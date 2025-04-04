@@ -373,7 +373,7 @@ class ConversionPage:
 
         # Add header bar
         header_bar = Adw.HeaderBar()
-        header_bar.set_title_widget(Gtk.Label(label=_("Big Video Converter")))
+        header_bar.set_title_widget(Gtk.Label(label="Big Video Converter"))
         content_box.append(header_bar)
 
         # Create main box to hold everything with proper layout

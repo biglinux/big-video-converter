@@ -113,7 +113,7 @@ class VideoConverterApp(Adw.Application):
         # Create main window
         self.window = Adw.ApplicationWindow(application=self)
         self.window.set_default_size(900, 620)
-        self.window.set_title(_("Big Video Converter"))
+        self.window.set_title("Big Video Converter")
 
         # Add close request handler to ensure processes are terminated
         self.window.connect("close-request", self._on_window_close_request)
@@ -595,7 +595,7 @@ class VideoConverterApp(Adw.Application):
             version=APP_VERSION,
             developers=APP_DEVELOPERS,
             license_type=Gtk.License.GPL_3_0,
-            website="https://communitybig.org",
+            website="https://www.biglinux.com.br",
         )
         about.present()
 
