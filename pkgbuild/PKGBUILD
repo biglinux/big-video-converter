@@ -12,7 +12,7 @@ pkgver=$(date +%Y%m%d)
 pkgrel=$(date +%H%M)
 arch=('any')
 license=('MIT')
-url="https://github.com/${pkgname}"
+url="https://github.com/biglinux/$pkgname"
 source=("git+${url}.git")
 md5sums=('SKIP')
 
