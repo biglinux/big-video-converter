@@ -1,0 +1,531 @@
+#!/usr/bin/env bash
+
+# Version: 3.0.0
+
+# If ffmpeg_executable is not set, use ffmpeg
+if [[ -z $ffmpeg_executable ]]; then
+    # If have jellyfin-ffmpeg installed, use it
+    if [[ -e /usr/lib/jellyfin-ffmpeg/ffmpeg ]]; then
+        ffmpeg_executable="/usr/lib/jellyfin-ffmpeg/ffmpeg"
+    else
+        ffmpeg_executable="ffmpeg"
+    fi
+fi
+
+# If show_executable is set, show the ffmpeg executable path
+if [[ $show_executable == 1 ]]; then
+    echo "$ffmpeg_executable"
+    exit 0
+fi
+
+# If vainfo is available, check for VAAPI encoders before ffmpeg to faster result
+if ! command -v vainfo > /dev/null; then
+	echo "Command vainfo not found"
+	exit 1
+fi
+
+# If vainfo is available, check for VAAPI encoders before ffmpeg to faster result
+if ! command -v lspci > /dev/null; then
+	echo "Command lspci not found"
+	exit 1
+fi
+
+# If detect_encoders is set, test and show encoders
+if [[ $detect_encoders == 1 ]]; then
+    # Using function as workround for not have problem in terminal session on ffmpeg crash
+    function detect_encoders_now() {
+        devices=$(lspci)
+        if grep -qiE '(VGA|3d).*nvidia' <<<"$devices"; then
+            if lsmod 2>/dev/null | grep -q nvidia_drm; then
+                search_encoder="nvidia|vulkan"
+            else
+                search_encoder="vaapi|vulkan"
+            fi
+        elif grep -qiE 'VGA.*(\bAMD\b|\bATI\b)' <<<"$devices"; then
+            search_encoder="amd|vaapi|vulkan"
+        elif grep -qi 'VGA.*intel' <<<"$devices"; then
+            search_encoder="intel|vaapi|vulkan"
+        else
+            encoder_format=$encoder_software
+        fi
+
+        available_encoders=$(ffmpeg -encoders 2>/dev/null | grep -iE "$search_encoder" | grep -vE 'mj?peg|vp8' | awk '{print $2}')
+        vaapi_encoders=$(vainfo 2>/dev/null | grep -i "VAEntrypointEncSlice\|VAEntrypointEncSliceLP" | awk -F: '{print $1}')
+        
+        # Map VA-API codec names to ffmpeg encoder names
+        for vaapi_verify in $vaapi_encoders; do
+            case "$vaapi_verify" in
+                "VAProfileH264"*) available_vaapi_encoders+=" h264_vaapi";;
+                "VAProfileHEVC"*) available_vaapi_encoders+=" hevc_vaapi";;
+                "VAProfileVP9"*)  available_vaapi_encoders+=" vp9_vaapi";;
+                "VAProfileAV1"*)  available_vaapi_encoders+=" av1_vaapi";;
+            esac
+        done
+
+        for encoder in $available_encoders; do
+            if [[ $encoder =~ .*vaapi && $available_vaapi_encoders =~ .*$encoder.* ]]; then
+                for device in /dev/dri/renderD*; do
+                    if ffmpeg -vaapi_device $device -f lavfi -i nullsrc=s=1280x720:d=1 -vf 'format=nv12,hwupload' -c:v $encoder -frames:v 1 -f null - 2>/dev/null; then
+                        echo "$encoder"
+                    fi
+                done
+            elif [[ $encoder =~ .*vulkan ]]; then
+                    if ffmpeg -nostdin -xerror -init_hw_device vulkan=vk -f lavfi -i nullsrc=s=1280x720:d=1 -filter_hw_device vk -vf "format=nv12,hwupload=derive_device=vulkan" -c:v h264_vulkan -frames:v 1 -f null - 2>/dev/null; then
+                        echo "$encoder"
+                    fi
+            elif [[ $encoder =~ .*nvidia|.*amf ]]; then
+                if ffmpeg -nostdin -xerror -f lavfi -i nullsrc=s=1280x720:d=1 -c:v $encoder -frames:v 1 -f null - 2>/dev/null; then
+                    echo "$encoder"
+                fi
+            fi
+        done
+        exit 0
+    }
+    detect_encoders_now 2> /dev/null
+
+fi
+
+
+# Define color variables
+COLOR_RESET="\e[0m"
+COLOR_GREEN="\e[32m"
+COLOR_YELLOW="\e[33m"
+COLOR_CYAN="\e[36m"
+COLOR_BLUE="\e[34m"
+
+# Show help if no arguments are passed or the first argument is -h or --help
+if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
+    echo -e "${COLOR_CYAN}Usage:${COLOR_RESET} ${COLOR_YELLOW}variables=value${COLOR_RESET} $0 ${COLOR_YELLOW}input_file${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_CYAN}You can specify various variables before the command. Below are the available options and examples:${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}1. Specifying the GPU:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify which GPU to use for the operation. Options include:${COLOR_GREEN} auto, nvidia, amd, intel, software${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}gpu=nvidia${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}2. Specifying the Output File:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify the name of the output file. If this variable is not specified, a default name will be used.${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}output_file=video_converted.mp4${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}3. Specifying the Output Folder:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify the folder where the output file will be saved. This will save the file with the same name as the input file in the specified folder.${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}If ${COLOR_YELLOW}output_file${COLOR_CYAN} is specified, this variable is ignored.${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}output_folder=/home/user/Videos${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}4. Specifying Video Quality:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify the quality of the video. Options include:${COLOR_GREEN} veryhigh, high, medium, low, verylow${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}video_quality=high${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}5. Specifying Audio Bitrate:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify the bitrate of the audio. Example:${COLOR_GREEN} 128k, 192k, 256k${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Default is 32k per channel, stereo audio will have 64k bitrate, and 5.1 audio will have 192k bitrate${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}audio_bitrate=192k${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}6. Specifying Audio Channels:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify the number of audio channels. If not specified, the default will be used.${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}audio_channels=2${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}7. Video Filter:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify the video filter for ffmpeg. Example:${COLOR_GREEN} -vf scale=1280x720${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}8. Specifying Compression Preset:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify the preset for compression.:${COLOR_GREEN} ultrafast, veryfast, faster, medium, slow, veryslow${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Default is medium for GPU encode and faster for software encode${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}preset=veryslow${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}9. Passing Additional Options to FFmpeg:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can pass additional options directly to FFmpeg using the ${COLOR_YELLOW}options${COLOR_CYAN} variable.${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}Example to cut a video from 1 minute to 30 seconds:${COLOR_RESET}"
+    echo -e "   ${COLOR_YELLOW}options=\"-ss 60 -t 30\"${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}10. Specifying Subtitle Handling:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify how to handle subtitles. Options include:${COLOR_GREEN} extract, embedded, none${COLOR_RESET} Default is extract"
+    echo -e "   ${COLOR_CYAN}Example to extract subtitles:${COLOR_RESET} ${COLOR_YELLOW}subtitle_extract=extract${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}11. Specifying Audio Handling:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify how to handle audio. Options include:${COLOR_GREEN} copy, reencode, none${COLOR_RESET} Default is copy"
+    echo -e "   ${COLOR_CYAN}Example to copy audio without reencoding:${COLOR_RESET} ${COLOR_YELLOW}audio_handling=copy${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}12. Specifying Video Encoder:${COLOR_RESET}"
+    echo -e "   ${COLOR_CYAN}You can specify the video encoder. Options include:${COLOR_GREEN} h264, h265, av1, vp9${COLOR_RESET} Default is h264"
+    echo -e "   ${COLOR_CYAN}Example to use h265 encoder:${COLOR_RESET} ${COLOR_YELLOW}video_encoder=h265${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}13. Force Gpu partial mode, decode using CPU and encode using GPU:${COLOR_RESET}"
+    echo -e "   ${COLOR_YELLOW}gpu_partial=1${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}14. Force CPU decode and encode:${COLOR_RESET}"
+    echo -e "   ${COLOR_YELLOW}force_software=1${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}15. Copy video without reencode:${COLOR_RESET}"
+    echo -e "   ${COLOR_YELLOW}force_copy_video=1${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}15. Only extract subtitles to .srt files:${COLOR_RESET}"
+    echo -e "   ${COLOR_YELLOW}only_extract_subtitles=1${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}16. Show ffmpeg executable path:${COLOR_RESET}"
+    echo -e "   ${COLOR_YELLOW}show_executable=1${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}17. Detect and show available encoders:${COLOR_RESET}"
+    echo -e "   ${COLOR_YELLOW}detect_encoders=1${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}18. Force ffmpeg encoder. Options: nvenc, vulkan, vaapi, qsv, amf, software ${COLOR_RESET}"
+    echo -e "   ${COLOR_YELLOW}force_encoder=encoder_name${COLOR_RESET}"
+    echo ""
+    echo -e "${COLOR_BLUE}19. Force ffmpeg decoder. Options: cuda, vaapi, qsv, amf, software ${COLOR_RESET}"
+    echo -e "   ${COLOR_YELLOW}force_decoder=decoder_name${COLOR_RESET}"
+    exit 0
+fi
+
+
+# Use the first argument as the input file
+input_file="$1"
+
+# Remove extension from the input file
+input_file_without_extension=${input_file##*/}
+input_file_without_extension=${input_file_without_extension%.*}
+
+# Check if the output_folder variable exists and variable output_file not exists
+if [[ -n $output_folder && -z $output_file ]]; then
+    output_file="$output_folder/$input_file_without_extension"
+fi
+
+# If variable output_file is not set, use same folder as input file
+: ${output_file:="$input_file_without_extension"}
+
+# Info about the input file
+ffprobe_result=$(ffprobe -select_streams s -show_entries stream=index:stream_tags=language,title:stream_disposition=forced -of csv=p=0 "$input_file" 2>&1)
+
+# Filter only subtitles in srt format
+subtitle_list_srt=$(grep 'Subtitle: subrip (srt)' <<<"$ffprobe_result")
+
+subtitle_list_srt_ids=$(sed -E 's|.*Stream #0:([0-9]+).*|\1|g' <<<"$subtitle_list_srt")
+
+# Filter simplified 
+subtitle_list_simplified=$(grep '^[0-9],' <<<"$ffprobe_result")
+
+# Convert to an array
+mapfile -t subtitles <<<"$subtitle_list_simplified"
+
+# If not specified, use extract
+: ${subtitle_extract:=extract}
+
+# Subtitle handling
+if [[ $subtitle_extract == "embedded" ]]; then
+    subtitle_cmd="-map 0:s? -c:s mov_text"
+elif [[ $subtitle_extract == "extract" ]]; then
+    if [[ -n $subtitle_list_srt ]]; then
+        # Declare an associative array to track language code usage
+        declare -A language_code_usage
+
+        # Loop through the array
+        for i in "${subtitles[@]}"; do
+
+            IFS=',' read -r index disposition language_code title <<< "$i"
+
+            # Only process the subtitle if it is in the list of srt subtitles
+            if [[ $subtitle_list_srt_ids =~ $index ]]; then
+            
+                # Remove white spaces from the language code
+                language_code=${language_code// /}
+                
+                # Verify if the language code is valid
+                if [[ -z $language_code || $language_code == "0" ]]; then
+                    language_code="und"  # undetermined, if the language code is empty
+                fi
+                
+                # Check if the language code has been used before
+                if [[ -n "${language_code_usage[$language_code]}" ]]; then
+                    language_code_count=${language_code_usage[$language_code]}
+                    ((language_code_count++))
+                    language_code_usage[$language_code]=$language_code_count
+                    language_code="${language_code}${language_code_count}"
+                else
+                    language_code_usage[$language_code]=1
+                fi
+                
+                if [[ $title == *"(Forced)"* || $disposition == "1" ]]; then
+                    suffix=".forced"
+                else
+                    suffix=""
+                fi
+                
+                output_file_srt="$output_file.$language_code$suffix.srt"
+
+                subtitle_cmd+=" -map 0:$index -c copy \"$output_file_srt\" "
+
+            fi
+        done
+    fi
+elif [[ $subtitle_extract == "none" ]]; then
+    subtitle_cmd=""
+fi
+
+# If not specified, use copy
+: ${audio_handling:=copy}
+
+# Audio handling
+if [[ $audio_handling == "copy" ]]; then
+    audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
+    mapfile -t audio_streams <<< "$audio_info"
+    for i in "${!audio_streams[@]}"; do
+        IFS=',' read -r index_audio language_audio <<< "${audio_streams[$i]}"
+        audio_cmd+="-map 0:$index_audio -c:a:$i copy "
+    done
+elif [[ $audio_handling == "reencode" ]]; then
+    audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
+    mapfile -t audio_streams <<< "$audio_info"
+    unset i
+    for i in "${!audio_streams[@]}"; do
+        IFS=',' read -r index_audio language_audio <<< "${audio_streams[$i]}"
+        
+        # Get the number of channels for this specific audio track
+        if [[ -n $audio_channels ]]; then
+            channels=$audio_channels
+        else
+            channels=$(ffprobe -v error -select_streams a:$i -show_entries stream=channels -of csv=p=0 "$input_file")
+        fi
+        
+        # Remove white spaces from the language_audio
+        language_audio=${language_audio// /}
+
+        # Verify if the language_audio is empty, if not set it to undetermined
+        if [[ -z $language_audio ]]; then
+            language_audio="und"
+        fi
+
+        if [[ -z $audio_bitrate ]]; then
+            audio_bitrate_value=$((channels * 32))k
+        else
+            audio_bitrate_value=$audio_bitrate
+        fi
+
+        audio_cmd+="-map 0:$index_audio -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
+
+    done
+elif [[ $audio_handling == "none" ]]; then
+    audio_cmd="-an"
+fi
+
+
+# if video_quality is default, remove auto
+video_quality=${video_quality/default/}
+
+# If quality is not specified, use medium
+: ${video_quality:=medium}
+
+case $video_quality in
+    veryhigh)
+        cq_value=19
+        qp_value=18
+        global_quality=18
+        cq_value_nvidia=19
+        ;;
+    high)
+        cq_value=24
+        qp_value=21
+        global_quality=21
+        cq_value_nvidia=24
+        ;;
+    medium)
+        cq_value=28
+        qp_value=24
+        global_quality=24
+        cq_value_nvidia=28
+        ;;
+    low)
+        cq_value=31
+        qp_value=27
+        global_quality=27
+        cq_value_nvidia=31
+        ;;
+    verylow)
+        cq_value=34
+        qp_value=30
+        global_quality=30
+        cq_value_nvidia=34
+        ;;
+    superlow)
+        cq_value=38
+        qp_value=33
+        global_quality=33
+        cq_value_nvidia=38
+        ;;
+esac
+
+# If preset is not specified, use medium for GPU and faster for software encoding
+if [[ -z $preset ]]; then
+    language_audio="und"
+    preset=medium
+    software_preset=faster
+else
+    software_preset=$preset
+fi
+
+# Convert preset for NVIDIA
+case $preset in
+    ultrafast) nvidia_preset=1 ;;
+    veryfast)  nvidia_preset=2 ;;
+    faster)    nvidia_preset=3 ;;
+    slow)      nvidia_preset=5 ;;
+    veryslow)  nvidia_preset=6 ;;
+    *)         nvidia_preset=4 ;; # Default to medium
+esac
+
+general_params="-i \"$input_file\" $subtitle_cmd -map 0:v:0 $audio_cmd"
+copy_video="$general_params -c:v copy"
+
+# Select appropriate encoder command based on the specified video encoder
+case $video_encoder in
+    h265)
+        encoder_nvenc="$general_params -c:v hevc_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+        encoder_vulkan="$general_params -c:v hevc_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+        encoder_vaapi="$general_params -c:v hevc_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+        encoder_qsv="$general_params -c:v hevc_qsv -preset $preset -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+        encoder_software="$general_params -c:v libx265 -preset $software_preset -look_ahead_depth 100 -crf $qp_value"
+        ;;
+    av1)
+        encoder_nvenc="$general_params -c:v av1_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+        encoder_vaapi="$general_params -c:v av1_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+        encoder_qsv="$general_params -c:v av1_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+        encoder_software="$general_params -c:v librav1e -preset $software_preset -look_ahead_depth 100 -crf $cq_value"
+        ;;
+    vp9)
+        encoder_nvenc="$general_params -c:v vp9_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+        encoder_vaapi="$general_params -c:v vp9_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+        encoder_qsv="$general_params -c:v vp9_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+        encoder_software="$general_params -c:v libvpx-vp9 -preset $software_preset -look_ahead_depth 100 -crf $cq_value  -speed 1"
+        ;;
+    *) # Default is h264
+        encoder_nvenc="$general_params -c:v h264_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+        encoder_vulkan="$general_params -c:v h264_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+        encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v high -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
+        encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v high -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+        encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v high -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
+        ;;
+esac
+
+# If gpu = auto change gpu to empty
+gpu=${gpu/auto/}
+# If gpu empty auto detect
+if [[ -z $gpu ]]; then
+    devices=$(lspci)
+else
+    devices="VGA $gpu"
+fi
+
+decoder_cuda='-hwaccel cuda -hwaccel_output_format cuda'
+decoder_vaapi='-hwaccel vaapi -hwaccel_output_format vaapi'
+init_vaapi='-init_hw_device vaapi'
+decoder_qsv='-filter_hw_device qs -hwaccel qsv -hwaccel_output_format qsv'
+init_qsv='-init_hw_device vaapi=va:,driver=iHD,kernel_driver=i915 -init_hw_device qsv=qs@va'
+
+if grep -qiE '(VGA|3d).*nvidia' <<<"$devices"; then
+	decoder_format="$decoder_cuda"
+	encoder_format="$encoder_nvenc"
+	init_hardware=""
+elif grep -qiE 'VGA.*(\bAMD\b|\bATI\b)' <<<"$devices"; then
+	decoder_format="$decoder_vaapi"
+	encoder_format="$encoder_vaapi"
+	init_hardware="$init_vaapi"
+elif grep -qi 'VGA.*intel' <<<"$devices"; then
+	decoder_format="$decoder_qsv"
+	encoder_format="$encoder_qsv"
+	init_hardware="$init_qsv"
+else
+	encoder_format=$encoder_software
+fi
+
+if [[ $force_software = 1 ]]; then
+    encoder_format=$encoder_software
+fi
+
+if [[ $force_copy_video = 1 ]]; then
+    encoder_format=$copy_video
+fi
+if [[ -n $force_encoder ]]; then
+    encoder_var="encoder_${force_encoder}"
+    encoder_format=${!encoder_var}
+    init_hardware="${!encoder_var/init/}"
+fi
+
+if [[ -n $force_decoder ]]; then
+    decoder_var="decoder_${force_decoder}"
+    decoder_format=${!decoder_var}
+    init_hardware="${!decoder_var/init/}"
+fi
+
+# Change to case insensitive
+shopt -s nocasematch
+
+# Check if the output file has the extension, if not, add mp4
+if [[ ! "$output_file" =~ \.(mp4|avi|mkv|mov|wmv|flv|webm|mpeg|mpg)$ ]]; then
+    output_file="$output_file.mp4"
+fi
+
+# Back to case sensitive
+shopt -u nocasematch
+
+# Generic options for ffmpeg
+ffmpeg_generic_options="-movflags +faststart -y \"$output_file\""
+
+if [[ $only_extract_subtitles = 1 ]]; then
+    general_params="-i \"$input_file\" $subtitle_cmd"
+    echo "Running command: $ffmpeg_executable $general_params"
+    eval $ffmpeg_executable $general_params
+exit
+fi
+
+video_filter_gpu=${video_filter/scale=/scale_vaapi=}
+# if have scale_cuda add ,hwdownload,format=nv12 after scale_cuda=value:value using sed
+if [[ $video_filter_gpu =~ scale_vaapi ]]; then
+    video_filter_gpu=$(sed -E 's/(scale_vaapi=[^,]+:[^,]+)(.*)/\1,hwdownload,format=nv12\2/' <<<"$video_filter_gpu")
+fi
+
+#  verify if not have scale_cuda and have -vf, and add hwdownload,format=nv12,
+if [[ $video_filter_gpu =~ -vf && ! $video_filter_gpu =~ scale_vaapi ]]; then
+    video_filter_gpu=${video_filter_gpu/-vf /-vf hwdownload,format=nv12,}
+fi
+
+if [[ $video_filter_gpu =~ hwdownload ]]; then
+    video_filter_gpu+=',hwupload'
+fi
+
+if [[ $encoder_format =~ .*nvenc.* ]]; then
+    video_filter_gpu=${video_filter_gpu/scale_vaapi=/scale_cuda=}
+fi
+
+if [[ $encoder_format =~ .*qsv.* ]]; then
+    video_filter_gpu=${video_filter_gpu/scale_vaapi=/scale_qsv=}
+fi
+
+
+# Try to encode with the GPU
+if [[ "$encoder_format" != "$encoder_software" ]]; then
+    echo "Encode mode: Decode GPU, encode GPU"
+    echo "Running command: $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_gpu $ffmpeg_generic_options"
+    eval $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_gpu $ffmpeg_generic_options
+fi
+
+# Store the exit code while preserving $? for later checks
+exit_code=$?
+
+# If encoding not successful, and not exit with 255 (interrupted by user), and not software encoding, try with the second option
+if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 ]]; then
+    echo "Encode mode: Decode Software, Encode GPU"
+    echo "Running command: $ffmpeg_executable $init_hardware $options $encoder_format $video_filter $ffmpeg_generic_options"
+    eval $ffmpeg_executable $init_hardware $options $encoder_format $video_filter $ffmpeg_generic_options
+    exit_code=$?
+fi
+
+# If encoding not successful, and not exit with 255 (interrupted by user), try with software
+if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 || "$encoder_format" == "$encoder_software" ]]; then
+    echo "Encode mode: Decode Software, Encode Software"
+    echo "Running command: $ffmpeg_executable $options $encoder_software $ffmpeg_generic_options"
+    eval $ffmpeg_executable $options $encoder_software $video_filter $ffmpeg_generic_options
+    exit_code=$?
+fi
+
+if [[ $exit_code != 0 ]]; then
+    echo -e "${COLOR_YELLOW}Conversion failed with exit code $exit_code.${COLOR_RESET}"
+    exit $exit_code
+fi

@@ -1,0 +1,46 @@
+[Desktop Entry]
+Name=Big Video Converter
+Name[pt]=Conversor de Vídeo Big
+Name[es]=Convertidor de Video Big
+Name[bg]=Big Видео Конвертор
+Name[cs]=Big Video Převaděč
+Name[da]=Big Videokonverter
+Name[de]=Big Video-Konverter
+Name[el]=Μετατροπέας Βίντεο Big
+Name[et]=Big Video Teisendaja
+Name[fi]=Big Videomuunnin
+Name[fr]=Convertisseur Vidéo Big
+Name[he]=ממיר וידאו Big
+Name[hr]=Big Video Pretvarač
+Name[hu]=Big Videó Átalakító
+Name[is]=Big Myndbandbreytir
+Name[it]=Convertitore Video Big
+Name[ja]=Big ビデオコンバーター
+Name[ko]=Big 비디오 변환기
+Name[nl]=Big Videoconverter
+Name[no]=Big Videokonverterer
+Name[pl]=Konwerter Wideo Big
+Name[ro]=Convertor Video Big
+Name[ru]=Конвертер Видео Big
+Name[sk]=Big Video Konvertor
+Name[sv]=Big Videokonverterare
+Name[tr]=Big Video Dönüştürücü
+Name[uk]=Відео Конвертер Big
+Name[zh]=Big 视频转换器
+Comment=GUI and CLI interface for converting videos using FFmpeg with GPU acceleration.
+Exec=big-video-converter-gui %F
+Icon=big-video-converter
+StartupWMClass=big-video-converter
+StartupNotify=true
+Terminal=false
+Type=Application
+Categories=AudioVideo;Video;
+Keywords=video;converter;mkv;mp4;ffmpeg;
+X-GNOME-UsesNotifications=true
+MimeType=video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/x-ms-wmv;video/mpeg;video/x-m4v;video/mp2t;video/x-flv;
+
+Actions=SoftwareRender;
+
+[Desktop Action SoftwareRender]
+Name=Software Render
+Exec=SoftwareRender big-video-converter-gui %F
