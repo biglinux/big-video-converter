@@ -8,7 +8,7 @@ import os
 # Application metadata
 APP_ID = "br.com.biglinux.converter"
 APP_NAME = "Big Video Converter"
-APP_VERSION = "1.0.0"
+APP_VERSION = "3.0.0"
 
 APP_DEVELOPERS = ["Tales A. Mendonça", "Bruno Gonçalves Araujo"]
 APP_WEBSITES = ["communitybig.org", "biglinux.com.br"]
