@@ -7,13 +7,12 @@ depends=('python' 'python-gobject' 'gtk4' 'ffmpeg' 'python-cairo')
 #makedepends=('')
 #optdepends=('')
 conflicts=('comm-video-converter')
-provides=('comm-video-converter')
 replaces=('comm-video-converter')
 pkgver=$(date +%Y%m%d)
 pkgrel=$(date +%H%M)
 arch=('any')
 license=('MIT')
-url="https://github.com/communitybig/${pkgname}"
+url="https://github.com/b/${pkgname}"
 source=("git+${url}.git")
 md5sums=('SKIP')
 
