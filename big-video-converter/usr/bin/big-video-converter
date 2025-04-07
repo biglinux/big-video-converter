@@ -457,10 +457,17 @@ fi
 # Change to case insensitive
 shopt -s nocasematch
 
-# Check if the output file has the extension, if not, add mp4
-if [[ ! "$output_file" =~ \.(mp4|avi|mkv|mov|wmv|flv|webm|mpeg|mpg)$ ]]; then
+# Improved version that uses output_format when available
+if [[ -n "$output_format" ]]; then
+    # Remove any existing extension
+    output_basename="${output_file%.*}"
+    # Add the output format extension
+    output_file="${output_basename}.${output_format}"
+elif [[ ! "$output_file" =~ \.(mp4|avi|mkv|mov|wmv|flv|webm|m4v|mpeg|mpg)$ ]]; then
+    # If no format is defined and no recognized extension is present, use mp4
     output_file="$output_file.mp4"
 fi
+
 
 # Back to case sensitive
 shopt -u nocasematch

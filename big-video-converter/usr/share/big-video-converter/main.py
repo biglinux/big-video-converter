@@ -50,6 +50,11 @@ class VideoConverterApp(Adw.Application):
         self.last_accessed_directory = self.settings_manager.load_setting(
             "last-accessed-directory", os.path.expanduser("~")
         )
+        
+        # Make sure that the selected format is one of the available options
+        current_format = self.settings_manager.load_setting("output-format-index", 0)
+        if current_format > 1:  # We now only have indices 0 and 1
+            self.settings_manager.save_setting("output-format-index", 0)  # Reset to MP4
 
         # Initialize state variables
         self.conversions_running = 0
@@ -706,6 +711,25 @@ class VideoConverterApp(Adw.Application):
                 self.video_edit_page.update_trim_display()
 
         print("Trim settings have been reset")
+    
+    def get_selected_format_extension(self):
+        """Return the extension of the selected file format"""
+        # Obter o valor mais recente da configuração
+        format_index = self.settings_manager.load_setting("output-format-index", 0)
+        
+        # Debug para ver o valor sendo recuperado
+        print(f"DEBUG: output-format-index = {format_index}")
+        
+        format_extensions = {
+            0: ".mp4",   # MP4
+            1: ".mkv",   # MKV
+        }
+        return format_extensions.get(format_index, ".mp4")  # Return .mp4 as default
+
+    def get_selected_format_name(self):
+        """Return the format name without the leading dot"""
+        extension = self.get_selected_format_extension()
+        return extension.lstrip('.')
 
     # Dialog helpers
     def show_error_dialog(self, message):

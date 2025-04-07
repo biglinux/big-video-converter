@@ -54,11 +54,6 @@ def run_with_progress_dialog(
         env_vars["output_folder"] = output_folder
         print(f"Set output folder: {output_folder}")
 
-        # Important: Don't specify output file with path, only filename
-        if "output_file" in env_vars and os.path.dirname(env_vars["output_file"]):
-            env_vars["output_file"] = os.path.basename(env_vars["output_file"])
-            print(f"Using basename for output file: {env_vars['output_file']}")
-
     # Ensure trim environment variables are properly set
     # Print trim-related environment variables for debugging
     if "trim_start" in env_vars:

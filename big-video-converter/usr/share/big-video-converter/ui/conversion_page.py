@@ -996,11 +996,13 @@ class ConversionPage:
             # Store the current file to be processed
             self.current_file_path = file_path
 
-            # Update output folder to match input folder
-            input_dir = os.path.dirname(file_path)
-            self.output_folder_entry.set_text(input_dir)
+            # Update output folder ONLY if using "Same as input" option
+            if self.folder_combo.get_selected() == 0:  # 0 = "Same folder as original file"
+                input_dir = os.path.dirname(file_path)
+                self.output_folder_entry.set_text(input_dir)
 
             # Keep last accessed directory updated
+            input_dir = os.path.dirname(file_path)
             self.app.last_accessed_directory = input_dir
             self.app.settings_manager.save_setting("last-accessed-directory", input_dir)
             return True
@@ -1214,24 +1216,53 @@ class ConversionPage:
 
             traceback.print_exc()
 
-        # Set output folder based on selection
-        use_custom_folder = self.folder_combo.get_selected() == 1
+        # Get the extension of the selected output format
+        output_ext = self.app.get_selected_format_extension()
+        output_format = self.app.get_selected_format_name()
 
-        if use_custom_folder:
-            output_folder = self.output_folder_entry.get_text()
-            if output_folder:
-                if not os.path.isabs(output_folder):
-                    output_folder = os.path.abspath(output_folder)
-                env_vars["output_folder"] = output_folder
-                print(f"Using specified output folder: {output_folder}")
-            else:
-                # Fallback to input directory if custom folder is empty
-                env_vars["output_folder"] = input_dir
-                print(f"Using input file directory as output (fallback): {input_dir}")
+        # Check if input file has the same extension as the selected output format
+        input_ext = os.path.splitext(input_file)[1].lower()
+        input_basename = os.path.splitext(os.path.basename(input_file))[0]
+        input_dir = os.path.dirname(os.path.abspath(input_file))
+
+        if input_ext == output_ext:
+            # If input format is the same as output format, add "-converted" to the name
+            output_basename = f"{input_basename}-converted{output_ext}"
         else:
+            # If format is different, just change the extension
+            output_basename = f"{input_basename}{output_ext}"
+
+        # Set output folder based on selection
+        use_same_folder = self.folder_combo.get_selected() == 0  # 0 = "Same folder as original file"
+
+        if use_same_folder:
             # Use same folder as input
-            env_vars["output_folder"] = input_dir
-            print(f"Using input file directory as output: {input_dir}")
+            output_folder = input_dir
+        else:
+            # Custom folder selected
+            output_folder = self.output_folder_entry.get_text()
+            if not output_folder:
+                # If custom folder is empty, use input directory
+                output_folder = input_dir
+
+        # Ensure output folder path is absolute
+        if not os.path.isabs(output_folder):
+            output_folder = os.path.abspath(output_folder)
+
+        # IMPORTANT: Create the full output file path
+        full_output_path = os.path.join(output_folder, output_basename)
+
+        # Set the full path as output_file
+        env_vars["output_file"] = full_output_path
+
+        # Remove output_folder to avoid confusion in the bash script
+        if "output_folder" in env_vars:
+            del env_vars["output_folder"]
+
+        print(f"Full output path: {full_output_path}")
+
+        # Set the output format
+        env_vars["output_format"] = output_format
 
         # Build the conversion command
         cmd = [CONVERT_SCRIPT_PATH, input_file]

@@ -139,6 +139,17 @@ class SettingsPage:
         self.video_encoder_combo.set_model(codec_model)
         self.video_encoder_combo.set_selected(0)
         encoding_group.add(self.video_encoder_combo)
+        
+        # Output format selection
+        format_model = Gtk.StringList()
+        format_model.append("MP4")  # Default
+        format_model.append("MKV")
+
+        self.output_format_combo = Adw.ComboRow(title=_("Output"))
+        self.output_format_combo.set_subtitle(_("Select output file format"))
+        self.output_format_combo.set_model(format_model)
+        self.output_format_combo.set_selected(0)  # Default to MP4
+        encoding_group.add(self.output_format_combo)
 
         # Video resolution combo with common values
         resolution_model = Gtk.StringList()
@@ -377,6 +388,12 @@ class SettingsPage:
         self.video_encoder_combo.connect(
             "notify::selected", lambda w, p: self._save_codec_setting(w.get_selected())
         )
+        
+        # Output format selection
+        self.output_format_combo.connect(
+            "notify::selected",
+            lambda w, p: self.settings_manager.save_setting("output-format-index", w.get_selected()),
+        )
 
         # Preset
         self.preset_combo.connect(
@@ -532,6 +549,10 @@ class SettingsPage:
         codec_value = self.settings_manager.load_setting("video-codec", "h264")
         codec_index = self._find_codec_index(codec_value)
         self.video_encoder_combo.set_selected(codec_index)
+        
+        # Load output format setting
+        output_format_idx = self.settings_manager.load_setting("output-format-index", 0)  # 0 = MP4 (default)
+        self.output_format_combo.set_selected(output_format_idx)
 
         # Preset
         preset_value = self.settings_manager.load_setting("preset", "medium")
