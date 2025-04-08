@@ -44,10 +44,11 @@ VIDEO_FILE_MIME_TYPES = [
 # Encoding options
 GPU_OPTIONS = [
     "Auto-detect",
-    "nvidia",
-    "amd",
-    "intel",
-    "software"
+    "NVENC (Nvidia)",
+    "VAAPI (Intel/AMD)",
+    "QSV (Intel)",
+    "Vulkan",
+    "Software (CPU)"
 ]
 VIDEO_QUALITY_OPTIONS = [
     "Default",

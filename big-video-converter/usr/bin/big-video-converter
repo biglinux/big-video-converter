@@ -413,26 +413,32 @@ else
     devices="VGA $gpu"
 fi
 
+decoder_vulkan='-init_hw_device vulkan=vk -filter_hw_device vk'
+init_vulkan='-init_hw_device vulkan=vk'
 decoder_cuda='-hwaccel cuda -hwaccel_output_format cuda'
 decoder_vaapi='-hwaccel vaapi -hwaccel_output_format vaapi'
 init_vaapi='-init_hw_device vaapi'
 decoder_qsv='-filter_hw_device qs -hwaccel qsv -hwaccel_output_format qsv'
 init_qsv='-init_hw_device vaapi=va:,driver=iHD,kernel_driver=i915 -init_hw_device qsv=qs@va'
 
-if grep -qiE '(VGA|3d).*nvidia' <<<"$devices"; then
-	decoder_format="$decoder_cuda"
-	encoder_format="$encoder_nvenc"
-	init_hardware=""
+if [[ "$gpu" == *"Vulkan"* || "$gpu" == *"vulkan"* ]]; then
+    decoder_format="$decoder_vulkan"
+    encoder_format="$encoder_vulkan"
+    init_hardware="$init_vulkan"
+elif grep -qiE '(VGA|3d).*nvidia' <<<"$devices"; then
+    decoder_format="$decoder_cuda"
+    encoder_format="$encoder_nvenc"
+    init_hardware=""
 elif grep -qiE 'VGA.*(\bAMD\b|\bATI\b)' <<<"$devices"; then
-	decoder_format="$decoder_vaapi"
-	encoder_format="$encoder_vaapi"
-	init_hardware="$init_vaapi"
+    decoder_format="$decoder_vaapi"
+    encoder_format="$encoder_vaapi"
+    init_hardware="$init_vaapi"
 elif grep -qi 'VGA.*intel' <<<"$devices"; then
-	decoder_format="$decoder_qsv"
-	encoder_format="$encoder_qsv"
-	init_hardware="$init_qsv"
+    decoder_format="$decoder_qsv"
+    encoder_format="$encoder_qsv"
+    init_hardware="$init_qsv"
 else
-	encoder_format=$encoder_software
+    encoder_format=$encoder_software
 fi
 
 if [[ $force_software = 1 ]]; then

@@ -467,13 +467,15 @@ class SettingsPage:
         if index == 0:  # Default/Auto
             self.settings_manager.save_setting("gpu", "auto")
         elif index == 1:  # nvidia
-            self.settings_manager.save_setting("gpu", "nvidia")
+            self.settings_manager.save_setting("gpu", "NVENC – Compatible with Nvidia")
         elif index == 2:  # amd
-            self.settings_manager.save_setting("gpu", "amd")
+            self.settings_manager.save_setting("gpu", "VAAPI – Compatible with Intel/AMD")
         elif index == 3:  # intel
-            self.settings_manager.save_setting("gpu", "intel")
-        elif index == 4:  # software
-            self.settings_manager.save_setting("gpu", "software")
+            self.settings_manager.save_setting("gpu", "QSV – Compatible with Intel")
+        elif index == 4:  # vulkan
+            self.settings_manager.save_setting("gpu", "Vulkan – Default, low compatibility")
+        elif index == 5:  # software
+            self.settings_manager.save_setting("gpu", "Software – Compatible with all")
 
     def _save_quality_setting(self, index):
         """Save video quality setting as direct value"""
@@ -653,10 +655,28 @@ class SettingsPage:
     def _find_gpu_index(self, value):
         """Find index of GPU value in GPU_OPTIONS"""
         value = value.lower()
+        
+        # Check for key words in the value
+        if "nvenc" in value or "nvidia" in value:
+            return 1
+        elif "vaapi" in value or "amd" in value:
+            return 2
+        elif "qsv" in value or "intel" in value:
+            return 3
+        elif "vulkan" in value:
+            return 4
+        elif "software" in value:
+            return 5
+        elif value == "auto" or "auto-detect" in value:
+            return 0
+            
+        # If no match, try the standard search
         for i, option in enumerate(GPU_OPTIONS):
-            if option.lower() == value or (i == 0 and value == "auto"):
+            if option.lower() == value:
                 return i
-        return 0  # Default to Auto-detect
+                
+        # Default to Auto-detect
+        return 0
 
     def _find_quality_index(self, value):
         """Find index of quality value in VIDEO_QUALITY_OPTIONS"""
