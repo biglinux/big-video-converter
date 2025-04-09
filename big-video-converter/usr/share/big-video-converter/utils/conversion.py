@@ -849,8 +849,8 @@ def monitor_progress(app, process, progress_item):
                         print(size_info)
                         GLib.idle_add(progress_item.add_output_text, size_info)
 
-                        # Use 20% of original size as threshold
-                        min_size_threshold = input_size * 0.2
+                        # Use 15% of original size as threshold
+                        min_size_threshold = input_size * 0.15
                         
                         if output_size > min_size_threshold:
                             try:
@@ -889,7 +889,7 @@ def monitor_progress(app, process, progress_item):
                                     )
                                 )
                         else:
-                            size_warning = f"The original file was not deleted because the converted file size is less than 20% of original size."
+                            size_warning = f"The converted file size is suspicious, so the original file was not removed."
                             print(size_warning)
                             GLib.idle_add(progress_item.add_output_text, size_warning)
                             GLib.idle_add(
@@ -897,7 +897,7 @@ def monitor_progress(app, process, progress_item):
                                     app,
                                     _(
                                         "Conversion completed successfully!\n\n"
-                                        "The original file was not deleted because the converted file size is less than 20% of original size."
+                                        "The converted file size is suspicious, so the original file was not removed."
                                     ),
                                     progress_item,
                                 )
