@@ -1,8 +1,6 @@
 # Comm Video Converter
 A modern graphical frontend for converting MKV videos to MP4 format, built with Python and GTK3.
 
-![comm-big-convert](https://github.com/user-attachments/assets/3b7de454-1b9f-4ca9-b863-78b4ed696d4f)
-
 ## Description
 Comm Big Converter provides an intuitive graphical interface to easily convert video files from MKV to MP4 format using FFmpeg as the conversion engine. This application offers both single-file conversion with advanced options and batch conversion capabilities for processing multiple files at once.
 
