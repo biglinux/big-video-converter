@@ -249,7 +249,7 @@ elif [[ $subtitle_extract == "extract" ]]; then
                     suffix=""
                 fi
                 
-                output_file_srt="$output_file.$language_code$suffix.srt"
+                output_file_srt="${output_file%.*}.$language_code$suffix.srt"
 
                 subtitle_cmd+=" -map 0:$index -c copy \"$output_file_srt\" "
 
