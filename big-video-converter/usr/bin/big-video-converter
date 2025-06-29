@@ -225,8 +225,15 @@ elif [[ $subtitle_extract == "extract" ]]; then
             # Only process the subtitle if it is in the list of srt subtitles
             if [[ $subtitle_list_srt_ids =~ $index ]]; then
             
-                # Remove white spaces from the language code
+                # Remove white spaces and special characters from the language code
                 language_code=${language_code// /}
+                # Remove quotes, parentheses and other problematic characters
+                language_code=${language_code//\"/}
+                language_code=${language_code//\'/}
+                language_code=${language_code//\(/}
+                language_code=${language_code//\)/}
+                language_code=${language_code//\[/}
+                language_code=${language_code//\]/}
                 
                 # Verify if the language code is valid
                 if [[ -z $language_code || $language_code == "0" ]]; then
