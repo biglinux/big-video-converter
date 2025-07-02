@@ -180,6 +180,27 @@ fi
 # Use the first argument as the input file
 input_file="$1"
 
+# Determine if video is 10-bit based on pixel format and profile
+is_10bit=false
+if [[ $pix_fmt =~ yuv.*p10 || $pix_fmt =~ yuv.*10le || $pix_fmt =~ .*10bit.* ]]; then
+    is_10bit=true
+    echo "Detected 10-bit video input (pixel format: $pix_fmt)"
+elif [[ $video_profile =~ .*10.* || $video_profile =~ .*High\ 10.* || $video_profile =~ .*Main\ 10.* ]]; then
+    is_10bit=true
+    echo "Detected 10-bit video input (profile: $video_profile)"
+else
+    echo "Detected 8-bit video input"
+fi
+
+# Select appropriate H.264 profile based on bit depth
+if [[ $is_10bit == true ]]; then
+    h264_profile="high10"
+    echo "Using H.264 profile: high10 (for 10-bit content)"
+else
+    h264_profile="high"
+    echo "Using H.264 profile: high (for 8-bit content)"
+fi
+
 # Remove extension from the input file
 input_file_without_extension=${input_file##*/}
 input_file_without_extension=${input_file_without_extension%.*}
@@ -402,12 +423,12 @@ case $video_encoder in
         encoder_qsv="$general_params -c:v vp9_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
         encoder_software="$general_params -c:v libvpx-vp9 -preset $software_preset -look_ahead_depth 100 -crf $cq_value  -speed 1"
         ;;
-    *) # Default is h264
+    *) # Default is h264 - now with dynamic profile selection
         encoder_nvenc="$general_params -c:v h264_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
         encoder_vulkan="$general_params -c:v h264_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-        encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v high -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
-        encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v high -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
-        encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v high -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
+        encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v $h264_profile -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
+        encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v $h264_profile -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+        encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v $h264_profile -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
         ;;
 esac
 
@@ -518,6 +539,16 @@ if [[ $encoder_format =~ .*qsv.* ]]; then
     video_filter_gpu=${video_filter_gpu/scale_vaapi=/scale_qsv=}
 fi
 
+# Additional validation for 10-bit content with GPU encoders
+if [[ $is_10bit == true && $video_encoder == "h264" ]]; then
+    echo "Warning: Converting 10-bit input to H.264. Consider using H.265 for better quality and compatibility."
+    
+    # Test GPU encoder compatibility with 10-bit input for H.264
+    if [[ "$encoder_format" =~ nvenc|vaapi|qsv ]]; then
+        echo "Note: Some GPU encoders may not support 10-bit H.264 encoding optimally."
+        echo "If encoding fails, the system will automatically fallback to software encoding."
+    fi
+fi
 
 # Try to encode with the GPU
 if [[ "$encoder_format" != "$encoder_software" ]]; then
