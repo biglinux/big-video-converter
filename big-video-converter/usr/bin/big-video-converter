@@ -176,9 +176,13 @@ if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
     exit 0
 fi
 
-
 # Use the first argument as the input file
 input_file="$1"
+
+# Detect bit depth of input video for profile selection
+echo "Analyzing input video..."
+pix_fmt=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of csv=p=0 "$input_file" 2>/dev/null)
+video_profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profile -of csv=p=0 "$input_file" 2>/dev/null)
 
 # Determine if video is 10-bit based on pixel format and profile
 is_10bit=false
