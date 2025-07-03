@@ -13,6 +13,21 @@ import gettext
 
 _ = gettext.gettext  # Will use the already initialized translation
 
+def detect_bit_depth_info(file_path):
+    """Detect and log bit depth information for user awareness"""
+    try:
+        result = subprocess.run([
+            "ffprobe", "-v", "error", "-select_streams", "v:0",
+            "-show_entries", "stream=pix_fmt", "-of", "csv=p=0", file_path
+        ], capture_output=True, text=True)
+        
+        pix_fmt = result.stdout.strip()
+        if "p10" in pix_fmt or "10le" in pix_fmt:
+            return f"ℹ️  Detected 10-bit video - will use appropriate profile automatically"
+        else:
+            return f"ℹ️  Detected 8-bit video - using standard profile"
+    except:
+        return "ℹ️  Video analysis complete"
 
 def format_resolution(width, height):
     """
@@ -147,7 +162,7 @@ def run_with_progress_dialog(
 
         # Start thread to monitor progress
         monitor_thread = threading.Thread(
-            target=monitor_progress, args=(app, process, progress_item)
+            target=monitor_progress, args=(app, process, progress_item, env_vars)
         )
         monitor_thread.daemon = True
         monitor_thread.start()
@@ -184,8 +199,13 @@ def run_with_progress_dialog(
         app.conversions_running -= 1
 
 
-def monitor_progress(app, process, progress_item):
+def monitor_progress(app, process, progress_item, env_vars=None):
     """Monitor the progress of a running conversion process"""
+    # Detect and display bit depth information
+    if hasattr(progress_item, 'input_file') and progress_item.input_file:
+        bit_depth_info = detect_bit_depth_info(progress_item.input_file)
+        GLib.idle_add(progress_item.add_output_text, bit_depth_info + "\n")
+    
     # More accurate patterns for FFmpeg output
     time_pattern = re.compile(r"time=(\d+:\d+:\d+\.\d+)")
     duration_pattern = re.compile(r"Duration: (\d+:\d+:\d+\.\d+)")
