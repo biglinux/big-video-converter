@@ -14,18 +14,33 @@ import gettext
 _ = gettext.gettext  # Will use the already initialized translation
 
 def detect_bit_depth_info(file_path):
-    """Detect and log bit depth information for user awareness"""
+    """Detect and log bit depth and codec information for user awareness"""
     try:
+        # Get both pixel format and codec information
         result = subprocess.run([
             "ffprobe", "-v", "error", "-select_streams", "v:0",
-            "-show_entries", "stream=pix_fmt", "-of", "csv=p=0", file_path
+            "-show_entries", "stream=pix_fmt,codec_name", "-of", "csv=p=0", file_path
         ], capture_output=True, text=True)
         
-        pix_fmt = result.stdout.strip()
-        if "p10" in pix_fmt or "10le" in pix_fmt:
-            return f"ℹ️  Detected 10-bit video - will use appropriate profile automatically"
+        output = result.stdout.strip().split(',')
+        if len(output) >= 2:
+            pix_fmt = output[0]
+            codec = output[1]
         else:
-            return f"ℹ️  Detected 8-bit video - using standard profile"
+            pix_fmt = output[0] if output else ""
+            codec = "unknown"
+        
+        is_10bit = "p10" in pix_fmt or "10le" in pix_fmt
+        is_hevc = codec in ['hevc', 'h265']
+        
+        if is_10bit and is_hevc:
+            return f"ℹ️  Detected H.265 10-bit video - will use optimized GPU conversion for H.264 output"
+        elif is_10bit:
+            return f"ℹ️  Detected 10-bit video ({codec}) - will use appropriate profile automatically"
+        elif is_hevc:
+            return f"ℹ️  Detected H.265 8-bit video - using standard conversion"
+        else:
+            return f"ℹ️  Detected 8-bit video ({codec}) - using standard profile"
     except:
         return "ℹ️  Video analysis complete"
 
