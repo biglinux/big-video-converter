@@ -447,7 +447,7 @@ case $video_encoder in
             echo "Applying optimized GPU commands for H.265 10-bit to H.264 8-bit conversion"
             
             # NVIDIA: Use optimized CUDA scaling with yuv420p format
-            encoder_nvenc="$general_params -hwaccel cuda -hwaccel_output_format cuda -vf scale_cuda=format=yuv420p -c:v h264_nvenc -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+            encoder_nvenc="-hwaccel cuda -hwaccel_output_format cuda $general_params -vf scale_cuda=format=yuv420p -c:v h264_nvenc -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
             
             # AMD: Use optimized VAAPI scaling with nv12 format  
             encoder_vaapi="-init_hw_device vaapi=amd:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi $general_params -vf scale_vaapi=format=nv12 -c:v h264_vaapi -qp $global_quality"
