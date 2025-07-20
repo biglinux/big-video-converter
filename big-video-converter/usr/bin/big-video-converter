@@ -450,10 +450,10 @@ case $video_encoder in
             encoder_nvenc="$general_params -hwaccel cuda -hwaccel_output_format cuda -vf scale_cuda=format=yuv420p -c:v h264_nvenc -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
             
             # AMD: Use optimized VAAPI scaling with nv12 format  
-            encoder_vaapi="$general_params -init_hw_device vaapi=amd:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -vf scale_vaapi=format=nv12 -c:v h264_vaapi -qp $global_quality"
+            encoder_vaapi="-init_hw_device vaapi=amd:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi $general_params -vf scale_vaapi=format=nv12 -c:v h264_vaapi -qp $global_quality"
             
             # Intel: Use optimized QSV scaling with nv12 format
-            encoder_qsv="$general_params -init_hw_device qsv=intel -hwaccel qsv -hwaccel_output_format qsv -vf scale_qsv=format=nv12 -c:v h264_qsv -global_quality $global_quality"
+            encoder_qsv="-init_hw_device qsv=intel -hwaccel qsv -hwaccel_output_format qsv $general_params -vf scale_qsv=format=nv12 -c:v h264_qsv -global_quality $global_quality"
             
             # Software fallback with pixel format conversion
             encoder_software="$general_params -vf format=yuv420p -c:v libx264 -preset $software_preset -crf $qp_value"
