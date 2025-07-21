@@ -2,14 +2,6 @@
 """
 Big Video Converter - Nautilus Extension
 Global context menu extension for video file conversion.
-
-Installation:
-    sudo cp big_video_converter_nautilus.py /usr/share/nautilus-python/extensions/
-    nautilus -q
-
-Requirements:
-    - python3-nautilus package installed
-    - big-video-converter application installed
 """
 
 import os
@@ -17,6 +9,11 @@ import subprocess
 from gi.repository import Nautilus, GObject
 from urllib.parse import unquote
 from pathlib import Path
+
+# Setup translation
+import gettext
+
+_ = gettext.gettext
 
 class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
     """Nautilus extension for Big Video Converter integration"""
@@ -75,29 +72,19 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
             # Single file - show "Convert Video"
             convert_item = Nautilus.MenuItem(
                 name='BigVideoConverter::Convert',
-                label='Convert Video',
-                tip=f'Convert {os.path.basename(video_files[0].get_name())} using Big Video Converter',
+                label=_('Convert Video'),
+                tip=_('Convert {0} using Big Video Converter').format(os.path.basename(video_files[0].get_name())),
                 icon='big-video-converter'
             )
             convert_item.connect('activate', self.convert_video, video_files)
             menu_items.append(convert_item)
             
-            # Edit/Preview option for single files
-            edit_item = Nautilus.MenuItem(
-                name='BigVideoConverter::Edit',
-                label='Edit Video',
-                tip=f'Edit and preview {os.path.basename(video_files[0].get_name())}',
-                icon='video-x-generic'
-            )
-            edit_item.connect('activate', self.edit_video, video_files)
-            menu_items.append(edit_item)
-            
         else:
             # Multiple files - show "Convert Videos"
             convert_item = Nautilus.MenuItem(
                 name='BigVideoConverter::ConvertMultiple',
-                label=f'Convert {len(video_files)} Videos',
-                tip=f'Convert {len(video_files)} video files using Big Video Converter',
+                label=_('Convert {0} Videos').format(len(video_files)),
+                tip=_('Convert {0} video files using Big Video Converter').format(len(video_files)),
                 icon='big-video-converter'
             )
             convert_item.connect('activate', self.convert_video, video_files)
@@ -146,19 +133,14 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
     
     def convert_video(self, menu_item, files):
         """Launch Big Video Converter for conversion"""
-        self.launch_application(files, mode='convert')
+        self.launch_application(files)
     
-    def edit_video(self, menu_item, files):
-        """Launch Big Video Converter for editing/preview"""
-        self.launch_application(files, mode='edit')
-    
-    def launch_application(self, files, mode='convert'):
+    def launch_application(self, files):
         """
         Launch the Big Video Converter application with the selected files.
         
         Args:
             files: List of Nautilus file info objects
-            mode: 'convert' or 'edit' - determines which tab to open
         """
         if not files:
             return
@@ -166,8 +148,8 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         # Check if application is installed
         if not self.is_application_available():
             self.show_error_notification(
-                "Big Video Converter not found",
-                f"Please install the {self.app_executable} application"
+                _("Big Video Converter not found"),
+                _("Please install the {0} application").format(self.app_executable)
             )
             return
         
@@ -180,8 +162,8 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         
         if not file_paths:
             self.show_error_notification(
-                "No valid files",
-                "Could not access the selected video files"
+                _("No valid files"),
+                _("Could not access the selected video files")
             )
             return
         
@@ -202,8 +184,8 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         except Exception as e:
             print(f"Error launching application: {e}")
             self.show_error_notification(
-                "Launch Error", 
-                f"Failed to launch Big Video Converter: {str(e)}"
+                _("Launch Error"), 
+                _("Failed to launch Big Video Converter: {0}").format(str(e))
             )
     
     def is_application_available(self):
@@ -231,7 +213,7 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
             ], check=False)
         except Exception:
             # If notify-send is not available, just print to console
-            print(f"Error: {title} - {message}")
+            print(_("Error: {0} - {1}").format(title, message))
 
 
 # Extension registration - required for Nautilus to load the extension
