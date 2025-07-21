@@ -208,7 +208,7 @@ fi
 needs_hevc_10bit_to_h264_conversion=false
 if [[ $is_10bit == true && $is_hevc_input == true && $video_encoder == "h264" ]]; then
     needs_hevc_10bit_to_h264_conversion=true
-    echo "Enabling optimized H.265 10-bit to H.264 8-bit GPU conversion"
+    echo "Using GPU for H.265 10-bit to H.264 8-bit conversion"
 fi
 
 # Select appropriate H.264 profile based on bit depth
@@ -442,17 +442,17 @@ case $video_encoder in
         encoder_qsv="$general_params -c:v vp9_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
         encoder_software="$general_params -c:v libvpx-vp9 -preset $software_preset -look_ahead_depth 100 -crf $cq_value  -speed 1"
         ;;
-    *) # Default is h264 - now with dynamic profile selection and H.265 10-bit optimization
+    *) # Default is h264 - with full GPU processing for H.265 10-bit input
         if [[ $needs_hevc_10bit_to_h264_conversion == true ]]; then
-            echo "Applying optimized GPU commands for H.265 10-bit to H.264 8-bit conversion"
+            echo "Using full GPU processing for H.265 10-bit to H.264 8-bit conversion"
             
-            # NVIDIA: Use optimized CUDA scaling with yuv420p format
+            # NVIDIA: Full GPU decode and encode with format conversion
             encoder_nvenc="-hwaccel cuda -hwaccel_output_format cuda $general_params -vf scale_cuda=format=yuv420p -c:v h264_nvenc -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
             
-            # AMD: Use optimized VAAPI scaling with nv12 format  
+            # AMD: Full GPU decode and encode with format conversion
             encoder_vaapi="-init_hw_device vaapi=amd:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi $general_params -vf scale_vaapi=format=nv12 -c:v h264_vaapi -qp $global_quality"
             
-            # Intel: Use optimized QSV scaling with nv12 format
+            # Intel: Full GPU decode and encode with format conversion
             encoder_qsv="-init_hw_device qsv=intel -hwaccel qsv -hwaccel_output_format qsv $general_params -vf scale_qsv=format=nv12 -c:v h264_qsv -global_quality $global_quality"
             
             # Software fallback with pixel format conversion
