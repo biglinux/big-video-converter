@@ -6,6 +6,7 @@ Global context menu extension for video file conversion.
 
 import os
 import subprocess
+import locale
 from gi.repository import Nautilus, GObject
 from urllib.parse import unquote
 from pathlib import Path
@@ -13,7 +14,20 @@ from pathlib import Path
 # Setup translation
 import gettext
 
-_ = gettext.gettext
+# Configure translation domain
+DOMAIN = "big-video-converter"
+LOCALE_DIR = "/usr/share/locale"
+
+try:
+    # Set up the translation
+    locale.setlocale(locale.LC_ALL, '')
+    gettext.bindtextdomain(DOMAIN, LOCALE_DIR)
+    gettext.textdomain(DOMAIN)
+    _ = gettext.gettext
+except Exception as e:
+    print(f"Warning: Could not set up translations: {e}")
+    # Fallback: no translation
+    _ = lambda x: x
 
 class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
     """Nautilus extension for Big Video Converter integration"""
