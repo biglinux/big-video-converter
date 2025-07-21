@@ -233,10 +233,12 @@ class VideoEditPage:
 
         try:
             # Get the filters using our shared utility
+            # Pass current video path for H.265 10-bit detection
             filters = generate_video_filters(
                 self.settings,
                 video_width=self.video_width,
                 video_height=self.video_height,
+                input_file=self.current_video_path,
             )
 
             filter_arg = ",".join(filters) if filters else "null"

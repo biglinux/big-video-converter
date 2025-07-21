@@ -1160,17 +1160,19 @@ class ConversionPage:
                     )
 
                 # Get the unified video filter string AFTER setting crop values
+                # Pass input file for H.265 10-bit detection
                 video_filter = get_video_filter_string(
                     self.app.settings_manager,
                     video_width=video_width,
                     video_height=video_height,
+                    input_file=input_file,
                 )
 
                 if video_filter:
                     env_vars["video_filter"] = video_filter
                     print(f"Using video_filter: {env_vars['video_filter']}")
                 else:
-                    print("No video filters applied")
+                    print("No video filters applied (may be handled by optimized GPU conversion)")
 
                 # Handle additional options
                 additional_options = self.app.settings_manager.load_setting(

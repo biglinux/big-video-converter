@@ -179,10 +179,11 @@ fi
 # Use the first argument as the input file
 input_file="$1"
 
-# Detect bit depth of input video for profile selection
+# Detect bit depth and codec of input video
 echo "Analyzing input video..."
-pix_fmt=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of csv=p=0 "$input_file" 2>/dev/null)
-video_profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profile -of csv=p=0 "$input_file" 2>/dev/null)
+pix_fmt=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of csv=p=0 "$1" 2>/dev/null)
+video_profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profile -of csv=p=0 "$1" 2>/dev/null)
+input_codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of csv=p=0 "$1" 2>/dev/null)
 
 # Determine if video is 10-bit based on pixel format and profile
 is_10bit=false
@@ -194,6 +195,20 @@ elif [[ $video_profile =~ .*10.* || $video_profile =~ .*High\ 10.* || $video_pro
     echo "Detected 10-bit video input (profile: $video_profile)"
 else
     echo "Detected 8-bit video input"
+fi
+
+# Determine if input is H.265/HEVC
+is_hevc_input=false
+if [[ $input_codec =~ hevc || $input_codec =~ h265 ]]; then
+    is_hevc_input=true
+    echo "Detected H.265/HEVC input codec: $input_codec"
+fi
+
+# Check if we need special H.265 10-bit to H.264 8-bit conversion
+needs_hevc_10bit_to_h264_conversion=false
+if [[ $is_10bit == true && $is_hevc_input == true && $video_encoder == "h264" ]]; then
+    needs_hevc_10bit_to_h264_conversion=true
+    echo "Using GPU for H.265 10-bit to H.264 8-bit conversion"
 fi
 
 # Select appropriate H.264 profile based on bit depth
@@ -427,12 +442,32 @@ case $video_encoder in
         encoder_qsv="$general_params -c:v vp9_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
         encoder_software="$general_params -c:v libvpx-vp9 -preset $software_preset -look_ahead_depth 100 -crf $cq_value  -speed 1"
         ;;
-    *) # Default is h264 - now with dynamic profile selection
-        encoder_nvenc="$general_params -c:v h264_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-        encoder_vulkan="$general_params -c:v h264_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-        encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v $h264_profile -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
-        encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v $h264_profile -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
-        encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v $h264_profile -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
+    *) # Default is h264 - with full GPU processing for H.265 10-bit input
+        if [[ $needs_hevc_10bit_to_h264_conversion == true ]]; then
+            echo "Using full GPU processing for H.265 10-bit to H.264 8-bit conversion"
+            
+            # NVIDIA: Full GPU decode and encode with format conversion
+            encoder_nvenc="-hwaccel cuda -hwaccel_output_format cuda $general_params -vf scale_cuda=format=yuv420p -c:v h264_nvenc -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+            
+            # AMD: Full GPU decode and encode with format conversion
+            encoder_vaapi="-init_hw_device vaapi=amd:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi $general_params -vf scale_vaapi=format=nv12 -c:v h264_vaapi -qp $global_quality"
+            
+            # Intel: Full GPU decode and encode with format conversion
+            encoder_qsv="-init_hw_device qsv=intel -hwaccel qsv -hwaccel_output_format qsv $general_params -vf scale_qsv=format=nv12 -c:v h264_qsv -global_quality $global_quality"
+            
+            # Software fallback with pixel format conversion
+            encoder_software="$general_params -vf format=yuv420p -c:v libx264 -preset $software_preset -crf $qp_value"
+            
+            # Vulkan - use format conversion
+            encoder_vulkan="$general_params -vf format=yuv420p -c:v h264_vulkan -preset $preset -global_quality $global_quality"
+        else
+            # Default H.264 encoders (original behavior)
+            encoder_nvenc="$general_params -c:v h264_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+            encoder_vulkan="$general_params -c:v h264_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+            encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v $h264_profile -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
+            encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v $h264_profile -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+            encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v $h264_profile -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
+        fi
         ;;
 esac
 

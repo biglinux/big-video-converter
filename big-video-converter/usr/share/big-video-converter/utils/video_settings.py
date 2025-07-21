@@ -103,7 +103,7 @@ def ui_to_ffmpeg_hue(ui_hue):
 #
 # FFmpeg Filter Generation
 #
-def generate_video_filters(settings, video_width=None, video_height=None):
+def generate_video_filters(settings, video_width=None, video_height=None, input_file=None):
     """
     Generate all needed FFmpeg filters in one go.
 
@@ -111,11 +111,43 @@ def generate_video_filters(settings, video_width=None, video_height=None):
         settings: Settings manager
         video_width: Width of the video (needed for crop)
         video_height: Height of the video (needed for crop)
+        input_file: Path to input file (needed for H.265 10-bit detection)
 
     Returns:
         List of filter strings ready to join with commas
     """
     filters = []
+
+    # Check if this is H.265 10-bit to H.264 conversion (skip custom filters in this case)
+    is_hevc_10bit_to_h264 = False
+    if input_file:
+        try:
+            # Quick check for H.265 10-bit to H.264 conversion
+            import subprocess
+            result = subprocess.run([
+                "ffprobe", "-v", "error", "-select_streams", "v:0",
+                "-show_entries", "stream=pix_fmt,codec_name", "-of", "csv=p=0", input_file
+            ], capture_output=True, text=True)
+            
+            output = result.stdout.strip().split(',')
+            if len(output) >= 2:
+                pix_fmt = output[0]
+                codec = output[1]
+                
+                is_10bit = "p10" in pix_fmt or "10le" in pix_fmt
+                is_hevc = codec in ['hevc', 'h265']
+                is_h264_output = settings.get_value("video-codec", "h264") == "h264"
+                
+                if is_10bit and is_hevc and is_h264_output:
+                    is_hevc_10bit_to_h264 = True
+                    print("Detected H.265 10-bit to H.264 conversion - using optimized GPU filters")
+        except:
+            pass
+
+    # For H.265 10-bit to H.264 conversion, let the GPU handle format conversion
+    if is_hevc_10bit_to_h264:
+        print("Skipping custom video filters for optimized H.265 10-bit to H.264 GPU conversion")
+        return []  # Let the bash script handle the GPU-optimized conversion
 
     # DEBUG: Print settings values to verify they're being read
     debug_values = {
@@ -220,9 +252,9 @@ def generate_video_filters(settings, video_width=None, video_height=None):
     return filters
 
 
-def get_ffmpeg_filter_string(settings, video_width=None, video_height=None):
+def get_ffmpeg_filter_string(settings, video_width=None, video_height=None, input_file=None):
     """Get the complete FFmpeg filter string for command-line use"""
-    filters = generate_video_filters(settings, video_width, video_height)
+    filters = generate_video_filters(settings, video_width, video_height, input_file)
 
     if not filters:
         return ""
