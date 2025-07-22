@@ -88,7 +88,7 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
                 name='BigVideoConverter::Convert',
                 label=_('Convert Video'),
                 tip=_('Convert {0} using Big Video Converter').format(os.path.basename(video_files[0].get_name())),
-                icon='big-video-converter'
+                icon='video-x-generic'  # Standard video icon
             )
             convert_item.connect('activate', self.convert_video, video_files)
             menu_items.append(convert_item)
@@ -99,7 +99,7 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
                 name='BigVideoConverter::ConvertMultiple',
                 label=_('Convert {0} Videos').format(len(video_files)),
                 tip=_('Convert {0} video files using Big Video Converter').format(len(video_files)),
-                icon='big-video-converter'
+                icon='video-x-generic'  # Standard video icon
             )
             convert_item.connect('activate', self.convert_video, video_files)
             menu_items.append(convert_item)
