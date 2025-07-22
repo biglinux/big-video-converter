@@ -11,7 +11,7 @@ from gi.repository import Nautilus, GObject
 from urllib.parse import unquote
 from pathlib import Path
 
-# Setup translation
+# Standard gettext setup that xgettext can recognize
 import gettext
 
 # Configure translation domain
@@ -19,7 +19,7 @@ DOMAIN = "big-video-converter"
 LOCALE_DIR = "/usr/share/locale"
 
 try:
-    # Set up the translation
+    # Set up the translation - compatible with xgettext extraction
     locale.setlocale(locale.LC_ALL, '')
     gettext.bindtextdomain(DOMAIN, LOCALE_DIR)
     gettext.textdomain(DOMAIN)
