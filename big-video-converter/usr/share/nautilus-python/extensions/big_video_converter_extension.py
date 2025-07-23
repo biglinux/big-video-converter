@@ -86,11 +86,11 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         Returns icon name or None if none available.
         """
         icons = [
-            'big-video-converter',      # Application specific icon
-            'video-x-generic',          # Standard video icon
-            'applications-multimedia',  # Multimedia applications
-            'video',                    # Simple video icon
-            'media-video'               # Media video icon
+            'big-video-converter',       # Application specific icon
+            'video-x-generic',           # Standard video icon
+            'applications-multimedia',   # Multimedia applications
+            'video',                     # Simple video icon
+            'media-video'                # Media video icon
         ]
         
         try:
