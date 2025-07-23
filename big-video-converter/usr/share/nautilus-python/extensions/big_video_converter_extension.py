@@ -18,16 +18,35 @@ import gettext
 DOMAIN = "big-video-converter"
 LOCALE_DIR = "/usr/share/locale"
 
+def _(text):
+    """Translation function that ensures correct textdomain every time"""
+    try:
+        # Ensure our textdomain is active (Nautilus may override it)
+        gettext.bindtextdomain(DOMAIN, LOCALE_DIR)
+        gettext.bind_textdomain_codeset(DOMAIN, 'UTF-8')
+        current_domain = gettext.textdomain()
+        gettext.textdomain(DOMAIN)
+        
+        # Get translation
+        translated = gettext.gettext(text)
+        
+        # Restore previous textdomain (good citizen behavior)
+        if current_domain != DOMAIN:
+            gettext.textdomain(current_domain)
+            
+        return translated
+        
+    except Exception:
+        # Silent fallback - return original text
+        return text
+
+# Initial setup (will be reinforced in _ function)
 try:
-    # Set up the translation - compatible with xgettext extraction
     locale.setlocale(locale.LC_ALL, '')
     gettext.bindtextdomain(DOMAIN, LOCALE_DIR)
-    gettext.textdomain(DOMAIN)
-    _ = gettext.gettext
-except Exception as e:
-    print(f"Warning: Could not set up translations: {e}")
-    # Fallback: no translation
-    _ = lambda x: x
+    gettext.bind_textdomain_codeset(DOMAIN, 'UTF-8')
+except Exception:
+    pass  # Silent fail, _ function will handle it
 
 class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
     """Nautilus extension for Big Video Converter integration"""
@@ -61,6 +80,34 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         # Application executable
         self.app_executable = 'big-video-converter-gui'
     
+    def get_available_icon(self):
+        """
+        Get the first available icon from fallback list.
+        Returns icon name or None if none available.
+        """
+        icons = [
+            'big-video-converter',      # Application specific icon
+            'video-x-generic',          # Standard video icon
+            'applications-multimedia',  # Multimedia applications
+            'video',                    # Simple video icon
+            'media-video'               # Media video icon
+        ]
+        
+        try:
+            from gi.repository import Gtk
+            icon_theme = Gtk.IconTheme.get_default()
+            
+            for icon_name in icons:
+                if icon_theme.has_icon(icon_name):
+                    return icon_name
+                    
+        except Exception:
+            # If icon checking fails, return first fallback
+            pass
+            
+        # Fallback to first icon in list or None
+        return icons[1] if len(icons) > 1 else None
+
     def get_file_items(self, files):
         """
         Return menu items for selected files.
@@ -87,9 +134,14 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
             convert_item = Nautilus.MenuItem(
                 name='BigVideoConverter::Convert',
                 label=_('Convert Video'),
-                tip=_('Convert {0} using Big Video Converter').format(os.path.basename(video_files[0].get_name())),
-                icon='video-x-generic'  # Standard video icon
+                tip=_('Convert {0} using Big Video Converter').format(os.path.basename(video_files[0].get_name()))
             )
+            
+            # Set icon with fallback
+            available_icon = self.get_available_icon()
+            if available_icon:
+                convert_item.set_property('icon', available_icon)
+                
             convert_item.connect('activate', self.convert_video, video_files)
             menu_items.append(convert_item)
             
@@ -98,9 +150,14 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
             convert_item = Nautilus.MenuItem(
                 name='BigVideoConverter::ConvertMultiple',
                 label=_('Convert {0} Videos').format(len(video_files)),
-                tip=_('Convert {0} video files using Big Video Converter').format(len(video_files)),
-                icon='video-x-generic'  # Standard video icon
+                tip=_('Convert {0} video files using Big Video Converter').format(len(video_files))
             )
+            
+            # Set icon with fallback
+            available_icon = self.get_available_icon()
+            if available_icon:
+                convert_item.set_property('icon', available_icon)
+                
             convert_item.connect('activate', self.convert_video, video_files)
             menu_items.append(convert_item)
         
