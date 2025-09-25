@@ -300,51 +300,55 @@ elif [[ $subtitle_extract == "none" ]]; then
     subtitle_cmd=""
 fi
 
-# If not specified, use copy
+# If not specified, use copy. Store the original user choice.
 : ${audio_handling:=copy}
+original_audio_handling=$audio_handling
 
-# Audio handling
-if [[ $audio_handling == "copy" ]]; then
-    audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
-    mapfile -t audio_streams <<< "$audio_info"
-    for i in "${!audio_streams[@]}"; do
-        IFS=',' read -r index_audio language_audio <<< "${audio_streams[$i]}"
-        audio_cmd+="-map 0:$index_audio -c:a:$i copy "
-    done
-elif [[ $audio_handling == "reencode" ]]; then
-    audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
-    mapfile -t audio_streams <<< "$audio_info"
-    unset i
-    for i in "${!audio_streams[@]}"; do
-        IFS=',' read -r index_audio language_audio <<< "${audio_streams[$i]}"
-        
-        # Get the number of channels for this specific audio track
-        if [[ -n $audio_channels ]]; then
-            channels=$audio_channels
-        else
-            channels=$(ffprobe -v error -select_streams a:$i -show_entries stream=channels -of csv=p=0 "$input_file")
-        fi
-        
-        # Remove white spaces from the language_audio
-        language_audio=${language_audio// /}
+# Function to build the audio command string based on the current audio_handling value
+function build_audio_cmd() {
+    audio_cmd="" # Reset audio command
+    if [[ $audio_handling == "copy" ]]; then
+        audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
+        mapfile -t audio_streams <<< "$audio_info"
+        for i in "${!audio_streams[@]}"; do
+            IFS=',' read -r index_audio language_audio <<< "${audio_streams[$i]}"
+            audio_cmd+="-map 0:$index_audio -c:a:$i copy "
+        done
+    elif [[ $audio_handling == "reencode" ]]; then
+        audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
+        mapfile -t audio_streams <<< "$audio_info"
+        unset i
+        for i in "${!audio_streams[@]}"; do
+            IFS=',' read -r index_audio language_audio <<< "${audio_streams[$i]}"
+            
+            # Get the number of channels for this specific audio track
+            if [[ -n $audio_channels ]]; then
+                channels=$audio_channels
+            else
+                channels=$(ffprobe -v error -select_streams a:$i -show_entries stream=channels -of csv=p=0 "$input_file")
+            fi
+            
+            # Remove white spaces from the language_audio
+            language_audio=${language_audio// /}
 
-        # Verify if the language_audio is empty, if not set it to undetermined
-        if [[ -z $language_audio ]]; then
-            language_audio="und"
-        fi
+            # Verify if the language_audio is empty, if not set it to undetermined
+            if [[ -z $language_audio ]]; then
+                language_audio="und"
+            fi
 
-        if [[ -z $audio_bitrate ]]; then
-            audio_bitrate_value=$((channels * 32))k
-        else
-            audio_bitrate_value=$audio_bitrate
-        fi
+            if [[ -z $audio_bitrate ]]; then
+                audio_bitrate_value=$((channels * 32))k
+            else
+                audio_bitrate_value=$audio_bitrate
+            fi
 
-        audio_cmd+="-map 0:$index_audio -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
+            audio_cmd+="-map 0:$index_audio -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
 
-    done
-elif [[ $audio_handling == "none" ]]; then
-    audio_cmd="-an"
-fi
+        done
+    elif [[ $audio_handling == "none" ]]; then
+        audio_cmd="-an"
+    fi
+}
 
 
 # if video_quality is default, remove auto
@@ -415,114 +419,44 @@ case $preset in
     *)         nvidia_preset=4 ;; # Default to medium
 esac
 
-general_params="-i \"$input_file\" $subtitle_cmd -map 0:v:0 $audio_cmd"
-copy_video="$general_params -c:v copy"
+# Function to build the main encoder command strings
+function build_encoder_commands() {
+    general_params="-i \"$input_file\" $subtitle_cmd -map 0:v:0 $audio_cmd"
+    copy_video="$general_params -c:v copy"
 
-# Select appropriate encoder command based on the specified video encoder
-case $video_encoder in
-    h265)
-        encoder_nvenc="$general_params -c:v hevc_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-        encoder_vulkan="$general_params -c:v hevc_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-        encoder_vaapi="$general_params -c:v hevc_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-        encoder_qsv="$general_params -c:v hevc_qsv -preset $preset -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
-        encoder_software="$general_params -c:v libx265 -preset $software_preset -look_ahead_depth 100 -crf $qp_value"
-        ;;
-    av1)
-        encoder_nvenc="$general_params -c:v av1_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-        encoder_vaapi="$general_params -c:v av1_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-        encoder_qsv="$general_params -c:v av1_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-        encoder_software="$general_params -c:v librav1e -preset $software_preset -look_ahead_depth 100 -crf $cq_value"
-        ;;
-    vp9)
-        encoder_nvenc="$general_params -c:v vp9_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-        encoder_vaapi="$general_params -c:v vp9_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-        encoder_qsv="$general_params -c:v vp9_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-        encoder_software="$general_params -c:v libvpx-vp9 -preset $software_preset -look_ahead_depth 100 -crf $cq_value  -speed 1"
-        ;;
-    *) # Default is h264
-        if [[ $needs_10bit_to_8bit_conversion == true ]]; then
-            echo "Applying 10-bit to 8-bit conversion filters for H.264 output."
-            
-            # NVIDIA: Full GPU decode and encode with format conversion
-            encoder_nvenc="$general_params -vf scale_cuda=format=yuv420p -c:v h264_nvenc -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-            
-            # AMD: Full GPU decode and encode with format conversion
-            encoder_vaapi="-init_hw_device vaapi=amd:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi $general_params -vf scale_vaapi=format=nv12 -c:v h264_vaapi -qp $global_quality"
-            
-            # Intel: Full GPU decode and encode with format conversion
-            encoder_qsv="-init_hw_device qsv=intel -hwaccel qsv -hwaccel_output_format qsv $general_params -vf scale_qsv=format=nv12 -c:v h264_qsv -global_quality $global_quality"
-            
-            # Software fallback with pixel format conversion
-            encoder_software="$general_params -vf format=yuv420p -c:v libx264 -preset $software_preset -crf $qp_value"
-            
-            # Vulkan - use format conversion
-            encoder_vulkan="$general_params -vf format=yuv420p -c:v h264_vulkan -preset $preset -global_quality $global_quality"
-        else
-            # Default H.264 encoders (original behavior for 8-bit)
+    # Select appropriate encoder command based on the specified video encoder
+    case $video_encoder in
+        h265)
+            encoder_nvenc="$general_params -c:v hevc_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+            encoder_vulkan="$general_params -c:v hevc_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+            encoder_vaapi="$general_params -c:v hevc_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+            encoder_qsv="$general_params -c:v hevc_qsv -preset $preset -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+            encoder_software="$general_params -c:v libx265 -preset $software_preset -look_ahead_depth 100 -crf $qp_value"
+            ;;
+        av1)
+            encoder_nvenc="$general_params -c:v av1_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+            encoder_vaapi="$general_params -c:v av1_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+            encoder_qsv="$general_params -c:v av1_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+            encoder_software="$general_params -c:v librav1e -preset $software_preset -look_ahead_depth 100 -crf $cq_value"
+            ;;
+        vp9)
+            encoder_nvenc="$general_params -c:v vp9_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+            encoder_vaapi="$general_params -c:v vp9_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+            encoder_qsv="$general_params -c:v vp9_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+            encoder_software="$general_params -c:v libvpx-vp9 -preset $software_preset -look_ahead_depth 100 -crf $cq_value  -speed 1"
+            ;;
+        *) # Default is h264
             encoder_nvenc="$general_params -c:v h264_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
             encoder_vulkan="$general_params -c:v h264_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
             encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v $h264_profile -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
             encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v $h264_profile -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
             encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v $h264_profile -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
-        fi
-        ;;
-esac
+            ;;
+    esac
+}
 
 # If gpu = auto change gpu to empty
 gpu=${gpu/auto/}
-# If gpu empty auto detect
-if [[ -z $gpu ]]; then
-    devices=$(lspci)
-else
-    devices="VGA $gpu"
-fi
-
-decoder_vulkan='-init_hw_device vulkan=vk -filter_hw_device vk'
-init_vulkan='-init_hw_device vulkan=vk'
-decoder_cuda='-hwaccel cuda -hwaccel_output_format cuda'
-decoder_vaapi='-hwaccel vaapi -hwaccel_output_format vaapi'
-init_vaapi='-init_hw_device vaapi'
-decoder_qsv='-filter_hw_device qs -hwaccel qsv -hwaccel_output_format qsv'
-init_qsv='-init_hw_device vaapi=va:,driver=iHD,kernel_driver=i915 -init_hw_device qsv=qs@va'
-
-if [[ "$gpu" == *"Vulkan"* || "$gpu" == *"vulkan"* ]]; then
-    decoder_format="$decoder_vulkan"
-    encoder_format="$encoder_vulkan"
-    init_hardware="$init_vulkan"
-elif grep -qiE '(VGA|3d).*nvidia' <<<"$devices"; then
-    decoder_format="$decoder_cuda"
-    encoder_format="$encoder_nvenc"
-    init_hardware=""
-elif grep -qiE 'VGA.*(\bAMD\b|\bATI\b)' <<<"$devices"; then
-    decoder_format="$decoder_vaapi"
-    encoder_format="$encoder_vaapi"
-    init_hardware="$init_vaapi"
-elif grep -qi 'VGA.*intel' <<<"$devices"; then
-    decoder_format="$decoder_qsv"
-    encoder_format="$encoder_qsv"
-    init_hardware="$init_qsv"
-else
-    encoder_format=$encoder_software
-fi
-
-if [[ $force_software = 1 ]]; then
-    encoder_format=$encoder_software
-fi
-
-if [[ $force_copy_video = 1 ]]; then
-    encoder_format=$copy_video
-fi
-if [[ -n $force_encoder ]]; then
-    encoder_var="encoder_${force_encoder}"
-    encoder_format=${!encoder_var}
-    init_hardware="${!encoder_var/init/}"
-fi
-
-if [[ -n $force_decoder ]]; then
-    decoder_var="decoder_${force_decoder}"
-    decoder_format=${!decoder_var}
-    init_hardware="${!decoder_var/init/}"
-fi
 
 # Change to case insensitive
 shopt -s nocasematch
@@ -549,30 +483,7 @@ if [[ $only_extract_subtitles = 1 ]]; then
     general_params="-i \"$input_file\" $subtitle_cmd"
     echo "Running command: $ffmpeg_executable $general_params"
     eval $ffmpeg_executable $general_params
-exit
-fi
-
-video_filter_gpu=${video_filter/scale=/scale_vaapi=}
-# if have scale_vaapi add ,hwdownload:format=nv12 after scale_vaapi=value:value using sed
-if [[ $video_filter_gpu =~ scale_vaapi ]]; then
-    video_filter_gpu=$(sed -E 's/(scale_vaapi=[^,]+:[^,]+)(.*)/\1:format=nv12\2/' <<<"$video_filter_gpu")
-fi
-
-#  verify if not have scale_cuda and have -vf, and add hwdownload:format=nv12,
-if [[ $video_filter_gpu =~ -vf && ! $video_filter_gpu =~ scale_vaapi ]]; then
-    video_filter_gpu=${video_filter_gpu/-vf /-vf hwdownload:format=nv12,}
-fi
-
-if [[ $video_filter_gpu =~ hwdownload ]]; then
-    video_filter_gpu+=',hwupload'
-fi
-
-if [[ $encoder_format =~ .*nvenc.* ]]; then
-    video_filter_gpu=${video_filter_gpu/scale_vaapi=/scale_cuda=}
-fi
-
-if [[ $encoder_format =~ .*qsv.* ]]; then
-    video_filter_gpu=${video_filter_gpu/scale_vaapi=/scale_qsv=}
+    exit
 fi
 
 # Additional validation for 10-bit content with GPU encoders
@@ -586,34 +497,194 @@ if [[ $is_10bit == true && $video_encoder == "h264" ]]; then
     fi
 fi
 
-# Try to encode with the GPU
-if [[ "$encoder_format" != "$encoder_software" && "$gpu_partial" != "1" ]]; then
-    echo "Encode mode: Decode GPU, encode GPU"
-    echo "Running command: $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_gpu $ffmpeg_generic_options"
-    eval $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_gpu $ffmpeg_generic_options
-fi
+# Function to attempt the conversion using the 3-stage fallback (GPU -> Partial -> CPU)
+function attempt_conversion() {
+    # This function now re-initializes all hardware-specific variables to ensure a clean state
+    
+    # If gpu empty auto detect
+    if [[ -z $gpu ]]; then
+        devices=$(lspci)
+    else
+        devices="VGA $gpu"
+    fi
 
-# Store the exit code while preserving $? for later checks
-exit_code=$?
+    decoder_vulkan='-init_hw_device vulkan=vk -filter_hw_device vk'
+    init_vulkan='-init_hw_device vulkan=vk'
+    decoder_cuda='-hwaccel cuda -hwaccel_output_format cuda'
+    decoder_vaapi='-hwaccel vaapi -hwaccel_output_format vaapi'
+    init_vaapi='-init_hw_device vaapi'
+    decoder_qsv='-filter_hw_device qs -hwaccel qsv -hwaccel_output_format qsv'
+    init_qsv='-init_hw_device vaapi=va:,driver=iHD,kernel_driver=i915 -init_hw_device qsv=qs@va'
 
-# If encoding not successful, and not exit with 255 (interrupted by user), and not software encoding, try with the second option
-if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 || "$gpu_partial" == "1" ]]; then
-    echo "Encode mode: Decode Software, Encode GPU"
-	# Add hwupload_cuda to partial gpu mode
-    video_filter_gpu=${video_filter_gpu/scale_cuda/hwupload_cuda,scale_cuda}
-    echo "Running command: $ffmpeg_executable $init_hardware $options $encoder_format $video_filter_gpu $ffmpeg_generic_options"
-    eval $ffmpeg_executable $init_hardware $options $encoder_format $video_filter_gpu $ffmpeg_generic_options
+    local scale_filter_name="scale"
+
+    if [[ "$gpu" == *"Vulkan"* || "$gpu" == *"vulkan"* ]]; then
+        decoder_format="$decoder_vulkan"
+        encoder_format="$encoder_vulkan"
+        init_hardware="$init_vulkan"
+    elif grep -qiE '(VGA|3d).*nvidia' <<<"$devices"; then
+        decoder_format="$decoder_cuda"
+        encoder_format="$encoder_nvenc"
+        # Initialize a CUDA hw device and set it as the filter device so hwupload_cuda
+        # knows where to upload frames to. Name chosen as 'cu'.
+        init_hardware='-init_hw_device cuda=cu -filter_hw_device cu'
+        scale_filter_name="scale_cuda"
+    elif grep -qiE 'VGA.*(\bAMD\b|\bATI\b)' <<<"$devices"; then
+        decoder_format="$decoder_vaapi"
+        encoder_format="$encoder_vaapi"
+        init_hardware="$init_vaapi"
+        scale_filter_name="scale_vaapi"
+    elif grep -qi 'VGA.*intel' <<<"$devices"; then
+        decoder_format="$decoder_qsv"
+        encoder_format="$encoder_qsv"
+        init_hardware="$init_qsv"
+        scale_filter_name="scale_qsv"
+    else
+        encoder_format=$encoder_software
+    fi
+
+    if [[ $force_software = 1 ]]; then
+        encoder_format=$encoder_software
+    fi
+
+    if [[ $force_copy_video = 1 ]]; then
+        encoder_format=$copy_video
+    fi
+    if [[ -n $force_encoder ]]; then
+        encoder_var="encoder_${force_encoder}"
+        encoder_format=${!encoder_var}
+        init_hardware="${!encoder_var/init/}"
+    fi
+
+    if [[ -n $force_decoder ]]; then
+        decoder_var="decoder_${force_decoder}"
+        decoder_format=${!decoder_var}
+        init_hardware="${!decoder_var/init/}"
+    fi
+
+    # --- Build the unified video filter chain ---
+    local video_filter_chain=""
+    local filter_parts=()
+    
+    # 1. Add 10-bit to 8-bit conversion filter if needed
+    if [[ $needs_10bit_to_8bit_conversion == true ]]; then
+        if [[ "$encoder_format" == "$encoder_software" ]]; then
+            filter_parts+=("format=yuv420p")
+        else
+            filter_parts+=("${scale_filter_name}=format=yuv420p")
+        fi
+    fi
+
+    # 2. Add user-provided filters (like scaling)
+    if [[ -n "$video_filter" ]]; then
+        local user_filters=${video_filter/-vf /}
+        user_filters=${user_filters/scale=/$scale_filter_name=}
+        filter_parts+=("$user_filters")
+    fi
+    
+    # 3. Combine filter parts into a single chain
+    if [[ ${#filter_parts[@]} -gt 0 ]]; then
+        video_filter_chain="-vf $(IFS=,; echo "${filter_parts[*]}")"
+    fi
+    
+    # --- Execute Conversion Attempts ---
+
+    # Try to encode with the GPU
+    if [[ "$encoder_format" != "$encoder_software" && "$gpu_partial" != "1" ]]; then
+        echo "Encode mode: Decode GPU, encode GPU"
+        echo "Running command: $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
+        eval $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format "$video_filter_chain" $ffmpeg_generic_options
+    fi
+
+    # Store the exit code while preserving $? for later checks
     exit_code=$?
+
+    # If encoding not successful, and not exit with 255 (interrupted by user), and not software encoding, try with the second option
+    if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 || "$gpu_partial" == "1" ]]; then
+        echo "Encode mode: Decode Software, Encode GPU"
+        
+        # For partial GPU, we need to add hwupload at the beginning of the filter chain
+        # Choose the correct upload filter depending on the GPU encoder.
+        # - NVENC requires hwupload_cuda and prefers NV12 pixel format.
+        # - VAAPI/Vulkan should derive the device so hwupload can find it.
+        # - QSV can use hwupload_qsv.
+        local partial_filter_parts=()
+        if [[ ${encoder_format,,} =~ nvenc ]]; then
+            partial_filter_parts+=("format=nv12" "hwupload_cuda")
+        elif [[ ${encoder_format,,} =~ vulkan ]]; then
+            partial_filter_parts+=("format=nv12" "hwupload=derive_device=vulkan")
+        elif [[ ${encoder_format,,} =~ vaapi ]]; then
+            # Ensure the hw device created by init_hardware is used by deriving it here
+            partial_filter_parts+=("format=nv12" "hwupload=derive_device=vaapi")
+        elif [[ ${encoder_format,,} =~ qsv ]]; then
+            partial_filter_parts+=("format=nv12" "hwupload_qsv")
+        else
+            # Fallback to generic hwupload (may require init_hardware or -vaapi_device elsewhere)
+            partial_filter_parts+=("hwupload")
+        fi
+
+        # Append existing filter parts after the upload so GPU-only filters run on GPU surfaces.
+        if [[ ${#filter_parts[@]} -gt 0 ]]; then
+            # Sanitize filter parts: ensure any explicit format conversions target nv12
+            # (GPU encoders typically expect nv12) and avoid placing a format=... after hwupload.
+            sanitized_parts=()
+            for part in "${filter_parts[@]}"; do
+                # If part contains 'format=', replace its value with 'nv12'
+                if [[ $part == *"format="* ]]; then
+                    sanitized_parts+=("${part%%format=*}format=nv12")
+                else
+                    sanitized_parts+=("$part")
+                fi
+            done
+            partial_filter_parts+=("${sanitized_parts[@]}")
+        fi
+
+        # For Vulkan specifically, derive_device should point to the device name created by init_vulkan (vk)
+        # If any hwupload derive mentions 'vulkan' replace it with the actual device name 'vk'.
+        for i in "${!partial_filter_parts[@]}"; do
+            partial_filter_parts[$i]=$(sed -E 's/derive_device=vulkan/derive_device=vk/g' <<<"${partial_filter_parts[$i]}")
+        done
+
+        local partial_filter_chain="-vf $(IFS=,; echo "${partial_filter_parts[*]}")"
+
+        echo "Running command: $ffmpeg_executable $init_hardware $options $encoder_format $partial_filter_chain $ffmpeg_generic_options"
+        eval $ffmpeg_executable $init_hardware $options $encoder_format "$partial_filter_chain" $ffmpeg_generic_options
+        exit_code=$?
+    fi
+
+    # If encoding not successful, and not exit with 255 (interrupted by user), try with software
+    if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 || "$encoder_format" == "$encoder_software" ]]; then
+        echo "Encode mode: Decode Software, Encode Software"
+        # Software mode uses the original video_filter variable without hw acceleration
+        echo "Running command: $ffmpeg_executable $options $encoder_software $video_filter $ffmpeg_generic_options"
+        eval $ffmpeg_executable $options $encoder_software "$video_filter" $ffmpeg_generic_options
+        exit_code=$?
+    fi
+}
+
+# --- First Pass ---
+# Build commands with initial user settings and attempt conversion.
+build_audio_cmd
+build_encoder_commands
+attempt_conversion
+
+# --- Audio Fallback Pass ---
+# If the first pass failed and we were trying to copy audio, it's likely due to an
+# incompatible audio codec for the container. Let's try again by re-encoding the audio.
+if [[ $exit_code != 0 && $exit_code != 255 && "$original_audio_handling" == "copy" ]]; then
+    echo -e "${COLOR_YELLOW}Audio stream copy may have failed. Retrying with audio re-encoding...${COLOR_RESET}"
+    
+    # Force re-encode and rebuild all commands
+    audio_handling="reencode"
+    build_audio_cmd
+    build_encoder_commands
+    
+    # Attempt the conversion again with the new settings
+    attempt_conversion
 fi
 
-# If encoding not successful, and not exit with 255 (interrupted by user), try with software
-if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 || "$encoder_format" == "$encoder_software" ]]; then
-    echo "Encode mode: Decode Software, Encode Software"
-    echo "Running command: $ffmpeg_executable $options $encoder_software $video_filter $ffmpeg_generic_options"
-    eval $ffmpeg_executable $options $encoder_software $video_filter $ffmpeg_generic_options
-    exit_code=$?
-fi
 
+# --- Final Exit Code Check ---
 if [[ $exit_code != 0 ]]; then
     if [[ $exit_code == 255 ]]; then
         echo -e "${COLOR_YELLOW}Conversion interrupted by user.${COLOR_RESET}"
