@@ -197,18 +197,11 @@ else
     echo "Detected 8-bit video input"
 fi
 
-# Determine if input is H.265/HEVC
-is_hevc_input=false
-if [[ $input_codec =~ hevc || $input_codec =~ h265 ]]; then
-    is_hevc_input=true
-    echo "Detected H.265/HEVC input codec: $input_codec"
-fi
-
-# Check if we need special H.265 10-bit to H.264 8-bit conversion
-needs_hevc_10bit_to_h264_conversion=false
-if [[ $is_10bit == true && $is_hevc_input == true && $video_encoder == "h264" ]]; then
-    needs_hevc_10bit_to_h264_conversion=true
-    echo "Using GPU for H.265 10-bit to H.264 8-bit conversion"
+# Determine if we need to convert 10-bit video to 8-bit for H.264 compatibility
+needs_10bit_to_8bit_conversion=false
+if [[ $is_10bit == true && ($video_encoder == "h264" || -z "$video_encoder") ]]; then
+    needs_10bit_to_8bit_conversion=true
+    echo "Detected 10-bit input. Forcing 8-bit pixel format (yuv420p) for H.264 compatibility."
 fi
 
 # Select appropriate H.264 profile based on bit depth
@@ -399,6 +392,10 @@ case $video_quality in
         ;;
 esac
 
+if [[ $preset == "default" ]]; then
+	unset preset
+fi
+
 # If preset is not specified, use medium for GPU and faster for software encoding
 if [[ -z $preset ]]; then
     language_audio="und"
@@ -442,12 +439,12 @@ case $video_encoder in
         encoder_qsv="$general_params -c:v vp9_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
         encoder_software="$general_params -c:v libvpx-vp9 -preset $software_preset -look_ahead_depth 100 -crf $cq_value  -speed 1"
         ;;
-    *) # Default is h264 - with full GPU processing for H.265 10-bit input
-        if [[ $needs_hevc_10bit_to_h264_conversion == true ]]; then
-            echo "Using full GPU processing for H.265 10-bit to H.264 8-bit conversion"
+    *) # Default is h264
+        if [[ $needs_10bit_to_8bit_conversion == true ]]; then
+            echo "Applying 10-bit to 8-bit conversion filters for H.264 output."
             
             # NVIDIA: Full GPU decode and encode with format conversion
-            encoder_nvenc="-hwaccel cuda -hwaccel_output_format cuda $general_params -vf scale_cuda=format=yuv420p -c:v h264_nvenc -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+            encoder_nvenc="$general_params -vf scale_cuda=format=yuv420p -c:v h264_nvenc -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
             
             # AMD: Full GPU decode and encode with format conversion
             encoder_vaapi="-init_hw_device vaapi=amd:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi $general_params -vf scale_vaapi=format=nv12 -c:v h264_vaapi -qp $global_quality"
@@ -461,7 +458,7 @@ case $video_encoder in
             # Vulkan - use format conversion
             encoder_vulkan="$general_params -vf format=yuv420p -c:v h264_vulkan -preset $preset -global_quality $global_quality"
         else
-            # Default H.264 encoders (original behavior)
+            # Default H.264 encoders (original behavior for 8-bit)
             encoder_nvenc="$general_params -c:v h264_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
             encoder_vulkan="$general_params -c:v h264_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
             encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v $h264_profile -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
@@ -556,14 +553,14 @@ exit
 fi
 
 video_filter_gpu=${video_filter/scale=/scale_vaapi=}
-# if have scale_cuda add ,hwdownload,format=nv12 after scale_cuda=value:value using sed
+# if have scale_vaapi add ,hwdownload:format=nv12 after scale_vaapi=value:value using sed
 if [[ $video_filter_gpu =~ scale_vaapi ]]; then
-    video_filter_gpu=$(sed -E 's/(scale_vaapi=[^,]+:[^,]+)(.*)/\1,hwdownload,format=nv12\2/' <<<"$video_filter_gpu")
+    video_filter_gpu=$(sed -E 's/(scale_vaapi=[^,]+:[^,]+)(.*)/\1:format=nv12\2/' <<<"$video_filter_gpu")
 fi
 
-#  verify if not have scale_cuda and have -vf, and add hwdownload,format=nv12,
+#  verify if not have scale_cuda and have -vf, and add hwdownload:format=nv12,
 if [[ $video_filter_gpu =~ -vf && ! $video_filter_gpu =~ scale_vaapi ]]; then
-    video_filter_gpu=${video_filter_gpu/-vf /-vf hwdownload,format=nv12,}
+    video_filter_gpu=${video_filter_gpu/-vf /-vf hwdownload:format=nv12,}
 fi
 
 if [[ $video_filter_gpu =~ hwdownload ]]; then
@@ -581,7 +578,7 @@ fi
 # Additional validation for 10-bit content with GPU encoders
 if [[ $is_10bit == true && $video_encoder == "h264" ]]; then
     echo "Warning: Converting 10-bit input to H.264. Consider using H.265 for better quality and compatibility."
-    
+
     # Test GPU encoder compatibility with 10-bit input for H.264
     if [[ "$encoder_format" =~ nvenc|vaapi|qsv ]]; then
         echo "Note: Some GPU encoders may not support 10-bit H.264 encoding optimally."
@@ -590,7 +587,7 @@ if [[ $is_10bit == true && $video_encoder == "h264" ]]; then
 fi
 
 # Try to encode with the GPU
-if [[ "$encoder_format" != "$encoder_software" ]]; then
+if [[ "$encoder_format" != "$encoder_software" && "$gpu_partial" != "1" ]]; then
     echo "Encode mode: Decode GPU, encode GPU"
     echo "Running command: $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_gpu $ffmpeg_generic_options"
     eval $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_gpu $ffmpeg_generic_options
@@ -600,22 +597,28 @@ fi
 exit_code=$?
 
 # If encoding not successful, and not exit with 255 (interrupted by user), and not software encoding, try with the second option
-if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 ]]; then
+if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 || "$gpu_partial" == "1" ]]; then
     echo "Encode mode: Decode Software, Encode GPU"
-    echo "Running command: $ffmpeg_executable $init_hardware $options $encoder_format $video_filter $ffmpeg_generic_options"
-    eval $ffmpeg_executable $init_hardware $options $encoder_format $video_filter $ffmpeg_generic_options
+	# Add hwupload_cuda to partial gpu mode
+    video_filter_gpu=${video_filter_gpu/scale_cuda/hwupload_cuda,scale_cuda}
+    echo "Running command: $ffmpeg_executable $init_hardware $options $encoder_format $video_filter_gpu $ffmpeg_generic_options"
+    eval $ffmpeg_executable $init_hardware $options $encoder_format $video_filter_gpu $ffmpeg_generic_options
     exit_code=$?
 fi
 
 # If encoding not successful, and not exit with 255 (interrupted by user), try with software
 if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 || "$encoder_format" == "$encoder_software" ]]; then
     echo "Encode mode: Decode Software, Encode Software"
-    echo "Running command: $ffmpeg_executable $options $encoder_software $ffmpeg_generic_options"
+    echo "Running command: $ffmpeg_executable $options $encoder_software $video_filter $ffmpeg_generic_options"
     eval $ffmpeg_executable $options $encoder_software $video_filter $ffmpeg_generic_options
     exit_code=$?
 fi
 
 if [[ $exit_code != 0 ]]; then
-    echo -e "${COLOR_YELLOW}Conversion failed with exit code $exit_code.${COLOR_RESET}"
+    if [[ $exit_code == 255 ]]; then
+        echo -e "${COLOR_YELLOW}Conversion interrupted by user.${COLOR_RESET}"
+    else
+        echo -e "${COLOR_YELLOW}Conversion failed with an unexpected error. Exit code: $exit_code.${COLOR_RESET}"
+    fi
     exit $exit_code
 fi

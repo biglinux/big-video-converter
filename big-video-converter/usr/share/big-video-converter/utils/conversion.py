@@ -1,38 +1,50 @@
-import os
-import subprocess
-import shlex
-import threading
-import re
-import time
-from gi.repository import GLib
-
-from constants import CONVERT_SCRIPT_PATH
-
 # Import translation function
 import gettext
+import os
+import re
+import shlex
+import subprocess
+import threading
+import time
+
+from constants import CONVERT_SCRIPT_PATH
+from gi.repository import GLib
 
 _ = gettext.gettext  # Will use the already initialized translation
+
 
 def detect_bit_depth_info(file_path):
     """Detect and log bit depth and codec information for user awareness"""
     try:
         # Get both pixel format and codec information
-        result = subprocess.run([
-            "ffprobe", "-v", "error", "-select_streams", "v:0",
-            "-show_entries", "stream=pix_fmt,codec_name", "-of", "csv=p=0", file_path
-        ], capture_output=True, text=True)
-        
-        output = result.stdout.strip().split(',')
+        result = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "stream=pix_fmt,codec_name",
+                "-of",
+                "csv=p=0",
+                file_path,
+            ],
+            capture_output=True,
+            text=True,
+        )
+
+        output = result.stdout.strip().split(",")
         if len(output) >= 2:
             pix_fmt = output[0]
             codec = output[1]
         else:
             pix_fmt = output[0] if output else ""
             codec = "unknown"
-        
+
         is_10bit = "p10" in pix_fmt or "10le" in pix_fmt
-        is_hevc = codec in ['hevc', 'h265']
-        
+        is_hevc = codec in ["hevc", "h265"]
+
         if is_10bit and is_hevc:
             return f"ℹ️  Detected H.265 10-bit video - will use optimized GPU conversion for H.264 output"
         elif is_10bit:
@@ -43,6 +55,7 @@ def detect_bit_depth_info(file_path):
             return f"ℹ️  Detected 8-bit video ({codec}) - using standard profile"
     except:
         return "ℹ️  Video analysis complete"
+
 
 def format_resolution(width, height):
     """
@@ -217,10 +230,10 @@ def run_with_progress_dialog(
 def monitor_progress(app, process, progress_item, env_vars=None):
     """Monitor the progress of a running conversion process"""
     # Detect and display bit depth information
-    if hasattr(progress_item, 'input_file') and progress_item.input_file:
+    if hasattr(progress_item, "input_file") and progress_item.input_file:
         bit_depth_info = detect_bit_depth_info(progress_item.input_file)
         GLib.idle_add(progress_item.add_output_text, bit_depth_info + "\n")
-    
+
     # More accurate patterns for FFmpeg output
     time_pattern = re.compile(r"time=(\d+:\d+:\d+\.\d+)")
     duration_pattern = re.compile(r"Duration: (\d+:\d+:\d+\.\d+)")
@@ -315,7 +328,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
         import threading
 
         # Queue to collect output from both streams
-        from queue import Queue, Empty
+        from queue import Empty, Queue
 
         output_queue = Queue()
 
@@ -825,25 +838,31 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     input_file = progress_item.input_file
 
                     # Add debug logging
-                    debug_msg = f"Checking if original file should be deleted: {input_file}"
+                    debug_msg = (
+                        f"Checking if original file should be deleted: {input_file}"
+                    )
                     print(debug_msg)
                     GLib.idle_add(progress_item.add_output_text, debug_msg)
 
                     # Improved output file detection with focus on MP4 files
                     output_file_to_check = None
-                    
+
                     # Try to infer video output file based on input file
                     input_dirname = os.path.dirname(input_file)
                     input_basename = os.path.splitext(os.path.basename(input_file))[0]
                     possible_mp4 = os.path.join(input_dirname, f"{input_basename}.mp4")
-                    
+
                     if os.path.exists(possible_mp4):
                         output_file_to_check = possible_mp4
                         debug_msg = f"Found MP4 output: {output_file_to_check}"
                         print(debug_msg)
                         GLib.idle_add(progress_item.add_output_text, debug_msg)
                     # If no MP4 found, check output_file but only if it's a video file
-                    elif output_file and os.path.exists(output_file) and output_file.lower().endswith(('.mp4', '.mkv', '.avi')):
+                    elif (
+                        output_file
+                        and os.path.exists(output_file)
+                        and output_file.lower().endswith((".mp4", ".mkv", ".avi"))
+                    ):
                         output_file_to_check = output_file
                         debug_msg = f"Using FFmpeg detected video: {output_file}"
                         print(debug_msg)
@@ -853,23 +872,32 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         output_folder = os.path.dirname(input_file)
                         if "output_folder" in env_vars and env_vars["output_folder"]:
                             output_folder = env_vars["output_folder"]
-                        
+
                         # Look for recently created MP4 files
                         try:
                             for file in os.listdir(output_folder):
                                 file_path = os.path.join(output_folder, file)
-                                if file.lower().endswith('.mp4') and file.startswith(input_basename):
+                                if file.lower().endswith(".mp4") and file.startswith(
+                                    input_basename
+                                ):
                                     # Check if it's recent (created in the last minute)
                                     file_mtime = os.path.getmtime(file_path)
                                     if time.time() - file_mtime < 60:
                                         output_file_to_check = file_path
-                                        debug_msg = f"Found recent MP4 in folder: {file_path}"
+                                        debug_msg = (
+                                            f"Found recent MP4 in folder: {file_path}"
+                                        )
                                         print(debug_msg)
-                                        GLib.idle_add(progress_item.add_output_text, debug_msg)
+                                        GLib.idle_add(
+                                            progress_item.add_output_text, debug_msg
+                                        )
                                         break
                         except Exception as e:
                             print(f"Error searching for MP4 files: {e}")
-                            GLib.idle_add(progress_item.add_output_text, f"Error searching for MP4 files: {e}")
+                            GLib.idle_add(
+                                progress_item.add_output_text,
+                                f"Error searching for MP4 files: {e}",
+                            )
 
                     # Check if the output file exists and has a reasonable size
                     if output_file_to_check and os.path.exists(output_file_to_check):
@@ -879,14 +907,14 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         input_size_mb = input_size / (1024 * 1024)
                         output_size_mb = output_size / (1024 * 1024)
                         percentage = (output_size / input_size) * 100
-                        
+
                         size_info = f"Compare: Input={input_size_mb:.2f}MB, Output={output_size_mb:.2f}MB ({percentage:.1f}% of original)"
                         print(size_info)
                         GLib.idle_add(progress_item.add_output_text, size_info)
 
                         # Use 15% of original size as threshold
                         min_size_threshold = input_size * 0.15
-                        
+
                         if output_size > min_size_threshold:
                             try:
                                 os.remove(input_file)
@@ -938,7 +966,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 )
                             )
                     else:
-                        error_msg = f"Output file not found or not accessible: {output_file}"
+                        error_msg = (
+                            f"Output file not found or not accessible: {output_file}"
+                        )
                         print(error_msg)
                         GLib.idle_add(progress_item.add_output_text, error_msg)
                         # Try to list files in expected output directory for debugging
@@ -946,12 +976,14 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                             output_dir = os.path.dirname(output_file_to_check)
                             try:
                                 files = os.listdir(output_dir)
-                                files_info = f"Files in output directory: {', '.join(files)}"
+                                files_info = (
+                                    f"Files in output directory: {', '.join(files)}"
+                                )
                                 print(files_info)
                                 GLib.idle_add(progress_item.add_output_text, files_info)
                             except Exception as e:
                                 print(f"Error listing directory: {e}")
-                        
+
                         GLib.idle_add(
                             lambda: show_info_dialog_and_close_progress(
                                 app,
@@ -1017,6 +1049,15 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         )
                     )
                 else:
+                    # For queue items, show a non-blocking toast notification
+                    if progress_item.input_file:
+                        file_name = os.path.basename(progress_item.input_file)
+                        toast_msg = _("Failed to convert: {0}").format(file_name)
+                    else:
+                        toast_msg = _("A file conversion failed.")
+
+                    GLib.idle_add(app.show_toast, toast_msg)
+
                     # Just remove the item after a delay without showing dialog
                     GLib.timeout_add(
                         5000,

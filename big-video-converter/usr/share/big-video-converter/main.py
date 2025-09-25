@@ -4,26 +4,26 @@ Main entry point for Big Video Converter application.
 """
 
 import os
-import sys
-import gi
-from collections import deque
 import subprocess
+import sys
+from collections import deque
+
+import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio, GLib, Gdk
+# Setup translation
+import gettext
 
 # Import local modules
 from constants import APP_ID, VIDEO_FILE_MIME_TYPES
-from ui.header_bar import HeaderBar
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from ui.conversion_page import ConversionPage
-from ui.video_edit_page import VideoEditPage
-from ui.settings_page import SettingsPage
+from ui.header_bar import HeaderBar
 from ui.progress_page import ProgressPage
+from ui.settings_page import SettingsPage
+from ui.video_edit_page import VideoEditPage
 from utils.settings_manager import SettingsManager
-
-# Setup translation
-import gettext
 
 _ = gettext.gettext
 
@@ -50,7 +50,7 @@ class VideoConverterApp(Adw.Application):
         self.last_accessed_directory = self.settings_manager.load_setting(
             "last-accessed-directory", os.path.expanduser("~")
         )
-        
+
         # Make sure that the selected format is one of the available options
         current_format = self.settings_manager.load_setting("output-format-index", 0)
         if current_format > 1:  # We now only have indices 0 and 1
@@ -129,7 +129,8 @@ class VideoConverterApp(Adw.Application):
         # Setup drag and drop
         self._setup_drag_and_drop()
 
-        # Create main content structure
+        # Create main content structure with ToastOverlay
+        self.toast_overlay = Adw.ToastOverlay()
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.header_bar = HeaderBar(self)
         main_box.append(self.header_bar)
@@ -138,7 +139,9 @@ class VideoConverterApp(Adw.Application):
         self.stack = Adw.ViewStack()
         self.stack.set_vexpand(True)
         main_box.append(self.stack)
-        self.window.set_content(main_box)
+
+        self.toast_overlay.set_child(main_box)
+        self.window.set_content(self.toast_overlay)
 
         # Create pages
         self._create_pages()
@@ -495,16 +498,13 @@ class VideoConverterApp(Adw.Application):
                 lambda: self.conversion_page.convert_button.set_sensitive(True)
             )
 
-        # Handle completed file
-        if (
-            self.conversion_queue
-            and success
-            and hasattr(self, "current_processing_file")
-        ):
+        # Handle the file that was just processed (success or fail)
+        if self.conversion_queue and hasattr(self, "current_processing_file"):
             try:
+                # Always remove the processed file from the queue to prevent loops
                 self.conversion_queue.remove(self.current_processing_file)
                 print(
-                    f"Removed completed file from queue: {os.path.basename(self.current_processing_file)}"
+                    f"Removed processed file from queue: {os.path.basename(self.current_processing_file)}"
                 )
             except ValueError:
                 print("File not found in queue, may have been removed already")
@@ -591,7 +591,7 @@ class VideoConverterApp(Adw.Application):
     # Menu actions
     def on_about_action(self, action, param):
         """Show about dialog"""
-        from constants import APP_NAME, APP_VERSION, APP_DEVELOPERS
+        from constants import APP_DEVELOPERS, APP_NAME, APP_VERSION
 
         about = Adw.AboutWindow(
             transient_for=self.window,
@@ -711,25 +711,25 @@ class VideoConverterApp(Adw.Application):
                 self.video_edit_page.update_trim_display()
 
         print("Trim settings have been reset")
-    
+
     def get_selected_format_extension(self):
         """Return the extension of the selected file format"""
         # Obter o valor mais recente da configuração
         format_index = self.settings_manager.load_setting("output-format-index", 0)
-        
+
         # Debug para ver o valor sendo recuperado
         print(f"DEBUG: output-format-index = {format_index}")
-        
+
         format_extensions = {
-            0: ".mp4",   # MP4
-            1: ".mkv",   # MKV
+            0: ".mp4",  # MP4
+            1: ".mkv",  # MKV
         }
         return format_extensions.get(format_index, ".mp4")  # Return .mp4 as default
 
     def get_selected_format_name(self):
         """Return the format name without the leading dot"""
         extension = self.get_selected_format_extension()
-        return extension.lstrip('.')
+        return extension.lstrip(".")
 
     # Dialog helpers
     def show_error_dialog(self, message):
@@ -757,6 +757,12 @@ class VideoConverterApp(Adw.Application):
 
         dialog.connect("response", lambda d, r: callback(r == 1))
         dialog.show(self.window)
+
+    def show_toast(self, message):
+        """Shows a toast notification."""
+        if hasattr(self, "toast_overlay"):
+            toast = Adw.Toast(title=message)
+            self.toast_overlay.add_toast(toast)
 
     def show_file_details(self, file_path):
         """Preview a file in the editor"""

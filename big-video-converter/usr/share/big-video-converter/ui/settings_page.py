@@ -2,19 +2,18 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw
-
-from constants import (
-    GPU_OPTIONS,
-    VIDEO_QUALITY_OPTIONS,
-    VIDEO_CODEC_OPTIONS,
-    PRESET_OPTIONS,
-    SUBTITLE_OPTIONS,
-    AUDIO_OPTIONS,
-)
-
 # Setup translation
 import gettext
+
+from constants import (
+    AUDIO_OPTIONS,
+    GPU_OPTIONS,
+    PRESET_OPTIONS,
+    SUBTITLE_OPTIONS,
+    VIDEO_CODEC_OPTIONS,
+    VIDEO_QUALITY_OPTIONS,
+)
+from gi.repository import Adw, Gtk
 
 _ = gettext.gettext
 
@@ -77,7 +76,7 @@ class SettingsPage:
         self._create_encoding_settings(main_content)
         self._create_audio_settings(main_content)
         self._create_general_options(main_content)
-        
+
         # Group for reset button
         reset_group = Adw.PreferencesGroup()
 
@@ -89,14 +88,15 @@ class SettingsPage:
 
         # Create the reset button with warning style
         reset_button = Gtk.Button(label=_("Reset All Settings"))
-        reset_button.add_css_class("destructive-action")  # Red to indicate a destructive action
+        reset_button.add_css_class(
+            "destructive-action"
+        )  # Red to indicate a destructive action
         reset_button.add_css_class("pill")  # Rounded style
         reset_button.connect("clicked", self._on_reset_button_clicked)
         reset_box.append(reset_button)
 
         reset_group.add(reset_box)
         main_content.append(reset_group)
-
 
         return page
 
@@ -139,7 +139,7 @@ class SettingsPage:
         self.video_encoder_combo.set_model(codec_model)
         self.video_encoder_combo.set_selected(0)
         encoding_group.add(self.video_encoder_combo)
-        
+
         # Output format selection
         format_model = Gtk.StringList()
         format_model.append("MP4")  # Default
@@ -388,11 +388,13 @@ class SettingsPage:
         self.video_encoder_combo.connect(
             "notify::selected", lambda w, p: self._save_codec_setting(w.get_selected())
         )
-        
+
         # Output format selection
         self.output_format_combo.connect(
             "notify::selected",
-            lambda w, p: self.settings_manager.save_setting("output-format-index", w.get_selected()),
+            lambda w, p: self.settings_manager.save_setting(
+                "output-format-index", w.get_selected()
+            ),
         )
 
         # Preset
@@ -469,11 +471,15 @@ class SettingsPage:
         elif index == 1:  # nvidia
             self.settings_manager.save_setting("gpu", "NVENC – Compatible with Nvidia")
         elif index == 2:  # amd
-            self.settings_manager.save_setting("gpu", "VAAPI – Compatible with Intel/AMD")
+            self.settings_manager.save_setting(
+                "gpu", "VAAPI – Compatible with Intel/AMD"
+            )
         elif index == 3:  # intel
             self.settings_manager.save_setting("gpu", "QSV – Compatible with Intel")
         elif index == 4:  # vulkan
-            self.settings_manager.save_setting("gpu", "Vulkan – Default, low compatibility")
+            self.settings_manager.save_setting(
+                "gpu", "Vulkan – Default, low compatibility"
+            )
         elif index == 5:  # software
             self.settings_manager.save_setting("gpu", "Software – Compatible with all")
 
@@ -551,9 +557,11 @@ class SettingsPage:
         codec_value = self.settings_manager.load_setting("video-codec", "h264")
         codec_index = self._find_codec_index(codec_value)
         self.video_encoder_combo.set_selected(codec_index)
-        
+
         # Load output format setting
-        output_format_idx = self.settings_manager.load_setting("output-format-index", 0)  # 0 = MP4 (default)
+        output_format_idx = self.settings_manager.load_setting(
+            "output-format-index", 0
+        )  # 0 = MP4 (default)
         self.output_format_combo.set_selected(output_format_idx)
 
         # Preset
@@ -594,7 +602,7 @@ class SettingsPage:
             # No saved resolution, use default
             self.video_resolution_combo.set_selected(0)
             self.custom_resolution_row.set_visible(False)
-        
+
         # Audio handling
         audio_value = self.settings_manager.load_setting("audio-handling", "copy")
         audio_index = 0  # Default to "copy"
@@ -613,14 +621,16 @@ class SettingsPage:
                 if rate == bitrate_value:
                     standard_index = i
                     break
-            
+
             if standard_index >= 0:
                 # Standard bitrate found
                 self.audio_bitrate_combo.set_selected(standard_index)
                 self.custom_bitrate_row.set_visible(False)
             else:
                 # Must be a custom bitrate
-                self.audio_bitrate_combo.set_selected(len(self.bitrate_values) - 1)  # Custom
+                self.audio_bitrate_combo.set_selected(
+                    len(self.bitrate_values) - 1
+                )  # Custom
                 self.custom_bitrate_row.set_text(bitrate_value)
                 self.custom_bitrate_row.set_visible(True)
         else:
@@ -637,14 +647,16 @@ class SettingsPage:
                 if ch == channels_value:
                     standard_index = i
                     break
-            
+
             if standard_index >= 0:
                 # Standard channels found
                 self.audio_channels_combo.set_selected(standard_index)
                 self.custom_channels_row.set_visible(False)
             else:
                 # Must be a custom channel configuration
-                self.audio_channels_combo.set_selected(len(self.channels_values) - 1)  # Custom
+                self.audio_channels_combo.set_selected(
+                    len(self.channels_values) - 1
+                )  # Custom
                 self.custom_channels_row.set_text(channels_value)
                 self.custom_channels_row.set_visible(True)
         else:
@@ -652,10 +664,24 @@ class SettingsPage:
             self.audio_channels_combo.set_selected(0)
             self.custom_channels_row.set_visible(False)
 
+        # Load boolean switch settings
+        gpu_partial_active = self.settings_manager.load_setting("gpu-partial", False)
+        self.gpu_partial_check.set_active(gpu_partial_active)
+
+        force_copy_video_active = self.settings_manager.load_setting(
+            "force-copy-video", False
+        )
+        self.force_copy_video_check.set_active(force_copy_video_active)
+
+        only_extract_subtitles_active = self.settings_manager.load_setting(
+            "only-extract-subtitles", False
+        )
+        self.only_extract_subtitles_check.set_active(only_extract_subtitles_active)
+
     def _find_gpu_index(self, value):
         """Find index of GPU value in GPU_OPTIONS"""
         value = value.lower()
-        
+
         # Check for key words in the value
         if "nvenc" in value or "nvidia" in value:
             return 1
@@ -669,12 +695,12 @@ class SettingsPage:
             return 5
         elif value == "auto" or "auto-detect" in value:
             return 0
-            
+
         # If no match, try the standard search
         for i, option in enumerate(GPU_OPTIONS):
             if option.lower() == value:
                 return i
-                
+
         # Default to Auto-detect
         return 0
 
@@ -724,38 +750,38 @@ class SettingsPage:
         # Show a confirmation dialog before resetting
         dialog = Gtk.AlertDialog.new(_("Reset All Settings?"))
         dialog.set_detail(
-            _("This will reset all settings to their default values. This action cannot be undone.")
+            _(
+                "This will reset all settings to their default values. This action cannot be undone."
+            )
         )
         dialog.set_buttons(["Cancel", "Reset"])
         dialog.set_cancel_button(0)  # First button (Cancel) is the cancel button
         dialog.set_default_button(0)  # Cancel is the default button
-        
-        dialog.choose(
-            self.app.window,
-            None,
-            self._on_reset_confirmation_response
-        )
+
+        dialog.choose(self.app.window, None, self._on_reset_confirmation_response)
 
     def _on_reset_confirmation_response(self, dialog, response):
         """Handle response from reset confirmation dialog"""
         if response == 1:  # User clicked Reset
             # Reset all settings to defaults
             self._reset_all_settings()
-            
+
             # Show a confirmation message
             success_dialog = Gtk.AlertDialog.new(_("Settings Reset"))
-            success_dialog.set_detail(_("All settings have been reset to their default values."))
+            success_dialog.set_detail(
+                _("All settings have been reset to their default values.")
+            )
             success_dialog.show(self.app.window)
 
     def _reset_all_settings(self):
         """Reset all settings to their default values"""
         # Get all default values from settings manager
         default_values = self.settings_manager.DEFAULT_VALUES
-        
+
         # Reset each setting to its default value
         for key, value in default_values.items():
             print(f"Resetting {key} to {value}")
-            
+
             # Use the appropriate setter method based on the value type
             if isinstance(value, bool):
                 self.settings_manager.set_boolean(key, value)
@@ -764,7 +790,9 @@ class SettingsPage:
             elif isinstance(value, float):
                 self.settings_manager.set_double(key, value)
             else:
-                self.settings_manager.set_string(key, str(value) if value is not None else "")
-        
+                self.settings_manager.set_string(
+                    key, str(value) if value is not None else ""
+                )
+
         # Reload settings to update UI
         self._load_settings()
