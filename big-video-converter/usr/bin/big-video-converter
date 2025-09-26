@@ -201,16 +201,7 @@ fi
 needs_10bit_to_8bit_conversion=false
 if [[ $is_10bit == true && ($video_encoder == "h264" || -z "$video_encoder") ]]; then
     needs_10bit_to_8bit_conversion=true
-    echo "Detected 10-bit input. Forcing 8-bit pixel format (yuv420p) for H.264 compatibility."
-fi
-
-# Select appropriate H.264 profile based on bit depth
-if [[ $is_10bit == true ]]; then
-    h264_profile="high10"
-    echo "Using H.264 profile: high10 (for 10-bit content)"
-else
-    h264_profile="high"
-    echo "Using H.264 profile: high (for 8-bit content)"
+    echo "Detected 10-bit input. Forcing 8-bit pixel format (nv12) for H.264 compatibility."
 fi
 
 # Remove extension from the input file
@@ -437,7 +428,7 @@ function build_encoder_commands() {
             encoder_nvenc="$general_params -c:v av1_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
             encoder_vaapi="$general_params -c:v av1_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
             encoder_qsv="$general_params -c:v av1_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-            encoder_software="$general_params -c:v librav1e -preset $software_preset -look_ahead_depth 100 -crf $cq_value"
+            encoder_software="$general_params -c:v libsvtav1 -crf $cq_value"
             ;;
         vp9)
             encoder_nvenc="$general_params -c:v vp9_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
@@ -448,9 +439,9 @@ function build_encoder_commands() {
         *) # Default is h264
             encoder_nvenc="$general_params -c:v h264_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
             encoder_vulkan="$general_params -c:v h264_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-            encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v $h264_profile -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
-            encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v $h264_profile -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
-            encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v $h264_profile -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
+            encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v high -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
+            encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v high -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+            encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v high -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
             ;;
     esac
 }
@@ -569,9 +560,9 @@ function attempt_conversion() {
     # 1. Add 10-bit to 8-bit conversion filter if needed
     if [[ $needs_10bit_to_8bit_conversion == true ]]; then
         if [[ "$encoder_format" == "$encoder_software" ]]; then
-            filter_parts+=("format=yuv420p")
+            filter_parts+=("format=nv12")
         else
-            filter_parts+=("${scale_filter_name}=format=yuv420p")
+            filter_parts+=("${scale_filter_name}=format=nv12")
         fi
     fi
 
