@@ -14,11 +14,22 @@ APP_DEVELOPERS = ["Tales A. Mendonça", "Bruno Gonçalves Araujo"]
 APP_WEBSITES = ["communitybig.org", "biglinux.com.br"]
 
 # Paths to executables
-CONVERT_SCRIPT_PATH = "/usr/bin/big-video-converter"
-
-# During development, use local path if scripts are not installed
-if not os.path.exists(CONVERT_SCRIPT_PATH):
-    CONVERT_SCRIPT_PATH = "./big-video-converter"
+# Detect if running from AppImage or system install
+if 'APPIMAGE' in os.environ or 'APPDIR' in os.environ:
+    # Running from AppImage
+    # constants.py is in: usr/share/big-video-converter/constants.py
+    # Script is in: usr/bin/big-video-converter
+    # Need to go up to AppImage root and then to usr/bin
+    script_dir = os.path.dirname(os.path.abspath(__file__))  # usr/share/big-video-converter
+    usr_dir = os.path.dirname(os.path.dirname(script_dir))   # usr
+    appimage_root = os.path.dirname(usr_dir)                  # AppImage root
+    CONVERT_SCRIPT_PATH = os.path.join(appimage_root, 'usr', 'bin', 'big-video-converter')
+elif os.path.exists('/usr/bin/big-video-converter'):
+    # System install
+    CONVERT_SCRIPT_PATH = '/usr/bin/big-video-converter'
+else:
+    # Development/local
+    CONVERT_SCRIPT_PATH = './big-video-converter'
 
 # UI constants
 WINDOW_DEFAULT_WIDTH = 900
