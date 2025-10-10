@@ -1011,7 +1011,19 @@ class VideoConverterApp(Adw.Application):
 
 def main():
     # Set up internationalization
-    gettext.bindtextdomain("big-video-converter")
+    # Determine locale directory (works in AppImage and system install)
+    locale_dir = '/usr/share/locale'  # Default for system install
+    
+    # Check if we're in an AppImage or non-standard install
+    # Look for locale directory relative to this script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Try ../locale (for AppImage structure like usr/share/app/main.py)
+    appimage_locale = os.path.join(os.path.dirname(script_dir), 'locale')
+    if os.path.isdir(appimage_locale) and any(os.path.isdir(os.path.join(appimage_locale, d)) for d in os.listdir(appimage_locale) if os.path.isdir(os.path.join(appimage_locale, d))):
+        locale_dir = appimage_locale
+    
+    gettext.bindtextdomain("big-video-converter", locale_dir)
     gettext.textdomain("big-video-converter")
 
     # Create and run application

@@ -259,9 +259,9 @@ class VideoEditPage:
         )
 
         # Add video resolution filter if needed
-        video_resolution = self.settings.load_setting("video-resolution", "")
-        if video_resolution:
-            filters.insert(0, f"scale={video_resolution}")
+        # video_resolution = self.settings.load_setting("video-resolution", "")
+        # if video_resolution:
+        #     filters.insert(0, f"scale={video_resolution}")
 
         filter_arg = ",".join(filters) if filters else "null"
 

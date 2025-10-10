@@ -239,12 +239,12 @@ def generate_video_filters(settings, video_width=None, video_height=None, input_
         filters.append(f"eq={':'.join(eq_parts)}")
 
     # 4. Add resolution scaling if needed
-    video_resolution = settings.get_value("video-resolution", "")
-    if video_resolution:
-        # Ensure we use the right format (width:height)
-        if "x" in video_resolution:
-            video_resolution = video_resolution.replace("x", ":")
-        filters.append(f"scale={video_resolution}")
+    # video_resolution = settings.get_value("video-resolution", "")
+    # if video_resolution:
+    #     # Ensure we use the right format (width:height)
+    #     if "x" in video_resolution:
+    #         video_resolution = video_resolution.replace("x", ":")
+    #     filters.append(f"scale={video_resolution}")
 
     # Debug what filters were generated
     print(f"Generated filters: {filters}")
@@ -260,7 +260,7 @@ def get_ffmpeg_filter_string(settings, video_width=None, video_height=None, inpu
         return ""
 
     filter_string = ",".join(filters)
-    return f"-vf {filter_string}"
+    return f"{filter_string}"
 
 
 # Legacy functions kept for compatibility
