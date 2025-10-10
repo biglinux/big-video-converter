@@ -469,19 +469,19 @@ class SettingsPage:
         if index == 0:  # Default/Auto
             self.settings_manager.save_setting("gpu", "auto")
         elif index == 1:  # nvidia
-            self.settings_manager.save_setting("gpu", "NVENC – Compatible with Nvidia")
+            self.settings_manager.save_setting("gpu", "nvidia")
         elif index == 2:  # amd
             self.settings_manager.save_setting(
-                "gpu", "VAAPI – Compatible with Intel/AMD"
+                "gpu", "amd"
             )
         elif index == 3:  # intel
-            self.settings_manager.save_setting("gpu", "QSV – Compatible with Intel")
+            self.settings_manager.save_setting("gpu", "intel")
         elif index == 4:  # vulkan
             self.settings_manager.save_setting(
-                "gpu", "Vulkan – Default, low compatibility"
+                "gpu", "vulkan"
             )
         elif index == 5:  # software
-            self.settings_manager.save_setting("gpu", "Software – Compatible with all")
+            self.settings_manager.save_setting("gpu", "software")
 
     def _save_quality_setting(self, index):
         """Save video quality setting as direct value"""

@@ -1059,7 +1059,9 @@ class ConversionPage:
                 env_vars["audio_handling"] = self.app.settings_manager.load_setting(
                     "audio-handling", "copy"
                 )
-
+                env_vars["video_resolution"] = self.app.settings_manager.load_setting(
+                    "video-resolution", ""
+                )
                 # Set flags
                 if self.app.settings_manager.get_boolean("gpu-partial", False):
                     env_vars["gpu_partial"] = "1"
@@ -1297,7 +1299,7 @@ class ConversionPage:
                 "audio_handling",
                 "audio_bitrate",
                 "audio_channels",
-                "video_resolution",
+                "resolution",
                 "options",
                 "gpu_partial",
                 "force_copy_video",
