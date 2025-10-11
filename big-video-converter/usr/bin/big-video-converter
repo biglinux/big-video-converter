@@ -137,6 +137,16 @@ else
 	echo "Detected 8-bit video input"
 fi
 
+echo "Detecting source video codec..."
+source_video_codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$input_file" 2>/dev/null)
+echo "Source video codec detected: $source_video_codec"
+
+# From another codec to h264 (ex: hevc -> h264)
+if [[ ($video_encoder == "h264" || -z "$video_encoder") && "$source_video_codec" != "h264" ]]; then
+	echo "Applying pixel format conversion for compatibility ($source_video_codec -> h264)."
+	needs_10bit_to_8bit_conversion=true
+fi
+
 # Determine if we need to convert 10-bit video to 8-bit for H.264 compatibility
 needs_10bit_to_8bit_conversion=false
 if [[ $is_10bit == true && ($video_encoder == "h264" || -z "$video_encoder") ]]; then
