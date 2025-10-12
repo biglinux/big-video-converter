@@ -525,26 +525,25 @@ function attempt_conversion() {
 	fi
 
 	if [[ "$video_resolution" && ${#filter_parts[@]} -gt 0 ]]; then
-			video_filter_chain="-vf ${force_8bit_color}hwdownload,format=nv12,"
-			video_filter_chain+="$(
-				IFS=,
-				echo "${filter_parts[*]}"
-			)"
-			video_filter_chain+=",hwupload,$scale_filter_name=${video_resolution/x/:}"
-
+		video_filter_chain="-vf ${force_8bit_color}hwdownload,format=nv12,"
+		video_filter_chain+="$(
+			IFS=,
+			echo "${filter_parts[*]}"
+		)"
+		video_filter_chain+=",hwupload,$scale_filter_name=${video_resolution/x/:}"
 
 	elif [[ ${#filter_parts[@]} -gt 0 ]]; then
-			video_filter_chain="-vf ${force_8bit_color}hwdownload,format=nv12,"
-			video_filter_chain+="$(
-				IFS=,
-				echo "${filter_parts[*]}"
-			)"
+		video_filter_chain="-vf ${force_8bit_color}hwdownload,format=nv12,"
+		video_filter_chain+="$(
+			IFS=,
+			echo "${filter_parts[*]}"
+		)"
 
 	elif [[ -n "$video_resolution" ]]; then
-			video_filter_chain="-vf ${force_8bit_color}$scale_filter_name=${video_resolution/x/:}"
+		video_filter_chain="-vf ${force_8bit_color}$scale_filter_name=${video_resolution/x/:}"
 
 	elif [[ $needs_10bit_to_8bit_conversion == true ]]; then
-			video_filter_chain="-vf $force_8bit_color"
+		video_filter_chain="-vf $force_8bit_color"
 
 	fi
 
@@ -560,77 +559,66 @@ function attempt_conversion() {
 	exit_code=$?
 
 	# If encoding not successful, and not exit with 255 (interrupted by user), and not software encoding, try with the second option
-	if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 || "$gpu_partial" == "1" ]]; then
+	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1" ]]; then
 		echo "Encode mode: Decode Software, Encode GPU"
 
 		#####################################################
 		# --- Encode GPU Decode CPU filter chain ---
 		#####################################################
-		local video_filter_chain=""
-		local filter_parts=()
+		local partial_video_filter_chain=""
+		local partial_filter_parts=()
 
+		# For partial GPU, we need to add hwupload at the beginning of the filter chain.
+		# This moves the software-decoded frame (e.g., nv12) to the GPU's memory.
+		if [[ ${encoder_format,,} =~ nvenc ]]; then
+			partial_filter_parts+=("format=nv12" "hwupload_cuda")
+		elif [[ ${encoder_format,,} =~ vulkan ]]; then
+			partial_filter_parts+=("format=nv12" "hwupload=derive_device=vulkan")
+		elif [[ ${encoder_format,,} =~ vaapi ]]; then
+			partial_filter_parts+=("format=nv12" "hwupload=derive_device=vaapi")
+		elif [[ ${encoder_format,,} =~ qsv ]]; then
+			partial_filter_parts+=("format=nv12" "hwupload_qsv")
+		fi
 
-        # For partial GPU, we need to add hwupload at the beginning of the filter chain
-        # Choose the correct upload filter depending on the GPU encoder.
-        # - NVENC requires hwupload_cuda and prefers NV12 pixel format.
-        # - VAAPI/Vulkan should derive the device so hwupload can find it.
-        # - QSV can use hwupload_qsv.
-        local partial_filter_parts=""
-        if [[ ${encoder_format,,} =~ nvenc ]]; then
-            partial_filter_parts+=("format=nv12" "hwupload_cuda")
-        elif [[ ${encoder_format,,} =~ vulkan ]]; then
-            partial_filter_parts+=("format=nv12" "hwupload=derive_device=vulkan")
-        elif [[ ${encoder_format,,} =~ vaapi ]]; then
-            # Ensure the hw device created by init_hardware is used by deriving it here
-            partial_filter_parts+=("format=nv12" "hwupload=derive_device=vaapi")
-        elif [[ ${encoder_format,,} =~ qsv ]]; then
-            partial_filter_parts+=("format=nv12" "hwupload_qsv")
-        fi
-
-
-
+		# Add user-provided filters after the upload
 		if [[ -n "$video_filter" ]]; then
-			local user_filters=$video_filter
-			filter_parts+=("$user_filters")
+			partial_filter_parts+=("$video_filter")
 		fi
 
-		if [[ "$video_resolution" && ${#filter_parts[@]} -gt 0 ]]; then
-				video_filter_chain="-vf format=nv12,"
-				video_filter_chain+="$(
-					IFS=,
-					echo "${filter_parts[*]}"
-				)"
-				video_filter_chain+=",scale=${video_resolution/x/:}"
-
-
-		elif [[ ${#filter_parts[@]} -gt 0 ]]; then
-				video_filter_chain="-vf format=nv12,"
-				video_filter_chain+="$(
-					IFS=,
-					echo "${filter_parts[*]}"
-				)"
-
-		elif [[ "$video_resolution" ]]; then
-				video_filter_chain="-vf scale=${video_resolution/x/:}"
-
+		# Add scaling filter if specified
+		if [[ -n "$video_resolution" ]]; then
+			# For partial mode, scaling happens on the GPU after upload
+			partial_filter_parts+=("$scale_filter_name=${video_resolution/x/:}")
 		fi
 
-		video_filter_chain_partial_gpu+=$partial_filter_parts
+		# Build the final filter chain string if there are any filters
+		if [[ ${#partial_filter_parts[@]} -gt 0 ]]; then
+			partial_video_filter_chain="-vf $(IFS=,; echo "${partial_filter_parts[*]}")"
+		fi
 
-
-		echo "Running command: $ffmpeg_executable $options $encoder_format $video_filter_chain_partial_gpu $ffmpeg_generic_options"
-		eval $ffmpeg_executable $options $encoder_format "$video_filter_chain_partial_gpu" $ffmpeg_generic_options
+		echo "Running command: $ffmpeg_executable $init_hardware $options $encoder_format $partial_video_filter_chain $ffmpeg_generic_options"
+		eval $ffmpeg_executable $init_hardware $options $encoder_format "$partial_video_filter_chain" $ffmpeg_generic_options
 		exit_code=$?
 	fi
 
 	# If encoding not successful, and not exit with 255 (interrupted by user), try with software
-	if [[ $exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1 || "$encoder_format" == "$encoder_software" ]]; then
+	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || ("$encoder_format" == "$encoder_software" && $exit_code != 0) ]]; then
 		echo "Encode mode: Decode Software, Encode Software"
 		# Software mode uses the original video_filter variable without hw acceleration
-		video_filter_chain="${video_filter_chain/hwdownload,/}"
-		video_filter_chain="${video_filter_chain/,hwupload/}"
-		echo "Running command: $ffmpeg_executable $options $encoder_software $video_filter_chain $ffmpeg_generic_options"
-		eval $ffmpeg_executable $options $encoder_software "$video_filter_chain" $ffmpeg_generic_options
+		local software_filter_chain=""
+		if [[ -n "$video_filter" ]]; then
+			software_filter_chain="-vf $video_filter"
+		fi
+		if [[ -n "$video_resolution" ]]; then
+			if [[ -z "$software_filter_chain" ]]; then
+				software_filter_chain="-vf scale=${video_resolution/x/:}"
+			else
+				software_filter_chain+=",scale=${video_resolution/x/:}"
+			fi
+		fi
+
+		echo "Running command: $ffmpeg_executable $options $encoder_software $software_filter_chain $ffmpeg_generic_options"
+		eval $ffmpeg_executable $options $encoder_software "$software_filter_chain" $ffmpeg_generic_options
 		exit_code=$?
 	fi
 }
