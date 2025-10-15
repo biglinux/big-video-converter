@@ -27,8 +27,8 @@ Comm Big Converter provides an intuitive graphical interface to easily convert v
 * GTK 4.0+
 * FFmpeg
 * Python GObject Introspection (PyGI)
-* libva-utils
-* libva-mesa-driver
+* Libva-utils
+* Libva-mesa-driver
 
 ## Installation
 From Package (Arch Linux / BigCommunity)
