@@ -236,12 +236,12 @@ class VideoEditUI:
         crop_grid.set_valign(Gtk.Align.CENTER)
 
         crop_labels = [_("Left"), _("Right"), _("Top"), _("Bottom")]
+        crop_keys = ["left", "right", "top", "bottom"]
         self.crop_spins = {}
-        for i, label_text in enumerate(crop_labels):
+        for i, (label_text, key) in enumerate(zip(crop_labels, crop_keys)):
             label = Gtk.Label(label=label_text, xalign=0)
             adjustment = Gtk.Adjustment(value=0, lower=0, upper=9999, step_increment=1)
             spin = Gtk.SpinButton(adjustment=adjustment, numeric=True, width_chars=5)
-            key = label_text.lower()
             self.crop_spins[key] = spin
             spin.connect("value-changed", self.page.on_crop_value_changed)
 
