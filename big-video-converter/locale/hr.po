@@ -314,6 +314,30 @@ msgstr "Uzorkovna frekvencija"
 msgid "Copy sample rate"
 msgstr "Kopiraj uzorku frekvenciju"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 524
+msgid "CD Quality"
+msgstr "CD kvaliteta"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 526
+msgid "Hi-Res Audio"
+msgstr "Hi-Res audio"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 539
+msgid "(Mono)"
+msgstr "(Mono)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 541
+msgid "(Stereo)"
+msgstr "(Stereo)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 543
+msgid "(5.1 Surround)"
+msgstr "(5.1 Surround)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 545
+msgid "(7.1 Surround)"
+msgstr "(7.1 Surround)"
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 548
 msgid "Channels"
 msgstr "Kanali"
@@ -350,6 +374,318 @@ msgstr "Greška prilikom preuzimanja informacija o datoteci"
 msgid "Retry"
 msgstr "Pokušaj ponovo"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 185
+msgid ""
+"Choose which hardware accelerates video processing:\n"
+"• Auto-detect: Automatically uses the best available\n"
+"• NVENC: For Nvidia graphics cards (fastest)\n"
+"• VAAPI: For Intel/AMD graphics\n"
+"• QSV: For Intel processors\n"
+"• Vulkan: Cross-platform GPU acceleration\n"
+"• Software: Uses CPU only (slowest but compatible)"
+msgstr ""
+"Odaberite koji hardver ubrzava obradu videa:\n"
+"• Automatsko otkrivanje: Automatski koristi najbolju dostupnu opciju\n"
+"• NVENC: Za Nvidia grafičke kartice (najbrže)\n"
+"• VAAPI: Za Intel/AMD grafike\n"
+"• QSV: Za Intel procesore\n"
+"• Vulkan: Ubrzanje GPU-a na više platformi\n"
+"• Softver: Koristi samo CPU (najsporije, ali kompatibilno)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 188
+msgid ""
+"Controls how compressed the video will be:\n"
+"• Very High/High: Best quality, larger file size\n"
+"• Medium: Good balance between quality and size\n"
+"• Low/Very Low: Smaller files, lower quality\n"
+"Higher quality = slower processing + bigger files"
+msgstr ""
+"Kontrolira koliko će video biti komprimiran:\n"
+"• Vrlo visoka/Visoka: Najbolja kvaliteta, veća veličina datoteke\n"
+"• Srednja: Dobar balans između kvalitete i veličine\n"
+"• Niska/Vrlo niska: Manje datoteke, niža kvaliteta\n"
+"Viša kvaliteta = sporija obrada + veće datoteke"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 191
+msgid ""
+"The format used to compress video:\n"
+"• H.264: Most compatible, works everywhere\n"
+"• H.265 (HEVC): Better compression, newer devices\n"
+"• AV1: Best compression, requires modern hardware\n"
+"• VP9: Good for web, used by YouTube"
+msgstr ""
+"Format korišten za kompresiju videa:\n"
+"• H.264: Najkompatibilniji, radi svugdje\n"
+"• H.265 (HEVC): Bolja kompresija, noviji uređaji\n"
+"• AV1: Najbolja kompresija, zahtijeva moderni hardver\n"
+"• VP9: Dobar za web, koristi ga YouTube"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 194
+msgid ""
+"What to do with the audio:\n"
+"• Copy: Keep audio unchanged (fast)\n"
+"• Re-encode: Convert audio to new format\n"
+"• Remove: Delete all audio tracks"
+msgstr ""
+"Što učiniti s audio zapisom:\n"
+"• Kopiraj: Zadrži audio nepromijenjen (brzo)\n"
+"• Ponovno kodiraj: Pretvori audio u novi format\n"
+"• Ukloni: Izbriši sve audio zapise"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 197
+msgid ""
+"How to handle subtitle tracks:\n"
+"• Extract to SRT: Save as separate subtitle file\n"
+"• Keep Embedded: Leave inside video file\n"
+"• Remove: Delete all subtitles"
+msgstr ""
+"Kako upravljati titlovima:\n"
+"• Izdvoji u SRT: Spremi kao zasebnu datoteku s titlovima\n"
+"• Zadrži ugrađene: Ostavite unutar video datoteke\n"
+"• Ukloni: Izbriši sve titlove"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 200
+msgid ""
+"Exclusive option to cut videos into segments or change the container format to MP4 or MKV, with the "
+"advantage of no quality loss and very fast processing."
+msgstr ""
+"Ekskluzivna opcija za rezanje videa u segmente ili promjenu kontejnerskog formata u MP4 ili MKV, s "
+"prednošću bez gubitka kvalitete i vrlo brze obrade."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 204
+msgid ""
+"Encoding speed vs file size:\n"
+"• Ultra Fast: Quick but larger files\n"
+"• Medium: Balanced (recommended)\n"
+"• Very Slow: Best compression, takes longer"
+msgstr ""
+"Brzina kodiranja vs veličina datoteke:\n"
+"• Ultra brzo: Brzo, ali veće datoteke\n"
+"• Srednje: Uravnoteženo (preporučeno)\n"
+"• Vrlo sporo: Najbolja kompresija, traje duže"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 207
+msgid ""
+"Audio compression format (when re-encoding):\n"
+"• AAC: Most compatible, good quality\n"
+"• Opus: Best quality at low bitrates\n"
+"• AC3 (Dolby Digital): For home theater systems"
+msgstr ""
+"Format kompresije zvuka (prilikom ponovnog kodiranja):\n"
+"• AAC: Najkompatibilniji, dobra kvaliteta\n"
+"• Opus: Najbolja kvaliteta pri niskim bitratima\n"
+"• AC3 (Dolby Digital): Za kućne kino sustave"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 210
+msgid ""
+"Output video size:\n"
+"• Original: Keep the same size\n"
+"• Standard formats: 4K, Full HD, HD for TVs/monitors\n"
+"• Vertical formats: For smartphones and social media\n"
+"• Custom: Specify your own dimensions"
+msgstr ""
+"Veličina izlaznog videa:\n"
+"• Izvorna: Zadrži istu veličinu\n"
+"• Standardni formati: 4K, Full HD, HD za TV/monitor\n"
+"• Vertikalni formati: Za pametne telefone i društvene mreže\n"
+"• Prilagođeno: Odredite vlastite dimenzije"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 213
+msgid ""
+"Video container format:\n"
+"• MP4: Most compatible\n"
+"• MKV: Supports more features"
+msgstr ""
+"Format video kontejnera:\n"
+"• MP4: Najkompatibilniji\n"
+"• MKV: Podržava više značajki"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
+msgid ""
+"Adjust how light or dark the video appears:\n"
+"• Move right: Brighter\n"
+"• Move left: Darker\n"
+"• Default: 0 (no change)"
+msgstr ""
+"Podesite koliko svijetla ili tamnog video izgleda:\n"
+"• Pomaknite desno: Svjetlije\n"
+"• Pomaknite lijevo: Tamnije\n"
+"• Zadano: 0 (bez promjene)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 220
+msgid ""
+"Control color intensity:\n"
+"• Move right: More vivid colors\n"
+"• Move left: More gray/washed out\n"
+"• Default: 1.0 (no change)"
+msgstr ""
+"Kontrola intenziteta boje:\n"
+"• Pomaknite udesno: Živopisnije boje\n"
+"• Pomaknite ulijevo: Sive/izblijedjele boje\n"
+"• Zadano: 1.0 (bez promjene)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
+msgid ""
+"Shift colors:\n"
+"• Positive values: Shift toward red/yellow\n"
+"• Negative values: Shift toward blue/green\n"
+"• Default: 0 (no change)"
+msgstr ""
+"Pomakni boje:\n"
+"• Pozitivne vrijednosti: Pomakni prema crvenoj/žutoj\n"
+"• Negativne vrijednosti: Pomakni prema plavoj/zelenoj\n"
+"• Zadano: 0 (bez promjene)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
+msgid ""
+"Remove unwanted areas from video edges:\n"
+"• Drag borders to remove parts\n"
+"• Useful for removing black bars or unwanted content\n"
+"• Does not resize, only cuts"
+msgstr ""
+"Uklonite neželjena područja s rubova videa:\n"
+"• Povucite rubove za uklanjanje dijelova\n"
+"• Korisno za uklanjanje crnih traka ili neželjenog sadržaja\n"
+"• Ne mijenja veličinu, samo reže"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 229
+msgid ""
+"Select the parts you want to keep in the video. You can add sections by clicking the + button or, "
+"more easily, by using the marker button directly on the video area.\n"
+" You can export the selected segments as a single file or as separate files, which is very "
+"convenient, for example, when creating clips for social media."
+msgstr ""
+"Odaberite dijelove koje želite zadržati u videu. Možete dodati odjeljke klikom na gumb + ili, još "
+"lakše, korištenjem gumba oznake izravno na području videa. Možete izvesti odabrane segmente kao "
+"jednu datoteku ili kao odvojene datoteke, što je vrlo praktično, na primjer, prilikom stvaranja "
+"isječaka za društvene mreže."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 233
+msgid ""
+"Decodes video using CPU\n"
+"• Encodes video using GPU\n"
+"• Can be faster on some systems\n"
+"• Try if full GPU encoding has issues"
+msgstr ""
+"Dekodira video koristeći CPU\n"
+"• Kodira video koristeći GPU\n"
+"• Može biti brži na nekim sustavima\n"
+"• Pokušajte ako puni GPU kodiranje ima problema"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+msgid ""
+"Audio quality:\n"
+"• Higher = better quality, larger file\n"
+"• 128k: Good for most content\n"
+"• 192k: High quality\n"
+"• 256k+: Audiophile quality\n"
+"• Default: Let encoder decide"
+msgstr ""
+"Kvaliteta zvuka:\n"
+"• Viša = bolja kvaliteta, veća datoteka\n"
+"• 128k: Dobra za većinu sadržaja\n"
+"• 192k: Visoka kvaliteta\n"
+"• 256k+: Kvaliteta za audiofile\n"
+"• Zadano: Neka encoder odluči"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 239
+msgid ""
+"Number of audio channels:\n"
+"• 1: Mono (single speaker)\n"
+"• 2: Stereo (left/right)\n"
+"• 6: 5.1 Surround sound\n"
+"• 8: 7.1 Surround sound\n"
+"• Default: Keep original"
+msgstr ""
+"Broj audio kanala:\n"
+"• 1: Mono (jedan zvučnik)\n"
+"• 2: Stereo (lijevo/desno)\n"
+"• 6: 5.1 Surround zvuk\n"
+"• 8: 7.1 Surround zvuk\n"
+"• Zadano: Zadrži izvorno"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 242
+msgid ""
+"Advanced FFmpeg options:\n"
+"• Add custom FFmpeg parameters\n"
+"• Example: -ss 60 -t 30 (skip 60s, take 30s)\n"
+"• For advanced users only\n"
+"• Wrong options can cause errors"
+msgstr ""
+"Napredne FFmpeg opcije:\n"
+"• Dodajte prilagođene FFmpeg parametre\n"
+"• Primjer: -ss 60 -t 30 (preskočite 60s, uzmite 30s)\n"
+"• Samo za napredne korisnike\n"
+"• Pogrešne opcije mogu uzrokovati greške"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 245
+msgid ""
+"Skips video processing\n"
+"• Only extracts subtitle tracks to SRT files\n"
+"• Fast operation\n"
+"• Useful when you only need subtitles"
+msgstr ""
+"Preskoči obradu videa\n"
+"• Samo izvlači titlove u SRT datoteke\n"
+"• Brza operacija\n"
+"• Korisno kada su vam potrebni samo titlovi"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+msgid ""
+"• Display explanations when hovering over options\n"
+"• This message you are reading is an example of a tooltip"
+msgstr ""
+"• Prikaži objašnjenja kada zadržiš pokazivač iznad opcija  \n"
+"• Ova poruka koju čitaš je primjer alatne informacije"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
+msgid "Return to file queue"
+msgstr "Vrati se u red datoteka"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 252
+msgid "Add video files to the queue for conversion"
+msgstr "Dodajte video datoteke u red za konverziju"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
+msgid "Remove all files from the queue"
+msgstr "Ukloni sve datoteke iz reda."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
+msgid "Start converting all files in the queue"
+msgstr "Započnite pretvaranje svih datoteka u redu."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
+msgid "Convert this file with current editing settings"
+msgstr "Pretvorite ovu datoteku s trenutnim postavkama uređivanja."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 256
+msgid "Open application menu"
+msgstr "Otvorite izbornik aplikacije"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 258
+msgid "Right-click for more options"
+msgstr "Desni klik za više opcija"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 259
+msgid "Preview this video file"
+msgstr "Pregledajte ovu video datoteku"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 260
+msgid "Open video editor for this file"
+msgstr "Otvorite video uređivač za ovu datoteku"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+msgid "Show detailed file information"
+msgstr "Prikaži detaljne informacije o datoteci"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 262
+msgid "Remove this file from the queue"
+msgstr "Ukloni ovu datoteku iz reda."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 203
+msgid "Main"
+msgstr "Glavni"
+# 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 287
@@ -357,23 +693,65 @@ msgstr "Pokušaj ponovo"
 msgid "Conversion"
 msgstr "Konverzija"
 # 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 417
+msgid "Editing"
+msgstr "Uređivanje"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 288
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 42
-msgid "Video Edit"
-msgstr "Video Uređivanje"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 110
+msgid "GPU"
+msgstr "GPU"
 # 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 450
+msgid "Hardware acceleration"
+msgstr "Hardverska akceleracija"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 289
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 47
-msgid "Settings"
-msgstr "Postavke"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 459
+msgid "Video Quality"
+msgstr "Kvaliteta videa"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 468
+msgid "Video Codec"
+msgstr "Video kodek"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 482
+msgid "Audio"
+msgstr "Zvuk"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 283
+msgid "Copy video without reencoding"
+msgstr "Kopiraj video bez ponovnog kodiranja"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 285
+msgid "Faster but less compatible"
+msgstr "Brže, ali manje kompatibilno"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 510
+msgid "Show helpful tooltips"
+msgstr "Prikaži korisne savjete."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 512
+msgid "Display explanation when hovering over options"
+msgstr "Prikaži objašnjenje kada zadržiš pokazivač iznad opcija"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 520
+msgid "Advanced Settings..."
+msgstr "Napredne postavke..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 587
+msgid "Queue"
+msgstr "Redoslijed"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 592
+msgid "Editor"
+msgstr "Urednik"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "Napredak"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 707
+msgid "Advanced Settings"
+msgstr "Napredne postavke"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 527
 msgid "Queue Processing Complete"
@@ -383,55 +761,17 @@ msgstr "Obrada reda je završena"
 msgid "All files in the queue have been processed."
 msgstr "Svi datoteke u redu su obrađene."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 550
-msgid "Please select a video file first"
-msgstr "Molimo vas da prvo odaberete video datoteku."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1225
+msgid "File not found"
+msgstr "Datoteka nije pronađena"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 554
-msgid "Could not load the selected video file"
-msgstr "Nije moguće učitati odabranu video datoteku."
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 69
-msgid "Help"
-msgstr "Pomoć"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 607
-msgid ""
-"This application helps you convert video files between different formats.\n"
-"\n"
-"• Use the Conversion tab to select and convert video files\n"
-"• Use the Video Edit tab to trim, crop, and adjust video properties\n"
-"• Access settings through the gear icon\n"
-"\n"
-"For more help, visit the website: communitybig.org"
-msgstr ""
-"Ova aplikacija vam pomaže pretvoriti video datoteke između različitih formata.\n"
-"\n"
-"• Koristite karticu Konverzija za odabir i pretvaranje video datoteka\n"
-"• Koristite karticu Uređivanje videa za obrezivanje, rezanje i prilagodbu svojstava videa\n"
-"• Pristupite postavkama putem ikone zupčanika\n"
-"\n"
-"Za više pomoći, posjetite web stranicu: communitybig.org"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1238
+msgid "Could not load video file"
+msgstr "Nije moguće učitati video datoteku."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 714
 msgid "Error"
 msgstr "Greška"
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 741
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 773
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 951
-msgid "Could not preview this video file"
-msgstr "Nije moguće pregledati ovu video datoteku."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 782
-#, python-brace-format
-msgid "Error previewing file: {0}"
-msgstr "Greška pri pregledavanju datoteke: {0}"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 837
 msgid "Select Video Files"
@@ -444,10 +784,6 @@ msgstr "Video datoteke"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 864
 msgid "Select Folder with Video Files"
 msgstr "Odaberite mapu s video datotekama"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 869
-msgid "Folders"
-msgstr "Mape"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 911
 msgid "{} video files have been added to the queue."
@@ -481,93 +817,314 @@ msgstr "Nema dodanih datoteka"
 msgid "No valid video files were found in your selection."
 msgstr "Nisu pronađene valjane video datoteke u vašem odabiru."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 175
-msgid "Loading..."
-msgstr "Učitavanje..."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 295
+msgid "Go to segment start"
+msgstr "Idi na početak segmenta"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 344
-msgid "Start time must be less than end time. Please select an earlier position."
-msgstr "Vrijeme početka mora biti manje od vremena završetka. Molimo odaberite raniju poziciju."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 304
+msgid "Edit segment times"
+msgstr "Uredi vrijeme segmenata"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 352
-msgid "Invalid trim start time"
-msgstr "Nevažeće vrijeme početka obrezivanja"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 311
+msgid "Remove segment"
+msgstr "Ukloni segment"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 384
-msgid "End time must be greater than start time. Please select a later position."
-msgstr "Vrijeme završetka mora biti veće od vremena početka. Molimo odaberite kasniju poziciju."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 394
+msgid "Edit Segment"
+msgstr "Uredi segment"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 392
-msgid "Invalid trim end time"
-msgstr "Nevažeće vrijeme završetka obrezivanja"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 396
+msgid "Edit start and end times for this segment"
+msgstr "Uredi početno i završno vrijeme za ovaj segment"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 249
-msgid "Previous frame"
-msgstr "Prethodni okvir"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 406
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 532
+msgid "Start Time:"
+msgstr "Vrijeme početka:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 414
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 538
+msgid "End Time:"
+msgstr "Vrijeme završetka:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 318
+msgid "Cancel"
+msgstr "Otkaži"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 423
+msgid "Save"
+msgstr "Spremi"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 448
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 571
+msgid "Invalid Time"
+msgstr "Nevažeće vrijeme"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 448
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 571
+msgid "Time values cannot be negative"
+msgstr "Vrijednosti vremena ne mogu biti negativne."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 454
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 577
+msgid "Invalid Time Range"
+msgstr "Nevažeći vremenski raspon"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 454
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 577
+msgid "Start time must be before end time"
+msgstr "Vrijeme početka mora biti prije vremena završetka."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+msgid "OK"
+msgstr "U redu"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 495
+msgid "Clear All Segments?"
+msgstr "Izbriši sve segmente?"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 498
+msgid "This will remove all trim segments. This action cannot be undone."
+msgstr "Ovo će ukloniti sve segmente obrezivanja. Ova radnja se ne može poništiti."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 502
+msgid "Clear All"
+msgstr "Izbriši sve"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 520
+msgid "Add Segment Manually"
+msgstr "Dodaj segment ručno"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 522
+msgid "Enter start and end times for the new segment"
+msgstr "Unesite vrijeme početka i završetka za novi segment."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 547
+msgid "Add Segment"
+msgstr "Dodaj segment"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 851
+msgid "Disabled"
+msgstr "Onemogućeno"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 53
+msgid "Welcome to Big Video Converter"
+msgstr "Dobrodošli u Big Video Converter"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 72
+msgid "Convert Video Formats"
+msgstr "Pretvori video formate"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 73
+msgid ""
+"MP4, MKV, AVI, WebM and many more\n"
+"with hardware acceleration support"
+msgstr ""
+"MP4, MKV, AVI, WebM i mnogi drugi\n"
+"s podrškom za hardversku akceleraciju"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 76
+msgid "Trim and Cut Videos"
+msgstr "Obreži i Izreži Videozapise"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 78
+msgid ""
+"Select specific segments to keep\n"
+"and create new videos with only those parts"
+msgstr ""
+"Odaberite specifične segmente koje želite zadržati i izradite nove videozapise samo s tim "
+"dijelovima."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 83
+msgid "Video Color Adjustments"
+msgstr "Podešavanja boje videa"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 85
+msgid ""
+"Control brightness, saturation, and hue\n"
+"to enhance your videos"
+msgstr "Kontrolirajte svjetlinu, zasićenost i nijansu kako biste poboljšali svoje videozapise"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 90
+msgid "Fast Copy Mode"
+msgstr "Brzi način kopiranja"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 92
+msgid ""
+"Change container format without re-encoding\n"
+"for ultra-fast processing with no quality loss"
+msgstr "Promijenite format kontejnera bez ponovnog kodiranja za ultra-brzu obradu bez gubitka kvalitete"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 109
+msgid "Crop Videos"
+msgstr "Isecite videozapise"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 110
+msgid ""
+"Remove unwanted areas from edges\n"
+"to focus on what matters"
+msgstr "Uklonite neželjena područja s rubova kako biste se usredotočili na ono što je važno."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 113
+msgid "Audio Control"
+msgstr "Kontrola zvuka"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 115
+msgid ""
+"Extract, copy, or re-encode audio\n"
+"with multiple codec options"
+msgstr "Izvuci, kopiraj ili ponovo kodiraj audio s više opcija kodeka."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 120
+msgid "Subtitle Management"
+msgstr "Upravljanje titlovima"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 122
+msgid ""
+"Extract subtitles to SRT files\n"
+"or keep them embedded in video"
+msgstr "Izvuci titlove u SRT datoteke ili ih zadrži ugrađene u video."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 127
+msgid "Batch Processing"
+msgstr "Obrada serija"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 129
+msgid ""
+"Convert multiple videos at once\n"
+"with queue management"
+msgstr "Konvertirajte više videozapisa odjednom uz upravljanje redom."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 465
+msgid "Show dialog on startup"
+msgstr "Prikaži dijalog pri pokretanju"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 172
+msgid "Let's Start"
+msgstr "Započnimo"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 97
+msgid "Mark segment point"
+msgstr "Označi točku segmenta"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 107
+msgid "Cancel current mark"
+msgstr "Otkaži trenutnu oznaku"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 256
 msgid "Back 1 second"
 msgstr "Povratak 1 sekundu"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 263
-msgid "Back 10 seconds"
-msgstr "Povratak 10 sekundi"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 249
+msgid "Previous frame"
+msgstr "Prethodni okvir"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 268
-msgid "Reset"
-msgstr "Ponovno postavi"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 270
-msgid "Reset all settings"
-msgstr "Poništi sve postavke"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 277
-msgid "Forward 10 seconds"
-msgstr "Naprijed 10 sekundi"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 284
-msgid "Forward 1 second"
-msgstr "Naprijed 1 sekundu"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 141
+msgid "Play/Pause"
+msgstr "Igraj/Pauziraj"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 291
 msgid "Next frame"
 msgstr "Sljedeći okvir"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 312
-msgid "Trim by Time"
-msgstr "Obreži prema vremenu"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 284
+msgid "Forward 1 second"
+msgstr "Naprijed 1 sekundu"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 331
-msgid "Start time"
-msgstr "Vrijeme početka"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 173
+msgid "Audio Track"
+msgstr "Audio Zapisi"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 333
-msgid "Set timeline marked time as start"
-msgstr "Postavi vremensku liniju označeno vrijeme kao početak"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 194
+msgid "Toggle Fullscreen"
+msgstr "Prebaci u cijeli ekran"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 349
-msgid "End time"
-msgstr "Vrijeme završetka"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
+msgid "Left"
+msgstr "Lijevo"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 350
-msgid "Set timeline marked time as end"
-msgstr "Postavi vremensku liniju označeno vrijeme kao kraj"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
+msgid "Right"
+msgstr "U redu"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
+msgid "Top"
+msgstr "Vrh"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
+msgid "Bottom"
+msgstr "Dno"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 273
+msgid "Resolution:"
+msgstr "Rezolucija:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 274
+msgid "Codec:"
+msgstr "Kodek:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 275
+msgid "Size:"
+msgstr "Veličina:"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 361
 msgid "Duration:"
 msgstr "Trajanje:"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 295
+msgid "Volume"
+msgstr "Jedinica glasnoće"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 329
+msgid "Color Adjustments"
+msgstr "Podešavanje boje"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 334
+msgid "Brightness"
+msgstr "Svjetlina"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 347
+msgid "Saturation"
+msgstr "Zasićenje"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 360
+msgid "Hue"
+msgstr "Nijansa"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 374
+msgid "Trim Segments"
+msgstr "Obreži segmente"
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 376
-msgid "Reset trim points"
-msgstr "Poništi točke trimanja"
+msgid "Segments List"
+msgstr "Popis Segmenata"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 388
-msgid "Crop by Edges"
-msgstr "Izreži po rubovima"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 386
+msgid "No Segments Added"
+msgstr "Nema dodanih segmenata"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 420
-msgid "Left Side"
-msgstr "Lijeva strana"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 387
+msgid "Use the scissors button on the player to mark segments."
+msgstr "Upotrijebite gumb za škare na playeru za označavanje segmenata."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 406
+msgid "Add segment manually"
+msgstr "Dodajte segment ručno"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 414
+msgid "Clear all segments"
+msgstr "Izbriši sve segmente"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 429
+msgid "Join segments into a single file"
+msgstr "Spojite segmente u jednu datoteku"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 430
+msgid "Save each segment as a separate file"
+msgstr "Spremi svaki segment kao zasebnu datoteku."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 439
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 471
@@ -577,34 +1134,6 @@ msgstr "Lijeva strana"
 msgid "Reset to default"
 msgstr "Vrati na zadano"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 452
-msgid "Right Side"
-msgstr "Desna strana"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 483
-msgid "Top Side"
-msgstr "Gornja strana"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 514
-msgid "Bottom Side"
-msgstr "Donja strana"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 546
-msgid "Final size: calculating..."
-msgstr "Završna veličina: izračunavanje..."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 562
-msgid "Video Adjustments"
-msgstr "Podešavanja videa"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 724
-msgid "Video Information"
-msgstr "Informacije o videu"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 727
-msgid "Filename"
-msgstr "Naziv datoteke"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 91
 msgid "Reset All Settings"
 msgstr "Poništi sve postavke"
@@ -612,14 +1141,6 @@ msgstr "Poništi sve postavke"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 104
 msgid "Encoding Settings"
 msgstr "Postavke kodiranja"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 110
-msgid "GPU"
-msgstr "GPU"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 111
-msgid "Select hardware acceleration"
-msgstr "Odaberite hardversku akceleraciju"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 117
 msgid "GPU partial mode"
@@ -629,41 +1150,21 @@ msgstr "GPU djelomični način"
 msgid "Decode using CPU, encode using GPU"
 msgstr "Dekodiraj pomoću CPU-a, kodiraj pomoću GPU-a"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 125
-msgid "Video quality"
-msgstr "Kvaliteta videa"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 127
-msgid "Higher quality needs more processing power"
-msgstr "Veća kvaliteta zahtijeva više procesorske snage."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 137
-msgid "Video codec"
-msgstr "Video kodek"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 138
-msgid "Select encoding format"
-msgstr "Odaberite format kodiranja"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 148
-msgid "Output"
-msgstr "Izlaz"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 179
+msgid "Compression preset"
+msgstr "Postavka kompresije"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 149
-msgid "Select output file format"
-msgstr "Odaberite format izlazne datoteke"
+msgid "Speed vs compression ratio"
+msgstr "Brzina vs omjer kompresije"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 146
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 202
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 236
-msgid "Default"
-msgstr "Zadano"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 159
+msgid "Output Format"
+msgstr "Format izlaza"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 152
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 208
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 240
-msgid "Custom"
-msgstr "Prilagođeno"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 159
+msgid "Container format for output file"
+msgstr "Format kontejnera za izlaznu datoteku"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 157
 msgid "Video resolution"
@@ -681,21 +1182,21 @@ msgstr "Prilagođena razlučivost"
 msgid "Ex: 1280x720, 1920x1080"
 msgstr "1280x720, 1920x1080"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 179
-msgid "Compression preset"
-msgstr "Postavka kompresije"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 180
-msgid "Slower presets provide better compression"
-msgstr "Sporiji postavke pružaju bolju kompresiju"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 189
-msgid "Subtitle handling"
-msgstr "Rukovanje titlovima"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 197
 msgid "Audio Settings"
 msgstr "Postavke zvuka"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 146
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 202
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 236
+msgid "Default"
+msgstr "Zadano"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 152
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 208
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 240
+msgid "Custom"
+msgstr "Prilagođeno"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 213
 msgid "Audio bitrate"
@@ -729,9 +1230,13 @@ msgstr "Prilagođeni kanali"
 msgid "Ex: 2 (stereo), 6 (5.1)"
 msgstr "Ex: 2 (stereo), 6 (5.1)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 267
-msgid "Audio handling"
-msgstr "Rukovanje zvukom"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 269
+msgid "Audio codec"
+msgstr "Audio kodek"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 270
+msgid "Codec to use when re-encoding audio"
+msgstr "Codec koji se koristi prilikom ponovnog kodiranja zvuka"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 275
 msgid "General Options"
@@ -744,14 +1249,6 @@ msgstr "Dodatne FFmpeg opcije"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 279
 msgid "Ex: -ss 60 -t 30"
 msgstr "Ex: -ss 60 -t 30"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 283
-msgid "Copy video without reencoding"
-msgstr "Kopiraj video bez ponovnog kodiranja"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 285
-msgid "Faster but less compatible"
-msgstr "Brže, ali manje kompatibilno"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 289
 msgid "Only extract subtitles"
@@ -769,6 +1266,10 @@ msgstr "Poništi sve postavke?"
 msgid "This will reset all settings to their default values. This action cannot be undone."
 msgstr "Ovo će resetirati sve postavke na njihove zadane vrijednosti. Ova radnja se ne može poništiti."
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 268
+msgid "Reset"
+msgstr "Ponovno postavi"
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 705
 msgid "Settings Reset"
 msgstr "Resetiranje postavki"
@@ -777,33 +1278,51 @@ msgstr "Resetiranje postavki"
 msgid "All settings have been reset to their default values."
 msgstr "Sve postavke su vraćene na zadane vrijednosti."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 106
-msgid "Show help"
-msgstr "Prikaži pomoć"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 101
+msgid "Open Containing Folder"
+msgstr "Otvorite mapu koja sadrži"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 111
-msgid "Conversion Queue"
-msgstr "Redoslijed konverzije"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 104
+msgid "More Information..."
+msgstr "Više informacija..."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 190
-msgid "Clear Queue"
-msgstr "Isprazni redoslijed"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 107
+msgid "Delete from Disk..."
+msgstr "Izbriši s diska..."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 196
-msgid "Add Files"
-msgstr "Dodaj datoteke"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 188
+msgid "Delete File from Disk?"
+msgstr "Izbriši datoteku s diska?"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 191
+msgid ""
+"Are you sure you want to permanently delete '{}'?\n"
+"\n"
+"This action cannot be undone."
+msgstr ""
+"Jeste li sigurni da želite trajno izbrisati '{}'?\n"
+"\n"
+"Ova radnja se ne može poništiti."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 197
-msgid "Add video files to queue"
-msgstr "Dodajte video datoteke u red čekanja"
+msgid "Delete"
+msgstr "Izbriši"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 230
-msgid "Add Folder"
-msgstr "Dodaj mapu"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 226
+msgid "Error Deleting File"
+msgstr "Greška pri brisanju datoteke"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 242
-msgid "Convert All"
-msgstr "Pretvori sve"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 227
+msgid "Could not delete file: {}"
+msgstr "Nije moguće izbrisati datoteku: {}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 282
+msgid "No Video Files"
+msgstr "Nema video datoteka"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 284
+msgid "Drag files here or use the Add Files button"
+msgstr "Povucite datoteke ovdje ili upotrijebite gumb Dodaj datoteke"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 270
 msgid "Save in the same folder as the original file"
@@ -821,69 +1340,13 @@ msgstr "Odaberite mapu"
 msgid "Delete original files"
 msgstr "Izbriši izvorne datoteke"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 401
-msgid "A powerful tool for converting video files to MP4 format."
-msgstr "Moćan alat za pretvaranje video datoteka u MP4 format."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 407
-msgid "• GPU-accelerated conversion for NVIDIA, AMD, and Intel GPUs"
-msgstr "• GPU-ubrzana konverzija za NVIDIA, AMD i Intel GPU-e"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 408
-msgid "• High-quality video processing with customizable settings"
-msgstr "• Video obrada visoke kvalitete s prilagodljivim postavkama"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 409
-msgid "• Support for various video codecs (H.264, H.265/HEVC, AV1, VP9)"
-msgstr "• Podrška za razne video kodeke (H.264, H.265/HEVC, AV1, VP9)"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 410
-msgid "• Subtitle extraction and embedding"
-msgstr "• Izdvajanje i umetanje titlova"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 411
-msgid "• Video preview with trimming and effects"
-msgstr "• Pregled videa s obrezivanjem i efektima"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 430
-msgid ""
-"This application uses <b>FFmpeg</b> for reliable, high-performance video conversion. The GPU "
-"acceleration significantly reduces conversion time compared to software-only processing."
-msgstr ""
-"Ova aplikacija koristi <b>FFmpeg</b> za pouzdanu, visokoučinkovitu konverziju videa. GPU ubrzanje "
-"značajno smanjuje vrijeme konverzije u usporedbi s obradom isključivo putem softvera."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 465
-msgid "Show dialog on startup"
-msgstr "Prikaži dijalog pri pokretanju"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 477
-msgid "Close"
-msgstr "Zatvori"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 561
 msgid "Select the output folder"
 msgstr "Odaberite izlaznu mapu"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 583
-msgid "Please add files to the queue first."
-msgstr "Molimo dodajte datoteke u red čekanja prvo."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 736
-msgid "Show file information"
-msgstr "Prikaži informacije o datoteci"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 745
-msgid "Play in default video player"
-msgstr "Igraj u zadnjem video playeru"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 764
-msgid "Remove from queue"
-msgstr "Ukloni iz reda"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 830
-msgid "Queue is empty. Add files to convert."
-msgstr "Red čekanja je prazan. Dodajte datoteke za konverziju."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 654
+msgid "Could not open this video file"
+msgstr "Nije moguće otvoriti ovu video datoteku."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 979
 msgid "Could not open the video file with the default player"
@@ -894,9 +1357,33 @@ msgstr "Nije moguće otvoriti video datoteku s zadanim playerom."
 msgid "Could not find this video file"
 msgstr "Nije moguće pronaći ovu video datoteku."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 64
-msgid "Menu"
-msgstr "Izbornik"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 42
+msgid "Back"
+msgstr "Natrag"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 69
+msgid "0 files"
+msgstr "0 datoteka"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 196
+msgid "Add Files"
+msgstr "Dodaj datoteke"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 230
+msgid "Add Folder"
+msgstr "Dodaj mapu"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 242
+msgid "Convert All"
+msgstr "Pretvori sve"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 114
+msgid "Convert This File"
+msgstr "Pretvori ovu datoteku"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 133
+msgid "Welcome Screen"
+msgstr "Zaslon dobrodošlice"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 68
 msgid "About"
@@ -905,6 +1392,18 @@ msgstr "O aplikaciji"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 70
 msgid "Quit"
 msgstr "Izlaz"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 189
+msgid "1 file"
+msgstr "1 datoteka"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 191
+msgid "{} files"
+msgstr "{} datoteke"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 29
+msgid "Conversion Progress"
+msgstr "Napredak konverzije"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 167
 msgid "Starting conversion..."
@@ -922,36 +1421,6 @@ msgstr "Čekam na naredbu..."
 msgid "Command Output"
 msgstr "Izlaz naredbe"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 318
-msgid "Cancel"
-msgstr "Otkaži"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 433
 msgid "Conversion cancelled"
 msgstr "Konverzija otkazana"
-# 
-# File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 75
-msgid "Convert Video"
-msgstr "Pretvori video"
-# 
-# File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 86
-#, python-brace-format
-msgid "Convert {0} Videos"
-msgstr "Pretvori {0} videozapisa"
-# 
-# File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 108
-msgid "No valid local files selected"
-msgstr "Nema odabranih valjanih lokalnih datoteka"
-# 
-# File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 109
-msgid "Could not get the path for the selected video files."
-msgstr "Nije moguće dobiti putanju za odabrane video datoteke."
-# 
-# File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 124
-msgid "Application Launch Error"
-msgstr "Greška pri pokretanju aplikacije"
-# 
-# File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 125
-#, python-brace-format
-msgid "Failed to start Big Video Converter: {0}"
-msgstr "Neuspješno pokretanje Big Video Convertera: {0}"
