@@ -55,28 +55,36 @@ VIDEO_FILE_MIME_TYPES = [
 ]
 
 # Encoding options - User-friendly display names
-GPU_OPTIONS = [
-    _("Auto-detect"),
-    _("NVENC (Nvidia)"),
-    _("VAAPI (Intel/AMD)"),
-    _("QSV (Intel)"),
-    _("Vulkan"),
-    _("Software (CPU)")
-]
+def get_gpu_options():
+    """Return translated GPU options"""
+    return [
+        _("Auto-detect"),
+        _("NVENC (Nvidia)"),
+        _("VAAPI (Intel/AMD)"),
+        _("QSV (Intel)"),
+        _("Vulkan"),
+        _("Software (CPU)")
+    ]
+
+GPU_OPTIONS = get_gpu_options()  # Default initialization
 
 # Internal values mapping for GPU options
 GPU_VALUES = {0: "auto", 1: "nvidia", 2: "amd", 3: "intel", 4: "vulkan", 5: "software"}
 
 # User-friendly quality display names
-VIDEO_QUALITY_OPTIONS = [
-    _("Default"),
-    _("Very High"),
-    _("High"),
-    _("Medium"),
-    _("Low"),
-    _("Very Low"),
-    _("Super Low"),
-]
+def get_video_quality_options():
+    """Return translated video quality options"""
+    return [
+        _("Default"),
+        _("Very High"),
+        _("High"),
+        _("Medium"),
+        _("Low"),
+        _("Very Low"),
+        _("Super Low"),
+    ]
+
+VIDEO_QUALITY_OPTIONS = get_video_quality_options()  # Default initialization
 
 # Internal values for ffmpeg
 VIDEO_QUALITY_VALUES = {
@@ -90,26 +98,34 @@ VIDEO_QUALITY_VALUES = {
 }
 
 # User-friendly codec display names
-VIDEO_CODEC_OPTIONS = [
-    _("H.264 (Default)"),
-    _("H.265 (HEVC)"),
-    _("AV1"),
-    _("VP9"),
-]
+def get_video_codec_options():
+    """Return translated video codec options"""
+    return [
+        _("H.264 (Default)"),
+        _("H.265 (HEVC)"),
+        _("AV1"),
+        _("VP9"),
+    ]
+
+VIDEO_CODEC_OPTIONS = get_video_codec_options()  # Default initialization
 
 # Internal codec values for ffmpeg
 VIDEO_CODEC_VALUES = {0: "h264", 1: "h265", 2: "av1", 3: "vp9"}
 
 # User-friendly preset names
-PRESET_OPTIONS = [
-    _("Default"),
-    _("Ultra Fast"),
-    _("Very Fast"),
-    _("Faster"),
-    _("Medium"),
-    _("Slow"),
-    _("Very Slow"),
-]
+def get_preset_options():
+    """Return translated preset options"""
+    return [
+        _("Default"),
+        _("Ultra Fast"),
+        _("Very Fast"),
+        _("Faster"),
+        _("Medium"),
+        _("Slow"),
+        _("Very Slow"),
+    ]
+
+PRESET_OPTIONS = get_preset_options()  # Default initialization
 
 # Internal preset values for ffmpeg
 PRESET_VALUES = {
@@ -123,42 +139,58 @@ PRESET_VALUES = {
 }
 
 # User-friendly subtitle options
-SUBTITLE_OPTIONS = [_("Extract to SRT"), _("Keep Embedded"), _("Remove")]
+def get_subtitle_options():
+    """Return translated subtitle options"""
+    return [_("Extract to SRT"), _("Keep Embedded"), _("Remove")]
+
+SUBTITLE_OPTIONS = get_subtitle_options()  # Default initialization
 
 # Internal subtitle values for ffmpeg
 SUBTITLE_VALUES = {0: "extract", 1: "embedded", 2: "none"}
 
 # User-friendly audio handling options
-AUDIO_OPTIONS = [_("Copy (No Re-encoding)"), _("Re-encode"), _("Remove Audio")]
+def get_audio_options():
+    """Return translated audio options"""
+    return [_("Copy (No Re-encoding)"), _("Re-encode"), _("Remove Audio")]
+
+AUDIO_OPTIONS = get_audio_options()  # Default initialization
 
 # Internal audio values for ffmpeg
 AUDIO_VALUES = {0: "copy", 1: "reencode", 2: "none"}
 
 # Audio codec options for re-encoding (user-friendly names)
-AUDIO_CODEC_OPTIONS = [
-    _("AAC (Default)"),
-    _("Opus (Best Quality)"),
-    _("AC3 (Dolby Digital)"),
-]
+def get_audio_codec_options():
+    """Return translated audio codec options"""
+    return [
+        _("AAC (Default)"),
+        _("Opus (Best Quality)"),
+        _("AC3 (Dolby Digital)"),
+    ]
+
+AUDIO_CODEC_OPTIONS = get_audio_codec_options()  # Default initialization
 
 # Internal audio codec values for ffmpeg
 AUDIO_CODEC_VALUES = {0: "aac", 1: "opus", 2: "ac3"}
 
 # Video resolution options (user-friendly names)
-VIDEO_RESOLUTION_OPTIONS = [
-    _("Default (Original)"),
-    _("4K UHD (3840×2160)"),
-    _("2K QHD (2560×1440)"),
-    _("Full HD (1920×1080)"),
-    _("HD (1280×720)"),
-    _("SD (854×480)"),
-    _("4K UHD Vertical (2160×3840)"),
-    _("2K QHD Vertical (1440×2560)"),
-    _("Full HD Vertical (1080×1920)"),
-    _("HD Vertical (720×1280)"),
-    _("SD Vertical (480×854)"),
-    _("Custom"),
-]
+def get_video_resolution_options():
+    """Return translated video resolution options"""
+    return [
+        _("Default (Original)"),
+        _("4K UHD (3840×2160)"),
+        _("2K QHD (2560×1440)"),
+        _("Full HD (1920×1080)"),
+        _("HD (1280×720)"),
+        _("SD (854×480)"),
+        _("4K UHD Vertical (2160×3840)"),
+        _("2K QHD Vertical (1440×2560)"),
+        _("Full HD Vertical (1080×1920)"),
+        _("HD Vertical (720×1280)"),
+        _("SD Vertical (480×854)"),
+        _("Custom"),
+    ]
+
+VIDEO_RESOLUTION_OPTIONS = get_video_resolution_options()  # Default initialization
 
 # Internal resolution values for ffmpeg
 VIDEO_RESOLUTION_VALUES = {
@@ -182,26 +214,24 @@ def get_tooltips():
     return {
         # Sidebar options
         "gpu": _(
-            "Choose which hardware accelerates video processing:\n• Auto-detect: Automatically uses the best available\n• NVENC: For Nvidia graphics cards (fastest)\n• VAAPI: For Intel/AMD graphics\n• QSV: For Intel processors\n• Vulkan: Cross-platform GPU acceleration\n• Software: Uses CPU only (slowest but compatible)"
+            "If the system's GPU supports video conversion, the process will be much faster. Automatic detection is usually the best option, but you can also select it manually. The Software mode is slower but compatible with more formats. If the GPU doesn’t support conversion, the system will attempt partial GPU processing and, if that fails, will automatically switch to Software mode."
         ),
-        "video_quality": _(
-            "Controls how compressed the video will be:\n• Very High/High: Best quality, larger file size\n• Medium: Good balance between quality and size\n• Low/Very Low: Smaller files, lower quality\nHigher quality = slower processing + bigger files"
-        ),
+        "video_quality": _("The higher the quality, the larger the video file size."),
         "video_codec": _(
-            "The format used to compress video:\n• H.264: Most compatible, works everywhere\n• H.265 (HEVC): Better compression, newer devices\n• AV1: Best compression, requires modern hardware\n• VP9: Good for web, used by YouTube"
+            "H.264: An older format that works on almost all devices. It takes up more storage space but is the fastest to convert.\nH.265: A newer version of H.264. It doesn't work on older devices and compresses files more efficiently.\nVP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the conversion can be very slow.\nAV1: The most modern format. It offers the best compression (creating smaller files), but the conversion can also be slow if the graphics card isn't compatible."
         ),
         "audio_handling": _(
-            "What to do with the audio:\n• Copy: Keep audio unchanged (fast)\n• Re-encode: Convert audio to new format\n• Remove: Delete all audio tracks"
+            "Copy is usually the best option because it’s fast and keeps the audio's full quality. Re-encoding will re-process the audio, which slightly reduces quality. However, it may be necessary to make the file compatible with more devices or to reduce its size."
         ),
         "subtitles": _(
-            "How to handle subtitle tracks:\n• Extract to SRT: Save as separate subtitle file\n• Keep Embedded: Leave inside video file\n• Remove: Delete all subtitles"
+            "If the file has embedded subtitles, it's usually best to keep them embedded. However, some programs need the subtitles in a separate file, so this option can improve compatibility."
         ),
         "force_copy": _(
-            "Exclusive option to cut videos into segments or change the container format to MP4 or MKV, with the advantage of no quality loss and very fast processing."
+            "Copying the video is very fast and maintains the image's full quality. This is very useful for making video cuts, for example, to publish short videos on social media."
         ),
         # Advanced Settings
         "preset": _(
-            "Encoding speed vs file size:\n• Ultra Fast: Quick but larger files\n• Medium: Balanced (recommended)\n• Very Slow: Best compression, takes longer"
+            "A slower conversion speed will result in a more compressed final file. As you might expect, this process can take a very long time to finish."
         ),
         "audio_codec": _(
             "Audio compression format (when re-encoding):\n• AAC: Most compatible, good quality\n• Opus: Best quality at low bitrates\n• AC3 (Dolby Digital): For home theater systems"
@@ -222,15 +252,13 @@ def get_tooltips():
         "hue": _(
             "Shift colors:\n• Positive values: Shift toward red/yellow\n• Negative values: Shift toward blue/green\n• Default: 0 (no change)"
         ),
-        "crop": _(
-            "Remove unwanted areas from video edges:\n• Drag borders to remove parts\n• Useful for removing black bars or unwanted content\n• Does not resize, only cuts"
-        ),
+        "crop": _("Crop the video's edges to keep only the part you need."),
         "segments": _(
             "Select the parts you want to keep in the video. You can add sections by clicking the + button or, more easily, by using the marker button directly on the video area.\n You can export the selected segments as a single file or as separate files, which is very convenient, for example, when creating clips for social media."
         ),
         # Advanced Settings - additional options
         "gpu_partial": _(
-            "Decodes video using CPU\n• Encodes video using GPU\n• Can be faster on some systems\n• Try if full GPU encoding has issues"
+            "When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility issues."
         ),
         "audio_bitrate": _(
             "Audio quality:\n• Higher = better quality, larger file\n• 128k: Good for most content\n• 192k: High quality\n• 256k+: Audiophile quality\n• Default: Let encoder decide"
@@ -242,10 +270,10 @@ def get_tooltips():
             "Advanced FFmpeg options:\n• Add custom FFmpeg parameters\n• Example: -ss 60 -t 30 (skip 60s, take 30s)\n• For advanced users only\n• Wrong options can cause errors"
         ),
         "extract_subtitles": _(
-            "Skips video processing\n• Only extracts subtitle tracks to SRT files\n• Fast operation\n• Useful when you only need subtitles"
+            "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
         ),
         "show_tooltips": _(
-            "• Display explanations when hovering over options\n• This message you are reading is an example of a tooltip"
+            "Show explanations when hovering over options.\nThis message you are reading is an example of a tooltip."
         ),
         # Header bar buttons
         "back_button": _("Return to file queue"),
@@ -261,3 +289,18 @@ def get_tooltips():
         "file_list_info_button": _("Show detailed file information"),
         "file_list_remove_button": _("Remove this file from the queue"),
     }
+
+
+def refresh_translations():
+    """Refresh all translated constants after gettext is properly initialized"""
+    global GPU_OPTIONS, VIDEO_QUALITY_OPTIONS, VIDEO_CODEC_OPTIONS, PRESET_OPTIONS
+    global SUBTITLE_OPTIONS, AUDIO_OPTIONS, AUDIO_CODEC_OPTIONS, VIDEO_RESOLUTION_OPTIONS
+    
+    GPU_OPTIONS = get_gpu_options()
+    VIDEO_QUALITY_OPTIONS = get_video_quality_options()
+    VIDEO_CODEC_OPTIONS = get_video_codec_options()
+    PRESET_OPTIONS = get_preset_options()
+    SUBTITLE_OPTIONS = get_subtitle_options()
+    AUDIO_OPTIONS = get_audio_options()
+    AUDIO_CODEC_OPTIONS = get_audio_codec_options()
+    VIDEO_RESOLUTION_OPTIONS = get_video_resolution_options()

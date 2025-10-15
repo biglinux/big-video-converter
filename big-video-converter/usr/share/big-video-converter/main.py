@@ -471,7 +471,7 @@ class VideoConverterApp(Adw.Application):
         settings_box.set_spacing(24)
         settings_box.set_margin_start(12)
         settings_box.set_margin_end(12)
-        settings_box.set_margin_top(24)
+        settings_box.set_margin_top(12)
         settings_box.set_margin_bottom(24)
 
         # Encoding Settings Group
@@ -537,15 +537,11 @@ class VideoConverterApp(Adw.Application):
         self.force_copy_video_check = Adw.SwitchRow(
             title=_("Copy video without reencoding")
         )
-        self.force_copy_video_check.set_subtitle(_("Faster but less compatible"))
         options_group.add(self.force_copy_video_check)
         self.tooltip_helper.add_tooltip(self.force_copy_video_check, "force_copy")
 
         # Show helpful tooltips switch
         self.show_tooltips_check = Adw.SwitchRow(title=_("Show helpful tooltips"))
-        self.show_tooltips_check.set_subtitle(
-            _("Display explanation when hovering over options")
-        )
         options_group.add(self.show_tooltips_check)
         self.tooltip_helper.add_tooltip(self.show_tooltips_check, "show_tooltips")
 
@@ -1610,6 +1606,10 @@ def main():
 
     gettext.bindtextdomain("big-video-converter", locale_dir)
     gettext.textdomain("big-video-converter")
+    
+    # Refresh translated constants after gettext is initialized
+    from constants import refresh_translations
+    refresh_translations()
 
     app = VideoConverterApp()
     return app.run(sys.argv)

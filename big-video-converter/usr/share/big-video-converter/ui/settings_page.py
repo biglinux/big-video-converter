@@ -4,24 +4,8 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 # Setup translation
 import gettext
+import constants
 
-from constants import (
-    APP_ID,
-    GPU_OPTIONS,
-    GPU_VALUES,
-    VIDEO_QUALITY_OPTIONS,
-    VIDEO_QUALITY_VALUES,
-    VIDEO_CODEC_OPTIONS,
-    VIDEO_CODEC_VALUES,
-    PRESET_OPTIONS,
-    PRESET_VALUES,
-    SUBTITLE_OPTIONS,
-    SUBTITLE_VALUES,
-    AUDIO_CODEC_OPTIONS,
-    AUDIO_CODEC_VALUES,
-    VIDEO_RESOLUTION_OPTIONS,
-    VIDEO_RESOLUTION_VALUES,
-)
 from gi.repository import Adw, Gtk
 
 _ = gettext.gettext
@@ -144,7 +128,7 @@ class SettingsPage:
         preset_row = Adw.ComboRow(
             title=_("Compression preset"), subtitle=_("Speed vs compression ratio")
         )
-        preset_model = Gtk.StringList.new(PRESET_OPTIONS)
+        preset_model = Gtk.StringList.new(constants.PRESET_OPTIONS)
         preset_row.set_model(preset_model)
         self.preset_combo = preset_row
         encoding_group.add(preset_row)
@@ -164,7 +148,7 @@ class SettingsPage:
 
         # Video resolution combo with common values
         resolution_model = Gtk.StringList()
-        for option in VIDEO_RESOLUTION_OPTIONS:
+        for option in constants.VIDEO_RESOLUTION_OPTIONS:
             resolution_model.append(option)
 
         self.video_resolution_combo = Adw.ComboRow(title=_("Video resolution"))
@@ -261,7 +245,7 @@ class SettingsPage:
 
         # Audio codec combo for re-encoding
         codec_model = Gtk.StringList()
-        for option in AUDIO_CODEC_OPTIONS:
+        for option in constants.AUDIO_CODEC_OPTIONS:
             codec_model.append(option)
 
         self.audio_codec_combo = Adw.ComboRow(title=_("Audio codec"))
@@ -330,7 +314,7 @@ class SettingsPage:
         selected = combo.get_selected()
 
         # Check if Custom is selected (last option in VIDEO_RESOLUTION_OPTIONS)
-        if selected == len(VIDEO_RESOLUTION_OPTIONS) - 1:  # Custom option
+        if selected == len(constants.VIDEO_RESOLUTION_OPTIONS) - 1:  # Custom option
             self.custom_resolution_row.set_visible(True)
 
             # Use the custom value if it's not empty
@@ -342,8 +326,8 @@ class SettingsPage:
             self.custom_resolution_row.set_visible(False)
 
             # Use the mapping to get the internal value
-            if selected < len(VIDEO_RESOLUTION_VALUES):
-                resolution = VIDEO_RESOLUTION_VALUES[selected]
+            if selected < len(constants.VIDEO_RESOLUTION_VALUES):
+                resolution = constants.VIDEO_RESOLUTION_VALUES[selected]
                 self.settings_manager.save_setting("video-resolution", resolution)
 
     def _on_custom_resolution_changed(self, entry):
@@ -352,7 +336,7 @@ class SettingsPage:
         if (
             value
             and self.video_resolution_combo.get_selected()
-            == len(VIDEO_RESOLUTION_OPTIONS) - 1
+            == len(constants.VIDEO_RESOLUTION_OPTIONS) - 1
         ):
             self.settings_manager.save_setting("video-resolution", value)
 
@@ -421,39 +405,39 @@ class SettingsPage:
     def _save_gpu_setting(self, index):
         """Save GPU setting as direct value"""
         # Use the mapping from constants to save the internal value
-        internal_value = GPU_VALUES.get(index, "auto")
+        internal_value = constants.GPU_VALUES.get(index, "auto")
         self.settings_manager.save_setting("gpu", internal_value)
 
     def _save_quality_setting(self, index):
         """Save video quality setting as direct value"""
         # Use the mapping from constants to save the internal value
-        internal_value = VIDEO_QUALITY_VALUES.get(index, "medium")
+        internal_value = constants.VIDEO_QUALITY_VALUES.get(index, "medium")
         self.settings_manager.save_setting("video-quality", internal_value)
 
     def _save_codec_setting(self, combo_box):
         """Save video codec setting"""
         selected = combo_box.get_selected()
-        if selected < len(VIDEO_CODEC_VALUES):
+        if selected < len(constants.VIDEO_CODEC_VALUES):
             # Get the internal value from the mapping
-            internal_value = VIDEO_CODEC_VALUES[selected]
+            internal_value = constants.VIDEO_CODEC_VALUES[selected]
             self.app.settings_manager.save_setting("video_encoder", internal_value)
             print(f"Saved codec: {internal_value}")
 
     def _save_preset_setting(self, combo_box, _param=None):
         """Save preset setting"""
         selected = combo_box.get_selected()
-        if selected < len(PRESET_VALUES):
+        if selected < len(constants.PRESET_VALUES):
             # Get the internal value from the mapping
-            internal_value = PRESET_VALUES[selected]
+            internal_value = constants.PRESET_VALUES[selected]
             self.app.settings_manager.save_setting("preset", internal_value)
             print(f"Saved preset: {internal_value}")
 
     def _save_audio_codec_setting(self, combo_box, _param=None):
         """Save audio codec setting"""
         selected = combo_box.get_selected()
-        if selected < len(AUDIO_CODEC_VALUES):
+        if selected < len(constants.AUDIO_CODEC_VALUES):
             # Get the internal value from the mapping
-            internal_value = AUDIO_CODEC_VALUES[selected]
+            internal_value = constants.AUDIO_CODEC_VALUES[selected]
             self.app.settings_manager.save_setting("audio-codec", internal_value)
             print(f"Saved audio codec: {internal_value}")
 
@@ -466,7 +450,7 @@ class SettingsPage:
         if saved_resolution:
             # Check if it's one of the standard resolutions using reverse mapping
             standard_index = -1
-            for index, internal_value in VIDEO_RESOLUTION_VALUES.items():
+            for index, internal_value in constants.VIDEO_RESOLUTION_VALUES.items():
                 if internal_value == saved_resolution:
                     standard_index = index
                     break
@@ -478,7 +462,7 @@ class SettingsPage:
             else:
                 # Must be a custom resolution
                 self.video_resolution_combo.set_selected(
-                    len(VIDEO_RESOLUTION_OPTIONS) - 1
+                    len(constants.VIDEO_RESOLUTION_OPTIONS) - 1
                 )  # Custom
                 self.custom_resolution_row.set_text(saved_resolution)
                 self.custom_resolution_row.set_visible(True)
@@ -580,8 +564,8 @@ class SettingsPage:
         elif value == "auto" or "auto-detect" in value:
             return 0
 
-        # Reverse lookup in GPU_VALUES
-        for index, internal_value in GPU_VALUES.items():
+        # Reverse lookup in constants.GPU_VALUES
+        for index, internal_value in constants.GPU_VALUES.items():
             if internal_value == value:
                 return index
 
@@ -592,8 +576,8 @@ class SettingsPage:
         """Find index of quality value using reverse mapping"""
         value = value.lower()
 
-        # Reverse lookup in VIDEO_QUALITY_VALUES
-        for index, internal_value in VIDEO_QUALITY_VALUES.items():
+        # Reverse lookup in constants.VIDEO_QUALITY_VALUES
+        for index, internal_value in constants.VIDEO_QUALITY_VALUES.items():
             if internal_value == value:
                 return index
 
@@ -604,8 +588,8 @@ class SettingsPage:
         """Find index of codec value using reverse mapping"""
         value = value.lower()
 
-        # Reverse lookup in VIDEO_CODEC_VALUES
-        for index, internal_value in VIDEO_CODEC_VALUES.items():
+        # Reverse lookup in constants.VIDEO_CODEC_VALUES
+        for index, internal_value in constants.VIDEO_CODEC_VALUES.items():
             if internal_value == value:
                 return index
 
@@ -616,8 +600,8 @@ class SettingsPage:
         """Find index of preset value using reverse mapping"""
         value = value.lower()
 
-        # Reverse lookup in PRESET_VALUES
-        for index, internal_value in PRESET_VALUES.items():
+        # Reverse lookup in constants.PRESET_VALUES
+        for index, internal_value in constants.PRESET_VALUES.items():
             if internal_value == value:
                 return index
 
@@ -628,8 +612,8 @@ class SettingsPage:
         """Find index of audio codec value using reverse mapping"""
         value = value.lower()
 
-        # Reverse lookup in AUDIO_CODEC_VALUES
-        for index, internal_value in AUDIO_CODEC_VALUES.items():
+        # Reverse lookup in constants.AUDIO_CODEC_VALUES
+        for index, internal_value in constants.AUDIO_CODEC_VALUES.items():
             if internal_value == value:
                 return index
 
