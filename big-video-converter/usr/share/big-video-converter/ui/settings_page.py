@@ -65,12 +65,8 @@ class SettingsPage:
         # Output format stays enabled - user can still choose container
         # self.output_format_combo.set_sensitive(True)  # Always enabled
 
-        # Audio settings - disable all
-        self.audio_bitrate_combo.set_sensitive(enable_encoding_options)
-        self.custom_bitrate_row.set_sensitive(enable_encoding_options)
-        self.audio_channels_combo.set_sensitive(enable_encoding_options)
-        self.custom_channels_row.set_sensitive(enable_encoding_options)
-        self.audio_codec_combo.set_sensitive(enable_encoding_options)
+        # Note: Audio settings remain enabled even in copy mode
+        # Users may want to configure audio handling/extraction separately
 
         # General options stay enabled (additional ffmpeg options, extract subtitles)
         # self.options_entry.set_sensitive(True)  # Always enabled
@@ -175,6 +171,8 @@ class SettingsPage:
         self.video_resolution_combo.set_subtitle(_("Select output resolution"))
         self.video_resolution_combo.set_model(resolution_model)
         self.video_resolution_combo.set_selected(0)  # Default
+        # Request wider size to accommodate long option names
+        self.video_resolution_combo.set_size_request(400, -1)
         self.app.tooltip_helper.add_tooltip(self.video_resolution_combo, "resolution")
 
         # Add custom entry for resolution that shows when "Custom" is selected
@@ -546,7 +544,7 @@ class SettingsPage:
         self.gpu_partial_check.set_active(gpu_partial_active)
 
         # Load preset
-        preset_value = self.settings_manager.load_setting("preset", "medium")
+        preset_value = self.settings_manager.load_setting("preset", "default")
         preset_index = self._find_preset_index(preset_value)
         self.preset_combo.set_selected(preset_index)
 

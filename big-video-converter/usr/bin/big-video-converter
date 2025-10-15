@@ -579,6 +579,15 @@ function attempt_conversion() {
 	fi
 
 	# --- Execute Conversion Attempts ---
+	
+	if [[ "$force_copy_video" = "1" ]]; then
+		echo "Generating file without re-encoding"
+		echo "Running command: $ffmpeg_executable $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
+		eval $ffmpeg_executable $options $decoder_format $encoder_format "$video_filter_chain" $ffmpeg_generic_options
+		# After copy always exit
+		exit $?
+	fi
+	
 	# Try to encode with the GPU
 	if [[ "$encoder_format" != "$encoder_software" && "$gpu_partial" != "1" ]]; then
 		echo "Encode mode: Decode GPU, encode GPU"

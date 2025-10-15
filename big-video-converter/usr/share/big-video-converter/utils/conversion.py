@@ -1245,12 +1245,13 @@ def monitor_progress(app, process, progress_item, env_vars=None):
 
 
 def show_info_dialog_and_close_progress(app, message, progress_item):
-    """Shows an information dialog"""
+    """Shows a system notification instead of dialog"""
     # Remove the item from the progress page after a delay
     GLib.timeout_add(
         5000, lambda: app.progress_page.remove_conversion(progress_item.conversion_id)
     )
-    app.show_info_dialog(_("Information"), message)
+    # Send system notification instead of showing dialog
+    app.send_system_notification(_("Information"), message)
 
 
 def show_error_dialog_and_close_progress(app, message, progress_item):

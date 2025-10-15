@@ -754,7 +754,7 @@ class ConversionPage:
 
                 # Video quality and codec
                 env_vars["video_quality"] = self.app.settings_manager.load_setting(
-                    "video-quality", "medium"
+                    "video-quality", "default"
                 )
                 env_vars["video_encoder"] = self.app.settings_manager.load_setting(
                     "video-codec", "h264"
@@ -762,10 +762,10 @@ class ConversionPage:
 
                 # Other encoding settings
                 env_vars["preset"] = self.app.settings_manager.load_setting(
-                    "preset", "medium"
+                    "preset", "default"
                 )
                 env_vars["subtitle_extract"] = self.app.settings_manager.load_setting(
-                    "subtitle-extract", "extract"
+                    "subtitle-extract", "embedded"
                 )
 
                 # Audio handling - Check if video has audio streams
@@ -1011,8 +1011,20 @@ class ConversionPage:
         if not os.path.isabs(output_folder):
             output_folder = os.path.abspath(output_folder)
 
-        # IMPORTANT: Create the full output file path
+        # Check if file exists and find an available filename
         full_output_path = os.path.join(output_folder, output_basename)
+        if os.path.exists(full_output_path):
+            # Find an available filename by adding a counter
+            base_name = os.path.splitext(output_basename)[0]
+            extension = os.path.splitext(output_basename)[1]
+            counter = 1
+            while True:
+                output_basename = f"{base_name}_{counter}{extension}"
+                full_output_path = os.path.join(output_folder, output_basename)
+                if not os.path.exists(full_output_path):
+                    print(f"Output file exists, using alternative name: {output_basename}")
+                    break
+                counter += 1
 
         # Set the full path as output_file
         env_vars["output_file"] = full_output_path
@@ -1057,6 +1069,7 @@ class ConversionPage:
                     "full_output_path": full_output_path,
                     "input_file": input_file,
                     "input_basename": input_basename,
+                    "input_ext": input_ext,
                     "output_ext": output_ext,
                     "output_folder": output_folder,
                     "trim_segments": trim_segments,
@@ -1099,6 +1112,7 @@ class ConversionPage:
             "full_output_path": full_output_path,
             "input_file": input_file,
             "input_basename": input_basename,
+            "input_ext": input_ext,
             "output_ext": output_ext,
             "output_folder": output_folder,
             "trim_segments": trim_segments,
@@ -1115,6 +1129,7 @@ class ConversionPage:
         full_output_path = context["full_output_path"]
         input_file = context["input_file"]
         input_basename = context["input_basename"]
+        input_ext = context["input_ext"]
         output_ext = context["output_ext"]
         output_folder = context["output_folder"]
         trim_segments = context["trim_segments"]
@@ -1280,6 +1295,14 @@ class ConversionPage:
 
                     # Notify completion - segment items are auto-removed individually
                     def notify_completion():
+                        # Only show notification if not in queue processing
+                        is_queue_processing = len(self.app.conversion_queue) > 0
+                        if not is_queue_processing:
+                            # Send system notification for single file conversions
+                            self.app.send_system_notification(
+                                _("Conversion Complete"),
+                                _("All {0} segments have been processed successfully!").format(len(trim_segments))
+                            )
                         # Notify app that the batch conversion is complete
                         self.app.conversion_completed(True)
 
@@ -1304,6 +1327,12 @@ class ConversionPage:
                 # Define the conversion logic to run in background thread
                 def process_segments_and_join():
                     import subprocess
+
+                    # Define output basename for final joined file
+                    if input_ext == output_ext:
+                        output_basename = f"{input_basename}-converted{output_ext}"
+                    else:
+                        output_basename = f"{input_basename}{output_ext}"
 
                     # Store temp segment paths for concatenation
                     temp_segment_paths = []
@@ -1340,8 +1369,20 @@ class ConversionPage:
                                 # Use relative path to avoid issues with special characters
                                 f.write(f"file '{os.path.basename(temp_path)}'\n")
 
-                        # Build final output path
+                        # Build final output path with collision check
                         final_output_path = os.path.join(output_folder, output_basename)
+                        if os.path.exists(final_output_path):
+                            # Find an available filename by adding a counter
+                            base_name = os.path.splitext(output_basename)[0]
+                            extension = os.path.splitext(output_basename)[1]
+                            counter = 1
+                            while True:
+                                output_basename = f"{base_name}_{counter}{extension}"
+                                final_output_path = os.path.join(output_folder, output_basename)
+                                if not os.path.exists(final_output_path):
+                                    print(f"Output file exists, using alternative name: {output_basename}")
+                                    break
+                                counter += 1
 
                         # Run ffmpeg concatenation
                         concat_cmd = [
@@ -1403,9 +1444,31 @@ class ConversionPage:
                                 except Exception as e:
                                     print(f"Error deleting original file: {e}")
 
-                            # Notify completion without dialog
+                            # Notify completion with notification
                             print("Join operation completed successfully")
-                            GLib.idle_add(lambda: self.app.conversion_completed(True))
+                            def notify_join_completion():
+                                # Track completed file for completion screen
+                                if hasattr(self.app, "current_processing_file") and self.app.current_processing_file:
+                                    file_info = {
+                                        "input_file": self.app.current_processing_file,
+                                        "output_file": final_output_path,
+                                        "success": True
+                                    }
+                                    if not hasattr(self.app, "completed_conversions"):
+                                        self.app.completed_conversions = []
+                                    self.app.completed_conversions.append(file_info)
+                                
+                                # Only show notification if not in queue processing
+                                is_queue_processing = len(self.app.conversion_queue) > 0
+                                if not is_queue_processing:
+                                    # Send system notification for single file conversions
+                                    self.app.send_system_notification(
+                                        _("Conversion Complete"),
+                                        _("All {0} segments have been joined successfully!").format(len(trim_segments))
+                                    )
+                                # Pass skip_tracking=True to avoid duplicate tracking
+                                self.app.conversion_completed(True, skip_tracking=True)
+                            GLib.idle_add(notify_join_completion)
                         else:
                             error_msg = f"Concatenation failed: {result.stderr}"
                             print(error_msg)
@@ -1438,6 +1501,12 @@ class ConversionPage:
                 return True
 
         # Single segment or no segments - use standard conversion
+        # Calculate segment duration for single-segment trimming for accurate progress
+        segment_duration = None
+        if len(trim_segments) == 1:
+            segment_duration = trim_segments[0]["end"] - trim_segments[0]["start"]
+            print(f"Single segment mode: segment_duration={segment_duration:.2f}s")
+        
         # Create and display progress dialog
         run_with_progress_dialog(
             self.app,
@@ -1446,6 +1515,7 @@ class ConversionPage:
             input_file if delete_original else None,
             delete_original,
             env_vars,
+            segment_duration=segment_duration,  # Pass segment duration for progress calculation
         )
 
         return True

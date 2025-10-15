@@ -18,6 +18,7 @@ import gettext
 # Import local modules
 from constants import APP_ID, AUDIO_VALUES, SUBTITLE_VALUES, VIDEO_FILE_MIME_TYPES
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from ui.completion_page import CompletionPage
 from ui.conversion_page import ConversionPage
 from ui.header_bar import HeaderBar
 from ui.progress_page import ProgressPage
@@ -91,6 +92,9 @@ class VideoConverterApp(Adw.Application):
         self.currently_converting = False
         self.auto_convert = False
         self.queue_display_widgets = []
+        
+        # Track completed conversions for completion screen
+        self.completed_conversions = []
 
         # Video editing state - initialize with reset values
         self.trim_start_time = 0
@@ -154,10 +158,20 @@ class VideoConverterApp(Adw.Application):
         """Create the main application window and UI components"""
         # Create main window
         self.window = Adw.ApplicationWindow(application=self)
-        self.window.set_default_size(1200, 720)
+        
+        # Restore window size from settings
+        width = self.settings_manager.load_setting("window-width", 1200)
+        height = self.settings_manager.load_setting("window-height", 720)
+        self.window.set_default_size(width, height)
+        
+        # Restore maximized state
+        is_maximized = self.settings_manager.load_setting("window-maximized", False)
+        if is_maximized:
+            self.window.maximize()
+        
         self.window.set_title("Big Video Converter")
 
-        # Add close request handler to ensure processes are terminated
+        # Add close request handler to ensure processes are terminated and save window state
         self.window.connect("close-request", self._on_window_close_request)
 
         # Set application icon
@@ -196,8 +210,9 @@ class VideoConverterApp(Adw.Application):
         self._create_left_pane()
         self._create_right_pane()
 
-        # Set initial paned position (30% left, 70% right)
-        self.main_paned.set_position(350)
+        # Set initial paned position (restore from settings or use default 430px)
+        sidebar_position = self.settings_manager.load_setting("sidebar-position", 430)
+        self.main_paned.set_position(sidebar_position)
 
         # Add main_paned as first page of main_stack
         self.main_stack.add_titled(self.main_paned, "main_view", _("Main"))
@@ -210,6 +225,9 @@ class VideoConverterApp(Adw.Application):
 
     def _on_window_close_request(self, window):
         """Handle window close event to clean up running processes"""
+        # Save window state before closing
+        self._save_window_state()
+        
         # Check if we have active conversions
         if self.progress_page and self.progress_page.has_active_conversions():
             # Terminate all running processes
@@ -229,6 +247,23 @@ class VideoConverterApp(Adw.Application):
 
         # Continue with normal window close
         return False  # False means continue with close, True would prevent close
+    
+    def _save_window_state(self):
+        """Save current window size, position and maximized state"""
+        # Save maximized state
+        is_maximized = self.window.is_maximized()
+        self.settings_manager.save_setting("window-maximized", is_maximized)
+        
+        # Only save size if not maximized
+        if not is_maximized:
+            width = self.window.get_width()
+            height = self.window.get_height()
+            self.settings_manager.save_setting("window-width", width)
+            self.settings_manager.save_setting("window-height", height)
+        
+        # Save sidebar position
+        sidebar_position = self.main_paned.get_position()
+        self.settings_manager.save_setting("sidebar-position", sidebar_position)
 
     def terminate_process_tree(self, process):
         """Properly terminate a process and all its children"""
@@ -596,6 +631,12 @@ class VideoConverterApp(Adw.Application):
         self.main_stack.add_titled(
             self.progress_page.get_page(), "progress_view", _("Progress")
         )
+        
+        # Create and add completion page to main_stack
+        self.completion_page = CompletionPage(self)
+        self.main_stack.add_titled(
+            self.completion_page, "completion_view", _("Complete")
+        )
 
     def _connect_left_pane_signals(self):
         """Connect signals for left pane settings controls"""
@@ -633,7 +674,7 @@ class VideoConverterApp(Adw.Application):
         self.subtitle_combo.connect(
             "notify::selected",
             lambda w, p: self.settings_manager.save_setting(
-                "subtitle-extract", SUBTITLE_VALUES.get(w.get_selected(), "extract")
+                "subtitle-extract", SUBTITLE_VALUES.get(w.get_selected(), "embedded")
             ),
         )
 
@@ -651,7 +692,7 @@ class VideoConverterApp(Adw.Application):
         self.gpu_combo.set_selected(gpu_index)
 
         # Video Quality
-        quality_value = self.settings_manager.load_setting("video-quality", "medium")
+        quality_value = self.settings_manager.load_setting("video-quality", "default")
         quality_index = self._find_quality_index(quality_value)
         self.video_quality_combo.set_selected(quality_index)
 
@@ -678,7 +719,7 @@ class VideoConverterApp(Adw.Application):
 
         # Subtitle - Use reverse lookup
         subtitle_value = self.settings_manager.load_setting(
-            "subtitle-extract", "extract"
+            "subtitle-extract", "embedded"
         )
         subtitle_index = 0  # Default
         for index, internal_value in SUBTITLE_VALUES.items():
@@ -814,9 +855,8 @@ class VideoConverterApp(Adw.Application):
         self.video_quality_combo.set_sensitive(enable_encoding_options)
         self.video_codec_combo.set_sensitive(enable_encoding_options)
 
-        # Disable/enable audio and subtitle options
-        self.audio_handling_combo.set_sensitive(enable_encoding_options)
-        self.subtitle_combo.set_sensitive(enable_encoding_options)
+        # Note: Audio and subtitle options remain enabled even in copy mode
+        # as users may want to extract/handle them separately
 
         # Update video edit page if it exists
         if hasattr(self, "video_edit_page") and self.video_edit_page:
@@ -1009,6 +1049,7 @@ class VideoConverterApp(Adw.Application):
 
         print("Starting queue processing")
         self._was_queue_processing = True
+        self.completed_conversions = []  # Clear previous completions
         self.header_bar.set_buttons_sensitive(False)
 
         # Reset conversion state and start processing
@@ -1104,14 +1145,35 @@ class VideoConverterApp(Adw.Application):
             self.currently_converting = False
         return False  # Don't repeat
 
-    def conversion_completed(self, success):
-        """Called when a conversion is completed"""
-        print(f"Conversion completed with success={success}")
+    def conversion_completed(self, success, skip_tracking=False):
+        """Called when a conversion is completed
+        
+        Args:
+            success: Whether the conversion was successful
+            skip_tracking: If True, skip file tracking and notification (already handled elsewhere)
+        """
+        print(f"Conversion completed with success={success}, skip_tracking={skip_tracking}")
         self.currently_converting = False
 
         # Re-enable convert button
         if hasattr(self, "header_bar") and hasattr(self.header_bar, "convert_button"):
             GLib.idle_add(lambda: self.header_bar.convert_button.set_sensitive(True))
+
+        # Track completed file for completion screen (unless already tracked)
+        if not skip_tracking and hasattr(self, "current_processing_file") and self.current_processing_file:
+            file_info = {
+                "input_file": self.current_processing_file,
+                "output_file": "",  # Will be filled by progress tracking
+                "success": success
+            }
+            self.completed_conversions.append(file_info)
+            
+            # Send system notification for individual file completion
+            if success:
+                self.send_system_notification(
+                    _("Conversion Complete"),
+                    _("Successfully converted {0}").format(os.path.basename(self.current_processing_file))
+                )
 
         # Check if this was a single file conversion from editor
         is_single_file_conversion = (
@@ -1152,10 +1214,13 @@ class VideoConverterApp(Adw.Application):
             if hasattr(self, "conversion_page"):
                 GLib.idle_add(self.conversion_page.update_queue_display)
 
-            # Enable buttons and return to main view
+            # Enable buttons
             GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
-            if self.main_stack.get_visible_child_name() == "progress_view":
-                GLib.idle_add(self.return_to_main_view)
+            
+            # Show completion screen if we have completed conversions
+            if self.completed_conversions:
+                print(f"Single file conversion complete, showing completion screen with {len(self.completed_conversions)} file(s)")
+                self.show_completion_screen()
             return
 
         # Handle the file that was just processed (success or fail) - for queue processing
@@ -1190,22 +1255,16 @@ class VideoConverterApp(Adw.Application):
             print("Queue is now empty")
             GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
 
-            # Check if we're in the progress view and should return to main view
-            if self.main_stack.get_visible_child_name() == "progress_view":
-                # Show completion notification if we were processing a queue
-                if (
-                    hasattr(self, "_was_queue_processing")
-                    and self._was_queue_processing
-                ):
-                    GLib.idle_add(
-                        lambda: self.show_info_dialog(
-                            _("Queue Processing Complete"),
-                            _("All files in the queue have been processed."),
-                        )
-                    )
+            # Show completion screen if we have any completed conversions
+            if self.completed_conversions:
+                print(f"Showing completion screen with {len(self.completed_conversions)} completed file(s)")
+                self.show_completion_screen()
+                # Reset the queue processing flag if it was set
+                if hasattr(self, "_was_queue_processing"):
                     self._was_queue_processing = False
-
-                # Always return to main view when queue is empty and we're in progress view
+            # Otherwise, if we're in the progress view, return to main view
+            elif self.main_stack.get_visible_child_name() == "progress_view":
+                print("No completed conversions to show, returning to main view")
                 GLib.idle_add(self.return_to_main_view)
 
     # UI Navigation
@@ -1369,6 +1428,31 @@ class VideoConverterApp(Adw.Application):
         if hasattr(self, "toast_overlay"):
             toast = Adw.Toast(title=message)
             self.toast_overlay.add_toast(toast)
+
+    def send_system_notification(self, title, body):
+        """Send a system notification"""
+        notification = Gio.Notification.new(title)
+        notification.set_body(body)
+        self.send_notification(None, notification)
+    
+    def show_completion_screen(self):
+        """Show the completion screen with list of converted files"""
+        if hasattr(self, "completion_page") and self.completed_conversions:
+            self.completion_page.set_completed_files(self.completed_conversions)
+            self.main_stack.set_visible_child_name("completion_view")
+            
+            # Send final system notification
+            count = len(self.completed_conversions)
+            if count == 1:
+                self.send_system_notification(
+                    _("All Conversions Complete"),
+                    _("1 video has been converted successfully!")
+                )
+            else:
+                self.send_system_notification(
+                    _("All Conversions Complete"),
+                    _("{0} videos have been converted successfully!").format(count)
+                )
 
     # GIO Application overrides
     def do_open(self, files, n_files, hint):

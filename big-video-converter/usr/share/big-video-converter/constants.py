@@ -35,7 +35,7 @@ else:
     CONVERT_SCRIPT_PATH = './big-video-converter'
 
 # UI constants
-WINDOW_DEFAULT_WIDTH = 900
+WINDOW_DEFAULT_WIDTH = 1000
 WINDOW_DEFAULT_HEIGHT = 620
 CONTENT_TIGHTENING_THRESHOLD = 600
 
@@ -56,12 +56,12 @@ VIDEO_FILE_MIME_TYPES = [
 
 # Encoding options - User-friendly display names
 GPU_OPTIONS = [
-    "Auto-detect",
-    "NVENC (Nvidia)",
-    "VAAPI (Intel/AMD)",
-    "QSV (Intel)",
-    "Vulkan",
-    "Software (CPU)"
+    _("Auto-detect"),
+    _("NVENC (Nvidia)"),
+    _("VAAPI (Intel/AMD)"),
+    _("QSV (Intel)"),
+    _("Vulkan"),
+    _("Software (CPU)")
 ]
 
 # Internal values mapping for GPU options
@@ -69,13 +69,13 @@ GPU_VALUES = {0: "auto", 1: "nvidia", 2: "amd", 3: "intel", 4: "vulkan", 5: "sof
 
 # User-friendly quality display names
 VIDEO_QUALITY_OPTIONS = [
-    "Default",
-    "Very High",
-    "High",
-    "Medium",
-    "Low",
-    "Very Low",
-    "Super Low",
+    _("Default"),
+    _("Very High"),
+    _("High"),
+    _("Medium"),
+    _("Low"),
+    _("Very Low"),
+    _("Super Low"),
 ]
 
 # Internal values for ffmpeg
@@ -91,10 +91,10 @@ VIDEO_QUALITY_VALUES = {
 
 # User-friendly codec display names
 VIDEO_CODEC_OPTIONS = [
-    "H.264 (Default)",
-    "H.265 (HEVC)",
-    "AV1",
-    "VP9",
+    _("H.264 (Default)"),
+    _("H.265 (HEVC)"),
+    _("AV1"),
+    _("VP9"),
 ]
 
 # Internal codec values for ffmpeg
@@ -102,13 +102,13 @@ VIDEO_CODEC_VALUES = {0: "h264", 1: "h265", 2: "av1", 3: "vp9"}
 
 # User-friendly preset names
 PRESET_OPTIONS = [
-    "Default",
-    "Ultra Fast",
-    "Very Fast",
-    "Faster",
-    "Medium",
-    "Slow",
-    "Very Slow",
+    _("Default"),
+    _("Ultra Fast"),
+    _("Very Fast"),
+    _("Faster"),
+    _("Medium"),
+    _("Slow"),
+    _("Very Slow"),
 ]
 
 # Internal preset values for ffmpeg
@@ -123,22 +123,22 @@ PRESET_VALUES = {
 }
 
 # User-friendly subtitle options
-SUBTITLE_OPTIONS = ["Extract to SRT", "Keep Embedded", "Remove"]
+SUBTITLE_OPTIONS = [_("Extract to SRT"), _("Keep Embedded"), _("Remove")]
 
 # Internal subtitle values for ffmpeg
 SUBTITLE_VALUES = {0: "extract", 1: "embedded", 2: "none"}
 
 # User-friendly audio handling options
-AUDIO_OPTIONS = ["Copy (No Re-encoding)", "Re-encode", "Remove Audio"]
+AUDIO_OPTIONS = [_("Copy (No Re-encoding)"), _("Re-encode"), _("Remove Audio")]
 
 # Internal audio values for ffmpeg
 AUDIO_VALUES = {0: "copy", 1: "reencode", 2: "none"}
 
 # Audio codec options for re-encoding (user-friendly names)
 AUDIO_CODEC_OPTIONS = [
-    "AAC (Default)",
-    "Opus (Best Quality)",
-    "AC3 (Dolby Digital)",
+    _("AAC (Default)"),
+    _("Opus (Best Quality)"),
+    _("AC3 (Dolby Digital)"),
 ]
 
 # Internal audio codec values for ffmpeg
@@ -146,18 +146,18 @@ AUDIO_CODEC_VALUES = {0: "aac", 1: "opus", 2: "ac3"}
 
 # Video resolution options (user-friendly names)
 VIDEO_RESOLUTION_OPTIONS = [
-    "Default (Original)",
-    "4K UHD (3840×2160)",
-    "2K QHD (2560×1440)",
-    "Full HD (1920×1080)",
-    "HD (1280×720)",
-    "SD (854×480)",
-    "4K UHD Vertical (2160×3840)",
-    "2K QHD Vertical (1440×2560)",
-    "Full HD Vertical (1080×1920)",
-    "HD Vertical (720×1280)",
-    "SD Vertical (480×854)",
-    "Custom",
+    _("Default (Original)"),
+    _("4K UHD (3840×2160)"),
+    _("2K QHD (2560×1440)"),
+    _("Full HD (1920×1080)"),
+    _("HD (1280×720)"),
+    _("SD (854×480)"),
+    _("4K UHD Vertical (2160×3840)"),
+    _("2K QHD Vertical (1440×2560)"),
+    _("Full HD Vertical (1080×1920)"),
+    _("HD Vertical (720×1280)"),
+    _("SD Vertical (480×854)"),
+    _("Custom"),
 ]
 
 # Internal resolution values for ffmpeg

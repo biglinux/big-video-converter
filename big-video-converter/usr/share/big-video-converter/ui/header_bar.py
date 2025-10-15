@@ -50,7 +50,7 @@ class HeaderBar(Gtk.Box):
 
         # Create left controls box for queue info
         left_controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        left_controls.set_margin_start(20)
+        left_controls.set_margin_start(14)
         left_controls.set_halign(Gtk.Align.START)
 
         # Clear queue icon button (left side)
@@ -204,11 +204,20 @@ class HeaderBar(Gtk.Box):
         if view_name == "queue":
             # Show file management buttons
             self.add_button.set_visible(True)
-            # clear_queue_button visibility is managed by update_queue_size()
-            self.convert_button.set_visible(True)
             self.convert_current_button.set_visible(False)
             # Hide back button
             self.back_button.set_visible(False)
+            # Restore button visibility based on queue size
+            if hasattr(self, 'app') and hasattr(self.app, 'conversion_queue'):
+                queue_count = len(self.app.conversion_queue)
+                has_multiple_files = queue_count >= 2
+                has_files = queue_count > 0
+                self.clear_queue_button.set_visible(has_multiple_files)
+                self.queue_size_label.set_visible(has_multiple_files)
+                self.convert_button.set_visible(has_files)
+            else:
+                # Fallback if queue not accessible
+                self.convert_button.set_visible(False)
         elif view_name == "editor":
             # Hide file management buttons
             self.add_button.set_visible(False)

@@ -60,6 +60,7 @@ class WelcomeDialog:
         # Main content area with two columns
         columns_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=24)
         columns_box.set_margin_top(18)
+        columns_box.set_margin_start(100)
         columns_box.set_halign(Gtk.Align.CENTER)
         columns_box.set_hexpand(True)
 

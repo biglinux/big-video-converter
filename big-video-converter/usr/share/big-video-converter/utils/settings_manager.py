@@ -16,6 +16,11 @@ class SettingsManager:
         "show-single-help-on-startup": True,
         "show-conversion-help-on-startup": True,
         "show-tooltips": True,
+        # Window state
+        "window-width": 1200,
+        "window-height": 720,
+        "window-maximized": False,
+        "sidebar-position": 430,
         # Batch conversion
         "search-directory": "",
         "max-processes": 2,
@@ -27,7 +32,7 @@ class SettingsManager:
         "video-quality": "default",
         "video-codec": "h264",
         "preset": "default",
-        "subtitle-extract": "extract",
+        "subtitle-extract": "embedded",
         "audio-handling": "copy",
         # Audio settings
         "audio-bitrate": "",
