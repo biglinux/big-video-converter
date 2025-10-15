@@ -21,6 +21,22 @@ class ProgressPage:
     def __init__(self, app):
         self.app = app
 
+        # Create ToolbarView to wrap the content and provide headerbar
+        self.toolbar_view = Adw.ToolbarView()
+
+        # Create HeaderBar with window controls
+        header_bar = Adw.HeaderBar()
+        header_bar.set_title_widget(Gtk.Label(label=_("Conversion Progress")))
+        # Show only minimize and maximize buttons, disable close button
+        # Users must use the Cancel button to stop conversions
+        # Check if window buttons are on the left or right
+        window_buttons_left = self.app._window_buttons_on_left()
+        if window_buttons_left:
+            header_bar.set_decoration_layout("minimize,maximize:")
+        else:
+            header_bar.set_decoration_layout(":minimize,maximize")
+        self.toolbar_view.add_top_bar(header_bar)
+
         # Root container using Box for vertical layout
         self.page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
@@ -55,6 +71,9 @@ class ProgressPage:
         self.content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.clamp.set_child(self.content_box)
 
+        # Set the page as content of toolbar_view
+        self.toolbar_view.set_content(self.page)
+
         # Dictionary to track active conversion processes
         self.active_conversions = {}
 
@@ -62,8 +81,8 @@ class ProgressPage:
         self.count = 0
 
     def get_page(self):
-        """Return the page widget"""
-        return self.page
+        """Return the toolbar_view widget (which contains the page with headerbar)"""
+        return self.toolbar_view
 
     def add_conversion(self, command_title, input_file, process):
         """Add a new conversion to be tracked on the progress page"""
@@ -120,8 +139,6 @@ class ProgressPage:
     def has_active_conversions(self):
         """Check if there are any active conversions"""
         return len(self.active_conversions) > 0
-
-
 class ConversionItem(Gtk.Box):
     """Individual conversion item widget to display progress for a single conversion"""
 
@@ -189,6 +206,7 @@ class ConversionItem(Gtk.Box):
         self.append(progress_box)
 
         # Add CSS styling for command and terminal areas using GNOME/Adwaita guidelines
+        # Note: This is safe now because widget creation is always done on the main thread
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data(b"""
             .terminal-text { 
@@ -210,9 +228,12 @@ class ConversionItem(Gtk.Box):
                 margin-right: 8px;
             }
         """)
-        Gtk.StyleContext.add_provider_for_display(
-            self.get_display(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
+        
+        display = self.get_display()
+        if display is not None:
+            Gtk.StyleContext.add_provider_for_display(
+                display, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            )
 
         # Add FFmpeg command display in an expander
         self.cmd_expander = Gtk.Expander()
@@ -246,11 +267,6 @@ class ConversionItem(Gtk.Box):
         self.cmd_text.set_xalign(0)
         self.cmd_text.set_yalign(0)  # Align to top
         self.cmd_text.add_css_class("terminal-text")
-
-        # Override the inline CSS provider with the one that includes transparent background
-        self.cmd_text.get_style_context().add_provider(
-            css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
 
         cmd_scroll.set_child(self.cmd_text)
         cmd_box.append(cmd_scroll)
@@ -289,11 +305,6 @@ class ConversionItem(Gtk.Box):
         self.terminal_view.set_cursor_visible(False)
         self.terminal_view.set_monospace(True)
         self.terminal_view.add_css_class("terminal-text")
-
-        # Apply custom CSS
-        self.terminal_view.get_style_context().add_provider(
-            css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-        )
 
         self.terminal_buffer = self.terminal_view.get_buffer()
 
@@ -407,11 +418,6 @@ class ConversionItem(Gtk.Box):
         # Kill process
         if self.process:
             try:
-                # Notify the app to remove this file from the conversion queue
-                if self.input_file and hasattr(self.app, "remove_from_queue"):
-                    print(f"Removing cancelled file from queue: {self.input_file}")
-                    self.app.remove_from_queue(self.input_file)
-
                 print(f"Terminating process with PID {self.process.pid}")
 
                 # Use the app's terminate_process_tree method if available
@@ -430,11 +436,13 @@ class ConversionItem(Gtk.Box):
             except Exception as e:
                 print(f"Error killing process: {e}")
 
-        self.status_label.set_text(_("Conversion cancelled"))
+        # Notify the app to remove this file from the conversion queue
+        # Do this AFTER killing the process to ensure proper cleanup
+        if self.input_file and hasattr(self.app, "remove_from_queue"):
+            print(f"Removing cancelled file from queue: {self.input_file}")
+            self.app.remove_from_queue(self.input_file)
 
-    def set_process(self, process):
-        """Set the conversion process for monitoring"""
-        self.process = process
+        self.status_label.set_text(_("Conversion cancelled"))
 
     def update_progress(self, fraction, text=None):
         """Update progress bar"""

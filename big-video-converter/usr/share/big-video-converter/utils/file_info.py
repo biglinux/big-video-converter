@@ -521,9 +521,9 @@ class VideoInfoDialog:
                         # Add suffix for quality indicator
                         if sample_rate >= 44100:
                             quality_label = Gtk.Label(
-                                label="CD Quality"
+                                label=_("CD Quality")
                                 if sample_rate == 44100
-                                else "Hi-Res Audio"
+                                else _("Hi-Res Audio")
                             )
                             quality_label.add_css_class("caption")
                             quality_label.add_css_class("accent")
@@ -536,13 +536,13 @@ class VideoInfoDialog:
                         channels = stream["channels"]
                         channels_str = str(channels)
                         if channels == 1:
-                            channels_str += " (Mono)"
+                            channels_str += " " + _("(Mono)")
                         elif channels == 2:
-                            channels_str += " (Stereo)"
+                            channels_str += " " + _("(Stereo)")
                         elif channels == 6:
-                            channels_str += " (5.1 Surround)"
+                            channels_str += " " + _("(5.1 Surround)")
                         elif channels == 8:
-                            channels_str += " (7.1 Surround)"
+                            channels_str += " " + _("(7.1 Surround)")
 
                         channels_row = Adw.ActionRow(title=channels_str)
                         channels_row.set_subtitle(_("Channels"))
@@ -809,24 +809,6 @@ def get_video_file_info(file_path):
         print(f"Error getting file info: {e}")
         return None
 
-
-def format_time_display(seconds):
-    """Format time in seconds to a human-readable string"""
-    if seconds is None:
-        return "N/A"
-
-    hours = int(seconds // 3600)
-    minutes = int((seconds % 3600) // 60)
-    secs = seconds % 60
-
-    if hours > 0:
-        return f"{hours}h {minutes}m {secs:.1f}s"
-    elif minutes > 0:
-        return f"{minutes}m {secs:.1f}s"
-    else:
-        return f"{secs:.1f}s"
-
-
 def format_file_size(size_bytes):
     """Format file size in bytes to a human-readable string"""
     if size_bytes < 1024:
@@ -837,3 +819,43 @@ def format_file_size(size_bytes):
         return f"{size_bytes / (1024 * 1024):.2f} MB"
     else:
         return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+
+
+def has_audio_streams(file_path):
+    """
+    Check if a video file has audio streams.
+
+    Args:
+        file_path: Path to the video file
+
+    Returns:
+        bool: True if the file has at least one audio stream, False otherwise
+    """
+    try:
+        # Ensure file exists
+        if not os.path.exists(file_path):
+            return False
+
+        # Run ffprobe to check for audio streams
+        command = [
+            "ffprobe",
+            "-v",
+            "quiet",
+            "-select_streams",
+            "a:0",
+            "-show_entries",
+            "stream=codec_type",
+            "-of",
+            "csv=p=0",
+            file_path,
+        ]
+
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        # If we get output, it means there's at least one audio stream
+        return bool(result.stdout.strip())
+
+    except Exception as e:
+        print(f"Error checking audio streams: {e}")
+        # On error, assume there might be audio to avoid accidentally removing it
+        return True

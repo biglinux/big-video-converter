@@ -2,7 +2,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, GLib
+from gi.repository import Gtk, Adw, Gdk, GLib, Gio, Pango
 
 # Setup translation
 import gettext
@@ -16,195 +16,56 @@ class VideoEditUI:
 
     def create_page(self):
         """Create the main page layout and all UI elements"""
-        # Create main container with a vertical BoxLayout
+        # Main container with a vertical layout. Top (video) expands, bottom (toolbar) is fixed.
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        page.set_vexpand(True)
 
-        # Create a Paned container to allow resizing between video and controls
-        paned = Gtk.Paned(orientation=Gtk.Orientation.VERTICAL)
-        paned.set_wide_handle(True)  # Make handle easier to grab
-        paned.set_vexpand(True)
+        # TOP: Video preview area
+        self.video_overlay = Gtk.Overlay()
+        self.video_overlay.set_vexpand(True)
+        self.video_overlay.set_hexpand(True)
 
-        # Add size constraints to prevent either part from becoming too small
-        paned.set_shrink_start_child(
-            False
-        )  # Don't shrink the top part below its minimum
-        paned.set_shrink_end_child(
-            False
-        )  # Don't shrink the bottom part below its minimum
-        paned.set_resize_start_child(True)  # Allow the top part to be resized
-        paned.set_resize_end_child(True)  # Allow the bottom part to be resized
+        video_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        video_box.set_vexpand(True)
+        video_box.set_hexpand(True)
+        video_box.set_size_request(-1, 300)
 
-        page.append(paned)
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_data(b".video-background { background-color: #000; }")
+        video_box.get_style_context().add_provider(
+            css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
+        )
+        video_box.add_css_class("video-background")
 
-        # Create fixed preview area for the top pane - without any margins
-        fixed_preview_area = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        fixed_preview_area.set_vexpand(True)
-        fixed_preview_area.set_hexpand(True)
-        fixed_preview_area.set_size_request(-1, 200)  # Set minimum height to 200px
-        fixed_preview_area.add_css_class("background")
+        self.preview_video = Gtk.Picture()
+        self.preview_video.set_hexpand(True)
+        self.preview_video.set_vexpand(True)
+        self.preview_video.set_can_shrink(True)
+        self.preview_video.set_keep_aspect_ratio(True)
+        video_box.append(self.preview_video)
 
-        # Create a simple image widget for the preview - directly in the container
-        self.preview_image = Gtk.Picture()
-        self.preview_image.set_can_shrink(True)
-        self.preview_image.set_content_fit(Gtk.ContentFit.CONTAIN)
-        self.preview_image.set_hexpand(True)
-        self.preview_image.set_vexpand(True)
+        self.video_overlay.set_child(video_box)
+        self._create_overlay_controls(self.video_overlay)
+        page.append(self.video_overlay)
 
-        # Add the image directly to the fixed area for better screen usage
-        fixed_preview_area.append(self.preview_image)
-
-        # Add the fixed preview area to the top pane
-        paned.set_start_child(fixed_preview_area)
-
-        # Add ScrolledWindow for the rest of the content in the bottom pane
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scrolled_window.set_hexpand(True)
-        scrolled_window.set_vexpand(True)
-        scrolled_window.set_size_request(-1, 200)  # Set minimum height to 200px
-
-        # This is our reference to the scrolled window
-        self.scrolled_window = scrolled_window
-
-        # Container for scrollable content
-        scrollable_content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        scrollable_content.set_vexpand(True)
-        scrolled_window.set_child(scrollable_content)
-
-        # Add the scrolled window to the bottom pane
-        paned.set_end_child(scrolled_window)
-
-        # Set initial position (approximately 60% for the video, 40% for controls)
-        # This will be adjusted when the window is resized
-        GLib.idle_add(lambda: paned.set_position(400))
-
-        # Use Adw.Clamp for consistent width
-        clamp = Adw.Clamp()
-        clamp.set_maximum_size(900)
-        clamp.set_tightening_threshold(700)
-        scrollable_content.append(clamp)
-
-        # Main content box for scrollable area
-        main_content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        main_content.set_spacing(24)
-        main_content.set_margin_start(12)
-        main_content.set_margin_end(12)
-        main_content.set_margin_bottom(24)
-        clamp.set_child(main_content)
-
-        # Add the playback controls
-        main_content.append(self._create_playback_controls())
-
-        # Add the trimming controls
-        main_content.append(self._create_trimming_controls())
-
-        # Add the crop controls
-        main_content.append(self._create_crop_controls())
-
-        # Add the video adjustment controls
-        main_content.append(self._create_adjustments_group())
-
-        # Add the video information section
-        main_content.append(self._create_info_group())
-
-        # Store a reference to the main content area
-        self.main_content = main_content
-
-        # Create a custom tooltip popover for immediate display
-        self._setup_tooltip_popover()
+        # BOTTOM: Compact editing toolbar
+        self.toolbar = self._create_compact_toolbar()
+        page.append(self.toolbar)
 
         return page
 
-    def _setup_tooltip_popover(self):
-        """Set up the tooltip popover for sliders"""
-        self.tooltip_popover = Gtk.Popover()
-        self.tooltip_popover.set_autohide(False)  # Don't hide when clicked elsewhere
-        self.tooltip_popover.set_position(Gtk.PositionType.TOP)
+    def _create_overlay_controls(self, overlay):
+        """Create YouTube-style overlay controls at bottom of video"""
+        controls_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        controls_container.set_valign(Gtk.Align.END)
+        controls_container.set_halign(Gtk.Align.FILL)
+        controls_container.set_margin_start(12)
+        controls_container.set_margin_end(12)
+        controls_container.set_margin_bottom(12)
+        controls_container.add_css_class("osd")
+        controls_container.add_css_class("toolbar")
 
-        # Add a label to the popover
-        self.tooltip_label = Gtk.Label()
-        self.tooltip_label.set_margin_start(8)
-        self.tooltip_label.set_margin_end(8)
-        self.tooltip_label.set_margin_top(4)
-        self.tooltip_label.set_margin_bottom(4)
-        self.tooltip_popover.set_child(self.tooltip_label)
-
-    def add_tooltip_to_slider(self, slider, format_func):
-        """Add instant tooltip functionality to any slider"""
-        # Store the format function with the slider for use in the motion handler
-        slider.format_func = format_func
-
-        # Create a unique tooltip popover for this slider
-        tooltip_popover = Gtk.Popover()
-        tooltip_popover.set_autohide(False)
-        tooltip_popover.set_position(Gtk.PositionType.TOP)
-
-        # Add a label to the popover
-        tooltip_label = Gtk.Label()
-        tooltip_label.set_margin_start(8)
-        tooltip_label.set_margin_end(8)
-        tooltip_label.set_margin_top(4)
-        tooltip_label.set_margin_bottom(4)
-        tooltip_popover.set_child(tooltip_label)
-
-        # Store the tooltip popover in our dictionary with the slider as the key
-        self.page.adjustment_tooltips[slider] = {
-            "popover": tooltip_popover,
-            "label": tooltip_label,
-        }
-
-        # Add motion controller to show tooltip
-        motion_controller = Gtk.EventControllerMotion.new()
-        motion_controller.connect("motion", self.page.on_adjustment_motion)
-        motion_controller.connect("leave", self.page.on_adjustment_leave)
-        slider.add_controller(motion_controller)
-
-    def add_tooltip_to_button(self, button, tooltip_text):
-        """Add custom tooltip functionality to any button"""
-        # Create a unique tooltip popover for this button
-        tooltip_popover = Gtk.Popover()
-        tooltip_popover.set_autohide(False)
-        tooltip_popover.set_position(Gtk.PositionType.TOP)
-
-        # Add a label to the popover
-        tooltip_label = Gtk.Label()
-        tooltip_label.set_text(tooltip_text)
-        tooltip_label.set_margin_start(8)
-        tooltip_label.set_margin_end(8)
-        tooltip_label.set_margin_top(4)
-        tooltip_label.set_margin_bottom(4)
-        tooltip_popover.set_child(tooltip_label)
-
-        # Store the tooltip popover in our dictionary with the button as the key
-        self.page.button_tooltips[button] = {
-            "popover": tooltip_popover,
-            "label": tooltip_label,
-            "text": tooltip_text,
-        }
-
-        # Add motion controller to show/hide tooltip
-        motion_controller = Gtk.EventControllerMotion.new()
-        motion_controller.connect("enter", self.page.on_button_enter)
-        motion_controller.connect("leave", self.page.on_button_leave)
-        button.add_controller(motion_controller)
-
-        # Remove the standard tooltip if it exists
-        button.set_tooltip_text(None)
-
-    def _create_playback_controls(self):
-        """Create the playback controls group"""
-        playback_group = Adw.PreferencesGroup()
-
-        # Create position controls box directly in the group (no ActionRow wrapper)
-        position_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        position_box.set_margin_top(12)
-        position_box.set_margin_bottom(12)
-        position_box.set_margin_start(12)
-        position_box.set_margin_end(12)
-        position_box.set_hexpand(True)
-
-        # Position slider
-        slider_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        slider_overlay = Gtk.Overlay()
 
         adjustment = Gtk.Adjustment(value=0, lower=0, upper=100, step_increment=1)
         self.position_scale = Gtk.Scale(
@@ -215,556 +76,625 @@ class VideoEditUI:
         self.page.position_changed_handler_id = self.position_scale.connect(
             "value-changed", self.page.on_position_changed
         )
+        self.position_scale.set_can_target(False)
 
-        # Add motion controller for tooltip hover functionality
-        motion_controller = Gtk.EventControllerMotion.new()
-        motion_controller.connect("motion", self.page.on_slider_motion)
-        motion_controller.connect("leave", self.page.on_slider_leave)
-        self.position_scale.add_controller(motion_controller)
+        slider_overlay.set_child(self.position_scale)
 
-        # Store current hover position for tooltips
-        self.hover_position = 0
+        self.segment_markers_canvas = Gtk.DrawingArea()
+        self.segment_markers_canvas.set_draw_func(self._draw_segment_markers)
+        self.segment_markers_canvas.set_can_target(True)
 
-        slider_box.append(self.position_scale)
-        position_box.append(slider_box)
+        slider_overlay.add_overlay(self.segment_markers_canvas)
+        self._setup_drag_controllers()
 
-        # Create a combined info and navigation bar
-        info_nav_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        info_nav_box.set_hexpand(True)
+        controls_container.append(slider_overlay)
 
-        # Position label on the left side
+        button_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        button_row.set_halign(Gtk.Align.CENTER)
+
+        # --- New Single Mark Button ---
+        mark_button = Gtk.Button(icon_name="bookmark-new-symbolic")
+        mark_button.set_tooltip_text(_("Mark segment point"))
+        mark_button.connect("clicked", self.page.on_mark_segment_point)
+        button_row.append(mark_button)
+
+        # --- Feedback for marking ---
+        self.mark_time_label = Gtk.Label(label="")
+        self.mark_time_label.set_visible(False)
+        button_row.append(self.mark_time_label)
+
+        self.mark_cancel_button = Gtk.Button(icon_name="edit-clear-symbolic")
+        self.mark_cancel_button.set_tooltip_text(_("Cancel current mark"))
+        self.mark_cancel_button.add_css_class("flat")
+        self.mark_cancel_button.connect("clicked", self.page.on_mark_cancel)
+        self.mark_cancel_button.set_visible(False)
+        button_row.append(self.mark_cancel_button)
+
+        button_row.append(
+            Gtk.Separator(
+                orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6
+            )
+        )
+
+        # Seek buttons
+        seek_back_button = Gtk.Button(
+            icon_name="media-seek-backward-symbolic", tooltip_text=_("Back 1 second")
+        )
+        seek_back_button.connect("clicked", lambda b: self.page.seek_relative(-1))
+        button_row.append(seek_back_button)
+
+        prev_frame_button = Gtk.Button(
+            icon_name="go-previous-symbolic", tooltip_text=_("Previous frame")
+        )
+        prev_frame_button.connect(
+            "clicked",
+            lambda b: self.page.seek_relative(
+                -1 / self.page.video_fps if self.page.video_fps > 0 else -1 / 25
+            ),
+        )
+        button_row.append(prev_frame_button)
+
+        # Playback controls
+        self.play_pause_button = Gtk.Button()
+        self.play_pause_button.set_icon_name("media-playback-start-symbolic")
+        self.play_pause_button.add_css_class("circular")
+        self.play_pause_button.set_tooltip_text(_("Play/Pause"))
+        self.play_pause_button.connect("clicked", self.page.on_play_pause_clicked)
+        button_row.append(self.play_pause_button)
+
+        next_frame_button = Gtk.Button(
+            icon_name="go-next-symbolic", tooltip_text=_("Next frame")
+        )
+        next_frame_button.connect(
+            "clicked",
+            lambda b: self.page.seek_relative(
+                1 / self.page.video_fps if self.page.video_fps > 0 else 1 / 25
+            ),
+        )
+        button_row.append(next_frame_button)
+
+        seek_fwd_button = Gtk.Button(
+            icon_name="media-seek-forward-symbolic", tooltip_text=_("Forward 1 second")
+        )
+        seek_fwd_button.connect("clicked", lambda b: self.page.seek_relative(1))
+        button_row.append(seek_fwd_button)
+
+        button_row.append(
+            Gtk.Separator(
+                orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6
+            )
+        )
+
+        # Volume and Track controls
+        self.volume_button = self._create_volume_button()
+        button_row.append(self.volume_button)
+
+        self.audio_track_button = Gtk.MenuButton(
+            icon_name="audio-input-microphone-symbolic", tooltip_text=_("Audio Track")
+        )
+        self.audio_track_menu = Gio.Menu()
+        self.audio_track_button.set_menu_model(self.audio_track_menu)
+        button_row.append(self.audio_track_button)
+
+        self.subtitle_button = Gtk.MenuButton(
+            icon_name="media-view-subtitles-symbolic", tooltip_text=_("Subtitles")
+        )
+        self.subtitle_menu = Gio.Menu()
+        self.subtitle_button.set_menu_model(self.subtitle_menu)
+        button_row.append(self.subtitle_button)
+
+        # Spacer to push fullscreen to the right
+        spacer = Gtk.Box()
+        spacer.set_hexpand(True)
+        button_row.append(spacer)
+
+        # Fullscreen button
+        self.fullscreen_button = Gtk.Button()
+        self.fullscreen_button.set_icon_name("view-fullscreen-symbolic")
+        self.fullscreen_button.set_tooltip_text(_("Toggle Fullscreen"))
+        self.fullscreen_button.connect("clicked", self.page.on_toggle_fullscreen)
+        button_row.append(self.fullscreen_button)
+
+        controls_container.append(button_row)
+
+        labels_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         self.position_label = Gtk.Label(label="0:00.000 / 0:00.000")
         self.position_label.set_halign(Gtk.Align.START)
         self.position_label.set_hexpand(True)
-        info_nav_box.append(self.position_label)
+        labels_box.append(self.position_label)
 
-        # Navigation buttons in center
-        nav_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        nav_box.set_halign(Gtk.Align.CENTER)
-        nav_box.set_hexpand(True)
-
-        # Previous/next frame buttons
-        prev_frame_button = Gtk.Button()
-        prev_frame_button.set_icon_name("go-previous-symbolic")
-        self.add_tooltip_to_button(prev_frame_button, _("Previous frame"))
-        prev_frame_button.connect("clicked", lambda b: self.page.seek_relative(-1 / 25))
-        nav_box.append(prev_frame_button)
-
-        # Step back 1 second
-        step_back_button = Gtk.Button()
-        step_back_button.set_icon_name("media-seek-backward-symbolic")
-        self.add_tooltip_to_button(step_back_button, _("Back 1 second"))
-        step_back_button.connect("clicked", lambda b: self.page.seek_relative(-1))
-        nav_box.append(step_back_button)
-
-        # Step back 10 seconds
-        step_back10_button = Gtk.Button()
-        step_back10_button.set_icon_name("media-skip-backward-symbolic")
-        self.add_tooltip_to_button(step_back10_button, _("Back 10 seconds"))
-        step_back10_button.connect("clicked", lambda b: self.page.seek_relative(-10))
-        nav_box.append(step_back10_button)
-
-        # Reset button
-        reset_button = Gtk.Button(label=_("Reset"))
-        reset_button.add_css_class("destructive-action")  # Red styling for warning
-        self.add_tooltip_to_button(reset_button, _("Reset all settings"))
-        reset_button.connect("clicked", self.page.on_reset_all_settings)
-        nav_box.append(reset_button)
-
-        # Step forward 10 seconds
-        step_fwd10_button = Gtk.Button()
-        step_fwd10_button.set_icon_name("media-skip-forward-symbolic")
-        self.add_tooltip_to_button(step_fwd10_button, _("Forward 10 seconds"))
-        step_fwd10_button.connect("clicked", lambda b: self.page.seek_relative(10))
-        nav_box.append(step_fwd10_button)
-
-        # Step forward 1 second
-        step_fwd_button = Gtk.Button()
-        step_fwd_button.set_icon_name("media-seek-forward-symbolic")
-        self.add_tooltip_to_button(step_fwd_button, _("Forward 1 second"))
-        step_fwd_button.connect("clicked", lambda b: self.page.seek_relative(1))
-        nav_box.append(step_fwd_button)
-
-        # Next frame button
-        next_frame_button = Gtk.Button()
-        next_frame_button.set_icon_name("go-next-symbolic")
-        self.add_tooltip_to_button(next_frame_button, _("Next frame"))
-        next_frame_button.connect("clicked", lambda b: self.page.seek_relative(1 / 25))
-        nav_box.append(next_frame_button)
-
-        info_nav_box.append(nav_box)
-
-        # Frame counter on the right side
-        self.frame_label = Gtk.Label(label="Frame: 0/0")
+        self.frame_label = Gtk.Label(label="Frame: 0 / 0")
         self.frame_label.set_halign(Gtk.Align.END)
         self.frame_label.set_hexpand(True)
-        info_nav_box.append(self.frame_label)
+        labels_box.append(self.frame_label)
+        controls_container.append(labels_box)
 
-        position_box.append(info_nav_box)
+        overlay.add_overlay(controls_container)
+        self.overlay_controls = controls_container
 
-        # Add position controls directly to the group
-        playback_group.add(position_box)
+        # Auto-hide functionality
+        self.controls_visible = True
+        self.hide_timer_id = None
+        motion = Gtk.EventControllerMotion.new()
+        motion.connect("enter", self._on_video_mouse_enter)
+        motion.connect("motion", self._on_video_mouse_motion)
+        motion.connect("leave", self._on_video_mouse_leave)
+        overlay.add_controller(motion)
 
-        return playback_group
+    def _create_compact_toolbar(self):
+        """Creates the unified, compact toolbar below the video."""
+        toolbar_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        toolbar_box.set_margin_start(12)
+        toolbar_box.set_margin_end(12)
+        toolbar_box.set_margin_top(6)
+        toolbar_box.set_margin_bottom(6)
+        toolbar_box.add_css_class("toolbar")
 
-    def _create_trimming_controls(self):
-        """Create the trimming controls group"""
-        trim_group = Adw.PreferencesGroup(title=_("Trim by Time"))
+        # --- Crop Controls ---
+        crop_grid = Gtk.Grid(column_spacing=12, row_spacing=4)
+        self.crop_grid = crop_grid  # Store reference for enable/disable
+        crop_grid.set_valign(Gtk.Align.CENTER)
 
-        # Create an ActionRow for trim controls
-        trim_row = Adw.ActionRow()
-        trim_row.set_activatable(False)
+        crop_labels = [_("Left"), _("Right"), _("Top"), _("Bottom")]
+        self.crop_spins = {}
+        for i, label_text in enumerate(crop_labels):
+            label = Gtk.Label(label=label_text, xalign=0)
+            adjustment = Gtk.Adjustment(value=0, lower=0, upper=9999, step_increment=1)
+            spin = Gtk.SpinButton(adjustment=adjustment, numeric=True, width_chars=5)
+            key = label_text.lower()
+            self.crop_spins[key] = spin
+            spin.connect("value-changed", self.page.on_crop_value_changed)
 
-        # Create a single row for all trim controls
-        trim_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        trim_box.set_margin_top(12)
-        trim_box.set_margin_bottom(12)
+            col, row = (i % 2, i // 2)
+            crop_grid.attach(label, col * 2, row, 1, 1)
+            crop_grid.attach(spin, col * 2 + 1, row, 1, 1)
 
-        # Start time section
-        start_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        start_box.set_hexpand(True)
+        setattr(self, "crop_left_spin", self.crop_spins["left"])
+        setattr(self, "crop_right_spin", self.crop_spins["right"])
+        setattr(self, "crop_top_spin", self.crop_spins["top"])
+        setattr(self, "crop_bottom_spin", self.crop_spins["bottom"])
 
-        self.start_time_label = Gtk.Label(label="0:00.000")
-        self.start_time_label.set_halign(Gtk.Align.START)
-        self.start_time_label.set_width_chars(8)
+        # Add tooltip to crop grid
+        if hasattr(self.page.app, "tooltip_helper"):
+            self.page.app.tooltip_helper.add_tooltip(crop_grid, "crop")
 
-        set_start_button = Gtk.Button(label=_("Start time"))
-        self.add_tooltip_to_button(
-            set_start_button, _("Set timeline marked time as start")
-        )
-        set_start_button.connect("clicked", self.page.on_set_start_time)
-
-        start_box.append(set_start_button)
-        start_box.append(self.start_time_label)
-        trim_box.append(start_box)
-
-        # End time section
-        end_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        end_box.set_hexpand(True)
-
-        self.end_time_label = Gtk.Label()
-        self.end_time_label.set_halign(Gtk.Align.START)
-        self.end_time_label.set_width_chars(8)
-
-        set_end_button = Gtk.Button(label=_("End time"))
-        self.add_tooltip_to_button(set_end_button, _("Set timeline marked time as end"))
-        set_end_button.connect("clicked", self.page.on_set_end_time)
-
-        end_box.append(set_end_button)
-        end_box.append(self.end_time_label)
-        trim_box.append(end_box)
-
-        # Duration section
-        duration_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        duration_box.set_hexpand(False)
-
-        duration_label = Gtk.Label(label=_("Duration:"))
-        duration_label.set_halign(Gtk.Align.END)
-
-        self.duration_label = Gtk.Label(label="0:00.000")
-        self.duration_label.set_halign(Gtk.Align.START)
-
-        duration_box.append(duration_label)
-        duration_box.append(self.duration_label)
-        trim_box.append(duration_box)
-
-        # Reset button with icon
-        reset_button = Gtk.Button()
-        reset_button.set_icon_name("edit-undo-symbolic")
-        reset_button.add_css_class("flat")
-        reset_button.add_css_class("circular")
-        self.add_tooltip_to_button(reset_button, _("Reset trim points"))
-        reset_button.connect("clicked", self.page.on_reset_trim_points)
-        trim_box.append(reset_button)
-
-        # Add the trim box to the row and the row to the group
-        trim_row.add_suffix(trim_box)
-        trim_group.add(trim_row)
-
-        return trim_group
-
-    def _create_crop_controls(self):
-        """Create the crop controls group"""
-        crop_group = Adw.PreferencesGroup(title=_("Crop by Edges"))
-
-        # Crop dimension controls with new terminology
-        crop_controls_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        crop_controls_box.set_margin_top(12)
-        crop_controls_box.set_margin_bottom(12)
-        crop_controls_box.set_margin_start(16)
-        crop_controls_box.set_margin_end(16)
-        crop_controls_box.add_css_class("card")
-        crop_controls_box.set_margin_start(0)
-        crop_controls_box.set_margin_end(0)
-
-        # Create a box for the crop margin inputs in a single horizontal row
-        crop_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=24)
-        crop_box.set_halign(Gtk.Align.FILL)
-        # Add card styling to match other widgets
-        crop_box.set_margin_top(8)
-        crop_box.set_margin_bottom(12)
-        crop_box.set_margin_start(12)
-        crop_box.set_margin_end(12)
-        # Use individual margins instead of set_padding
-        crop_box.set_margin_top(crop_box.get_margin_top() + 12)
-        crop_box.set_margin_bottom(crop_box.get_margin_bottom() + 12)
-        crop_box.set_margin_start(crop_box.get_margin_start() + 12)
-        crop_box.set_margin_end(crop_box.get_margin_end() + 12)
-
-        # Create the crop controls for all four sides (left, right, top, bottom)
-        # Left margin - vertical layout with label at top
-        left_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        left_box.set_hexpand(True)
-        left_box.set_halign(Gtk.Align.CENTER)
-
-        left_label = Gtk.Label(label=_("Left Side"))
-        left_label.set_halign(Gtk.Align.CENTER)
-        left_box.append(left_label)
-
-        left_input_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        left_input_box.set_halign(Gtk.Align.CENTER)
-
-        adjustment = Gtk.Adjustment(value=0, lower=0, upper=9999, step_increment=1)
-        self.crop_left_spin = Gtk.SpinButton()
-        self.crop_left_spin.set_adjustment(adjustment)
-        self.crop_left_spin.set_numeric(True)
-        self.crop_left_spin.set_width_chars(5)  # Set uniform width
-        self.crop_left_spin.connect("value-changed", self.page.on_crop_value_changed)
-        left_input_box.append(self.crop_left_spin)
-
-        left_reset = Gtk.Button()
-        left_reset.set_icon_name("edit-undo-symbolic")
-        left_reset.add_css_class("flat")
-        left_reset.add_css_class("circular")
-        self.add_tooltip_to_button(left_reset, _("Reset to default"))
-        left_reset.connect("clicked", lambda b: self.page.reset_crop_value("left"))
-        left_input_box.append(left_reset)
-
-        left_box.append(left_input_box)
-        crop_box.append(left_box)
-
-        # Right, Top, and Bottom crop controls follow the same pattern
-        # Right margin control
-        right_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        right_box.set_hexpand(True)
-        right_box.set_halign(Gtk.Align.CENTER)
-
-        right_label = Gtk.Label(label=_("Right Side"))
-        right_label.set_halign(Gtk.Align.CENTER)
-        right_box.append(right_label)
-
-        right_input_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        right_input_box.set_halign(Gtk.Align.CENTER)
-
-        adjustment = Gtk.Adjustment(value=0, lower=0, upper=9999, step_increment=1)
-        self.crop_right_spin = Gtk.SpinButton()
-        self.crop_right_spin.set_adjustment(adjustment)
-        self.crop_right_spin.set_numeric(True)
-        self.crop_right_spin.set_width_chars(5)
-        self.crop_right_spin.connect("value-changed", self.page.on_crop_value_changed)
-        right_input_box.append(self.crop_right_spin)
-
-        right_reset = Gtk.Button()
-        right_reset.set_icon_name("edit-undo-symbolic")
-        right_reset.add_css_class("flat")
-        right_reset.add_css_class("circular")
-        self.add_tooltip_to_button(right_reset, _("Reset to default"))
-        right_reset.connect("clicked", lambda b: self.page.reset_crop_value("right"))
-        right_input_box.append(right_reset)
-
-        right_box.append(right_input_box)
-        crop_box.append(right_box)
-
-        # Top margin control
-        top_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        top_box.set_hexpand(True)
-        top_box.set_halign(Gtk.Align.CENTER)
-
-        top_label = Gtk.Label(label=_("Top Side"))
-        top_label.set_halign(Gtk.Align.CENTER)
-        top_box.append(top_label)
-
-        top_input_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        top_input_box.set_halign(Gtk.Align.CENTER)
-
-        adjustment = Gtk.Adjustment(value=0, lower=0, upper=9999, step_increment=1)
-        self.crop_top_spin = Gtk.SpinButton()
-        self.crop_top_spin.set_adjustment(adjustment)
-        self.crop_top_spin.set_numeric(True)
-        self.crop_top_spin.set_width_chars(5)
-        self.crop_top_spin.connect("value-changed", self.page.on_crop_value_changed)
-        top_input_box.append(self.crop_top_spin)
-
-        top_reset = Gtk.Button()
-        top_reset.set_icon_name("edit-undo-symbolic")
-        top_reset.add_css_class("flat")
-        top_reset.add_css_class("circular")
-        self.add_tooltip_to_button(top_reset, _("Reset to default"))
-        top_reset.connect("clicked", lambda b: self.page.reset_crop_value("top"))
-        top_input_box.append(top_reset)
-
-        top_box.append(top_input_box)
-        crop_box.append(top_box)
-
-        # Bottom margin control
-        bottom_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        bottom_box.set_hexpand(True)
-        bottom_box.set_halign(Gtk.Align.CENTER)
-
-        bottom_label = Gtk.Label(label=_("Bottom Side"))
-        bottom_label.set_halign(Gtk.Align.CENTER)
-        bottom_box.append(bottom_label)
-
-        bottom_input_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        bottom_input_box.set_halign(Gtk.Align.CENTER)
-
-        adjustment = Gtk.Adjustment(value=0, lower=0, upper=9999, step_increment=1)
-        self.crop_bottom_spin = Gtk.SpinButton()
-        self.crop_bottom_spin.set_adjustment(adjustment)
-        self.crop_bottom_spin.set_numeric(True)
-        self.crop_bottom_spin.set_width_chars(5)
-        self.crop_bottom_spin.connect("value-changed", self.page.on_crop_value_changed)
-        bottom_input_box.append(self.crop_bottom_spin)
-
-        bottom_reset = Gtk.Button()
-        bottom_reset.set_icon_name("edit-undo-symbolic")
-        bottom_reset.add_css_class("flat")
-        bottom_reset.add_css_class("circular")
-        self.add_tooltip_to_button(bottom_reset, _("Reset to default"))
-        bottom_reset.connect("clicked", lambda b: self.page.reset_crop_value("bottom"))
-        bottom_input_box.append(bottom_reset)
-
-        bottom_box.append(bottom_input_box)
-        crop_box.append(bottom_box)
-
-        # Result size indicator below the crop controls
-        result_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        result_box.set_halign(Gtk.Align.CENTER)
-
-        result_label = Gtk.Label()
-        result_label.set_markup(
-            "<small>" + _("Final size: calculating...") + "</small>"
-        )
-        result_label.set_halign(Gtk.Align.CENTER)
-        result_box.append(result_label)
-        self.crop_result_label = result_label
-
-        crop_controls_box.append(crop_box)
-        crop_controls_box.append(result_box)
-
-        # Add the crop controls directly to the group for better layout
-        crop_group.add(crop_controls_box)
-
-        return crop_group
-
-    def _create_adjustments_group(self):
-        """Create the video adjustments group"""
-        adjustments_group = Adw.PreferencesGroup(title=_("Video Adjustments"))
-
-        # Add the common adjustment sliders (brightness, contrast, saturation, etc.)
-        adjustments_group.add(
-            self._create_adjustment_row(
-                "Brightness",
-                "Between -1.0 and 1.0. Default: 0.0",
-                -1.0,
-                1.0,
-                0.05,
-                self.page.brightness,
-                self.page.on_brightness_changed,
-                self.page.reset_brightness,
+        toolbar_box.append(crop_grid)
+        toolbar_box.append(
+            Gtk.Separator(
+                orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6
             )
         )
 
-        adjustments_group.add(
-            self._create_adjustment_row(
-                "Contrast",
-                "Between 0.0 and 2.0. Default: 1.0",  # Updated to correct FFmpeg range
-                0.0,
-                2.0,  # New contrast range from 0 to 2
-                0.01,  # Small step for precise control
-                self.page.contrast,
-                self.page.on_contrast_changed,
-                self.page.reset_contrast,
-            )
+        # --- Info Display ---
+        info_grid = Gtk.Grid(column_spacing=12, row_spacing=4)
+        info_grid.set_valign(Gtk.Align.CENTER)
+        info_grid.set_hexpand(True)
+
+        self.info_dimensions_label = self._add_info_row(info_grid, 0, _("Resolution:"))
+        self.info_codec_label = self._add_info_row(info_grid, 1, _("Codec:"))
+        self.info_filesize_label = self._add_info_row(info_grid, 2, _("Size:"))
+        self.info_duration_label = self._add_info_row(info_grid, 3, _("Duration:"))
+
+        toolbar_box.append(info_grid)
+
+        return toolbar_box
+
+    def _add_info_row(self, grid, row_index, title):
+        """Helper to add a row to the info grid."""
+        title_label = Gtk.Label(label=title, xalign=1, css_classes=["dim-label"])
+        value_label = Gtk.Label(
+            label="...", xalign=0, selectable=True, ellipsize=Pango.EllipsizeMode.END
+        )
+        grid.attach(title_label, 0, row_index, 1, 1)
+        grid.attach(value_label, 1, row_index, 1, 1)
+        return value_label
+
+    def _create_volume_button(self):
+        """Creates the volume button with its popover."""
+        volume_button = Gtk.MenuButton(
+            icon_name="audio-volume-high-symbolic", tooltip_text=_("Volume")
         )
 
-        adjustments_group.add(
-            self._create_adjustment_row(
-                "Saturation",
-                "Between 0.0 and 3.0. Default: 1.0",  # FFmpeg range
-                0.0,
-                3.0,
-                0.05,
-                self.page.saturation,
-                self.page.on_saturation_changed,
-                self.page.reset_saturation,
-            )
+        volume_popover = Gtk.Popover()
+        volume_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=6,
+            margin_top=12,
+            margin_bottom=12,
+            margin_start=12,
+            margin_end=12,
         )
 
-        adjustments_group.add(
-            self._create_adjustment_row(
-                "Gamma",
-                "Between 0.1 and 10.0. Default: 1.0",  # FFmpeg range
-                0.1,
-                10.0,
-                0.1,
-                self.page.gamma,
-                self.page.on_gamma_changed,
-                self.page.reset_gamma,
-            )
+        self.volume_scale = Gtk.Scale.new_with_range(
+            Gtk.Orientation.VERTICAL, 0.0, 1.0, 0.05
         )
+        self.volume_scale.set_value(1.0)
+        self.volume_scale.set_inverted(True)
+        self.volume_scale.set_size_request(-1, 150)
+        self.volume_scale.set_draw_value(True)
+        self.volume_scale.set_value_pos(Gtk.PositionType.BOTTOM)
+        self.volume_scale.connect("value-changed", self.page.on_volume_changed)
+        volume_box.append(self.volume_scale)
 
-        adjustments_group.add(
-            self._create_adjustment_row(
-                "Red Gamma",
-                "Between 0.1 and 10.0. Default: 1.0",  # FFmpeg range
-                0.1,
-                10.0,
-                0.1,
-                self.page.gamma_r,
-                self.page.on_gamma_r_changed,
-                self.page.reset_gamma_r,
-            )
+        volume_popover.set_child(volume_box)
+        volume_button.set_popover(volume_popover)
+        return volume_button
+
+    def populate_sidebar(self, sidebar_box):
+        """Populate the sidebar with video adjustment controls and trim marking"""
+        while child := sidebar_box.get_first_child():
+            sidebar_box.remove(child)
+
+        # --- Video Adjustments Group ---
+        adjust_group = Adw.PreferencesGroup(title=_("Color Adjustments"))
+        self.adjust_group = adjust_group  # Store reference for enable/disable
+
+        self.brightness_scale, brightness_row = self._create_adjustment_row(
+            adjust_group,
+            _("Brightness"),
+            -1.0,
+            1.0,
+            0.0,
+            self.page.on_brightness_changed,
+            self.page.reset_brightness,
         )
+        # Add tooltip to brightness row
+        if brightness_row and hasattr(self.page.app, "tooltip_helper"):
+            self.page.app.tooltip_helper.add_tooltip(brightness_row, "brightness")
 
-        adjustments_group.add(
-            self._create_adjustment_row(
-                "Green Gamma",
-                "Between 0.1 and 10.0. Default: 1.0",  # FFmpeg range
-                0.1,
-                10.0,
-                0.1,
-                self.page.gamma_g,
-                self.page.on_gamma_g_changed,
-                self.page.reset_gamma_g,
-            )
+        self.saturation_scale, saturation_row = self._create_adjustment_row(
+            adjust_group,
+            _("Saturation"),
+            0.0,
+            2.0,
+            1.0,
+            self.page.on_saturation_changed,
+            self.page.reset_saturation,
         )
+        # Add tooltip to saturation row
+        if saturation_row and hasattr(self.page.app, "tooltip_helper"):
+            self.page.app.tooltip_helper.add_tooltip(saturation_row, "saturation")
 
-        adjustments_group.add(
-            self._create_adjustment_row(
-                "Blue Gamma",
-                "Between 0.1 and 10.0. Default: 1.0",  # FFmpeg range
-                0.1,
-                10.0,
-                0.1,
-                self.page.gamma_b,
-                self.page.on_gamma_b_changed,
-                self.page.reset_gamma_b,
-            )
+        self.hue_scale, hue_row = self._create_adjustment_row(
+            adjust_group,
+            _("Hue"),
+            -1.0,
+            1.0,
+            0.0,
+            self.page.on_hue_changed,
+            self.page.reset_hue,
         )
+        # Add tooltip to hue row
+        if hue_row and hasattr(self.page.app, "tooltip_helper"):
+            self.page.app.tooltip_helper.add_tooltip(hue_row, "hue")
 
-        adjustments_group.add(
-            self._create_adjustment_row(
-                "Gamma Weight",
-                "Between 0.0 and 1.0. Default: 1.0",  # FFmpeg range
-                0.0,
-                1.0,
-                0.01,
-                self.page.gamma_weight,
-                self.page.on_gamma_weight_changed,
-                self.page.reset_gamma_weight,
-            )
+        sidebar_box.append(adjust_group)
+
+        # --- Trim Segments Group ---
+        trim_group = Adw.PreferencesGroup(title=_("Trim Segments"))
+
+        list_row = Adw.ActionRow(title=_("Segments List"))
+
+        scrolled_window = Gtk.ScrolledWindow(min_content_height=150, vexpand=True)
+        scrolled_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+
+        self.segments_listbox = Gtk.ListBox(
+            selection_mode=Gtk.SelectionMode.NONE, css_classes=["boxed-list"]
         )
-
-        adjustments_group.add(
-            self._create_adjustment_row(
-                "Hue",
-                "Between -3.14 and 3.14 radians. Default: 0.0",
-                -3.14,
-                3.14,
-                0.05,
-                self.page.hue,
-                self.page.on_hue_changed,
-                self.page.reset_hue,
-            )
+        placeholder = Adw.StatusPage(
+            icon_name="video-trim-symbolic",
+            title=_("No Segments Added"),
+            description=_("Use the scissors button on the player to mark segments."),
         )
+        self.segments_listbox.set_placeholder(placeholder)
 
-        return adjustments_group
+        scrolled_window.set_child(self.segments_listbox)
+        list_row.set_child(scrolled_window)
+        trim_group.add(list_row)
+
+        # Action buttons row with + and trash icons
+        actions_row = Adw.ActionRow()
+        button_box = Gtk.Box(
+            spacing=30, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER
+        )
+        button_box.set_hexpand(True)
+
+        # Add segment button
+        add_button = Gtk.Button(icon_name="list-add-symbolic")
+        add_button.add_css_class("circular")
+        add_button.add_css_class("suggested-action")
+        add_button.set_tooltip_text(_("Add segment manually"))
+        add_button.connect("clicked", self.page._on_add_manual_segment_clicked)
+        button_box.append(add_button)
+
+        # Clear all segments button
+        clear_button = Gtk.Button(icon_name="user-trash-symbolic")
+        clear_button.add_css_class("circular")
+        clear_button.add_css_class("destructive-action")
+        clear_button.set_tooltip_text(_("Clear all segments"))
+        clear_button.connect(
+            "clicked", self.page._on_clear_all_segments_with_confirmation
+        )
+        button_box.append(clear_button)
+
+        actions_row.set_child(button_box)
+        trim_group.add(actions_row)
+
+        # Add tooltip to trim group
+        if hasattr(self.page.app, "tooltip_helper"):
+            self.page.app.tooltip_helper.add_tooltip(trim_group, "segments")
+
+        # Output Mode dropdown (no title, just dropdown)
+        output_mode_model = Gtk.StringList()
+        output_mode_model.append(_("Join segments into a single file"))
+        output_mode_model.append(_("Save each segment as a separate file"))
+
+        # Create a simple row to contain the dropdown
+        output_row = Adw.ActionRow()
+        self.output_mode_combo = Gtk.DropDown()
+        self.output_mode_combo.set_model(output_mode_model)
+        self.output_mode_combo.set_hexpand(True)
+        self.output_mode_combo.set_valign(Gtk.Align.CENTER)
+        self.output_mode_combo.connect(
+            "notify::selected", self.page._on_output_mode_changed
+        )
+        output_row.add_suffix(self.output_mode_combo)
+        output_row.set_activatable_widget(self.output_mode_combo)
+        trim_group.add(output_row)
+
+        sidebar_box.append(trim_group)
+
+    def update_for_force_copy_state(self, force_copy_enabled):
+        """Enable/disable editing controls based on force copy state"""
+        # When force copy is enabled, color adjustments and crop don't work
+        # Only trim segments continue to work
+        enable_editing_options = not force_copy_enabled
+
+        # Disable/enable color adjustments group
+        if hasattr(self, "adjust_group"):
+            self.adjust_group.set_sensitive(enable_editing_options)
+
+        # Disable/enable crop controls
+        if hasattr(self, "crop_grid"):
+            self.crop_grid.set_sensitive(enable_editing_options)
+
+        # Trim segments always stay enabled - they work with stream copy
 
     def _create_adjustment_row(
-        self, title, subtitle, min_val, max_val, step, current_val, on_change, on_reset
+        self, container, title, min_val, max_val, default_val, on_change, on_reset
     ):
-        """Helper to create adjustment rows with consistent styling"""
-        row = Adw.ActionRow(title=_(title))
-        row.set_subtitle(_(subtitle))
-        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-        box.set_margin_top(8)
-        box.set_margin_bottom(8)
+        """Helper to create a single adjustment row for the sidebar."""
+        row = Adw.ActionRow(title=title)
 
-        scale = Gtk.Scale.new_with_range(
-            Gtk.Orientation.HORIZONTAL, min_val, max_val, step
+        box = Gtk.Box(spacing=6, valign=Gtk.Align.CENTER)
+
+        scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            digits=2,
+            value_pos=Gtk.PositionType.RIGHT,
+            hexpand=True,
         )
-        scale.set_value(current_val)
-        scale.set_size_request(400, -1)
-        scale.set_draw_value(True)
-        scale.set_value_pos(Gtk.PositionType.RIGHT)
+        scale.set_adjustment(
+            Gtk.Adjustment(
+                value=default_val, lower=min_val, upper=max_val, step_increment=0.05
+            )
+        )
         scale.connect("value-changed", on_change)
 
-        # Add tooltip functionality
-        self.add_tooltip_to_slider(scale, lambda x: f"{x:.2f}")
-
-        reset_button = Gtk.Button()
-        reset_button.set_icon_name("edit-undo-symbolic")
-        reset_button.add_css_class("flat")
-        reset_button.add_css_class("circular")
-        self.add_tooltip_to_button(reset_button, _("Reset to default"))
+        reset_button = Gtk.Button(
+            icon_name="edit-undo-symbolic", tooltip_text=_("Reset to default")
+        )
         reset_button.connect("clicked", lambda b: on_reset())
 
         box.append(scale)
         box.append(reset_button)
+
         row.add_suffix(box)
+        container.add(row)
+        return scale, row
 
-        # Save a reference to the scale if needed later
-        setattr(self, f"{title.lower().replace(' ', '_')}_scale", scale)
+    def _draw_segment_markers(self, area, cr, width, height):
+        """Draw segment markers on the progress bar"""
+        if not self.page.current_video_path:
+            return
 
-        return row
+        if not hasattr(self.page, "gst_player") or not self.page.gst_player:
+            return
 
-    def _create_info_group(self):
-        """Create the video information section"""
-        info_group = Adw.PreferencesGroup(title=_("Video Information"))
+        duration = self.page.gst_player.get_duration()
+        if duration <= 0:
+            return
 
-        # Create individual rows for each piece of information
-        self.info_filename_row = Adw.ActionRow(title=_("Filename"))
-        self.info_filename_label = Gtk.Label(label=_("Unknown"))
-        self.info_filename_label.set_halign(Gtk.Align.END)
-        self.info_filename_row.add_suffix(self.info_filename_label)
-        info_group.add(self.info_filename_row)
+        # Draw first mark point if it exists (before second mark is made)
+        if self.page.first_segment_point is not None:
+            first_x = (self.page.first_segment_point / duration) * width
+            # Draw a bright marker line for the first point
+            cr.set_source_rgba(1.0, 0.5, 0.0, 0.9)  # Orange color
+            cr.set_line_width(3)
+            cr.move_to(first_x, 0)
+            cr.line_to(first_x, height)
+            cr.stroke()
 
-        self.info_dimensions_row = Adw.ActionRow(title=_("Resolution"))
-        self.info_dimensions_label = Gtk.Label(label=_("Unknown"))
-        self.info_dimensions_label.set_halign(Gtk.Align.END)
-        self.info_dimensions_row.add_suffix(self.info_dimensions_label)
-        info_group.add(self.info_dimensions_row)
+        # Draw completed segments
+        if self.page.trim_segments:
+            for segment in self.page.trim_segments:
+                start = segment["start"]
+                end = segment["end"]
 
-        self.info_codec_row = Adw.ActionRow(title=_("Codec"))
-        self.info_codec_label = Gtk.Label(label=_("Unknown"))
-        self.info_codec_label.set_halign(Gtk.Align.END)
-        self.info_codec_row.add_suffix(self.info_codec_label)
-        info_group.add(self.info_codec_row)
+                start_x = (start / duration) * width
+                end_x = (end / duration) * width
+                segment_width = end_x - start_x
 
-        # Add format row for displaying the format_long_name
-        self.info_format_row = Adw.ActionRow(title=_("Format"))
-        self.info_format_label = Gtk.Label(label=_("Unknown"))
-        self.info_format_label.set_halign(Gtk.Align.END)
-        self.info_format_row.add_suffix(self.info_format_label)
-        info_group.add(self.info_format_row)
+                cr.set_source_rgba(0.2, 0.6, 1.0, 0.4)
+                cr.rectangle(start_x, 0, segment_width, height)
+                cr.fill()
 
-        self.info_filesize_row = Adw.ActionRow(title=_("File Size"))
-        self.info_filesize_label = Gtk.Label(label=_("Unknown"))
-        self.info_filesize_label.set_halign(Gtk.Align.END)
-        self.info_filesize_row.add_suffix(self.info_filesize_label)
-        info_group.add(self.info_filesize_row)
+                cr.set_source_rgba(0.2, 0.6, 1.0, 0.8)
+                cr.set_line_width(2)
+                cr.move_to(start_x, 0)
+                cr.line_to(start_x, height)
+                cr.stroke()
+                cr.move_to(end_x, 0)
+                cr.line_to(end_x, height)
+                cr.stroke()
 
-        self.info_duration_row = Adw.ActionRow(title=_("Duration"))
-        self.info_duration_label = Gtk.Label(label=_("Unknown"))
-        self.info_duration_label.set_halign(Gtk.Align.END)
-        self.info_duration_row.add_suffix(self.info_duration_label)
-        info_group.add(self.info_duration_row)
+    def update_segment_markers(self):
+        """Request redraw of segment markers"""
+        if hasattr(self, "segment_markers_canvas"):
+            self.segment_markers_canvas.queue_draw()
 
-        self.info_fps_row = Adw.ActionRow(title=_("Frame Rate"))
-        self.info_fps_label = Gtk.Label(label=_("Unknown"))
-        self.info_fps_label.set_halign(Gtk.Align.END)
-        self.info_fps_row.add_suffix(self.info_fps_label)
-        info_group.add(self.info_fps_row)
+    def _setup_drag_controllers(self):
+        """Setup drag controllers on the interactive DrawingArea."""
+        self._dragging_segment = None
+        self._drag_threshold = 10
+        self._segment_drag_active = False
+        self._drag_start_pos = None
 
-        return info_group
+        self.drag_gesture = Gtk.GestureDrag.new()
+        self.drag_gesture.set_touch_only(False)
+        self.drag_gesture.set_button(1)
+        self.drag_gesture.connect("drag-begin", self._on_drag_begin)
+        self.drag_gesture.connect("drag-update", self._on_drag_update)
+        self.drag_gesture.connect("drag-end", self._on_drag_end)
+        self.segment_markers_canvas.add_controller(self.drag_gesture)
+
+        motion_controller = Gtk.EventControllerMotion.new()
+        motion_controller.connect("motion", self._on_motion)
+        motion_controller.connect("leave", self._on_motion_leave)
+        self.segment_markers_canvas.add_controller(motion_controller)
+
+    def _find_segment_edge_at_position(self, x, width):
+        if not self.page.trim_segments or not hasattr(self.page, "gst_player"):
+            return None
+        duration = self.page.gst_player.get_duration()
+        if duration <= 0:
+            return None
+        for idx, segment in enumerate(self.page.trim_segments):
+            start_x = (segment["start"] / duration) * width
+            end_x = (segment["end"] / duration) * width
+            if abs(x - start_x) <= self._drag_threshold:
+                return {"segment_index": idx, "edge": "start"}
+            if abs(x - end_x) <= self._drag_threshold:
+                return {"segment_index": idx, "edge": "end"}
+        return None
+
+    def _on_drag_begin(self, gesture, start_x, start_y):
+        self.page.user_is_dragging_slider = True
+        self._drag_start_pos = (start_x, start_y)
+        width = self.segment_markers_canvas.get_allocated_width()
+        edge_info = self._find_segment_edge_at_position(start_x, width)
+        if edge_info:
+            self._dragging_segment = edge_info
+            self._segment_drag_active = True
+        else:
+            self._segment_drag_active = False
+            self._update_slider_drag(start_x, width)
+
+    def _on_drag_update(self, gesture, offset_x, offset_y):
+        if not self._drag_start_pos:
+            return
+        start_x, _ = self._drag_start_pos
+        current_x = start_x + offset_x
+        width = self.segment_markers_canvas.get_allocated_width()
+        current_x = max(0, min(width, current_x))
+        if self._segment_drag_active:
+            self._update_segment_drag(current_x, width)
+        else:
+            self._update_slider_drag(current_x, width)
+
+    def _on_drag_end(self, gesture, offset_x, offset_y):
+        if self._segment_drag_active:
+            self.page._save_file_metadata()
+        self.page.user_is_dragging_slider = False
+        self._dragging_segment = None
+        self._segment_drag_active = False
+        self._drag_start_pos = None
+
+    def _update_slider_drag(self, x, width):
+        if not hasattr(self.page, "gst_player"):
+            return
+        duration = self.page.gst_player.get_duration()
+        if duration <= 0:
+            return
+        new_time = (x / width) * duration
+        new_time = max(0, min(duration, new_time))
+        self.position_scale.set_value(new_time)
+
+    def _on_motion(self, controller, x, y):
+        if not self.page.user_is_dragging_slider:
+            width = self.segment_markers_canvas.get_allocated_width()
+            edge_info = self._find_segment_edge_at_position(x, width)
+            self.segment_markers_canvas.set_cursor_from_name(
+                "ew-resize" if edge_info else None
+            )
+
+    def _on_motion_leave(self, controller):
+        self.segment_markers_canvas.set_cursor(None)
+
+    def _update_segment_drag(self, x, width):
+        if not self._dragging_segment or not hasattr(self.page, "gst_player"):
+            return
+        duration = self.page.gst_player.get_duration()
+        if duration <= 0:
+            return
+        new_time = (x / width) * duration
+        new_time = max(0, min(duration, new_time))
+        idx, edge = (
+            self._dragging_segment["segment_index"],
+            self._dragging_segment["edge"],
+        )
+        if edge == "start" and new_time < self.page.trim_segments[idx]["end"]:
+            self.page.trim_segments[idx]["start"] = new_time
+            self.position_scale.set_value(new_time)
+        elif edge == "end" and new_time > self.page.trim_segments[idx]["start"]:
+            self.page.trim_segments[idx]["end"] = new_time
+            self.position_scale.set_value(new_time)
+        self.update_segment_markers()
+        self.page._update_segments_listbox()
+
+    def _on_video_mouse_enter(self, c, x, y):
+        self._show_controls()
+
+    def _on_video_mouse_motion(self, c, x, y):
+        self._show_controls()
+        if self.page.is_playing:
+            self._schedule_hide_controls()
+
+    def _on_video_mouse_leave(self, c):
+        if not self._any_popover_visible() and self.page.is_playing:
+            self._schedule_hide_controls(delay=500)
+
+    def _any_popover_visible(self):
+        """Checks if any of the main popover-controlling buttons are active."""
+        return (
+            (hasattr(self, "volume_button") and self.volume_button.get_active())
+            or (
+                hasattr(self, "audio_track_button")
+                and self.audio_track_button.get_active()
+            )
+            or (hasattr(self, "subtitle_button") and self.subtitle_button.get_active())
+        )
+
+    def _show_controls(self):
+        if hasattr(self, "overlay_controls"):
+            self.overlay_controls.set_visible(True)
+            self.controls_visible = True
+            if self.hide_timer_id:
+                GLib.source_remove(self.hide_timer_id)
+                self.hide_timer_id = None
+
+    def _schedule_hide_controls(self, delay=2000):
+        if self._any_popover_visible():
+            return
+        if self.hide_timer_id:
+            GLib.source_remove(self.hide_timer_id)
+        self.hide_timer_id = GLib.timeout_add(delay, self._hide_controls)
+
+    def _hide_controls(self):
+        if self._any_popover_visible():
+            return True
+        if hasattr(self, "overlay_controls"):
+            self.overlay_controls.set_visible(False)
+        self.controls_visible = False
+        self.hide_timer_id = None
+        return False

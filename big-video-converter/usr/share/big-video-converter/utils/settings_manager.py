@@ -15,6 +15,7 @@ class SettingsManager:
         "delete-original": False,
         "show-single-help-on-startup": True,
         "show-conversion-help-on-startup": True,
+        "show-tooltips": True,
         # Batch conversion
         "search-directory": "",
         "max-processes": 2,
@@ -23,17 +24,19 @@ class SettingsManager:
         "delete-batch-originals": False,
         # Encoding settings - use strings directly
         "gpu": "auto",
-        "video-quality": "medium",
+        "video-quality": "default",
         "video-codec": "h264",
-        "preset": "medium",
+        "preset": "default",
         "subtitle-extract": "extract",
         "audio-handling": "copy",
         # Audio settings
         "audio-bitrate": "",
         "audio-channels": "",
+        "audio-codec": "aac",
         # Video settings
         "video-resolution": "",
         "additional-options": "",
+        "output-format-index": 0,
         # Feature toggles
         "gpu-partial": False,
         "force-copy-video": False,
@@ -44,17 +47,13 @@ class SettingsManager:
         "preview-crop-top": 0,
         "preview-crop-bottom": 0,
         "preview-brightness": 0.0,
-        "preview-contrast": 1.0,
         "preview-saturation": 1.0,
-        "preview-gamma": 1.0,
-        "preview-gamma-r": 1.0,
-        "preview-gamma-g": 1.0,
-        "preview-gamma-b": 1.0,
-        "preview-gamma-weight": 1.0,
         "preview-hue": 0.0,
         # Video trim settings
         "video-trim-start": 0.0,
         "video-trim-end": -1.0,  # -1 means no end time (use full video)
+        # Multi-segment output mode
+        "multi-segment-output-mode": "join",  # Options: "join", "split"
     }
 
     def __init__(self, app_id, dev_mode=False, dev_settings_file=None):
@@ -138,12 +137,6 @@ class SettingsManager:
 
     def get_boolean(self, key, default=None):
         return self.get_value(key, default if default is not None else False)
-
-    def get_int(self, key, default=None):
-        return self.get_value(key, default if default is not None else 0)
-
-    def get_double(self, key, default=None):
-        return self.get_value(key, default if default is not None else 0.0)
 
     def set_string(self, key, value):
         return self.set_value(key, str(value) if value is not None else "")

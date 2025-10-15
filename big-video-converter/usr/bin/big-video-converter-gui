@@ -1,3 +1,18 @@
 #!/bin/sh
 
-python3 /usr/share/big-video-converter/main.py "$@"
+# Determine the script directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+SHARE_DIR="$(dirname "$SCRIPT_DIR")/share"
+
+# If running from installed location
+if [ -d "/usr/share/big-video-converter" ]; then
+    export PYTHONPATH="/usr/share/big-video-converter:$PYTHONPATH"
+    exec python3 /usr/share/big-video-converter/main.py "$@"
+# If running from development/build directory  
+elif [ -d "$SHARE_DIR/big-video-converter" ]; then
+    export PYTHONPATH="$SHARE_DIR/big-video-converter:$PYTHONPATH"
+    exec python3 "$SHARE_DIR/big-video-converter/main.py" "$@"
+else
+    echo "Error: Could not find big-video-converter installation"
+    exit 1
+fi

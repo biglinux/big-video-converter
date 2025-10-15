@@ -90,29 +90,33 @@ if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
 	echo -e "   ${COLOR_CYAN}You can specify how to handle audio. Options include:${COLOR_GREEN} copy, reencode, none${COLOR_RESET} Default is copy"
 	echo -e "   ${COLOR_CYAN}Example to copy audio without reencoding:${COLOR_RESET} ${COLOR_YELLOW}audio_handling=copy${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
 	echo ""
-	echo -e "${COLOR_BLUE}12. Specifying Video Encoder:${COLOR_RESET}"
+	echo -e "${COLOR_BLUE}12. Specifying Audio Codec for Re-encoding:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the audio codec when re-encoding. Options include:${COLOR_GREEN} aac, opus, ac3${COLOR_RESET} Default is aac"
+	echo -e "   ${COLOR_CYAN}Example to use opus codec:${COLOR_RESET} ${COLOR_YELLOW}audio_codec=opus${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}13. Specifying Video Encoder:${COLOR_RESET}"
 	echo -e "   ${COLOR_CYAN}You can specify the video encoder. Options include:${COLOR_GREEN} h264, h265, av1, vp9${COLOR_RESET} Default is h264"
 	echo -e "   ${COLOR_CYAN}Example to use h265 encoder:${COLOR_RESET} ${COLOR_YELLOW}video_encoder=h265${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
 	echo ""
-	echo -e "${COLOR_BLUE}13. Force Gpu partial mode, decode using CPU and encode using GPU:${COLOR_RESET}"
+	echo -e "${COLOR_BLUE}14. Force Gpu partial mode, decode using CPU and encode using GPU:${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}gpu_partial=1${COLOR_RESET}"
 	echo ""
-	echo -e "${COLOR_BLUE}14. Force CPU decode and encode:${COLOR_RESET}"
+	echo -e "${COLOR_BLUE}15. Force CPU decode and encode:${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}force_software=1${COLOR_RESET}"
 	echo ""
-	echo -e "${COLOR_BLUE}15. Copy video without reencode:${COLOR_RESET}"
+	echo -e "${COLOR_BLUE}16. Copy video without reencode:${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}force_copy_video=1${COLOR_RESET}"
 	echo ""
-	echo -e "${COLOR_BLUE}15. Only extract subtitles to .srt files:${COLOR_RESET}"
+	echo -e "${COLOR_BLUE}17. Only extract subtitles to .srt files:${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}only_extract_subtitles=1${COLOR_RESET}"
 	echo ""
-	echo -e "${COLOR_BLUE}16. Show ffmpeg executable path:${COLOR_RESET}"
+	echo -e "${COLOR_BLUE}18. Show ffmpeg executable path:${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}show_executable=1${COLOR_RESET}"
 	echo ""
-	echo -e "${COLOR_BLUE}18. Force ffmpeg encoder. Options: nvenc, vulkan, vaapi, qsv, amf, software ${COLOR_RESET}"
+	echo -e "${COLOR_BLUE}19. Force ffmpeg encoder. Options: nvenc, vulkan, vaapi, qsv, amf, software ${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}force_encoder=encoder_name${COLOR_RESET}"
 	echo ""
-	echo -e "${COLOR_BLUE}19. Force ffmpeg decoder. Options: cuda, vaapi, qsv, amf, software ${COLOR_RESET}"
+	echo -e "${COLOR_BLUE}20. Force ffmpeg decoder. Options: cuda, vaapi, qsv, amf, software ${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}force_decoder=decoder_name${COLOR_RESET}"
 	exit 0
 fi
@@ -251,16 +255,22 @@ fi
 : ${audio_handling:=copy}
 original_audio_handling=$audio_handling
 
+# If audio codec not specified, use aac
+: ${audio_codec:=aac}
+
 # Function to build the audio command string based on the current audio_handling value
 function build_audio_cmd() {
 	audio_cmd="" # Reset audio command
 	if [[ $audio_handling == "copy" ]]; then
 		audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
 		mapfile -t audio_streams <<<"$audio_info"
+		echo "DEBUG: Found ${#audio_streams[@]} audio streams"
 		for i in "${!audio_streams[@]}"; do
 			IFS=',' read -r index_audio language_audio <<<"${audio_streams[$i]}"
+			echo "DEBUG: Mapping audio stream $index_audio (language: $language_audio)"
 			audio_cmd+="-map 0:$index_audio -c:a:$i copy "
 		done
+		echo "DEBUG: Final audio_cmd: $audio_cmd"
 	elif [[ $audio_handling == "reencode" ]]; then
 		audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
 		mapfile -t audio_streams <<<"$audio_info"
@@ -283,15 +293,29 @@ function build_audio_cmd() {
 				language_audio="und"
 			fi
 
-			if [[ -z $audio_bitrate ]]; then
-				audio_bitrate_value=$((channels * 32))k
-			else
-				audio_bitrate_value=$audio_bitrate
-			fi
+		if [[ -z $audio_bitrate ]]; then
+			audio_bitrate_value=$((channels * 32))k
+		else
+			audio_bitrate_value=$audio_bitrate
+		fi
 
+		# Build audio encoding command based on codec
+		case $audio_codec in
+		opus)
+			# Opus: excellent quality, especially at lower bitrates
+			audio_cmd+="-map 0:$index_audio -c:a:$i libopus -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
+			;;
+		ac3)
+			# AC3 (Dolby Digital): for multichannel audio
+			audio_cmd+="-map 0:$index_audio -c:a:$i ac3 -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
+			;;
+		*)
+			# AAC: default, best compatibility
 			audio_cmd+="-map 0:$index_audio -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
+			;;
+		esac
 
-		done
+	done
 	elif [[ $audio_handling == "none" ]]; then
 		audio_cmd="-an"
 	fi

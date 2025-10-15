@@ -56,26 +56,24 @@ def detect_bit_depth_info(file_path):
     except:
         return "ℹ️  Video analysis complete"
 
-
-def format_resolution(width, height):
-    """
-    Format resolution string with the correct separator for FFmpeg.
-    FFmpeg requires width:height format (not width×height).
+def run_with_progress_dialog(
+    app,
+    cmd,
+    title_suffix,
+    input_file=None,
+    delete_original=False,
+    env_vars=None,
+    wait_for_completion=False,
+    is_segment_batch=False,
+    segment_duration=None,
+):
+    """Run a conversion command and show progress on the Progress page
 
     Args:
-        width (int or str): Video width
-        height (int or str): Video height
-
-    Returns:
-        str: Formatted resolution string (e.g. "1920:1080")
+        wait_for_completion: If True, blocks until conversion completes (for sequential processing)
+        is_segment_batch: If True, suppresses completion dialogs for individual segments in a batch
+        segment_duration: Expected duration of this segment in seconds (overrides ffmpeg-detected duration for progress calculation)
     """
-    return f"{width}:{height}"
-
-
-def run_with_progress_dialog(
-    app, cmd, title_suffix, input_file=None, delete_original=False, env_vars=None
-):
-    """Run a conversion command and show progress on the Progress page"""
     # Use app's global setting for deleting original files if not explicitly set
     if hasattr(app, "delete_original_after_conversion"):
         delete_original = app.delete_original_after_conversion
@@ -140,6 +138,7 @@ def run_with_progress_dialog(
                 "audio_handling",
                 "audio_bitrate",
                 "audio_channels",
+                "audio_codec",
                 "video_resolution",
                 "options",
                 "gpu_partial",
@@ -168,9 +167,67 @@ def run_with_progress_dialog(
         )
 
         # Create conversion item on progress page
-        progress_item = app.progress_page.add_conversion(
-            title_suffix, input_file, process
-        )
+        # CRITICAL: GTK widget creation must happen on the main thread to avoid segfaults
+        import threading
+
+        # Check if we're already on the main thread
+        main_context = GLib.MainContext.default()
+        is_main_thread = main_context.is_owner()
+
+        progress_item_container = [None]
+        exception_container = [None]
+
+        if is_main_thread:
+            # We're already on the main thread, call directly
+            print("Creating progress item directly (already on main thread)")
+            try:
+                progress_item_container[0] = app.progress_page.add_conversion(
+                    title_suffix, input_file, process
+                )
+            except Exception as e:
+                exception_container[0] = e
+        else:
+            # We're on a background thread, schedule on main thread and wait
+            print("Scheduling progress item creation on main thread")
+            creation_complete = threading.Event()
+
+            def create_progress_item():
+                try:
+                    progress_item_container[0] = app.progress_page.add_conversion(
+                        title_suffix, input_file, process
+                    )
+                except Exception as e:
+                    exception_container[0] = e
+                finally:
+                    creation_complete.set()
+
+            GLib.idle_add(create_progress_item)
+            creation_complete.wait(timeout=5.0)  # Wait up to 5 seconds
+
+        # Check if an exception occurred during widget creation
+        if exception_container[0] is not None:
+            raise Exception(
+                f"Failed to create progress item on main thread: {exception_container[0]}"
+            )
+
+        if progress_item_container[0] is None:
+            raise Exception(
+                "Failed to create progress item on main thread: timeout or unknown error"
+            )
+        
+        progress_item = progress_item_container[0]
+
+        # Store segment duration for progress calculation
+        # When processing a segment with -ss/-t, ffmpeg detects the full video duration
+        # but reports progress based on the segment duration specified in -t
+        # We need to use the segment duration for accurate progress calculation
+        if segment_duration is not None and segment_duration > 0:
+            progress_item.expected_duration = segment_duration
+            print(
+                f"Segment mode: expected duration={segment_duration:.2f}s (will override ffmpeg-detected duration for progress calculation)"
+            )
+        else:
+            progress_item.expected_duration = None
 
         # Flag to track if this is part of a queue processing
         if input_file:
@@ -179,6 +236,8 @@ def run_with_progress_dialog(
         # Flag to indicate it's a queue item if queue has files
         is_queue_processing = len(app.conversion_queue) > 0
         progress_item.is_queue_processing = is_queue_processing
+        # Flag to indicate this is part of a segment batch (suppress dialogs for individual segments)
+        progress_item.is_segment_batch = is_segment_batch
         progress_item.input_file_path = input_file  # Store the input file path
 
         # Also store the input file path in progress_item for later reference
@@ -211,13 +270,46 @@ def run_with_progress_dialog(
                     except Exception as del_error:
                         print(f"Error deleting file {input_file}: {del_error}")
 
-                # Notify the application that conversion is complete
-                GLib.idle_add(lambda: app.conversion_completed(result == 0))
+                # Auto-remove successful segment batch items to keep UI clean
+                if is_segment_batch and result == 0:
+                    print(
+                        f"Auto-removing successful segment batch item: {progress_item.conversion_id}"
+                    )
+
+                    # Small delay before removal to show completion briefly
+                    def remove_after_delay():
+                        GLib.timeout_add(
+                            100,
+                            lambda: app.progress_page.remove_conversion(
+                                progress_item.conversion_id
+                            )
+                            or False,
+                        )
+
+                    GLib.idle_add(remove_after_delay)
+
+                # Notify the application that conversion is complete (skip for segment batch)
+                if not is_segment_batch:
+                    GLib.idle_add(lambda: app.conversion_completed(result == 0))
+                else:
+                    print(
+                        "Skipping conversion_completed callback for segment batch item"
+                    )
 
             except Exception as e:
                 print(f"Error in conversion completion handler: {e}")
-                # Still notify app even if there's an error in the handler
-                GLib.idle_add(lambda: app.conversion_completed(False))
+                # Still notify app even if there's an error in the handler (skip for segment batch)
+                if not is_segment_batch:
+                    GLib.idle_add(lambda: app.conversion_completed(False))
+
+        # Wait for completion if requested (for sequential processing)
+        if wait_for_completion:
+            print(f"Waiting for conversion to complete: {title_suffix}")
+            returncode = process.wait()
+            print(f"Conversion finished with return code: {returncode}")
+            on_conversion_complete(process, returncode)
+            # Also wait for monitor thread to finish
+            monitor_thread.join(timeout=5.0)
 
     except Exception as e:
         app.show_error_dialog(_("Error starting conversion: {0}").format(e))
@@ -500,17 +592,30 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 ms = rest.split(".")[1] if "." in rest else "0"
 
                                 # Calculate duration in seconds with millisecond precision
-                                duration_secs = (
+                                detected_duration_secs = (
                                     int(h) * 3600
                                     + int(m) * 60
                                     + int(s)
                                     + (int(ms) / 100)
                                 )
+
+                                # Override with expected segment duration if processing a segment
+                                if (
+                                    hasattr(progress_item, "expected_duration")
+                                    and progress_item.expected_duration is not None
+                                ):
+                                    duration_secs = progress_item.expected_duration
+                                    print(
+                                        f"FFmpeg detected duration: {detected_duration_secs:.2f}s (full video), using expected segment duration: {duration_secs:.2f}s for progress calculation"
+                                    )
+                                else:
+                                    duration_secs = detected_duration_secs
+                                    print(
+                                        f"Detected duration: {duration_str} ({duration_secs:.3f} seconds)"
+                                    )
+
                                 duration_detected = True
 
-                                print(
-                                    f"Detected duration: {duration_str} ({duration_secs:.3f} seconds)"
-                                )
                                 GLib.idle_add(
                                     progress_item.add_output_text,
                                     f"Detected duration: {duration_str}",
@@ -803,7 +908,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                 print(error_msg)
                 GLib.idle_add(progress_item.add_output_text, error_msg)
 
-            # Update UI for cancellation
+                # Update UI for cancellation
             cancel_msg = _("Conversion cancelled.")
             GLib.idle_add(progress_item.update_status, cancel_msg)
             GLib.idle_add(progress_item.update_progress, 0.0, _("Cancelled"))
@@ -816,6 +921,16 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     progress_item.conversion_id
                 ),
             )
+
+            # Re-enable buttons but don't trigger queue processing
+            # This handles the case where user manually cancelled
+            if hasattr(app, "header_bar"):
+                GLib.idle_add(lambda: app.header_bar.set_buttons_sensitive(True))
+
+            # If we were processing a queue and this was cancelled,
+            # we need to reset the converting flag
+            if hasattr(app, "currently_converting"):
+                app.currently_converting = False
         else:
             # Process finished normally, get return code
             return_code = process.wait()
@@ -925,8 +1040,12 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                     hasattr(progress_item, "is_queue_processing")
                                     and progress_item.is_queue_processing
                                 )
-                                if not is_queue_processing:
-                                    # Only show dialogs for individual conversions (not queue items)
+                                is_segment_batch = (
+                                    hasattr(progress_item, "is_segment_batch")
+                                    and progress_item.is_segment_batch
+                                )
+                                if not is_queue_processing and not is_segment_batch:
+                                    # Only show dialogs for individual conversions (not queue items or batch segments)
                                     GLib.idle_add(
                                         lambda: show_info_dialog_and_close_progress(
                                             app,
@@ -941,30 +1060,48 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 error_msg = f"Could not delete the original file: {e}"
                                 print(error_msg)
                                 GLib.idle_add(progress_item.add_output_text, error_msg)
-                                GLib.idle_add(
-                                    lambda e=e: show_info_dialog_and_close_progress(
-                                        app,
-                                        _(
-                                            "Conversion completed successfully!\n\n"
-                                            "Could not delete the original file: {0}"
-                                        ).format(e),
-                                        progress_item,
-                                    )
+                                is_queue_processing = (
+                                    hasattr(progress_item, "is_queue_processing")
+                                    and progress_item.is_queue_processing
                                 )
+                                is_segment_batch = (
+                                    hasattr(progress_item, "is_segment_batch")
+                                    and progress_item.is_segment_batch
+                                )
+                                if not is_queue_processing and not is_segment_batch:
+                                    GLib.idle_add(
+                                        lambda e=e: show_info_dialog_and_close_progress(
+                                            app,
+                                            _(
+                                                "Conversion completed successfully!\n\n"
+                                                "Could not delete the original file: {0}"
+                                            ).format(e),
+                                            progress_item,
+                                        )
+                                    )
                         else:
                             size_warning = f"The converted file size is suspicious, so the original file was not removed."
                             print(size_warning)
                             GLib.idle_add(progress_item.add_output_text, size_warning)
-                            GLib.idle_add(
-                                lambda: show_info_dialog_and_close_progress(
-                                    app,
-                                    _(
-                                        "Conversion completed successfully!\n\n"
-                                        "The converted file size is suspicious, so the original file was not removed."
-                                    ),
-                                    progress_item,
-                                )
+                            is_queue_processing = (
+                                hasattr(progress_item, "is_queue_processing")
+                                and progress_item.is_queue_processing
                             )
+                            is_segment_batch = (
+                                hasattr(progress_item, "is_segment_batch")
+                                and progress_item.is_segment_batch
+                            )
+                            if not is_queue_processing and not is_segment_batch:
+                                GLib.idle_add(
+                                    lambda: show_info_dialog_and_close_progress(
+                                        app,
+                                        _(
+                                            "Conversion completed successfully!\n\n"
+                                            "The converted file size is suspicious, so the original file was not removed."
+                                        ),
+                                        progress_item,
+                                    )
+                                )
                     else:
                         error_msg = (
                             f"Output file not found or not accessible: {output_file}"
@@ -984,20 +1121,35 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                             except Exception as e:
                                 print(f"Error listing directory: {e}")
 
-                        GLib.idle_add(
-                            lambda: show_info_dialog_and_close_progress(
-                                app,
-                                _("Conversion completed successfully!"),
-                                progress_item,
-                            )
+                        is_queue_processing = (
+                            hasattr(progress_item, "is_queue_processing")
+                            and progress_item.is_queue_processing
                         )
+                        is_segment_batch = (
+                            hasattr(progress_item, "is_segment_batch")
+                            and progress_item.is_segment_batch
+                        )
+                        if not is_queue_processing and not is_segment_batch:
+                            GLib.idle_add(
+                                lambda: show_info_dialog_and_close_progress(
+                                    app,
+                                    _("Conversion completed successfully!"),
+                                    progress_item,
+                                )
+                            )
                 else:
-                    # Only show completion dialog if not processing a queue
+                    # Check if this is part of a segment batch or queue processing
                     is_queue_processing = (
                         hasattr(progress_item, "is_queue_processing")
                         and progress_item.is_queue_processing
                     )
-                    if not is_queue_processing:
+                    is_segment_batch = (
+                        hasattr(progress_item, "is_segment_batch")
+                        and progress_item.is_segment_batch
+                    )
+                    
+                    if not is_queue_processing and not is_segment_batch:
+                        # Only show dialog for individual conversions (not queue or batch segments)
                         GLib.idle_add(
                             lambda: show_info_dialog_and_close_progress(
                                 app,
@@ -1006,25 +1158,29 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                             )
                         )
                     else:
-                        # For queue items, just remove from progress page after delay without dialog
-                        GLib.timeout_add(
-                            3000,
-                            lambda: app.progress_page.remove_conversion(
-                                progress_item.conversion_id
-                            ),
-                        )
+                        # For queue items or batch segments, just remove from progress page after delay without dialog
+                        # IMPORTANT: For segment batch, don't remove yet - let the batch completion handle cleanup
+                        if not is_segment_batch:
+                            GLib.timeout_add(
+                                3000,
+                                lambda: app.progress_page.remove_conversion(
+                                    progress_item.conversion_id
+                                ),
+                            )
 
-                # Clean up progress page regardless
-                GLib.timeout_add(
-                    5000,
-                    lambda: app.progress_page.remove_conversion(
-                        progress_item.conversion_id
-                    ),
-                )
+                # Clean up progress page regardless (only if not part of segment batch)
+                if not is_segment_batch:
+                    GLib.timeout_add(
+                        5000,
+                        lambda: app.progress_page.remove_conversion(
+                            progress_item.conversion_id
+                        ),
+                    )
 
                 # CRITICAL: Notify the app that conversion is complete to trigger next queue item
-                # This must be called directly with idle_add for reliable behavior
-                GLib.idle_add(lambda: app.conversion_completed(True))
+                # Skip this for segment batch items to avoid premature page closing
+                if not is_segment_batch:
+                    GLib.idle_add(lambda: app.conversion_completed(True))
 
             else:
                 error_msg = _("Conversion failed with code {0}").format(return_code)
@@ -1032,12 +1188,16 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                 GLib.idle_add(progress_item.update_status, error_msg)
                 GLib.idle_add(progress_item.add_output_text, error_msg)
 
-                # Update to check for queue processing here too
+                # Check for queue processing or segment batch
                 is_queue_processing = (
                     hasattr(progress_item, "is_queue_processing")
                     and progress_item.is_queue_processing
                 )
-                if not is_queue_processing:
+                is_segment_batch = (
+                    hasattr(progress_item, "is_segment_batch")
+                    and progress_item.is_segment_batch
+                )
+                if not is_queue_processing and not is_segment_batch:
                     GLib.idle_add(
                         lambda: show_error_dialog_and_close_progress(
                             app,
@@ -1059,15 +1219,18 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     GLib.idle_add(app.show_toast, toast_msg)
 
                     # Just remove the item after a delay without showing dialog
-                    GLib.timeout_add(
-                        5000,
-                        lambda: app.progress_page.remove_conversion(
-                            progress_item.conversion_id
-                        ),
-                    )
+                    # IMPORTANT: For segment batch, don't remove yet
+                    if not is_segment_batch:
+                        GLib.timeout_add(
+                            5000,
+                            lambda: app.progress_page.remove_conversion(
+                                progress_item.conversion_id
+                            ),
+                        )
 
-                # CRITICAL: Notify the app about failed conversion as well
-                GLib.idle_add(lambda: app.conversion_completed(False))
+                # CRITICAL: Notify the app about failed conversion (skip for segment batch)
+                if not is_segment_batch:
+                    GLib.idle_add(lambda: app.conversion_completed(False))
 
             # Disable cancel button
             GLib.idle_add(progress_item.cancel_button.set_sensitive, False)
@@ -1101,6 +1264,8 @@ def show_error_dialog_and_close_progress(app, message, progress_item):
 
 def build_convert_command(input_file, settings):
     """Build the convert command and environment variables"""
+    from utils.file_info import has_audio_streams
+
     cmd = [CONVERT_SCRIPT_PATH, input_file]
     env_vars = os.environ.copy()
 
@@ -1115,6 +1280,7 @@ def build_convert_command(input_file, settings):
         "audio-handling",
         "audio-bitrate",
         "audio-channels",
+        "audio-codec",
         "video-resolution",
         "additional-options",
         "gpu-partial",
@@ -1130,6 +1296,15 @@ def build_convert_command(input_file, settings):
             if hasattr(settings, "get_value")
             else settings.get(key)
         )
+
+        # Special handling for audio-handling: check if video has audio
+        if key == "audio-handling" and value:
+            if not has_audio_streams(input_file):
+                # Video has no audio streams, force audio_handling to "none"
+                value = "none"
+                print(
+                    f"No audio streams detected in {os.path.basename(input_file)}, overriding audio_handling to 'none'"
+                )
 
         # Skip empty values
         if value not in [None, "", False]:
