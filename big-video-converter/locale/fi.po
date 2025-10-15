@@ -525,6 +525,10 @@ msgstr "Opus (Paras Laatu)"
 msgid "AC3 (Dolby Digital)"
 msgstr "AC3 (Dolby Digital)"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 179
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 179
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 149
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 149
@@ -575,95 +579,77 @@ msgstr "SD Pystysuunnassa (480×854)"
 msgid "Custom"
 msgstr "Mukautettu"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 185
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Choose which hardware accelerates video processing:\n"
-"• Auto-detect: Automatically uses the best available\n"
-"• NVENC: For Nvidia graphics cards (fastest)\n"
-"• VAAPI: For Intel/AMD graphics\n"
-"• QSV: For Intel processors\n"
-"• Vulkan: Cross-platform GPU acceleration\n"
-"• Software: Uses CPU only (slowest but compatible)"
+"If the system's GPU supports video conversion, the process will be much faster. Automatic detection "
+"is usually the best option, but you can also select it manually. The Software mode is slower but "
+"compatible with more formats. If the GPU doesn’t support conversion, the system will attempt "
+"partial GPU processing and, if that fails, will automatically switch to Software mode."
 msgstr ""
-"Valitse, mikä laitteisto nopeuttaa videonkäsittelyä:\n"
-"• Automaattinen tunnistus: Käyttää automaattisesti parasta saatavilla olevaa\n"
-"• NVENC: Nvidia-näytönohjaimille (nopein)\n"
-"• VAAPI: Intel/AMD-näytönohjaimille\n"
-"• QSV: Intel-prosessoreille\n"
-"• Vulkan: Ristiinalustainen GPU-kiihdytys\n"
-"• Ohjelmisto: Käyttää vain CPU:ta (hitain mutta yhteensopiva)"
+"Jos järjestelmän GPU tukee videomuunnosta, prosessi on paljon nopeampi. Automaattinen tunnistus on "
+"yleensä paras vaihtoehto, mutta voit myös valita sen manuaalisesti. Ohjelmistotila on hitaampi, "
+"mutta yhteensopiva useampien formaattien kanssa. Jos GPU ei tue muunnosta, järjestelmä yrittää "
+"osittaista GPU-käsittelyä ja, jos se epäonnistuu, vaihtaa automaattisesti ohjelmistotilaan."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 188
-msgid ""
-"Controls how compressed the video will be:\n"
-"• Very High/High: Best quality, larger file size\n"
-"• Medium: Good balance between quality and size\n"
-"• Low/Very Low: Smaller files, lower quality\n"
-"Higher quality = slower processing + bigger files"
-msgstr ""
-"Ohjaa, kuinka paljon video on pakattu:\n"
-"• Erittäin korkea/Korkea: Paras laatu, suurempi tiedostokoko\n"
-"• Keskitaso: Hyvä tasapaino laadun ja koon välillä\n"
-"• Matala/Erittäin matala: Pienemmät tiedostot, heikompi laatu\n"
-"Korkeampi laatu = hitaampi käsittely + suuremmat tiedostot"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 219
+msgid "The higher the quality, the larger the video file size."
+msgstr "Mitä korkeampi laatu, sitä suurempi videon tiedostokoko."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 191
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 221
 msgid ""
-"The format used to compress video:\n"
-"• H.264: Most compatible, works everywhere\n"
-"• H.265 (HEVC): Better compression, newer devices\n"
-"• AV1: Best compression, requires modern hardware\n"
-"• VP9: Good for web, used by YouTube"
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
 msgstr ""
-"Videon pakkaamiseen käytettävä formaatti:\n"
-"• H.264: Yhteensopivin, toimii kaikkialla\n"
-"• H.265 (HEVC): Parempi pakkaus, uudemmat laitteet\n"
-"• AV1: Paras pakkaus, vaatii modernia laitteistoa\n"
-"• VP9: Hyvä verkkokäyttöön, käytetään YouTubessa"
+"H.264: Vanha formaatti, joka toimii lähes kaikilla laitteilla. Se vie enemmän tallennustilaa, mutta "
+"on nopein muuntaa.  \n"
+"H.265: Uudempi versio H.264:stä. Se ei toimi vanhemmilla laitteilla ja pakkaa tiedostoja "
+"tehokkaammin.  \n"
+"VP9: Laajasti käytetty YouTubessa. Jos tietokoneessasi ei ole yhteensopivaa näytönohjainta, muunnos "
+"voi olla hyvin hidasta.  \n"
+"AV1: Modernein formaatti. Se tarjoaa parhaan pakkaussuhteen (luo pienempiä tiedostoja), mutta "
+"muunnos voi myös olla hidasta, jos näytönohjain ei ole yhteensopiva."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 194
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 224
 msgid ""
-"What to do with the audio:\n"
-"• Copy: Keep audio unchanged (fast)\n"
-"• Re-encode: Convert audio to new format\n"
-"• Remove: Delete all audio tracks"
+"Copy is usually the best option because it’s fast and keeps the audio's full quality. Re-encoding "
+"will re-process the audio, which slightly reduces quality. However, it may be necessary to make the "
+"file compatible with more devices or to reduce its size."
 msgstr ""
-"Mitä tehdä äänen kanssa:\n"
-"• Kopioi: Pidä ääni muuttumattomana (nopea)\n"
-"• Uudelleenkoodaa: Muunna ääni uuteen muotoon\n"
-"• Poista: Poista kaikki ääniraitat"
+"Kopio on yleensä paras vaihtoehto, koska se on nopea ja säilyttää äänen täyden laadun. "
+"Uudelleenkoodaus käsittelee ääntä uudelleen, mikä hieman heikentää laatua. Kuitenkin se saattaa "
+"olla tarpeen tehdä tiedostosta yhteensopiva useampien laitteiden kanssa tai pienentää sen kokoa."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 197
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 227
 msgid ""
-"How to handle subtitle tracks:\n"
-"• Extract to SRT: Save as separate subtitle file\n"
-"• Keep Embedded: Leave inside video file\n"
-"• Remove: Delete all subtitles"
+"If the file has embedded subtitles, it's usually best to keep them embedded. However, some programs "
+"need the subtitles in a separate file, so this option can improve compatibility."
 msgstr ""
-"Kuinka käsitellä tekstitysjälkiä:\n"
-"• Poista SRT: Tallenna erillisenä tekstitystiedostona\n"
-"• Säilytä upotettuna: Jätä videotiedostoon\n"
-"• Poista: Poista kaikki tekstitykset"
+"Jos tiedostossa on upotettuja tekstityksiä, on yleensä parasta pitää ne upotettuina. Kuitenkin "
+"jotkin ohjelmat tarvitsevat tekstitykset erillisessä tiedostossa, joten tämä vaihtoehto voi "
+"parantaa yhteensopivuutta."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 200
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
-"Exclusive option to cut videos into segments or change the container format to MP4 or MKV, with the "
-"advantage of no quality loss and very fast processing."
+"Copying the video is very fast and maintains the image's full quality. This is very useful for "
+"making video cuts, for example, to publish short videos on social media."
 msgstr ""
-"Eksklusiivinen vaihtoehto leikata videoita segmentteihin tai muuttaa säiliömuoto MP4:ksi tai "
-"MKV:ksi, etuna ei laatuvaurio ja erittäin nopea käsittely."
+"Videon kopioiminen on erittäin nopeaa ja säilyttää kuvan täyden laadun. Tämä on erittäin "
+"hyödyllistä videoleikkausten tekemisessä, esimerkiksi lyhyiden videoiden julkaisemiseksi "
+"sosiaalisessa mediassa."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 204
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 234
 msgid ""
-"Encoding speed vs file size:\n"
-"• Ultra Fast: Quick but larger files\n"
-"• Medium: Balanced (recommended)\n"
-"• Very Slow: Best compression, takes longer"
+"A slower conversion speed will result in a more compressed final file. As you might expect, this "
+"process can take a very long time to finish."
 msgstr ""
-"Koodauksen nopeus vs tiedoston koko:\n"
-"• Erittäin nopea: Nopea mutta suuremmat tiedostot\n"
-"• Keskitaso: Tasapainoinen (suositeltava)\n"
-"• Erittäin hidas: Paras pakkaus, vie enemmän aikaa"
+"Hitaampi muunnosnopeus johtaa tiiviimpään lopputiedostoon. Kuten saatat odottaa, tämä prosessi voi "
+"kestää hyvin pitkään."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 207
 msgid ""
@@ -737,17 +723,9 @@ msgstr ""
 "• Negatiiviset arvot: Siirrä siniseen/vihreään\n"
 "• Oletusarvo: 0 (ei muutosta)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
-msgid ""
-"Remove unwanted areas from video edges:\n"
-"• Drag borders to remove parts\n"
-"• Useful for removing black bars or unwanted content\n"
-"• Does not resize, only cuts"
-msgstr ""
-"Poista ei-toivotut alueet videon reunoilta:\n"
-"• Vedä reunoja poistaaksesi osia\n"
-"• Hyödyllinen mustien palkkien tai ei-toivotun sisällön poistamiseen\n"
-"• Ei muokkaa kokoa, vain leikkaa"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
+msgid "Crop the video's edges to keep only the part you need."
+msgstr "Rajaa videon reunat, jotta säilytät vain tarvitsemasi osan."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 229
 msgid ""
@@ -761,17 +739,15 @@ msgstr ""
 "yhtenä tiedostona tai erillisinä tiedostoina, mikä on erittäin kätevää esimerkiksi sosiaalisen "
 "median klippien luomisessa."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 233
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
 msgid ""
-"Decodes video using CPU\n"
-"• Encodes video using GPU\n"
-"• Can be faster on some systems\n"
-"• Try if full GPU encoding has issues"
+"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
+"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
+"issues."
 msgstr ""
-"Dekoodaa videota käyttäen CPU:ta  \n"
-"• Koodaa videota käyttäen GPU:ta  \n"
-"• Voi olla nopeampi joillakin järjestelmillä  \n"
-"• Kokeile, jos täydessä GPU-koodauksessa on ongelmia"
+"Kun käytät GPU-kiihdytystä, tämä vaihtoehto pakottaa kooderin olemaan GPU:lla ja koodauksen olemaan "
+"CPU:lla. On yleensä parempi jättää tämä valinta pois, mutta se voi olla hyödyllinen "
+"yhteensopivuusongelmissa."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
 msgid ""
@@ -819,25 +795,17 @@ msgstr ""
 "• Vain edistyneille käyttäjille\n"
 "• Väärät vaihtoehdot voivat aiheuttaa virheitä"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 245
-msgid ""
-"Skips video processing\n"
-"• Only extracts subtitle tracks to SRT files\n"
-"• Fast operation\n"
-"• Useful when you only need subtitles"
-msgstr ""
-"Ohittaa videonkäsittelyn\n"
-"• Vain tekstitysratojen purku SRT-tiedostoiksi\n"
-"• Nopea toiminta\n"
-"• Hyödyllinen, kun tarvitset vain tekstityksiä"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 273
+msgid "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
+msgstr "Ohittaa kaikki jäljellä olevat prosessit ja vie vain upotetut tekstitykset SRT-tiedostona."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 276
 msgid ""
-"• Display explanations when hovering over options\n"
-"• This message you are reading is an example of a tooltip"
+"Show explanations when hovering over options.\n"
+"This message you are reading is an example of a tooltip."
 msgstr ""
-"• Näytä selitykset, kun hiiri on vaihtoehtojen päällä  \n"
-"• Tämä viesti, jota luet, on esimerkki työkaluvihjeestä"
+"Näytä selitykset, kun hiiri on vaihtoehtojen päällä.  \n"
+"Tämä viesti, jota luet, on esimerkki työkaluvihjeestä."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
 msgid "Return to file queue"
@@ -922,17 +890,9 @@ msgstr "Ääni"
 msgid "Copy video without reencoding"
 msgstr "Kopioi video ilman uudelleenkoodauksen."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 285
-msgid "Faster but less compatible"
-msgstr "Nope, not compatible."
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 510
 msgid "Show helpful tooltips"
 msgstr "Näytä hyödyllisiä työkaluvihjeitä"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 512
-msgid "Display explanation when hovering over options"
-msgstr "Näytä selitys, kun hiiren osoitin on vaihtoehtojen päällä."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 520
 msgid "Advanced Settings..."
@@ -949,6 +909,10 @@ msgstr "Muokkaaja"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "Edistyminen"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 638
 # 
@@ -1051,6 +1015,22 @@ msgstr "Muutokset Valmiit"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
 msgid "All video conversions have been completed successfully!"
 msgstr "Kaikki videomuunnokset on suoritettu onnistuneesti!"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 70
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 70
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 

@@ -551,93 +551,64 @@ msgstr "SD 세로 (480×854)"
 msgid "Custom"
 msgstr "사용자 정의"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 185
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Choose which hardware accelerates video processing:\n"
-"• Auto-detect: Automatically uses the best available\n"
-"• NVENC: For Nvidia graphics cards (fastest)\n"
-"• VAAPI: For Intel/AMD graphics\n"
-"• QSV: For Intel processors\n"
-"• Vulkan: Cross-platform GPU acceleration\n"
-"• Software: Uses CPU only (slowest but compatible)"
+"If the system's GPU supports video conversion, the process will be much faster. Automatic detection "
+"is usually the best option, but you can also select it manually. The Software mode is slower but "
+"compatible with more formats. If the GPU doesn’t support conversion, the system will attempt "
+"partial GPU processing and, if that fails, will automatically switch to Software mode."
 msgstr ""
-"비디오 처리를 가속화하는 하드웨어를 선택하세요:\n"
-"• 자동 감지: 사용 가능한 최상의 하드웨어를 자동으로 사용\n"
-"• NVENC: Nvidia 그래픽 카드용 (가장 빠름)\n"
-"• VAAPI: Intel/AMD 그래픽용\n"
-"• QSV: Intel 프로세서용\n"
-"• Vulkan: 크로스 플랫폼 GPU 가속\n"
-"• 소프트웨어: CPU만 사용 (가장 느리지만 호환 가능)"
+"시스템의 GPU가 비디오 변환을 지원하면 프로세스가 훨씬 빨라집니다. 자동 감지가 일반적으로 최상의 옵션이지만 수동으로 선택할 수도 있습니다. 소프트웨어 모드는 느리지만 더 많은 "
+"형식과 호환됩니다. GPU가 변환을 지원하지 않으면 시스템은 부분 GPU 처리를 시도하고, 실패할 경우 자동으로 소프트웨어 모드로 전환됩니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 188
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 219
+msgid "The higher the quality, the larger the video file size."
+msgstr "품질이 높을수록 비디오 파일 크기가 커집니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 221
 msgid ""
-"Controls how compressed the video will be:\n"
-"• Very High/High: Best quality, larger file size\n"
-"• Medium: Good balance between quality and size\n"
-"• Low/Very Low: Smaller files, lower quality\n"
-"Higher quality = slower processing + bigger files"
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
 msgstr ""
-"비디오 압축 정도를 제어합니다:\n"
-"• 매우 높음/높음: 최고의 품질, 더 큰 파일 크기\n"
-"• 중간: 품질과 크기 간의 좋은 균형\n"
-"• 낮음/매우 낮음: 더 작은 파일, 낮은 품질\n"
-"더 높은 품질 = 느린 처리 + 더 큰 파일"
+"H.264: 거의 모든 장치에서 작동하는 오래된 형식입니다. 더 많은 저장 공간을 차지하지만 변환 속도가 가장 빠릅니다.  \n"
+"H.265: H.264의 최신 버전입니다. 구형 장치에서는 작동하지 않으며 파일을 더 효율적으로 압축합니다.  \n"
+"VP9: YouTube에서 널리 사용됩니다. 컴퓨터에 호환되는 그래픽 카드가 없으면 변환 속도가 매우 느릴 수 있습니다.  \n"
+"AV1: 가장 현대적인 형식입니다. 최고의 압축(더 작은 파일 생성)을 제공하지만 그래픽 카드가 호환되지 않으면 변환 속도가 느릴 수 있습니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 191
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 224
 msgid ""
-"The format used to compress video:\n"
-"• H.264: Most compatible, works everywhere\n"
-"• H.265 (HEVC): Better compression, newer devices\n"
-"• AV1: Best compression, requires modern hardware\n"
-"• VP9: Good for web, used by YouTube"
+"Copy is usually the best option because it’s fast and keeps the audio's full quality. Re-encoding "
+"will re-process the audio, which slightly reduces quality. However, it may be necessary to make the "
+"file compatible with more devices or to reduce its size."
 msgstr ""
-"비디오 압축에 사용되는 형식:\n"
-"• H.264: 가장 호환성이 높고, 어디서나 작동\n"
-"• H.265 (HEVC): 더 나은 압축, 최신 장치\n"
-"• AV1: 최고의 압축, 최신 하드웨어 필요\n"
-"• VP9: 웹에 적합, YouTube에서 사용"
+"복사는 일반적으로 빠르고 오디오의 전체 품질을 유지하기 때문에 가장 좋은 옵션입니다. 재인코딩은 오디오를 다시 처리하므로 품질이 약간 감소합니다. 그러나 파일을 더 많은 장치와 "
+"호환되도록 하거나 크기를 줄이기 위해 필요할 수 있습니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 194
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 227
 msgid ""
-"What to do with the audio:\n"
-"• Copy: Keep audio unchanged (fast)\n"
-"• Re-encode: Convert audio to new format\n"
-"• Remove: Delete all audio tracks"
+"If the file has embedded subtitles, it's usually best to keep them embedded. However, some programs "
+"need the subtitles in a separate file, so this option can improve compatibility."
 msgstr ""
-"오디오에 대한 작업:\n"
-"• 복사: 오디오를 변경하지 않음 (빠름)\n"
-"• 재인코딩: 오디오를 새 형식으로 변환\n"
-"• 제거: 모든 오디오 트랙 삭제"
+"파일에 내장 자막이 있는 경우, 일반적으로 내장된 상태로 유지하는 것이 가장 좋습니다. 그러나 일부 프로그램은 자막을 별도의 파일로 필요로 하므로 이 옵션은 호환성을 향상시킬 수 "
+"있습니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 197
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
-"How to handle subtitle tracks:\n"
-"• Extract to SRT: Save as separate subtitle file\n"
-"• Keep Embedded: Leave inside video file\n"
-"• Remove: Delete all subtitles"
-msgstr ""
-"자막 트랙 처리 방법:\n"
-"• SRT로 추출: 별도의 자막 파일로 저장\n"
-"• 내장 유지: 비디오 파일 내에 남겨두기\n"
-"• 제거: 모든 자막 삭제"
+"Copying the video is very fast and maintains the image's full quality. This is very useful for "
+"making video cuts, for example, to publish short videos on social media."
+msgstr "비디오 복사는 매우 빠르며 이미지의 전체 품질을 유지합니다. 이는 예를 들어 소셜 미디어에 짧은 비디오를 게시하기 위해 비디오 컷을 만드는 데 매우 유용합니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 200
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 234
 msgid ""
-"Exclusive option to cut videos into segments or change the container format to MP4 or MKV, with the "
-"advantage of no quality loss and very fast processing."
-msgstr "비디오를 세그먼트로 자르거나 컨테이너 형식을 MP4 또는 MKV로 변경하는 독점 옵션으로, 품질 손실 없이 매우 빠른 처리 속도의 장점이 있습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 204
-msgid ""
-"Encoding speed vs file size:\n"
-"• Ultra Fast: Quick but larger files\n"
-"• Medium: Balanced (recommended)\n"
-"• Very Slow: Best compression, takes longer"
-msgstr ""
-"인코딩 속도 대 파일 크기:\n"
-"• 초고속: 빠르지만 파일 크기가 큼\n"
-"• 중간: 균형 잡힘 (권장)\n"
-"• 매우 느림: 최고의 압축, 시간이 더 걸림"
+"A slower conversion speed will result in a more compressed final file. As you might expect, this "
+"process can take a very long time to finish."
+msgstr "느린 변환 속도는 더 압축된 최종 파일을 생성합니다. 예상할 수 있듯이, 이 과정은 완료되는 데 매우 오랜 시간이 걸릴 수 있습니다."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 207
 msgid ""
@@ -711,17 +682,9 @@ msgstr ""
 "• 음수 값: 파랑/초록 쪽으로 이동\n"
 "• 기본값: 0 (변경 없음)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
-msgid ""
-"Remove unwanted areas from video edges:\n"
-"• Drag borders to remove parts\n"
-"• Useful for removing black bars or unwanted content\n"
-"• Does not resize, only cuts"
-msgstr ""
-"비디오 가장자리에서 원치 않는 영역 제거:\n"
-"• 부분을 제거하려면 경계를 드래그하세요\n"
-"• 검은색 바 또는 원치 않는 콘텐츠를 제거하는 데 유용합니다\n"
-"• 크기를 조정하지 않고 잘라냅니다"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
+msgid "Crop the video's edges to keep only the part you need."
+msgstr "비디오의 가장자리를 자르기 위해 필요한 부분만 유지하세요."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 229
 msgid ""
@@ -733,17 +696,14 @@ msgstr ""
 "비디오에서 유지할 부분을 선택하세요. + 버튼을 클릭하거나 비디오 영역에서 마커 버튼을 직접 사용하여 섹션을 추가할 수 있습니다. 선택한 세그먼트를 단일 파일로 또는 별도의 "
 "파일로 내보낼 수 있으며, 이는 소셜 미디어용 클립을 만들 때 매우 편리합니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 233
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
 msgid ""
-"Decodes video using CPU\n"
-"• Encodes video using GPU\n"
-"• Can be faster on some systems\n"
-"• Try if full GPU encoding has issues"
+"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
+"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
+"issues."
 msgstr ""
-"CPU를 사용하여 비디오를 디코딩합니다.\n"
-"• GPU를 사용하여 비디오를 인코딩합니다.\n"
-"• 일부 시스템에서 더 빠를 수 있습니다.\n"
-"• 전체 GPU 인코딩에 문제가 있는 경우 시도해 보세요."
+"GPU 가속을 사용할 때, 이 옵션은 인코더를 GPU에서 실행하고 인코딩을 CPU에서 실행하도록 강제합니다. 일반적으로 이 체크를 해제하는 것이 더 좋지만, 호환성 문제에 유용할 "
+"수 있습니다."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
 msgid ""
@@ -791,25 +751,17 @@ msgstr ""
 "• 고급 사용자 전용\n"
 "• 잘못된 옵션은 오류를 발생시킬 수 있습니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 245
-msgid ""
-"Skips video processing\n"
-"• Only extracts subtitle tracks to SRT files\n"
-"• Fast operation\n"
-"• Useful when you only need subtitles"
-msgstr ""
-"비디오 처리를 건너뜁니다\n"
-"• 자막 트랙만 SRT 파일로 추출합니다\n"
-"• 빠른 작업\n"
-"• 자막만 필요할 때 유용합니다"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 273
+msgid "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
+msgstr "남은 모든 프로세스를 건너뛰고 내장된 자막을 SRT 파일로 내보냅니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 276
 msgid ""
-"• Display explanations when hovering over options\n"
-"• This message you are reading is an example of a tooltip"
+"Show explanations when hovering over options.\n"
+"This message you are reading is an example of a tooltip."
 msgstr ""
-"• 옵션 위에 마우스를 올릴 때 설명 표시\n"
-"• 당신이 읽고 있는 이 메시지는 툴팁의 예입니다"
+"옵션 위에 마우스를 올리면 설명을 표시합니다.  \n"
+"당신이 읽고 있는 이 메시지는 툴팁의 예입니다."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
 msgid "Return to file queue"
@@ -894,17 +846,9 @@ msgstr "오디오"
 msgid "Copy video without reencoding"
 msgstr "재인코딩 없이 비디오 복사"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 285
-msgid "Faster but less compatible"
-msgstr "더 빠르지만 호환성이 떨어짐"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 510
 msgid "Show helpful tooltips"
 msgstr "도움이 되는 툴팁 표시"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 512
-msgid "Display explanation when hovering over options"
-msgstr "옵션 위에 마우스를 올릴 때 설명 표시"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 520
 msgid "Advanced Settings..."

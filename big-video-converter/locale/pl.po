@@ -551,95 +551,76 @@ msgstr "SD Pionowy (480×854)"
 msgid "Custom"
 msgstr "Niestandardowy"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 185
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Choose which hardware accelerates video processing:\n"
-"• Auto-detect: Automatically uses the best available\n"
-"• NVENC: For Nvidia graphics cards (fastest)\n"
-"• VAAPI: For Intel/AMD graphics\n"
-"• QSV: For Intel processors\n"
-"• Vulkan: Cross-platform GPU acceleration\n"
-"• Software: Uses CPU only (slowest but compatible)"
+"If the system's GPU supports video conversion, the process will be much faster. Automatic detection "
+"is usually the best option, but you can also select it manually. The Software mode is slower but "
+"compatible with more formats. If the GPU doesn’t support conversion, the system will attempt "
+"partial GPU processing and, if that fails, will automatically switch to Software mode."
 msgstr ""
-"Wybierz, który sprzęt przyspiesza przetwarzanie wideo:\n"
-"• Auto-detekcja: Automatycznie używa najlepszego dostępnego\n"
-"• NVENC: Dla kart graficznych Nvidia (najszybsze)\n"
-"• VAAPI: Dla grafik Intel/AMD\n"
-"• QSV: Dla procesorów Intel\n"
-"• Vulkan: Przyspieszenie GPU na wielu platformach\n"
-"• Oprogramowanie: Używa tylko CPU (najwolniejsze, ale kompatybilne)"
+"Jeśli GPU systemu obsługuje konwersję wideo, proces będzie znacznie szybszy. Automatyczne "
+"wykrywanie jest zazwyczaj najlepszą opcją, ale można je również wybrać ręcznie. Tryb oprogramowania "
+"jest wolniejszy, ale kompatybilny z większą liczbą formatów. Jeśli GPU nie obsługuje konwersji, "
+"system spróbuje częściowego przetwarzania GPU, a jeśli to się nie powiedzie, automatycznie "
+"przełączy się na tryb oprogramowania."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 188
-msgid ""
-"Controls how compressed the video will be:\n"
-"• Very High/High: Best quality, larger file size\n"
-"• Medium: Good balance between quality and size\n"
-"• Low/Very Low: Smaller files, lower quality\n"
-"Higher quality = slower processing + bigger files"
-msgstr ""
-"Kontroluje, jak bardzo skompresowane będzie wideo:\n"
-"• Bardzo wysoka/Wysoka: Najlepsza jakość, większy rozmiar pliku\n"
-"• Średnia: Dobra równowaga między jakością a rozmiarem\n"
-"• Niska/Bardzo niska: Mniejsze pliki, niższa jakość\n"
-"Wyższa jakość = wolniejsze przetwarzanie + większe pliki"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 219
+msgid "The higher the quality, the larger the video file size."
+msgstr "Im wyższa jakość, tym większy rozmiar pliku wideo."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 191
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 221
 msgid ""
-"The format used to compress video:\n"
-"• H.264: Most compatible, works everywhere\n"
-"• H.265 (HEVC): Better compression, newer devices\n"
-"• AV1: Best compression, requires modern hardware\n"
-"• VP9: Good for web, used by YouTube"
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
 msgstr ""
-"Format używany do kompresji wideo:\n"
-"• H.264: Najbardziej kompatybilny, działa wszędzie\n"
-"• H.265 (HEVC): Lepsza kompresja, nowsze urządzenia\n"
-"• AV1: Najlepsza kompresja, wymaga nowoczesnego sprzętu\n"
-"• VP9: Dobry do sieci, używany przez YouTube"
+"H.264: Starszy format, który działa na prawie wszystkich urządzeniach. Zajmuje więcej miejsca na "
+"dysku, ale jest najszybszy w konwersji.  \n"
+"H.265: Nowsza wersja H.264. Nie działa na starszych urządzeniach i kompresuje pliki bardziej "
+"efektywnie.  \n"
+"VP9: Szeroko stosowany przez YouTube. Jeśli twój komputer nie ma kompatybilnej karty graficznej, "
+"konwersja może być bardzo wolna.  \n"
+"AV1: Najnowocześniejszy format. Oferuje najlepszą kompresję (tworząc mniejsze pliki), ale konwersja "
+"może być również wolna, jeśli karta graficzna nie jest kompatybilna."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 194
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 224
 msgid ""
-"What to do with the audio:\n"
-"• Copy: Keep audio unchanged (fast)\n"
-"• Re-encode: Convert audio to new format\n"
-"• Remove: Delete all audio tracks"
+"Copy is usually the best option because it’s fast and keeps the audio's full quality. Re-encoding "
+"will re-process the audio, which slightly reduces quality. However, it may be necessary to make the "
+"file compatible with more devices or to reduce its size."
 msgstr ""
-"Co zrobić z dźwiękiem:\n"
-"• Kopiuj: Zachowaj dźwięk bez zmian (szybko)\n"
-"• Przekoduj: Przekształć dźwięk do nowego formatu\n"
-"• Usuń: Usuń wszystkie ścieżki dźwiękowe"
+"Kopiowanie jest zazwyczaj najlepszą opcją, ponieważ jest szybkie i zachowuje pełną jakość dźwięku. "
+"Ponowne kodowanie przetwarza dźwięk, co nieznacznie obniża jakość. Może być jednak konieczne, aby "
+"plik był kompatybilny z większą liczbą urządzeń lub aby zmniejszyć jego rozmiar."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 197
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 227
 msgid ""
-"How to handle subtitle tracks:\n"
-"• Extract to SRT: Save as separate subtitle file\n"
-"• Keep Embedded: Leave inside video file\n"
-"• Remove: Delete all subtitles"
+"If the file has embedded subtitles, it's usually best to keep them embedded. However, some programs "
+"need the subtitles in a separate file, so this option can improve compatibility."
 msgstr ""
-"Jak obsługiwać ścieżki napisów:\n"
-"• Wyodrębnij do SRT: Zapisz jako oddzielny plik z napisami\n"
-"• Zachowaj osadzone: Pozostaw wewnątrz pliku wideo\n"
-"• Usuń: Usuń wszystkie napisy"
+"Jeśli plik ma osadzone napisy, zazwyczaj najlepiej jest je zachować w osadzonej formie. Jednak "
+"niektóre programy potrzebują napisów w osobnym pliku, więc ta opcja może poprawić kompatybilność."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 200
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
-"Exclusive option to cut videos into segments or change the container format to MP4 or MKV, with the "
-"advantage of no quality loss and very fast processing."
+"Copying the video is very fast and maintains the image's full quality. This is very useful for "
+"making video cuts, for example, to publish short videos on social media."
 msgstr ""
-"Ekskluzywna opcja cięcia wideo na segmenty lub zmiany formatu kontenera na MP4 lub MKV, z zaletą "
-"braku utraty jakości i bardzo szybkiego przetwarzania."
+"Kopiowanie wideo jest bardzo szybkie i zachowuje pełną jakość obrazu. Jest to bardzo przydatne do "
+"edytowania wideo, na przykład do publikowania krótkich filmów w mediach społecznościowych."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 204
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 234
 msgid ""
-"Encoding speed vs file size:\n"
-"• Ultra Fast: Quick but larger files\n"
-"• Medium: Balanced (recommended)\n"
-"• Very Slow: Best compression, takes longer"
+"A slower conversion speed will result in a more compressed final file. As you might expect, this "
+"process can take a very long time to finish."
 msgstr ""
-"Prędkość kodowania vs rozmiar pliku:\n"
-"• Ultra Szybko: Szybko, ale większe pliki\n"
-"• Średnio: Zrównoważone (zalecane)\n"
-"• Bardzo Wolno: Najlepsza kompresja, zajmuje więcej czasu"
+"Wolniejsza prędkość konwersji spowoduje bardziej skompresowany plik końcowy. Jak można się "
+"spodziewać, ten proces może zająć bardzo dużo czasu."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 207
 msgid ""
@@ -713,17 +694,9 @@ msgstr ""
 "• Negatywne wartości: Przesuń w kierunku niebieskiego/zielonego\n"
 "• Domyślnie: 0 (brak zmiany)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
-msgid ""
-"Remove unwanted areas from video edges:\n"
-"• Drag borders to remove parts\n"
-"• Useful for removing black bars or unwanted content\n"
-"• Does not resize, only cuts"
-msgstr ""
-"Usuń niechciane obszary z krawędzi wideo:\n"
-"• Przeciągnij krawędzie, aby usunąć części\n"
-"• Przydatne do usuwania czarnych pasków lub niechcianych treści\n"
-"• Nie zmienia rozmiaru, tylko przycina"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
+msgid "Crop the video's edges to keep only the part you need."
+msgstr "Przytnij krawędzie wideo, aby zachować tylko potrzebną część."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 229
 msgid ""
@@ -737,17 +710,15 @@ msgstr ""
 "wybrane segmenty jako jeden plik lub jako oddzielne pliki, co jest bardzo wygodne, na przykład przy "
 "tworzeniu klipów do mediów społecznościowych."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 233
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
 msgid ""
-"Decodes video using CPU\n"
-"• Encodes video using GPU\n"
-"• Can be faster on some systems\n"
-"• Try if full GPU encoding has issues"
+"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
+"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
+"issues."
 msgstr ""
-"Dekoduje wideo za pomocą CPU\n"
-"• Koduje wideo za pomocą GPU\n"
-"• Może być szybsze na niektórych systemach\n"
-"• Spróbuj, jeśli pełne kodowanie GPU ma problemy"
+"Kiedy używasz akceleracji GPU, ta opcja wymusza, aby enkoder działał na GPU, a kodowanie na CPU. "
+"Zwykle lepiej jest pozostawić to odznaczone, ale może być przydatne w przypadku problemów z "
+"kompatybilnością."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
 msgid ""
@@ -795,25 +766,15 @@ msgstr ""
 "• Tylko dla zaawansowanych użytkowników\n"
 "• Błędne opcje mogą powodować błędy"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 245
-msgid ""
-"Skips video processing\n"
-"• Only extracts subtitle tracks to SRT files\n"
-"• Fast operation\n"
-"• Useful when you only need subtitles"
-msgstr ""
-"Pomija przetwarzanie wideo\n"
-"• Tylko wyodrębnia ścieżki napisów do plików SRT\n"
-"• Szybka operacja\n"
-"• Przydatne, gdy potrzebujesz tylko napisów"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 273
+msgid "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
+msgstr "Pomija wszystkie pozostałe procesy i po prostu eksportuje osadzone napisy jako plik SRT."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 276
 msgid ""
-"• Display explanations when hovering over options\n"
-"• This message you are reading is an example of a tooltip"
-msgstr ""
-"• Wyświetlaj wyjaśnienia po najechaniu kursorem na opcje  \n"
-"• Ta wiadomość, którą czytasz, jest przykładem podpowiedzi"
+"Show explanations when hovering over options.\n"
+"This message you are reading is an example of a tooltip."
+msgstr "Pokaż wyjaśnienia po najechaniu na opcje. Ta wiadomość, którą czytasz, jest przykładem podpowiedzi."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
 msgid "Return to file queue"
@@ -898,17 +859,9 @@ msgstr "Audio"
 msgid "Copy video without reencoding"
 msgstr "Kopiuj wideo bez ponownego kodowania"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 285
-msgid "Faster but less compatible"
-msgstr "Szybszy, ale mniej kompatybilny"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 510
 msgid "Show helpful tooltips"
 msgstr "Pokaż pomocne podpowiedzi"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 512
-msgid "Display explanation when hovering over options"
-msgstr "Wyświetl wyjaśnienie po najechaniu kursorem na opcje"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 520
 msgid "Advanced Settings..."
@@ -925,6 +878,10 @@ msgstr "Edytor"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "Postęp"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 638
 # 

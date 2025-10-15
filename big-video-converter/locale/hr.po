@@ -551,95 +551,74 @@ msgstr "SD Vertikal (480×854)"
 msgid "Custom"
 msgstr "Prilagođeno"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 185
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Choose which hardware accelerates video processing:\n"
-"• Auto-detect: Automatically uses the best available\n"
-"• NVENC: For Nvidia graphics cards (fastest)\n"
-"• VAAPI: For Intel/AMD graphics\n"
-"• QSV: For Intel processors\n"
-"• Vulkan: Cross-platform GPU acceleration\n"
-"• Software: Uses CPU only (slowest but compatible)"
+"If the system's GPU supports video conversion, the process will be much faster. Automatic detection "
+"is usually the best option, but you can also select it manually. The Software mode is slower but "
+"compatible with more formats. If the GPU doesn’t support conversion, the system will attempt "
+"partial GPU processing and, if that fails, will automatically switch to Software mode."
 msgstr ""
-"Odaberite koji hardver ubrzava obradu videa:\n"
-"• Automatsko otkrivanje: Automatski koristi najbolju dostupnu opciju\n"
-"• NVENC: Za Nvidia grafičke kartice (najbrže)\n"
-"• VAAPI: Za Intel/AMD grafike\n"
-"• QSV: Za Intel procesore\n"
-"• Vulkan: Ubrzanje GPU-a na više platformi\n"
-"• Softver: Koristi samo CPU (najsporije, ali kompatibilno)"
+"Ako GPU sustava podržava konverziju videa, proces će biti mnogo brži. Automatsko otkrivanje obično "
+"je najbolja opcija, ali ga također možete odabrati ručno. Softverski način rada je sporiji, ali "
+"kompatibilan s više formata. Ako GPU ne podržava konverziju, sustav će pokušati djelomično GPU "
+"procesiranje i, ako to ne uspije, automatski će preći na softverski način rada."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 188
-msgid ""
-"Controls how compressed the video will be:\n"
-"• Very High/High: Best quality, larger file size\n"
-"• Medium: Good balance between quality and size\n"
-"• Low/Very Low: Smaller files, lower quality\n"
-"Higher quality = slower processing + bigger files"
-msgstr ""
-"Kontrolira koliko će video biti komprimiran:\n"
-"• Vrlo visoka/Visoka: Najbolja kvaliteta, veća veličina datoteke\n"
-"• Srednja: Dobar balans između kvalitete i veličine\n"
-"• Niska/Vrlo niska: Manje datoteke, niža kvaliteta\n"
-"Viša kvaliteta = sporija obrada + veće datoteke"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 219
+msgid "The higher the quality, the larger the video file size."
+msgstr "Što je veća kvaliteta, to je veća veličina video datoteke."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 191
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 221
 msgid ""
-"The format used to compress video:\n"
-"• H.264: Most compatible, works everywhere\n"
-"• H.265 (HEVC): Better compression, newer devices\n"
-"• AV1: Best compression, requires modern hardware\n"
-"• VP9: Good for web, used by YouTube"
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
 msgstr ""
-"Format korišten za kompresiju videa:\n"
-"• H.264: Najkompatibilniji, radi svugdje\n"
-"• H.265 (HEVC): Bolja kompresija, noviji uređaji\n"
-"• AV1: Najbolja kompresija, zahtijeva moderni hardver\n"
-"• VP9: Dobar za web, koristi ga YouTube"
+"H.264: Stariji format koji radi na gotovo svim uređajima. Zauzima više prostora za pohranu, ali je "
+"najbrži za konverziju.  \n"
+"H.265: Novija verzija H.264. Ne radi na starijim uređajima i komprimira datoteke učinkovitije.  \n"
+"VP9: Široko koristi YouTube. Ako vaš računalni sustav nema kompatibilnu grafičku karticu, "
+"konverzija može biti vrlo spora.  \n"
+"AV1: Najmoderniji format. Nudi najbolju kompresiju (stvarajući manje datoteke), ali konverzija "
+"također može biti spora ako grafička kartica nije kompatibilna."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 194
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 224
 msgid ""
-"What to do with the audio:\n"
-"• Copy: Keep audio unchanged (fast)\n"
-"• Re-encode: Convert audio to new format\n"
-"• Remove: Delete all audio tracks"
+"Copy is usually the best option because it’s fast and keeps the audio's full quality. Re-encoding "
+"will re-process the audio, which slightly reduces quality. However, it may be necessary to make the "
+"file compatible with more devices or to reduce its size."
 msgstr ""
-"Što učiniti s audio zapisom:\n"
-"• Kopiraj: Zadrži audio nepromijenjen (brzo)\n"
-"• Ponovno kodiraj: Pretvori audio u novi format\n"
-"• Ukloni: Izbriši sve audio zapise"
+"Kopiranje je obično najbolja opcija jer je brzo i zadržava punu kvalitetu zvuka. Ponovno kodiranje "
+"će ponovno obraditi zvuk, što malo smanjuje kvalitetu. Međutim, može biti potrebno učiniti datoteku "
+"kompatibilnom s više uređaja ili smanjiti njezinu veličinu."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 197
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 227
 msgid ""
-"How to handle subtitle tracks:\n"
-"• Extract to SRT: Save as separate subtitle file\n"
-"• Keep Embedded: Leave inside video file\n"
-"• Remove: Delete all subtitles"
+"If the file has embedded subtitles, it's usually best to keep them embedded. However, some programs "
+"need the subtitles in a separate file, so this option can improve compatibility."
 msgstr ""
-"Kako upravljati titlovima:\n"
-"• Izdvoji u SRT: Spremi kao zasebnu datoteku s titlovima\n"
-"• Zadrži ugrađene: Ostavite unutar video datoteke\n"
-"• Ukloni: Izbriši sve titlove"
+"Ako datoteka ima ugrađene titlove, obično je najbolje zadržati ih ugrađene. Međutim, neki programi "
+"trebaju titlove u odvojenoj datoteci, pa ova opcija može poboljšati kompatibilnost."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 200
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
-"Exclusive option to cut videos into segments or change the container format to MP4 or MKV, with the "
-"advantage of no quality loss and very fast processing."
+"Copying the video is very fast and maintains the image's full quality. This is very useful for "
+"making video cuts, for example, to publish short videos on social media."
 msgstr ""
-"Ekskluzivna opcija za rezanje videa u segmente ili promjenu kontejnerskog formata u MP4 ili MKV, s "
-"prednošću bez gubitka kvalitete i vrlo brze obrade."
+"Kopiranje videa je vrlo brzo i održava punu kvalitetu slike. Ovo je vrlo korisno za rezanje videa, "
+"na primjer, za objavljivanje kratkih videa na društvenim mrežama."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 204
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 234
 msgid ""
-"Encoding speed vs file size:\n"
-"• Ultra Fast: Quick but larger files\n"
-"• Medium: Balanced (recommended)\n"
-"• Very Slow: Best compression, takes longer"
+"A slower conversion speed will result in a more compressed final file. As you might expect, this "
+"process can take a very long time to finish."
 msgstr ""
-"Brzina kodiranja vs veličina datoteke:\n"
-"• Ultra brzo: Brzo, ali veće datoteke\n"
-"• Srednje: Uravnoteženo (preporučeno)\n"
-"• Vrlo sporo: Najbolja kompresija, traje duže"
+"Sporija brzina konverzije rezultirat će komprimiranijim konačnim datotekom. Kao što možete "
+"očekivati, ovaj proces može potrajati vrlo dugo da završi."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 207
 msgid ""
@@ -713,17 +692,9 @@ msgstr ""
 "• Negativne vrijednosti: Pomakni prema plavoj/zelenoj\n"
 "• Zadano: 0 (bez promjene)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
-msgid ""
-"Remove unwanted areas from video edges:\n"
-"• Drag borders to remove parts\n"
-"• Useful for removing black bars or unwanted content\n"
-"• Does not resize, only cuts"
-msgstr ""
-"Uklonite neželjena područja s rubova videa:\n"
-"• Povucite rubove za uklanjanje dijelova\n"
-"• Korisno za uklanjanje crnih traka ili neželjenog sadržaja\n"
-"• Ne mijenja veličinu, samo reže"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
+msgid "Crop the video's edges to keep only the part you need."
+msgstr "Isecite rubove videozapisa kako biste zadržali samo dio koji vam je potreban."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 229
 msgid ""
@@ -737,17 +708,14 @@ msgstr ""
 "jednu datoteku ili kao odvojene datoteke, što je vrlo praktično, na primjer, prilikom stvaranja "
 "isječaka za društvene mreže."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 233
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
 msgid ""
-"Decodes video using CPU\n"
-"• Encodes video using GPU\n"
-"• Can be faster on some systems\n"
-"• Try if full GPU encoding has issues"
+"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
+"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
+"issues."
 msgstr ""
-"Dekodira video koristeći CPU\n"
-"• Kodira video koristeći GPU\n"
-"• Može biti brži na nekim sustavima\n"
-"• Pokušajte ako puni GPU kodiranje ima problema"
+"Kada koristite GPU akceleraciju, ova opcija prisiljava enkoder da bude na GPU-u, a enkodiranje na "
+"CPU-u. Obično je bolje ostaviti ovo neoznačeno, ali može biti korisno za probleme s kompatibilnošću."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
 msgid ""
@@ -795,25 +763,17 @@ msgstr ""
 "• Samo za napredne korisnike\n"
 "• Pogrešne opcije mogu uzrokovati greške"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 245
-msgid ""
-"Skips video processing\n"
-"• Only extracts subtitle tracks to SRT files\n"
-"• Fast operation\n"
-"• Useful when you only need subtitles"
-msgstr ""
-"Preskoči obradu videa\n"
-"• Samo izvlači titlove u SRT datoteke\n"
-"• Brza operacija\n"
-"• Korisno kada su vam potrebni samo titlovi"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 273
+msgid "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
+msgstr "Preskoči sve preostale procese i jednostavno izvozi ugrađene titlove kao SRT datoteku."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 276
 msgid ""
-"• Display explanations when hovering over options\n"
-"• This message you are reading is an example of a tooltip"
+"Show explanations when hovering over options.\n"
+"This message you are reading is an example of a tooltip."
 msgstr ""
-"• Prikaži objašnjenja kada zadržiš pokazivač iznad opcija  \n"
-"• Ova poruka koju čitaš je primjer alatne informacije"
+"Prikaži objašnjenja kada prelaziš mišem preko opcija. Ova poruka koju čitaš je primjer alatne "
+"informacije."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
 msgid "Return to file queue"
@@ -898,17 +858,9 @@ msgstr "Zvuk"
 msgid "Copy video without reencoding"
 msgstr "Kopiraj video bez ponovnog kodiranja"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 285
-msgid "Faster but less compatible"
-msgstr "Brže, ali manje kompatibilno"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 510
 msgid "Show helpful tooltips"
 msgstr "Prikaži korisne savjete."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 512
-msgid "Display explanation when hovering over options"
-msgstr "Prikaži objašnjenje kada zadržiš pokazivač iznad opcija"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 520
 msgid "Advanced Settings..."
@@ -925,6 +877,10 @@ msgstr "Urednik"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "Napredak"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 638
 # 
