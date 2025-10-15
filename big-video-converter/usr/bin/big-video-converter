@@ -19,15 +19,18 @@ if [[ $show_executable == 1 ]]; then
 fi
 
 # If vainfo is available, check for VAAPI encoders before ffmpeg to faster result
-if ! command -v vainfo >/dev/null; then
-	echo "Command vainfo not found"
-	exit 1
-fi
+# Only check if not using software encoding
+if [[ "$gpu" != "software" && "$force_software" != "1" ]]; then
+	if ! command -v vainfo >/dev/null; then
+		echo "Command vainfo not found"
+		exit 1
+	fi
 
-# If vainfo is available, check for VAAPI encoders before ffmpeg to faster result
-if ! command -v lspci >/dev/null; then
-	echo "Command lspci not found"
-	exit 1
+	# If vainfo is available, check for VAAPI encoders before ffmpeg to faster result
+	if ! command -v lspci >/dev/null; then
+		echo "Command lspci not found"
+		exit 1
+	fi
 fi
 
 # Define color variables
@@ -484,7 +487,11 @@ function attempt_conversion() {
 
 	local scale_filter_name="scale"
 
-	if [[ "$force_encoder" == "vulkan" || "$gpu" == "vulkan" ]]; then
+	# Handle explicit software encoding request
+	if [[ "$gpu" == "software" ]]; then
+		encoder_format=$encoder_software
+		force_software=1
+	elif [[ "$force_encoder" == "vulkan" || "$gpu" == "vulkan" ]]; then
 		decoder_format="$decoder_vulkan"
 		encoder_format="$encoder_vulkan"
 		init_hardware="$init_vulkan"
@@ -577,10 +584,12 @@ function attempt_conversion() {
 		echo "Encode mode: Decode GPU, encode GPU"
 		echo "Running command: $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
 		eval $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format "$video_filter_chain" $ffmpeg_generic_options
+		# Store the exit code while preserving $? for later checks
+		exit_code=$?
+	else
+		# GPU encoding skipped, set exit_code to trigger software encoding
+		exit_code=1
 	fi
-
-	# Store the exit code while preserving $? for later checks
-	exit_code=$?
 
 	# If encoding not successful, and not exit with 255 (interrupted by user), and not software encoding, try with the second option
 	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1" ]]; then
@@ -626,7 +635,7 @@ function attempt_conversion() {
 	fi
 
 	# If encoding not successful, and not exit with 255 (interrupted by user), try with software
-	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || ("$encoder_format" == "$encoder_software" && $exit_code != 0) ]]; then
+	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || $force_software == 1 || ("$encoder_format" == "$encoder_software") ]]; then
 		echo "Encode mode: Decode Software, Encode Software"
 		# Software mode uses the original video_filter variable without hw acceleration
 		local software_filter_chain=""

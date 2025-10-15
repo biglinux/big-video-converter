@@ -859,3 +859,61 @@ def has_audio_streams(file_path):
         print(f"Error checking audio streams: {e}")
         # On error, assume there might be audio to avoid accidentally removing it
         return True
+
+
+def check_mp4_compatibility(file_path):
+    """
+    Check if video/audio codecs are compatible with MP4 container when copying without reencoding.
+
+    Args:
+        file_path: Path to the video file
+
+    Returns:
+        tuple: (is_compatible: bool, incompatible_streams: list of str)
+    """
+    try:
+        # Ensure file exists
+        if not os.path.exists(file_path):
+            return False, ["File does not exist"]
+
+        # Get file info
+        info = get_video_file_info(file_path)
+        if not info or "streams" not in info:
+            return True, []  # Can't determine, assume compatible
+
+        # MP4 compatible codecs
+        mp4_video_codecs = ["h264", "hevc", "mpeg4", "h263", "mjpeg", "vp9", "av1"]
+        mp4_audio_codecs = [
+            "aac",
+            "mp3",
+            "ac3",
+            "eac3",
+            "opus",
+            "vorbis",
+            "flac",
+            "alac",
+        ]
+
+        incompatible = []
+
+        for stream in info["streams"]:
+            codec_type = stream.get("codec_type")
+            codec_name = stream.get("codec_name", "").lower()
+
+            if codec_type == "video":
+                if codec_name and codec_name not in mp4_video_codecs:
+                    incompatible.append(
+                        f"Video codec '{codec_name}' is not compatible with MP4"
+                    )
+
+            elif codec_type == "audio":
+                if codec_name and codec_name not in mp4_audio_codecs:
+                    incompatible.append(
+                        f"Audio codec '{codec_name}' is not compatible with MP4"
+                    )
+
+        return len(incompatible) == 0, incompatible
+
+    except Exception as e:
+        print(f"Error checking MP4 compatibility: {e}")
+        return True, []  # On error, assume compatible to avoid blocking conversion

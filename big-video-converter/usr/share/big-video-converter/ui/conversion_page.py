@@ -735,8 +735,22 @@ class ConversionPage:
                 # Get settings directly using string values instead of indices
                 env_vars = {}
 
-                # GPU - Use direct string value
-                env_vars["gpu"] = self.app.settings_manager.load_setting("gpu", "auto")
+                # Check if force copy video is enabled
+                force_copy_video_enabled = self.app.settings_manager.get_boolean(
+                    "force-copy-video", False
+                )
+
+                # GPU - Use direct string value, but disable if copying without reencoding
+                if force_copy_video_enabled:
+                    # When copying without reencoding, hardware acceleration is not needed
+                    env_vars["gpu"] = "software"
+                    print(
+                        "Force copy video enabled: disabling hardware acceleration (not needed for copying)"
+                    )
+                else:
+                    env_vars["gpu"] = self.app.settings_manager.load_setting(
+                        "gpu", "auto"
+                    )
 
                 # Video quality and codec
                 env_vars["video_quality"] = self.app.settings_manager.load_setting(
@@ -1022,6 +1036,89 @@ class ConversionPage:
 
         # Delete original setting
         delete_original = self.delete_original_check.get_active()
+
+        # Check MP4 compatibility when copying without reencoding to MP4
+        force_copy_video = env_vars.get("force_copy_video") == "1"
+        if force_copy_video and output_format == "mp4":
+            from utils.file_info import check_mp4_compatibility
+
+            is_compatible, incompatible_streams = check_mp4_compatibility(input_file)
+            if not is_compatible:
+                # Show warning dialog
+                incompatibility_msg = "\n".join(
+                    f"• {issue}" for issue in incompatible_streams
+                )
+
+                # Package all needed variables
+                conversion_context = {
+                    "cmd": cmd,
+                    "env_vars": env_vars,
+                    "delete_original": delete_original,
+                    "full_output_path": full_output_path,
+                    "input_file": input_file,
+                    "input_basename": input_basename,
+                    "output_ext": output_ext,
+                    "output_folder": output_folder,
+                    "trim_segments": trim_segments,
+                    "output_mode": output_mode,
+                }
+
+                def show_compatibility_warning():
+                    dialog = Adw.AlertDialog()
+                    dialog.set_heading(_("MP4 Compatibility Warning"))
+                    dialog.set_body(
+                        _(
+                            "The source file contains streams that are not compatible with MP4 container when copying without reencoding:\n\n{}\n\nTo convert this file to MP4, you need to disable 'Copy video without reencoding' option to reencode the incompatible streams."
+                        ).format(incompatibility_msg)
+                    )
+                    dialog.add_response("cancel", _("Cancel"))
+                    dialog.add_response("proceed", _("Proceed Anyway"))
+                    dialog.set_response_appearance(
+                        "proceed", Adw.ResponseAppearance.DESTRUCTIVE
+                    )
+                    dialog.set_default_response("cancel")
+                    dialog.set_close_response("cancel")
+
+                    def on_response(dialog, response):
+                        if response == "proceed":
+                            # User chose to proceed, continue with conversion
+                            GLib.idle_add(self._continue_conversion, conversion_context)
+
+                    dialog.connect("response", on_response)
+                    dialog.present(self.app.window)
+
+                # Show dialog in main thread
+                GLib.idle_add(show_compatibility_warning)
+                return False  # Stop here, dialog will handle continuation
+
+        # Continue with conversion
+        conversion_context = {
+            "cmd": cmd,
+            "env_vars": env_vars,
+            "delete_original": delete_original,
+            "full_output_path": full_output_path,
+            "input_file": input_file,
+            "input_basename": input_basename,
+            "output_ext": output_ext,
+            "output_folder": output_folder,
+            "trim_segments": trim_segments,
+            "output_mode": output_mode,
+        }
+        return self._continue_conversion(conversion_context)
+
+    def _continue_conversion(self, context):
+        """Continue with the actual conversion process"""
+        # Unpack context
+        cmd = context["cmd"]
+        env_vars = context["env_vars"]
+        delete_original = context["delete_original"]
+        full_output_path = context["full_output_path"]
+        input_file = context["input_file"]
+        input_basename = context["input_basename"]
+        output_ext = context["output_ext"]
+        output_folder = context["output_folder"]
+        trim_segments = context["trim_segments"]
+        output_mode = context["output_mode"]
 
         # Log the command and environment variables for debugging
         print("\n=== CONVERSION COMMAND ===")
