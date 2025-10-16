@@ -553,33 +553,52 @@ msgstr "사용자 정의"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Automatic (Recommended). If your graphics card is supported, conversion is much faster. If not, the "
-"app will use Software mode automatically. You can also pick GPU or Software manually."
+"If your GPU supports video encoding, conversion will be much faster.\n"
+"Automatic detection is usually the best choice, but you can also select it manually.\n"
+"Software mode is slower but compatible with more formats.\n"
+"If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
+"to Software mode if needed."
 msgstr ""
-"자동 (권장). 그래픽 카드가 지원되는 경우 변환 속도가 훨씬 빠릅니다. 그렇지 않은 경우 앱은 자동으로 소프트웨어 모드를 사용합니다. GPU 또는 소프트웨어를 수동으로 선택할 "
-"수도 있습니다."
+"GPU가 비디오 인코딩을 지원하는 경우 변환 속도가 훨씬 빨라집니다.  \n"
+"자동 감지가 일반적으로 가장 좋은 선택이지만 수동으로 선택할 수도 있습니다.  \n"
+"소프트웨어 모드는 느리지만 더 많은 형식과 호환됩니다.  \n"
+"GPU가 지원되지 않는 경우 시스템은 부분 GPU 처리를 시도하고 필요할 경우 자동으로 소프트웨어 모드로 전환됩니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 222
-msgid "Higher quality means a larger file."
-msgstr "더 높은 품질은 더 큰 파일을 의미합니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 225
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
-"H.264: Most compatible; fast to convert; larger files.\n"
-"H.265: Smaller files; may not play on older devices.\n"
-"VP9: Good for YouTube; can be slow without GPU support.\n"
-"AV1: Smallest files; may be slow and not supported everywhere."
+"Higher quality means a larger file.\n"
+"The default option is a good balance between image quality and file size."
 msgstr ""
-"H.264: 가장 호환성이 높음; 변환 속도가 빠름; 파일 크기가 큼.  \n"
-"H.265: 파일 크기가 작음; 구형 장치에서 재생되지 않을 수 있음.  \n"
-"VP9: YouTube에 적합; GPU 지원이 없으면 느릴 수 있음.  \n"
-"AV1: 가장 작은 파일; 느릴 수 있으며 모든 곳에서 지원되지 않을 수 있음."
+"더 높은 품질은 더 큰 파일을 의미합니다.\n"
+"기본 옵션은 이미지 품질과 파일 크기 간의 좋은 균형을 제공합니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 231
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
 msgid ""
-"Keep original (Recommended): fastest and keeps full quality. Convert: slightly lower quality, "
-"better compatibility, often smaller file."
-msgstr "원본 유지(권장): 가장 빠르고 전체 품질 유지. 변환: 약간 낮은 품질, 더 나은 호환성, 종종 더 작은 파일."
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
+msgstr ""
+"H.264: 거의 모든 장치에서 작동하는 오래된 형식입니다. 더 많은 저장 공간을 차지하지만 변환 속도가 가장 빠릅니다.\n"
+"\n"
+"H.265: H.264의 최신 버전입니다. 구형 장치에서는 작동하지 않으며 파일을 더 효율적으로 압축합니다.\n"
+"\n"
+"VP9: YouTube에서 널리 사용됩니다. 컴퓨터에 호환되는 그래픽 카드가 없으면 변환 속도가 매우 느릴 수 있습니다.\n"
+"\n"
+"AV1: 가장 현대적인 형식입니다. 최고의 압축(더 작은 파일 생성)을 제공하지만 그래픽 카드가 호환되지 않으면 변환 속도가 느릴 수 있습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+msgid ""
+"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
+"improves compatibility and can reduce file size."
+msgstr "복사는 일반적으로 가장 좋습니다 — 빠르고 전체 품질을 유지합니다. 재인코딩은 품질을 약간 저하시킬 수 있지만 호환성을 개선하고 파일 크기를 줄일 수 있습니다."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
 msgid ""
@@ -587,13 +606,17 @@ msgid ""
 "file, which can improve compatibility."
 msgstr "자막이 내장되어 있는 경우, 이를 유지하는 것이 일반적으로 가장 좋습니다. 일부 플레이어는 외부 자막 파일이 필요하며, 이는 호환성을 향상시킬 수 있습니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 239
-msgid "Copy video (very fast, full quality). Great for quick cuts and trims for social media."
-msgstr "비디오 복사(매우 빠르고, 전체 품질). 소셜 미디어용 빠른 컷 및 트림에 적합합니다."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+msgid ""
+"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
+"videos for social media."
+msgstr "비디오 복사는 매우 빠르며 전체 이미지 품질을 유지합니다. 소셜 미디어용 비디오를 자르거나 다듬기에 완벽합니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 244
-msgid "Faster = bigger file. Slower = smaller file. Choose what matters most: speed or size."
-msgstr "더 빠른 속도 = 더 큰 파일. 더 느린 속도 = 더 작은 파일. 가장 중요한 것을 선택하세요: 속도 또는 크기."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+msgid ""
+"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
+"save time."
+msgstr "느린 변환은 더 작고 압축된 파일을 생성합니다. 빠른 프리셋은 더 큰 파일을 생성하지만 시간을 절약합니다."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
 msgid ""
@@ -671,23 +694,28 @@ msgstr ""
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "비디오의 가장자리를 자르기 위해 필요한 부분만 유지하세요."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
 msgid ""
-"Choose the parts of the video to keep. Add sections with the + button or place markers on the "
-"player area.\n"
-"Export the selected parts as one file or as separate clips — great for social media."
+"Select parts of the video to keep.\n"
+"\n"
+"Add sections with the + button or directly on the video using markers.\n"
+"\n"
+"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
+"for social media."
 msgstr ""
-"비디오에서 유지할 부분을 선택하세요. + 버튼을 사용하여 섹션을 추가하거나 플레이어 영역에 마커를 배치하세요. 선택한 부분을 하나의 파일로 또는 별도의 클립으로 내보내세요 — "
-"소셜 미디어에 적합합니다."
+"비디오에서 유지할 부분을 선택하세요.\n"
+"\n"
+"+ 버튼을 사용하거나 비디오에서 직접 마커를 사용하여 섹션을 추가하세요.\n"
+"\n"
+"선택한 부분을 하나의 파일로 또는 여러 클립으로 내보낼 수 있습니다 — 소셜 미디어용 짧은 비디오를 만들기에 이상적입니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
 msgid ""
-"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
-"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
-"issues."
+"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"GPU 가속을 사용할 때, 이 옵션은 인코더를 GPU에서 실행하고 인코딩을 CPU에서 실행하도록 강제합니다. 일반적으로 이 체크를 해제하는 것이 더 좋지만, 호환성 문제에 유용할 "
-"수 있습니다."
+"GPU에서 실행되도록 인코딩을 강제하고 최종 처리는 CPU에서 수행합니다.  \n"
+"일반적으로 비활성화 상태로 두는 것이 가장 좋지만 특정 호환성 문제에 도움이 될 수 있습니다."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
 msgid ""

@@ -553,35 +553,59 @@ msgstr "Egyedi"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Automatic (Recommended). If your graphics card is supported, conversion is much faster. If not, the "
-"app will use Software mode automatically. You can also pick GPU or Software manually."
+"If your GPU supports video encoding, conversion will be much faster.\n"
+"Automatic detection is usually the best choice, but you can also select it manually.\n"
+"Software mode is slower but compatible with more formats.\n"
+"If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
+"to Software mode if needed."
 msgstr ""
-"Automatikus (Ajánlott). Ha a grafikus kártyád támogatott, a konverzió sokkal gyorsabb. Ha nem, az "
-"alkalmazás automatikusan a Szoftver módot használja. Kézzel is választhatsz GPU-t vagy Szoftvert."
+"Ha a GPU-d támogatja a videó kódolást, a konverzió sokkal gyorsabb lesz.  \n"
+"Az automatikus észlelés általában a legjobb választás, de manuálisan is kiválaszthatod.  \n"
+"A szoftveres mód lassabb, de több formátummal kompatibilis.  \n"
+"Ha a GPU nem támogatott, a rendszer megpróbálja a részleges GPU-feldolgozást, és szükség esetén "
+"automatikusan visszaáll a szoftveres módra."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 222
-msgid "Higher quality means a larger file."
-msgstr "A magasabb minőség nagyobb fájlt jelent."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 225
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
-"H.264: Most compatible; fast to convert; larger files.\n"
-"H.265: Smaller files; may not play on older devices.\n"
-"VP9: Good for YouTube; can be slow without GPU support.\n"
-"AV1: Smallest files; may be slow and not supported everywhere."
+"Higher quality means a larger file.\n"
+"The default option is a good balance between image quality and file size."
 msgstr ""
-"H.264: Legjobban kompatibilis; gyors átkonvertálás; nagyobb fájlok.\n"
-"H.265: Kisebb fájlok; lehet, hogy nem játszható le régebbi eszközökön.\n"
-"VP9: Jó a YouTube-hoz; lehet, hogy lassú GPU támogatás nélkül.\n"
-"AV1: Legkisebb fájlok; lehet, hogy lassú és nem támogatott mindenhol."
+"A magasabb minőség nagyobb fájlt jelent.  \n"
+"A alapértelmezett opció jó egyensúlyt teremt a képminőség és a fájlméret között."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 231
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
 msgid ""
-"Keep original (Recommended): fastest and keeps full quality. Convert: slightly lower quality, "
-"better compatibility, often smaller file."
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
 msgstr ""
-"Eredeti megőrzése (Ajánlott): leggyorsabb és megőrzi a teljes minőséget. Átkonvertálás: enyhén "
-"alacsonyabb minőség, jobb kompatibilitás, gyakran kisebb fájl."
+"H.264: Egy régebbi formátum, amely szinte minden eszközön működik. Több tárolóhelyet foglal el, de "
+"a leggyorsabb a konvertálás.\n"
+"\n"
+"H.265: Az H.264 újabb verziója. Nem működik régebbi eszközökön, és hatékonyabban tömöríti a "
+"fájlokat.\n"
+"\n"
+"VP9: Széles körben használt a YouTube-on. Ha a számítógépének nincs kompatibilis grafikus kártyája, "
+"a konvertálás nagyon lassú lehet.\n"
+"\n"
+"AV1: A legmodernebb formátum. A legjobb tömörítést kínálja (kisebb fájlok létrehozása), de a "
+"konvertálás is lassú lehet, ha a grafikus kártya nem kompatibilis."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+msgid ""
+"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
+"improves compatibility and can reduce file size."
+msgstr ""
+"A másolás általában a legjobb — gyors és megőrzi a teljes minőséget. A kódolás újra kissé csökkenti "
+"a minőséget, de javítja a kompatibilitást és csökkentheti a fájlméretet."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
 msgid ""
@@ -591,15 +615,21 @@ msgstr ""
 "Ha a feliratok beágyazva vannak, azok megtartása általában a legjobb. Néhány lejátszó külső "
 "feliratfájlt igényel, ami javíthatja a kompatibilitást."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 239
-msgid "Copy video (very fast, full quality). Great for quick cuts and trims for social media."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+msgid ""
+"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
+"videos for social media."
 msgstr ""
-"Videó másolása (nagyon gyors, teljes minőség). Kiváló gyors vágásokhoz és rövidítésekhez a "
-"közösségi médiában."
+"A videók másolása rendkívül gyors, és megőrzi a teljes képminőséget. Tökéletes a videók vágásához "
+"vagy rövidítéséhez a közösségi médiához."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 244
-msgid "Faster = bigger file. Slower = smaller file. Choose what matters most: speed or size."
-msgstr "Gyorsabb = nagyobb fájl. Lassabb = kisebb fájl. Válaszd ki, mi a legfontosabb: sebesség vagy méret."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+msgid ""
+"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
+"save time."
+msgstr ""
+"A lassúbb konverzió kisebb, tömörített fájlokat eredményez. A gyorsabb előbeállítások nagyobb "
+"fájlokat hoznak létre, de időt takarítanak meg."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
 msgid ""
@@ -677,25 +707,29 @@ msgstr ""
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "Vágja le a videó széleit, hogy csak a szükséges részt tartsa meg."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
 msgid ""
-"Choose the parts of the video to keep. Add sections with the + button or place markers on the "
-"player area.\n"
-"Export the selected parts as one file or as separate clips — great for social media."
+"Select parts of the video to keep.\n"
+"\n"
+"Add sections with the + button or directly on the video using markers.\n"
+"\n"
+"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
+"for social media."
 msgstr ""
-"Válaszd ki a megtartandó videórészeket. Adj hozzá szakaszokat a + gombbal, vagy helyezz el "
-"jelölőket a lejátszó területen. Exportáld a kiválasztott részeket egy fájlként vagy külön klipként "
-"— nagyszerű a közösségi médiához."
+"Válassza ki a videó azon részeit, amelyeket meg szeretne tartani.\n"
+"\n"
+"Adjon hozzá szakaszokat a + gombbal vagy közvetlenül a videón, jelölőkkel.\n"
+"\n"
+"A kiválasztott részeket egy fájlként vagy több klipként exportálhatja — ideális rövid videók "
+"készítéséhez közösségi médiához."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
 msgid ""
-"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
-"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
-"issues."
+"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"A GPU gyorsítás használatakor ez az opció arra kényszeríti a kódolót, hogy a GPU-n, míg a kódolást "
-"a CPU-n végezze. Általában jobb, ha ezt a jelölőnégyzetet üresen hagyja, de hasznos lehet "
-"kompatibilitási problémák esetén."
+"Kényszeríti a kódolást a GPU-n való futásra, a végső feldolgozást pedig a CPU-n végzi.\n"
+"Általában a legjobb, ha le van tiltva, de bizonyos kompatibilitási problémák esetén segíthet."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
 msgid ""
@@ -851,6 +885,10 @@ msgstr "Szerkesztő"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "Haladás"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 

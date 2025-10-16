@@ -463,6 +463,12 @@ msgstr "Jazyk"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 424
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 599
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 424
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 599
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 424
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 599
+# 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
@@ -915,35 +921,58 @@ msgstr "Vlastní"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Automatic (Recommended). If your graphics card is supported, conversion is much faster. If not, the "
-"app will use Software mode automatically. You can also pick GPU or Software manually."
+"If your GPU supports video encoding, conversion will be much faster.\n"
+"Automatic detection is usually the best choice, but you can also select it manually.\n"
+"Software mode is slower but compatible with more formats.\n"
+"If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
+"to Software mode if needed."
 msgstr ""
-"Automatické (Doporučeno). Pokud je vaše grafická karta podporována, převod je mnohem rychlejší. "
-"Pokud ne, aplikace automaticky použije režim Software. Můžete také ručně vybrat GPU nebo Software."
+"Pokud vaše GPU podporuje kódování videa, převod bude mnohem rychlejší.  \n"
+"Automatické detekce je obvykle nejlepší volba, ale můžete ji také vybrat ručně.  \n"
+"Režim softwaru je pomalejší, ale kompatibilní s více formáty.  \n"
+"Pokud GPU není podporováno, systém se pokusí o částečné zpracování GPU a v případě potřeby se "
+"automaticky vrátí k režimu softwaru."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 222
-msgid "Higher quality means a larger file."
-msgstr "Vyšší kvalita znamená větší soubor."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 225
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
-"H.264: Most compatible; fast to convert; larger files.\n"
-"H.265: Smaller files; may not play on older devices.\n"
-"VP9: Good for YouTube; can be slow without GPU support.\n"
-"AV1: Smallest files; may be slow and not supported everywhere."
+"Higher quality means a larger file.\n"
+"The default option is a good balance between image quality and file size."
 msgstr ""
-"H.264: Nejvíce kompatibilní; rychlé převody; větší soubory.  \n"
-"H.265: Menší soubory; nemusí se přehrávat na starších zařízeních.  \n"
-"VP9: Dobré pro YouTube; může být pomalé bez podpory GPU.  \n"
-"AV1: Nejmenší soubory; může být pomalé a nemusí být podporováno všude."
+"Vyšší kvalita znamená větší soubor.\n"
+"Výchozí možnost je dobrá rovnováha mezi kvalitou obrazu a velikostí souboru."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 231
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
 msgid ""
-"Keep original (Recommended): fastest and keeps full quality. Convert: slightly lower quality, "
-"better compatibility, often smaller file."
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
 msgstr ""
-"Udržet originál (Doporučeno): nejrychlejší a zachovává plnou kvalitu. Konvertovat: mírně nižší "
-"kvalita, lepší kompatibilita, často menší soubor."
+"H.264: Starší formát, který funguje na téměř všech zařízeních. Zaberá více úložného prostoru, ale "
+"je nejrychlejší na převod.\n"
+"\n"
+"H.265: Novější verze H.264. Nepracuje na starších zařízeních a komprimuje soubory efektivněji.\n"
+"\n"
+"VP9: Široce používaný YouTube. Pokud váš počítač nemá kompatibilní grafickou kartu, může být převod "
+"velmi pomalý.\n"
+"\n"
+"AV1: Nejpokročilejší formát. Nabízí nejlepší kompresi (vytváří menší soubory), ale převod může být "
+"také pomalý, pokud grafická karta není kompatibilní."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+msgid ""
+"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
+"improves compatibility and can reduce file size."
+msgstr ""
+"Kopie je obvykle nejlepší — rychlá a zachovává plnou kvalitu. Znovu kódování mírně snižuje kvalitu, "
+"ale zlepšuje kompatibilitu a může snížit velikost souboru."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
 msgid ""
@@ -953,15 +982,21 @@ msgstr ""
 "Pokud jsou titulky vložené, obvykle je nejlepší je zachovat. Některé přehrávače potřebují externí "
 "soubor s titulky, což může zlepšit kompatibilitu."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 239
-msgid "Copy video (very fast, full quality). Great for quick cuts and trims for social media."
-msgstr "Kopírovat video (velmi rychle, plná kvalita). Skvělé pro rychlé střihy a úpravy pro sociální média."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 244
-msgid "Faster = bigger file. Slower = smaller file. Choose what matters most: speed or size."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+msgid ""
+"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
+"videos for social media."
 msgstr ""
-"Rychlejší = větší soubor. Pomalejší = menší soubor. Vyberte, co je nejdůležitější: rychlost nebo "
-"velikost."
+"Kopírování videa je extrémně rychlé a zachovává plnou kvalitu obrazu. Ideální pro střih nebo "
+"zkracování videí pro sociální média."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+msgid ""
+"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
+"save time."
+msgstr ""
+"Pomalejší konverze produkuje menší, více komprimované soubory. Rychlejší předvolby vytvářejí větší "
+"soubory, ale šetří čas."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
 msgid ""
@@ -1039,24 +1074,29 @@ msgstr ""
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "Ořízněte okraje videa, abyste si ponechali pouze část, kterou potřebujete."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
 msgid ""
-"Choose the parts of the video to keep. Add sections with the + button or place markers on the "
-"player area.\n"
-"Export the selected parts as one file or as separate clips — great for social media."
+"Select parts of the video to keep.\n"
+"\n"
+"Add sections with the + button or directly on the video using markers.\n"
+"\n"
+"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
+"for social media."
 msgstr ""
-"Vyberte části videa, které chcete zachovat. Přidejte sekce pomocí tlačítka + nebo umístěte značky "
-"na oblasti přehrávače. Exportujte vybrané části jako jeden soubor nebo jako samostatné klipy — "
-"skvělé pro sociální média."
+"Vyberte části videa, které chcete zachovat.\n"
+"\n"
+"Přidejte sekce pomocí tlačítka + nebo přímo na videu pomocí značek.\n"
+"\n"
+"Vybrané části můžete exportovat jako jeden soubor nebo jako více klipů — ideální pro vytváření "
+"krátkých videí pro sociální média."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
 msgid ""
-"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
-"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
-"issues."
+"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"Při použití akcelerace GPU tato volba nutí kodér být na GPU a kódování na CPU. Obvykle je lepší "
-"tuto možnost nechat nezaškrtnutou, ale může být užitečná pro problémy s kompatibilitou."
+"Nucené kódování pro běh na GPU a konečné zpracování na CPU. Obvykle je nejlepší to nechat zakázané, "
+"ale může pomoci s určitými problémy s kompatibilitou."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
 msgid ""
@@ -1212,6 +1252,10 @@ msgstr "Editor"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "Pokrok"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 

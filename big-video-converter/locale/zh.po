@@ -587,31 +587,52 @@ msgstr "自定义"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Automatic (Recommended). If your graphics card is supported, conversion is much faster. If not, the "
-"app will use Software mode automatically. You can also pick GPU or Software manually."
-msgstr "自动（推荐）。如果您的显卡受支持，转换速度会更快。如果不支持，应用程序将自动使用软件模式。您也可以手动选择GPU或软件。"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 222
-msgid "Higher quality means a larger file."
-msgstr "更高的质量意味着更大的文件。"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 225
-msgid ""
-"H.264: Most compatible; fast to convert; larger files.\n"
-"H.265: Smaller files; may not play on older devices.\n"
-"VP9: Good for YouTube; can be slow without GPU support.\n"
-"AV1: Smallest files; may be slow and not supported everywhere."
+"If your GPU supports video encoding, conversion will be much faster.\n"
+"Automatic detection is usually the best choice, but you can also select it manually.\n"
+"Software mode is slower but compatible with more formats.\n"
+"If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
+"to Software mode if needed."
 msgstr ""
-"H.264：最兼容；转换速度快；文件较大。\n"
-"H.265：文件较小；可能无法在旧设备上播放。\n"
-"VP9：适合YouTube；在没有GPU支持的情况下可能较慢。\n"
-"AV1：文件最小；可能较慢且不支持所有地方。"
+"如果您的 GPU 支持视频编码，转换速度将更快。\n"
+"自动检测通常是最佳选择，但您也可以手动选择。\n"
+"软件模式速度较慢，但与更多格式兼容。\n"
+"如果不支持 GPU，系统将尝试部分 GPU 处理，并在需要时自动回退到软件模式。"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 231
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
-"Keep original (Recommended): fastest and keeps full quality. Convert: slightly lower quality, "
-"better compatibility, often smaller file."
-msgstr "保留原始（推荐）：速度最快且保持完整质量。转换：稍低质量，更好兼容性，通常文件更小。"
+"Higher quality means a larger file.\n"
+"The default option is a good balance between image quality and file size."
+msgstr ""
+"更高的质量意味着更大的文件。\n"
+"默认选项在图像质量和文件大小之间提供了良好的平衡。"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
+msgid ""
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
+msgstr ""
+"H.264：一种较旧的格式，几乎在所有设备上都能使用。它占用更多存储空间，但转换速度最快。\n"
+"\n"
+"H.265：H.264的更新版本。它不支持旧设备，并且能更有效地压缩文件。\n"
+"\n"
+"VP9：被YouTube广泛使用。如果您的计算机没有兼容的显卡，转换可能会非常慢。\n"
+"\n"
+"AV1：最现代的格式。它提供最佳的压缩（生成更小的文件），但如果显卡不兼容，转换也可能很慢。"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+msgid ""
+"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
+"improves compatibility and can reduce file size."
+msgstr "复制通常是最佳选择——快速且保持完整质量。重新编码会略微降低质量，但提高兼容性并可以减小文件大小。"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
 msgid ""
@@ -619,13 +640,17 @@ msgid ""
 "file, which can improve compatibility."
 msgstr "如果字幕是嵌入的，通常最好保留它们。一些播放器需要外部字幕文件，这可以提高兼容性。"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 239
-msgid "Copy video (very fast, full quality). Great for quick cuts and trims for social media."
-msgstr "复制视频（非常快速，完整质量）。非常适合社交媒体的快速剪辑和修剪。"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+msgid ""
+"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
+"videos for social media."
+msgstr "复制视频速度极快，并保持完整的图像质量。非常适合为社交媒体剪辑或修剪视频。"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 244
-msgid "Faster = bigger file. Slower = smaller file. Choose what matters most: speed or size."
-msgstr "更快 = 更大的文件。更慢 = 更小的文件。选择最重要的：速度还是大小。"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+msgid ""
+"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
+"save time."
+msgstr "较慢的转换会生成更小、更压缩的文件。较快的预设会生成更大的文件，但节省时间。"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
 msgid ""
@@ -703,19 +728,28 @@ msgstr ""
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "裁剪视频的边缘，只保留您需要的部分。"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
 msgid ""
-"Choose the parts of the video to keep. Add sections with the + button or place markers on the "
-"player area.\n"
-"Export the selected parts as one file or as separate clips — great for social media."
-msgstr "选择要保留的视频部分。使用 + 按钮添加部分或在播放器区域放置标记。将选定的部分导出为一个文件或单独的剪辑 — 非常适合社交媒体。"
+"Select parts of the video to keep.\n"
+"\n"
+"Add sections with the + button or directly on the video using markers.\n"
+"\n"
+"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
+"for social media."
+msgstr ""
+"选择要保留的视频部分。\n"
+"\n"
+"使用 + 按钮或直接在视频上使用标记添加部分。\n"
+"\n"
+"您可以将选定的部分导出为一个文件或多个剪辑 — 非常适合为社交媒体创建短视频。"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
 msgid ""
-"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
-"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
-"issues."
-msgstr "在使用GPU加速时，此选项强制编码器在GPU上运行，而编码在CPU上进行。通常最好保持此选项未选中，但在兼容性问题上可能会有用。"
+"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Usually best left disabled, but can help with certain compatibility issues."
+msgstr ""
+"强制编码在GPU上运行，最终处理在CPU上。  \n"
+"通常最好保持禁用，但可以帮助解决某些兼容性问题。"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
 msgid ""
@@ -880,6 +914,10 @@ msgstr "进度"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 635
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 635
@@ -1001,6 +1039,22 @@ msgstr "转换完成"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
 msgid "All video conversions have been completed successfully!"
 msgstr "所有视频转换已成功完成！"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 

@@ -553,36 +553,60 @@ msgstr "Пользовательский"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Automatic (Recommended). If your graphics card is supported, conversion is much faster. If not, the "
-"app will use Software mode automatically. You can also pick GPU or Software manually."
+"If your GPU supports video encoding, conversion will be much faster.\n"
+"Automatic detection is usually the best choice, but you can also select it manually.\n"
+"Software mode is slower but compatible with more formats.\n"
+"If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
+"to Software mode if needed."
 msgstr ""
-"Автоматически (Рекомендуется). Если ваша видеокарта поддерживается, конвертация проходит "
-"значительно быстрее. Если нет, приложение автоматически использует программный режим. Вы также "
-"можете вручную выбрать GPU или Программный режим."
+"Если ваш графический процессор поддерживает видеокодирование, конвертация будет значительно "
+"быстрее.  \n"
+"Автоматическое определение обычно является наилучшим выбором, но вы также можете выбрать его "
+"вручную.  \n"
+"Программный режим медленнее, но совместим с большим количеством форматов.  \n"
+"Если графический процессор не поддерживается, система попытается выполнить частичную обработку с "
+"помощью графического процессора и автоматически вернется к программному режиму при необходимости."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 222
-msgid "Higher quality means a larger file."
-msgstr "Большее качество означает больший файл."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 225
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
-"H.264: Most compatible; fast to convert; larger files.\n"
-"H.265: Smaller files; may not play on older devices.\n"
-"VP9: Good for YouTube; can be slow without GPU support.\n"
-"AV1: Smallest files; may be slow and not supported everywhere."
+"Higher quality means a larger file.\n"
+"The default option is a good balance between image quality and file size."
 msgstr ""
-"H.264: Наиболее совместимый; быстрое преобразование; большие файлы.  \n"
-"H.265: Меньшие файлы; может не воспроизводиться на старых устройствах.  \n"
-"VP9: Хорошо для YouTube; может быть медленным без поддержки GPU.  \n"
-"AV1: Наименьшие файлы; может быть медленным и не поддерживается повсюду."
+"Более высокое качество означает больший размер файла.  \n"
+"Опция по умолчанию является хорошим балансом между качеством изображения и размером файла."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 231
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
 msgid ""
-"Keep original (Recommended): fastest and keeps full quality. Convert: slightly lower quality, "
-"better compatibility, often smaller file."
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
 msgstr ""
-"Сохранить оригинал (Рекомендуется): самый быстрый и сохраняет полное качество. Конвертировать: "
-"немного ниже качество, лучшая совместимость, часто меньший размер файла."
+"H.264: Старый формат, который работает почти на всех устройствах. Он занимает больше места для "
+"хранения, но быстрее всего конвертируется.\n"
+"\n"
+"H.265: Новая версия H.264. Он не работает на старых устройствах и сжимает файлы более эффективно.\n"
+"\n"
+"VP9: Широко используется YouTube. Если на вашем компьютере нет совместимой видеокарты, конвертация "
+"может быть очень медленной.\n"
+"\n"
+"AV1: Самый современный формат. Он предлагает лучшее сжатие (создание меньших файлов), но "
+"конвертация также может быть медленной, если видеокарта несовместима."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+msgid ""
+"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
+"improves compatibility and can reduce file size."
+msgstr ""
+"Копирование обычно лучше — быстро и сохраняет полное качество. Перекодирование немного снижает "
+"качество, но улучшает совместимость и может уменьшить размер файла."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
 msgid ""
@@ -592,15 +616,21 @@ msgstr ""
 "Если субтитры встроены, лучше всего их сохранить. Некоторые плееры требуют внешний файл субтитров, "
 "что может улучшить совместимость."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 239
-msgid "Copy video (very fast, full quality). Great for quick cuts and trims for social media."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+msgid ""
+"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
+"videos for social media."
 msgstr ""
-"Копировать видео (очень быстро, полное качество). Отлично подходит для быстрых нарезок и обрезок "
-"для социальных сетей."
+"Копирование видео происходит очень быстро и сохраняет полное качество изображения. Идеально "
+"подходит для нарезки или обрезки видео для социальных сетей."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 244
-msgid "Faster = bigger file. Slower = smaller file. Choose what matters most: speed or size."
-msgstr "Быстрее = больший файл. Медленнее = меньший файл. Выберите, что важнее: скорость или размер."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+msgid ""
+"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
+"save time."
+msgstr ""
+"Более медленное преобразование создает меньшие, более сжатые файлы. Более быстрые пресеты создают "
+"большие файлы, но экономят время."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
 msgid ""
@@ -678,25 +708,29 @@ msgstr ""
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "Обрежьте края видео, чтобы оставить только нужную часть."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
 msgid ""
-"Choose the parts of the video to keep. Add sections with the + button or place markers on the "
-"player area.\n"
-"Export the selected parts as one file or as separate clips — great for social media."
+"Select parts of the video to keep.\n"
+"\n"
+"Add sections with the + button or directly on the video using markers.\n"
+"\n"
+"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
+"for social media."
 msgstr ""
-"Выберите части видео, которые хотите сохранить. Добавьте секции с помощью кнопки + или установите "
-"маркеры в области плеера. Экспортируйте выбранные части в один файл или в отдельные клипы — отлично "
-"подходит для социальных сетей."
+"Выберите части видео, которые хотите сохранить.\n"
+"\n"
+"Добавьте разделы с помощью кнопки + или прямо на видео, используя маркеры.\n"
+"\n"
+"Вы можете экспортировать выбранные части как один файл или как несколько клипов — идеально для "
+"создания коротких видео для социальных сетей."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
 msgid ""
-"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
-"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
-"issues."
+"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"При использовании аппаратного ускорения GPU эта опция заставляет кодировщик работать на GPU, а "
-"кодирование — на CPU. Обычно лучше оставить это поле незаполненным, но это может быть полезно для "
-"решения проблем совместимости."
+"Принуждает кодирование выполняться на GPU, а финальную обработку на CPU. Обычно лучше оставить "
+"отключенным, но может помочь с определенными проблемами совместимости."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
 msgid ""
@@ -861,6 +895,10 @@ msgstr "Прогресс"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 635
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 635
@@ -982,6 +1020,22 @@ msgstr "Конверсии завершены"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
 msgid "All video conversions have been completed successfully!"
 msgstr "Все видеоконверсии были успешно завершены!"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 

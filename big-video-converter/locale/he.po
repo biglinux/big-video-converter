@@ -345,6 +345,10 @@ msgstr "פורמט"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 250
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 250
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 250
+# 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
@@ -1198,35 +1202,56 @@ msgstr "מותאם אישית"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
-"Automatic (Recommended). If your graphics card is supported, conversion is much faster. If not, the "
-"app will use Software mode automatically. You can also pick GPU or Software manually."
+"If your GPU supports video encoding, conversion will be much faster.\n"
+"Automatic detection is usually the best choice, but you can also select it manually.\n"
+"Software mode is slower but compatible with more formats.\n"
+"If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
+"to Software mode if needed."
 msgstr ""
-"אוטומטי (מומלץ). אם כרטיס הגרפי שלך נתמך, ההמרה תהיה הרבה יותר מהירה. אם לא, האפליקציה תשתמש במצב "
-"תוכנה באופן אוטומטי. אתה יכול גם לבחור GPU או תוכנה באופן ידני."
+"אם ה-GPU שלך תומך בקידוד וידאו, ההמרה תהיה הרבה יותר מהירה.\n"
+"זיהוי אוטומטי הוא בדרך כלל הבחירה הטובה ביותר, אך תוכל גם לבחור אותו ידנית.\n"
+"מצב תוכנה הוא איטי יותר אך תואם ליותר פורמטים.\n"
+"אם ה-GPU לא נתמך, המערכת תנסה עיבוד חלקי של ה-GPU ותשוב אוטומטית למצב תוכנה אם יש צורך."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 222
-msgid "Higher quality means a larger file."
-msgstr "איכות גבוהה יותר משמעותה קובץ גדול יותר."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 225
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
-"H.264: Most compatible; fast to convert; larger files.\n"
-"H.265: Smaller files; may not play on older devices.\n"
-"VP9: Good for YouTube; can be slow without GPU support.\n"
-"AV1: Smallest files; may be slow and not supported everywhere."
+"Higher quality means a larger file.\n"
+"The default option is a good balance between image quality and file size."
 msgstr ""
-"H.264: תואם ביותר; מהיר להמרה; קבצים גדולים יותר.\n"
-"H.265: קבצים קטנים יותר; עשוי לא לפעול על מכשירים ישנים.\n"
-"VP9: טוב ל-YouTube; עשוי להיות איטי ללא תמיכת GPU.\n"
-"AV1: הקבצים הקטנים ביותר; עשוי להיות איטי ולא נתמך בכל מקום."
+"איכות גבוהה יותר משמעותה קובץ גדול יותר.\n"
+"האפשרות המוגדרת כברירת מחדל היא איזון טוב בין איכות התמונה לגודל הקובץ."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 231
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
 msgid ""
-"Keep original (Recommended): fastest and keeps full quality. Convert: slightly lower quality, "
-"better compatibility, often smaller file."
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the "
+"fastest to convert.\n"
+"\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more "
+"efficiently.\n"
+"\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the "
+"conversion can be very slow.\n"
+"\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the "
+"conversion can also be slow if the graphics card isn't compatible."
 msgstr ""
-"שמור על המקורי (מומלץ): הכי מהיר ושומר על איכות מלאה. המרה: איכות מעט נמוכה יותר, תאימות טובה יותר, "
-"לעיתים קובץ קטן יותר."
+"H.264: פורמט ישן יותר שעובד כמעט על כל המכשירים. הוא תופס יותר מקום אחסון אך הוא המהיר ביותר להמרה.\n"
+"\n"
+"H.265: גרסה חדשה יותר של H.264. הוא לא עובד על מכשירים ישנים ודוחס קבצים בצורה יעילה יותר.\n"
+"\n"
+"VP9: בשימוש נרחב על ידי YouTube. אם המחשב שלך לא כולל כרטיס גרפי תואם, ההמרה יכולה להיות מאוד "
+"איטית.\n"
+"\n"
+"AV1: הפורמט המודרני ביותר. הוא מציע את הדחיסה הטובה ביותר (יוצר קבצים קטנים יותר), אך ההמרה יכולה "
+"להיות גם איטית אם כרטיס הגרפי אינו תואם."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+msgid ""
+"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
+"improves compatibility and can reduce file size."
+msgstr ""
+"העתקה היא בדרך כלל הטובה ביותר - מהירה ושומרת על איכות מלאה. קידוד מחדש מפחית במעט את האיכות אך "
+"משפר את ההתאמה ויכול להפחית את גודל הקובץ."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
 msgid ""
@@ -1236,13 +1261,21 @@ msgstr ""
 "אם כתוביות משולבות, שמירה עליהן בדרך כלל היא הטובה ביותר. חלק מהנגן דורשים קובץ כתוביות חיצוני, מה "
 "שיכול לשפר את ההתאמה."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 239
-msgid "Copy video (very fast, full quality). Great for quick cuts and trims for social media."
-msgstr "העתק וידאו (מאוד מהר, באיכות מלאה). מצוין לחיתוכים מהירים וגזירות עבור מדיה חברתית."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+msgid ""
+"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
+"videos for social media."
+msgstr ""
+"העתקת וידאו היא מהירה מאוד ושומרת על איכות התמונה המלאה. מושלם לחיתוך או לקיצור וידאו עבור מדיה "
+"חברתית."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 244
-msgid "Faster = bigger file. Slower = smaller file. Choose what matters most: speed or size."
-msgstr "מהיר יותר = קובץ גדול יותר. איטי יותר = קובץ קטן יותר. בחר מה שחשוב ביותר: מהירות או גודל."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+msgid ""
+"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
+"save time."
+msgstr ""
+"המרה איטית מייצרת קבצים קטנים יותר, דחוסים יותר. פריסטים מהירים יוצרים קבצים גדולים יותר אך חוסכים "
+"זמן."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
 msgid ""
@@ -1320,23 +1353,29 @@ msgstr ""
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "גזור את קצוות הווידאו כדי לשמור רק על החלק שאתה צריך."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
 msgid ""
-"Choose the parts of the video to keep. Add sections with the + button or place markers on the "
-"player area.\n"
-"Export the selected parts as one file or as separate clips — great for social media."
+"Select parts of the video to keep.\n"
+"\n"
+"Add sections with the + button or directly on the video using markers.\n"
+"\n"
+"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
+"for social media."
 msgstr ""
-"בחר את החלקים של הווידאו לשמירה. הוסף קטעים עם כפתור + או הנח סימנים באזור הנגן. \n"
-"ייצא את החלקים שנבחרו כקובץ אחד או כקליפים נפרדים - נהדר לרשתות חברתיות."
+"בחר חלקים מהווידאו לשמירה.\n"
+"\n"
+"הוסף קטעים עם כפתור + או ישירות על הווידאו באמצעות סימנים.\n"
+"\n"
+"אתה יכול לייצא את החלקים הנבחרים כקובץ אחד או כקליפים מרובים - אידיאלי ליצירת סרטונים קצרים לרשתות "
+"חברתיות."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
 msgid ""
-"When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be "
-"on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility "
-"issues."
+"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"כאשר משתמשים בהאצת GPU, אפשרות זו מכריחה את המ编码 להיות על ה-GPU ואת ההקלטה להיות על ה-CPU. בדרך כלל "
-"עדיף להשאיר זאת לא מסומן, אך זה יכול להיות מועיל לבעיות תאימות."
+"כופה קידוד לפעול על ה-GPU ועיבוד סופי על ה-CPU. בדרך כלל עדיף להשאיר כבוי, אך יכול לעזור עם בעיות "
+"תאימות מסוימות."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
 msgid ""
@@ -1492,6 +1531,10 @@ msgstr "עורך"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "התקדמות"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
