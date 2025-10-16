@@ -173,6 +173,23 @@ fi
 # If variable output_file is not set, use same folder as input file
 : ${output_file:="$input_file_without_extension"}
 
+# Change to case insensitive
+shopt -s nocasematch
+
+# Improved version that uses output_format when available
+if [[ -n "$output_format" ]]; then
+	# Remove any existing extension
+	output_basename="${output_file%.*}"
+	# Add the output format extension
+	output_file="${output_basename}.${output_format}"
+elif [[ ! "$output_file" =~ \.(mp4|avi|mkv|mov|wmv|flv|webm|m4v|mpeg|mpg)$ ]]; then
+	# If no format is defined and no recognized extension is present, use mp4
+	output_file="$output_file.mp4"
+fi
+
+# Back to case sensitive
+shopt -u nocasematch
+
 # Info about the input file
 ffprobe_result=$(ffprobe -select_streams s -show_entries stream=index:stream_tags=language,title:stream_disposition=forced -of csv=p=0 "$input_file" 2>&1)
 
@@ -195,7 +212,26 @@ mapfile -t subtitles <<<"$subtitle_list_simplified"
 
 # Subtitle handling
 if [[ $subtitle_extract == "embedded" ]]; then
-	subtitle_cmd="-map 0:s? -c:s mov_text"
+	output_extension="${output_file##*.}"
+	subtitle_cmd="" # Initialize as empty
+
+	if [[ "$output_extension" == "mp4" ]]; then
+		# For MP4, find compatible SRT streams and convert them to mov_text
+		map_cmd=""
+		subtitle_info_for_embed=$(ffprobe -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file")
+		while IFS=, read -r index codec_name; do
+			if [[ "$codec_name" == "subrip" ]]; then
+				map_cmd+=" -map 0:$index"
+			fi
+		done <<<"$subtitle_info_for_embed"
+		# If we found any SRT streams, set the command
+		if [[ -n "$map_cmd" ]]; then
+			subtitle_cmd="$map_cmd -c:s mov_text"
+		fi
+	else
+		# For other containers like MKV, copy all subtitle streams
+		subtitle_cmd="-map 0:s? -c:s copy"
+	fi
 elif [[ $subtitle_extract == "extract" ]]; then
 	if [[ -n $subtitle_list_srt ]]; then
 		# Declare an associative array to track language code usage
@@ -438,23 +474,6 @@ function build_encoder_commands() {
 # If gpu = auto change gpu to empty
 gpu=${gpu/auto/}
 
-# Change to case insensitive
-shopt -s nocasematch
-
-# Improved version that uses output_format when available
-if [[ -n "$output_format" ]]; then
-	# Remove any existing extension
-	output_basename="${output_file%.*}"
-	# Add the output format extension
-	output_file="${output_basename}.${output_format}"
-elif [[ ! "$output_file" =~ \.(mp4|avi|mkv|mov|wmv|flv|webm|m4v|mpeg|mpg)$ ]]; then
-	# If no format is defined and no recognized extension is present, use mp4
-	output_file="$output_file.mp4"
-fi
-
-# Back to case sensitive
-shopt -u nocasematch
-
 # Generic options for ffmpeg
 ffmpeg_generic_options="-movflags +faststart -y \"$output_file\""
 
@@ -582,8 +601,8 @@ function attempt_conversion() {
 	
 	if [[ "$force_copy_video" = "1" ]]; then
 		echo "Generating file without re-encoding"
-		echo "Running command: $ffmpeg_executable $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
-		eval $ffmpeg_executable $options $decoder_format $encoder_format "$video_filter_chain" $ffmpeg_generic_options
+		echo "Running command: $ffmpeg_executable $options $decoder_format $encoder_format  $ffmpeg_generic_options"
+		eval $ffmpeg_executable $options $decoder_format $encoder_format $ffmpeg_generic_options
 		# After copy always exit
 		exit $?
 	fi

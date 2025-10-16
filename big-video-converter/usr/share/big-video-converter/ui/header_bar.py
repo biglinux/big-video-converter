@@ -168,11 +168,15 @@ class HeaderBar(Gtk.Box):
 
     def _on_convert_all_clicked(self, button):
         """Handle Convert All button click"""
+        # Immediately disable button to prevent double-clicks
+        button.set_sensitive(False)
         if hasattr(self.app, "start_queue_processing"):
             self.app.start_queue_processing()
 
     def _on_convert_current_clicked(self, button):
         """Handle Convert This File button click"""
+        # Immediately disable button to prevent double-clicks
+        button.set_sensitive(False)
         if hasattr(self.app, "convert_current_file"):
             self.app.convert_current_file()
 
@@ -215,6 +219,8 @@ class HeaderBar(Gtk.Box):
                 self.clear_queue_button.set_visible(has_multiple_files)
                 self.queue_size_label.set_visible(has_multiple_files)
                 self.convert_button.set_visible(has_files)
+                # Re-enable convert button when returning to queue view
+                self.convert_button.set_sensitive(True)
             else:
                 # Fallback if queue not accessible
                 self.convert_button.set_visible(False)
@@ -227,3 +233,5 @@ class HeaderBar(Gtk.Box):
             # Show editor buttons
             self.convert_current_button.set_visible(True)
             self.back_button.set_visible(True)
+            # Re-enable convert current button when entering editor view
+            self.convert_current_button.set_sensitive(True)

@@ -4,7 +4,6 @@ import os
 import re
 import shlex
 import subprocess
-import threading
 import time
 
 from constants import CONVERT_SCRIPT_PATH
@@ -46,15 +45,16 @@ def detect_bit_depth_info(file_path):
         is_hevc = codec in ["hevc", "h265"]
 
         if is_10bit and is_hevc:
-            return f"ℹ️  Detected H.265 10-bit video - will use optimized GPU conversion for H.264 output"
+            return "ℹ️  Detected H.265 10-bit video - will use optimized GPU conversion for H.264 output"
         elif is_10bit:
             return f"ℹ️  Detected 10-bit video ({codec}) - will use appropriate profile automatically"
         elif is_hevc:
-            return f"ℹ️  Detected H.265 8-bit video - using standard conversion"
+            return "ℹ️  Detected H.265 8-bit video - using standard conversion"
         else:
             return f"ℹ️  Detected 8-bit video ({codec}) - using standard profile"
     except:
         return "ℹ️  Video analysis complete"
+
 
 def run_with_progress_dialog(
     app,
@@ -202,7 +202,7 @@ def run_with_progress_dialog(
                     creation_complete.set()
 
             GLib.idle_add(create_progress_item)
-            creation_complete.wait(timeout=5.0)  # Wait up to 5 seconds
+            creation_complete.wait(timeout=10.0)  # Wait up to 5 seconds
 
         # Check if an exception occurred during widget creation
         if exception_container[0] is not None:
@@ -214,7 +214,7 @@ def run_with_progress_dialog(
             raise Exception(
                 "Failed to create progress item on main thread: timeout or unknown error"
             )
-        
+
         progress_item = progress_item_container[0]
 
         # Store segment duration for progress calculation
@@ -279,7 +279,7 @@ def run_with_progress_dialog(
                     # Small delay before removal to show completion briefly
                     def remove_after_delay():
                         GLib.timeout_add(
-                            100,
+                            50,
                             lambda: app.progress_page.remove_conversion(
                                 progress_item.conversion_id
                             )
@@ -868,72 +868,54 @@ def monitor_progress(app, process, progress_item, env_vars=None):
     # Process finished or was canceled
     try:
         if progress_item.was_cancelled():
-            # If process was cancelled, try to terminate it
-            try:
-                if process.poll() is None:  # If process is still running
-                    # Use app's terminate_process_tree method for more reliable termination
-                    if hasattr(app, "terminate_process_tree"):
-                        app.terminate_process_tree(process)
-                    else:
-                        process.kill()
+            # This block is now the primary handler for user cancellation.
+            # It signals the main app to stop everything.
+            print("Monitor detected cancellation. Notifying app to stop queue.")
+            GLib.idle_add(lambda: app.conversion_completed(False))
 
-                    # Wait with timeout to avoid hanging
-                    try:
-                        process.wait(timeout=2)
-                        term_msg = "Process terminated after cancellation"
-                        print(term_msg)
-                        GLib.idle_add(progress_item.add_output_text, term_msg)
-                    except subprocess.TimeoutExpired:
-                        error_msg = "Process didn't terminate within timeout, may still be running"
-                        print(error_msg)
-                        GLib.idle_add(progress_item.add_output_text, error_msg)
-
-                        # As a last resort, try to kill any orphaned ffmpeg processes with the same input file
-                        if (
-                            hasattr(progress_item, "input_file_path")
-                            and progress_item.input_file_path
-                        ):
-                            try:
-                                # Create a safe version of the filename to use in grep
-                                safe_filename = os.path.basename(
-                                    progress_item.input_file_path
-                                ).replace("'", "'\\''")
-                                kill_cmd = f"pkill -KILL -f 'ffmpeg.*{safe_filename}'"
-                                print(f"Attempting emergency cleanup: {kill_cmd}")
-                                os.system(kill_cmd)
-                            except Exception as e:
-                                print(f"Emergency cleanup failed: {e}")
-            except Exception as e:
-                error_msg = f"Error killing process after cancellation: {e}"
-                print(error_msg)
-                GLib.idle_add(progress_item.add_output_text, error_msg)
-
-                # Update UI for cancellation
+            # Update UI for this specific item
             cancel_msg = _("Conversion cancelled.")
             GLib.idle_add(progress_item.update_status, cancel_msg)
             GLib.idle_add(progress_item.update_progress, 0.0, _("Cancelled"))
             GLib.idle_add(progress_item.cancel_button.set_sensitive, False)
 
-            # Remove conversion item from the page after a delay
+            # Remove this specific conversion item from the page after a delay
             GLib.timeout_add(
                 2000,
                 lambda: app.progress_page.remove_conversion(
                     progress_item.conversion_id
                 ),
             )
-
-            # Re-enable buttons but don't trigger queue processing
-            # This handles the case where user manually cancelled
-            if hasattr(app, "header_bar"):
-                GLib.idle_add(lambda: app.header_bar.set_buttons_sensitive(True))
-
-            # If we were processing a queue and this was cancelled,
-            # we need to reset the converting flag
-            if hasattr(app, "currently_converting"):
-                app.currently_converting = False
         else:
-            # Process finished normally, get return code
-            return_code = process.wait()
+            # Process finished normally, get return code with timeout
+            max_wait_seconds = 7200  # 2 hours
+            try:
+                return_code = process.wait(timeout=max_wait_seconds)
+            except subprocess.TimeoutExpired:
+                timeout_error = f"ERROR: Process exceeded maximum time limit ({max_wait_seconds / 3600:.1f} hours). Force terminating..."
+                print(timeout_error)
+                GLib.idle_add(progress_item.add_output_text, timeout_error)
+
+                try:
+                    process.terminate()
+                    time.sleep(2)
+                    if process.poll() is None:
+                        process.kill()
+                        time.sleep(1)
+                except Exception as e:
+                    print(f"Error terminating stuck process: {e}")
+
+                try:
+                    return_code = process.wait(timeout=5)
+                except:
+                    return_code = -1
+
+                timeout_msg = _("Conversion timed out after {0} hours").format(
+                    max_wait_seconds / 3600
+                )
+                GLib.idle_add(progress_item.update_status, timeout_msg)
+                GLib.idle_add(progress_item.add_output_text, timeout_msg)
+
             finish_msg = f"Process finished with return code: {return_code}"
             print(finish_msg)
             GLib.idle_add(progress_item.add_output_text, finish_msg)
@@ -952,17 +934,14 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                 if progress_item.delete_original and progress_item.input_file:
                     input_file = progress_item.input_file
 
-                    # Add debug logging
                     debug_msg = (
                         f"Checking if original file should be deleted: {input_file}"
                     )
                     print(debug_msg)
                     GLib.idle_add(progress_item.add_output_text, debug_msg)
 
-                    # Improved output file detection with focus on MP4 files
                     output_file_to_check = None
 
-                    # Try to infer video output file based on input file
                     input_dirname = os.path.dirname(input_file)
                     input_basename = os.path.splitext(os.path.basename(input_file))[0]
                     possible_mp4 = os.path.join(input_dirname, f"{input_basename}.mp4")
@@ -972,7 +951,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         debug_msg = f"Found MP4 output: {output_file_to_check}"
                         print(debug_msg)
                         GLib.idle_add(progress_item.add_output_text, debug_msg)
-                    # If no MP4 found, check output_file but only if it's a video file
                     elif (
                         output_file
                         and os.path.exists(output_file)
@@ -982,20 +960,17 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         debug_msg = f"Using FFmpeg detected video: {output_file}"
                         print(debug_msg)
                         GLib.idle_add(progress_item.add_output_text, debug_msg)
-                    # Check output folder for recently created MP4 files
                     else:
                         output_folder = os.path.dirname(input_file)
                         if "output_folder" in env_vars and env_vars["output_folder"]:
                             output_folder = env_vars["output_folder"]
 
-                        # Look for recently created MP4 files
                         try:
                             for file in os.listdir(output_folder):
                                 file_path = os.path.join(output_folder, file)
                                 if file.lower().endswith(".mp4") and file.startswith(
                                     input_basename
                                 ):
-                                    # Check if it's recent (created in the last minute)
                                     file_mtime = os.path.getmtime(file_path)
                                     if time.time() - file_mtime < 60:
                                         output_file_to_check = file_path
@@ -1014,7 +989,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 f"Error searching for MP4 files: {e}",
                             )
 
-                    # Check if the output file exists and has a reasonable size
                     if output_file_to_check and os.path.exists(output_file_to_check):
                         input_size = os.path.getsize(input_file)
                         output_size = os.path.getsize(output_file_to_check)
@@ -1027,7 +1001,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         print(size_info)
                         GLib.idle_add(progress_item.add_output_text, size_info)
 
-                        # Use 15% of original size as threshold
                         min_size_threshold = input_size * 0.15
 
                         if output_size > min_size_threshold:
@@ -1045,7 +1018,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                     and progress_item.is_segment_batch
                                 )
                                 if not is_queue_processing and not is_segment_batch:
-                                    # Only show dialogs for individual conversions (not queue items or batch segments)
                                     GLib.idle_add(
                                         lambda: show_info_dialog_and_close_progress(
                                             app,
@@ -1080,7 +1052,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                         )
                                     )
                         else:
-                            size_warning = f"The converted file size is suspicious, so the original file was not removed."
+                            size_warning = "The converted file size is suspicious, so the original file was not removed."
                             print(size_warning)
                             GLib.idle_add(progress_item.add_output_text, size_warning)
                             is_queue_processing = (
@@ -1108,7 +1080,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         )
                         print(error_msg)
                         GLib.idle_add(progress_item.add_output_text, error_msg)
-                        # Try to list files in expected output directory for debugging
                         if output_file_to_check:
                             output_dir = os.path.dirname(output_file_to_check)
                             try:
@@ -1138,7 +1109,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 )
                             )
                 else:
-                    # Check if this is part of a segment batch or queue processing
                     is_queue_processing = (
                         hasattr(progress_item, "is_queue_processing")
                         and progress_item.is_queue_processing
@@ -1147,9 +1117,8 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         hasattr(progress_item, "is_segment_batch")
                         and progress_item.is_segment_batch
                     )
-                    
+
                     if not is_queue_processing and not is_segment_batch:
-                        # Only show dialog for individual conversions (not queue or batch segments)
                         GLib.idle_add(
                             lambda: show_info_dialog_and_close_progress(
                                 app,
@@ -1158,8 +1127,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                             )
                         )
                     else:
-                        # For queue items or batch segments, just remove from progress page after delay without dialog
-                        # IMPORTANT: For segment batch, don't remove yet - let the batch completion handle cleanup
                         if not is_segment_batch:
                             GLib.timeout_add(
                                 3000,
@@ -1168,7 +1135,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 ),
                             )
 
-                # Clean up progress page regardless (only if not part of segment batch)
                 if not is_segment_batch:
                     GLib.timeout_add(
                         5000,
@@ -1177,8 +1143,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         ),
                     )
 
-                # CRITICAL: Notify the app that conversion is complete to trigger next queue item
-                # Skip this for segment batch items to avoid premature page closing
                 if not is_segment_batch:
                     GLib.idle_add(lambda: app.conversion_completed(True))
 
@@ -1188,7 +1152,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                 GLib.idle_add(progress_item.update_status, error_msg)
                 GLib.idle_add(progress_item.add_output_text, error_msg)
 
-                # Check for queue processing or segment batch
                 is_queue_processing = (
                     hasattr(progress_item, "is_queue_processing")
                     and progress_item.is_queue_processing
@@ -1209,17 +1172,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         )
                     )
                 else:
-                    # For queue items, show a non-blocking toast notification
-                    if progress_item.input_file:
-                        file_name = os.path.basename(progress_item.input_file)
-                        toast_msg = _("Failed to convert: {0}").format(file_name)
-                    else:
-                        toast_msg = _("A file conversion failed.")
-
-                    GLib.idle_add(app.show_toast, toast_msg)
-
-                    # Just remove the item after a delay without showing dialog
-                    # IMPORTANT: For segment batch, don't remove yet
                     if not is_segment_batch:
                         GLib.timeout_add(
                             5000,
@@ -1228,35 +1180,52 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                             ),
                         )
 
-                # CRITICAL: Notify the app about failed conversion (skip for segment batch)
                 if not is_segment_batch:
                     GLib.idle_add(lambda: app.conversion_completed(False))
 
-            # Disable cancel button
             GLib.idle_add(progress_item.cancel_button.set_sensitive, False)
+    except Exception as e:
+        error_msg = f"FATAL: Exception in progress monitor: {e}"
+        print(error_msg)
+        import traceback
+
+        traceback.print_exc()
+
+        try:
+            GLib.idle_add(progress_item.add_output_text, error_msg)
+            GLib.idle_add(progress_item.update_status, _("Monitor error"))
+        except:
+            pass
+
+        is_segment_batch = (
+            hasattr(progress_item, "is_segment_batch")
+            and progress_item.is_segment_batch
+        )
+        if not is_segment_batch:
+            print("Notifying app of conversion failure due to monitor exception")
+            GLib.idle_add(lambda: app.conversion_completed(False))
     finally:
-        # Always decrement the conversion counter - even if exceptions occur
         app.conversions_running -= 1
         completion_msg = (
             f"Conversion finished, active conversions: {app.conversions_running}"
         )
         print(completion_msg)
-        GLib.idle_add(progress_item.add_output_text, completion_msg)
+        try:
+            GLib.idle_add(progress_item.add_output_text, completion_msg)
+        except:
+            pass
 
 
 def show_info_dialog_and_close_progress(app, message, progress_item):
     """Shows a system notification instead of dialog"""
-    # Remove the item from the progress page after a delay
     GLib.timeout_add(
         5000, lambda: app.progress_page.remove_conversion(progress_item.conversion_id)
     )
-    # Send system notification instead of showing dialog
     app.send_system_notification(_("Information"), message)
 
 
 def show_error_dialog_and_close_progress(app, message, progress_item):
     """Shows an error dialog"""
-    # Remove the item from the progress page after a delay
     GLib.timeout_add(
         5000, lambda: app.progress_page.remove_conversion(progress_item.conversion_id)
     )
@@ -1270,8 +1239,6 @@ def build_convert_command(input_file, settings):
     cmd = [CONVERT_SCRIPT_PATH, input_file]
     env_vars = os.environ.copy()
 
-    # Direct mapping of settings to environment variables
-    # These are the environment variables expected by the conversion script
     setting_keys = [
         "gpu",
         "video-quality",
@@ -1290,7 +1257,13 @@ def build_convert_command(input_file, settings):
         "output-folder",
     ]
 
-    # Just convert dashes to underscores for environment variable names
+    force_copy = (
+        settings.get_value("force-copy-video")
+        if hasattr(settings, "get_value")
+        else settings.get("force-copy-video")
+    )
+    is_copy_mode = force_copy in ["1", True, "true", "True"]
+
     for key in setting_keys:
         value = (
             settings.get_value(key)
@@ -1298,22 +1271,29 @@ def build_convert_command(input_file, settings):
             else settings.get(key)
         )
 
-        # Special handling for audio-handling: check if video has audio
+        if is_copy_mode and key in [
+            "video-codec",
+            "video-quality",
+            "video-resolution",
+            "gpu",
+            "gpu-partial",
+            "preset",
+        ]:
+            print(f"Skipping {key} because copy mode is enabled")
+            continue
+
         if key == "audio-handling" and value:
             if not has_audio_streams(input_file):
-                # Video has no audio streams, force audio_handling to "none"
                 value = "none"
                 print(
                     f"No audio streams detected in {os.path.basename(input_file)}, overriding audio_handling to 'none'"
                 )
 
-        # Skip empty values
         if value not in [None, "", False]:
             env_key = key.replace("-", "_")
             env_vars[env_key] = str(value)
             print(f"Setting {env_key}={value}")
 
-    # Add trim times to environment variables
     trim_start = settings.get_value("video-trim-start")
     trim_end = settings.get_value("video-trim-end")
 
@@ -1325,7 +1305,6 @@ def build_convert_command(input_file, settings):
         env_vars["trim_end"] = str(trim_end)
         print(f"Setting trim_end={trim_end}")
 
-    # Set default output folder if not specified
     if "output_folder" not in env_vars and input_file:
         env_vars["output_folder"] = os.path.dirname(input_file)
         print(

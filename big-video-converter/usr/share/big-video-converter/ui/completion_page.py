@@ -29,11 +29,9 @@ class CompletionPage(Gtk.Box):
         # Create content box with spacing
         content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         content_box.set_spacing(12)
-        content_box.set_margin_top(24)
         content_box.set_margin_bottom(24)
         content_box.set_margin_start(24)
-        content_box.set_margin_end(24)
-        content_box.set_vexpand(True)
+        content_box.set_vexpand(False)
 
         # Create status page for main content
         self.status_page = Adw.StatusPage()
@@ -64,7 +62,6 @@ class CompletionPage(Gtk.Box):
         button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         button_box.set_halign(Gtk.Align.CENTER)
         button_box.set_spacing(12)
-        button_box.set_margin_top(24)
 
         # OK button to return to queue view
         self.ok_button = Gtk.Button(label=_("OK"))
@@ -122,16 +119,7 @@ class CompletionPage(Gtk.Box):
             
             self.file_listbox.append(row)
 
-        # Update description with count
-        count = len(files)
-        if count == 1:
-            self.status_page.set_description(
-                _("1 video conversion has been completed successfully!")
-            )
-        else:
-            self.status_page.set_description(
-                _("{0} video conversions have been completed successfully!").format(count)
-            )
+
 
     def on_ok_clicked(self, button):
         """Handle OK button click - return to queue view"""

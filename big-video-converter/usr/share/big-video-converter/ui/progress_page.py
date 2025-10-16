@@ -139,6 +139,8 @@ class ProgressPage:
     def has_active_conversions(self):
         """Check if there are any active conversions"""
         return len(self.active_conversions) > 0
+
+
 class ConversionItem(Gtk.Box):
     """Individual conversion item widget to display progress for a single conversion"""
 
@@ -228,7 +230,7 @@ class ConversionItem(Gtk.Box):
                 margin-right: 8px;
             }
         """)
-        
+
         display = self.get_display()
         if display is not None:
             Gtk.StyleContext.add_provider_for_display(
@@ -410,7 +412,10 @@ class ConversionItem(Gtk.Box):
 
     def on_cancel_clicked(self, button):
         """Handle cancel button click with simplified process termination"""
-        # Set cancelled flag first to prevent error messages
+        # Set global cancellation flag
+        self.app.is_cancellation_requested = True
+
+        # Set local cancelled flag first to prevent error messages
         self.cancelled = True
         print("Cancel button clicked, setting cancelled flag")
         self.cancel_button.set_sensitive(False)
@@ -435,12 +440,6 @@ class ConversionItem(Gtk.Box):
 
             except Exception as e:
                 print(f"Error killing process: {e}")
-
-        # Notify the app to remove this file from the conversion queue
-        # Do this AFTER killing the process to ensure proper cleanup
-        if self.input_file and hasattr(self.app, "remove_from_queue"):
-            print(f"Removing cancelled file from queue: {self.input_file}")
-            self.app.remove_from_queue(self.input_file)
 
         self.status_label.set_text(_("Conversion cancelled"))
 

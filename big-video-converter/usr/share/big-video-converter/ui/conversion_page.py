@@ -4,7 +4,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio, Pango, GLib, Gdk, GObject
+from gi.repository import Gtk, Adw, Gio, GLib, Gdk, GObject
 
 from constants import CONVERT_SCRIPT_PATH
 from utils.conversion import run_with_progress_dialog
@@ -288,7 +288,7 @@ class ConversionPage:
         self.queue_listbox.set_placeholder(self.placeholder)
 
         # Debug - log placeholder state
-        print(f"DEBUG: Placeholder created:")
+        print("DEBUG: Placeholder created:")
         print(f"  - visible: {self.placeholder.get_visible()}")
         print(f"  - parent: {self.placeholder.get_parent()}")
         print(f"  - mapped: {self.placeholder.get_mapped()}")
@@ -747,23 +747,25 @@ class ConversionPage:
                     print(
                         "Force copy video enabled: disabling hardware acceleration (not needed for copying)"
                     )
+                    # Don't set video encoding parameters when in copy mode
+                    print("Force copy video enabled: skipping video_quality, video_encoder, preset")
                 else:
                     env_vars["gpu"] = self.app.settings_manager.load_setting(
                         "gpu", "auto"
                     )
-
-                # Video quality and codec
-                env_vars["video_quality"] = self.app.settings_manager.load_setting(
-                    "video-quality", "default"
-                )
-                env_vars["video_encoder"] = self.app.settings_manager.load_setting(
-                    "video-codec", "h264"
-                )
-
-                # Other encoding settings
-                env_vars["preset"] = self.app.settings_manager.load_setting(
-                    "preset", "default"
-                )
+                    # Video quality and codec
+                    env_vars["video_quality"] = self.app.settings_manager.load_setting(
+                        "video-quality", "default"
+                    )
+                    env_vars["video_encoder"] = self.app.settings_manager.load_setting(
+                        "video-codec", "h264"
+                    )
+                    # Other encoding settings
+                    env_vars["preset"] = self.app.settings_manager.load_setting(
+                        "preset", "default"
+                    )
+                
+                # Subtitle handling (works regardless of copy mode)
                 env_vars["subtitle_extract"] = self.app.settings_manager.load_setting(
                     "subtitle-extract", "embedded"
                 )
@@ -784,13 +786,21 @@ class ConversionPage:
                     )
 
                 env_vars["audio_handling"] = audio_handling
-                env_vars["video_resolution"] = self.app.settings_manager.load_setting(
-                    "video-resolution", ""
-                )
+                
+                # Only set video resolution if NOT in copy mode
+                if not force_copy_video_enabled:
+                    video_resolution = self.app.settings_manager.load_setting(
+                        "video-resolution", ""
+                    )
+                    if video_resolution:
+                        env_vars["video_resolution"] = video_resolution
+                else:
+                    print("Copy mode enabled - skipping video_resolution")
+                
                 # Set flags
                 if self.app.settings_manager.get_boolean("gpu-partial", False):
                     env_vars["gpu_partial"] = "1"
-                if self.app.settings_manager.get_boolean("force-copy-video", False):
+                if force_copy_video_enabled:
                     env_vars["force_copy_video"] = "1"
                 if self.app.settings_manager.get_boolean(
                     "only-extract-subtitles", False
@@ -914,21 +924,25 @@ class ConversionPage:
                     )
 
                 # Get the unified video filter string AFTER setting crop values
-                # Pass input file for H.265 10-bit detection
-                video_filter = get_video_filter_string(
-                    self.app.settings_manager,
-                    video_width=video_width,
-                    video_height=video_height,
-                    input_file=input_file,
-                )
-
-                if video_filter:
-                    env_vars["video_filter"] = video_filter
-                    print(f"Using video_filter: {env_vars['video_filter']}")
-                else:
-                    print(
-                        "No video filters applied (may be handled by optimized GPU conversion)"
+                # Skip video filters when in copy mode since filters require re-encoding
+                if not force_copy_video_enabled:
+                    # Pass input file for H.265 10-bit detection
+                    video_filter = get_video_filter_string(
+                        self.app.settings_manager,
+                        video_width=video_width,
+                        video_height=video_height,
+                        input_file=input_file,
                     )
+
+                    if video_filter:
+                        env_vars["video_filter"] = video_filter
+                        print(f"Using video_filter: {env_vars['video_filter']}")
+                    else:
+                        print(
+                            "No video filters applied (may be handled by optimized GPU conversion)"
+                        )
+                else:
+                    print("Copy mode enabled - skipping video_filter (filters require re-encoding)")
 
                 # Handle additional options
                 additional_options = self.app.settings_manager.load_setting(

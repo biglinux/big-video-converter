@@ -92,7 +92,8 @@ class VideoConverterApp(Adw.Application):
         self.currently_converting = False
         self.auto_convert = False
         self.queue_display_widgets = []
-        
+        self.is_cancellation_requested = False
+
         # Track completed conversions for completion screen
         self.completed_conversions = []
 
@@ -158,17 +159,17 @@ class VideoConverterApp(Adw.Application):
         """Create the main application window and UI components"""
         # Create main window
         self.window = Adw.ApplicationWindow(application=self)
-        
+
         # Restore window size from settings
         width = self.settings_manager.load_setting("window-width", 1200)
         height = self.settings_manager.load_setting("window-height", 720)
         self.window.set_default_size(width, height)
-        
+
         # Restore maximized state
         is_maximized = self.settings_manager.load_setting("window-maximized", False)
         if is_maximized:
             self.window.maximize()
-        
+
         self.window.set_title("Big Video Converter")
 
         # Add close request handler to ensure processes are terminated and save window state
@@ -227,7 +228,7 @@ class VideoConverterApp(Adw.Application):
         """Handle window close event to clean up running processes"""
         # Save window state before closing
         self._save_window_state()
-        
+
         # Check if we have active conversions
         if self.progress_page and self.progress_page.has_active_conversions():
             # Terminate all running processes
@@ -247,20 +248,20 @@ class VideoConverterApp(Adw.Application):
 
         # Continue with normal window close
         return False  # False means continue with close, True would prevent close
-    
+
     def _save_window_state(self):
         """Save current window size, position and maximized state"""
         # Save maximized state
         is_maximized = self.window.is_maximized()
         self.settings_manager.save_setting("window-maximized", is_maximized)
-        
+
         # Only save size if not maximized
         if not is_maximized:
             width = self.window.get_width()
             height = self.window.get_height()
             self.settings_manager.save_setting("window-width", width)
             self.settings_manager.save_setting("window-height", height)
-        
+
         # Save sidebar position
         sidebar_position = self.main_paned.get_position()
         self.settings_manager.save_setting("sidebar-position", sidebar_position)
@@ -627,7 +628,7 @@ class VideoConverterApp(Adw.Application):
         self.main_stack.add_titled(
             self.progress_page.get_page(), "progress_view", _("Progress")
         )
-        
+
         # Create and add completion page to main_stack
         self.completion_page = CompletionPage(self)
         self.main_stack.add_titled(
@@ -1041,29 +1042,27 @@ class VideoConverterApp(Adw.Application):
     def start_queue_processing(self):
         """Start processing the conversion queue"""
         if not self.conversion_queue:
+            print("Queue is empty, nothing to process")
+            GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
             return
 
         print("Starting queue processing")
+        self.is_cancellation_requested = False
         self._was_queue_processing = True
-        self.completed_conversions = []  # Clear previous completions
+        self.completed_conversions = []
         self.header_bar.set_buttons_sensitive(False)
 
-        # Reset conversion state and start processing
         self.currently_converting = False
-
-        # Switch to progress view in main_stack
         self.main_stack.set_visible_child_name("progress_view")
-
         GLib.timeout_add(300, self.process_next_in_queue)
 
     def convert_current_file(self):
         """Convert the currently opened file in the editor"""
-        # Get the current file from video_edit_page
         if not hasattr(self, "video_edit_page") or not self.video_edit_page:
             print("No video edit page available")
+            GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
             return
 
-        # Stop video playback if playing
         if self.video_edit_page.is_playing:
             print("Stopping video playback before conversion")
             if self.video_edit_page.gst_player:
@@ -1076,35 +1075,25 @@ class VideoConverterApp(Adw.Application):
                     "media-playback-start-symbolic"
                 )
             if self.video_edit_page.position_update_id:
-                from gi.repository import GLib
-
                 GLib.source_remove(self.video_edit_page.position_update_id)
                 self.video_edit_page.position_update_id = None
 
         current_file = self.video_edit_page.current_video_path
         if not current_file or not os.path.exists(current_file):
             print("No valid file currently loaded in editor")
+            GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
             return
 
         print(f"Converting current file: {os.path.basename(current_file)}")
 
-        # Save the original queue
         self._original_queue_before_single_conversion = list(self.conversion_queue)
-
-        # Mark this as a single file conversion (not queue processing)
         self._single_file_conversion = True
         self._single_file_to_convert = current_file
-
-        # Create a temporary single-file queue for conversion
-        temp_queue = [current_file]
-        self.conversion_queue = deque(temp_queue)
-
-        # Start processing
+        self.conversion_queue = deque([current_file])
         self.start_queue_processing()
 
     def process_next_in_queue(self):
         """Process the next file in the conversion queue"""
-        # Check if we can proceed
         if not self.conversion_queue:
             print("Queue is empty, nothing to process")
             self.currently_converting = False
@@ -1114,154 +1103,166 @@ class VideoConverterApp(Adw.Application):
             print("Already converting, not starting another conversion")
             return False
 
-        # Start processing
         print("Processing next item in queue...")
         self.currently_converting = True
-
-        # Get next file
         file_path = self.conversion_queue[0]
+
+        if (
+            hasattr(self, "current_processing_file")
+            and self.current_processing_file == file_path
+        ):
+            print(
+                f"WARNING: File {os.path.basename(file_path)} is already being processed! Skipping."
+            )
+            self.currently_converting = False
+            return False
+
         self.current_processing_file = file_path
         print(f"Processing file: {os.path.basename(file_path)}")
 
-        # Set file and start conversion
         if hasattr(self, "conversion_page"):
             self.conversion_page.set_file(file_path)
             GLib.timeout_add(300, self._force_start_conversion)
 
-        return False  # Don't repeat
+        return False
 
     def _force_start_conversion(self):
         """Helper to force start conversion with proper error handling"""
+        import traceback
+
+        self.currently_converting = True
+        result = False
         try:
             print("Forcing conversion to start automatically...")
             if hasattr(self, "conversion_page"):
-                self.conversion_page.force_start_conversion()
+                result = self.conversion_page.force_start_conversion()
         except Exception as e:
             print(f"Error starting automatic conversion: {e}")
+            traceback.print_exc()
+            result = False
+
+        if result is False:
+            print("Conversion failed to start or was deferred, resetting state.")
             self.currently_converting = False
-        return False  # Don't repeat
+            GLib.idle_add(lambda: self.conversion_completed(False))
+
+        return False
 
     def conversion_completed(self, success, skip_tracking=False):
-        """Called when a conversion is completed
-        
-        Args:
-            success: Whether the conversion was successful
-            skip_tracking: If True, skip file tracking and notification (already handled elsewhere)
-        """
-        print(f"Conversion completed with success={success}, skip_tracking={skip_tracking}")
-        self.currently_converting = False
-
-        # Re-enable convert button
-        if hasattr(self, "header_bar") and hasattr(self.header_bar, "convert_button"):
-            GLib.idle_add(lambda: self.header_bar.convert_button.set_sensitive(True))
-
-        # Track completed file for completion screen (unless already tracked)
-        if not skip_tracking and hasattr(self, "current_processing_file") and self.current_processing_file:
-            file_info = {
-                "input_file": self.current_processing_file,
-                "output_file": "",  # Will be filled by progress tracking
-                "success": success
-            }
-            self.completed_conversions.append(file_info)
-            
-            # Send system notification for individual file completion
-            if success:
-                self.send_system_notification(
-                    _("Conversion Complete"),
-                    _("Successfully converted {0}").format(os.path.basename(self.current_processing_file))
-                )
-
-        # Check if this was a single file conversion from editor
-        is_single_file_conversion = (
-            hasattr(self, "_single_file_conversion") and self._single_file_conversion
-        )
-
-        if is_single_file_conversion:
-            print("Single file conversion completed, cleaning up")
-            # Clear the single file conversion flag
-            self._single_file_conversion = False
-            converted_file_path = (
-                self._single_file_to_convert
-                if hasattr(self, "_single_file_to_convert")
-                else None
+        """Called when a conversion is completed"""
+        if hasattr(self, "_processing_completion") and self._processing_completion:
+            print(
+                "WARNING: conversion_completed is already being processed, ignoring duplicate call"
             )
-            if hasattr(self, "_single_file_to_convert"):
-                delattr(self, "_single_file_to_convert")
-
-            # Restore the original queue and remove the converted file
-            if hasattr(self, "_original_queue_before_single_conversion"):
-                original_queue = self._original_queue_before_single_conversion
-                delattr(self, "_original_queue_before_single_conversion")
-
-                # Remove the converted file from the original queue if it exists
-                if converted_file_path and converted_file_path in original_queue:
-                    original_queue.remove(converted_file_path)
-                    print(
-                        f"Removed converted file from queue: {os.path.basename(converted_file_path)}"
-                    )
-
-                # Restore the queue
-                self.conversion_queue = deque(original_queue)
-            else:
-                # Fallback: just clear the temp queue
-                self.conversion_queue.clear()
-
-            # Update queue display to show file was processed
-            if hasattr(self, "conversion_page"):
-                GLib.idle_add(self.conversion_page.update_queue_display)
-
-            # Enable buttons
-            GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
-            
-            # Show completion screen if we have completed conversions
-            if self.completed_conversions:
-                print(f"Single file conversion complete, showing completion screen with {len(self.completed_conversions)} file(s)")
-                self.show_completion_screen()
             return
 
-        # Handle the file that was just processed (success or fail) - for queue processing
-        if self.conversion_queue and hasattr(self, "current_processing_file"):
-            try:
-                # Remove the processed file from the queue only if successful
-                if success:
-                    self.conversion_queue.remove(self.current_processing_file)
-                    print(
-                        f"Removed processed file from queue: {os.path.basename(self.current_processing_file)}"
-                    )
-                else:
-                    print(
-                        f"Conversion failed for {os.path.basename(self.current_processing_file)}, keeping in queue for retry"
-                    )
-            except ValueError:
-                print("File not found in queue, may have been removed already")
+        self._processing_completion = True
 
-            self.current_processing_file = None
+        try:
+            print(f"\n=== conversion_completed called with success={success} ===")
 
-            # Update UI
-            if hasattr(self, "conversion_page"):
-                GLib.idle_add(self.conversion_page.update_queue_display)
+            # Reset core state immediately to prevent re-entry
+            self.currently_converting = False
 
-        # Process next file or finish
-        if self.conversion_queue:
-            print(
-                f"Queue has {len(self.conversion_queue)} file(s) remaining, processing next file"
-            )
-            GLib.timeout_add(500, self.process_next_in_queue)
-        else:
-            print("Queue is now empty")
-            GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
-
-            # Show completion screen if we have any completed conversions
-            if self.completed_conversions:
-                print(f"Showing completion screen with {len(self.completed_conversions)} completed file(s)")
-                self.show_completion_screen()
-                # Reset the queue processing flag if it was set
-                if hasattr(self, "_was_queue_processing"):
-                    self._was_queue_processing = False
-            # Otherwise, if we're in the progress view, return to main view
-            elif self.main_stack.get_visible_child_name() == "progress_view":
-                print("No completed conversions to show, returning to main view")
+            # Handle cancellation first - it's a full stop.
+            if self.is_cancellation_requested:
+                print("Cancellation requested. Stopping queue processing.")
+                self.is_cancellation_requested = False
+                self.current_processing_file = None
+                GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
                 GLib.idle_add(self.return_to_main_view)
+                return
+
+            # Track the file that just finished.
+            if (
+                not skip_tracking
+                and hasattr(self, "current_processing_file")
+                and self.current_processing_file
+            ):
+                file_info = {
+                    "input_file": self.current_processing_file,
+                    "output_file": "",
+                    "success": success,
+                }
+                if self.current_processing_file not in [
+                    f["input_file"] for f in self.completed_conversions
+                ]:
+                    self.completed_conversions.append(file_info)
+
+                if success:
+                    self.send_system_notification(
+                        _("Conversion Complete"),
+                        _("Successfully converted {0}").format(
+                            os.path.basename(self.current_processing_file)
+                        ),
+                    )
+
+            # Handle the two distinct modes: single file vs. queue.
+            is_single_file_conversion = getattr(self, "_single_file_conversion", False)
+
+            if is_single_file_conversion:
+                print("Single file conversion finished. Cleaning up.")
+                converted_file = self.current_processing_file
+                self._single_file_conversion = False
+                if hasattr(self, "_single_file_to_convert"):
+                    delattr(self, "_single_file_to_convert")
+                if hasattr(self, "_original_queue_before_single_conversion"):
+                    # Remove the converted file from the original queue before restoring
+                    original_queue = list(self._original_queue_before_single_conversion)
+                    if converted_file in original_queue:
+                        original_queue.remove(converted_file)
+                        print(f"Removed {os.path.basename(converted_file)} from queue after single file conversion")
+                    self.conversion_queue = deque(original_queue)
+                    delattr(self, "_original_queue_before_single_conversion")
+                else:
+                    self.conversion_queue.clear()
+
+                self.current_processing_file = None  # CRITICAL: Clean this state.
+
+                if hasattr(self, "conversion_page"):
+                    GLib.idle_add(self.conversion_page.update_queue_display)
+                GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
+
+                if self.completed_conversions:
+                    self.show_completion_screen()
+                else:
+                    self.return_to_main_view()
+
+                return  # End of path for single file conversion.
+
+            # If not single file, it's queue processing.
+            else:
+                # Remove the processed file from the queue.
+                if (
+                    self.conversion_queue
+                    and self.conversion_queue[0] == self.current_processing_file
+                ):
+                    try:
+                        self.conversion_queue.popleft()
+                    except IndexError:
+                        pass  # Should not happen, but safe.
+
+                self.current_processing_file = None  # Clean state.
+
+                if hasattr(self, "conversion_page"):
+                    GLib.idle_add(self.conversion_page.update_queue_display)
+
+                # Decide what to do next.
+                if self.conversion_queue:
+                    print(
+                        f"Queue has {len(self.conversion_queue)} items left. Processing next."
+                    )
+                    GLib.timeout_add(500, self.process_next_in_queue)
+                else:
+                    print("Queue finished.")
+                    GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
+                    if self.completed_conversions:
+                        self.show_completion_screen()
+                    else:
+                        self.return_to_main_view()
+
+        finally:
+            self._processing_completion = False
 
     # UI Navigation
     def show_queue_view(self):
@@ -1430,24 +1431,24 @@ class VideoConverterApp(Adw.Application):
         notification = Gio.Notification.new(title)
         notification.set_body(body)
         self.send_notification(None, notification)
-    
+
     def show_completion_screen(self):
         """Show the completion screen with list of converted files"""
         if hasattr(self, "completion_page") and self.completed_conversions:
             self.completion_page.set_completed_files(self.completed_conversions)
             self.main_stack.set_visible_child_name("completion_view")
-            
+
             # Send final system notification
             count = len(self.completed_conversions)
             if count == 1:
                 self.send_system_notification(
                     _("All Conversions Complete"),
-                    _("1 video has been converted successfully!")
+                    _("1 video has been converted successfully!"),
                 )
             else:
                 self.send_system_notification(
                     _("All Conversions Complete"),
-                    _("{0} videos have been converted successfully!").format(count)
+                    _("{0} videos have been converted successfully!").format(count),
                 )
 
     # GIO Application overrides
@@ -1609,6 +1610,11 @@ def main():
     
     # Refresh translated constants after gettext is initialized
     from constants import refresh_translations
+    refresh_translations()
+
+    # Refresh translated constants after gettext is initialized
+    from constants import refresh_translations
+
     refresh_translations()
 
     app = VideoConverterApp()
