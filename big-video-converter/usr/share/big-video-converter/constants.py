@@ -214,66 +214,108 @@ def get_tooltips():
     return {
         # Sidebar options
         "gpu": _(
-            "If the system's GPU supports video conversion, the process will be much faster. Automatic detection is usually the best option, but you can also select it manually. The Software mode is slower but compatible with more formats. If the GPU doesn’t support conversion, the system will attempt partial GPU processing and, if that fails, will automatically switch to Software mode."
+            "Automatic (Recommended). If your graphics card is supported, conversion is much faster. "
+            "If not, the app will use Software mode automatically. "
+            "You can also pick GPU or Software manually."
         ),
-        "video_quality": _("The higher the quality, the larger the video file size."),
+        "video_quality": _(
+            "Higher quality means a larger file."
+        ),
         "video_codec": _(
-            "H.264: An older format that works on almost all devices. It takes up more storage space but is the fastest to convert.\nH.265: A newer version of H.264. It doesn't work on older devices and compresses files more efficiently.\nVP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the conversion can be very slow.\nAV1: The most modern format. It offers the best compression (creating smaller files), but the conversion can also be slow if the graphics card isn't compatible."
+            "H.264: Most compatible; fast to convert; larger files.\n"
+            "H.265: Smaller files; may not play on older devices.\n"
+            "VP9: Good for YouTube; can be slow without GPU support.\n"
+            "AV1: Smallest files; may be slow and not supported everywhere."
         ),
         "audio_handling": _(
-            "Copy is usually the best option because it’s fast and keeps the audio's full quality. Re-encoding will re-process the audio, which slightly reduces quality. However, it may be necessary to make the file compatible with more devices or to reduce its size."
+            "Keep original (Recommended): fastest and keeps full quality. "
+            "Convert: slightly lower quality, better compatibility, often smaller file."
         ),
         "subtitles": _(
-            "If the file has embedded subtitles, it's usually best to keep them embedded. However, some programs need the subtitles in a separate file, so this option can improve compatibility."
+            "If subtitles are embedded, keeping them is usually best. "
+            "Some players need an external subtitle file, which can improve compatibility."
         ),
         "force_copy": _(
-            "Copying the video is very fast and maintains the image's full quality. This is very useful for making video cuts, for example, to publish short videos on social media."
+            "Copy video (very fast, full quality). "
+            "Great for quick cuts and trims for social media."
         ),
         # Advanced Settings
         "preset": _(
-            "A slower conversion speed will result in a more compressed final file. As you might expect, this process can take a very long time to finish."
+            "Faster = bigger file. Slower = smaller file. "
+            "Choose what matters most: speed or size."
         ),
         "audio_codec": _(
-            "Audio compression format (when re-encoding):\n• AAC: Most compatible, good quality\n• Opus: Best quality at low bitrates\n• AC3 (Dolby Digital): For home theater systems"
+            "Audio format (when converting):\n"
+            "• AAC: Most compatible, good quality\n"
+            "• Opus: Excellent quality at small sizes\n"
+            "• AC3 (Dolby Digital): Good for home theater"
         ),
         "resolution": _(
-            "Output video size:\n• Original: Keep the same size\n• Standard formats: 4K, Full HD, HD for TVs/monitors\n• Vertical formats: For smartphones and social media\n• Custom: Specify your own dimensions"
+            "Output size:\n"
+            "• Original: Keep the same resolution\n"
+            "• Standard: 4K, Full HD, HD (TVs and monitors)\n"
+            "• Vertical: For phones and social media\n"
+            "• Custom: Set your own dimensions"
         ),
         "output_format": _(
-            "Video container format:\n• MP4: Most compatible\n• MKV: Supports more features"
+            "Container format:\n"
+            "• MP4: Most compatible\n"
+            "• MKV: More features"
         ),
         # Video editing
         "brightness": _(
-            "Adjust how light or dark the video appears:\n• Move right: Brighter\n• Move left: Darker\n• Default: 0 (no change)"
+            "Adjust brightness:\n"
+            "• Move right: Brighter\n"
+            "• Move left: Darker\n"
+            "• Default: 0 (no change)"
         ),
         "saturation": _(
-            "Control color intensity:\n• Move right: More vivid colors\n• Move left: More gray/washed out\n• Default: 1.0 (no change)"
+            "Adjust color intensity:\n"
+            "• Move right: More vivid\n"
+            "• Move left: More muted\n"
+            "• Default: 1.0 (no change)"
         ),
         "hue": _(
-            "Shift colors:\n• Positive values: Shift toward red/yellow\n• Negative values: Shift toward blue/green\n• Default: 0 (no change)"
+            "Shift overall color tone:\n"
+            "• Positive: More red/yellow\n"
+            "• Negative: More blue/green\n"
+            "• Default: 0 (no change)"
         ),
         "crop": _("Crop the video's edges to keep only the part you need."),
         "segments": _(
-            "Select the parts you want to keep in the video. You can add sections by clicking the + button or, more easily, by using the marker button directly on the video area.\n You can export the selected segments as a single file or as separate files, which is very convenient, for example, when creating clips for social media."
+            "Choose the parts of the video to keep. Add sections with the + button or place markers on the player area.\nExport the selected parts as one file or as separate clips — great for social media."
         ),
         # Advanced Settings - additional options
         "gpu_partial": _(
             "When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility issues."
         ),
         "audio_bitrate": _(
-            "Audio quality:\n• Higher = better quality, larger file\n• 128k: Good for most content\n• 192k: High quality\n• 256k+: Audiophile quality\n• Default: Let encoder decide"
+            "Audio quality:\n"
+            "• Higher = better quality, larger file\n"
+            "• 128k: Good for most content\n"
+            "• 192k: High quality\n"
+            "• 256k+: Professional use\n"
+            "• Default: Auto (encoder decides)"
         ),
         "audio_channels": _(
-            "Number of audio channels:\n• 1: Mono (single speaker)\n• 2: Stereo (left/right)\n• 6: 5.1 Surround sound\n• 8: 7.1 Surround sound\n• Default: Keep original"
+            "Number of audio channels:\n"
+            "• 1: Mono (single speaker)\n"
+            "• 2: Stereo (left/right)\n"
+            "• 6: 5.1 Surround\n"
+            "• 8: 7.1 Surround\n"
+            "• Default: Keep original"
         ),
         "additional_options": _(
-            "Advanced FFmpeg options:\n• Add custom FFmpeg parameters\n• Example: -ss 60 -t 30 (skip 60s, take 30s)\n• For advanced users only\n• Wrong options can cause errors"
+            "Advanced: Custom FFmpeg options.\n"
+            "• For experienced users only\n"
+            "• Invalid options may cause errors\n"
+            "• Example: -ss 60 -t 30 (skip 60s, take 30s)"
         ),
         "extract_subtitles": _(
             "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
         ),
         "show_tooltips": _(
-            "Show explanations when hovering over options.\nThis message you are reading is an example of a tooltip."
+            "You’re seeing an example of help shown when hovering over an item."
         ),
         # Header bar buttons
         "back_button": _("Return to file queue"),
