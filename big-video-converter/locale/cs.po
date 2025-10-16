@@ -86,6 +86,11 @@ msgstr "Konverze zrušena."
 msgid "Cancelled"
 msgstr "Zrušeno"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 913
+#, python-brace-format
+msgid "Conversion timed out after {0} hours"
+msgstr "Čas konverze vypršel po {0} hodinách"
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 789
 msgid "Completed!"
 msgstr "Dokončeno!"
@@ -148,14 +153,9 @@ msgstr ""
 "\n"
 "Zkontrolujte protokol pro více podrobností."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1055
-#, python-brace-format
-msgid "Failed to convert: {0}"
-msgstr "Nepodařilo se převést: {0}"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1057
-msgid "A file conversion failed."
-msgstr "Konverze souboru se nezdařila."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1196
+msgid "Monitor error"
+msgstr "Chyba monitoru"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1019
 msgid "Information"
@@ -300,6 +300,12 @@ msgstr "Kopírovat formát pixelů"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 592
 msgid "Language"
 msgstr "Jazyk"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 424
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 599
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 424
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 599
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 424
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 599
@@ -1216,6 +1222,10 @@ msgstr "Editor"
 msgid "Progress"
 msgstr "Pokrok"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 635
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 635
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
@@ -1336,15 +1346,6 @@ msgstr "Všechny konverze videa byly úspěšně dokončeny!"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 msgid "OK"
 msgstr "OK"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 129
-msgid "1 video conversion has been completed successfully!"
-msgstr "1 konverze videa byla úspěšně dokončena!"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 133
-#, python-brace-format
-msgid "{0} video conversions have been completed successfully!"
-msgstr "{0} převodů videa bylo úspěšně dokončeno!"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 295
 msgid "Go to segment start"

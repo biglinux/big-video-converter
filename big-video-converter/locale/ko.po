@@ -86,6 +86,11 @@ msgstr "변환이 취소되었습니다."
 msgid "Cancelled"
 msgstr "취소됨"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 913
+#, python-brace-format
+msgid "Conversion timed out after {0} hours"
+msgstr "변환이 {0}시간 후에 시간 초과되었습니다."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 789
 msgid "Completed!"
 msgstr "완료되었습니다!"
@@ -148,14 +153,9 @@ msgstr ""
 "\n"
 "자세한 내용은 로그를 확인하세요."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1055
-#, python-brace-format
-msgid "Failed to convert: {0}"
-msgstr "변환 실패: {0}"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1057
-msgid "A file conversion failed."
-msgstr "파일 변환에 실패했습니다."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1196
+msgid "Monitor error"
+msgstr "모니터 오류"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1019
 msgid "Information"
@@ -976,15 +976,6 @@ msgstr "모든 비디오 변환이 성공적으로 완료되었습니다!"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 msgid "OK"
 msgstr "알겠습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 129
-msgid "1 video conversion has been completed successfully!"
-msgstr "1개의 비디오 변환이 성공적으로 완료되었습니다!"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 133
-#, python-brace-format
-msgid "{0} video conversions have been completed successfully!"
-msgstr "{0} 비디오 변환이 성공적으로 완료되었습니다!"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 295
 msgid "Go to segment start"

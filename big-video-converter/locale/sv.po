@@ -86,6 +86,11 @@ msgstr "Konvertering avbruten."
 msgid "Cancelled"
 msgstr "Avbruten"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 913
+#, python-brace-format
+msgid "Conversion timed out after {0} hours"
+msgstr "Konverteringstiden gick ut efter {0} timmar"
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 789
 msgid "Completed!"
 msgstr "Slutfört!"
@@ -148,14 +153,9 @@ msgstr ""
 "\n"
 "Kontrollera loggen för mer information."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1055
-#, python-brace-format
-msgid "Failed to convert: {0}"
-msgstr "Misslyckades med att konvertera: {0}"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1057
-msgid "A file conversion failed."
-msgstr "En filkonvertering misslyckades."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1196
+msgid "Monitor error"
+msgstr "Övervakningsfel"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1019
 msgid "Information"
@@ -884,6 +884,10 @@ msgstr "Redigerare"
 msgid "Progress"
 msgstr "Framsteg"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 635
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 635
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 634
@@ -1007,31 +1011,6 @@ msgstr "Alla videokonverteringar har slutförts framgångsrikt!"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 msgid "OK"
 msgstr "Okej"
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 70
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 70
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 129
-msgid "1 video conversion has been completed successfully!"
-msgstr "1 videokonvertering har slutförts framgångsrikt!"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 133
-#, python-brace-format
-msgid "{0} video conversions have been completed successfully!"
-msgstr "{0} videokonverteringar har slutförts framgångsrikt!"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 295
 msgid "Go to segment start"
