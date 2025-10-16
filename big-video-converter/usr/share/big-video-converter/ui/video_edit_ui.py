@@ -338,6 +338,7 @@ class VideoEditUI:
             self.page.on_brightness_changed,
             self.page.reset_brightness,
         )
+        self.brightness_row = brightness_row  # Store reference for tooltip reapplication
         # Add tooltip to brightness row
         if brightness_row and hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(brightness_row, "brightness")
@@ -351,6 +352,7 @@ class VideoEditUI:
             self.page.on_saturation_changed,
             self.page.reset_saturation,
         )
+        self.saturation_row = saturation_row  # Store reference for tooltip reapplication
         # Add tooltip to saturation row
         if saturation_row and hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(saturation_row, "saturation")
@@ -364,6 +366,7 @@ class VideoEditUI:
             self.page.on_hue_changed,
             self.page.reset_hue,
         )
+        self.hue_row = hue_row  # Store reference for tooltip reapplication
         # Add tooltip to hue row
         if hue_row and hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(hue_row, "hue")
@@ -372,6 +375,7 @@ class VideoEditUI:
 
         # --- Trim Segments Group ---
         trim_group = Adw.PreferencesGroup(title=_("Trim Segments"))
+        self.trim_group = trim_group  # Store reference for tooltip reapplication
 
         list_row = Adw.ActionRow(title=_("Segments List"))
 
@@ -698,3 +702,22 @@ class VideoEditUI:
         self.controls_visible = False
         self.hide_timer_id = None
         return False
+
+    def apply_tooltips(self):
+        """Apply tooltips to all video edit UI elements"""
+        if not hasattr(self.page.app, "tooltip_helper"):
+            return
+        
+        tooltip_helper = self.page.app.tooltip_helper
+        
+        # Apply tooltips to stored widget references
+        if hasattr(self, "crop_grid") and self.crop_grid:
+            tooltip_helper.add_tooltip(self.crop_grid, "crop")
+        if hasattr(self, "brightness_row") and self.brightness_row:
+            tooltip_helper.add_tooltip(self.brightness_row, "brightness")
+        if hasattr(self, "saturation_row") and self.saturation_row:
+            tooltip_helper.add_tooltip(self.saturation_row, "saturation")
+        if hasattr(self, "hue_row") and self.hue_row:
+            tooltip_helper.add_tooltip(self.hue_row, "hue")
+        if hasattr(self, "trim_group") and self.trim_group:
+            tooltip_helper.add_tooltip(self.trim_group, "segments")

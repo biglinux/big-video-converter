@@ -6,6 +6,7 @@ Main entry point for Big Video Converter application.
 import os
 import subprocess
 import sys
+import logging
 from collections import deque
 
 import gi
@@ -79,6 +80,9 @@ class VideoConverterApp(Adw.Application):
         # Initialize tooltip helper
         self.tooltip_helper = TooltipHelper(self.settings_manager)
 
+        # Initialize logger
+        self.logger = logging.getLogger(__name__)
+
         # Make sure that the selected format is one of the available options
         current_format = self.settings_manager.load_setting("output-format-index", 0)
         if current_format > 1:  # We now only have indices 0 and 1
@@ -130,8 +134,11 @@ class VideoConverterApp(Adw.Application):
             self.add_action(action)
 
     def on_activate(self, app):
+        # Check if this is the first activation
+        is_first_activation = not hasattr(self, "window") or self.window is None
+        
         # Create window if it doesn't exist
-        if not hasattr(self, "window") or self.window is None:
+        if is_first_activation:
             self._create_window()
 
         # Reset trim settings on startup
@@ -145,8 +152,8 @@ class VideoConverterApp(Adw.Application):
                 self.add_to_conversion_queue(file_path)
             self.queued_files = []
 
-        # Show welcome dialog if enabled
-        if WelcomeDialog.should_show_welcome(self.settings_manager):
+        # Show welcome dialog only on first activation (not when files are added externally)
+        if is_first_activation and WelcomeDialog.should_show_welcome(self.settings_manager):
             GLib.idle_add(self._show_welcome_dialog_startup)
 
     def _show_welcome_dialog_startup(self):
@@ -542,7 +549,7 @@ class VideoConverterApp(Adw.Application):
         self.tooltip_helper.add_tooltip(self.force_copy_video_check, "force_copy")
 
         # Show helpful tooltips switch
-        self.show_tooltips_check = Adw.SwitchRow(title=_("Show helpful tooltips"))
+        self.show_tooltips_check = Adw.SwitchRow(title=_("Show help on hover"))
         options_group.add(self.show_tooltips_check)
         self.tooltip_helper.add_tooltip(self.show_tooltips_check, "show_tooltips")
 
@@ -834,12 +841,41 @@ class VideoConverterApp(Adw.Application):
         # Update the state of encoding options
         self._update_encoding_options_state(is_active)
 
+    def _apply_all_tooltips(self):
+        """Apply tooltips to all UI elements"""
+        if not hasattr(self, "tooltip_helper"):
+            return
+            
+        # Apply tooltips to settings controls
+        if hasattr(self, "gpu_combo"):
+            self.tooltip_helper.add_tooltip(self.gpu_combo, "gpu")
+        if hasattr(self, "video_quality_combo"):
+            self.tooltip_helper.add_tooltip(self.video_quality_combo, "video_quality")
+        if hasattr(self, "video_codec_combo"):
+            self.tooltip_helper.add_tooltip(self.video_codec_combo, "video_codec")
+        if hasattr(self, "audio_handling_combo"):
+            self.tooltip_helper.add_tooltip(self.audio_handling_combo, "audio_handling")
+        if hasattr(self, "subtitle_combo"):
+            self.tooltip_helper.add_tooltip(self.subtitle_combo, "subtitles")
+        if hasattr(self, "force_copy_video_check"):
+            self.tooltip_helper.add_tooltip(self.force_copy_video_check, "force_copy")
+        if hasattr(self, "show_tooltips_check"):
+            self.tooltip_helper.add_tooltip(self.show_tooltips_check, "show_tooltips")
+        
+        # Apply tooltips to video edit UI if it exists
+        if hasattr(self, "video_edit_page") and self.video_edit_page:
+            if hasattr(self.video_edit_page, "ui") and self.video_edit_page.ui:
+                self.video_edit_page.ui.apply_tooltips()
+
     def _on_tooltips_toggle(self, is_active):
         """Handle tooltip toggle change"""
         self.settings_manager.save_setting("show-tooltips", is_active)
-        # Refresh all tooltips in the app
+        # Re-apply or hide all tooltips in the app
         if hasattr(self, "tooltip_helper"):
-            self.tooltip_helper.refresh_all()
+            if is_active:
+                self._apply_all_tooltips()
+            else:
+                self.tooltip_helper.refresh_all()
 
     def _update_encoding_options_state(self, force_copy_enabled):
         """Enable/disable encoding options based on force copy state"""
@@ -1452,6 +1488,27 @@ class VideoConverterApp(Adw.Application):
                 )
 
     # GIO Application overrides
+    def _present_window_and_request_focus(self, window):
+        """Present the window and use a modal dialog hack to request focus if needed."""
+        window.present()
+
+        def check_and_apply_hack():
+            if not window.is_active():
+                self.logger.info(
+                    "Window not active after present(), applying modal window hack."
+                )
+                hack_window = Gtk.Window(transient_for=window, modal=True)
+
+                hack_window.set_default_size(1, 1)
+                hack_window.set_decorated(False)
+
+                hack_window.present()
+                GLib.idle_add(hack_window.destroy)
+
+            return GLib.SOURCE_REMOVE
+
+        GLib.idle_add(check_and_apply_hack)
+
     def do_open(self, files, n_files, hint):
         """Handle files opened via file association or from another instance"""
         if not hasattr(self, "window") or self.window is None:
@@ -1470,6 +1527,9 @@ class VideoConverterApp(Adw.Application):
 
         if files_added > 0:
             GLib.idle_add(self.show_queue_view)
+            # Request window focus when files are added externally
+            if hasattr(self, "window") and self.window:
+                self._present_window_and_request_focus(self.window)
 
     def do_command_line(self, command_line):
         """Handle command line arguments"""
