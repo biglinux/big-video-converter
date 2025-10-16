@@ -43,7 +43,6 @@ class HeaderBar(Gtk.Box):
         back_box.append(back_icon)
         back_box.append(back_label)
         self.back_button.set_child(back_box)
-        self.app.tooltip_helper.add_tooltip(self.back_button, "back_button")
         self.back_button.connect("clicked", self._on_back_clicked)
         self.back_button.set_visible(False)  # Hidden by default
         self.header_bar.pack_start(self.back_button)
@@ -85,7 +84,6 @@ class HeaderBar(Gtk.Box):
 
         # Add Files button (SplitButton for Add Files/Add Folder)
         self.add_button = Adw.SplitButton(label=_("Add Files"))
-        self.app.tooltip_helper.add_tooltip(self.add_button, "add_files_button")
         self.add_button.add_css_class("suggested-action")
         self.add_button.connect("clicked", self._on_add_files_clicked)
 
@@ -102,7 +100,6 @@ class HeaderBar(Gtk.Box):
         # Convert All button
         self.convert_button = Gtk.Button(label=_("Convert All"))
         self.convert_button.add_css_class("suggested-action")
-        self.app.tooltip_helper.add_tooltip(self.convert_button, "convert_all_button")
         self.convert_button.set_margin_start(12)
         self.convert_button.connect("clicked", self._on_convert_all_clicked)
         self.convert_button.set_visible(
@@ -113,9 +110,6 @@ class HeaderBar(Gtk.Box):
         # Convert This File button (for editor view)
         self.convert_current_button = Gtk.Button(label=_("Convert This File"))
         self.convert_current_button.add_css_class("suggested-action")
-        self.app.tooltip_helper.add_tooltip(
-            self.convert_current_button, "convert_current_button"
-        )
         self.convert_current_button.connect("clicked", self._on_convert_current_clicked)
         self.convert_current_button.set_visible(False)  # Hidden by default
         self.action_box.append(self.convert_current_button)

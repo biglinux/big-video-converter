@@ -214,66 +214,59 @@ def get_tooltips():
     return {
         # Sidebar options
         "gpu": _(
-            "If your GPU supports video encoding, conversion will be much faster.\n"
-            "Automatic detection is usually the best choice, but you can also select it manually.\n"
-            "Software mode is slower but compatible with more formats.\n"
+            "If your GPU supports video encoding, conversion will be much faster.\n\n"
+            "Automatic detection is usually the best choice, but you can also select it manually.\n\n"
+            "Software mode is slower but compatible with more formats.\n\n"
             "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back to Software mode if needed."
         ),
         "video_quality": _(
-            "Higher quality means a larger file.\n"
+            "Higher quality means a larger file.\n\n"
             "The default option is a good balance between image quality and file size."
         ),
-        "video_codec": _( "H.264: An older format that works on almost all devices. It takes up more storage space but is the fastest to convert.\n\nH.265: A newer version of H.264. It doesn't work on older devices and compresses files more efficiently.\n\nVP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the conversion can be very slow.\n\nAV1: The most modern format. It offers the best compression (creating smaller files), but the conversion can also be slow if the graphics card isn't compatible." ),
+        "video_codec": _(
+            "H.264: An older format that works on almost all devices. It takes up more storage space but is the fastest to convert.\n\nH.265: A newer version of H.264. It doesn't work on older devices and compresses files more efficiently.\n\nVP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the conversion can be very slow.\n\nAV1: The most modern format. It offers the best compression (creating smaller files), but the conversion can also be slow if the graphics card isn't compatible."
+        ),
         "audio_handling": _(
-            "Copy is usually best — fast and preserves full quality. "
+            "Copy is usually best, fast and preserves full quality.\n\n"
             "Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
         ),
         "subtitles": _(
-            "If subtitles are embedded, keeping them is usually best. "
-            "Some players need an external subtitle file, which can improve compatibility."
+            "If subtitles are embedded, keeping them is usually best.\n\n"
+            "Some players need an external subtitle file."
         ),
         "force_copy": _(
-            "Copying video is extremely fast and keeps full image quality. "
+            "Copying video is extremely fast and keeps full image quality.\n\n"
             "Perfect for cutting or trimming videos for social media."
         ),
         # Advanced Settings
         "preset": _(
-            "Slower conversion produces smaller, more compressed files. "
-            "Faster presets create larger files but save time."
+            "Slower conversion produces smaller files.\n\n"
+            "Faster presets create larger files but convert in less time."
         ),
         "audio_codec": _(
-            "Audio format (when converting):\n"
+            "Audio format (when converting):\n\n"
             "• AAC: Most compatible, good quality\n"
             "• Opus: Excellent quality at small sizes\n"
             "• AC3 (Dolby Digital): Good for home theater"
         ),
         "resolution": _(
-            "Output size:\n"
+            "Output size:\n\n"
             "• Original: Keep the same resolution\n"
             "• Standard: 4K, Full HD, HD (TVs and monitors)\n"
             "• Vertical: For phones and social media\n"
             "• Custom: Set your own dimensions"
         ),
-        "output_format": _(
-            "Container format:\n"
-            "• MP4: Most compatible\n"
-            "• MKV: More features"
-        ),
+        "output_format": _("• MP4: Most compatible\n• MKV: More features"),
         # Video editing
         "brightness": _(
-            "Adjust brightness:\n"
-            "• Move right: Brighter\n"
-            "• Move left: Darker\n"
-            "• Default: 0 (no change)"
+            "• Move right: Brighter\n• Move left: Darker\n• Default: 0 (no change)"
         ),
         "saturation": _(
-            "Adjust color intensity:\n"
             "• Move right: More vivid\n"
             "• Move left: More muted\n"
             "• Default: 1.0 (no change)"
         ),
         "hue": _(
-            "Shift overall color tone:\n"
             "• Positive: More red/yellow\n"
             "• Negative: More blue/green\n"
             "• Default: 0 (no change)"
@@ -281,16 +274,16 @@ def get_tooltips():
         "crop": _("Crop the video's edges to keep only the part you need."),
         "segments": _(
             "Select parts of the video to keep.\n\n"
-            "Add sections with the + button or directly on the video using markers.\n\n"
-            "You can export selected parts as one file or as multiple clips — ideal for creating short videos for social media."
+            "Add sections with the + button or directly in the video using the markers button above the video.\n\n"
+            "You can export selected parts as one file or as multiple clips\n ideal for creating short videos for social media."
         ),
         # Advanced Settings - additional options
         "gpu_partial": _(
-            "Forces encoding to run on the GPU and final processing on the CPU.\n"
+            "Run decode on the CPU and encode on the GPU.\n\n"
             "Usually best left disabled, but can help with certain compatibility issues."
         ),
         "audio_bitrate": _(
-            "Audio quality:\n"
+            "Audio quality:\n\n"
             "• Higher = better quality, larger file\n"
             "• 128k: Good for most content\n"
             "• 192k: High quality\n"
@@ -298,7 +291,7 @@ def get_tooltips():
             "• Default: Auto (encoder decides)"
         ),
         "audio_channels": _(
-            "Number of audio channels:\n"
+            "Number of audio channels:\n\n"
             "• 1: Mono (single speaker)\n"
             "• 2: Stereo (left/right)\n"
             "• 6: 5.1 Surround\n"
@@ -306,7 +299,7 @@ def get_tooltips():
             "• Default: Keep original"
         ),
         "additional_options": _(
-            "Advanced: Custom FFmpeg options.\n"
+            "Advanced: Custom FFmpeg options.\n\n"
             "• For experienced users only\n"
             "• Invalid options may cause errors\n"
             "• Example: -ss 60 -t 30 (skip 60s, take 30s)"
@@ -318,11 +311,7 @@ def get_tooltips():
             "You’re seeing an example of help shown when hovering over an item."
         ),
         # Header bar buttons
-        "back_button": _("Return to file queue"),
-        "add_files_button": _("Add video files to the queue for conversion"),
         "clear_queue_button": _("Remove all files from the queue"),
-        "convert_all_button": _("Start converting all files in the queue"),
-        "convert_current_button": _("Convert this file with current editing settings"),
         "menu_button": _("Open application menu"),
         # File list
         "file_list_item": _("Right-click for more options"),
