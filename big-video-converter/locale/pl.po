@@ -554,23 +554,31 @@ msgstr "Niestandardowy"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
 "If your GPU supports video encoding, conversion will be much faster.\n"
+"\n"
 "Automatic detection is usually the best choice, but you can also select it manually.\n"
+"\n"
 "Software mode is slower but compatible with more formats.\n"
+"\n"
 "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
 "to Software mode if needed."
 msgstr ""
-"Jeśli twój GPU obsługuje kodowanie wideo, konwersja będzie znacznie szybsza.  \n"
-"Automatyczne wykrywanie jest zazwyczaj najlepszym wyborem, ale możesz również wybrać je ręcznie.  \n"
-"Tryb oprogramowania jest wolniejszy, ale kompatybilny z większą liczbą formatów.  \n"
+"Jeśli twój GPU obsługuje kodowanie wideo, konwersja będzie znacznie szybsza.\n"
+"\n"
+"Automatyczne wykrywanie jest zazwyczaj najlepszym wyborem, ale możesz również wybrać je ręcznie.\n"
+"\n"
+"Tryb oprogramowania jest wolniejszy, ale kompatybilny z większą liczbą formatów.\n"
+"\n"
 "Jeśli GPU nie jest obsługiwane, system spróbuje częściowego przetwarzania GPU i automatycznie "
 "przełączy się na tryb oprogramowania, jeśli zajdzie taka potrzeba."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
 "Higher quality means a larger file.\n"
+"\n"
 "The default option is a good balance between image quality and file size."
 msgstr ""
-"Wyższa jakość oznacza większy plik.  \n"
+"Wyższa jakość oznacza większy plik.\n"
+"\n"
 "Domyślna opcja to dobry kompromis między jakością obrazu a rozmiarem pliku."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
@@ -599,141 +607,150 @@ msgstr ""
 "AV1: Najnowocześniejszy format. Oferuje najlepszą kompresję (tworząc mniejsze pliki), ale konwersja "
 "może być również wolna, jeśli karta graficzna nie jest kompatybilna."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
-"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
-"improves compatibility and can reduce file size."
+"Copy is usually best, fast and preserves full quality.\n"
+"\n"
+"Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
 msgstr ""
-"Kopiowanie jest zazwyczaj najlepsze — szybkie i zachowuje pełną jakość. Ponowne kodowanie "
-"nieznacznie obniża jakość, ale poprawia kompatybilność i może zmniejszyć rozmiar pliku."
+"Kopiowanie jest zazwyczaj najlepsze, szybkie i zachowuje pełną jakość.\n"
+"\n"
+"Ponowne kodowanie nieznacznie obniża jakość, ale poprawia kompatybilność i może zmniejszyć rozmiar "
+"pliku."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 234
 msgid ""
-"If subtitles are embedded, keeping them is usually best. Some players need an external subtitle "
-"file, which can improve compatibility."
+"If subtitles are embedded, keeping them is usually best.\n"
+"\n"
+"Some players need an external subtitle file."
 msgstr ""
-"Jeśli napisy są osadzone, najlepiej je zachować. Niektóre odtwarzacze potrzebują zewnętrznego pliku "
-"z napisami, co może poprawić kompatybilność."
+"Jeśli napisy są osadzone, najlepiej je zachować.\n"
+"\n"
+"Niektóre odtwarzacze potrzebują zewnętrznego pliku z napisami."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 238
 msgid ""
-"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
-"videos for social media."
+"Copying video is extremely fast and keeps full image quality.\n"
+"\n"
+"Perfect for cutting or trimming videos for social media."
 msgstr ""
-"Kopiowanie wideo jest niezwykle szybkie i zachowuje pełną jakość obrazu. Idealne do edytowania lub "
-"przycinania wideo na media społecznościowe."
+"Kopiowanie wideo jest niezwykle szybkie i zachowuje pełną jakość obrazu.\n"
+"\n"
+"Idealne do edytowania lub przycinania wideo na media społecznościowe."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 243
 msgid ""
-"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
-"save time."
+"Slower conversion produces smaller files.\n"
+"\n"
+"Faster presets create larger files but convert in less time."
 msgstr ""
-"Wolniejsza konwersja produkuje mniejsze, bardziej skompresowane pliki. Szybsze ustawienia tworzą "
-"większe pliki, ale oszczędzają czas."
+"Wolniejsza konwersja produkuje mniejsze pliki.\n"
+"\n"
+"Szybsze ustawienia tworzą większe pliki, ale konwertują w krótszym czasie."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 247
 msgid ""
 "Audio format (when converting):\n"
+"\n"
 "• AAC: Most compatible, good quality\n"
 "• Opus: Excellent quality at small sizes\n"
 "• AC3 (Dolby Digital): Good for home theater"
 msgstr ""
 "Format audio (podczas konwersji):\n"
+"\n"
 "• AAC: Najbardziej kompatybilny, dobra jakość\n"
 "• Opus: Doskonała jakość przy małych rozmiarach\n"
 "• AC3 (Dolby Digital): Dobry do kina domowego"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid ""
 "Output size:\n"
+"\n"
 "• Original: Keep the same resolution\n"
 "• Standard: 4K, Full HD, HD (TVs and monitors)\n"
 "• Vertical: For phones and social media\n"
 "• Custom: Set your own dimensions"
 msgstr ""
-"Rozmiar wyjścia:\n"
+"Rozmiar wyjściowy:\n"
+"\n"
 "• Oryginalny: Zachowaj tę samą rozdzielczość\n"
 "• Standardowy: 4K, Full HD, HD (telewizory i monitory)\n"
 "• Pionowy: Dla telefonów i mediów społecznościowych\n"
 "• Niestandardowy: Ustaw własne wymiary"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 259
 msgid ""
-"Container format:\n"
 "• MP4: Most compatible\n"
 "• MKV: More features"
 msgstr ""
-"Format kontenera:\n"
-"• MP4: Najbardziej kompatybilny\n"
+"• MP4: Najbardziej kompatybilny  \n"
 "• MKV: Więcej funkcji"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 267
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 262
 msgid ""
-"Adjust brightness:\n"
 "• Move right: Brighter\n"
 "• Move left: Darker\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Dostosuj jasność:\n"
 "• Przesuń w prawo: Jaśniej\n"
 "• Przesuń w lewo: Ciemniej\n"
-"• Domyślnie: 0 (brak zmian)"
+"• Domyślnie: 0 (bez zmian)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 273
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 265
 msgid ""
-"Adjust color intensity:\n"
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 1.0 (no change)"
 msgstr ""
-"Dostosuj intensywność koloru:\n"
-"• Przesuń w prawo: Bardziej żywy\n"
-"• Przesuń w lewo: Bardziej stonowany\n"
+"• Przesuń w prawo: Bardziej wyraźny  \n"
+"• Przesuń w lewo: Bardziej stonowany  \n"
 "• Domyślnie: 1.0 (bez zmian)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 279
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 270
 msgid ""
-"Shift overall color tone:\n"
 "• Positive: More red/yellow\n"
 "• Negative: More blue/green\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Przesuń ogólny odcień koloru:\n"
-"• Pozytywny: Więcej czerwieni/żółci\n"
-"• Negatywny: Więcej niebieskiego/zielonego\n"
-"• Domyślny: 0 (brak zmian)"
+"• Pozytywne: Więcej czerwonego/żółtego  \n"
+"• Negatywne: Więcej niebieskiego/zielonego  \n"
+"• Domyślne: 0 (brak zmian)"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "Przytnij krawędzie wideo, aby zachować tylko potrzebną część."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 276
 msgid ""
 "Select parts of the video to keep.\n"
 "\n"
-"Add sections with the + button or directly on the video using markers.\n"
+"Add sections with the + button or directly in the video using the markers button above the video.\n"
 "\n"
-"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
-"for social media."
+"You can export selected parts as one file or as multiple clips\n"
+" ideal for creating short videos for social media."
 msgstr ""
 "Wybierz części wideo do zachowania.\n"
 "\n"
-"Dodaj sekcje za pomocą przycisku + lub bezpośrednio na wideo, używając znaczników.\n"
+"Dodaj sekcje za pomocą przycisku + lub bezpośrednio w wideo, używając przycisku znaczników powyżej "
+"wideo.\n"
 "\n"
-"Możesz eksportować wybrane części jako jeden plik lub jako wiele klipów — idealne do tworzenia "
-"krótkich filmów na media społecznościowe."
+"Możesz eksportować wybrane części jako jeden plik lub jako wiele klipów, co jest idealne do "
+"tworzenia krótkich filmów na media społecznościowe."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 282
 msgid ""
-"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Run decode on the CPU and encode on the GPU.\n"
+"\n"
 "Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"Wymusza kodowanie na GPU i końcowe przetwarzanie na CPU. Zazwyczaj najlepiej pozostawić wyłączone, "
-"ale może pomóc w niektórych problemach z kompatybilnością."
+"Uruchom dekodowanie na CPU i kodowanie na GPU.\n"
+"\n"
+"Zazwyczaj najlepiej pozostawić wyłączone, ale może pomóc w niektórych problemach z kompatybilnością."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
 msgid ""
 "Audio quality:\n"
+"\n"
 "• Higher = better quality, larger file\n"
 "• 128k: Good for most content\n"
 "• 192k: High quality\n"
@@ -741,15 +758,17 @@ msgid ""
 "• Default: Auto (encoder decides)"
 msgstr ""
 "Jakość dźwięku:\n"
+"\n"
 "• Wyższa = lepsza jakość, większy plik\n"
 "• 128k: Dobre dla większości treści\n"
 "• 192k: Wysoka jakość\n"
 "• 256k+: Użycie profesjonalne\n"
-"• Domyślnie: Auto (kodek decyduje)"
+"• Domyślnie: Auto (decyduje enkoder)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 301
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 294
 msgid ""
 "Number of audio channels:\n"
+"\n"
 "• 1: Mono (single speaker)\n"
 "• 2: Stereo (left/right)\n"
 "• 6: 5.1 Surround\n"
@@ -757,20 +776,23 @@ msgid ""
 "• Default: Keep original"
 msgstr ""
 "Liczba kanałów audio:\n"
+"\n"
 "• 1: Mono (jeden głośnik)\n"
 "• 2: Stereo (lewy/prawy)\n"
 "• 6: 5.1 Surround\n"
 "• 8: 7.1 Surround\n"
 "• Domyślnie: Zachowaj oryginał"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 309
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 302
 msgid ""
 "Advanced: Custom FFmpeg options.\n"
+"\n"
 "• For experienced users only\n"
 "• Invalid options may cause errors\n"
 "• Example: -ss 60 -t 30 (skip 60s, take 30s)"
 msgstr ""
 "Zaawansowane: Niestandardowe opcje FFmpeg.\n"
+"\n"
 "• Tylko dla doświadczonych użytkowników\n"
 "• Nieprawidłowe opcje mogą powodować błędy\n"
 "• Przykład: -ss 60 -t 30 (pomijaj 60s, weź 30s)"
@@ -783,25 +805,9 @@ msgstr "Pomija wszystkie pozostałe procesy i po prostu eksportuje osadzone napi
 msgid "You’re seeing an example of help shown when hovering over an item."
 msgstr "Widok przykładu pomocy wyświetlanej po najechaniu kursorem na element."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
-msgid "Return to file queue"
-msgstr "Powrót do kolejki plików"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 252
-msgid "Add video files to the queue for conversion"
-msgstr "Dodaj pliki wideo do kolejki konwersji"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid "Remove all files from the queue"
 msgstr "Usuń wszystkie pliki z kolejki"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
-msgid "Start converting all files in the queue"
-msgstr "Rozpocznij konwersję wszystkich plików w kolejce"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
-msgid "Convert this file with current editing settings"
-msgstr "Przekonwertuj ten plik z bieżącymi ustawieniami edycji."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 256
 msgid "Open application menu"
@@ -885,6 +891,10 @@ msgstr "Edytor"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "Postęp"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 

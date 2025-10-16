@@ -554,23 +554,31 @@ msgstr "Vlastný"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
 "If your GPU supports video encoding, conversion will be much faster.\n"
+"\n"
 "Automatic detection is usually the best choice, but you can also select it manually.\n"
+"\n"
 "Software mode is slower but compatible with more formats.\n"
+"\n"
 "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
 "to Software mode if needed."
 msgstr ""
-"Ak váš GPU podporuje kódovanie videa, konverzia bude oveľa rýchlejšia.  \n"
-"Automatické zistenie je zvyčajne najlepšia voľba, ale môžete si ho tiež vybrať manuálne.  \n"
-"Softvérový režim je pomalší, ale kompatibilný s viacerými formátmi.  \n"
-"Ak GPU nie je podporované, systém sa pokúsi o čiastočné spracovanie GPU a v prípade potreby "
-"automaticky prejde na softvérový režim."
+"Ak váš GPU podporuje kódovanie videa, konverzia bude oveľa rýchlejšia.\n"
+"\n"
+"Automatické zistenie je zvyčajne najlepšou voľbou, ale môžete si ho tiež vybrať manuálne.\n"
+"\n"
+"Softvérový režim je pomalší, ale kompatibilný s viacerými formátmi.\n"
+"\n"
+"Ak GPU nie je podporované, systém sa pokúsi o čiastočné spracovanie GPU a v prípade potreby sa "
+"automaticky prepnúť na softvérový režim."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
 "Higher quality means a larger file.\n"
+"\n"
 "The default option is a good balance between image quality and file size."
 msgstr ""
 "Vyššia kvalita znamená väčší súbor.\n"
+"\n"
 "Predvolená možnosť je dobrá rovnováha medzi kvalitou obrázka a veľkosťou súboru."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
@@ -598,106 +606,110 @@ msgstr ""
 "AV1: Najmodernejší formát. Ponúka najlepšiu kompresiu (vytvára menšie súbory), ale konverzia môže "
 "byť tiež pomalá, ak grafická karta nie je kompatibilná."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
-"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
-"improves compatibility and can reduce file size."
+"Copy is usually best, fast and preserves full quality.\n"
+"\n"
+"Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
 msgstr ""
-"Kopírovanie je zvyčajne najlepšie — rýchle a zachováva plnú kvalitu. Prekódovanie mierne znižuje "
-"kvalitu, ale zlepšuje kompatibilitu a môže zmenšiť veľkosť súboru."
+"Kopírovanie je zvyčajne najlepšie, rýchle a zachováva plnú kvalitu.\n"
+"\n"
+"Prekódovanie mierne znižuje kvalitu, ale zlepšuje kompatibilitu a môže zmenšiť veľkosť súboru."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 234
 msgid ""
-"If subtitles are embedded, keeping them is usually best. Some players need an external subtitle "
-"file, which can improve compatibility."
+"If subtitles are embedded, keeping them is usually best.\n"
+"\n"
+"Some players need an external subtitle file."
 msgstr ""
-"Ak sú titulky vložené, je zvyčajne najlepšie ich zachovať. Niektoré prehrávače potrebujú externý "
-"súbor s titulkami, čo môže zlepšiť kompatibilitu."
+"Ak sú titulky vložené, je zvyčajne najlepšie ich zachovať.\n"
+"\n"
+"Niektoré prehrávače potrebujú externý súbor s titulkami."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 238
 msgid ""
-"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
-"videos for social media."
+"Copying video is extremely fast and keeps full image quality.\n"
+"\n"
+"Perfect for cutting or trimming videos for social media."
 msgstr ""
-"Kopírovanie videa je mimoriadne rýchle a zachováva plnú kvalitu obrazu. Ideálne na strihanie alebo "
-"skrátenie videí pre sociálne médiá."
+"Kopírovanie videa je mimoriadne rýchle a zachováva plnú kvalitu obrazu.\n"
+"\n"
+"Ideálne na strihanie alebo skrátenie videí pre sociálne médiá."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 243
 msgid ""
-"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
-"save time."
+"Slower conversion produces smaller files.\n"
+"\n"
+"Faster presets create larger files but convert in less time."
 msgstr ""
-"Pomalšia konverzia produkuje menšie, viac komprimované súbory. Rýchlejšie predvoľby vytvárajú "
-"väčšie súbory, ale šetria čas."
+"Pomalšia konverzia vytvára menšie súbory.\n"
+"\n"
+"Rýchlejšie predvoľby vytvárajú väčšie súbory, ale konvertujú za kratší čas."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 247
 msgid ""
 "Audio format (when converting):\n"
+"\n"
 "• AAC: Most compatible, good quality\n"
 "• Opus: Excellent quality at small sizes\n"
 "• AC3 (Dolby Digital): Good for home theater"
 msgstr ""
 "Formát zvuku (pri konverzii):\n"
+"\n"
 "• AAC: Najkompatibilnejší, dobrá kvalita\n"
 "• Opus: Vynikajúca kvalita pri malých veľkostiach\n"
 "• AC3 (Dolby Digital): Dobrý pre domáce kino"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid ""
 "Output size:\n"
+"\n"
 "• Original: Keep the same resolution\n"
 "• Standard: 4K, Full HD, HD (TVs and monitors)\n"
 "• Vertical: For phones and social media\n"
 "• Custom: Set your own dimensions"
 msgstr ""
 "Veľkosť výstupu:\n"
+"\n"
 "• Pôvodné: Zachovať rovnaké rozlíšenie\n"
 "• Štandardné: 4K, Full HD, HD (TV a monitory)\n"
 "• Vertikálne: Pre telefóny a sociálne médiá\n"
 "• Vlastné: Nastavte si vlastné rozmery"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 259
 msgid ""
-"Container format:\n"
 "• MP4: Most compatible\n"
 "• MKV: More features"
 msgstr ""
-"Formát kontajnera:\n"
-"• MP4: Najviac kompatibilný\n"
+"• MP4: Najviac kompatibilný  \n"
 "• MKV: Viac funkcií"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 267
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 262
 msgid ""
-"Adjust brightness:\n"
 "• Move right: Brighter\n"
 "• Move left: Darker\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Upravte jas:\n"
-"• Posuňte doprava: Jasnejšie\n"
-"• Posuňte doľava: Tmavšie\n"
+"• Posunúť doprava: Jasnejšie\n"
+"• Posunúť doľava: Tmavšie\n"
 "• Predvolené: 0 (žiadna zmena)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 273
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 265
 msgid ""
-"Adjust color intensity:\n"
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 1.0 (no change)"
 msgstr ""
-"Upravte intenzitu farby:\n"
-"• Posuňte doprava: Viac živé\n"
-"• Posuňte doľava: Viac tlmené\n"
-"• Predvolené: 1.0 (žiadna zmena)"
+"• Presuň doprava: Živejšie\n"
+"• Presuň doľava: Tlmené\n"
+"• Predvolené: 1.0 (bez zmeny)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 279
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 270
 msgid ""
-"Shift overall color tone:\n"
 "• Positive: More red/yellow\n"
 "• Negative: More blue/green\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Posunúť celkový farebný tón:\n"
 "• Pozitívne: Viac červenej/žltej\n"
 "• Negatívne: Viac modrej/zelené\n"
 "• Predvolené: 0 (žiadna zmena)"
@@ -706,33 +718,36 @@ msgstr ""
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "Orežte okraje videa, aby ste si ponechali iba tú časť, ktorú potrebujete."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 276
 msgid ""
 "Select parts of the video to keep.\n"
 "\n"
-"Add sections with the + button or directly on the video using markers.\n"
+"Add sections with the + button or directly in the video using the markers button above the video.\n"
 "\n"
-"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
-"for social media."
+"You can export selected parts as one file or as multiple clips\n"
+" ideal for creating short videos for social media."
 msgstr ""
 "Vyberte časti videa, ktoré chcete zachovať.\n"
 "\n"
-"Pridajte sekcie pomocou tlačidla + alebo priamo vo videu pomocou značiek.\n"
+"Pridajte sekcie pomocou tlačidla + alebo priamo vo videu pomocou tlačidla značiek nad videom.\n"
 "\n"
-"Môžete exportovať vybrané časti ako jeden súbor alebo ako viacero klipov — ideálne na vytváranie "
+"Môžete exportovať vybrané časti ako jeden súbor alebo ako viacero klipov, ideálne na vytváranie "
 "krátkych videí pre sociálne médiá."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 282
 msgid ""
-"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Run decode on the CPU and encode on the GPU.\n"
+"\n"
 "Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"Núti kódovanie na spustenie na GPU a konečné spracovanie na CPU. \n"
-"Zvyčajne je najlepšie nechať vypnuté, ale môže pomôcť pri určitých problémoch s kompatibilitou."
+"Spustite dekódovanie na CPU a kódovanie na GPU.\n"
+"\n"
+"Zvyčajne je najlepšie to nechať vypnuté, ale môže pomôcť pri určitých problémoch s kompatibilitou."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
 msgid ""
 "Audio quality:\n"
+"\n"
 "• Higher = better quality, larger file\n"
 "• 128k: Good for most content\n"
 "• 192k: High quality\n"
@@ -740,15 +755,17 @@ msgid ""
 "• Default: Auto (encoder decides)"
 msgstr ""
 "Kvalita zvuku:\n"
+"\n"
 "• Vyššia = lepšia kvalita, väčší súbor\n"
 "• 128k: Dobré pre väčšinu obsahu\n"
 "• 192k: Vysoká kvalita\n"
 "• 256k+: Profesionálne použitie\n"
 "• Predvolené: Automaticky (kódovač sa rozhodne)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 301
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 294
 msgid ""
 "Number of audio channels:\n"
+"\n"
 "• 1: Mono (single speaker)\n"
 "• 2: Stereo (left/right)\n"
 "• 6: 5.1 Surround\n"
@@ -756,20 +773,23 @@ msgid ""
 "• Default: Keep original"
 msgstr ""
 "Počet audio kanálov:\n"
+"\n"
 "• 1: Mono (jediný reproduktor)\n"
 "• 2: Stereo (ľavý/pravý)\n"
-"• 6: 5.1 Priestorový zvuk\n"
-"• 8: 7.1 Priestorový zvuk\n"
+"• 6: 5.1 priestorový zvuk\n"
+"• 8: 7.1 priestorový zvuk\n"
 "• Predvolené: Zachovať pôvodné"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 309
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 302
 msgid ""
 "Advanced: Custom FFmpeg options.\n"
+"\n"
 "• For experienced users only\n"
 "• Invalid options may cause errors\n"
 "• Example: -ss 60 -t 30 (skip 60s, take 30s)"
 msgstr ""
 "Pokročilé: Vlastné možnosti FFmpeg.\n"
+"\n"
 "• Iba pre skúsených používateľov\n"
 "• Neplatné možnosti môžu spôsobiť chyby\n"
 "• Príklad: -ss 60 -t 30 (preskočiť 60s, vziať 30s)"
@@ -782,25 +802,9 @@ msgstr "Preskočí všetky zostávajúce procesy a jednoducho exportuje vložen�
 msgid "You’re seeing an example of help shown when hovering over an item."
 msgstr "Vidíte príklad nápovede zobrazený pri prechode kurzorom nad položkou."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
-msgid "Return to file queue"
-msgstr "Návrat do fronty súborov"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 252
-msgid "Add video files to the queue for conversion"
-msgstr "Pridajte video súbory do fronty na konverziu."
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid "Remove all files from the queue"
 msgstr "Odstrániť všetky súbory z fronty"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
-msgid "Start converting all files in the queue"
-msgstr "Začnite konvertovať všetky súbory v čakacom zozname."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
-msgid "Convert this file with current editing settings"
-msgstr "Preveďte tento súbor s aktuálnymi nastaveniami úprav."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 256
 msgid "Open application menu"
@@ -1004,6 +1008,22 @@ msgstr "Konverzie dokončené"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
 msgid "All video conversions have been completed successfully!"
 msgstr "Všetky konverzie videa boli úspešne dokončené!"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 

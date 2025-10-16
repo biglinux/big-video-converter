@@ -626,23 +626,31 @@ msgstr "Özel"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
 "If your GPU supports video encoding, conversion will be much faster.\n"
+"\n"
 "Automatic detection is usually the best choice, but you can also select it manually.\n"
+"\n"
 "Software mode is slower but compatible with more formats.\n"
+"\n"
 "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
 "to Software mode if needed."
 msgstr ""
-"Eğer GPU'nuz video kodlamayı destekliyorsa, dönüşüm çok daha hızlı olacaktır.  \n"
-"Otomatik algılama genellikle en iyi seçimdir, ancak manuel olarak da seçebilirsiniz.  \n"
-"Yazılım modu daha yavaştır ama daha fazla formatla uyumludur.  \n"
+"Eğer GPU'nuz video kodlamayı destekliyorsa, dönüşüm çok daha hızlı olacaktır.\n"
+"\n"
+"Otomatik algılama genellikle en iyi seçimdir, ancak manuel olarak da seçebilirsiniz.\n"
+"\n"
+"Yazılım modu daha yavaştır ancak daha fazla formatla uyumludur.\n"
+"\n"
 "Eğer GPU desteklenmiyorsa, sistem kısmi GPU işleme deneyecek ve gerekirse otomatik olarak Yazılım "
 "moduna geri dönecektir."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
 "Higher quality means a larger file.\n"
+"\n"
 "The default option is a good balance between image quality and file size."
 msgstr ""
-"Daha yüksek kalite, daha büyük bir dosya anlamına gelir.  \n"
+"Daha yüksek kalite, daha büyük bir dosya anlamına gelir.\n"
+"\n"
 "Varsayılan seçenek, görüntü kalitesi ile dosya boyutu arasında iyi bir denge sağlar."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
@@ -671,106 +679,110 @@ msgstr ""
 "AV1: En modern format. En iyi sıkıştırmayı (daha küçük dosyalar oluşturma) sunar, ancak grafik "
 "kartı uyumlu değilse dönüştürme de yavaş olabilir."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
-"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
-"improves compatibility and can reduce file size."
+"Copy is usually best, fast and preserves full quality.\n"
+"\n"
+"Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
 msgstr ""
-"Kopyalama genellikle en iyisidir — hızlıdır ve tam kaliteden ödün vermez. Yeniden kodlama kaliteyi "
-"biraz azaltır ancak uyumluluğu artırır ve dosya boyutunu küçültebilir."
+"Kopyalama genellikle en iyisidir, hızlıdır ve tam kalitesini korur.\n"
+"\n"
+"Yeniden kodlama, kaliteyi biraz azaltır ancak uyumluluğu artırır ve dosya boyutunu küçültebilir."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 234
 msgid ""
-"If subtitles are embedded, keeping them is usually best. Some players need an external subtitle "
-"file, which can improve compatibility."
+"If subtitles are embedded, keeping them is usually best.\n"
+"\n"
+"Some players need an external subtitle file."
 msgstr ""
-"Eğer altyazılar gömülü ise, onları korumak genellikle en iyisidir. Bazı oynatıcılar harici bir "
-"altyazı dosyasına ihtiyaç duyar, bu da uyumluluğu artırabilir."
+"Eğer altyazılar gömülü ise, onları korumak genellikle en iyisidir.\n"
+"\n"
+"Bazı oynatıcılar harici bir altyazı dosyasına ihtiyaç duyar."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 238
 msgid ""
-"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
-"videos for social media."
+"Copying video is extremely fast and keeps full image quality.\n"
+"\n"
+"Perfect for cutting or trimming videos for social media."
 msgstr ""
-"Videoyu kopyalamak son derece hızlıdır ve tam görüntü kalitesini korur. Sosyal medya için videoları "
-"kesmek veya kırpmak için mükemmeldir."
+"Videoyu kopyalamak son derece hızlıdır ve tam görüntü kalitesini korur.\n"
+"\n"
+"Sosyal medya için videoları kesmek veya kırpmak için mükemmeldir."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 243
 msgid ""
-"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
-"save time."
+"Slower conversion produces smaller files.\n"
+"\n"
+"Faster presets create larger files but convert in less time."
 msgstr ""
-"Daha yavaş dönüşüm, daha küçük, daha sıkıştırılmış dosyalar üretir. Daha hızlı ön ayarlar daha "
-"büyük dosyalar oluşturur ancak zaman kazandırır."
+"Daha yavaş dönüşüm, daha küçük dosyalar üretir.\n"
+"\n"
+"Daha hızlı ön ayarlar, daha büyük dosyalar oluşturur ancak daha az zamanda dönüştürür."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 247
 msgid ""
 "Audio format (when converting):\n"
+"\n"
 "• AAC: Most compatible, good quality\n"
 "• Opus: Excellent quality at small sizes\n"
 "• AC3 (Dolby Digital): Good for home theater"
 msgstr ""
 "Ses formatı (dönüştürme sırasında):\n"
+"\n"
 "• AAC: En uyumlu, iyi kalite\n"
 "• Opus: Küçük boyutlarda mükemmel kalite\n"
 "• AC3 (Dolby Digital): Ev sineması için iyi"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid ""
 "Output size:\n"
+"\n"
 "• Original: Keep the same resolution\n"
 "• Standard: 4K, Full HD, HD (TVs and monitors)\n"
 "• Vertical: For phones and social media\n"
 "• Custom: Set your own dimensions"
 msgstr ""
 "Çıktı boyutu:\n"
+"\n"
 "• Orijinal: Aynı çözünürlüğü koru\n"
 "• Standart: 4K, Full HD, HD (TV'ler ve monitörler)\n"
 "• Dikey: Telefonlar ve sosyal medya için\n"
 "• Özel: Kendi boyutlarınızı ayarlayın"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 259
 msgid ""
-"Container format:\n"
 "• MP4: Most compatible\n"
 "• MKV: More features"
 msgstr ""
-"Konteyner formatı:\n"
 "• MP4: En uyumlu\n"
 "• MKV: Daha fazla özellik"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 267
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 262
 msgid ""
-"Adjust brightness:\n"
 "• Move right: Brighter\n"
 "• Move left: Darker\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Parlaklığı ayarla:\n"
 "• Sağa hareket et: Daha parlak\n"
 "• Sola hareket et: Daha karanlık\n"
 "• Varsayılan: 0 (değişiklik yok)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 273
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 265
 msgid ""
-"Adjust color intensity:\n"
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 1.0 (no change)"
 msgstr ""
-"Renk yoğunluğunu ayarlayın:\n"
-"• Sağa hareket: Daha canlı\n"
-"• Sola hareket: Daha soluk\n"
+"• Sağa hareket et: Daha canlı\n"
+"• Sola hareket et: Daha soluk\n"
 "• Varsayılan: 1.0 (değişiklik yok)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 279
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 270
 msgid ""
-"Shift overall color tone:\n"
 "• Positive: More red/yellow\n"
 "• Negative: More blue/green\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Genel renk tonunu kaydır:\n"
 "• Pozitif: Daha fazla kırmızı/sarı\n"
 "• Negatif: Daha fazla mavi/yeşil\n"
 "• Varsayılan: 0 (değişiklik yok)"
@@ -779,33 +791,38 @@ msgstr ""
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "Videonun kenarlarını keserek yalnızca ihtiyacınız olan kısmı saklayın."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 276
 msgid ""
 "Select parts of the video to keep.\n"
 "\n"
-"Add sections with the + button or directly on the video using markers.\n"
+"Add sections with the + button or directly in the video using the markers button above the video.\n"
 "\n"
-"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
-"for social media."
+"You can export selected parts as one file or as multiple clips\n"
+" ideal for creating short videos for social media."
 msgstr ""
 "Videonun saklanacak kısımlarını seçin.\n"
 "\n"
-"+ butonunu kullanarak veya videonun üzerinde işaretleyicilerle doğrudan bölümler ekleyin.\n"
+"+ butonunu kullanarak veya videonun üstündeki işaretleyici butonunu kullanarak doğrudan videoda "
+"bölümler ekleyin.\n"
 "\n"
-"Seçilen kısımları tek bir dosya veya birden fazla klip olarak dışa aktarabilirsiniz — sosyal medya "
-"için kısa videolar oluşturmak için idealdir."
+"Seçilen kısımları tek bir dosya veya birden fazla klip olarak dışa aktarabilirsiniz; bu, sosyal "
+"medya için kısa videolar oluşturmak için idealdir."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 282
 msgid ""
-"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Run decode on the CPU and encode on the GPU.\n"
+"\n"
 "Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"GPU'da çalışacak şekilde kodlama yapar ve son işlemleri CPU'da gerçekleştirir. Genellikle devre "
-"dışı bırakılması en iyisidir, ancak belirli uyumluluk sorunlarıyla yardımcı olabilir."
+"CPU'da çözümleme yapın ve GPU'da kodlama yapın.\n"
+"\n"
+"Genellikle devre dışı bırakılması en iyisidir, ancak belirli uyumluluk sorunlarıyla yardımcı "
+"olabilir."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
 msgid ""
 "Audio quality:\n"
+"\n"
 "• Higher = better quality, larger file\n"
 "• 128k: Good for most content\n"
 "• 192k: High quality\n"
@@ -813,15 +830,17 @@ msgid ""
 "• Default: Auto (encoder decides)"
 msgstr ""
 "Ses kalitesi:\n"
+"\n"
 "• Daha yüksek = daha iyi kalite, daha büyük dosya\n"
 "• 128k: Çoğu içerik için iyi\n"
 "• 192k: Yüksek kalite\n"
 "• 256k+: Profesyonel kullanım\n"
 "• Varsayılan: Otomatik (kodlayıcı karar verir)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 301
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 294
 msgid ""
 "Number of audio channels:\n"
+"\n"
 "• 1: Mono (single speaker)\n"
 "• 2: Stereo (left/right)\n"
 "• 6: 5.1 Surround\n"
@@ -829,20 +848,23 @@ msgid ""
 "• Default: Keep original"
 msgstr ""
 "Ses kanalı sayısı:\n"
+"\n"
 "• 1: Mono (tek hoparlör)\n"
 "• 2: Stereo (sol/sağ)\n"
 "• 6: 5.1 Surround\n"
 "• 8: 7.1 Surround\n"
 "• Varsayılan: Orijinali koru"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 309
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 302
 msgid ""
 "Advanced: Custom FFmpeg options.\n"
+"\n"
 "• For experienced users only\n"
 "• Invalid options may cause errors\n"
 "• Example: -ss 60 -t 30 (skip 60s, take 30s)"
 msgstr ""
 "Gelişmiş: Özel FFmpeg seçenekleri.\n"
+"\n"
 "• Sadece deneyimli kullanıcılar için\n"
 "• Geçersiz seçenekler hatalara neden olabilir\n"
 "• Örnek: -ss 60 -t 30 (60s atla, 30s al)"
@@ -855,25 +877,9 @@ msgstr "Tüm kalan işlemleri atlar ve gömülü altyazıları bir SRT dosyası 
 msgid "You’re seeing an example of help shown when hovering over an item."
 msgstr "Bir öğenin üzerine geldiğinizde gösterilen yardım örneğini görüyorsunuz."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
-msgid "Return to file queue"
-msgstr "Dosya kuyruğuna dön"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 252
-msgid "Add video files to the queue for conversion"
-msgstr "Dönüşüm için kuyrukta video dosyaları ekleyin."
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid "Remove all files from the queue"
 msgstr "Kuyruktaki tüm dosyaları kaldır"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
-msgid "Start converting all files in the queue"
-msgstr "Kuyruktaki tüm dosyaları dönüştürmeye başlayın."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
-msgid "Convert this file with current editing settings"
-msgstr "Bu dosyayı mevcut düzenleme ayarlarıyla dönüştür."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 256
 msgid "Open application menu"
@@ -957,6 +963,10 @@ msgstr "Düzenleyici"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "İlerleme"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 

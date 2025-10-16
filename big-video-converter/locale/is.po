@@ -1003,6 +1003,12 @@ msgstr "Tungumál"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 424
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 599
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 424
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 599
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 424
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 599
+# 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
@@ -1432,23 +1438,31 @@ msgstr "sérsniðið"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
 "If your GPU supports video encoding, conversion will be much faster.\n"
+"\n"
 "Automatic detection is usually the best choice, but you can also select it manually.\n"
+"\n"
 "Software mode is slower but compatible with more formats.\n"
+"\n"
 "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
 "to Software mode if needed."
 msgstr ""
-"Ef GPU-ið þitt styður vídeókóðun, verður umbreytingin mun hraðari. \n"
-"Sjálfvirk uppgötvun er venjulega besta valkosturinn, en þú getur einnig valið það handvirkt. \n"
-"Hugbúnaðarhamur er hægari en samhæfur við fleiri snið. \n"
-"Ef GPU-ið er ekki studd, mun kerfið reyna að nota að hluta GPU úrvinnslu og sjálfkrafa falla aftur "
+"Ef GPU-ið þitt styður vídeókóðun, verður umbreytingin mun hraðari.\n"
+"\n"
+"Sjálfvirk uppgötvun er venjulega besta valkosturinn, en þú getur einnig valið það handvirkt.\n"
+"\n"
+"Hugbúnaðarhamur er hægari en samhæfur við fleiri snið.\n"
+"\n"
+"Ef GPU-ið er ekki studd, mun kerfið reyna að nota að hluta GPU-úrvinnslu og sjálfkrafa falla aftur "
 "í Hugbúnaðarham ef þörf krefur."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
 "Higher quality means a larger file.\n"
+"\n"
 "The default option is a good balance between image quality and file size."
 msgstr ""
-"Hærri gæði þýðir stærri skrá. \n"
+"Hærri gæði þýðir stærri skrá.\n"
+"\n"
 "Sjálfgefið val er gott jafnvægi milli myndgæða og skráarstærðar."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
@@ -1476,141 +1490,148 @@ msgstr ""
 "AV1: Nýjasta sniðið. Það býður upp á bestu þjöppun (býr til minni skrár), en umbreytingin getur "
 "einnig verið hæg ef skjákortið er ekki samhæft."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
-"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
-"improves compatibility and can reduce file size."
+"Copy is usually best, fast and preserves full quality.\n"
+"\n"
+"Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
 msgstr ""
-"Afritun er venjulega best — hratt og varðveitir fulla gæði. Endurkóðun minnkar aðeins gæði en bætir "
-"samhæfni og getur minnkað skráarstærð."
+"Afritun er venjulega best, hratt og varðveitir fulla gæði.\n"
+"\n"
+"Endurkóðun minnkar aðeins gæði en bætir samhæfni og getur minnkað skráarstærð."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 234
 msgid ""
-"If subtitles are embedded, keeping them is usually best. Some players need an external subtitle "
-"file, which can improve compatibility."
+"If subtitles are embedded, keeping them is usually best.\n"
+"\n"
+"Some players need an external subtitle file."
 msgstr ""
-"Ef textaskyldur eru innbyggðir, er venjulega best að halda þeim. Sumir spilara þurfa ytra "
-"textaskyldufíl, sem getur bætt samhæfi."
+"Ef textaskipti eru innbyggð, er venjulega best að halda þeim.\n"
+"\n"
+"Sumir spilara þurfa ytra textaskiptaskjal."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 238
 msgid ""
-"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
-"videos for social media."
+"Copying video is extremely fast and keeps full image quality.\n"
+"\n"
+"Perfect for cutting or trimming videos for social media."
 msgstr ""
-"Að afrita vídeó er afar hratt og heldur fullri myndgæðum. Fullkomið til að klippa eða skera vídeó "
-"fyrir samfélagsmiðla."
+"Afturkopiering á vídeóum er afar hröð og heldur fullri myndgæðum.\n"
+"\n"
+"Fullkomið til að klippa eða skera vídeó fyrir samfélagsmiðla."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 243
 msgid ""
-"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
-"save time."
+"Slower conversion produces smaller files.\n"
+"\n"
+"Faster presets create larger files but convert in less time."
 msgstr ""
-"Hægari umbreyting framleiðir minni, þéttari skrár. Fljótari stillingar búa til stærri skrár en "
-"spara tíma."
+"Hægri umbreyting skapar minni skrár.\n"
+"\n"
+"Fljótari stillingar búa til stærri skrár en umbreyta á skemmri tíma."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 247
 msgid ""
 "Audio format (when converting):\n"
+"\n"
 "• AAC: Most compatible, good quality\n"
 "• Opus: Excellent quality at small sizes\n"
 "• AC3 (Dolby Digital): Good for home theater"
 msgstr ""
 "Hljóðform (við umbreytingu):\n"
+"\n"
 "• AAC: Flest samhæft, góð gæði\n"
 "• Opus: Frábær gæði við litla stærð\n"
 "• AC3 (Dolby Digital): Gott fyrir heimabíó"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid ""
 "Output size:\n"
+"\n"
 "• Original: Keep the same resolution\n"
 "• Standard: 4K, Full HD, HD (TVs and monitors)\n"
 "• Vertical: For phones and social media\n"
 "• Custom: Set your own dimensions"
 msgstr ""
 "Úttaksstærð:\n"
+"\n"
 "• Upprunalegt: Halda sömu upplausn\n"
 "• Staðlað: 4K, Full HD, HD (sjónvörp og skjáir)\n"
 "• Lóðrétt: Fyrir síma og samfélagsmiðla\n"
 "• Sérsniðið: Stilltu eigin víddir"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 259
 msgid ""
-"Container format:\n"
 "• MP4: Most compatible\n"
 "• MKV: More features"
 msgstr ""
-"Gáttaformát:\n"
-"• MP4: Flest samhæft\n"
+"• MP4: Samhæfðast\n"
 "• MKV: Fleiri eiginleikar"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 267
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 262
 msgid ""
-"Adjust brightness:\n"
 "• Move right: Brighter\n"
 "• Move left: Darker\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Aðlaga birtu:\n"
-"• Færa til hægri: Bjartara\n"
-"• Færa til vinstri: Dökkt\n"
+"• Hreyfa til hægri: Bjartari  \n"
+"• Hreyfa til vinstri: Dökari  \n"
 "• Sjálfgefið: 0 (engin breyting)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 273
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 265
 msgid ""
-"Adjust color intensity:\n"
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 1.0 (no change)"
 msgstr ""
-"Aðlaga litastyrk:\n"
-"• Færa til hægri: Meira líflegur\n"
-"• Færa til vinstri: Meira daufur\n"
+"• Hreyfa til hægri: Meira líflegt  \n"
+"• Hreyfa til vinstri: Meira daufur  \n"
 "• Sjálfgefið: 1.0 (engin breyting)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 279
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 270
 msgid ""
-"Shift overall color tone:\n"
 "• Positive: More red/yellow\n"
 "• Negative: More blue/green\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Breyta heildar litablæti:\n"
-"• Jákvætt: Meira rauður/gulur\n"
-"• Neikvætt: Meira blár/grænn\n"
+"• Jákvæð: Meira rauður/gulur  \n"
+"• Neikvæð: Meira blár/grænn  \n"
 "• Sjálfgefið: 0 (engin breyting)"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "Skeraðu jaðar myndbandsins til að halda aðeins þeirri hluta sem þú þarft."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 276
 msgid ""
 "Select parts of the video to keep.\n"
 "\n"
-"Add sections with the + button or directly on the video using markers.\n"
+"Add sections with the + button or directly in the video using the markers button above the video.\n"
 "\n"
-"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
-"for social media."
+"You can export selected parts as one file or as multiple clips\n"
+" ideal for creating short videos for social media."
 msgstr ""
-"Veldu hluta úr vídeoinu til að halda.\n"
+"Veldu hluta úr vídeóinu til að halda.\n"
 "\n"
-"Bættu við hlutum með + takkanum eða beint á vídeóið með merkjum.\n"
+"Bættu við hlutum með + takkanum eða beint í vídeóinu með merkjatakkanum fyrir ofan vídeóið.\n"
 "\n"
-"Þú getur flutt út valda hluta sem eina skrá eða sem marga klippur — fullkomið til að búa til stutt "
-"vídeó fyrir samfélagsmiðla."
+"Þú getur flutt út valda hluta sem eina skrá eða sem marga klippur, sem er fullkomið til að búa til "
+"stutt vídeó fyrir samfélagsmiðla."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 282
 msgid ""
-"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Run decode on the CPU and encode on the GPU.\n"
+"\n"
 "Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"Þvingar kóðun til að keyra á GPU og lokaúrvinnslu á CPU. Venjulega best að hafa óvirkt, en getur "
-"hjálpað við ákveðin samhæfingarvandamál."
+"Keyra afkóða á CPU og kóða á GPU.\n"
+"\n"
+"Venjulega best að hafa óvirkt, en getur hjálpað við ákveðin samhæfingarvandamál."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
 msgid ""
 "Audio quality:\n"
+"\n"
 "• Higher = better quality, larger file\n"
 "• 128k: Good for most content\n"
 "• 192k: High quality\n"
@@ -1618,15 +1639,17 @@ msgid ""
 "• Default: Auto (encoder decides)"
 msgstr ""
 "Hljóðgæði:\n"
+"\n"
 "• Hærra = betra gæði, stærri skrá\n"
 "• 128k: Gott fyrir flestar efni\n"
-"• 192k: Há gæði\n"
+"• 192k: Hár gæði\n"
 "• 256k+: Fagleg notkun\n"
 "• Sjálfgefið: Sjálfvirkt (kóðari ákveður)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 301
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 294
 msgid ""
 "Number of audio channels:\n"
+"\n"
 "• 1: Mono (single speaker)\n"
 "• 2: Stereo (left/right)\n"
 "• 6: 5.1 Surround\n"
@@ -1634,20 +1657,23 @@ msgid ""
 "• Default: Keep original"
 msgstr ""
 "Hljóðrása fjöldi:\n"
+"\n"
 "• 1: Mono (einn hátalari)\n"
 "• 2: Stereo (vinstri/hægri)\n"
 "• 6: 5.1 Umhverfi\n"
 "• 8: 7.1 Umhverfi\n"
 "• Sjálfgefið: Halda upprunalegu"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 309
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 302
 msgid ""
 "Advanced: Custom FFmpeg options.\n"
+"\n"
 "• For experienced users only\n"
 "• Invalid options may cause errors\n"
 "• Example: -ss 60 -t 30 (skip 60s, take 30s)"
 msgstr ""
 "Fyrirferð: Sérsniðnar FFmpeg valkostir.\n"
+"\n"
 "• Aðeins fyrir reynda notendur\n"
 "• Ógildir valkostir geta valdið villum\n"
 "• Dæmi: -ss 60 -t 30 (sneiða 60s, taka 30s)"
@@ -1660,25 +1686,9 @@ msgstr "Sleppir öll eftirfarandi ferli og flytur aðeins innbyggðu undirtextan
 msgid "You’re seeing an example of help shown when hovering over an item."
 msgstr "Þú ert að sjá dæmi um aðstoð sem sýnd er þegar þú svífur yfir hlut."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
-msgid "Return to file queue"
-msgstr "Vinsamlegast skilaðu aftur í skráaröðina"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 252
-msgid "Add video files to the queue for conversion"
-msgstr "Bættu við vídeóskrám í biðröðina til umbreytingar."
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid "Remove all files from the queue"
 msgstr "Fjarlægðu öll skrár úr biðröðinni"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
-msgid "Start converting all files in the queue"
-msgstr "Byrjiðu að breyta öllum skrám í biðröðinni"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
-msgid "Convert this file with current editing settings"
-msgstr "Breyta þessa skrá með núverandi ritunarskilyrðum."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 256
 msgid "Open application menu"
@@ -1762,6 +1772,10 @@ msgstr "Ritillari"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "Framkvæmd"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
@@ -1896,6 +1910,22 @@ msgstr "Umbreytingar Lokið"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
 msgid "All video conversions have been completed successfully!"
 msgstr "Öll vídeóbreytingar hafa verið lokið með góðum árangri!"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 

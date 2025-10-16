@@ -554,24 +554,32 @@ msgstr "Egyedi"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
 "If your GPU supports video encoding, conversion will be much faster.\n"
+"\n"
 "Automatic detection is usually the best choice, but you can also select it manually.\n"
+"\n"
 "Software mode is slower but compatible with more formats.\n"
+"\n"
 "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back "
 "to Software mode if needed."
 msgstr ""
-"Ha a GPU-d támogatja a videó kódolást, a konverzió sokkal gyorsabb lesz.  \n"
-"Az automatikus észlelés általában a legjobb választás, de manuálisan is kiválaszthatod.  \n"
-"A szoftveres mód lassabb, de több formátummal kompatibilis.  \n"
-"Ha a GPU nem támogatott, a rendszer megpróbálja a részleges GPU-feldolgozást, és szükség esetén "
+"Ha a GPU-d támogatja a videó kódolást, a konverzió sokkal gyorsabb lesz.\n"
+"\n"
+"Az automatikus észlelés általában a legjobb választás, de manuálisan is kiválaszthatod.\n"
+"\n"
+"A szoftveres mód lassabb, de több formátummal kompatibilis.\n"
+"\n"
+"Ha a GPU nem támogatott, a rendszer megpróbálja a részleges GPU feldolgozást, és szükség esetén "
 "automatikusan visszaáll a szoftveres módra."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 223
 msgid ""
 "Higher quality means a larger file.\n"
+"\n"
 "The default option is a good balance between image quality and file size."
 msgstr ""
-"A magasabb minőség nagyobb fájlt jelent.  \n"
-"A alapértelmezett opció jó egyensúlyt teremt a képminőség és a fájlméret között."
+"A magasabb minőség nagyobb fájlt jelent.\n"
+"\n"
+"Az alapértelmezett opció jó egyensúlyt teremt a képminőség és a fájlméret között."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
 msgid ""
@@ -599,106 +607,111 @@ msgstr ""
 "AV1: A legmodernebb formátum. A legjobb tömörítést kínálja (kisebb fájlok létrehozása), de a "
 "konvertálás is lassú lehet, ha a grafikus kártya nem kompatibilis."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 228
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
-"Copy is usually best — fast and preserves full quality. Re-encoding slightly reduces quality but "
-"improves compatibility and can reduce file size."
+"Copy is usually best, fast and preserves full quality.\n"
+"\n"
+"Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
 msgstr ""
-"A másolás általában a legjobb — gyors és megőrzi a teljes minőséget. A kódolás újra kissé csökkenti "
-"a minőséget, de javítja a kompatibilitást és csökkentheti a fájlméretet."
+"A másolás általában a legjobb, gyors és megőrzi a teljes minőséget.\n"
+"\n"
+"A újrakódolás enyhén csökkenti a minőséget, de javítja a kompatibilitást és csökkentheti a "
+"fájlméretet."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 235
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 234
 msgid ""
-"If subtitles are embedded, keeping them is usually best. Some players need an external subtitle "
-"file, which can improve compatibility."
+"If subtitles are embedded, keeping them is usually best.\n"
+"\n"
+"Some players need an external subtitle file."
 msgstr ""
-"Ha a feliratok beágyazva vannak, azok megtartása általában a legjobb. Néhány lejátszó külső "
-"feliratfájlt igényel, ami javíthatja a kompatibilitást."
+"Ha a feliratok beágyazva vannak, akkor azok megtartása általában a legjobb.\n"
+"\n"
+"Néhány lejátszó külső feliratfájlt igényel."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 236
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 238
 msgid ""
-"Copying video is extremely fast and keeps full image quality. Perfect for cutting or trimming "
-"videos for social media."
+"Copying video is extremely fast and keeps full image quality.\n"
+"\n"
+"Perfect for cutting or trimming videos for social media."
 msgstr ""
-"A videók másolása rendkívül gyors, és megőrzi a teljes képminőséget. Tökéletes a videók vágásához "
-"vagy rövidítéséhez a közösségi médiához."
+"A videók másolása rendkívül gyors, és megőrzi a teljes képminőséget.\n"
+"\n"
+"Tökéletes videók vágásához vagy rövidítéséhez közösségi médiához."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 241
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 243
 msgid ""
-"Slower conversion produces smaller, more compressed files. Faster presets create larger files but "
-"save time."
+"Slower conversion produces smaller files.\n"
+"\n"
+"Faster presets create larger files but convert in less time."
 msgstr ""
-"A lassúbb konverzió kisebb, tömörített fájlokat eredményez. A gyorsabb előbeállítások nagyobb "
-"fájlokat hoznak létre, de időt takarítanak meg."
+"A lassúbb konverzió kisebb fájlokat eredményez.\n"
+"\n"
+"A gyorsabb előbeállítások nagyobb fájlokat hoznak létre, de kevesebb idő alatt konvertálnak."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 248
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 247
 msgid ""
 "Audio format (when converting):\n"
+"\n"
 "• AAC: Most compatible, good quality\n"
 "• Opus: Excellent quality at small sizes\n"
 "• AC3 (Dolby Digital): Good for home theater"
 msgstr ""
 "Audioformátum (konvertáláskor):\n"
+"\n"
 "• AAC: Legjobban kompatibilis, jó minőség\n"
 "• Opus: Kiváló minőség kis méretekben\n"
 "• AC3 (Dolby Digital): Jó otthoni mozihoz"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid ""
 "Output size:\n"
+"\n"
 "• Original: Keep the same resolution\n"
 "• Standard: 4K, Full HD, HD (TVs and monitors)\n"
 "• Vertical: For phones and social media\n"
 "• Custom: Set your own dimensions"
 msgstr ""
 "Kimeneti méret:\n"
+"\n"
 "• Eredeti: Tartsa meg a felbontást\n"
 "• Standard: 4K, Full HD, HD (TV-k és monitorok)\n"
 "• Függőleges: Telefonokhoz és közösségi médiához\n"
 "• Egyedi: Állítsa be a saját méreteit"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 261
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 259
 msgid ""
-"Container format:\n"
 "• MP4: Most compatible\n"
 "• MKV: More features"
 msgstr ""
-"Tartályformátum:\n"
-"• MP4: Legkompatibilisebb\n"
-"• MKV: Több funkció"
+"• MP4: Legjobban kompatibilis  \n"
+"• MKV: További funkciók"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 267
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 262
 msgid ""
-"Adjust brightness:\n"
 "• Move right: Brighter\n"
 "• Move left: Darker\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Fényerő beállítása:\n"
 "• Jobbra mozgatás: Világosabb\n"
 "• Balra mozgatás: Sötétebb\n"
 "• Alapértelmezett: 0 (nincs változás)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 273
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 265
 msgid ""
-"Adjust color intensity:\n"
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 1.0 (no change)"
 msgstr ""
-"Színintenzitás beállítása:\n"
 "• Jobbra mozgatás: Élénkebb\n"
 "• Balra mozgatás: Tompább\n"
 "• Alapértelmezett: 1.0 (nincs változás)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 279
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 270
 msgid ""
-"Shift overall color tone:\n"
 "• Positive: More red/yellow\n"
 "• Negative: More blue/green\n"
 "• Default: 0 (no change)"
 msgstr ""
-"Általános színárnyalat eltolása:\n"
 "• Pozitív: Több piros/sárga\n"
 "• Negatív: Több kék/zöld\n"
 "• Alapértelmezett: 0 (nincs változás)"
@@ -707,49 +720,55 @@ msgstr ""
 msgid "Crop the video's edges to keep only the part you need."
 msgstr "Vágja le a videó széleit, hogy csak a szükséges részt tartsa meg."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 283
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 276
 msgid ""
 "Select parts of the video to keep.\n"
 "\n"
-"Add sections with the + button or directly on the video using markers.\n"
+"Add sections with the + button or directly in the video using the markers button above the video.\n"
 "\n"
-"You can export selected parts as one file or as multiple clips — ideal for creating short videos "
-"for social media."
+"You can export selected parts as one file or as multiple clips\n"
+" ideal for creating short videos for social media."
 msgstr ""
-"Válassza ki a videó azon részeit, amelyeket meg szeretne tartani.\n"
+"Válassza ki a megtartandó videórészeket.\n"
 "\n"
-"Adjon hozzá szakaszokat a + gombbal vagy közvetlenül a videón, jelölőkkel.\n"
+"Adjon hozzá szakaszokat a + gombbal vagy közvetlenül a videóban a videó felett található jelölőgomb "
+"segítségével.\n"
 "\n"
-"A kiválasztott részeket egy fájlként vagy több klipként exportálhatja — ideális rövid videók "
-"készítéséhez közösségi médiához."
+"A kiválasztott részeket egy fájlként vagy több klipként exportálhatja, ami ideális a közösségi "
+"média számára készült rövid videók készítéséhez."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 289
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 282
 msgid ""
-"Forces encoding to run on the GPU and final processing on the CPU.\n"
+"Run decode on the CPU and encode on the GPU.\n"
+"\n"
 "Usually best left disabled, but can help with certain compatibility issues."
 msgstr ""
-"Kényszeríti a kódolást a GPU-n való futásra, a végső feldolgozást pedig a CPU-n végzi.\n"
-"Általában a legjobb, ha le van tiltva, de bizonyos kompatibilitási problémák esetén segíthet."
+"Futtassa a dekódolást a CPU-n és a kódolást a GPU-n.\n"
+"\n"
+"Általában a legjobb, ha le van tiltva, de segíthet bizonyos kompatibilitási problémák esetén."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 293
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 286
 msgid ""
 "Audio quality:\n"
+"\n"
 "• Higher = better quality, larger file\n"
 "• 128k: Good for most content\n"
 "• 192k: High quality\n"
 "• 256k+: Professional use\n"
 "• Default: Auto (encoder decides)"
 msgstr ""
-"Hangkészlet:\n"
+"Hangképesség:\n"
+"\n"
 "• Magasabb = jobb minőség, nagyobb fájl\n"
-"• 128k: Jónak számít a legtöbb tartalomhoz\n"
+"• 128k: Jól használható a legtöbb tartalomhoz\n"
 "• 192k: Magas minőség\n"
 "• 256k+: Professzionális használat\n"
 "• Alapértelmezett: Automatikus (a kódoló dönt)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 301
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 294
 msgid ""
 "Number of audio channels:\n"
+"\n"
 "• 1: Mono (single speaker)\n"
 "• 2: Stereo (left/right)\n"
 "• 6: 5.1 Surround\n"
@@ -757,20 +776,23 @@ msgid ""
 "• Default: Keep original"
 msgstr ""
 "Audio csatornák száma:\n"
+"\n"
 "• 1: Mono (egységes hangszóró)\n"
 "• 2: Sztereó (bal/jobb)\n"
 "• 6: 5.1 térhangzás\n"
 "• 8: 7.1 térhangzás\n"
 "• Alapértelmezett: Eredeti megőrzése"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 309
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 302
 msgid ""
 "Advanced: Custom FFmpeg options.\n"
+"\n"
 "• For experienced users only\n"
 "• Invalid options may cause errors\n"
 "• Example: -ss 60 -t 30 (skip 60s, take 30s)"
 msgstr ""
 "Haladó: Egyedi FFmpeg opciók.\n"
+"\n"
 "• Csak tapasztalt felhasználók számára\n"
 "• Érvénytelen opciók hibákat okozhatnak\n"
 "• Példa: -ss 60 -t 30 (ugorj 60 másodpercet, vegyél 30 másodpercet)"
@@ -783,25 +805,9 @@ msgstr "Kihagyja az összes hátralévő folyamatot, és csak az beágyazott fel
 msgid "You’re seeing an example of help shown when hovering over an item."
 msgstr "Ez egy példa a segítségre, amely akkor jelenik meg, amikor egy elem fölé viszi az egeret."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 251
-msgid "Return to file queue"
-msgstr "Térj vissza a fájl sorba"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 252
-msgid "Add video files to the queue for conversion"
-msgstr "Add meg a videofájlokat a konvertálási sorba."
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid "Remove all files from the queue"
 msgstr "Távolítsa el az összes fájlt a sorból."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 254
-msgid "Start converting all files in the queue"
-msgstr "Kezdje el az összes fájl átkonvertálását a sorban."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 255
-msgid "Convert this file with current editing settings"
-msgstr "Konvertáld ezt a fájlt a jelenlegi szerkesztési beállításokkal."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 256
 msgid "Open application menu"
@@ -885,6 +891,10 @@ msgstr "Szerkesztő"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
 msgid "Progress"
 msgstr "Haladás"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
