@@ -214,35 +214,32 @@ def get_tooltips():
     return {
         # Sidebar options
         "gpu": _(
-            "Automatic (Recommended). If your graphics card is supported, conversion is much faster. "
-            "If not, the app will use Software mode automatically. "
-            "You can also pick GPU or Software manually."
+            "If your GPU supports video encoding, conversion will be much faster.\n"
+            "Automatic detection is usually the best choice, but you can also select it manually.\n"
+            "Software mode is slower but compatible with more formats.\n"
+            "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back to Software mode if needed."
         ),
         "video_quality": _(
-            "Higher quality means a larger file."
+            "Higher quality means a larger file.\n"
+            "The default option is a good balance between image quality and file size."
         ),
-        "video_codec": _(
-            "H.264: Most compatible; fast to convert; larger files.\n"
-            "H.265: Smaller files; may not play on older devices.\n"
-            "VP9: Good for YouTube; can be slow without GPU support.\n"
-            "AV1: Smallest files; may be slow and not supported everywhere."
-        ),
+        "video_codec": _( "H.264: An older format that works on almost all devices. It takes up more storage space but is the fastest to convert.\n\nH.265: A newer version of H.264. It doesn't work on older devices and compresses files more efficiently.\n\nVP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the conversion can be very slow.\n\nAV1: The most modern format. It offers the best compression (creating smaller files), but the conversion can also be slow if the graphics card isn't compatible." ),
         "audio_handling": _(
-            "Keep original (Recommended): fastest and keeps full quality. "
-            "Convert: slightly lower quality, better compatibility, often smaller file."
+            "Copy is usually best — fast and preserves full quality. "
+            "Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
         ),
         "subtitles": _(
             "If subtitles are embedded, keeping them is usually best. "
             "Some players need an external subtitle file, which can improve compatibility."
         ),
         "force_copy": _(
-            "Copy video (very fast, full quality). "
-            "Great for quick cuts and trims for social media."
+            "Copying video is extremely fast and keeps full image quality. "
+            "Perfect for cutting or trimming videos for social media."
         ),
         # Advanced Settings
         "preset": _(
-            "Faster = bigger file. Slower = smaller file. "
-            "Choose what matters most: speed or size."
+            "Slower conversion produces smaller, more compressed files. "
+            "Faster presets create larger files but save time."
         ),
         "audio_codec": _(
             "Audio format (when converting):\n"
@@ -283,11 +280,14 @@ def get_tooltips():
         ),
         "crop": _("Crop the video's edges to keep only the part you need."),
         "segments": _(
-            "Choose the parts of the video to keep. Add sections with the + button or place markers on the player area.\nExport the selected parts as one file or as separate clips — great for social media."
+            "Select parts of the video to keep.\n\n"
+            "Add sections with the + button or directly on the video using markers.\n\n"
+            "You can export selected parts as one file or as multiple clips — ideal for creating short videos for social media."
         ),
         # Advanced Settings - additional options
         "gpu_partial": _(
-            "When using GPU acceleration, this option forces the encoder to be on the GPU and the encode to be on the CPU. It's usually better to leave this unchecked, but it can be useful for compatibility issues."
+            "Forces encoding to run on the GPU and final processing on the CPU.\n"
+            "Usually best left disabled, but can help with certain compatibility issues."
         ),
         "audio_bitrate": _(
             "Audio quality:\n"
