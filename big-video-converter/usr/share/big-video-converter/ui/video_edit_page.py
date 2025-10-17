@@ -4,11 +4,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("GdkPixbuf", "2.0")
-gi.require_version("Gst", "1.0")
-from gi.repository import GLib, Gtk, Adw, Gst, Gio
-
-# Initialize GStreamer
-Gst.init(None)
+from gi.repository import GLib, Gtk, Adw, Gio
 
 # Setup translation
 import gettext
@@ -18,7 +14,7 @@ _ = gettext.gettext
 # Import the modules we've split off
 from ui.video_edit_ui import VideoEditUI
 from ui.video_processing import VideoProcessor
-from ui.gstreamer_player import GStreamerPlayer
+from ui.mpv_player import MPVPlayer
 
 # Import from the unified video_settings module instead of separate modules
 from utils.video_settings import (
@@ -56,7 +52,8 @@ class VideoEditPage:
         self.processor = VideoProcessor(self)
         self.ui = VideoEditUI(self)
         self.page = self.ui.create_page()
-        self.gst_player = GStreamerPlayer(self.ui.preview_video)
+        # RENAMED: self.gst_player is now self.mpv_player
+        self.mpv_player = MPVPlayer(self.ui.preview_video)
         self.is_playing = False
         self.user_is_dragging_slider = False
         self.loading_video = False
@@ -65,6 +62,9 @@ class VideoEditPage:
 
         # Simple fullscreen support - just hide UI elements
         self.is_video_fullscreen = False
+        
+        # Debounce timer for saving metadata to avoid file I/O on every slider change
+        self.metadata_save_timeout = None
 
     def __del__(self):
         try:
@@ -88,6 +88,7 @@ class VideoEditPage:
                 "crop_top": 0,
                 "crop_bottom": 0,
                 "brightness": 0.0,
+                "contrast": 0.0,
                 "saturation": 1.0,
                 "hue": 0.0,
                 "output_mode": default_output_mode,
@@ -127,16 +128,18 @@ class VideoEditPage:
         # Update crop spinbuttons
         self.update_crop_spinbuttons()
 
-        # Apply values to GStreamer player
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_brightness(self.brightness)
-            self.gst_player.set_saturation(self.saturation)
-            self.gst_player.set_hue(self.hue)
-            self.gst_player.set_crop(
+        # Apply values to MPV player
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_brightness(self.brightness)
+            self.mpv_player.set_saturation(self.saturation)
+            self.mpv_player.set_hue(self.hue)
+            self.mpv_player.set_crop(
                 self.crop_left, self.crop_right, self.crop_top, self.crop_bottom
             )
+            # MPV handles render updates internally
 
     def _save_file_metadata(self):
+        """Save metadata immediately - use _save_file_metadata_debounced for slider changes"""
         if not self.current_video_path or not hasattr(self.app, "conversion_page"):
             return
         metadata = self.app_state.file_metadata.get(self.current_video_path, {})
@@ -152,6 +155,20 @@ class VideoEditPage:
             "output_mode": self.output_mode,
         })
         self.app_state.file_metadata[self.current_video_path] = metadata
+
+    def _save_file_metadata_debounced(self):
+        """Debounced version of _save_file_metadata to avoid excessive file I/O during slider drag"""
+        # Cancel any pending save
+        if self.metadata_save_timeout:
+            GLib.source_remove(self.metadata_save_timeout)
+        
+        # Schedule save with 500ms delay - will only execute after user stops dragging
+        def do_save():
+            self.metadata_save_timeout = None
+            self._save_file_metadata()
+            return False
+        
+        self.metadata_save_timeout = GLib.timeout_add(500, do_save)
 
     def set_video(self, file_path):
         if self.loading_video:
@@ -182,38 +199,43 @@ class VideoEditPage:
         if getattr(self, "cleanup_called", False):
             return
         self.cleanup_called = True
+        print("VideoEditPage: Starting cleanup")
 
         # Stop position updates
         if hasattr(self, "position_update_id") and self.position_update_id:
+            print("VideoEditPage: Removing position update timer")
             GLib.source_remove(self.position_update_id)
             self.position_update_id = None
 
-        # Explicitly stop playback BEFORE cleanup
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.stop()  # Stop immediately
-            self.gst_player.cleanup()  # Then clean up resources
-
+        # Update UI immediately before stopping playback
         self.is_playing = False
-
-        # Update UI
         if hasattr(self, "ui") and self.ui:
             self.ui.play_pause_button.set_icon_name("media-playback-start-symbolic")
+
+        # Explicitly cleanup MPV player (non-blocking)
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            print("VideoEditPage: Cleaning up MPV player")
+            # Just call cleanup once - it handles everything
+            self.mpv_player.cleanup()
 
         # Clear video path
         if hasattr(self, "current_video_path"):
             self.current_video_path = None
+        
+        print("VideoEditPage: Cleanup complete")
 
     def on_brightness_changed(self, scale):
         self.brightness = scale.get_value()
-        self._save_file_metadata()
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_brightness(self.brightness)
-            if not self.is_playing:
-                self._refresh_preview()
+        self._save_file_metadata_debounced()  # Use debounced save to avoid file I/O during drag
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_brightness(self.brightness)
+            # Don't refresh preview during drag - MPV updates automatically
+            # if not self.is_playing:
+            #     self._refresh_preview()
 
     def on_crop_value_changed(self, spinbutton):
-        """Handle crop value changes - simple call without manual seek"""
-        if not hasattr(self, "gst_player") or not hasattr(self.ui, "crop_left_spin"):
+        """Handle crop value changes - ensures preview updates immediately"""
+        if not hasattr(self, "mpv_player") or not hasattr(self.ui, "crop_left_spin"):
             return
 
         left = self.ui.crop_left_spin.get_value()
@@ -230,8 +252,8 @@ class VideoEditPage:
         # Save metadata so values persist
         self._save_file_metadata()
 
-        # Set crop in player - the player handles the refresh internally
-        self.gst_player.set_crop(left, right, top, bottom)
+        # Set crop in player - MPV should update automatically
+        self.mpv_player.set_crop(left, right, top, bottom)
 
     def format_time_precise(self, seconds):
         if seconds is None:
@@ -464,6 +486,7 @@ class VideoEditPage:
 
             except (ValueError, IndexError) as e:
                 self._show_error_dialog(_("Error"), str(e))
+
     def _show_error_dialog(self, title, message):
         """Show a simple error dialog"""
         error_dialog = Adw.MessageDialog.new(
@@ -607,28 +630,29 @@ class VideoEditPage:
             self.crop_bottom = 0
         self._save_file_metadata()
         self.update_crop_spinbuttons()
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_crop(
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_crop(
                 self.crop_left, self.crop_right, self.crop_top, self.crop_bottom
             )
-            if not self.is_playing:
-                self._refresh_preview()
+            # MPV handles render updates internally
 
     def on_saturation_changed(self, scale):
         self.saturation = scale.get_value()
-        self._save_file_metadata()
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_saturation(self.saturation)
-            if not self.is_playing:
-                self._refresh_preview()
+        self._save_file_metadata_debounced()  # Use debounced save
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_saturation(self.saturation)
+            # Don't refresh preview - MPV updates automatically
+            # if not self.is_playing:
+            #     self._refresh_preview()
 
     def on_hue_changed(self, scale):
         self.hue = scale.get_value()
-        self._save_file_metadata()
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_hue(self.hue)
-            if not self.is_playing:
-                self._refresh_preview()
+        self._save_file_metadata_debounced()  # Use debounced save
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_hue(self.hue)
+            # Don't refresh preview - MPV updates automatically
+            # if not self.is_playing:
+            #     self._refresh_preview()
 
     def _on_output_mode_changed(self, combo, pspec):
         """Handle output mode combo box change"""
@@ -643,8 +667,8 @@ class VideoEditPage:
         self.brightness = 0.0
         self.ui.brightness_scale.set_value(self.brightness)
         self._save_file_metadata()
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_brightness(self.brightness)
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_brightness(self.brightness)
             if not self.is_playing:
                 self._refresh_preview()
 
@@ -652,8 +676,8 @@ class VideoEditPage:
         self.saturation = 1.0
         self.ui.saturation_scale.set_value(self.saturation)
         self._save_file_metadata()
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_saturation(self.saturation)
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_saturation(self.saturation)
             if not self.is_playing:
                 self._refresh_preview()
 
@@ -661,8 +685,8 @@ class VideoEditPage:
         self.hue = 0.0
         self.ui.hue_scale.set_value(self.hue)
         self._save_file_metadata()
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_hue(self.hue)
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_hue(self.hue)
             if not self.is_playing:
                 self._refresh_preview()
 
@@ -684,21 +708,21 @@ class VideoEditPage:
 
     def _refresh_preview(self):
         if (
-            not hasattr(self, "gst_player")
-            or not self.gst_player
+            not hasattr(self, "mpv_player")
+            or not self.mpv_player
             or not hasattr(self, "current_position")
         ):
             return
         current_pos = self.current_position
-        self.gst_player.seek(current_pos)
+        self.mpv_player.seek(current_pos)
 
     def on_position_changed(self, scale):
         position = scale.get_value()
         if abs(position - self.current_position) < 0.001:
             return
         self.current_position = position
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.seek(position)
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.seek(position)
         self.update_position_display(position)
         self.update_frame_counter(position)
 
@@ -708,17 +732,17 @@ class VideoEditPage:
         self.ui.position_scale.set_value(new_position)
 
     def on_play_pause_clicked(self, button):
-        if not self.gst_player or self.loading_video:
+        if not self.mpv_player or self.loading_video:
             return
         if self.is_playing:
-            self.gst_player.pause()
+            self.mpv_player.pause()
             self.is_playing = False
             self.ui.play_pause_button.set_icon_name("media-playback-start-symbolic")
             if self.position_update_id:
                 GLib.source_remove(self.position_update_id)
                 self.position_update_id = None
         else:
-            self.gst_player.play()
+            self.mpv_player.play()
             self.is_playing = True
             self.ui.play_pause_button.set_icon_name("media-playback-pause-symbolic")
             if not self.position_update_id:
@@ -727,12 +751,12 @@ class VideoEditPage:
                 )
 
     def _update_position_callback(self):
-        if not self.is_playing or not self.gst_player:
+        if not self.is_playing or not self.mpv_player:
             self.position_update_id = None
             return False
         if self.user_is_dragging_slider:
             return True
-        pos = self.gst_player.get_position()
+        pos = self.mpv_player.get_position()
         self.current_position = pos
         if self.position_changed_handler_id:
             self.ui.position_scale.handler_block(self.position_changed_handler_id)
@@ -753,8 +777,8 @@ class VideoEditPage:
 
     def on_volume_changed(self, scale):
         volume = scale.get_value()
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_volume(volume)
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_volume(volume)
             if hasattr(self.ui, "volume_button"):
                 if volume == 0:
                     self.ui.volume_button.set_icon_name("audio-volume-muted-symbolic")
@@ -766,9 +790,9 @@ class VideoEditPage:
                     self.ui.volume_button.set_icon_name("audio-volume-high-symbolic")
 
     def on_audio_track_changed(self, track_index):
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_audio_track(track_index)
-            audio_tracks = self.gst_player.get_audio_tracks()
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_audio_track(track_index)
+            audio_tracks = self.mpv_player.get_audio_tracks()
             for track in audio_tracks:
                 action = self.app.window.lookup_action(f"audio-track-{track['index']}")
                 if action:
@@ -777,12 +801,12 @@ class VideoEditPage:
                     )
 
     def on_subtitle_track_changed(self, track_index):
-        if hasattr(self, "gst_player") and self.gst_player:
-            self.gst_player.set_subtitle_track(track_index)
+        if hasattr(self, "mpv_player") and self.mpv_player:
+            self.mpv_player.set_subtitle_track(track_index)
             disabled_action = self.app.window.lookup_action("subtitle-track-disabled")
             if disabled_action:
                 disabled_action.set_state(GLib.Variant.new_boolean(track_index == -1))
-            subtitle_tracks = self.gst_player.get_subtitle_tracks()
+            subtitle_tracks = self.mpv_player.get_subtitle_tracks()
             for track in subtitle_tracks:
                 action = self.app.window.lookup_action(
                     f"subtitle-track-{track['index']}"
@@ -793,16 +817,16 @@ class VideoEditPage:
                     )
 
     def update_audio_subtitle_controls(self):
-        if not hasattr(self, "gst_player") or not self.gst_player:
+        if not hasattr(self, "mpv_player") or not self.mpv_player:
             return
         self._populate_track_menus_attempts = 0
         GLib.timeout_add(200, self._populate_track_menus)
 
     def _populate_track_menus(self):
-        if not hasattr(self, "gst_player") or not self.gst_player:
+        if not hasattr(self, "mpv_player") or not self.mpv_player:
             return False
-        audio_tracks = self.gst_player.get_audio_tracks()
-        subtitle_tracks = self.gst_player.get_subtitle_tracks()
+        audio_tracks = self.mpv_player.get_audio_tracks()
+        subtitle_tracks = self.mpv_player.get_subtitle_tracks()
         if (
             not audio_tracks
             and not subtitle_tracks
@@ -820,7 +844,7 @@ class VideoEditPage:
                         action_name,
                         None,
                         GLib.Variant.new_boolean(
-                            track["index"] == self.gst_player.current_audio_track
+                            track["index"] == self.mpv_player.current_audio_track
                         ),
                     )
                     action.connect(
@@ -841,7 +865,7 @@ class VideoEditPage:
                     action_name,
                     None,
                     GLib.Variant.new_boolean(
-                        self.gst_player.current_subtitle_track == -1
+                        self.mpv_player.current_subtitle_track == -1
                     ),
                 )
                 action.connect(
@@ -856,7 +880,7 @@ class VideoEditPage:
                         action_name,
                         None,
                         GLib.Variant.new_boolean(
-                            track["index"] == self.gst_player.current_subtitle_track
+                            track["index"] == self.mpv_player.current_subtitle_track
                         ),
                     )
                     action.connect(

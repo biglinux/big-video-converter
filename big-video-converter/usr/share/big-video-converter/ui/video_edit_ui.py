@@ -37,11 +37,12 @@ class VideoEditUI:
         )
         video_box.add_css_class("video-background")
 
-        self.preview_video = Gtk.Picture()
+        # Video player widget - using GLArea for MPV OpenGL rendering
+        # GLArea provides OpenGL context for MPV render API
+        self.preview_video = Gtk.GLArea()
         self.preview_video.set_hexpand(True)
         self.preview_video.set_vexpand(True)
-        self.preview_video.set_can_shrink(True)
-        self.preview_video.set_keep_aspect_ratio(True)
+        self.preview_video.set_auto_render(False)  # MPV controls rendering
         video_box.append(self.preview_video)
 
         self.video_overlay.set_child(video_box)
@@ -338,7 +339,9 @@ class VideoEditUI:
             self.page.on_brightness_changed,
             self.page.reset_brightness,
         )
-        self.brightness_row = brightness_row  # Store reference for tooltip reapplication
+        self.brightness_row = (
+            brightness_row  # Store reference for tooltip reapplication
+        )
         # Add tooltip to brightness row
         if brightness_row and hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(brightness_row, "brightness")
@@ -352,7 +355,9 @@ class VideoEditUI:
             self.page.on_saturation_changed,
             self.page.reset_saturation,
         )
-        self.saturation_row = saturation_row  # Store reference for tooltip reapplication
+        self.saturation_row = (
+            saturation_row  # Store reference for tooltip reapplication
+        )
         # Add tooltip to saturation row
         if saturation_row and hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(saturation_row, "saturation")
@@ -502,10 +507,10 @@ class VideoEditUI:
         if not self.page.current_video_path:
             return
 
-        if not hasattr(self.page, "gst_player") or not self.page.gst_player:
+        if not hasattr(self.page, "mpv_player") or not self.page.mpv_player:
             return
 
-        duration = self.page.gst_player.get_duration()
+        duration = self.page.mpv_player.get_duration()
         if duration <= 0:
             return
 
@@ -568,9 +573,9 @@ class VideoEditUI:
         self.segment_markers_canvas.add_controller(motion_controller)
 
     def _find_segment_edge_at_position(self, x, width):
-        if not self.page.trim_segments or not hasattr(self.page, "gst_player"):
+        if not self.page.trim_segments or not hasattr(self.page, "mpv_player"):
             return None
-        duration = self.page.gst_player.get_duration()
+        duration = self.page.mpv_player.get_duration()
         if duration <= 0:
             return None
         for idx, segment in enumerate(self.page.trim_segments):
@@ -615,9 +620,9 @@ class VideoEditUI:
         self._drag_start_pos = None
 
     def _update_slider_drag(self, x, width):
-        if not hasattr(self.page, "gst_player"):
+        if not hasattr(self.page, "mpv_player"):
             return
-        duration = self.page.gst_player.get_duration()
+        duration = self.page.mpv_player.get_duration()
         if duration <= 0:
             return
         new_time = (x / width) * duration
@@ -636,9 +641,9 @@ class VideoEditUI:
         self.segment_markers_canvas.set_cursor(None)
 
     def _update_segment_drag(self, x, width):
-        if not self._dragging_segment or not hasattr(self.page, "gst_player"):
+        if not self._dragging_segment or not hasattr(self.page, "mpv_player"):
             return
-        duration = self.page.gst_player.get_duration()
+        duration = self.page.mpv_player.get_duration()
         if duration <= 0:
             return
         new_time = (x / width) * duration
@@ -707,9 +712,9 @@ class VideoEditUI:
         """Apply tooltips to all video edit UI elements"""
         if not hasattr(self.page.app, "tooltip_helper"):
             return
-        
+
         tooltip_helper = self.page.app.tooltip_helper
-        
+
         # Apply tooltips to stored widget references
         if hasattr(self, "crop_grid") and self.crop_grid:
             tooltip_helper.add_tooltip(self.crop_grid, "crop")

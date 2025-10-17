@@ -1,8 +1,12 @@
 #!/bin/sh
 
+# Stupid complexity to run in appimage
 # Determine the script directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SHARE_DIR="$(dirname "$SCRIPT_DIR")/share"
+
+# OpenGL MPV need ngl renderer
+export GSK_RENDERER="ngl"
 
 # If running from installed location
 if [ -d "/usr/share/big-video-converter" ]; then

@@ -910,6 +910,9 @@ class ConversionPage:
                         traceback.print_exc()
 
                 # Important: Apply crop values to settings manager so they'll be included in video_filter
+                print(f"DEBUG: Crop values - left={crop_left}, right={crop_right}, top={crop_top}, bottom={crop_bottom}")
+                print(f"DEBUG: Video dimensions - width={video_width}, height={video_height}")
+                
                 if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:
                     print(
                         f"Setting crop values in settings: left={crop_left}, right={crop_right}, top={crop_top}, bottom={crop_bottom}"

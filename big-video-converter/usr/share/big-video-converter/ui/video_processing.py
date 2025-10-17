@@ -120,11 +120,11 @@ class VideoProcessor:
         self.page.ui.info_filesize_label.set_text(file_size_str)
         self.page.ui.info_duration_label.set_text(duration_formatted)
 
-        # --- Load into GStreamer and finalize ---
-        if hasattr(self.page, "gst_player") and self.page.gst_player:
-            if not self.page.gst_player.load_video(file_path):
+        # --- Load into video player and finalize ---
+        if hasattr(self.page, "mpv_player") and self.page.mpv_player:
+            if not self.page.mpv_player.load_video(file_path):
                 self.page.app.show_error_dialog(
-                    "Error: GStreamer failed to load video."
+                    "Error: Failed to load video file. Please check the file format and try again."
                 )
                 self.page.loading_video = False
                 return
@@ -143,6 +143,17 @@ class VideoProcessor:
 
         # Update audio and subtitle track controls
         self.page.update_audio_subtitle_controls()
+
+        # Start playback automatically and update UI state
+        if hasattr(self.page, "mpv_player") and self.page.mpv_player:
+            self.page.mpv_player.play()
+            self.page.is_playing = True
+            self.page.ui.play_pause_button.set_icon_name("media-playback-pause-symbolic")
+            # Start position update timer
+            if not self.page.position_update_id:
+                self.page.position_update_id = GLib.timeout_add(
+                    100, self.page._update_position_callback
+                )
 
         # Finally, release the loading lock
         self.page.loading_video = False

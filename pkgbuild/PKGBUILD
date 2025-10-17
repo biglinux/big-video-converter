@@ -3,7 +3,7 @@
 pkgname=big-video-converter
 pkgdesc="Optimized MKV to MP4 video converter"
 # Uncomment and edit the following lines as needed
-depends=('python' 'python-gobject' 'gtk4' 'ffmpeg' 'python-cairo' 'gst-plugin-gtk4' 'libadwaita' 'libva-utils')
+depends=('python' 'python-gobject' 'gtk4' 'ffmpeg' 'python-cairo' 'python-mpv' 'libadwaita' 'libva-utils' 'python-opengl')
 #makedepends=('')
 #optdepends=('')
 conflicts=('comm-video-converter')

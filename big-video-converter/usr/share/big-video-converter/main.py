@@ -1101,8 +1101,8 @@ class VideoConverterApp(Adw.Application):
 
         if self.video_edit_page.is_playing:
             print("Stopping video playback before conversion")
-            if self.video_edit_page.gst_player:
-                self.video_edit_page.gst_player.pause()
+            if self.video_edit_page.mpv_player:
+                self.video_edit_page.mpv_player.pause()
             self.video_edit_page.is_playing = False
             if hasattr(self.video_edit_page, "ui") and hasattr(
                 self.video_edit_page.ui, "play_pause_button"
