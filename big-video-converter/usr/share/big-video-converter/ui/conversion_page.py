@@ -733,7 +733,7 @@ class ConversionPage:
         try:
             if hasattr(self.app, "settings_manager"):
                 # Get settings directly using string values instead of indices
-                env_vars = {}
+                env_vars = os.environ.copy()
 
                 # Check if force copy video is enabled
                 force_copy_video_enabled = self.app.settings_manager.get_boolean(
