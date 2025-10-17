@@ -646,6 +646,24 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                             current_frame = int(frame_match.group(1))
                             max_current_frame = max(max_current_frame, current_frame)
 
+                            # Also extract current time if available in the same line
+                            if "time=" in line:
+                                time_match = time_pattern.search(line)
+                                if time_match:
+                                    try:
+                                        time_str = time_match.group(1)
+                                        h, m, rest = time_str.split(":")
+                                        s = rest.split(".")[0]
+                                        ms = rest.split(".")[1] if "." in rest else "0"
+                                        current_time_secs = (
+                                            int(h) * 3600
+                                            + int(m) * 60
+                                            + int(s)
+                                            + (int(ms) / 100)
+                                        )
+                                    except Exception as e:
+                                        pass  # Ignore time parsing errors
+
                             # Get info about current fps
                             current_fps = None
                             fps_match = fps_pattern.search(line)
@@ -661,11 +679,21 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 and duration_secs is not None
                                 and duration_secs > 0
                             ):
-                                if current_fps is not None and 1 <= current_fps <= 120:
-                                    # Only use current_fps if it's reasonable
+                                # Try to use video_fps first (from Stream info)
+                                if video_fps is not None and 1 <= video_fps <= 120:
+                                    total_frames = int(duration_secs * video_fps)
+                                    print(
+                                        f"Estimated total frames from video fps: {total_frames} (duration={duration_secs:.2f}s, fps={video_fps})"
+                                    )
+                                    GLib.idle_add(
+                                        progress_item.add_output_text,
+                                        f"Estimated total frames: {total_frames} (from video stream fps: {video_fps})",
+                                    )
+                                # Fallback: use current_fps if available and reasonable
+                                elif current_fps is not None and 1 <= current_fps <= 120:
                                     total_frames = int(duration_secs * current_fps)
                                     print(
-                                        f"Estimated total frames from current fps: {total_frames}"
+                                        f"Estimated total frames from current fps: {total_frames} (duration={duration_secs:.2f}s, fps={current_fps})"
                                     )
                                     GLib.idle_add(
                                         progress_item.add_output_text,
@@ -811,8 +839,43 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                     except Exception as e:
                                         print(f"Error calculating time progress: {e}")
 
-                            # If neither frame nor time progress works, show frames processed with fps if available
+                            # If neither frame nor time progress works, try to estimate from current data
                             else:
+                                # Try to calculate total frames if we have duration, current time, and current frame
+                                if (
+                                    total_frames is None
+                                    and duration_secs is not None
+                                    and duration_secs > 0
+                                    and current_time_secs > 1
+                                    and current_frame > 30
+                                ):
+                                    # Estimate FPS from observed data: fps = frames / time
+                                    estimated_fps = current_frame / current_time_secs
+                                    if 1 <= estimated_fps <= 120:
+                                        total_frames = int(duration_secs * estimated_fps)
+                                        print(
+                                            f"Estimated total frames from progress data: {total_frames} (fps={estimated_fps:.2f}, duration={duration_secs:.2f}s)"
+                                        )
+                                        GLib.idle_add(
+                                            progress_item.add_output_text,
+                                            f"Estimated total frames: {total_frames} (calculated from progress: {estimated_fps:.1f} fps)",
+                                        )
+                                        # Now recalculate progress with new total_frames
+                                        progress = min(0.99, current_frame / total_frames)
+                                        fps_display = f"{current_fps:.1f}" if current_fps is not None else f"{estimated_fps:.1f}"
+                                        friendly_mode = encode_mode_map.get(encode_mode, encode_mode)
+                                        status_msg = f"{_('Speed')}: {fps_display} fps\n{friendly_mode}"
+                                        GLib.idle_add(
+                                            progress_item.update_progress,
+                                            progress,
+                                            f"{int(progress * 100)}%",
+                                        )
+                                        GLib.idle_add(
+                                            progress_item.update_status, status_msg
+                                        )
+                                        # Skip the rest of this fallback section since we now have progress
+                                        continue
+
                                 # Modified status message for indeterminate progress
                                 if current_fps is not None:
                                     # Get the friendly encode mode for display
