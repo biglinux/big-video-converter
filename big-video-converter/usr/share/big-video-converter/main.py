@@ -78,7 +78,7 @@ class VideoConverterApp(Adw.Application):
         )
 
         # Initialize tooltip helper
-        self.tooltip_helper = TooltipHelper(self.settings_manager)
+        self.tooltip_helper = TooltipHelper(self)
 
         # Initialize logger
         self.logger = logging.getLogger(__name__)
