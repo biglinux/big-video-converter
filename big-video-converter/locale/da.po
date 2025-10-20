@@ -1164,6 +1164,68 @@ msgstr "Gem hver sektion som en separat fil"
 msgid "Reset to default"
 msgstr "Nulstil til standard"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
+msgid "FFmpeg Installation"
+msgstr "FFmpeg installation"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
+msgid "Installation Required"
+msgstr "Installation påkrævet"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
+msgid "FFmpeg is required for this application to function."
+msgstr "FFmpeg er påkrævet for, at denne applikation kan fungere."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
+msgid "Due to legal restrictions in some countries, FFmpeg is not bundled with the application."
+msgstr "På grund af juridiske begrænsninger i nogle lande er FFmpeg ikke inkluderet i applikationen."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
+msgid "Command to be executed"
+msgstr "Kommando, der skal udføres"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 72
+msgid ""
+"<b>Administrator privileges required</b>\n"
+"You will be asked for your password to install system packages."
+msgstr ""
+"<b>Administratorrettigheder kræves</b>\n"
+"Du vil blive bedt om din adgangskode for at installere systempakker."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 81
+msgid "Installation Output"
+msgstr "Installationsoutput"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
+msgid "Install FFmpeg"
+msgstr "Installer FFmpeg"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
+msgid "Close"
+msgstr "Luk"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 125
+msgid ""
+"Starting installation...\n"
+"\n"
+msgstr "Starter installation..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 172
+msgid "Installation completed successfully!"
+msgstr "Installation gennemført med succes!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 173
+msgid "Please restart the application."
+msgstr "Genstart venligst applikationen."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 177
+msgid "Installation failed."
+msgstr "Installation mislykkedes."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 178
+msgid "Please check the errors above and try again."
+msgstr "Kontroller venligst fejlene ovenfor og prøv igen."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 295
 msgid "Go to segment start"
 msgstr "Gå til segmentstart"
@@ -1564,6 +1626,10 @@ msgstr "Redaktør"
 msgid "Progress"
 msgstr "Fremskridt"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
@@ -1693,3 +1759,31 @@ msgstr "Ingen filer tilføjet"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 975
 msgid "No valid video files were found in your selection."
 msgstr "Der blev ikke fundet gyldige videofiler i dit valg."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
+msgid "FFmpeg Not Found"
+msgstr "FFmpeg ikke fundet"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
+msgid ""
+"FFmpeg is not installed and we could not determine how to install it for your system.\n"
+"Please install it manually using your distribution's package manager."
+msgstr ""
+"FFmpeg er ikke installeret, og vi kunne ikke finde ud af, hvordan man installerer det til dit "
+"system. Venligst installer det manuelt ved hjælp af din distributions pakkehåndtering."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
+msgid "Installation Successful"
+msgstr "Installation gennemført"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
+msgid "FFmpeg has been installed. The application will now restart."
+msgstr "FFmpeg er blevet installeret. Applikationen genstarter nu."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
+msgid "Installation Failed"
+msgstr "Installation mislykkedes"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
+msgid "FFmpeg was not found after installation. Please restart the application manually."
+msgstr "FFmpeg blev ikke fundet efter installation. Genstart venligst applikationen manuelt."
