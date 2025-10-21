@@ -1,159 +1,148 @@
 """
-Tooltip helper for showing helpful explanations on UI elements.
-Provides a simple way to add tooltips to any GTK widget.
+A robust, state-managed tooltip helper for GTK4.
 """
 
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Gtk, GLib
+gi.require_version("Gdk", "4.0")
+from gi.repository import Gtk, Gdk, GLib
 
 from constants import get_tooltips
 
 
 class TooltipHelper:
-    """Helper class to manage tooltips across the application."""
+    """
+    Manages a single, reusable Gtk.Popover to display custom tooltips.
+
+    Rationale: This is the canonical implementation. It uses a singleton popover
+    to prevent state conflicts. The animation is handled by CSS classes, and the
+    fade-in is reliably triggered by hooking into the popover's "map" signal.
+    This avoids all race conditions with the GTK renderer.
+    """
 
     def __init__(self, settings_manager):
-        """Initialize the tooltip helper with settings manager."""
         self.settings_manager = settings_manager
-        self.tooltip_popovers = {}  # Store popovers for cleanup
-        self.tooltip_timers = {}  # Store timer IDs for delay
-        self.tooltips = get_tooltips()  # Get translated tooltips
+        self.tooltips = get_tooltips()
+
+        # --- State Machine Variables ---
+        self.active_widget = None
+        self.show_timer_id = None
+
+        # --- The Single, Reusable Popover ---
+        self.popover = Gtk.Popover()
+        self.popover.set_autohide(False)
+        self.popover.set_has_arrow(True)
+        self.popover.set_position(Gtk.PositionType.TOP)
+        
+        self.label = Gtk.Label(
+            wrap=True,
+            max_width_chars=50,
+            margin_start=12,
+            margin_end=12,
+            margin_top=8,
+            margin_bottom=8,
+            halign=Gtk.Align.START,
+        )
+        self.popover.set_child(self.label)
+
+        # --- CSS for Class-Based Animation ---
+        self.css_provider = Gtk.CssProvider()
+        css = b"""
+        .tooltip-popover {
+            opacity: 0;
+            transition: opacity 250ms ease-in-out;
+        }
+        .tooltip-popover.visible {
+            opacity: 1;
+        }
+        """
+        self.css_provider.load_from_data(css)
+        self.popover.add_css_class("tooltip-popover")
+        
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(), self.css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+        )
+
+        # Connect to the "map" signal to trigger the fade-in animation.
+        self.popover.connect("map", self._on_popover_map)
+
+    def _on_popover_map(self, popover):
+        """Called when the popover is drawn. Adds the .visible class to fade in."""
+        self.popover.add_css_class("visible")
 
     def is_enabled(self):
-        """Check if tooltips are enabled in settings."""
         return self.settings_manager.load_setting("show-tooltips", True)
 
     def add_tooltip(self, widget, tooltip_key):
-        """
-        Add a tooltip to a widget.
-
-        Args:
-            widget: The GTK widget to attach tooltip to
-            tooltip_key: The key in TOOLTIPS dictionary
-        """
-        if not self.is_enabled():
-            return
-
-        tooltip_text = self.tooltips.get(tooltip_key)
-        if not tooltip_text:
-            return
-
-        # Create popover for this widget
-        popover = Gtk.Popover()
-        popover.set_autohide(False)
-        popover.set_position(Gtk.PositionType.TOP)
-        popover.set_parent(widget)
-
-        # Create label with tooltip text
-        label = Gtk.Label()
-        label.set_text(tooltip_text)
-        label.set_wrap(True)
-        label.set_max_width_chars(50)
-        label.set_margin_start(12)
-        label.set_margin_end(12)
-        label.set_margin_top(8)
-        label.set_margin_bottom(8)
-        label.set_halign(Gtk.Align.START)
-        popover.set_child(label)
-
-        # Store popover reference
-        self.tooltip_popovers[widget] = popover
-
-        # Add motion controller to show/hide tooltip
+        """Connects a widget to the tooltip management system."""
+        widget.tooltip_key = tooltip_key
+        
         motion_controller = Gtk.EventControllerMotion.new()
-        motion_controller.connect(
-            "enter", lambda c, x, y: self._schedule_show_tooltip(widget, popover) if self.is_enabled() else None
-        )
-        motion_controller.connect("leave", lambda c: self._cancel_and_hide_tooltip(widget, popover))
+        motion_controller.connect("enter", self._on_enter, widget)
+        motion_controller.connect("leave", self._on_leave)
         widget.add_controller(motion_controller)
 
-    def _schedule_show_tooltip(self, widget, popover):
-        """Schedule tooltip to show after 200ms delay."""
-        # Cancel any existing timer for this widget
-        if widget in self.tooltip_timers:
-            GLib.source_remove(self.tooltip_timers[widget])
-            del self.tooltip_timers[widget]
-        
-        # Schedule tooltip to show after 200ms
-        timer_id = GLib.timeout_add(200, lambda: self._show_tooltip_with_animation(widget, popover))
-        self.tooltip_timers[widget] = timer_id
+    def _clear_timer(self):
+        if self.show_timer_id:
+            GLib.source_remove(self.show_timer_id)
+            self.show_timer_id = None
 
-    def _show_tooltip_with_animation(self, widget, popover):
-        """Show tooltip popover with 200ms fade-in animation."""
-        # Remove timer reference
-        if widget in self.tooltip_timers:
-            del self.tooltip_timers[widget]
-        
-        
-        # Show the popover
-        popover.popup()
-        
-        # Animate opacity from 0 to 1 over 200ms
-        self._animate_opacity(popover, 0.0, 1.0, 200)
-        
-        return False  # Don't repeat timer
+    def _on_enter(self, controller, x, y, widget):
+        if not self.is_enabled() or self.active_widget == widget:
+            return
 
-    def _cancel_and_hide_tooltip(self, widget, popover):
-        """Cancel scheduled tooltip and hide if visible."""
-        # Cancel any pending timer
-        if widget in self.tooltip_timers:
-            GLib.source_remove(self.tooltip_timers[widget])
-            del self.tooltip_timers[widget]
+        self._clear_timer()
+        self._hide_tooltip()
+
+        self.active_widget = widget
+        self.show_timer_id = GLib.timeout_add(250, self._show_tooltip)
+
+    def _on_leave(self, controller):
+        self._clear_timer()
+        if self.active_widget:
+            self._hide_tooltip(animate=True)
+            self.active_widget = None
+
+    def _show_tooltip(self):
+        if not self.active_widget:
+            return GLib.SOURCE_REMOVE
+
+        tooltip_key = self.active_widget.tooltip_key
+        tooltip_text = self.tooltips.get(tooltip_key)
+
+        if not tooltip_text:
+            return GLib.SOURCE_REMOVE
+
+        # Configure and place on screen. The popover is initially transparent
+        # due to the .tooltip-popover class. The "map" signal will then
+        # trigger the animation by adding the .visible class.
+        self.label.set_text(tooltip_text)
+        self.popover.set_parent(self.active_widget)
+        self.popover.popup()
         
-        # Hide tooltip with animation
-        self._hide_tooltip(popover)
+        self.show_timer_id = None
+        return GLib.SOURCE_REMOVE
 
-    def _animate_opacity(self, popover, start_opacity, end_opacity, duration_ms):
-        """Animate popover opacity over specified duration."""
-        steps = 20  # Number of animation steps
-        step_duration = duration_ms // steps
-        opacity_increment = (end_opacity - start_opacity) / steps
-        current_step = [0]  # Use list to allow modification in nested function
-        
-        def update_opacity():
-            current_step[0] += 1
-            new_opacity = start_opacity + (opacity_increment * current_step[0])
-            
-            if current_step[0] >= steps:
-                popover.set_opacity(end_opacity)
-                return False  # Stop animation
-            else:
-                popover.set_opacity(new_opacity)
-                return True  # Continue animation
-        
-        GLib.timeout_add(step_duration, update_opacity)
+    def _hide_tooltip(self, animate=False):
+        if not self.popover.is_visible():
+            return
 
-    def _show_tooltip(self, popover):
-        """Show tooltip popover."""
-        popover.popup()
+        def do_cleanup():
+            self.popover.popdown()
+            self.popover.unparent()
+            return GLib.SOURCE_REMOVE
 
-    def _hide_tooltip(self, popover):
-        """Hide tooltip popover."""
-        popover.popdown()
+        # This triggers the fade-out animation.
+        self.popover.remove_css_class("visible")
 
-    def refresh_all(self):
-        """Refresh all tooltips based on current settings."""
-        enabled = self.is_enabled()
-
-        for widget, popover in self.tooltip_popovers.items():
-            if not enabled:
-                # Hide all tooltips if disabled and cancel any pending timers
-                if widget in self.tooltip_timers:
-                    GLib.source_remove(self.tooltip_timers[widget])
-                    del self.tooltip_timers[widget]
-                popover.popdown()
+        if animate:
+            # Wait for animation to finish before cleaning up.
+            GLib.timeout_add(200, do_cleanup)
+        else:
+            do_cleanup()
 
     def cleanup(self):
-        """Clean up all tooltip popovers and timers."""
-        # Cancel all pending timers
-        for timer_id in self.tooltip_timers.values():
-            GLib.source_remove(timer_id)
-        self.tooltip_timers.clear()
-        
-        # Clean up popovers
-        for popover in self.tooltip_popovers.values():
-            popover.unparent()
-        self.tooltip_popovers.clear()
-
+        """Call this when the application is shutting down."""
+        self._clear_timer()
+        self.popover.unparent()
