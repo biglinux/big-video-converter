@@ -13,7 +13,6 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-gi.require_version("Vte", "3.91") # Add this line for the terminal widget
 # Setup translation
 import gettext
 
@@ -29,8 +28,6 @@ from ui.video_edit_page import VideoEditPage
 from ui.welcome_dialog import WelcomeDialog
 from utils.settings_manager import SettingsManager
 from utils.tooltip_helper import TooltipHelper
-from utils.dependency_checker import DependencyChecker
-from ui.dependency_dialog import InstallDependencyDialog
 
 _ = gettext.gettext
 
@@ -76,13 +73,12 @@ class VideoConverterApp(Adw.Application):
 
         # Initialize settings
         self.settings_manager = SettingsManager(APP_ID)
-        self.dependency_checker = DependencyChecker()
         self.last_accessed_directory = self.settings_manager.load_setting(
             "last-accessed-directory", os.path.expanduser("~")
         )
 
         # Initialize tooltip helper
-        self.tooltip_helper = TooltipHelper(self)
+        self.tooltip_helper = TooltipHelper(self.settings_manager)
 
         # Initialize logger
         self.logger = logging.getLogger(__name__)
@@ -145,26 +141,18 @@ class VideoConverterApp(Adw.Application):
         if is_first_activation:
             self._create_window()
 
-        # Present the window early so dialogs can be transient for it
-        self.window.present()
-
-        # --- FFmpeg Dependency Check ---
-        if not self.dependency_checker.is_ffmpeg_available():
-            self._show_ffmpeg_install_dialog()
-            # Don't proceed with normal activation until ffmpeg is handled
-            return
-        # --- End of Check ---
-
         # Reset trim settings on startup
         self.reset_trim_settings()
 
-        # Process any queued files
+        # Present window and process any queued files
+        self.window.present()
+
         if hasattr(self, "queued_files") and self.queued_files:
             for file_path in self.queued_files:
                 self.add_to_conversion_queue(file_path)
             self.queued_files = []
 
-        # Show welcome dialog only on first activation
+        # Show welcome dialog only on first activation (not when files are added externally)
         if is_first_activation and WelcomeDialog.should_show_welcome(self.settings_manager):
             GLib.idle_add(self._show_welcome_dialog_startup)
 
@@ -1668,48 +1656,6 @@ class VideoConverterApp(Adw.Application):
                     )
         except Exception as error:
             print(f"Files not selected: {error}")
-            
-    def _show_ffmpeg_install_dialog(self):
-        """Shows the dialog to install FFmpeg."""
-        install_info = self.dependency_checker.get_install_command()
-        if not install_info:
-            self.show_error_dialog(
-                _("FFmpeg Not Found"),
-                _("FFmpeg is not installed and we could not determine how to install it for your system.\nPlease install it manually using your distribution's package manager.")
-            )
-            # Disable the main window as the app is not usable
-            self.window.set_sensitive(False)
-            return
-
-        dialog = InstallDependencyDialog(self.window, install_info)
-
-        def on_dialog_close(widget):
-            if dialog.installation_success:
-                # Re-check for ffmpeg
-                self.dependency_checker = DependencyChecker()
-                if self.dependency_checker.is_ffmpeg_available():
-                    self.show_info_dialog(
-                        _("Installation Successful"),
-                        _("FFmpeg has been installed. The application will now restart.")
-                    )
-                    # Restart the application
-                    self.quit()
-                    subprocess.Popen([sys.executable] + sys.argv)
-                else:
-                    self.show_error_dialog(
-                        _("Installation Failed"),
-                        _("FFmpeg was not found after installation. Please restart the application manually.")
-                    )
-                    self.quit()
-            else:
-                # User cancelled or installation failed, quit the app
-                self.quit()
-
-        dialog.connect("close-request", on_dialog_close)
-        
-        # Disable main window while this critical dialog is open
-        self.window.set_sensitive(False)
-        dialog.present()
 
 
 def main():
