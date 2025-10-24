@@ -16,7 +16,6 @@ from urllib.parse import unquote
 # This is mandatory in modern PyGObject to prevent warnings and ensure API compatibility.
 import gi
 gi.require_version('Gtk', '4.0')
-gi.require_version('Nautilus', '4.0')
 
 from gi.repository import GObject, Nautilus
 
@@ -51,11 +50,15 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
             'video/mp2t', 'video/x-flv', 'video/3gpp', 'video/ogg'
         }
 
-    def get_file_items(self, files: list[Nautilus.FileInfo]) -> list[Nautilus.MenuItem]:
+    def get_file_items(self, *args):
         """
         Returns menu items for the selected files.
         The menu is only shown if one or more supported video files are selected.
+        
+        Note: Using *args for compatibility across Nautilus versions.
+        The last argument is always the list of selected files.
         """
+        files = args[-1]
         video_files = [f for f in files if self._is_video_file(f)]
         if not video_files:
             return []
