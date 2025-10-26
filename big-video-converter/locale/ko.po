@@ -980,6 +980,98 @@ msgstr "파일이 추가되지 않았습니다."
 msgid "No valid video files were found in your selection."
 msgstr "선택한 항목에서 유효한 비디오 파일을 찾을 수 없습니다."
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
+msgid "FFmpeg Not Found"
+msgstr "FFmpeg을 찾을 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
+msgid ""
+"FFmpeg is not installed and we could not determine how to install it for your system.\n"
+"Please install it manually using your distribution's package manager."
+msgstr "FFmpeg이 설치되어 있지 않으며, 귀하의 시스템에 설치하는 방법을 확인할 수 없습니다. 배포판의 패키지 관리자를 사용하여 수동으로 설치해 주십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
+msgid "Installation Successful"
+msgstr "설치 성공"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
+msgid "FFmpeg has been installed. The application will now restart."
+msgstr "FFmpeg가 설치되었습니다. 애플리케이션이 이제 재시작됩니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
+msgid "Installation Failed"
+msgstr "설치 실패"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
+msgid "FFmpeg was not found after installation. Please restart the application manually."
+msgstr "설치 후 FFmpeg를 찾을 수 없습니다. 애플리케이션을 수동으로 다시 시작해 주십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
+msgid "FFmpeg Installation"
+msgstr "FFmpeg 설치"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
+msgid "Installation Required"
+msgstr "설치 필요"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
+msgid "FFmpeg is required for this application to function."
+msgstr "이 애플리케이션이 작동하려면 FFmpeg가 필요합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
+msgid "Due to legal restrictions in some countries, FFmpeg is not bundled with the application."
+msgstr "일부 국가의 법적 제한으로 인해 FFmpeg는 애플리케이션과 함께 번들되지 않습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
+msgid "Command to be executed"
+msgstr "실행할 명령"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 72
+msgid ""
+"<b>Administrator privileges required</b>\n"
+"You will be asked for your password to install system packages."
+msgstr ""
+"<b>관리자 권한 필요</b>  \n"
+"시스템 패키지를 설치하려면 비밀번호를 입력하라는 메시지가 표시됩니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 81
+msgid "Installation Output"
+msgstr "설치 출력"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 318
+msgid "Cancel"
+msgstr "취소"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
+msgid "Install FFmpeg"
+msgstr "FFmpeg 설치"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
+msgid "Close"
+msgstr "닫기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 125
+msgid ""
+"Starting installation...\n"
+"\n"
+msgstr "설치 시작 중..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 172
+msgid "Installation completed successfully!"
+msgstr "설치가 성공적으로 완료되었습니다!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 173
+msgid "Please restart the application."
+msgstr "애플리케이션을 다시 시작해 주세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 177
+msgid "Installation failed."
+msgstr "설치에 실패했습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 178
+msgid "Please check the errors above and try again."
+msgstr "위의 오류를 확인하고 다시 시도해 주세요."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 24
 msgid "Conversions Complete"
 msgstr "변환 완료"
@@ -1024,10 +1116,6 @@ msgstr "시작 시간:"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 538
 msgid "End Time:"
 msgstr "종료 시간:"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 318
-msgid "Cancel"
-msgstr "취소"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 423
 msgid "Save"
