@@ -890,6 +890,10 @@ msgstr "Urednik"
 msgid "Progress"
 msgstr "Napredak"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
@@ -1052,6 +1056,100 @@ msgstr "Nema dodanih datoteka"
 msgid "No valid video files were found in your selection."
 msgstr "Nisu pronađene valjane video datoteke u vašem odabiru."
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
+msgid "FFmpeg Not Found"
+msgstr "FFmpeg nije pronađen"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
+msgid ""
+"FFmpeg is not installed and we could not determine how to install it for your system.\n"
+"Please install it manually using your distribution's package manager."
+msgstr ""
+"FFmpeg nije instaliran i nismo mogli odrediti kako ga instalirati za vaš sustav. Molimo "
+"instalirajte ga ručno koristeći upravitelja paketa vaše distribucije."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
+msgid "Installation Successful"
+msgstr "Instalacija uspješna"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
+msgid "FFmpeg has been installed. The application will now restart."
+msgstr "FFmpeg je instaliran. Aplikacija će se sada ponovno pokrenuti."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
+msgid "Installation Failed"
+msgstr "Instalacija neuspjela"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
+msgid "FFmpeg was not found after installation. Please restart the application manually."
+msgstr "FFmpeg nije pronađen nakon instalacije. Molimo ručno ponovo pokrenite aplikaciju."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
+msgid "FFmpeg Installation"
+msgstr "FFmpeg Instalacija"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
+msgid "Installation Required"
+msgstr "Potrebna instalacija"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
+msgid "FFmpeg is required for this application to function."
+msgstr "FFmpeg je potreban za funkcioniranje ove aplikacije."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
+msgid "Due to legal restrictions in some countries, FFmpeg is not bundled with the application."
+msgstr "Zbog pravnih ograničenja u nekim zemljama, FFmpeg nije uključen u aplikaciju."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
+msgid "Command to be executed"
+msgstr "Naredba koja će se izvršiti"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 72
+msgid ""
+"<b>Administrator privileges required</b>\n"
+"You will be asked for your password to install system packages."
+msgstr ""
+"<b>Potrebna administratorska prava</b>\n"
+"Bit ćete zatraženi da unesete svoju lozinku za instalaciju sistemskih paketa."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 81
+msgid "Installation Output"
+msgstr "Izlaz instalacije"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 318
+msgid "Cancel"
+msgstr "Otkaži"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
+msgid "Install FFmpeg"
+msgstr "Instalirajte FFmpeg"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
+msgid "Close"
+msgstr "Zatvori"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 125
+msgid ""
+"Starting installation...\n"
+"\n"
+msgstr "Pokrećem instalaciju..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 172
+msgid "Installation completed successfully!"
+msgstr "Instalacija je uspješno završena!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 173
+msgid "Please restart the application."
+msgstr "Molimo ponovo pokrenite aplikaciju."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 177
+msgid "Installation failed."
+msgstr "Instalacija nije uspjela."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 178
+msgid "Please check the errors above and try again."
+msgstr "Molimo provjerite gornje pogreške i pokušajte ponovo."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 24
 msgid "Conversions Complete"
 msgstr "Konverzije dovršene"
@@ -1096,10 +1194,6 @@ msgstr "Vrijeme početka:"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 538
 msgid "End Time:"
 msgstr "Vrijeme završetka:"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 318
-msgid "Cancel"
-msgstr "Otkaži"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 423
 msgid "Save"
