@@ -138,6 +138,18 @@ class VideoConverterApp(Adw.Application):
             self.add_action(action)
 
     def on_activate(self, app):
+        # Add a fallback search path for icons bundled with the application.
+        # This ensures icons are found even if not installed system-wide.
+        try:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            icon_path = os.path.join(script_dir, 'icons')
+            if os.path.isdir(icon_path):
+                icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
+                icon_theme.add_search_path(icon_path)
+                print(f"Added fallback icon search path: {icon_path}")
+        except Exception as e:
+            print(f"Could not set fallback icon path: {e}")
+            
         # Check if this is the first activation
         is_first_activation = not hasattr(self, "window") or self.window is None
         
