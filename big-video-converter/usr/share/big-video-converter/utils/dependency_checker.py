@@ -48,14 +48,15 @@ class DependencyChecker:
     def __init__(self):
         self.distro = get_distro_info()
         self.ffmpeg_path = shutil.which('ffmpeg')
+        self.mpv_path = shutil.which('mpv')
 
-    def is_ffmpeg_available(self):
-        """Check if ffmpeg executable is in PATH."""
-        return self.ffmpeg_path is not None
+    def are_dependencies_available(self):
+       """Check if ffmpeg and mpv executables are in PATH."""
+       return self.ffmpeg_path is not None and self.mpv_path is not None
 
     def get_install_command(self):
         """Get the installation command for ffmpeg based on the distribution."""
-        packages = ['ffmpeg']
+        packages = ['ffmpeg', 'mpv']
         distro_base = self.distro.get('base')
 
         if distro_base == 'arch':

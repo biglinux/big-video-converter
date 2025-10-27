@@ -149,8 +149,8 @@ class VideoConverterApp(Adw.Application):
         self.window.present()
 
         # --- FFmpeg Dependency Check ---
-        if not self.dependency_checker.is_ffmpeg_available():
-            self._show_ffmpeg_install_dialog()
+        if not self.dependency_checker.are_dependencies_available():
+            self._show_dependency_install_dialog()
             # Don't proceed with normal activation until ffmpeg is handled
             return
         # --- End of Check ---
@@ -1669,13 +1669,13 @@ class VideoConverterApp(Adw.Application):
         except Exception as error:
             print(f"Files not selected: {error}")
 
-    def _show_ffmpeg_install_dialog(self):
-        """Shows the dialog to install FFmpeg."""
+    def _show_dependency_install_dialog(self):
+        """Shows the dialog to install required dependencies (FFmpeg and MPV)."""
         install_info = self.dependency_checker.get_install_command()
         if not install_info:
             self.show_error_dialog(
-                _("FFmpeg Not Found"),
-                _("FFmpeg is not installed and we could not determine how to install it for your system.\nPlease install it manually using your distribution's package manager.")
+                _("Dependencies Not Found"),
+                _("FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\nPlease install them manually using your distribution's package manager.")
             )
             # Disable the main window as the app is not usable
             self.window.set_sensitive(False)
@@ -1685,12 +1685,12 @@ class VideoConverterApp(Adw.Application):
 
         def on_dialog_close(widget):
             if dialog.installation_success:
-                # Re-check for ffmpeg
+                # Re-check for dependencies
                 self.dependency_checker = DependencyChecker()
-                if self.dependency_checker.is_ffmpeg_available():
+                if self.dependency_checker.are_dependencies_available():
                     self.show_info_dialog(
                         _("Installation Successful"),
-                        _("FFmpeg has been installed. The application will now restart.")
+                        _("Dependencies have been installed. The application will now restart.")
                     )
                     # Restart the application
                     self.quit()
@@ -1698,7 +1698,7 @@ class VideoConverterApp(Adw.Application):
                 else:
                     self.show_error_dialog(
                         _("Installation Failed"),
-                        _("FFmpeg was not found after installation. Please restart the application manually.")
+                        _("Dependencies were not found after installation. Please restart the application manually.")
                     )
                     self.quit()
             else:
