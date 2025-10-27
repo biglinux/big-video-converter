@@ -941,6 +941,10 @@ msgstr "Progresso"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
@@ -1104,48 +1108,54 @@ msgid "No valid video files were found in your selection."
 msgstr "Nenhum arquivo de vídeo válido foi encontrado em sua seleção."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
-msgid "FFmpeg Not Found"
-msgstr "FFmpeg Não Encontrado"
+msgid "Dependencies Not Found"
+msgstr "Dependências Não Encontradas"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
 msgid ""
-"FFmpeg is not installed and we could not determine how to install it for your system.\n"
-"Please install it manually using your distribution's package manager."
+"FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
+"Please install them manually using your distribution's package manager."
 msgstr ""
-"O FFmpeg não está instalado e não conseguimos determinar como instalá-lo para o seu sistema. Por "
-"favor, instale-o manualmente usando o gerenciador de pacotes da sua distribuição."
+"FFmpeg e/ou MPV não estão instalados e não conseguimos determinar como instalá-los para o seu "
+"sistema. Por favor, instale-os manualmente usando o gerenciador de pacotes da sua distribuição."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
 msgid "Installation Successful"
 msgstr "Instalação bem-sucedida"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
-msgid "FFmpeg has been installed. The application will now restart."
-msgstr "O FFmpeg foi instalado. O aplicativo será reiniciado agora."
+msgid "Dependencies have been installed. The application will now restart."
+msgstr "As dependências foram instaladas. O aplicativo será reiniciado agora."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
 msgid "Installation Failed"
 msgstr "Instalação Falhou"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
-msgid "FFmpeg was not found after installation. Please restart the application manually."
-msgstr "FFmpeg não foi encontrado após a instalação. Por favor, reinicie o aplicativo manualmente."
+msgid "Dependencies were not found after installation. Please restart the application manually."
+msgstr ""
+"As dependências não foram encontradas após a instalação. Por favor, reinicie o aplicativo "
+"manualmente."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
-msgid "FFmpeg Installation"
-msgstr "Instalação do FFmpeg"
+msgid "Required Dependencies"
+msgstr "Dependências Necessárias"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
 msgid "Installation Required"
 msgstr "Instalação Necessária"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
-msgid "FFmpeg is required for this application to function."
-msgstr "FFmpeg é necessário para que este aplicativo funcione."
+msgid "FFmpeg and MPV are required for this application to function."
+msgstr "FFmpeg e MPV são necessários para o funcionamento deste aplicativo."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
-msgid "Due to legal restrictions in some countries, FFmpeg is not bundled with the application."
-msgstr "Devido a restrições legais em alguns países, o FFmpeg não está incluído com o aplicativo."
+msgid ""
+"FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, "
+"they are not bundled."
+msgstr ""
+"O FFmpeg é necessário para conversão, e o MPV para a pré-visualização do editor de vídeo. Devido a "
+"restrições legais, eles não estão incluídos."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
 msgid "Command to be executed"
@@ -1168,8 +1178,8 @@ msgid "Cancel"
 msgstr "Cancelar"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
-msgid "Install FFmpeg"
-msgstr "Instalar FFmpeg"
+msgid "Install Dependencies"
+msgstr "Instalar Dependências"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
 msgid "Close"
@@ -1204,6 +1214,22 @@ msgstr "Conversões Concluídas"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
 msgid "All video conversions have been completed successfully!"
 msgstr "Todas as conversões de vídeo foram concluídas com sucesso!"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 497
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 497
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 

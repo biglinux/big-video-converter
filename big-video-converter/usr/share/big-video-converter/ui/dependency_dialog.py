@@ -22,7 +22,7 @@ class InstallDependencyDialog(Adw.Window):
         super().__init__()
         self.set_transient_for(parent)
         self.set_modal(True)
-        self.set_title(_("FFmpeg Installation"))
+        self.set_title(_("Required Dependencies"))
         self.set_default_size(700, 500)
         self.set_resizable(True)
         
@@ -49,8 +49,8 @@ class InstallDependencyDialog(Adw.Window):
         content_box.append(info_group)
 
         explanation_row = Adw.ActionRow()
-        explanation_row.set_title(_("FFmpeg is required for this application to function."))
-        explanation_row.set_subtitle(_("Due to legal restrictions in some countries, FFmpeg is not bundled with the application."))
+        explanation_row.set_title(_("FFmpeg and MPV are required for this application to function."))
+        explanation_row.set_subtitle(_("FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, they are not bundled."))
         info_group.add(explanation_row)
 
         command_row = Adw.ActionRow()
@@ -109,7 +109,7 @@ class InstallDependencyDialog(Adw.Window):
         self.cancel_button.connect("clicked", lambda btn: self.close())
         button_box.append(self.cancel_button)
 
-        self.install_button = Gtk.Button(label=_("Install FFmpeg"))
+        self.install_button = Gtk.Button(label=_("Install Dependencies"))
         self.install_button.add_css_class("suggested-action")
         self.install_button.connect("clicked", self._on_install_clicked)
         button_box.append(self.install_button)

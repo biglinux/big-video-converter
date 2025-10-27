@@ -898,6 +898,10 @@ msgstr "Edenemine"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
@@ -1061,48 +1065,52 @@ msgid "No valid video files were found in your selection."
 msgstr "Teie valikus ei leitud kehtivaid videofailide."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
-msgid "FFmpeg Not Found"
-msgstr "FFmpeg ei leitud"
+msgid "Dependencies Not Found"
+msgstr "Sõltuvusi ei leitud"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
 msgid ""
-"FFmpeg is not installed and we could not determine how to install it for your system.\n"
-"Please install it manually using your distribution's package manager."
+"FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
+"Please install them manually using your distribution's package manager."
 msgstr ""
-"FFmpeg ei ole installitud ja me ei suutnud määrata, kuidas seda teie süsteemile installida. Palun "
-"installige see käsitsi, kasutades oma jaotuse pakihaldurit."
+"FFmpeg ja/või MPV ei ole installitud ja me ei suutnud kindlaks teha, kuidas neid teie süsteemile "
+"installida. Palun installige need käsitsi, kasutades oma jaotuse pakihaldurit."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
 msgid "Installation Successful"
 msgstr "Installeerimine õnnestus"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
-msgid "FFmpeg has been installed. The application will now restart."
-msgstr "FFmpeg on installitud. Rakendus taaskäivitub nüüd."
+msgid "Dependencies have been installed. The application will now restart."
+msgstr "Sõltuvused on installitud. Rakendus taaskäivitub nüüd."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
 msgid "Installation Failed"
 msgstr "Installeerimine ebaõnnestus"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
-msgid "FFmpeg was not found after installation. Please restart the application manually."
-msgstr "FFmpeg'i ei leitud pärast installimist. Palun taaskäivitage rakendus käsitsi."
+msgid "Dependencies were not found after installation. Please restart the application manually."
+msgstr "Sõltuvusi ei leitud pärast installimist. Palun taaskäivitage rakendus käsitsi."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
-msgid "FFmpeg Installation"
-msgstr "FFmpeg'i paigaldamine"
+msgid "Required Dependencies"
+msgstr "Nõutavad sõltuvused"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
 msgid "Installation Required"
 msgstr "Paigaldamine vajalik"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
-msgid "FFmpeg is required for this application to function."
-msgstr "FFmpeg on vajalik selle rakenduse toimimiseks."
+msgid "FFmpeg and MPV are required for this application to function."
+msgstr "FFmpeg ja MPV on vajalikud selle rakenduse toimimiseks."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
-msgid "Due to legal restrictions in some countries, FFmpeg is not bundled with the application."
-msgstr "Mõnedes riikides kehtivate õiguslike piirangute tõttu ei ole FFmpeg rakendusega kaasas."
+msgid ""
+"FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, "
+"they are not bundled."
+msgstr ""
+"FFmpeg on vajalik konverteerimiseks ja MPV videotoimetaja eelvaate jaoks. Õiguslike piirangute "
+"tõttu ei ole need koos."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
 msgid "Command to be executed"
@@ -1125,8 +1133,8 @@ msgid "Cancel"
 msgstr "Tühista"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
-msgid "Install FFmpeg"
-msgstr "Installi FFmpeg"
+msgid "Install Dependencies"
+msgstr "Paigaldage sõltuvused"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
 msgid "Close"
@@ -1161,6 +1169,22 @@ msgstr "Muutmised lõpetatud"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
 msgid "All video conversions have been completed successfully!"
 msgstr "Kõik video konversioonid on edukalt lõpetatud!"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 497
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 67
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 497
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
