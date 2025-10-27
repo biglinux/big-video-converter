@@ -898,6 +898,10 @@ msgstr "Napredak"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
@@ -1061,48 +1065,52 @@ msgid "No valid video files were found in your selection."
 msgstr "Nisu pronađene valjane video datoteke u vašem odabiru."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
-msgid "FFmpeg Not Found"
-msgstr "FFmpeg nije pronađen"
+msgid "Dependencies Not Found"
+msgstr "Ovisnosti nisu pronađene"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
 msgid ""
-"FFmpeg is not installed and we could not determine how to install it for your system.\n"
-"Please install it manually using your distribution's package manager."
+"FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
+"Please install them manually using your distribution's package manager."
 msgstr ""
-"FFmpeg nije instaliran i nismo mogli odrediti kako ga instalirati za vaš sustav. Molimo "
-"instalirajte ga ručno koristeći upravitelja paketa vaše distribucije."
+"FFmpeg i/ili MPV nisu instalirani i nismo mogli odrediti kako ih instalirati za vaš sustav. Molimo "
+"instalirajte ih ručno koristeći upravitelja paketa vaše distribucije."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
 msgid "Installation Successful"
 msgstr "Instalacija uspješna"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
-msgid "FFmpeg has been installed. The application will now restart."
-msgstr "FFmpeg je instaliran. Aplikacija će se sada ponovno pokrenuti."
+msgid "Dependencies have been installed. The application will now restart."
+msgstr "Ovisnosti su instalirane. Aplikacija će se sada ponovno pokrenuti."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
 msgid "Installation Failed"
 msgstr "Instalacija neuspjela"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
-msgid "FFmpeg was not found after installation. Please restart the application manually."
-msgstr "FFmpeg nije pronađen nakon instalacije. Molimo ručno ponovo pokrenite aplikaciju."
+msgid "Dependencies were not found after installation. Please restart the application manually."
+msgstr "Ovisnosti nisu pronađene nakon instalacije. Molimo ručno ponovo pokrenite aplikaciju."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
-msgid "FFmpeg Installation"
-msgstr "FFmpeg Instalacija"
+msgid "Required Dependencies"
+msgstr "Potrebne ovisnosti"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
 msgid "Installation Required"
 msgstr "Potrebna instalacija"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
-msgid "FFmpeg is required for this application to function."
-msgstr "FFmpeg je potreban za funkcioniranje ove aplikacije."
+msgid "FFmpeg and MPV are required for this application to function."
+msgstr "FFmpeg i MPV su potrebni za funkcioniranje ove aplikacije."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
-msgid "Due to legal restrictions in some countries, FFmpeg is not bundled with the application."
-msgstr "Zbog pravnih ograničenja u nekim zemljama, FFmpeg nije uključen u aplikaciju."
+msgid ""
+"FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, "
+"they are not bundled."
+msgstr ""
+"FFmpeg je potreban za konverziju, a MPV za pregled video editora. Zbog pravnih ograničenja, nisu "
+"uključeni u paket."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
 msgid "Command to be executed"
@@ -1125,8 +1133,8 @@ msgid "Cancel"
 msgstr "Otkaži"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
-msgid "Install FFmpeg"
-msgstr "Instalirajte FFmpeg"
+msgid "Install Dependencies"
+msgstr "Instaliraj ovisnosti"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
 msgid "Close"

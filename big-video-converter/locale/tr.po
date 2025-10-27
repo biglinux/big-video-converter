@@ -972,6 +972,10 @@ msgstr "İlerleme"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
@@ -1135,48 +1139,52 @@ msgid "No valid video files were found in your selection."
 msgstr "Seçiminizde geçerli video dosyaları bulunamadı."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
-msgid "FFmpeg Not Found"
-msgstr "FFmpeg Bulunamadı"
+msgid "Dependencies Not Found"
+msgstr "Bağımlılıklar Bulunamadı"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
 msgid ""
-"FFmpeg is not installed and we could not determine how to install it for your system.\n"
-"Please install it manually using your distribution's package manager."
+"FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
+"Please install them manually using your distribution's package manager."
 msgstr ""
-"FFmpeg yüklü değil ve sisteminiz için nasıl yükleneceğini belirleyemedik. Lütfen dağıtımınızın "
-"paket yöneticisini kullanarak manuel olarak yükleyin."
+"FFmpeg ve/veya MPV yüklü değil ve sisteminiz için nasıl yükleneceğini belirleyemedik. Lütfen "
+"bunları dağıtımınızın paket yöneticisini kullanarak manuel olarak yükleyin."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
 msgid "Installation Successful"
 msgstr "Kurulum Başarılı"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
-msgid "FFmpeg has been installed. The application will now restart."
-msgstr "FFmpeg yüklendi. Uygulama şimdi yeniden başlatılacak."
+msgid "Dependencies have been installed. The application will now restart."
+msgstr "Bağımlılıklar yüklendi. Uygulama şimdi yeniden başlatılacak."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
 msgid "Installation Failed"
 msgstr "Kurulum Başarısız"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
-msgid "FFmpeg was not found after installation. Please restart the application manually."
-msgstr "FFmpeg kurulumdan sonra bulunamadı. Lütfen uygulamayı manuel olarak yeniden başlatın."
+msgid "Dependencies were not found after installation. Please restart the application manually."
+msgstr "Kurulumdan sonra bağımlılıklar bulunamadı. Lütfen uygulamayı manuel olarak yeniden başlatın."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
-msgid "FFmpeg Installation"
-msgstr "FFmpeg Kurulumu"
+msgid "Required Dependencies"
+msgstr "Gerekli Bağımlılıklar"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
 msgid "Installation Required"
 msgstr "Kurulum Gerekiyor"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
-msgid "FFmpeg is required for this application to function."
-msgstr "Bu uygulamanın çalışması için FFmpeg gereklidir."
+msgid "FFmpeg and MPV are required for this application to function."
+msgstr "Bu uygulamanın çalışması için FFmpeg ve MPV gereklidir."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
-msgid "Due to legal restrictions in some countries, FFmpeg is not bundled with the application."
-msgstr "Bazı ülkelerdeki yasal kısıtlamalar nedeniyle, FFmpeg uygulama ile birlikte sunulmamaktadır."
+msgid ""
+"FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, "
+"they are not bundled."
+msgstr ""
+"Dönüşüm için FFmpeg gereklidir ve video düzenleyici önizlemesi için MPV gereklidir. Yasal "
+"kısıtlamalar nedeniyle, bunlar bir arada sunulmamaktadır."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
 msgid "Command to be executed"
@@ -1199,8 +1207,8 @@ msgid "Cancel"
 msgstr "İptal et"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
-msgid "Install FFmpeg"
-msgstr "FFmpeg'i yükle"
+msgid "Install Dependencies"
+msgstr "Bağımlılıkları Yükle"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
 msgid "Close"

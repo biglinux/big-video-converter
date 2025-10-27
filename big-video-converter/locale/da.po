@@ -914,6 +914,10 @@ msgstr "Fremskridt"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 654
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 642
@@ -1077,48 +1081,52 @@ msgid "No valid video files were found in your selection."
 msgstr "Der blev ikke fundet gyldige videofiler i dit valg."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
-msgid "FFmpeg Not Found"
-msgstr "FFmpeg ikke fundet"
+msgid "Dependencies Not Found"
+msgstr "Afhængigheder ikke fundet"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
 msgid ""
-"FFmpeg is not installed and we could not determine how to install it for your system.\n"
-"Please install it manually using your distribution's package manager."
+"FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
+"Please install them manually using your distribution's package manager."
 msgstr ""
-"FFmpeg er ikke installeret, og vi kunne ikke finde ud af, hvordan man installerer det til dit "
-"system. Venligst installer det manuelt ved hjælp af din distributions pakkehåndtering."
+"FFmpeg og/eller MPV er ikke installeret, og vi kunne ikke finde ud af, hvordan man installerer dem "
+"til dit system. Venligst installer dem manuelt ved hjælp af din distributions pakkehåndtering."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
 msgid "Installation Successful"
 msgstr "Installation gennemført"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
-msgid "FFmpeg has been installed. The application will now restart."
-msgstr "FFmpeg er blevet installeret. Applikationen genstarter nu."
+msgid "Dependencies have been installed. The application will now restart."
+msgstr "Afhængigheder er blevet installeret. Applikationen genstarter nu."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
 msgid "Installation Failed"
 msgstr "Installation mislykkedes"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
-msgid "FFmpeg was not found after installation. Please restart the application manually."
-msgstr "FFmpeg blev ikke fundet efter installation. Genstart venligst applikationen manuelt."
+msgid "Dependencies were not found after installation. Please restart the application manually."
+msgstr "Afhængigheder blev ikke fundet efter installationen. Genstart venligst applikationen manuelt."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
-msgid "FFmpeg Installation"
-msgstr "FFmpeg installation"
+msgid "Required Dependencies"
+msgstr "Nødvendige afhængigheder"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
 msgid "Installation Required"
 msgstr "Installation påkrævet"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
-msgid "FFmpeg is required for this application to function."
-msgstr "FFmpeg er påkrævet for, at denne applikation kan fungere."
+msgid "FFmpeg and MPV are required for this application to function."
+msgstr "FFmpeg og MPV er nødvendige for, at denne applikation kan fungere."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
-msgid "Due to legal restrictions in some countries, FFmpeg is not bundled with the application."
-msgstr "På grund af juridiske restriktioner i nogle lande er FFmpeg ikke inkluderet i applikationen."
+msgid ""
+"FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, "
+"they are not bundled."
+msgstr ""
+"FFmpeg er nødvendig for konvertering, og MPV til videoredigeringsforhåndsvisning. På grund af "
+"juridiske begrænsninger er de ikke inkluderet."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
 msgid "Command to be executed"
@@ -1141,8 +1149,8 @@ msgid "Cancel"
 msgstr "Annuller"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
-msgid "Install FFmpeg"
-msgstr "Installer FFmpeg"
+msgid "Install Dependencies"
+msgstr "Installer afhængigheder"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
 msgid "Close"
