@@ -138,17 +138,32 @@ class VideoConverterApp(Adw.Application):
             self.add_action(action)
 
     def on_activate(self, app):
-        # Add a fallback search path for icons bundled with the application.
-        # This ensures icons are found even if not installed system-wide.
+        # Prioritize the project's bundled icon path over system themes.
+        # This ensures the application uses its own icons by default.
         try:
+            # Get the default icon theme object
+            icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
+            
+            # Get the current list of system search paths
+            current_paths = icon_theme.get_search_path()
+            
+            # Define the path to the project's bundled icons
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            icon_path = os.path.join(script_dir, 'icons')
-            if os.path.isdir(icon_path):
-                icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
-                icon_theme.add_search_path(icon_path)
-                print(f"Added fallback icon search path: {icon_path}")
+            project_icon_path = os.path.join(script_dir, 'icons')
+            
+            if os.path.isdir(project_icon_path):
+                # Create a new list of paths with the project's path at the beginning
+                new_paths = [project_icon_path] + current_paths
+                
+                # Set the new, prioritized search path list
+                icon_theme.set_search_path(new_paths)
+                
+                print(f"Prioritized project icon path: {project_icon_path}")
+            else:
+                print(f"Project icon path not found: {project_icon_path}")
+
         except Exception as e:
-            print(f"Could not set fallback icon path: {e}")
+            print(f"Could not set prioritized icon path: {e}")
             
         # Check if this is the first activation
         is_first_activation = not hasattr(self, "window") or self.window is None
