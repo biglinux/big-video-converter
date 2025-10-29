@@ -1,7 +1,3 @@
-"""
-System dependency checker for ffmpeg.
-"""
-
 import shutil
 import subprocess
 from gi.repository import GLib
@@ -51,8 +47,31 @@ class DependencyChecker:
         self.mpv_path = shutil.which('mpv')
 
     def are_dependencies_available(self):
-       """Check if ffmpeg and mpv executables are in PATH."""
-       return self.ffmpeg_path is not None and self.mpv_path is not None
+       """Check if ffmpeg and mpv executables are in PATH and are the correct versions."""
+       # First, a basic check if the executables exist at all.
+       if not self.ffmpeg_path or not self.mpv_path:
+           return False
+
+       # If the distro is RPM-based, we need to ensure it's not the limited 'ffmpeg-free'.
+       if self.distro.get('base') == 'rpm':
+           try:
+               # Ask the system which package owns the ffmpeg executable.
+               command = ['rpm', '-qf', self.ffmpeg_path]
+               result = subprocess.run(command, capture_output=True, text=True, check=True)
+               
+               package_name = result.stdout.strip()
+
+               # If the owner package is 'ffmpeg-free', the dependency is not met.
+               if 'ffmpeg-free' in package_name:
+                   print("Found 'ffmpeg-free' package. Triggering installation of the full version.")
+                   return False
+           except (subprocess.CalledProcessError, FileNotFoundError) as e:
+               # If the check fails for any reason, it's safer to assume the dependency is not met.
+               print(f"Warning: Could not verify the ffmpeg package provider: {e}")
+               return False
+
+       # If we passed all checks, the dependencies are considered available.
+       return True
 
     def get_install_command(self):
         """Get the installation command for ffmpeg based on the distribution."""
@@ -60,31 +79,45 @@ class DependencyChecker:
 
         if distro_base == 'arch':
             packages = ['ffmpeg', 'mpv']
-            # Use -Sy to ensure package databases are synced, similar to 'apt update'
+            # The full command that will be executed
             full_command_str = f"pacman -Sy --noconfirm {' '.join(packages)}"
+            # A simple, user-friendly string for the GUI
+            display_str = f"pacman -Sy {' '.join(packages)}"
             return {
                 'command': ['pkexec', 'sh', '-c', full_command_str],
-                'display': f"pkexec sh -c \"{full_command_str}\"",
+                'display': display_str,
                 'packages': packages
             }
         
         elif distro_base == 'debian':
-            packages = ['ffmpeg', 'mpv']
-            # Combine update and install into a single command
-            full_command_str = f"apt-get update && apt-get install -y {' '.join(packages)}"
+            packages = ['ffmpeg', 'mpv', 'libmpv2']
+            # The full command to be executed, including the update
+            full_command_str = f"apt update && apt install -y {' '.join(packages)}"
+            # A simple, user-friendly string for the GUI, avoiding '&&'
+            display_str = f"apt install -y {' '.join(packages)}"
             return {
                 'command': ['pkexec', 'sh', '-c', full_command_str],
-                'display': f"pkexec sh -c \"{full_command_str}\"",
+                'display': display_str,
                 'packages': packages
             }
         
         elif distro_base == 'rpm':
-            packages = ['ffmpeg', 'mpv-libs']
-            # dnf handles metadata updates automatically
-            full_command_str = f"dnf install -y {' '.join(packages)}"
+            packages = ['ffmpeg', 'mpv']
+            # Command to install RPM Fusion repos
+            rpm_fusion_install = "dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
+            
+            # Command to install the packages, automatically replacing 'ffmpeg-free'
+            package_install = f"dnf install -y {' '.join(packages)} --allowerasing"
+
+            # The full, robust command that will be executed
+            full_command_str = f"{rpm_fusion_install} && {package_install}"
+            
+            # A simple, user-friendly string for the GUI
+            display_str = f"dnf install -y {' '.join(packages)}"
+            
             return {
                 'command': ['pkexec', 'sh', '-c', full_command_str],
-                'display': f"pkexec sh -c \"{full_command_str}\"",
+                'display': display_str,
                 'packages': packages
             }
         

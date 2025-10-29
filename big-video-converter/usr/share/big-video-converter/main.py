@@ -13,7 +13,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-gi.require_version("Vte", "3.91")
+# gi.require_version("Vte", "3.91")
 # Setup translation
 import gettext
 
