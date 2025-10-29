@@ -19,8 +19,8 @@ from gi.repository import GLib
 try:
     import mpv
     from mpv import MpvGlGetProcAddressFn, MpvRenderContext
-except ImportError:
-    print("Warning: python-mpv not found. Install with: pip install python-mpv")
+except (ImportError, OSError) as e:
+    print(f"Warning: MPV library not found: {e}")
     mpv = None
     MpvGlGetProcAddressFn = None
     MpvRenderContext = None

@@ -56,10 +56,10 @@ class DependencyChecker:
 
     def get_install_command(self):
         """Get the installation command for ffmpeg based on the distribution."""
-        packages = ['ffmpeg', 'mpv']
         distro_base = self.distro.get('base')
 
         if distro_base == 'arch':
+            packages = ['ffmpeg', 'mpv']
             # Use -Sy to ensure package databases are synced, similar to 'apt update'
             full_command_str = f"pacman -Sy --noconfirm {' '.join(packages)}"
             return {
@@ -69,6 +69,7 @@ class DependencyChecker:
             }
         
         elif distro_base == 'debian':
+            packages = ['ffmpeg', 'mpv']
             # Combine update and install into a single command
             full_command_str = f"apt-get update && apt-get install -y {' '.join(packages)}"
             return {
@@ -78,6 +79,7 @@ class DependencyChecker:
             }
         
         elif distro_base == 'rpm':
+            packages = ['ffmpeg', 'mpv-libs']
             # dnf handles metadata updates automatically
             full_command_str = f"dnf install -y {' '.join(packages)}"
             return {
