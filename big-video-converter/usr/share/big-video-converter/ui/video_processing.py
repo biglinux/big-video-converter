@@ -148,7 +148,7 @@ class VideoProcessor:
         if hasattr(self.page, "mpv_player") and self.page.mpv_player:
             self.page.mpv_player.play()
             self.page.is_playing = True
-            self.page.ui.play_pause_button.set_icon_name("media-playback-pause-symbolic")
+            self.page.ui.play_pause_button.set_icon_name('big-media-playback-pause-symbolic')
             # Start position update timer
             if not self.page.position_update_id:
                 self.page.position_update_id = GLib.timeout_add(

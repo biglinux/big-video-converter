@@ -62,7 +62,7 @@ class InstallDependencyDialog(Adw.Window):
         warning_box.set_margin_top(8)
         warning_box.add_css_class("card")
         
-        warning_icon = Gtk.Image.new_from_icon_name("dialog-warning-symbolic")
+        warning_icon = Gtk.Image.new_from_icon_name('big-dialog-warning-symbolic')
         warning_icon.set_margin_top(12)
         warning_icon.set_margin_bottom(12)
         warning_icon.set_margin_start(12)
