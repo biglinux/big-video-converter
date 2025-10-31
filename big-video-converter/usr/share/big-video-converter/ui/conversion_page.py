@@ -56,7 +56,7 @@ class FileQueueRow(Adw.ActionRow):
         self.set_activatable(False)
 
         # Edit button (added third, appears last)
-        edit_button = Gtk.Button.new_from_icon_name("document-edit-symbolic")
+        edit_button = Gtk.Button.new_from_icon_name('big-document-edit-symbolic')
         self.app.tooltip_helper.add_tooltip(edit_button, "file_list_edit_button")
         edit_button.add_css_class("flat")
         edit_button.set_valign(Gtk.Align.CENTER)
@@ -66,7 +66,7 @@ class FileQueueRow(Adw.ActionRow):
         self.add_prefix(edit_button)
 
         # Play button (added second, appears middle)
-        play_button = Gtk.Button.new_from_icon_name("media-playback-start-symbolic")
+        play_button = Gtk.Button.new_from_icon_name('big-media-playback-start-symbolic')
         self.app.tooltip_helper.add_tooltip(play_button, "file_list_play_button")
         play_button.add_css_class("flat")
         play_button.set_valign(Gtk.Align.CENTER)
@@ -76,7 +76,7 @@ class FileQueueRow(Adw.ActionRow):
         self.add_prefix(play_button)
 
         # Remove button (added first, appears first)
-        remove_button = Gtk.Button.new_from_icon_name("edit-delete-remove")
+        remove_button = Gtk.Button.new_from_icon_name('big-trash-symbolic')
         self.app.tooltip_helper.add_tooltip(remove_button, "file_list_remove_button")
         remove_button.add_css_class("flat")
         remove_button.set_valign(Gtk.Align.CENTER)
@@ -278,7 +278,7 @@ class ConversionPage:
 
         # Create placeholder for empty queue
         self.placeholder = Adw.StatusPage()
-        self.placeholder.set_icon_name("folder-videos-symbolic")
+        self.placeholder.set_icon_name('big-folder-videos-symbolic')
         self.placeholder.set_title(_("No Video Files"))
         self.placeholder.set_description(
             _("Drag files here or use the Add Files button")
@@ -338,7 +338,7 @@ class ConversionPage:
 
         # Folder button
         folder_button = Gtk.Button()
-        folder_button.set_icon_name("folder-symbolic")
+        folder_button.set_icon_name('big-folder-symbolic')
         folder_button.connect("clicked", self.on_folder_button_clicked)
         folder_button.add_css_class("flat")
         folder_button.add_css_class("circular")

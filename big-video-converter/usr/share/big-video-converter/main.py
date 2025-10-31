@@ -137,33 +137,51 @@ class VideoConverterApp(Adw.Application):
             action.connect("activate", callback)
             self.add_action(action)
 
-    def on_activate(self, app):
-        # Prioritize the project's bundled icon path over system themes.
-        # This ensures the application uses its own icons by default.
+    def _setup_icon_theme(self):
+        """Setup custom icon theme path for bundled icons"""
         try:
-            # Get the default icon theme object
-            icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
-            
-            # Get the current list of system search paths
-            current_paths = icon_theme.get_search_path()
-            
-            # Define the path to the project's bundled icons
+            # Get the application's directory
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            project_icon_path = os.path.join(script_dir, 'icons')
+            icons_dir = os.path.join(script_dir, 'icons')
             
-            if os.path.isdir(project_icon_path):
-                # Create a new list of paths with the project's path at the beginning
-                new_paths = [project_icon_path] + current_paths
-                
-                # Set the new, prioritized search path list
-                icon_theme.set_search_path(new_paths)
-                
-                print(f"Prioritized project icon path: {project_icon_path}")
-            else:
-                print(f"Project icon path not found: {project_icon_path}")
+            # Check if icons directory exists
+            if os.path.exists(icons_dir):
+                # Create index.theme if it doesn't exist
+                index_theme_path = os.path.join(icons_dir, 'hicolor', 'index.theme')
+                if not os.path.exists(index_theme_path):
+                    try:
+                        os.makedirs(os.path.dirname(index_theme_path), exist_ok=True)
+                        with open(index_theme_path, 'w') as f:
+                            f.write("""[Icon Theme]
+Name=Hicolor
+Comment=Fallback icon theme
+Hidden=true
+Directories=scalable/actions
 
+[scalable/actions]
+Context=Actions
+Size=48
+MinSize=1
+MaxSize=512
+Type=Scalable
+""")
+                    except Exception:
+                        pass  # Silent failure if can't create index.theme
+                
+                # Get default icon theme and add custom icons directory
+                icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
+                icon_theme.add_search_path(icons_dir)
+                
+                if os.environ.get('BVC_DEBUG'):
+                    print(f"Custom icon theme path added: {icons_dir}")
+                    
         except Exception as e:
-            print(f"Could not set prioritized icon path: {e}")
+            if os.environ.get('BVC_DEBUG'):
+                print(f"Error setting up icon theme: {type(e).__name__}: {e}")
+
+    def on_activate(self, app):
+        # Setup custom icon theme for bundled icons
+        self._setup_icon_theme()
             
         # Check if this is the first activation
         is_first_activation = not hasattr(self, "window") or self.window is None
@@ -1147,7 +1165,7 @@ class VideoConverterApp(Adw.Application):
                 self.video_edit_page.ui, "play_pause_button"
             ):
                 self.video_edit_page.ui.play_pause_button.set_icon_name(
-                    "media-playback-start-symbolic"
+                    'big-media-playback-start-symbolic'
                 )
             if self.video_edit_page.position_update_id:
                 GLib.source_remove(self.video_edit_page.position_update_id)

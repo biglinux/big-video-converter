@@ -35,7 +35,7 @@ class CompletionPage(Gtk.Box):
 
         # Create status page for main content
         self.status_page = Adw.StatusPage()
-        self.status_page.set_icon_name("emblem-ok-symbolic")
+        self.status_page.set_icon_name('big-emblem-ok-symbolic')
         self.status_page.set_title(_("All Conversions Complete"))
         self.status_page.set_description(
             _("All video conversions have been completed successfully!")
@@ -109,10 +109,10 @@ class CompletionPage(Gtk.Box):
             
             # Add status icon
             if success:
-                icon = Gtk.Image.new_from_icon_name("emblem-ok-symbolic")
+                icon = Gtk.Image.new_from_icon_name('big-emblem-ok-symbolic')
                 icon.add_css_class("success")
             else:
-                icon = Gtk.Image.new_from_icon_name("dialog-error-symbolic")
+                icon = Gtk.Image.new_from_icon_name('big-dialog-error-symbolic')
                 icon.add_css_class("error")
             
             row.add_prefix(icon)
