@@ -834,6 +834,22 @@ msgstr "詳細なファイル情報を表示する"
 msgid "Remove this file from the queue"
 msgstr "このファイルをキューから削除します。"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 323
+msgid "Go back to the main screen"
+msgstr "メイン画面に戻る"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 324
+msgid "Show conversion log output"
+msgstr "変換ログ出力を表示する"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 325
+msgid "Cancel conversion of this file"
+msgstr "このファイルの変換をキャンセルします。"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 326
+msgid "Skip this file and do not convert it"
+msgstr "このファイルをスキップして変換しないでください。"
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 203
 msgid "Main"
 msgstr "メイン"
@@ -1214,14 +1230,6 @@ msgstr "インストールに失敗しました。"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 178
 msgid "Please check the errors above and try again."
 msgstr "上記のエラーを確認し、再試行してください。"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 24
-msgid "Conversions Complete"
-msgstr "変換が完了しました"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
-msgid "All video conversions have been completed successfully!"
-msgstr "すべてのビデオ変換が正常に完了しました！"
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
@@ -1756,6 +1764,16 @@ msgstr "無効な時間範囲"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 577
 msgid "Start time must be before end time"
 msgstr "開始時刻は終了時刻より前でなければなりません。"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 497
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 497
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
@@ -2316,29 +2334,68 @@ msgstr "1つのファイル"
 msgid "{} files"
 msgstr "{} ファイル"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 29
-msgid "Conversion Progress"
-msgstr "変換進行状況"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 167
-msgid "Starting conversion..."
-msgstr "変換を開始しています..."
-# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 31
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 219
-msgid "Command"
-msgstr "コマンド"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 222
+msgid "Converting Videos"
+msgstr "動画の変換"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 241
-msgid "Waiting for command..."
-msgstr "コマンドを待っています..."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 94
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 323
+msgid "Cancel All"
+msgstr "すべてキャンセル"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 262
-msgid "Command Output"
-msgstr "コマンド出力"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 283
+msgid "All {} videos converted successfully!"
+msgstr "すべての{}ビデオが正常に変換されました！"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 433
-msgid "Conversion cancelled"
-msgstr "変換がキャンセルされました"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 288
+msgid "{} completed, {} failed, {} cancelled"
+msgstr "{} 完了、{} 失敗、{} キャンセル"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 293
+msgid "All conversions failed or were cancelled"
+msgstr "すべての変換が失敗するか、キャンセルされました。"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 320
+msgid "Cancel All Conversions?"
+msgstr "すべての変換をキャンセルしますか？"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 321
+msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
+msgstr "この操作はすべてのアクティブな変換を停止し、すべての保留中のアイテムをスキップします。このアクションは元に戻すことができません。"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 436
+msgid "Unknown file"
+msgstr "不明なファイル"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 447
+msgid "Waiting in queue"
+msgstr "キューで待機中"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 528
+msgid "FFmpeg Command"
+msgstr "FFmpegコマンド"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 544
+msgid "Process Output"
+msgstr "プロセス出力"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 629
+msgid "Converting..."
+msgstr "変換中..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 699
+msgid "Completed"
+msgstr "完了しました"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 703
+msgid "Failed"
+msgstr "失敗しました"
 # 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 67
 msgid "Convert Video"

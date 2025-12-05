@@ -1014,6 +1014,22 @@ msgstr "Mostra informazioni dettagliate sul file"
 msgid "Remove this file from the queue"
 msgstr "Rimuovi questo file dalla coda"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 323
+msgid "Go back to the main screen"
+msgstr "Torna alla schermata principale"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 324
+msgid "Show conversion log output"
+msgstr "Mostra l'output del registro di conversione"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 325
+msgid "Cancel conversion of this file"
+msgstr "Annulla la conversione di questo file"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 326
+msgid "Skip this file and do not convert it"
+msgstr "Salta questo file e non convertirlo."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 203
 msgid "Main"
 msgstr "Principale"
@@ -1403,14 +1419,6 @@ msgstr "Installazione non riuscita."
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 178
 msgid "Please check the errors above and try again."
 msgstr "Si prega di controllare gli errori sopra e riprovare."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 24
-msgid "Conversions Complete"
-msgstr "Conversioni completate"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
-msgid "All video conversions have been completed successfully!"
-msgstr "Tutte le conversioni video sono state completate con successo!"
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
@@ -1961,6 +1969,16 @@ msgstr "Intervallo di tempo non valido"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 577
 msgid "Start time must be before end time"
 msgstr "L'orario di inizio deve essere prima dell'orario di fine."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 497
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 497
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
@@ -2525,29 +2543,70 @@ msgstr "1 file"
 msgid "{} files"
 msgstr "{} file"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 29
-msgid "Conversion Progress"
-msgstr "Progresso della conversione"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 167
-msgid "Starting conversion..."
-msgstr "Avvio della conversione..."
-# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 31
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 219
-msgid "Command"
-msgstr "Comando"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 222
+msgid "Converting Videos"
+msgstr "Conversione video"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 241
-msgid "Waiting for command..."
-msgstr "In attesa di un comando..."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 94
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 323
+msgid "Cancel All"
+msgstr "Annulla tutto"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 262
-msgid "Command Output"
-msgstr "Uscita del comando"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 283
+msgid "All {} videos converted successfully!"
+msgstr "Tutti i video {} convertiti con successo!"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 433
-msgid "Conversion cancelled"
-msgstr "Conversione annullata"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 288
+msgid "{} completed, {} failed, {} cancelled"
+msgstr "{} completati, {} falliti, {} annullati"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 293
+msgid "All conversions failed or were cancelled"
+msgstr "Tutte le conversioni sono fallite o sono state annullate."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 320
+msgid "Cancel All Conversions?"
+msgstr "Annullare tutte le conversioni?"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 321
+msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
+msgstr ""
+"Questo fermerà tutte le conversioni attive e salterà tutti gli elementi in attesa. Questa azione "
+"non può essere annullata."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 436
+msgid "Unknown file"
+msgstr "File sconosciuto"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 447
+msgid "Waiting in queue"
+msgstr "In attesa in coda"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 528
+msgid "FFmpeg Command"
+msgstr "Comando FFmpeg"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 544
+msgid "Process Output"
+msgstr "Output del processo"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 629
+msgid "Converting..."
+msgstr "Conversione..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 699
+msgid "Completed"
+msgstr "Completato"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 703
+msgid "Failed"
+msgstr "Fallito"
 # 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 67
 msgid "Convert Video"

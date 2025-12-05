@@ -833,6 +833,22 @@ msgstr "Részletes fájlinformációk megjelenítése"
 msgid "Remove this file from the queue"
 msgstr "Távolítsa el ezt a fájlt a sorból."
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 323
+msgid "Go back to the main screen"
+msgstr "Térj vissza a főképernyőre"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 324
+msgid "Show conversion log output"
+msgstr "Mutassa a konverziós napló kimenetét"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 325
+msgid "Cancel conversion of this file"
+msgstr "A fájl átalakításának megszakítása"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 326
+msgid "Skip this file and do not convert it"
+msgstr "Hagyd ki ezt a fájlt, és ne konvertáld."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 203
 msgid "Main"
 msgstr "Fő"
@@ -1220,21 +1236,6 @@ msgstr "A telepítés meghiúsult."
 msgid "Please check the errors above and try again."
 msgstr "Kérjük, ellenőrizze a fenti hibákat, és próbálja újra."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 24
-msgid "Conversions Complete"
-msgstr "A konverziók befejeződtek"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 43
-msgid "All video conversions have been completed successfully!"
-msgstr "Minden videókonverzió sikeresen befejeződött!"
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
-msgid "OK"
-msgstr "Rendben"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 295
 msgid "Go to segment start"
 msgstr "Ugrás a szegmens elejére"
@@ -1288,6 +1289,13 @@ msgstr "Érvénytelen időtartomány"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 577
 msgid "Start time must be before end time"
 msgstr "A kezdési időpontnak a befejezési időpont előtt kell lennie."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+msgid "OK"
+msgstr "Rendben"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 495
 msgid "Clear All Segments?"
@@ -1836,29 +1844,70 @@ msgstr "1 fájl"
 msgid "{} files"
 msgstr "{} fájlok"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 29
-msgid "Conversion Progress"
-msgstr "Átalakítási előrehaladás"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 167
-msgid "Starting conversion..."
-msgstr "Átalakítás indítása..."
-# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 31
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 219
-msgid "Command"
-msgstr "Parancs"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 222
+msgid "Converting Videos"
+msgstr "Videók konvertálása"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 241
-msgid "Waiting for command..."
-msgstr "Várakozás a parancsra..."
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 94
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 323
+msgid "Cancel All"
+msgstr "Minden törlése"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 262
-msgid "Command Output"
-msgstr "Parancs kimenet"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 283
+msgid "All {} videos converted successfully!"
+msgstr "Minden {} videó sikeresen átalakítva!"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 433
-msgid "Conversion cancelled"
-msgstr "A konverzió megszakítva"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 288
+msgid "{} completed, {} failed, {} cancelled"
+msgstr "{} befejeződött, {} meghiúsult, {} törölve"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 293
+msgid "All conversions failed or were cancelled"
+msgstr "Minden átalakítás meghiúsult vagy törlésre került."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 320
+msgid "Cancel All Conversions?"
+msgstr "Minden átalakítást törölni?"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 321
+msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
+msgstr ""
+"Ez leállítja az összes aktív átalakítást, és kihagyja az összes függő elemet. Ez a művelet nem "
+"vonható vissza."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 436
+msgid "Unknown file"
+msgstr "Ismeretlen fájl"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 447
+msgid "Waiting in queue"
+msgstr "Várakozás a sorban"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 528
+msgid "FFmpeg Command"
+msgstr "FFmpeg parancs"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 544
+msgid "Process Output"
+msgstr "Feldolgozási kimenet"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 629
+msgid "Converting..."
+msgstr "Átalakítás..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 699
+msgid "Completed"
+msgstr "Befejezve"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 703
+msgid "Failed"
+msgstr "Sikertelen"
 # 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 67
 msgid "Convert Video"
