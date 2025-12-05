@@ -108,41 +108,88 @@ class TooltipHelper:
         if not self.active_widget:
             return GLib.SOURCE_REMOVE
 
-        tooltip_key = self.active_widget.tooltip_key
+        # Safety check: ensure widget is still in valid state
+        try:
+            if not self.active_widget.get_mapped() or not self.active_widget.get_visible():
+                self.active_widget = None
+                return GLib.SOURCE_REMOVE
+            
+            # Check if widget has a valid parent and is in a toplevel
+            parent = self.active_widget.get_parent()
+            if parent is None:
+                self.active_widget = None
+                return GLib.SOURCE_REMOVE
+            
+            # Check if we can get a native ancestor
+            native = self.active_widget.get_native()
+            if native is None:
+                self.active_widget = None
+                return GLib.SOURCE_REMOVE
+        except Exception:
+            self.active_widget = None
+            return GLib.SOURCE_REMOVE
+
+        tooltip_key = getattr(self.active_widget, 'tooltip_key', None)
+        if not tooltip_key:
+            return GLib.SOURCE_REMOVE
+            
         tooltip_text = self.tooltips.get(tooltip_key)
 
         if not tooltip_text:
             return GLib.SOURCE_REMOVE
 
-        # Configure and place on screen. The popover is initially transparent
-        # due to the .tooltip-popover class. The "map" signal will then
-        # trigger the animation by adding the .visible class.
-        self.label.set_text(tooltip_text)
-        self.popover.set_parent(self.active_widget)
-        self.popover.popup()
+        try:
+            # Configure and place on screen. The popover is initially transparent
+            # due to the .tooltip-popover class. The "map" signal will then
+            # trigger the animation by adding the .visible class.
+            self.label.set_text(tooltip_text)
+            
+            # Unparent first if already parented
+            if self.popover.get_parent() is not None:
+                self.popover.unparent()
+            
+            # Ensure clean CSS state before showing
+            self.popover.remove_css_class("visible")
+            
+            self.popover.set_parent(self.active_widget)
+            self.popover.popup()
+        except Exception as e:
+            print(f"Tooltip error: {e}")
+            self.active_widget = None
         
         self.show_timer_id = None
         return GLib.SOURCE_REMOVE
 
     def _hide_tooltip(self, animate=False):
-        if not self.popover.is_visible():
-            return
+        try:
+            if not self.popover.is_visible():
+                return
 
-        def do_cleanup():
-            self.popover.popdown()
-            self.popover.unparent()
-            return GLib.SOURCE_REMOVE
+            def do_cleanup():
+                try:
+                    self.popover.popdown()
+                    if self.popover.get_parent():
+                        self.popover.unparent()
+                except Exception:
+                    pass
+                return GLib.SOURCE_REMOVE
 
-        # This triggers the fade-out animation.
-        self.popover.remove_css_class("visible")
+            # This triggers the fade-out animation.
+            self.popover.remove_css_class("visible")
 
-        if animate:
-            # Wait for animation to finish before cleaning up.
-            GLib.timeout_add(200, do_cleanup)
-        else:
-            do_cleanup()
+            if animate:
+                # Wait for animation to finish before cleaning up.
+                GLib.timeout_add(200, do_cleanup)
+            else:
+                do_cleanup()
+        except Exception:
+            pass
 
     def cleanup(self):
         """Call this when the application is shutting down."""
         self._clear_timer()
-        self.popover.unparent()
+        try:
+            if self.popover.get_parent():
+                self.popover.unparent()
+        except Exception:
+            pass

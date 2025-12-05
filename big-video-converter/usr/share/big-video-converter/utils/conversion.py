@@ -409,7 +409,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
         friendly_mode = get_friendly_encode_mode(encode_mode)
 
         if fps_value is not None:
-            status_msg = f"{_('Speed')}: {fps_display} fps\n{friendly_mode}"
+            status_msg = f"{friendly_mode} | {fps_display} fps"
         else:
             status_msg = f"{friendly_mode}"
 
@@ -767,7 +767,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                         if encode_mode in encode_mode_map:
                                             friendly_mode = encode_mode_map[encode_mode]
 
-                                        status_msg = f"{_('Speed')}: {fps_display} fps\n{friendly_mode}"
+                                        status_msg = f"{friendly_mode} | {fps_display} fps"
                                         GLib.idle_add(
                                             progress_item.update_progress,
                                             progress,
@@ -827,7 +827,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                                     encode_mode
                                                 ]
 
-                                            status_msg = f"{_('Speed:')} {fps_display} fps\n{friendly_mode}"
+                                            status_msg = f"{friendly_mode} | {fps_display} fps"
                                             GLib.idle_add(
                                                 progress_item.update_progress,
                                                 progress,
@@ -864,7 +864,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                         progress = min(0.99, current_frame / total_frames)
                                         fps_display = f"{current_fps:.1f}" if current_fps is not None else f"{estimated_fps:.1f}"
                                         friendly_mode = encode_mode_map.get(encode_mode, encode_mode)
-                                        status_msg = f"{_('Speed')}: {fps_display} fps\n{friendly_mode}"
+                                        status_msg = f"{friendly_mode} | {fps_display} fps"
                                         GLib.idle_add(
                                             progress_item.update_progress,
                                             progress,
@@ -883,7 +883,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                     if encode_mode in encode_mode_map:
                                         friendly_mode = encode_mode_map[encode_mode]
 
-                                    status_msg = f"{_('Speed:')} {current_fps:.1f} fps\n{friendly_mode}"
+                                    status_msg = f"{friendly_mode} | {current_fps:.1f} fps"
                                 else:
                                     # Get the friendly encode mode for display
                                     friendly_mode = encode_mode
@@ -1210,6 +1210,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     GLib.idle_add(lambda: app.conversion_completed(True))
 
             else:
+                # Mark as failed
+                GLib.idle_add(progress_item.mark_failure)
+                
                 error_msg = _("Conversion failed with code {0}").format(return_code)
                 GLib.idle_add(progress_item.update_progress, 0.0, _("Error!"))
                 GLib.idle_add(progress_item.update_status, error_msg)

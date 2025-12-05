@@ -1525,11 +1525,12 @@ class ConversionPage:
             print(f"Single segment mode: segment_duration={segment_duration:.2f}s")
         
         # Create and display progress dialog
+        # Always pass input_file for proper queue tracking
         run_with_progress_dialog(
             self.app,
             cmd,
             f"{os.path.basename(input_file)}",
-            input_file if delete_original else None,
+            input_file,  # Always pass full path for queue tracking
             delete_original,
             env_vars,
             segment_duration=segment_duration,  # Pass segment duration for progress calculation

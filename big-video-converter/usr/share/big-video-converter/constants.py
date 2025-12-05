@@ -319,6 +319,11 @@ def get_tooltips():
         "file_list_edit_button": _("Open video editor for this file"),
         "file_list_info_button": _("Show detailed file information"),
         "file_list_remove_button": _("Remove this file from the queue"),
+        # Progress page buttons
+        "progress_back": _("Go back to the main screen"),
+        "progress_show_log": _("Show conversion log output"),
+        "progress_cancel_file": _("Cancel conversion of this file"),
+        "progress_skip_file": _("Skip this file and do not convert it"),
     }
 
 

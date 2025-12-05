@@ -20,7 +20,6 @@ import gettext
 # Import local modules
 from constants import APP_ID, AUDIO_VALUES, SUBTITLE_VALUES, VIDEO_FILE_MIME_TYPES
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
-from ui.completion_page import CompletionPage
 from ui.conversion_page import ConversionPage
 from ui.header_bar import HeaderBar
 from ui.progress_page import ProgressPage
@@ -300,7 +299,8 @@ Type=Scalable
                 conversion_id,
                 conversion,
             ) in self.progress_page.active_conversions.items():
-                conversion_item = conversion["item"]
+                # Get the row (can be stored as "item" or "row" depending on implementation)
+                conversion_item = conversion.get("row") or conversion.get("item")
                 if conversion_item and conversion_item.process:
                     try:
                         print(
@@ -691,12 +691,6 @@ Type=Scalable
         # Add progress page to main_stack
         self.main_stack.add_titled(
             self.progress_page.get_page(), "progress_view", _("Progress")
-        )
-
-        # Create and add completion page to main_stack
-        self.completion_page = CompletionPage(self)
-        self.main_stack.add_titled(
-            self.completion_page, "completion_view", _("Complete")
         )
 
     def _connect_left_pane_signals(self):
@@ -1145,6 +1139,11 @@ Type=Scalable
         self.completed_conversions = []
         self.header_bar.set_buttons_sensitive(False)
 
+        # Initialize the progress page with the queue items
+        if hasattr(self, "progress_page"):
+            self.progress_page.reset()
+            self.progress_page.initialize_queue(list(self.conversion_queue))
+
         self.currently_converting = False
         self.main_stack.set_visible_child_name("progress_view")
         GLib.timeout_add(300, self.process_next_in_queue)
@@ -1526,23 +1525,22 @@ Type=Scalable
         self.send_notification(None, notification)
 
     def show_completion_screen(self):
-        """Show the completion screen with list of converted files"""
-        if hasattr(self, "completion_page") and self.completed_conversions:
-            self.completion_page.set_completed_files(self.completed_conversions)
-            self.main_stack.set_visible_child_name("completion_view")
+        """Show the completion summary on the progress page"""
+        if hasattr(self, "progress_page"):
+            self.progress_page.show_completion_summary()
 
-            # Send final system notification
-            count = len(self.completed_conversions)
-            if count == 1:
-                self.send_system_notification(
-                    _("All Conversions Complete"),
-                    _("1 video has been converted successfully!"),
-                )
-            else:
-                self.send_system_notification(
-                    _("All Conversions Complete"),
-                    _("{0} videos have been converted successfully!").format(count),
-                )
+        # Send final system notification
+        count = len(self.completed_conversions) if self.completed_conversions else 0
+        if count == 1:
+            self.send_system_notification(
+                _("All Conversions Complete"),
+                _("1 video has been converted successfully!"),
+            )
+        elif count > 1:
+            self.send_system_notification(
+                _("All Conversions Complete"),
+                _("{0} videos have been converted successfully!").format(count),
+            )
 
     # GIO Application overrides
     def _present_window_and_request_focus(self, window):
