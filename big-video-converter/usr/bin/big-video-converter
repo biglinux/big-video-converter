@@ -243,7 +243,8 @@ elif [[ $subtitle_extract == "extract" ]]; then
 			IFS=',' read -r index disposition language_code title <<<"$i"
 
 			# Only process the subtitle if it is in the list of srt subtitles
-			if [[ $subtitle_list_srt_ids =~ $index ]]; then
+			# Use word boundary matching to avoid false positives (e.g., index 4 matching in 14)
+			if [[ " $subtitle_list_srt_ids " =~ " $index " ]]; then
 
 				# Remove white spaces and special characters from the language code
 				language_code=${language_code// /}
