@@ -260,20 +260,25 @@ elif [[ $subtitle_extract == "extract" ]]; then
 					language_code="und" # undetermined, if the language code is empty
 				fi
 
-				# Check if the language code has been used before
-				if [[ -n "${language_code_usage[$language_code]}" ]]; then
-					language_code_count=${language_code_usage[$language_code]}
-					((language_code_count++))
-					language_code_usage[$language_code]=$language_code_count
-					language_code="${language_code}${language_code_count}"
-				else
-					language_code_usage[$language_code]=1
-				fi
-
+				# Check if this is a forced subtitle
 				if [[ $title == *"(Forced)"* || $disposition == "1" ]]; then
 					suffix=".forced"
 				else
 					suffix=""
+				fi
+
+				# Only increment the counter for non-forced subtitles
+				# Forced subtitles have a different suffix, so they don't need numbering
+				if [[ -z $suffix ]]; then
+					# Check if the language code has been used before
+					if [[ -n "${language_code_usage[$language_code]}" ]]; then
+						language_code_count=${language_code_usage[$language_code]}
+						((language_code_count++))
+						language_code_usage[$language_code]=$language_code_count
+						language_code="${language_code}${language_code_count}"
+					else
+						language_code_usage[$language_code]=1
+					fi
 				fi
 
 				output_file_srt="${output_file%.*}.$language_code$suffix.srt"
