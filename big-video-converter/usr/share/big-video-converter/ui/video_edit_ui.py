@@ -137,7 +137,7 @@ class VideoEditUI:
 
         # Playback controls
         self.play_pause_button = Gtk.Button()
-        self.play_pause_button.set_icon_name('big-media-playback-start-symbolic')
+        self.play_pause_button.set_icon_name('media-playback-start-symbolic')
         self.play_pause_button.add_css_class("circular")
         self.play_pause_button.set_tooltip_text(_("Play/Pause"))
         self.play_pause_button.connect("clicked", self.page.on_play_pause_clicked)
@@ -191,7 +191,7 @@ class VideoEditUI:
 
         # Fullscreen button
         self.fullscreen_button = Gtk.Button()
-        self.fullscreen_button.set_icon_name('big-view-fullscreen-symbolic')
+        self.fullscreen_button.set_icon_name('view-fullscreen-symbolic')
         self.fullscreen_button.set_tooltip_text(_("Toggle Fullscreen"))
         self.fullscreen_button.connect("clicked", self.page.on_toggle_fullscreen)
         button_row.append(self.fullscreen_button)

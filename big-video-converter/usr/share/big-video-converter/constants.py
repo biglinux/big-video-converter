@@ -11,7 +11,7 @@ _ = gettext.gettext
 # Application metadata
 APP_ID = "br.com.biglinux.converter"
 APP_NAME = "Big Video Converter"
-APP_VERSION = "3.9.32"
+APP_VERSION = "3.9.33"
 
 APP_DEVELOPERS = ["Tales A. Mendonça", "Bruno Gonçalves Araujo"]
 APP_WEBSITES = ["communitybig.org", "biglinux.com.br"]

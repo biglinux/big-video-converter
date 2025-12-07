@@ -196,10 +196,16 @@ ffprobe_result=$(ffprobe -select_streams s -show_entries stream=index:stream_tag
 ##############
 # Subtitles
 ##############
-# Filter only subtitles in srt format
-subtitle_list_srt=$(grep 'Subtitle: subrip (srt)' <<<"$ffprobe_result")
+# Get subtitle codec information to filter only SRT subtitles
+subtitle_codec_info=$(ffprobe -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file")
 
-subtitle_list_srt_ids=$(sed -E 's|.*Stream #0:([0-9]+).*|\1|g' <<<"$subtitle_list_srt")
+# Extract IDs of SRT (subrip) subtitles
+subtitle_list_srt_ids=""
+while IFS=, read -r index codec_name; do
+	if [[ "$codec_name" == "subrip" ]]; then
+		subtitle_list_srt_ids+="$index "
+	fi
+done <<<"$subtitle_codec_info"
 
 # Filter simplified
 subtitle_list_simplified=$(grep '^[0-9],' <<<"$ffprobe_result")
@@ -233,7 +239,7 @@ if [[ $subtitle_extract == "embedded" ]]; then
 		subtitle_cmd="-map 0:s? -c:s copy"
 	fi
 elif [[ $subtitle_extract == "extract" ]]; then
-	if [[ -n $subtitle_list_srt ]]; then
+	if [[ -n $subtitle_list_srt_ids ]]; then
 		# Declare an associative array to track language code usage
 		declare -A language_code_usage
 
@@ -486,7 +492,7 @@ ffmpeg_generic_options="-movflags +faststart -y \"$output_file\""
 if [[ $only_extract_subtitles = 1 ]]; then
 	general_params="-i \"$input_file\" $subtitle_cmd"
 	echo "Running command: $ffmpeg_executable $general_params"
-	eval $ffmpeg_executable $general_params
+	eval $ffmpeg_executable "$general_params"
 	exit $?
 fi
 
@@ -608,7 +614,7 @@ function attempt_conversion() {
 	if [[ "$force_copy_video" = "1" ]]; then
 		echo "Generating file without re-encoding"
 		echo "Running command: $ffmpeg_executable $options $decoder_format $encoder_format  $ffmpeg_generic_options"
-		eval $ffmpeg_executable $options $decoder_format $encoder_format $ffmpeg_generic_options
+		eval $ffmpeg_executable "$options" "$decoder_format" "$encoder_format" "$ffmpeg_generic_options"
 		# After copy always exit
 		exit $?
 	fi
@@ -617,7 +623,7 @@ function attempt_conversion() {
 	if [[ "$encoder_format" != "$encoder_software" && "$gpu_partial" != "1" ]]; then
 		echo "Encode mode: Decode GPU, encode GPU"
 		echo "Running command: $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
-		eval $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format "$video_filter_chain" $ffmpeg_generic_options
+		eval $ffmpeg_executable "$init_hardware" "$options" "$decoder_format" "$encoder_format" "$video_filter_chain" "$ffmpeg_generic_options"
 		# Store the exit code while preserving $? for later checks
 		exit_code=$?
 	else
@@ -664,7 +670,7 @@ function attempt_conversion() {
 		fi
 
 		echo "Running command: $ffmpeg_executable $init_hardware $options $encoder_format $partial_video_filter_chain $ffmpeg_generic_options"
-		eval $ffmpeg_executable $init_hardware $options $encoder_format "$partial_video_filter_chain" $ffmpeg_generic_options
+		eval $ffmpeg_executable "$init_hardware" "$options" "$encoder_format" "$partial_video_filter_chain" "$ffmpeg_generic_options"
 		exit_code=$?
 	fi
 
@@ -685,7 +691,7 @@ function attempt_conversion() {
 		fi
 
 		echo "Running command: $ffmpeg_executable $options $encoder_software $software_filter_chain $ffmpeg_generic_options"
-		eval $ffmpeg_executable $options $encoder_software "$software_filter_chain" $ffmpeg_generic_options
+		eval $ffmpeg_executable "$options" "$encoder_software" "$software_filter_chain" "$ffmpeg_generic_options"
 		exit_code=$?
 	fi
 }

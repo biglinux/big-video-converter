@@ -210,7 +210,7 @@ class VideoEditPage:
         # Update UI immediately before stopping playback
         self.is_playing = False
         if hasattr(self, "ui") and self.ui:
-            self.ui.play_pause_button.set_icon_name('big-media-playback-start-symbolic')
+            self.ui.play_pause_button.set_icon_name('media-playback-start-symbolic')
 
         # Explicitly cleanup MPV player (non-blocking)
         if hasattr(self, "mpv_player") and self.mpv_player:
@@ -737,14 +737,14 @@ class VideoEditPage:
         if self.is_playing:
             self.mpv_player.pause()
             self.is_playing = False
-            self.ui.play_pause_button.set_icon_name('big-media-playback-start-symbolic')
+            self.ui.play_pause_button.set_icon_name('media-playback-start-symbolic')
             if self.position_update_id:
                 GLib.source_remove(self.position_update_id)
                 self.position_update_id = None
         else:
             self.mpv_player.play()
             self.is_playing = True
-            self.ui.play_pause_button.set_icon_name('big-media-playback-pause-symbolic')
+            self.ui.play_pause_button.set_icon_name('media-playback-pause-symbolic')
             if not self.position_update_id:
                 self.position_update_id = GLib.timeout_add(
                     100, self._update_position_callback
@@ -781,13 +781,13 @@ class VideoEditPage:
             self.mpv_player.set_volume(volume)
             if hasattr(self.ui, "volume_button"):
                 if volume == 0:
-                    self.ui.volume_button.set_icon_name('big-audio-volume-muted-symbolic')
+                    self.ui.volume_button.set_icon_name('audio-volume-muted-symbolic')
                 elif volume < 0.33:
-                    self.ui.volume_button.set_icon_name('big-audio-volume-low-symbolic')
+                    self.ui.volume_button.set_icon_name('audio-volume-low-symbolic')
                 elif volume < 0.66:
-                    self.ui.volume_button.set_icon_name('big-audio-volume-medium-symbolic')
+                    self.ui.volume_button.set_icon_name('audio-volume-medium-symbolic')
                 else:
-                    self.ui.volume_button.set_icon_name('big-audio-volume-high-symbolic')
+                    self.ui.volume_button.set_icon_name('audio-volume-high-symbolic')
 
     def on_audio_track_changed(self, track_index):
         if hasattr(self, "mpv_player") and self.mpv_player:
@@ -906,9 +906,9 @@ class VideoEditPage:
     def _on_fullscreen_changed(self):
         """Update fullscreen button icon based on current state"""
         if self.is_video_fullscreen:
-            self.ui.fullscreen_button.set_icon_name('big-view-restore-symbolic')
+            self.ui.fullscreen_button.set_icon_name('view-restore-symbolic')
         else:
-            self.ui.fullscreen_button.set_icon_name('big-view-fullscreen-symbolic')
+            self.ui.fullscreen_button.set_icon_name('view-fullscreen-symbolic')
 
     def _enter_video_fullscreen(self):
         """Enter video-only fullscreen mode by hiding UI and fullscreening window"""
