@@ -515,17 +515,17 @@ function attempt_conversion() {
 		encoder_format="$encoder_vulkan"
 		init_hardware="$init_vulkan"
 		scale_filter_name="scale_vulkan"
-	elif grep -qiE '(VGA|3d).*nvidia' <<<"$devices"; then
+	elif grep -qiE '(VGA|Display controller|3d).*nvidia' <<<"$devices"; then
 		decoder_format="$decoder_cuda"
 		encoder_format="$encoder_nvenc"
 		init_hardware="$init_nvidia"
 		scale_filter_name="scale_cuda"
-	elif grep -qiE 'VGA.*(\bAMD\b|\bATI\b)' <<<"$devices"; then
+	elif grep -qiE '(VGA|Display controller.*(\bAMD\b|\bATI\b)' <<<"$devices"; then
 		decoder_format="$decoder_vaapi"
 		encoder_format="$encoder_vaapi"
 		init_hardware="$init_vaapi"
 		scale_filter_name="scale_vaapi"
-	elif grep -qi 'VGA.*intel' <<<"$devices"; then
+	elif grep -qiE '(VGA|Display controller).*intel' <<<"$devices"; then
 		decoder_format="$decoder_qsv"
 		encoder_format="$encoder_qsv"
 		init_hardware="$init_qsv"
