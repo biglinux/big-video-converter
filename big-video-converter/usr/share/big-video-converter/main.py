@@ -632,14 +632,14 @@ Type=Scalable
     def _create_right_pane(self):
         """Create right pane with stack for queue and editor views using ToolbarView"""
         # Create ToolbarView for right pane
-        right_toolbar_view = Adw.ToolbarView()
+        self.right_toolbar_view = Adw.ToolbarView()
 
         # Detect window button layout
         window_buttons_left = self._window_buttons_on_left()
 
         # Create HeaderBar for right pane
         self.header_bar = HeaderBar(self, window_buttons_left)
-        right_toolbar_view.add_top_bar(self.header_bar)
+        self.right_toolbar_view.add_top_bar(self.header_bar)
 
         # Create ViewStack for queue and editor
         self.right_stack = Adw.ViewStack()
@@ -654,8 +654,8 @@ Type=Scalable
         # The pages will be added here in _create_pages()
         # Queue view and editor view
 
-        right_toolbar_view.set_content(self.right_stack)
-        self.main_paned.set_end_child(right_toolbar_view)
+        self.right_toolbar_view.set_content(self.right_stack)
+        self.main_paned.set_end_child(self.right_toolbar_view)
 
     def _create_pages(self):
         """Create and add all application pages"""

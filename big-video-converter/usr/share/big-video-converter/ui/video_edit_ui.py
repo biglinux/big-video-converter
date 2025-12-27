@@ -9,6 +9,9 @@ import gettext
 
 _ = gettext.gettext
 
+# Import MPVPlayer to check rendering mode
+from ui.mpv_player import MPVPlayer
+
 
 class VideoEditUI:
     def __init__(self, page):
@@ -37,12 +40,20 @@ class VideoEditUI:
         )
         video_box.add_css_class("video-background")
 
-        # Video player widget - using GLArea for MPV OpenGL rendering
-        # GLArea provides OpenGL context for MPV render API
-        self.preview_video = Gtk.GLArea()
-        self.preview_video.set_hexpand(True)
-        self.preview_video.set_vexpand(True)
-        self.preview_video.set_auto_render(False)  # MPV controls rendering
+        # Video player widget - choose based on rendering mode
+        # X11 mode: Use DrawingArea for X11 window embedding (better VM compatibility)
+        # OpenGL mode: Use GLArea for MPV OpenGL render API
+        if MPVPlayer.use_x11_mode:
+            # X11 mode: DrawingArea allows MPV to embed its window directly
+            self.preview_video = Gtk.DrawingArea()
+            self.preview_video.set_hexpand(True)
+            self.preview_video.set_vexpand(True)
+        else:
+            # OpenGL mode: GLArea provides OpenGL context for MPV render API
+            self.preview_video = Gtk.GLArea()
+            self.preview_video.set_hexpand(True)
+            self.preview_video.set_vexpand(True)
+            self.preview_video.set_auto_render(False)  # MPV controls rendering
         video_box.append(self.preview_video)
 
         self.video_overlay.set_child(video_box)

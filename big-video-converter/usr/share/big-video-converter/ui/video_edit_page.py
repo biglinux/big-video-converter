@@ -915,9 +915,26 @@ class VideoEditPage:
         if self.is_video_fullscreen:
             return
 
+        # Store sidebar position before hiding
+        if hasattr(self.app, 'main_paned'):
+            self._saved_sidebar_position = self.app.main_paned.get_position()
+
         # Hide toolbar
         if hasattr(self.ui, "toolbar") and self.ui.toolbar:
             self.ui.toolbar.set_visible(False)
+
+        # Hide the sidebar (left pane of main_paned)
+        if hasattr(self.app, 'main_paned'):
+            # Get the start child (sidebar)
+            start_child = self.app.main_paned.get_start_child()
+            if start_child:
+                start_child.set_visible(False)
+            # Set paned position to 0 to maximize video area
+            self.app.main_paned.set_position(0)
+
+        # Hide the header bar using Adw.ToolbarView's reveal property
+        if hasattr(self.app, 'right_toolbar_view') and self.app.right_toolbar_view:
+            self.app.right_toolbar_view.set_reveal_top_bars(False)
 
         # Fullscreen the main window
         self.app.window.fullscreen()
@@ -925,6 +942,10 @@ class VideoEditPage:
         # Update state
         self.is_video_fullscreen = True
         self._on_fullscreen_changed()
+        
+        # Force controls to be visible initially
+        if hasattr(self.ui, 'overlay_controls'):
+            self.ui.overlay_controls.set_visible(True)
 
     def _exit_video_fullscreen(self):
         """Exit video-only fullscreen mode by showing UI and unfullscreening window"""
@@ -933,6 +954,23 @@ class VideoEditPage:
 
         # Unfullscreen the main window
         self.app.window.unfullscreen()
+
+        # Show the header bar
+        if hasattr(self.app, 'right_toolbar_view') and self.app.right_toolbar_view:
+            self.app.right_toolbar_view.set_reveal_top_bars(True)
+
+        # Show the sidebar (left pane of main_paned)
+        if hasattr(self.app, 'main_paned'):
+            # Get the start child (sidebar)
+            start_child = self.app.main_paned.get_start_child()
+            if start_child:
+                start_child.set_visible(True)
+            # Restore sidebar position
+            if hasattr(self, '_saved_sidebar_position'):
+                self.app.main_paned.set_position(self._saved_sidebar_position)
+            else:
+                # Default position if not saved
+                self.app.main_paned.set_position(430)
 
         # Show toolbar
         if hasattr(self.ui, "toolbar") and self.ui.toolbar:

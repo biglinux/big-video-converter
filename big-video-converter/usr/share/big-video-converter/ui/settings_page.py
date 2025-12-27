@@ -277,6 +277,25 @@ class SettingsPage:
             self.only_extract_subtitles_check, "extract_subtitles"
         )
 
+        # Video preview render mode
+        render_mode_model = Gtk.StringList()
+        self.render_mode_values = ["auto", "opengl", "software"]
+        self.render_mode_labels = [
+            _("Automatic"),
+            _("OpenGL (hardware accelerated)"),
+            _("Software (compatible mode)")
+        ]
+        for label in self.render_mode_labels:
+            render_mode_model.append(label)
+
+        self.render_mode_combo = Adw.ComboRow(title=_("Video preview rendering"))
+        self.render_mode_combo.set_subtitle(
+            _("Rendering mode for video editor preview. Restart required to apply.")
+        )
+        self.render_mode_combo.set_model(render_mode_model)
+        self.render_mode_combo.set_selected(0)  # Default to Auto
+        options_group.add(self.render_mode_combo)
+
         main_content.append(options_group)
 
     def _on_bitrate_combo_changed(self, combo, param):
@@ -402,6 +421,11 @@ class SettingsPage:
             "notify::selected", self._save_audio_codec_setting
         )
 
+        # Connect render mode combo change
+        self.render_mode_combo.connect(
+            "notify::selected", self._save_render_mode_setting
+        )
+
     def _save_gpu_setting(self, index):
         """Save GPU setting as direct value"""
         # Use the mapping from constants to save the internal value
@@ -440,6 +464,30 @@ class SettingsPage:
             internal_value = constants.AUDIO_CODEC_VALUES[selected]
             self.app.settings_manager.save_setting("audio-codec", internal_value)
             print(f"Saved audio codec: {internal_value}")
+
+    def _save_render_mode_setting(self, combo_box, _param=None):
+        """Save video preview render mode setting"""
+        selected = combo_box.get_selected()
+        if selected < len(self.render_mode_values):
+            internal_value = self.render_mode_values[selected]
+            
+            # Check if value actually changed
+            current_value = self.app.settings_manager.load_setting("video-preview-render-mode", "auto")
+            if internal_value != current_value:
+                # Save the new value
+                self.app.settings_manager.save_setting("video-preview-render-mode", internal_value)
+                print(f"Saved render mode: {internal_value} (restart required to apply)")
+                
+                # Show dialog informing user that restart is required
+                dialog = Gtk.AlertDialog()
+                dialog.set_message(_("Restart Required"))
+                dialog.set_detail(
+                    _("The video preview rendering mode has been changed.\n\n"
+                      "Please close and reopen the application for the change to take effect.")
+                )
+                dialog.set_buttons([_("OK")])
+                dialog.set_default_button(0)
+                dialog.show(self.app.window)
 
     def _load_settings(self):
         """Load settings and update UI components"""
@@ -545,6 +593,15 @@ class SettingsPage:
             "only-extract-subtitles", False
         )
         self.only_extract_subtitles_check.set_active(only_extract_subtitles_active)
+
+        # Load render mode
+        render_mode_value = self.settings_manager.load_setting("video-preview-render-mode", "auto")
+        render_mode_index = 0  # Default to auto
+        try:
+            render_mode_index = self.render_mode_values.index(render_mode_value)
+        except ValueError:
+            pass  # Use default if not found
+        self.render_mode_combo.set_selected(render_mode_index)
 
     def _find_gpu_index(self, value):
         """Find index of GPU value in GPU_OPTIONS using reverse mapping"""

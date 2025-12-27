@@ -59,6 +59,8 @@ class SettingsManager:
         "video-trim-end": -1.0,  # -1 means no end time (use full video)
         # Multi-segment output mode
         "multi-segment-output-mode": "join",  # Options: "join", "split"
+        # Video preview rendering mode
+        "video-preview-render-mode": "auto",  # Options: "auto", "opengl", "software"
     }
 
     def __init__(self, app_id, dev_mode=False, dev_settings_file=None):
