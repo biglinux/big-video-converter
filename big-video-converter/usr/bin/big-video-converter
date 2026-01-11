@@ -128,6 +128,7 @@ fi
 input_file="$1"
 
 # Detect bit depth and codec of input video
+echo "Iniciando o processo FFmpeg..."
 echo "Analyzing input video..."
 pix_fmt=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of csv=p=0 "$1" 2>/dev/null)
 video_profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profile -of csv=p=0 "$1" 2>/dev/null)
@@ -141,24 +142,20 @@ elif [[ $video_profile =~ .*10.* || $video_profile =~ .*High\ 10.* || $video_pro
 	is_10bit=true
 	echo "Detected 10-bit video input (profile: $video_profile)"
 else
-	echo "Detected 8-bit video input"
+	echo "ℹ️  Detected 8-bit video ($pix_fmt) - using standard profile"
 fi
 
 echo "Detecting source video codec..."
-source_video_codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$input_file" 2>/dev/null)
+source_video_codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$input_file" 2>/dev/null | head -n1)
 echo "Source video codec detected: $source_video_codec"
-
-# From another codec to h264 (ex: hevc -> h264)
-if [[ ($video_encoder == "h264" || -z "$video_encoder") && "$source_video_codec" != "h264" ]]; then
-	echo "Applying pixel format conversion for compatibility ($source_video_codec -> h264)."
-	needs_10bit_to_8bit_conversion=true
-fi
 
 # Determine if we need to convert 10-bit video to 8-bit for H.264 compatibility
 needs_10bit_to_8bit_conversion=false
 if [[ $is_10bit == true && ($video_encoder == "h264" || -z "$video_encoder") ]]; then
 	needs_10bit_to_8bit_conversion=true
 	echo "Detected 10-bit input. Forcing 8-bit pixel format (nv12) for H.264 compatibility."
+elif [[ ($video_encoder == "h264" || -z "$video_encoder") && "$source_video_codec" != "h264" && $is_10bit == false ]]; then
+	echo "Converting from $source_video_codec to h264 (8-bit input, no bit depth conversion needed)."
 fi
 
 # Remove extension from the input file
@@ -448,7 +445,7 @@ esac
 #######################
 # Function to build the main encoder command strings
 function build_encoder_commands() {
-	general_params="-i \"$input_file\" $subtitle_cmd -map 0:v:0 $audio_cmd"
+	general_params="-i \"$input_file\" -map 0:v:0 $audio_cmd"
 	copy_video="$general_params -c:v copy"
 
 	# Select appropriate encoder command based on the specified video encoder
@@ -571,9 +568,10 @@ function attempt_conversion() {
 	local video_filter_chain=""
 	local filter_parts=()
 
-	# # 1. Add 10-bit to 8-bit conversion filter if needed or using video filter
+	# # 1. Add 10-bit to 8-bit conversion filter if needed (only for GPU encode with hardware decode)
+	# Note: For 8-bit video, this conversion is NOT needed
 	if [[ $needs_10bit_to_8bit_conversion == true && -z "$video_filter" ]]; then
-		force_8bit_color='scale_cuda=format=nv12,'
+		force_8bit_color="${scale_filter_name}=format=nv12,"
 	fi
 
 	# if [[ -n "$video_filter" ]]; then
@@ -610,7 +608,13 @@ function attempt_conversion() {
 	fi
 
 	# --- Execute Conversion Attempts ---
-	
+
+	# Extract subtitles first if needed (separate command to avoid output conflicts)
+	if [[ -n "$subtitle_cmd" && "$subtitle_extract" == "extract" ]]; then
+		echo "Extracting subtitles..."
+		eval $ffmpeg_executable -i \"$input_file\" $subtitle_cmd 2>/dev/null
+	fi
+
 	if [[ "$force_copy_video" = "1" ]]; then
 		echo "Generating file without re-encoding"
 		echo "Running command: $ffmpeg_executable $options $decoder_format $encoder_format  $ffmpeg_generic_options"
@@ -622,10 +626,17 @@ function attempt_conversion() {
 	# Try to encode with the GPU
 	if [[ "$encoder_format" != "$encoder_software" && "$gpu_partial" != "1" ]]; then
 		echo "Encode mode: Decode GPU, encode GPU"
+		echo "Detected encode mode: Decode GPU, encode GPU (Aceleração total de GPU)"
 		echo "Running command: $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
+		echo ""
+		echo "FFmpeg command:"
+		echo "$ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$init_hardware" "$options" "$decoder_format" "$encoder_format" "$video_filter_chain" "$ffmpeg_generic_options"
 		# Store the exit code while preserving $? for later checks
 		exit_code=$?
+		if [[ $exit_code != 0 ]]; then
+			echo "Conversion failed!"
+		fi
 	else
 		# GPU encoding skipped, set exit_code to trigger software encoding
 		exit_code=1
@@ -634,6 +645,7 @@ function attempt_conversion() {
 	# If encoding not successful, and not exit with 255 (interrupted by user), and not software encoding, try with the second option
 	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1" ]]; then
 		echo "Encode mode: Decode Software, Encode GPU"
+		echo "Detected encode mode: Decode Software, Encode GPU (Decodificação de Software e codificação por GPU)"
 
 		#####################################################
 		# --- Encode GPU Decode CPU filter chain ---
@@ -650,7 +662,7 @@ function attempt_conversion() {
 		elif [[ ${encoder_format,,} =~ vaapi ]]; then
 			partial_filter_parts+=("format=nv12" "hwupload=derive_device=vaapi")
 		elif [[ ${encoder_format,,} =~ qsv ]]; then
-			partial_filter_parts+=("format=nv12" "hwupload_qsv")
+			partial_filter_parts+=("format=nv12" "hwupload=extra_hw_frames=64,format=qsv")
 		fi
 
 		# Add user-provided filters after the upload
@@ -670,13 +682,20 @@ function attempt_conversion() {
 		fi
 
 		echo "Running command: $ffmpeg_executable $init_hardware $options $encoder_format $partial_video_filter_chain $ffmpeg_generic_options"
+		echo ""
+		echo "FFmpeg command:"
+		echo "$ffmpeg_executable $init_hardware $options $encoder_format $partial_video_filter_chain $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$init_hardware" "$options" "$encoder_format" "$partial_video_filter_chain" "$ffmpeg_generic_options"
 		exit_code=$?
+		if [[ $exit_code != 0 ]]; then
+			echo "Conversion failed!"
+		fi
 	fi
 
 	# If encoding not successful, and not exit with 255 (interrupted by user), try with software
 	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || $force_software == 1 || ("$encoder_format" == "$encoder_software") ]]; then
 		echo "Encode mode: Decode Software, Encode Software"
+		echo "Detected encode mode: Decode Software, Encode Software (Codificação de software)"
 		# Software mode uses the original video_filter variable without hw acceleration
 		local software_filter_chain=""
 		if [[ -n "$video_filter" ]]; then
@@ -691,6 +710,9 @@ function attempt_conversion() {
 		fi
 
 		echo "Running command: $ffmpeg_executable $options $encoder_software $software_filter_chain $ffmpeg_generic_options"
+		echo ""
+		echo "FFmpeg command:"
+		echo "$ffmpeg_executable $options $encoder_software $software_filter_chain $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$options" "$encoder_software" "$software_filter_chain" "$ffmpeg_generic_options"
 		exit_code=$?
 	fi
