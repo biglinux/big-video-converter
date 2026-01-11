@@ -176,7 +176,7 @@ class VideoInfoDialog:
         file_name_row.set_subtitle(_("File Name"))
 
         # Add a copy button to copy the file name
-        copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+        copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
         copy_button.add_css_class("flat")
         copy_button.set_tooltip_text(_("Copy file name"))
         copy_button.connect("clicked", lambda btn: self._copy_to_clipboard(file_name))
@@ -189,7 +189,7 @@ class VideoInfoDialog:
         file_path_row.set_subtitle(_("Location"))
 
         # Add open folder button
-        open_button = Gtk.Button.new_from_icon_name('big-folder-open-symbolic')
+        open_button = Gtk.Button.new_from_icon_name('folder-open-symbolic')
         open_button.add_css_class("flat")
         open_button.set_tooltip_text(_("Open containing folder"))
         open_button.connect(
@@ -206,7 +206,7 @@ class VideoInfoDialog:
             size_row.set_subtitle(_("File Size"))
 
             # Add copy button
-            copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+            copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
             copy_button.add_css_class("flat")
             copy_button.set_tooltip_text(_("Copy file size"))
             copy_button.connect(
@@ -228,7 +228,7 @@ class VideoInfoDialog:
             duration_row.set_subtitle(_("Duration"))
 
             # Add copy button
-            copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+            copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
             copy_button.add_css_class("flat")
             copy_button.set_tooltip_text(_("Copy duration"))
             copy_button.connect(
@@ -245,7 +245,7 @@ class VideoInfoDialog:
             format_row.set_subtitle(_("Format"))
 
             # Add copy button
-            copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+            copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
             copy_button.add_css_class("flat")
             copy_button.set_tooltip_text(_("Copy format"))
             copy_button.connect(
@@ -263,7 +263,7 @@ class VideoInfoDialog:
             bitrate_row.set_subtitle(_("Bitrate"))
 
             # Add copy button
-            copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+            copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
             copy_button.add_css_class("flat")
             copy_button.set_tooltip_text(_("Copy bitrate"))
             copy_button.connect(
@@ -308,7 +308,7 @@ class VideoInfoDialog:
                     codec_row.set_subtitle(_("Codec"))
 
                     # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                     copy_button.add_css_class("flat")
                     copy_button.set_tooltip_text(_("Copy codec"))
                     copy_button.connect(
@@ -340,7 +340,7 @@ class VideoInfoDialog:
                         res_row.add_suffix(res_label)
 
                     # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                     copy_button.add_css_class("flat")
                     copy_button.set_tooltip_text(_("Copy resolution"))
                     copy_button.connect(
@@ -361,9 +361,7 @@ class VideoInfoDialog:
                         fps_row.set_subtitle(_("Frame Rate"))
 
                         # Add copy button
-                        copy_button = Gtk.Button.new_from_icon_name(
-                            'big-edit-copy-symbolic'
-                        )
+                        copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                         copy_button.add_css_class("flat")
                         copy_button.set_tooltip_text(_("Copy frame rate"))
                         copy_button.connect(
@@ -383,7 +381,7 @@ class VideoInfoDialog:
                     pix_row.set_subtitle(_("Pixel Format"))
 
                     # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                     copy_button.add_css_class("flat")
                     copy_button.set_tooltip_text(_("Copy pixel format"))
                     copy_button.connect(
@@ -401,7 +399,7 @@ class VideoInfoDialog:
                     bitrate_row.set_subtitle(_("Bitrate"))
 
                     # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                     copy_button.add_css_class("flat")
                     copy_button.set_tooltip_text(_("Copy bitrate"))
                     copy_button.connect(
@@ -419,7 +417,7 @@ class VideoInfoDialog:
                     lang_row.set_subtitle(_("Language"))
 
                     # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('big-edit-copy-symbolic')
+                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                     copy_button.add_css_class("flat")
                     copy_button.set_tooltip_text(_("Copy language code"))
                     copy_button.connect(
@@ -463,7 +461,7 @@ class VideoInfoDialog:
 
                 # Add icon suffix if we have one
                 if stream_icon:
-                    icon = Gtk.Image.new_from_icon_name(stream_icon)
+                    icon = Gtk.Image.new_from_file(icon_path(stream_icon))
                     icon.add_css_class("dim-label")
                     expander.add_prefix(icon)
 
@@ -476,9 +474,7 @@ class VideoInfoDialog:
                     codec_row.set_subtitle(_("Codec"))
 
                     # Add copy button for codec
-                    codec_copy_button = Gtk.Button.new_from_icon_name(
-                        'big-edit-copy-symbolic'
-                    )
+                    codec_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                     codec_copy_button.add_css_class("flat")
                     codec_copy_button.set_tooltip_text(_("Copy codec"))
                     codec_copy_button.connect(
@@ -488,9 +484,9 @@ class VideoInfoDialog:
                     codec_row.add_suffix(codec_copy_button)
 
                     # Add codec icon suffix
-                    codec_icon = Gtk.Image.new_from_icon_name(
+                    codec_icon = Gtk.Image.new_from_file(icon_path(
                         "application-x-executable-symbolic"
-                    )
+                    ))
                     codec_icon.add_css_class("dim-label")
                     codec_row.add_suffix(codec_icon)
 
@@ -507,9 +503,7 @@ class VideoInfoDialog:
                         sample_row.set_subtitle(_("Sample Rate"))
 
                         # Add copy button for sample rate
-                        sample_copy_button = Gtk.Button.new_from_icon_name(
-                            'big-edit-copy-symbolic'
-                        )
+                        sample_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                         sample_copy_button.add_css_class("flat")
                         sample_copy_button.set_tooltip_text(_("Copy sample rate"))
                         sample_copy_button.connect(
@@ -548,9 +542,7 @@ class VideoInfoDialog:
                         channels_row.set_subtitle(_("Channels"))
 
                         # Add copy button for channels
-                        channels_copy_button = Gtk.Button.new_from_icon_name(
-                            'big-edit-copy-symbolic'
-                        )
+                        channels_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                         channels_copy_button.add_css_class("flat")
                         channels_copy_button.set_tooltip_text(_("Copy channels"))
                         channels_copy_button.connect(
@@ -569,9 +561,7 @@ class VideoInfoDialog:
                         bitrate_row.set_subtitle(_("Bitrate"))
 
                         # Add copy button for bitrate
-                        bitrate_copy_button = Gtk.Button.new_from_icon_name(
-                            'big-edit-copy-symbolic'
-                        )
+                        bitrate_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                         bitrate_copy_button.add_css_class("flat")
                         bitrate_copy_button.set_tooltip_text(_("Copy bitrate"))
                         bitrate_copy_button.connect(
@@ -592,9 +582,7 @@ class VideoInfoDialog:
                         lang_row.set_subtitle(_("Language"))
 
                         # Add copy button for language
-                        lang_copy_button = Gtk.Button.new_from_icon_name(
-                            'big-edit-copy-symbolic'
-                        )
+                        lang_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                         lang_copy_button.add_css_class("flat")
                         lang_copy_button.set_tooltip_text(_("Copy language code"))
                         lang_copy_button.connect(
@@ -629,9 +617,7 @@ class VideoInfoDialog:
                             tag_row.set_subtitle(tag.capitalize())
 
                             # Add copy button for tag value
-                            tag_copy_button = Gtk.Button.new_from_icon_name(
-                                'big-edit-copy-symbolic'
-                            )
+                            tag_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
                             tag_copy_button.add_css_class("flat")
                             tag_copy_button.set_tooltip_text(_("Copy value"))
                             tag_copy_button.connect(
@@ -700,7 +686,7 @@ class VideoInfoDialog:
         error_box.set_valign(Gtk.Align.CENTER)
         error_box.set_halign(Gtk.Align.CENTER)
 
-        error_icon = Gtk.Image.new_from_icon_name('big-dialog-error-symbolic')
+        error_icon = Gtk.Image.new_from_icon_name('dialog-error-symbolic')
         error_icon.set_pixel_size(48)
         error_icon.add_css_class("error")
         error_box.append(error_icon)

@@ -137,43 +137,29 @@ class VideoConverterApp(Adw.Application):
             self.add_action(action)
 
     def _setup_icon_theme(self):
-        """Setup custom icon theme path for bundled icons"""
+        """Setup custom icon theme path for bundled icons with PRIORITY"""
         try:
             # Get the application's directory
             script_dir = os.path.dirname(os.path.abspath(__file__))
             icons_dir = os.path.join(script_dir, 'icons')
-            
+
             # Check if icons directory exists
             if os.path.exists(icons_dir):
-                # Create index.theme if it doesn't exist
-                index_theme_path = os.path.join(icons_dir, 'hicolor', 'index.theme')
-                if not os.path.exists(index_theme_path):
-                    try:
-                        os.makedirs(os.path.dirname(index_theme_path), exist_ok=True)
-                        with open(index_theme_path, 'w') as f:
-                            f.write("""[Icon Theme]
-Name=Hicolor
-Comment=Fallback icon theme
-Hidden=true
-Directories=scalable/actions
-
-[scalable/actions]
-Context=Actions
-Size=48
-MinSize=1
-MaxSize=512
-Type=Scalable
-""")
-                    except Exception:
-                        pass  # Silent failure if can't create index.theme
-                
-                # Get default icon theme and add custom icons directory
+                # Get default icon theme
                 icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
-                icon_theme.add_search_path(icons_dir)
-                
+
+                # Get current search paths
+                current_paths = icon_theme.get_search_path()
+
+                # Prepend our icons directory to ensure priority
+                # This guarantees our icons are found FIRST
+                new_paths = [icons_dir] + current_paths
+                icon_theme.set_search_path(new_paths)
+
                 if os.environ.get('BVC_DEBUG'):
-                    print(f"Custom icon theme path added: {icons_dir}")
-                    
+                    print(f"Custom icon theme path added with PRIORITY: {icons_dir}")
+                    print(f"Search paths order: {new_paths[:3]}...")  # Show first 3
+
         except Exception as e:
             if os.environ.get('BVC_DEBUG'):
                 print(f"Error setting up icon theme: {type(e).__name__}: {e}")
@@ -1164,7 +1150,7 @@ Type=Scalable
                 self.video_edit_page.ui, "play_pause_button"
             ):
                 self.video_edit_page.ui.play_pause_button.set_icon_name(
-                    'big-media-playback-start-symbolic'
+                    'media-playback-start'
                 )
             if self.video_edit_page.position_update_id:
                 GLib.source_remove(self.video_edit_page.position_update_id)

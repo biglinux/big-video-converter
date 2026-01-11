@@ -102,7 +102,7 @@ class ProgressPage:
         # ===== COMPLETION BANNER =====
         self.completion_banner = Adw.Banner()
         self.completion_banner.set_revealed(False)
-        self.completion_banner.set_button_label(_("Back"))
+        self.completion_banner.set_button_label(_("Completed"))
         self.completion_banner.connect("button-clicked", self._on_back_clicked)
         self.page.append(self.completion_banner)
 

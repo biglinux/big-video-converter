@@ -38,7 +38,7 @@ class HeaderBar(Gtk.Box):
         self.back_button = Gtk.Button()
         # Create box for icon + label
         back_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        back_icon = Gtk.Image.new_from_icon_name('big-go-previous-symbolic')
+        back_icon = Gtk.Image.new_from_icon_name('go-previous-symbolic')
         back_label = Gtk.Label(label=_("Back"))
         back_box.append(back_icon)
         back_box.append(back_label)
@@ -54,7 +54,7 @@ class HeaderBar(Gtk.Box):
 
         # Clear queue icon button (left side)
         self.clear_queue_button = Gtk.Button()
-        self.clear_queue_button.set_icon_name('big-trash-symbolic')
+        self.clear_queue_button.set_icon_name('trash-symbolic')
         self.app.tooltip_helper.add_tooltip(
             self.clear_queue_button, "clear_queue_button"
         )
@@ -119,7 +119,7 @@ class HeaderBar(Gtk.Box):
 
         # Add menu button (three dots) at the end
         self.menu_button = Gtk.MenuButton()
-        self.menu_button.set_icon_name('big-open-menu-symbolic')
+        self.menu_button.set_icon_name('open-menu-symbolic')
         self.app.tooltip_helper.add_tooltip(self.menu_button, "menu_button")
 
         # Create menu model
