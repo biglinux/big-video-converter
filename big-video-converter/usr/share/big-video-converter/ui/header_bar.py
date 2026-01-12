@@ -90,7 +90,7 @@ class HeaderBar(Gtk.Box):
         # Create menu model for the dropdown
         menu = Gio.Menu()
         menu_item = Gio.MenuItem.new(_("Add Folder"), "app.add_folder")
-        icon = Gio.ThemedIcon.new('big-folder-symbolic')
+        icon = Gio.ThemedIcon.new('folder-symbolic')
         menu_item.set_icon(icon)
         menu.append_item(menu_item)
         self.add_button.set_menu_model(menu)

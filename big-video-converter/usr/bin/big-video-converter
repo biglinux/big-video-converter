@@ -529,7 +529,7 @@ function attempt_conversion() {
 		encoder_format="$encoder_nvenc"
 		init_hardware="$init_nvidia"
 		scale_filter_name="scale_cuda"
-	elif grep -qiE '(VGA|Display controller.*(\bAMD\b|\bATI\b)' <<<"$devices"; then
+	elif grep -qiE '(VGA|Display controller).*(\bAMD\b|\bATI\b)' <<<"$devices"; then
 		decoder_format="$decoder_vaapi"
 		encoder_format="$encoder_vaapi"
 		init_hardware="$init_vaapi"

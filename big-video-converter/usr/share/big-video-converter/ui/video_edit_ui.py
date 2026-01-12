@@ -136,7 +136,7 @@ class VideoEditUI:
         button_row.append(seek_back_button)
 
         prev_frame_button = Gtk.Button(
-            icon_name='big-go-previous-symbolic', tooltip_text=_("Previous frame")
+            icon_name='go-previous-symbolic', tooltip_text=_("Previous frame")
         )
         prev_frame_button.connect(
             "clicked",
@@ -304,7 +304,7 @@ class VideoEditUI:
     def _create_volume_button(self):
         """Creates the volume button with its popover."""
         volume_button = Gtk.MenuButton(
-            icon_name='big-audio-volume-high-symbolic', tooltip_text=_("Volume")
+            icon_name='audio-volume-high-symbolic', tooltip_text=_("Volume")
         )
 
         volume_popover = Gtk.Popover()
