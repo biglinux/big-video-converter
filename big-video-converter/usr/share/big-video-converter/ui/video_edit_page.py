@@ -312,7 +312,7 @@ class VideoEditPage:
             row.set_subtitle(f"Duration: {duration_str}")
             button_box = Gtk.Box(spacing=6, valign=Gtk.Align.CENTER)
             goto_button = Gtk.Button(
-                icon_name='big-media-playback-start-symbolic',
+                icon_name='media-playback-start-symbolic',
                 css_classes=["flat"],
                 tooltip_text=_("Go to segment start"),
             )
@@ -321,7 +321,7 @@ class VideoEditPage:
             )
             button_box.append(goto_button)
             edit_button = Gtk.Button(
-                icon_name='big-document-edit-symbolic',
+                icon_name='document-edit-symbolic',
                 css_classes=["flat"],
                 tooltip_text=_("Edit segment times"),
             )
