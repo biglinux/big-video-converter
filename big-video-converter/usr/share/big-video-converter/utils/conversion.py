@@ -343,6 +343,11 @@ def monitor_progress(app, process, progress_item, env_vars=None):
     encode_mode_pattern = re.compile(r"Encode mode:\s*(.*)")
     running_command_pattern = re.compile(r"Running command:\s*(.*)")
 
+    # Pattern for file corruption errors
+    corruption_pattern = re.compile(
+        r"EBML header|Invalid data found|misdetection possible|not a valid video"
+    )
+
     # Map technical encode modes to user-friendly translations
     encode_mode_map = {
         "": _("Software encoding"),
@@ -355,6 +360,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
     encode_mode_detected = False
     encode_mode = _("Unknown")  # Default value
     full_command = None
+    file_corruption_detected = False
 
     # Values to track progress
     duration_secs = None
@@ -537,6 +543,21 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                             _("Process cancelled by user"),
                         )
                         break
+
+                    # Detect file corruption errors
+                    if not file_corruption_detected and corruption_pattern.search(line):
+                        file_corruption_detected = True
+                        corruption_msg = _(
+                            "The input file appears to be corrupted or is not a valid video file."
+                        )
+                        GLib.idle_add(
+                            progress_item.add_output_text,
+                            f"\n⚠️ {corruption_msg}\n",
+                        )
+                        GLib.idle_add(
+                            progress_item.update_status,
+                            _("Error: corrupted file"),
+                        )
 
                     # Capture output file if available
                     if "Output #0" in line and "'" in line:
