@@ -3,6 +3,8 @@ Unified video settings management module.
 Provides constants, utilities, and management for video adjustments.
 """
 
+import math
+
 # Video Adjustment Default Values
 VIDEO_ADJUSTMENT_DEFAULTS = {
     "brightness": 0.0,  # Preview player: -1.0 to 1.0, FFmpeg: -1.0 to 1.0 (direct map)
@@ -112,9 +114,6 @@ def preview_hue_to_ffmpeg(hue):
     - Preview hue =  0.0 → FFmpeg hue =  0  (0°)
     - Preview hue = +1.0 → FFmpeg hue = +π (+180°)
     """
-    # Map from preview normalized [-1.0, 1.0] to FFmpeg radians [-π, π]
-    import math
-
     return hue * math.pi
 
 
@@ -135,7 +134,6 @@ def generate_video_filters(
     """
     filters = []
 
-    # ... (O resto da função, como a detecção de HEVC 10-bit, permanece o mesmo) ...
     is_hevc_10bit_to_h264 = False
     if input_file:
         try:
@@ -169,7 +167,7 @@ def generate_video_filters(
 
                 if is_10bit and is_hevc and is_h264_output:
                     is_hevc_10bit_to_h264 = True
-        except:
+        except Exception:
             pass
 
     if is_hevc_10bit_to_h264:
@@ -196,7 +194,6 @@ def generate_video_filters(
         crop_height = video_height - crop_top - crop_bottom
 
         if crop_width > 0 and crop_height > 0:
-            print(f"DEBUG: Adding crop filter: crop={crop_width}:{crop_height}:{crop_left}:{crop_top}")
             filters.append(f"crop={crop_width}:{crop_height}:{crop_left}:{crop_top}")
 
     # 2. Add eq filter with calibrated values (brightness, saturation)
@@ -218,7 +215,7 @@ def generate_video_filters(
     # 3. Add hue filter separately (FFmpeg requires separate hue filter, not in eq)
     hue = get_adjustment_value(settings, "hue")
     if abs(hue) > FLOAT_THRESHOLD:
-        ffmpeg_hue = gstreamer_hue_to_ffmpeg(hue) * 180 / 3.14159
+        ffmpeg_hue = gstreamer_hue_to_ffmpeg(hue) * 180 / math.pi
         filters.append(f"hue=h={ffmpeg_hue:.3f}")
 
     return filters
@@ -272,6 +269,7 @@ class VideoAdjustmentManager:
         ui_controls = {
             "brightness": getattr(ui, "brightness_scale", None),
             "saturation": getattr(ui, "saturation_scale", None),
+            "hue": getattr(ui, "hue_scale", None),
             "crop_left": getattr(ui, "crop_left_spin", None),
             "crop_right": getattr(ui, "crop_right_spin", None),
             "crop_top": getattr(ui, "crop_top_spin", None),

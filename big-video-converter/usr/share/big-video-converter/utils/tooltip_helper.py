@@ -10,9 +10,8 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gtk, Gdk, GLib
-
 from constants import get_tooltips
+from gi.repository import Adw, Gdk, GLib, Gtk
 
 
 def _is_x11_backend() -> bool:
@@ -123,6 +122,11 @@ class TooltipHelper:
             return
         
         # Wayland: use custom popover tooltips
+        # If widget already has a tooltip, just update the key (avoid duplicate controllers)
+        if hasattr(widget, "tooltip_key"):
+            widget.tooltip_key = tooltip_key
+            return
+
         widget.tooltip_key = tooltip_key
         
         motion_controller = Gtk.EventControllerMotion.new()

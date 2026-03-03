@@ -4,11 +4,12 @@ Uses MPV's OpenGL render API for proper GTK4 integration.
 Supports X11 native mode for better compatibility in virtual machines.
 """
 
-import gi
+import ctypes
 import locale
 import os
-import ctypes
 import subprocess
+
+import gi
 
 
 def is_running_in_vm():
@@ -134,10 +135,8 @@ elif _RENDER_MODE_SETTING == "software":
     print("MPV: Will use software rendering mode (user preference)")
     os.environ['GSK_RENDERER'] = 'cairo'
 else:
-    # Auto mode: detect based on environment
-    # - VMs on X11: use X11 native mode (most compatible)
-    # - VMs on Wayland: use OpenGL with aggressive software fallbacks
-    # - Real hardware: use OpenGL with hardware acceleration
+    # Auto mode: let GTK auto-detect the best renderer
+    # Do NOT force GSK_RENDERER - it causes issues on some GPUs (e.g. NVIDIA)
     _USE_X11_MODE = _IS_VIRTUAL_MACHINE and _IS_X11
     _USE_SOFTWARE_MODE = _IS_VIRTUAL_MACHINE and _IS_WAYLAND
     
@@ -147,12 +146,11 @@ else:
         print("MPV: Will use software rendering mode (auto: VM on Wayland detected)")
         os.environ['GSK_RENDERER'] = 'cairo'
     else:
-        print("MPV: Will use OpenGL render context mode (auto: hardware detected)")
-        os.environ['GSK_RENDERER'] = 'ngl'
+        print("MPV: Will use auto-detected renderer (no GSK_RENDERER override)")
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
-from gi.repository import GLib, Gdk
+from gi.repository import Gdk, GLib
 
 try:
     import mpv
@@ -239,7 +237,7 @@ class MPVPlayer:
         self.current_file = None
         self.current_volume = 1.0
 
-        # Track current filter values
+        # Track current crop values
         self.crop_left = 0
         self.crop_right = 0
         self.crop_top = 0
@@ -249,12 +247,6 @@ class MPVPlayer:
         self.cached_brightness = 0
         self.cached_saturation = 0
         self.cached_hue = 0
-        
-        # Cache crop values to avoid redundant filter updates
-        self.cached_crop_left = 0
-        self.cached_crop_right = 0
-        self.cached_crop_top = 0
-        self.cached_crop_bottom = 0
 
         # Audio/subtitle tracks
         self.audio_tracks = []
@@ -327,7 +319,7 @@ class MPVPlayer:
             # Set locale for MPV (required on some systems)
             try:
                 locale.setlocale(locale.LC_NUMERIC, "C")
-            except:
+            except locale.Error:
                 pass
 
             if _USE_X11_MODE:
@@ -583,16 +575,6 @@ class MPVPlayer:
             import traceback
             traceback.print_exc()
             return False
-    
-    def _pause_after_frame(self):
-        """Pause playback after first frame is rendered"""
-        try:
-            if self.mpv_instance:
-                self.mpv_instance.pause = True
-                print("MPV: Paused after frame render")
-        except:
-            pass
-        return False
 
     def _query_duration(self):
         if self.mpv_instance:
@@ -600,7 +582,7 @@ class MPVPlayer:
                 duration = self.mpv_instance.duration
                 if duration:
                     self.duration = duration
-            except:
+            except Exception:
                 pass
         return False
 
@@ -666,7 +648,7 @@ class MPVPlayer:
         try:
             pos = self.mpv_instance.time_pos
             return pos if pos is not None else 0
-        except:
+        except Exception:
             return 0
 
     def get_duration(self):
@@ -681,7 +663,7 @@ class MPVPlayer:
                 self.cached_brightness = new_value
                 try:
                     self.mpv_instance.brightness = new_value
-                except:
+                except Exception:
                     pass
 
     def set_saturation(self, value):
@@ -693,7 +675,7 @@ class MPVPlayer:
                 self.cached_saturation = new_value
                 try:
                     self.mpv_instance.saturation = new_value
-                except:
+                except Exception:
                     pass
 
     def set_hue(self, value):
@@ -705,7 +687,7 @@ class MPVPlayer:
                 self.cached_hue = new_value
                 try:
                     self.mpv_instance.hue = new_value
-                except:
+                except Exception:
                     pass
 
     def set_crop(self, left, right, top, bottom):
@@ -717,22 +699,18 @@ class MPVPlayer:
             new_bottom = int(bottom)
             
             # Only update if values actually changed to avoid unnecessary updates
-            if (new_left != self.cached_crop_left or 
-                new_right != self.cached_crop_right or 
-                new_top != self.cached_crop_top or 
-                new_bottom != self.cached_crop_bottom):
+            if (
+                new_left != self.crop_left
+                or new_right != self.crop_right
+                or new_top != self.crop_top
+                or new_bottom != self.crop_bottom
+            ):
                 
                 self.crop_left = new_left
                 self.crop_right = new_right
                 self.crop_top = new_top
                 self.crop_bottom = new_bottom
-                
-                # Update cache
-                self.cached_crop_left = new_left
-                self.cached_crop_right = new_right
-                self.cached_crop_top = new_top
-                self.cached_crop_bottom = new_bottom
-                
+
                 # Use MPV's built-in video-crop property
                 self._update_video_crop()
 
@@ -845,7 +823,7 @@ class MPVPlayer:
             try:
                 print("MPV: Clearing render context update callback")
                 self.render_context.update_cb = None
-            except:
+            except Exception:
                 pass
 
         # Reset playback state

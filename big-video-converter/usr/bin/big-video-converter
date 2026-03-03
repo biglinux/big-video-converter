@@ -135,14 +135,22 @@ video_profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profil
 
 # Determine if video is 10-bit based on pixel format and profile
 is_10bit=false
-if [[ $pix_fmt =~ yuv.*p10 || $pix_fmt =~ yuv.*10le || $pix_fmt =~ .*10bit.* ]]; then
+if [[ $pix_fmt =~ yuv.*p10 || $pix_fmt =~ yuv.*10le || $pix_fmt =~ .*10bit.* || $pix_fmt =~ yuv.*p12 || $pix_fmt =~ yuv.*12le ]]; then
 	is_10bit=true
-	echo "Detected 10-bit video input (pixel format: $pix_fmt)"
+	echo "Detected high bit depth video input (pixel format: $pix_fmt)"
 elif [[ $video_profile =~ .*10.* || $video_profile =~ .*High\ 10.* || $video_profile =~ .*Main\ 10.* ]]; then
 	is_10bit=true
 	echo "Detected 10-bit video input (profile: $video_profile)"
 else
 	echo "ℹ️  Detected 8-bit video ($pix_fmt) - using standard profile"
+fi
+
+# Detect pixel formats with implicit GBR color matrix (e.g. ProRes 4444/XQ yuv444p12le)
+# These formats cause swscaler conversion failures and need zscale to override color matrix
+needs_gbr_matrix_fix=false
+if [[ $pix_fmt =~ 444p12 || $pix_fmt =~ ^gbrp ]]; then
+	needs_gbr_matrix_fix=true
+	echo "Detected video with GBR-incompatible pixel format ($pix_fmt) - zscale color fix will be applied"
 fi
 
 echo "Detecting source video codec..."
@@ -306,6 +314,43 @@ original_audio_handling=$audio_handling
 # If audio codec not specified, use aac
 : ${audio_codec:=aac}
 
+##############
+# Noise Reduction
+##############
+# If noise reduction is enabled, force audio re-encoding and build LADSPA filter
+noise_audio_filter=""
+if [[ $noise_reduction == "1" ]]; then
+	# Check if GTCRN LADSPA plugin is available
+	if [[ -e /usr/lib/ladspa/libgtcrn_ladspa.so ]]; then
+		# Build LADSPA filter with strength control
+		# Controls: c0=Enable(1), c1=Strength(0.0-1.0), c2=Model(1=Full)
+		: ${noise_strength:=1.0}
+		noise_audio_filter="ladspa=file=libgtcrn_ladspa:plugin=gtcrn_mono:controls=c0=1|c1=${noise_strength}|c2=1"
+		echo "Noise reduction enabled: strength=${noise_strength}"
+
+		# Build noise gate filter if enabled
+		if [[ $noise_gate == "1" ]]; then
+			: ${gate_threshold:=-30}
+			: ${gate_range:=-60}
+			: ${gate_attack:=20.0}
+			: ${gate_release:=150.0}
+			# Convert dB values to linear for FFmpeg agate filter
+			gate_threshold_linear=$(echo "scale=6; e(${gate_threshold}/20 * l(10))" | bc -l)
+			gate_range_linear=$(echo "scale=6; e(${gate_range}/20 * l(10))" | bc -l)
+			noise_audio_filter="${noise_audio_filter},agate=threshold=${gate_threshold_linear}:range=${gate_range_linear}:attack=${gate_attack}:release=${gate_release}:detection=rms"
+			echo "Noise gate enabled: threshold=${gate_threshold}dB range=${gate_range}dB attack=${gate_attack}ms release=${gate_release}ms"
+		fi
+
+		# Force re-encode if audio is set to copy (noise reduction requires processing)
+		if [[ $audio_handling == "copy" ]]; then
+			echo "Noise reduction requires audio re-encoding, switching from copy to reencode"
+			audio_handling="reencode"
+		fi
+	else
+		echo "WARNING: Noise reduction requested but GTCRN LADSPA plugin not found at /usr/lib/ladspa/libgtcrn_ladspa.so"
+	fi
+fi
+
 # Function to build the audio command string based on the current audio_handling value
 function build_audio_cmd() {
 	audio_cmd="" # Reset audio command
@@ -348,18 +393,24 @@ function build_audio_cmd() {
 		fi
 
 		# Build audio encoding command based on codec
+		# Build audio filter string (noise reduction if enabled)
+		local af_filter=""
+		if [[ -n $noise_audio_filter ]]; then
+			af_filter="-af:a:$i $noise_audio_filter"
+		fi
+
 		case $audio_codec in
 		opus)
 			# Opus: excellent quality, especially at lower bitrates
-			audio_cmd+="-map 0:$index_audio -c:a:$i libopus -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
+			audio_cmd+="-map 0:$index_audio -c:a:$i libopus -b:a:$i $audio_bitrate_value -ac:a:$i $channels $af_filter "
 			;;
 		ac3)
 			# AC3 (Dolby Digital): for multichannel audio
-			audio_cmd+="-map 0:$index_audio -c:a:$i ac3 -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
+			audio_cmd+="-map 0:$index_audio -c:a:$i ac3 -b:a:$i $audio_bitrate_value -ac:a:$i $channels $af_filter "
 			;;
 		*)
 			# AAC: default, best compatibility
-			audio_cmd+="-map 0:$index_audio -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
+			audio_cmd+="-map 0:$index_audio -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $audio_bitrate_value -ac:a:$i $channels $af_filter "
 			;;
 		esac
 
@@ -384,38 +435,47 @@ veryhigh)
 	qp_value=18
 	global_quality=18
 	cq_value_nvidia=19
+	qp_hevc=18
 	;;
 high)
 	cq_value=24
 	qp_value=21
 	global_quality=21
 	cq_value_nvidia=24
+	qp_hevc=21
 	;;
 medium)
 	cq_value=28
 	qp_value=24
 	global_quality=24
 	cq_value_nvidia=28
+	qp_hevc=22
 	;;
 low)
 	cq_value=31
 	qp_value=27
 	global_quality=27
 	cq_value_nvidia=31
+	qp_hevc=25
 	;;
 verylow)
 	cq_value=34
 	qp_value=30
 	global_quality=30
 	cq_value_nvidia=34
+	qp_hevc=28
 	;;
 superlow)
 	cq_value=38
 	qp_value=33
 	global_quality=33
 	cq_value_nvidia=38
+	qp_hevc=32
 	;;
 esac
+
+# QSV HEVC needs lower global_quality values than NVENC qp for same visual quality
+qp_hevc_qsv=$((qp_hevc - 4))
 
 if [[ $preset == "default" ]]; then
 	unset preset
@@ -440,6 +500,29 @@ veryslow) nvidia_preset=6 ;;
 *) nvidia_preset=4 ;; # Default to medium
 esac
 
+# Convert preset for SVT-AV1 (6=best quality, 12=fastest)
+# Presets below 6 add minimal quality gain with extreme slowdown
+case $software_preset in
+ultrafast) svtav1_preset=12 ;;
+veryfast) svtav1_preset=11 ;;
+faster) svtav1_preset=10 ;;
+medium) svtav1_preset=9 ;;
+slow) svtav1_preset=7 ;;
+veryslow) svtav1_preset=6 ;;
+*) svtav1_preset=10 ;; # Default to faster
+esac
+
+# Convert preset for VP9 cpu-used (0=slowest/best, 8=fastest/worst)
+case $software_preset in
+ultrafast) vpx_cpu_used=6 ;;
+veryfast) vpx_cpu_used=5 ;;
+faster) vpx_cpu_used=4 ;;
+medium) vpx_cpu_used=3 ;;
+slow) vpx_cpu_used=2 ;;
+veryslow) vpx_cpu_used=1 ;;
+*) vpx_cpu_used=3 ;; # Default to medium
+esac
+
 #######################
 # Create ffmpeg command
 #######################
@@ -451,31 +534,50 @@ function build_encoder_commands() {
 	# Select appropriate encoder command based on the specified video encoder
 	case $video_encoder in
 	h265)
-		encoder_nvenc="$general_params -c:v hevc_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-		encoder_vulkan="$general_params -c:v hevc_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_vaapi="$general_params -c:v hevc_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_qsv="$general_params -c:v hevc_qsv -preset $preset -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
-		encoder_software="$general_params -c:v libx265 -preset $software_preset -look_ahead_depth 100 -crf $qp_value"
+		encoder_nvenc="$general_params -c:v hevc_nvenc -rc:v constqp -qp $qp_hevc -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+		encoder_vulkan="$general_params -c:v hevc_vulkan -qp $qp_hevc -tune hq"
+		encoder_vaapi="$general_params -c:v hevc_vaapi -global_quality $qp_hevc -rc_mode ICQ"
+		encoder_qsv="$general_params -c:v hevc_qsv -preset $preset -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $qp_hevc_qsv -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+		encoder_software="$general_params -c:v libx265 -preset $software_preset -crf $qp_hevc -x265-params log-level=warning"
 		;;
 	av1)
 		encoder_nvenc="$general_params -c:v av1_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-		encoder_vaapi="$general_params -c:v av1_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+		encoder_vulkan="$general_params -c:v av1_vulkan -qp $qp_value -tune hq"
+		encoder_vaapi="$general_params -c:v av1_vaapi -global_quality $global_quality -rc_mode CQP"
 		encoder_qsv="$general_params -c:v av1_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_software="$general_params -c:v libsvtav1 -crf $cq_value"
+		encoder_software="$general_params -c:v libsvtav1 -preset $svtav1_preset -crf $cq_value -pix_fmt yuv420p10le -svtav1-params tune=0"
 		;;
 	vp9)
 		encoder_nvenc="$general_params -c:v vp9_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-		encoder_vaapi="$general_params -c:v vp9_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+		encoder_vaapi="$general_params -c:v vp9_vaapi -global_quality $global_quality -rc_mode CQP"
 		encoder_qsv="$general_params -c:v vp9_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_software="$general_params -c:v libvpx-vp9 -preset $software_preset -look_ahead_depth 100 -crf $cq_value  -speed 1"
+		encoder_software="$general_params -c:v libvpx-vp9 -crf $cq_value -b:v 0 -quality good -cpu-used $vpx_cpu_used -row-mt 1"
+		;;
+	prores)
+		# ProRes is a software-only codec, map quality to profile
+		# profile 0=Proxy, 1=LT, 2=Standard, 3=HQ, 4=4444, 5=4444XQ
+		local prores_profile
+		case $video_quality in
+			superlow|verylow) prores_profile=0 ;; # Proxy
+			low) prores_profile=1 ;;               # LT
+			medium|default) prores_profile=2 ;;    # Standard
+			high) prores_profile=3 ;;              # HQ
+			veryhigh) prores_profile=4 ;;          # 4444
+			*) prores_profile=2 ;;                 # Standard
+		esac
+		encoder_nvenc=""
+		encoder_vulkan=""
+		encoder_vaapi=""
+		encoder_qsv=""
+		encoder_software="$general_params -c:v prores_ks -profile:v $prores_profile -vendor apl0 -pix_fmt yuva444p10le"
 		;;
 	*)
 		# Default is h264
 		encoder_nvenc="$general_params -c:v h264_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-		encoder_vulkan="$general_params -c:v h264_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v high -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
-		encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v high -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
-		encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v high -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
+		encoder_vulkan="$general_params -c:v h264_vulkan -qp $global_quality"
+		encoder_vaapi="$general_params -c:v h264_vaapi -profile:v high -level:v 4.1 -rc_mode CQP -global_quality $global_quality"
+		encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v high -level:v 4.1 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+		encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v high -level:v 4.1 -crf $qp_value"
 		;;
 	esac
 }
@@ -508,6 +610,13 @@ function attempt_conversion() {
 	init_vaapi='-init_hw_device vaapi'
 	init_vulkan='-init_hw_device vulkan'
 	init_nvidia='-init_hw_device cuda'
+
+	# Use specific GPU device if provided
+	if [[ -n "$gpu_device" ]]; then
+		init_vaapi="-init_hw_device vaapi=va:$gpu_device"
+		init_vulkan="-init_hw_device vulkan=vk:$gpu_device"
+		init_nvidia="-init_hw_device cuda=cu:$gpu_device"
+	fi
 	decoder_qsv='-filter_hw_device qs -hwaccel qsv -hwaccel_output_format qsv'
 	decoder_vaapi='-hwaccel vaapi -hwaccel_output_format vaapi'
 	decoder_vulkan='-hwaccel vulkan -hwaccel_output_format vulkan'
@@ -517,6 +626,10 @@ function attempt_conversion() {
 
 	# Handle explicit software encoding request
 	if [[ "$gpu" == "software" ]]; then
+		encoder_format=$encoder_software
+		force_software=1
+	# ProRes is always software-only
+	elif [[ "$video_encoder" == "prores" ]]; then
 		encoder_format=$encoder_software
 		force_software=1
 	elif [[ "$force_encoder" == "vulkan" || "$gpu" == "vulkan" ]]; then
@@ -530,6 +643,10 @@ function attempt_conversion() {
 		init_hardware="$init_nvidia"
 		scale_filter_name="scale_cuda"
 	elif grep -qiE '(VGA|Display controller).*(\bAMD\b|\bATI\b)' <<<"$devices"; then
+		# AMD VAAPI doesn't support ICQ mode - use CQP for HEVC
+		if [[ "$video_encoder" == "h265" ]]; then
+			encoder_vaapi="$general_params -c:v hevc_vaapi -global_quality $qp_hevc -rc_mode CQP"
+		fi
 		decoder_format="$decoder_vaapi"
 		encoder_format="$encoder_vaapi"
 		init_hardware="$init_vaapi"
@@ -655,14 +772,28 @@ function attempt_conversion() {
 
 		# For partial GPU, we need to add hwupload at the beginning of the filter chain.
 		# This moves the software-decoded frame (e.g., nv12) to the GPU's memory.
+
+		# Add zscale fix for GBR color matrix (e.g. ProRes 4444/XQ) before format conversion
+		if [[ $needs_gbr_matrix_fix == true ]]; then
+			partial_filter_parts+=("zscale=min=709:m=709:tin=709:t=709:pin=709:p=709:r=tv")
+		fi
+
+		# Determine pixel format: 10-bit (p010le) for HEVC/VP9/AV1 with 10-bit+ sources or AV1 always
+		local hw_pix_fmt="nv12"
+		if [[ $video_encoder == "av1" ]]; then
+			hw_pix_fmt="p010le"
+		elif [[ $is_10bit == true && $needs_10bit_to_8bit_conversion == false ]]; then
+			hw_pix_fmt="p010le"
+		fi
+
 		if [[ ${encoder_format,,} =~ nvenc ]]; then
-			partial_filter_parts+=("format=nv12" "hwupload_cuda")
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload_cuda")
 		elif [[ ${encoder_format,,} =~ vulkan ]]; then
-			partial_filter_parts+=("format=nv12" "hwupload=derive_device=vulkan")
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload=derive_device=vulkan")
 		elif [[ ${encoder_format,,} =~ vaapi ]]; then
-			partial_filter_parts+=("format=nv12" "hwupload=derive_device=vaapi")
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload=derive_device=vaapi")
 		elif [[ ${encoder_format,,} =~ qsv ]]; then
-			partial_filter_parts+=("format=nv12" "hwupload=extra_hw_frames=64,format=qsv")
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload=extra_hw_frames=64,format=qsv")
 		fi
 
 		# Add user-provided filters after the upload
@@ -698,15 +829,31 @@ function attempt_conversion() {
 		echo "Detected encode mode: Decode Software, Encode Software (Codificação de software)"
 		# Software mode uses the original video_filter variable without hw acceleration
 		local software_filter_chain=""
-		if [[ -n "$video_filter" ]]; then
-			software_filter_chain="-vf $video_filter"
-		fi
-		if [[ -n "$video_resolution" ]]; then
-			if [[ -z "$software_filter_chain" ]]; then
-				software_filter_chain="-vf scale=${video_resolution/x/:}"
+		local sw_filter_parts=()
+
+		# Add zscale fix for GBR color matrix (e.g. ProRes 4444/XQ)
+		# Also add explicit format conversion since zscale alone doesn't change pixel format
+		if [[ $needs_gbr_matrix_fix == true ]]; then
+			sw_filter_parts+=("zscale=min=709:m=709:tin=709:t=709:pin=709:p=709:r=tv")
+			if [[ $video_encoder == "av1" ]]; then
+				sw_filter_parts+=("format=yuv420p10le")
+			elif [[ $is_10bit == true && $needs_10bit_to_8bit_conversion == false ]]; then
+				sw_filter_parts+=("format=yuv420p10le")
 			else
-				software_filter_chain+=",scale=${video_resolution/x/:}"
+				sw_filter_parts+=("format=yuv420p")
 			fi
+		fi
+
+		if [[ -n "$video_filter" ]]; then
+			sw_filter_parts+=("$video_filter")
+		fi
+
+		if [[ -n "$video_resolution" ]]; then
+			sw_filter_parts+=("scale=${video_resolution/x/:}")
+		fi
+
+		if [[ ${#sw_filter_parts[@]} -gt 0 ]]; then
+			software_filter_chain="-vf $(IFS=,; echo "${sw_filter_parts[*]}")"
 		fi
 
 		echo "Running command: $ffmpeg_executable $options $encoder_software $software_filter_chain $ffmpeg_generic_options"

@@ -4,8 +4,8 @@ Handles extraction, merging, and embedding of subtitles across multiple segments
 """
 
 import os
-import subprocess
 import re
+import subprocess
 
 
 class SubtitleProcessor:
@@ -108,7 +108,6 @@ class SubtitleProcessor:
             
             start = segment["start"]
             end = segment["end"]
-            duration = end - start
             
             # Extract subtitle for this segment
             if self._extract_segment_subtitle(seg_sub_file, stream_index):
@@ -121,8 +120,8 @@ class SubtitleProcessor:
                 )
                 if filtered.strip():
                     merged_subs.append(filtered)
-            
-            cumulative_time += duration
+
+            cumulative_time += end - start
         
         return "\n\n".join(merged_subs) if merged_subs else ""
     
@@ -146,8 +145,8 @@ class SubtitleProcessor:
         ]
         
         try:
-            subprocess.run(extract_cmd, capture_output=True, timeout=60)
-            return os.path.exists(output_file)
+            result = subprocess.run(extract_cmd, capture_output=True, timeout=60)
+            return result.returncode == 0 and os.path.exists(output_file)
         except Exception as e:
             print(f"Error extracting subtitle: {e}")
             return False
@@ -180,9 +179,8 @@ class SubtitleProcessor:
         )
         
         filtered_subs = []
-        
+
         for match in subtitle_pattern.finditer(content):
-            seq_num = match.group(1)
             start_tc = match.group(2)
             end_tc = match.group(3)
             text = match.group(4)
@@ -215,7 +213,7 @@ class SubtitleProcessor:
             h, m, s = map(int, time_part.split(':'))
             ms = int(ms_part)
             return h * 3600 + m * 60 + s + ms / 1000.0
-        except:
+        except (ValueError, AttributeError):
             return 0.0
     
     def _seconds_to_timecode(self, seconds):

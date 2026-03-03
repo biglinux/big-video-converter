@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 # Remove translation imports if not directly used in this file
 
@@ -46,6 +46,14 @@ class SettingsManager:
         "gpu-partial": False,
         "force-copy-video": False,
         "only-extract-subtitles": False,
+        # Noise reduction settings
+        "noise-reduction": False,
+        "noise-reduction-strength": 1.0,
+        "noise-gate-enabled": False,
+        "noise-gate-threshold": -30,
+        "noise-gate-range": -60,
+        "noise-gate-attack": 20.0,
+        "noise-gate-release": 150.0,
         # Preview settings
         "preview-crop-left": 0,
         "preview-crop-right": 0,
@@ -66,6 +74,7 @@ class SettingsManager:
     def __init__(self, app_id, dev_mode=False, dev_settings_file=None):
         self.app_id = app_id
         self.settings = {}
+        self._batch_mode = False  # When True, defer disk writes
 
         # Simplified path handling
         config_dir = os.path.expanduser("~/.config/big-video-converter")
@@ -119,6 +128,10 @@ class SettingsManager:
 
         # Convert to appropriate type based on default
         if isinstance(default, bool):
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.lower() in ("true", "1", "yes")
             return bool(value)
         elif isinstance(default, int):
             try:
@@ -134,9 +147,33 @@ class SettingsManager:
             return str(value) if value is not None else ""
 
     def set_value(self, key, value):
-        """Set setting value and save to disk"""
+        """Set setting value and save to disk (unless in batch mode)"""
         self.settings[key] = value
+        if self._batch_mode:
+            return True
         return self.save_to_disk()
+
+    def batch_update(self):
+        """Context manager to defer disk writes until all settings are updated.
+        Usage:
+            with settings_manager.batch_update():
+                settings_manager.set_value('key1', val1)
+                settings_manager.set_value('key2', val2)
+        """
+        return self._BatchContext(self)
+
+    class _BatchContext:
+        def __init__(self, manager):
+            self.manager = manager
+
+        def __enter__(self):
+            self.manager._batch_mode = True
+            return self.manager
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.manager._batch_mode = False
+            self.manager.save_to_disk()
+            return False
 
     # Legacy methods for compatibility
     def get_string(self, key, default=None):

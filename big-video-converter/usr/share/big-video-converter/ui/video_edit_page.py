@@ -1,20 +1,21 @@
 import os
+
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("GdkPixbuf", "2.0")
-from gi.repository import GLib, Gtk, Adw, Gio
-
 # Setup translation
 import gettext
+
+from gi.repository import Adw, Gio, GLib, Gtk
 
 _ = gettext.gettext
 
 # Import the modules we've split off
+from ui.mpv_player import MPVPlayer
 from ui.video_edit_ui import VideoEditUI
 from ui.video_processing import VideoProcessor
-from ui.mpv_player import MPVPlayer
 
 # Import from the unified video_settings module instead of separate modules
 from utils.video_settings import (
@@ -62,7 +63,7 @@ class VideoEditPage:
 
         # Simple fullscreen support - just hide UI elements
         self.is_video_fullscreen = False
-        
+
         # Debounce timer for saving metadata to avoid file I/O on every slider change
         self.metadata_save_timeout = None
 
@@ -161,13 +162,13 @@ class VideoEditPage:
         # Cancel any pending save
         if self.metadata_save_timeout:
             GLib.source_remove(self.metadata_save_timeout)
-        
+
         # Schedule save with 500ms delay - will only execute after user stops dragging
         def do_save():
             self.metadata_save_timeout = None
             self._save_file_metadata()
             return False
-        
+
         self.metadata_save_timeout = GLib.timeout_add(500, do_save)
 
     def set_video(self, file_path):
@@ -210,7 +211,7 @@ class VideoEditPage:
         # Update UI immediately before stopping playback
         self.is_playing = False
         if hasattr(self, "ui") and self.ui:
-            self.ui.play_pause_button.set_icon_name('media-playback-start-symbolic')
+            self.ui.play_pause_button.set_icon_name("media-playback-start-symbolic")
 
         # Explicitly cleanup MPV player (non-blocking)
         if hasattr(self, "mpv_player") and self.mpv_player:
@@ -221,7 +222,7 @@ class VideoEditPage:
         # Clear video path
         if hasattr(self, "current_video_path"):
             self.current_video_path = None
-        
+
         print("VideoEditPage: Cleanup complete")
 
     def on_brightness_changed(self, scale):
@@ -312,7 +313,7 @@ class VideoEditPage:
             row.set_subtitle(f"Duration: {duration_str}")
             button_box = Gtk.Box(spacing=6, valign=Gtk.Align.CENTER)
             goto_button = Gtk.Button(
-                icon_name='media-playback-start-symbolic',
+                icon_name="media-playback-start-symbolic",
                 css_classes=["flat"],
                 tooltip_text=_("Go to segment start"),
             )
@@ -321,7 +322,7 @@ class VideoEditPage:
             )
             button_box.append(goto_button)
             edit_button = Gtk.Button(
-                icon_name='document-edit-symbolic',
+                icon_name="document-edit-symbolic",
                 css_classes=["flat"],
                 tooltip_text=_("Edit segment times"),
             )
@@ -503,11 +504,6 @@ class VideoEditPage:
         self._save_file_metadata()
         self._update_segments_listbox()
 
-    def on_clear_all_segments(self, button):
-        self.trim_segments = []
-        self._save_file_metadata()
-        self._update_segments_listbox()
-
     def _on_clear_all_segments_with_confirmation(self, button):
         """Show confirmation dialog before clearing all segments"""
         if not self.trim_segments:
@@ -618,23 +614,6 @@ class VideoEditPage:
         self.ui.crop_right_spin.set_value(self.crop_right)
         self.ui.crop_top_spin.set_value(self.crop_top)
         self.ui.crop_bottom_spin.set_value(self.crop_bottom)
-
-    def reset_crop_value(self, position):
-        if position == "left":
-            self.crop_left = 0
-        elif position == "right":
-            self.crop_right = 0
-        elif position == "top":
-            self.crop_top = 0
-        elif position == "bottom":
-            self.crop_bottom = 0
-        self._save_file_metadata()
-        self.update_crop_spinbuttons()
-        if hasattr(self, "mpv_player") and self.mpv_player:
-            self.mpv_player.set_crop(
-                self.crop_left, self.crop_right, self.crop_top, self.crop_bottom
-            )
-            # MPV handles render updates internally
 
     def on_saturation_changed(self, scale):
         self.saturation = scale.get_value()

@@ -3,10 +3,12 @@
 Main entry point for Big Video Converter application.
 """
 
+import logging
 import os
+import signal
 import subprocess
 import sys
-import logging
+import threading
 from collections import deque
 
 import gi
@@ -14,22 +16,30 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 # gi.require_version("Vte", "3.91")
-# Setup translation
+
 import gettext
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 # Import local modules
-from constants import APP_ID, AUDIO_VALUES, SUBTITLE_VALUES, VIDEO_FILE_MIME_TYPES
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from constants import (
+    APP_ID,
+    AUDIO_VALUES,
+    GPU_VALUES,
+    SUBTITLE_VALUES,
+    VIDEO_CODEC_VALUES,
+    VIDEO_FILE_MIME_TYPES,
+    VIDEO_QUALITY_VALUES,
+)
 from ui.conversion_page import ConversionPage
+from ui.dependency_dialog import InstallDependencyDialog
 from ui.header_bar import HeaderBar
 from ui.progress_page import ProgressPage
 from ui.settings_page import SettingsPage
 from ui.video_edit_page import VideoEditPage
 from ui.welcome_dialog import WelcomeDialog
+from utils.dependency_checker import DependencyChecker
 from utils.settings_manager import SettingsManager
 from utils.tooltip_helper import TooltipHelper
-from utils.dependency_checker import DependencyChecker
-from ui.dependency_dialog import InstallDependencyDialog
 
 _ = gettext.gettext
 
@@ -52,8 +62,9 @@ class VideoConverterApp(Adw.Application):
                 # If no colon, treat as right side (default GNOME)
                 if "close" in layout:
                     return False
-        except Exception as e:
-            print(f"Could not detect window button layout: {e}")
+        except Exception:
+            # Logger not initialized yet, use print fallback or ignore
+            pass
         # Default: right side
         return False
 
@@ -96,13 +107,24 @@ class VideoConverterApp(Adw.Application):
         self.progress_widgets = []
         self.previous_page = "conversion"
         self.conversion_queue = deque()
-        self.currently_converting = False
+        # Track active conversions for parallel processing
+        self.active_conversions = []  # List of dictionaries with conversion info
+        self.gpu_slots = deque()  # Queue of available GPU slots for parallel processing
         self.auto_convert = False
         self.queue_display_widgets = []
         self.is_cancellation_requested = False
 
         # Track completed conversions for completion screen
         self.completed_conversions = []
+
+        # Thread safety locks
+        self.conversions_lock = threading.Lock()
+        self.completion_lock = threading.Lock()
+
+        # Initialize missing attributes
+        self._was_queue_processing = False
+        self._processing_completion = False
+        self.is_minimized = False
 
         # Video editing state - initialize with reset values
         self.trim_start_time = 0
@@ -129,6 +151,7 @@ class VideoConverterApp(Adw.Application):
             "quit": lambda a, p: self.quit(),
             "add_files": lambda a, p: self.select_files_for_queue(),
             "add_folder": lambda a, p: self.select_folder_for_queue(),
+            "add_network_file": lambda a, p: self.show_network_file_dialog(),
         }
 
         for name, callback in actions.items():
@@ -141,7 +164,7 @@ class VideoConverterApp(Adw.Application):
         try:
             # Get the application's directory
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            icons_dir = os.path.join(script_dir, 'icons')
+            icons_dir = os.path.join(script_dir, "icons")
 
             # Check if icons directory exists
             if os.path.exists(icons_dir):
@@ -156,21 +179,27 @@ class VideoConverterApp(Adw.Application):
                 new_paths = [icons_dir] + current_paths
                 icon_theme.set_search_path(new_paths)
 
-                if os.environ.get('BVC_DEBUG'):
-                    print(f"Custom icon theme path added with PRIORITY: {icons_dir}")
-                    print(f"Search paths order: {new_paths[:3]}...")  # Show first 3
+                if os.environ.get("BVC_DEBUG"):
+                    self.logger.debug(
+                        f"Custom icon theme path added with PRIORITY: {icons_dir}"
+                    )
+                    self.logger.debug(
+                        f"Search paths order: {new_paths[:3]}..."
+                    )  # Show first 3
 
         except Exception as e:
-            if os.environ.get('BVC_DEBUG'):
-                print(f"Error setting up icon theme: {type(e).__name__}: {e}")
+            if os.environ.get("BVC_DEBUG"):
+                self.logger.error(
+                    f"Error setting up icon theme: {type(e).__name__}: {e}"
+                )
 
     def on_activate(self, app):
         # Setup custom icon theme for bundled icons
         self._setup_icon_theme()
-            
+
         # Check if this is the first activation
         is_first_activation = not hasattr(self, "window") or self.window is None
-        
+
         # Create window if it doesn't exist
         if is_first_activation:
             self._create_window()
@@ -195,7 +224,9 @@ class VideoConverterApp(Adw.Application):
             self.queued_files = []
 
         # Show welcome dialog only on first activation
-        if is_first_activation and WelcomeDialog.should_show_welcome(self.settings_manager):
+        if is_first_activation and WelcomeDialog.should_show_welcome(
+            self.settings_manager
+        ):
             GLib.idle_add(self._show_welcome_dialog_startup)
 
     def _show_welcome_dialog_startup(self):
@@ -209,9 +240,17 @@ class VideoConverterApp(Adw.Application):
         # Create main window
         self.window = Adw.ApplicationWindow(application=self)
 
+        # Set minimum window size to prevent controls from being cut off
+        # Left sidebar (300px) + right content (620px) = 920px minimum width
+        self.window.set_size_request(920, 600)
+
         # Restore window size from settings
         width = self.settings_manager.load_setting("window-width", 1200)
         height = self.settings_manager.load_setting("window-height", 720)
+
+        # Ensure default size is not smaller than minimum
+        width = max(width, 920)
+        height = max(height, 600)
         self.window.set_default_size(width, height)
 
         # Restore maximized state
@@ -239,6 +278,10 @@ class VideoConverterApp(Adw.Application):
         # Create horizontal paned layout for main view
         self.main_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
         self.main_paned.set_vexpand(True)
+
+        # Prevent panes from shrinking below their minimum size
+        self.main_paned.set_shrink_start_child(False)
+        self.main_paned.set_shrink_end_child(False)
 
         # Create CSS for sidebar styling
         css_provider = Gtk.CssProvider()
@@ -268,7 +311,22 @@ class VideoConverterApp(Adw.Application):
         self.main_stack.add_titled(self.main_paned, "main_view", _("Main"))
 
         self.toast_overlay.set_child(self.main_stack)
-        self.window.set_content(self.toast_overlay)
+
+        # Subtitle-only alert banner
+        self.subtitle_banner = Adw.Banner()
+        self.subtitle_banner.set_title(
+            _("⚠ Subtitle extraction only mode is active — video will NOT be converted")
+        )
+        self.subtitle_banner.set_revealed(
+            self.settings_manager.get_boolean("only-extract-subtitles", False)
+        )
+
+        # Wrap toast overlay + banner in a vertical box
+        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        content_box.append(self.subtitle_banner)
+        content_box.append(self.toast_overlay)
+        self.toast_overlay.set_vexpand(True)
+        self.window.set_content(content_box)
 
         # Create pages (including progress page)
         self._create_pages()
@@ -279,7 +337,11 @@ class VideoConverterApp(Adw.Application):
         self._save_window_state()
 
         # Check if we have active conversions
-        if self.progress_page and self.progress_page.has_active_conversions():
+        if (
+            hasattr(self, "progress_page")
+            and self.progress_page
+            and self.progress_page.has_active_conversions()
+        ):
             # Terminate all running processes
             for (
                 conversion_id,
@@ -289,12 +351,12 @@ class VideoConverterApp(Adw.Application):
                 conversion_item = conversion.get("row") or conversion.get("item")
                 if conversion_item and conversion_item.process:
                     try:
-                        print(
+                        self.logger.info(
                             f"Terminating process {conversion_item.process.pid} on application exit"
                         )
                         self.terminate_process_tree(conversion_item.process)
                     except Exception as e:
-                        print(f"Error terminating process on exit: {e}")
+                        self.logger.error(f"Errorinating process on exit: {e}")
 
         # Continue with normal window close
         return False  # False means continue with close, True would prevent close
@@ -317,115 +379,61 @@ class VideoConverterApp(Adw.Application):
         self.settings_manager.save_setting("sidebar-position", sidebar_position)
 
     def terminate_process_tree(self, process):
-        """Properly terminate a process and all its children"""
+        """Properly terminate a process and all its children using process groups"""
         if not process:
-            return
+            return False
+
+        pid = process.pid
+        self.logger.info(f"Terminating process tree for PID {pid}")
 
         try:
-            pid = process.pid
-            print(f"Terminating process tree for PID {pid}")
+            # First try: Kill the entire process group
+            # This requires the process to have been started with start_new_session=True
+            pgid = os.getpgid(pid)
+            os.killpg(pgid, signal.SIGTERM)
 
-            # First try: Use more reliable signal handling through pkill
+            # Wait briefly
+            try:
+                process.wait(timeout=0.5)
+                self.logger.info(
+                    f"Process {pid} terminated gracefully via process group"
+                )
+                return True
+            except subprocess.TimeoutExpired:
+                # Force kill if still running
+                os.killpg(pgid, signal.SIGKILL)
+                process.kill()
+                self.logger.info(f"Process {pid} killed forcefully via process group")
+                return True
+
+        except ProcessLookupError:
+            self.logger.info(f"Process {pid} already gone")
+            return True
+        except Exception as e:
+            self.logger.warning(f"Error using process group termination: {e}")
+
+            # Fallback to manual child cleanup
             try:
                 # Kill any FFmpeg processes that might have been started by our process
-                # This helps catch alternative commands or FFmpeg processes that might be orphaned
                 subprocess.run(
                     ["pkill", "-TERM", "-P", str(pid)],
                     stderr=subprocess.DEVNULL,
                     stdout=subprocess.DEVNULL,
+                    check=False,
                 )
 
-                # Also attempt to kill any FFmpeg processes by name, but only those started by our app
-                # This is safer than killing every FFmpeg process system-wide
-                try:
-                    subprocess.run(
-                        ["pgrep", "-P", str(pid), "ffmpeg"],
-                        stderr=subprocess.PIPE,
-                        stdout=subprocess.PIPE,
-                        text=True,
-                        check=False,
-                    )
-                except Exception as e:
-                    print(f"Error finding ffmpeg processes: {e}")
-
-                # Terminate the parent process
                 process.terminate()
-
-                # Wait briefly for termination
                 try:
                     process.wait(timeout=0.5)
-                    print(f"Process {pid} terminated gracefully")
-                    return True
-                except subprocess.TimeoutExpired:
-                    # If still running, use SIGKILL on the process group
-                    subprocess.run(
-                        ["pkill", "-KILL", "-P", str(pid)],
-                        stderr=subprocess.DEVNULL,
-                        stdout=subprocess.DEVNULL,
-                    )
-
-                    # Kill the parent process
-                    process.kill()
-
-                    # Wait briefly to verify termination
-                    try:
-                        process.wait(timeout=0.5)
-                        print(f"Process {pid} killed forcefully")
-                        return True
-                    except subprocess.TimeoutExpired:
-                        print(f"Warning: Process {pid} still running after SIGKILL")
-                        return False
-
-            except Exception as e:
-                # Fallback to direct process termination
-                print(f"Error using pkill, trying direct process termination: {e}")
-
-                # Try to find and kill FFmpeg processes that might be associated with this conversion
-                try:
-                    # Find potential child processes more safely using ps
-                    ps_output = subprocess.check_output(
-                        ["ps", "-o", "pid", "--ppid", str(pid)],
-                        stderr=subprocess.DEVNULL,
-                        text=True,
-                    )
-
-                    # Parse the output to get child PIDs
-                    child_pids = []
-                    for line in ps_output.strip().split("\n")[1:]:  # Skip header
-                        if line.strip().isdigit():
-                            child_pids.append(int(line.strip()))
-
-                    # Kill each child process
-                    for child_pid in child_pids:
-                        try:
-                            os.kill(child_pid, 15)  # SIGTERM
-                            print(f"Sent SIGTERM to child process {child_pid}")
-                        except ProcessLookupError:
-                            pass  # Process already gone
-                        except Exception as e:
-                            print(f"Error killing child {child_pid}: {e}")
-
-                except Exception as e:
-                    print(f"Error finding child processes: {e}")
-
-                # Terminate the main process
-                process.terminate()
-
-                try:
-                    process.wait(timeout=0.5)
+                    self.logger.info(f"Process {pid} terminated via fallback")
                     return True
                 except subprocess.TimeoutExpired:
                     process.kill()
-
-                    try:
-                        process.wait(timeout=0.5)
-                        return True
-                    except subprocess.TimeoutExpired:
-                        print(f"Warning: Process {pid} could not be killed")
-                        return False
-        except Exception as e:
-            print(f"Error terminating process tree: {e}")
-            return False
+                    self.logger.info(f"Process {pid} killed via fallback")
+                    return True
+            except Exception as e2:
+                self.logger.error(f"Failed to terminate process {pid}: {e2}")
+                return False
 
     def _create_left_pane(self):
         """Create left settings pane with contextual ViewStack"""
@@ -505,6 +513,10 @@ class VideoConverterApp(Adw.Application):
 
         left_scroll.set_child(self.left_stack)
         left_toolbar_view.set_content(left_scroll)
+
+        # Set minimum width for left sidebar
+        left_toolbar_view.set_size_request(300, -1)
+
         self.main_paned.set_start_child(left_toolbar_view)
 
     def _create_conversion_settings(self):
@@ -537,6 +549,19 @@ class VideoConverterApp(Adw.Application):
         self.gpu_combo.set_model(gpu_model)
         encoding_group.add(self.gpu_combo)
         self.tooltip_helper.add_tooltip(self.gpu_combo, "gpu")
+
+        # GPU Device selection (visible only when multiple GPUs detected)
+        self.detected_gpus = self._detect_gpu_devices()
+        self.gpu_device_combo = Adw.ComboRow(title=_("GPU Device"))
+        self.gpu_device_combo.set_subtitle(_("Select which GPU to use"))
+        gpu_device_model = Gtk.StringList()
+        gpu_device_model.append(_("Auto"))
+        for gpu_info in self.detected_gpus:
+            gpu_device_model.append(gpu_info["name"])
+        self.gpu_device_combo.set_model(gpu_device_model)
+        encoding_group.add(self.gpu_device_combo)
+        # Only show when multiple GPUs are available
+        self.gpu_device_combo.set_visible(len(self.detected_gpus) > 1)
 
         # Video Quality
         quality_model = Gtk.StringList()
@@ -578,6 +603,65 @@ class VideoConverterApp(Adw.Application):
         self.subtitle_combo.set_model(subtitle_model)
         audio_group.add(self.subtitle_combo)
         self.tooltip_helper.add_tooltip(self.subtitle_combo, "subtitles")
+
+        # Audio Noise Reduction
+        self.noise_reduction_switch = Adw.SwitchRow(title=_("Noise Reduction"))
+        self.noise_reduction_switch.set_subtitle(_("Reduce background noise (GTCRN)"))
+        audio_group.add(self.noise_reduction_switch)
+        self.tooltip_helper.add_tooltip(self.noise_reduction_switch, "noise_reduction")
+
+        # Noise Reduction Strength (visible only when noise reduction is enabled)
+        self.noise_strength_spin = Adw.SpinRow.new_with_range(0.0, 1.0, 0.05)
+        self.noise_strength_spin.set_title(_("Strength"))
+        self.noise_strength_spin.set_digits(2)
+        self.noise_strength_spin.set_value(1.0)
+        self.noise_strength_spin.set_visible(False)
+        audio_group.add(self.noise_strength_spin)
+        self.tooltip_helper.add_tooltip(
+            self.noise_strength_spin, "noise_reduction_strength"
+        )
+
+        # Noise Gate (visible only when noise reduction is enabled)
+        self.gate_expander = Adw.ExpanderRow(title=_("Noise Gate"))
+        self.gate_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
+        self.gate_switch.connect("state-set", self._on_gate_switch_changed)
+        self.gate_expander.add_suffix(self.gate_switch)
+        self.gate_expander.set_enable_expansion(False)
+        self.gate_expander.set_expanded(False)
+        self.gate_expander.set_visible(False)
+        self.tooltip_helper.add_tooltip(self.gate_expander, "noise_gate")
+
+        self.gate_threshold_spin = Adw.SpinRow.new_with_range(-60, 0, 1)
+        self.gate_threshold_spin.set_title(_("Threshold (dB)"))
+        self.gate_threshold_spin.set_value(-30)
+        self.gate_threshold_spin.set_sensitive(False)
+        self.gate_expander.add_row(self.gate_threshold_spin)
+        self.tooltip_helper.add_tooltip(self.gate_threshold_spin, "gate_threshold")
+
+        self.gate_range_spin = Adw.SpinRow.new_with_range(-90, 0, 1)
+        self.gate_range_spin.set_title(_("Range (dB)"))
+        self.gate_range_spin.set_value(-60)
+        self.gate_range_spin.set_sensitive(False)
+        self.gate_expander.add_row(self.gate_range_spin)
+        self.tooltip_helper.add_tooltip(self.gate_range_spin, "gate_range")
+
+        self.gate_attack_spin = Adw.SpinRow.new_with_range(0.1, 500, 1)
+        self.gate_attack_spin.set_title(_("Attack (ms)"))
+        self.gate_attack_spin.set_digits(1)
+        self.gate_attack_spin.set_value(20.0)
+        self.gate_attack_spin.set_sensitive(False)
+        self.gate_expander.add_row(self.gate_attack_spin)
+        self.tooltip_helper.add_tooltip(self.gate_attack_spin, "gate_attack")
+
+        self.gate_release_spin = Adw.SpinRow.new_with_range(0, 1000, 5)
+        self.gate_release_spin.set_title(_("Release (ms)"))
+        self.gate_release_spin.set_digits(1)
+        self.gate_release_spin.set_value(150.0)
+        self.gate_release_spin.set_sensitive(False)
+        self.gate_expander.add_row(self.gate_release_spin)
+        self.tooltip_helper.add_tooltip(self.gate_release_spin, "gate_release")
+
+        audio_group.add(self.gate_expander)
 
         settings_box.append(audio_group)
 
@@ -641,6 +725,10 @@ class VideoConverterApp(Adw.Application):
         # Queue view and editor view
 
         self.right_toolbar_view.set_content(self.right_stack)
+
+        # Set minimum width for right content area
+        self.right_toolbar_view.set_size_request(620, -1)
+
         self.main_paned.set_end_child(self.right_toolbar_view)
 
     def _create_pages(self):
@@ -686,6 +774,14 @@ class VideoConverterApp(Adw.Application):
             "notify::selected", lambda w, p: self._save_gpu_setting(w.get_selected())
         )
 
+        # GPU Device
+        self.gpu_device_combo.connect(
+            "notify::selected",
+            lambda w, p: self.settings_manager.save_setting(
+                "gpu-device-index", w.get_selected()
+            ),
+        )
+
         # Video Quality
         self.video_quality_combo.connect(
             "notify::selected",
@@ -719,6 +815,46 @@ class VideoConverterApp(Adw.Application):
             ),
         )
 
+        # Noise Reduction
+        self.noise_reduction_switch.connect(
+            "notify::active",
+            self._on_noise_reduction_toggled,
+        )
+
+        # Noise Reduction Strength
+        self.noise_strength_spin.connect(
+            "changed",
+            lambda w: self.settings_manager.save_setting(
+                "noise-reduction-strength", w.get_value()
+            ),
+        )
+
+        # Noise Gate parameters
+        self.gate_threshold_spin.connect(
+            "changed",
+            lambda w: self.settings_manager.save_setting(
+                "noise-gate-threshold", int(w.get_value())
+            ),
+        )
+        self.gate_range_spin.connect(
+            "changed",
+            lambda w: self.settings_manager.save_setting(
+                "noise-gate-range", int(w.get_value())
+            ),
+        )
+        self.gate_attack_spin.connect(
+            "changed",
+            lambda w: self.settings_manager.save_setting(
+                "noise-gate-attack", w.get_value()
+            ),
+        )
+        self.gate_release_spin.connect(
+            "changed",
+            lambda w: self.settings_manager.save_setting(
+                "noise-gate-release", w.get_value()
+            ),
+        )
+
         # Show tooltips
         self.show_tooltips_check.connect(
             "notify::active",
@@ -731,6 +867,11 @@ class VideoConverterApp(Adw.Application):
         gpu_value = self.settings_manager.load_setting("gpu", "auto")
         gpu_index = self._find_gpu_index(gpu_value)
         self.gpu_combo.set_selected(gpu_index)
+
+        # GPU Device
+        gpu_device_index = self.settings_manager.load_setting("gpu-device-index", 0)
+        if gpu_device_index <= len(self.detected_gpus):
+            self.gpu_device_combo.set_selected(gpu_device_index)
 
         # Video Quality
         quality_value = self.settings_manager.load_setting("video-quality", "default")
@@ -769,9 +910,69 @@ class VideoConverterApp(Adw.Application):
                 break
         self.subtitle_combo.set_selected(subtitle_index)
 
+        # Noise Reduction
+        noise_reduction = self.settings_manager.load_setting("noise-reduction", False)
+        self.noise_reduction_switch.set_active(noise_reduction)
+
+        # Noise Reduction Strength
+        noise_strength = self.settings_manager.load_setting(
+            "noise-reduction-strength", 1.0
+        )
+        self.noise_strength_spin.set_value(noise_strength)
+        self.noise_strength_spin.set_visible(noise_reduction)
+
+        # Noise Gate
+        gate_enabled = self.settings_manager.load_setting("noise-gate-enabled", False)
+        self.gate_switch.set_active(gate_enabled)
+        self.gate_expander.set_visible(noise_reduction)
+        self.gate_expander.set_enable_expansion(gate_enabled)
+
+        gate_threshold = self.settings_manager.load_setting("noise-gate-threshold", -30)
+        self.gate_threshold_spin.set_value(gate_threshold)
+        self.gate_threshold_spin.set_sensitive(gate_enabled)
+
+        gate_range = self.settings_manager.load_setting("noise-gate-range", -60)
+        self.gate_range_spin.set_value(gate_range)
+        self.gate_range_spin.set_sensitive(gate_enabled)
+
+        gate_attack = self.settings_manager.load_setting("noise-gate-attack", 20.0)
+        self.gate_attack_spin.set_value(gate_attack)
+        self.gate_attack_spin.set_sensitive(gate_enabled)
+
+        gate_release = self.settings_manager.load_setting("noise-gate-release", 150.0)
+        self.gate_release_spin.set_value(gate_release)
+        self.gate_release_spin.set_sensitive(gate_enabled)
+
         # Show tooltips
         show_tooltips = self.settings_manager.load_setting("show-tooltips", True)
         self.show_tooltips_check.set_active(show_tooltips)
+
+    def _on_noise_reduction_toggled(self, switch, param):
+        """Handle noise reduction toggle - show/hide strength and gate controls"""
+        is_active = switch.get_active()
+        self.settings_manager.save_setting("noise-reduction", is_active)
+
+        # Show/hide dependent controls
+        self.noise_strength_spin.set_visible(is_active)
+        self.gate_expander.set_visible(is_active)
+
+        if not is_active:
+            self.gate_switch.set_active(False)
+
+    def _on_gate_switch_changed(self, switch, state):
+        """Handle noise gate toggle"""
+        self.settings_manager.save_setting("noise-gate-enabled", state)
+
+        self.gate_expander.set_enable_expansion(state)
+        self.gate_threshold_spin.set_sensitive(state)
+        self.gate_range_spin.set_sensitive(state)
+        self.gate_attack_spin.set_sensitive(state)
+        self.gate_release_spin.set_sensitive(state)
+
+        if not state:
+            self.gate_expander.set_expanded(False)
+
+        return False
 
     def on_show_advanced_settings(self, button):
         """Show advanced settings in modal dialog"""
@@ -811,62 +1012,75 @@ class VideoConverterApp(Adw.Application):
 
     def _save_gpu_setting(self, index):
         """Save GPU setting as direct value"""
-        gpu_values = ["auto", "nvidia", "amd", "intel", "vulkan", "software"]
-        if index < len(gpu_values):
-            self.settings_manager.save_setting("gpu", gpu_values[index])
+        if index in GPU_VALUES:
+            self.settings_manager.save_setting("gpu", GPU_VALUES[index])
 
     def _save_quality_setting(self, index):
         """Save video quality setting as direct value"""
-        quality_values = [
-            "default",
-            "veryhigh",
-            "high",
-            "medium",
-            "low",
-            "verylow",
-            "superlow",
-        ]
-        if index < len(quality_values):
-            self.settings_manager.save_setting("video-quality", quality_values[index])
+        if index in VIDEO_QUALITY_VALUES:
+            self.settings_manager.save_setting(
+                "video-quality", VIDEO_QUALITY_VALUES[index]
+            )
 
     def _save_codec_setting(self, index):
         """Save video codec setting as direct value"""
-        codec_values = ["h264", "h265", "av1", "vp9"]
-        if index < len(codec_values):
-            self.settings_manager.save_setting("video-codec", codec_values[index])
+        if index in VIDEO_CODEC_VALUES:
+            self.settings_manager.save_setting("video-codec", VIDEO_CODEC_VALUES[index])
+
+    def _detect_gpu_devices(self):
+        """Detect available GPU render devices in the system"""
+        gpus = []
+        try:
+            import glob
+            import subprocess
+
+            render_devices = sorted(glob.glob("/dev/dri/renderD*"))
+            if len(render_devices) <= 1:
+                return gpus
+
+            result = subprocess.run(
+                ["lspci", "-nn"], capture_output=True, text=True, timeout=5
+            )
+            gpu_lines = [
+                line
+                for line in result.stdout.splitlines()
+                if any(kw in line.lower() for kw in ["vga", "3d", "display"])
+            ]
+
+            for i, device_path in enumerate(render_devices):
+                if i < len(gpu_lines):
+                    name = (
+                        gpu_lines[i].split(": ", 1)[-1]
+                        if ": " in gpu_lines[i]
+                        else gpu_lines[i]
+                    )
+                    # Trim to reasonable length
+                    if len(name) > 50:
+                        name = name[:47] + "..."
+                else:
+                    name = os.path.basename(device_path)
+                gpus.append({"name": name, "device": device_path})
+        except Exception as e:
+            print(f"GPU detection error: {e}")
+        return gpus
 
     def _find_gpu_index(self, value):
         """Find index of GPU value"""
         value = value.lower()
-        gpu_map = {
-            "auto": 0,
-            "nvidia": 1,
-            "amd": 2,
-            "intel": 3,
-            "vulkan": 4,
-            "software": 5,
-        }
-        return gpu_map.get(value, 0)
+        reverse_map = {v: k for k, v in GPU_VALUES.items()}
+        return reverse_map.get(value, 0)
 
     def _find_quality_index(self, value):
         """Find index of quality value"""
         value = value.lower()
-        quality_map = {
-            "default": 0,
-            "veryhigh": 1,
-            "high": 2,
-            "medium": 3,
-            "low": 4,
-            "verylow": 5,
-            "superlow": 6,
-        }
-        return quality_map.get(value, 3)
+        reverse_map = {v: k for k, v in VIDEO_QUALITY_VALUES.items()}
+        return reverse_map.get(value, 3)
 
     def _find_codec_index(self, value):
         """Find index of codec value"""
         value = value.lower()
-        codec_map = {"h264": 0, "h265": 1, "av1": 2, "vp9": 3}
-        return codec_map.get(value, 0)
+        reverse_map = {v: k for k, v in VIDEO_CODEC_VALUES.items()}
+        return reverse_map.get(value, 0)
 
     def _on_force_copy_toggled(self, switch, param):
         """Handle force copy toggle - enable/disable encoding options"""
@@ -882,7 +1096,7 @@ class VideoConverterApp(Adw.Application):
         """Apply tooltips to all UI elements"""
         if not hasattr(self, "tooltip_helper"):
             return
-            
+
         # Apply tooltips to settings controls
         if hasattr(self, "gpu_combo"):
             self.tooltip_helper.add_tooltip(self.gpu_combo, "gpu")
@@ -898,7 +1112,7 @@ class VideoConverterApp(Adw.Application):
             self.tooltip_helper.add_tooltip(self.force_copy_video_check, "force_copy")
         if hasattr(self, "show_tooltips_check"):
             self.tooltip_helper.add_tooltip(self.show_tooltips_check, "show_tooltips")
-        
+
         # Apply tooltips to video edit UI if it exists
         if hasattr(self, "video_edit_page") and self.video_edit_page:
             if hasattr(self.video_edit_page, "ui") and self.video_edit_page.ui:
@@ -907,12 +1121,9 @@ class VideoConverterApp(Adw.Application):
     def _on_tooltips_toggle(self, is_active):
         """Handle tooltip toggle change"""
         self.settings_manager.save_setting("show-tooltips", is_active)
-        # Re-apply or hide all tooltips in the app
-        if hasattr(self, "tooltip_helper"):
-            if is_active:
-                self._apply_all_tooltips()
-            else:
-                self.tooltip_helper.refresh_all()
+        # Re-apply tooltips when re-enabled (they check is_enabled() before showing)
+        if hasattr(self, "tooltip_helper") and is_active:
+            self._apply_all_tooltips()
 
     def _update_encoding_options_state(self, force_copy_enabled):
         """Enable/disable encoding options based on force copy state"""
@@ -1097,17 +1308,10 @@ class VideoConverterApp(Adw.Application):
                     f"Cleared editor state for removed file: {os.path.basename(file_path)}"
                 )
 
-            # Remove metadata for this file
-            if (
-                hasattr(self, "conversion_page")
-                and file_path in self.conversion_page.file_metadata
-            ):
-                del self.conversion_page.file_metadata[file_path]
-                print(f"Removed metadata for {os.path.basename(file_path)}")
-
             if hasattr(self, "conversion_page"):
                 self.conversion_page.update_queue_display()
-            print(f"Removed {os.path.basename(file_path)} from queue")
+            if os.environ.get("BVC_DEBUG"):
+                self.logger.debug(f"Removed {os.path.basename(file_path)} from queue")
             return True
         return False
 
@@ -1150,7 +1354,7 @@ class VideoConverterApp(Adw.Application):
                 self.video_edit_page.ui, "play_pause_button"
             ):
                 self.video_edit_page.ui.play_pause_button.set_icon_name(
-                    'media-playback-start'
+                    "media-playback-start"
                 )
             if self.video_edit_page.position_update_id:
                 GLib.source_remove(self.video_edit_page.position_update_id)
@@ -1171,36 +1375,172 @@ class VideoConverterApp(Adw.Application):
         self.start_queue_processing()
 
     def process_next_in_queue(self):
-        """Process the next file in the conversion queue"""
-        if not self.conversion_queue:
-            print("Queue is empty, nothing to process")
-            self.currently_converting = False
+        """Process the next file in queue if we have capacity"""
+
+        # If cancellation was requested, don't start new conversions
+        if self.is_cancellation_requested:
+            print("Cancellation requested, stopping queue processing")
+            self.header_bar.set_buttons_sensitive(True)
+            self._was_queue_processing = False
             return False
 
-        if self.currently_converting:
-            print("Already converting, not starting another conversion")
-            return False
+        # Determine max concurrent conversions based on settings/hardware
+        max_concurrent = 1
 
-        print("Processing next item in queue...")
-        self.currently_converting = True
-        file_path = self.conversion_queue[0]
+        # Check if we can do parallel processing
+        # Conditions:
+        # 1. GPU setting is "Auto" (index 0)
+        # 2. We have multiple detected GPUs
+        # 3. Not forcing copy mode (which is fast enough sequentially)
+        gpu_setting_index = self.settings_manager.load_setting("gpu", "auto")
+        if gpu_setting_index == "auto":
+            gpu_setting_index = 0
+        elif gpu_setting_index == "nvidia":
+            gpu_setting_index = 1
+        elif gpu_setting_index == "amd":
+            gpu_setting_index = 2
+        elif gpu_setting_index == "intel":
+            gpu_setting_index = 3
+        else:
+            # handle other cases or assume sequential
+            pass
+
+        # Re-read actual numeric index if needed, but logic above tries to map string back.
+        # Actually `load_setting` returns string "auto" usually.
+        # Let's check `GPU_VALUES` in `constants.py`?
+        # Actually `conversion_page.py` showed `load_setting("gpu", "auto")` returns string.
+        # And `load_setting("gpu-device-index", 0)` returns int.
+
+        # Simpler check:
+        gpu_mode = self.settings_manager.load_setting("gpu", "auto")
+        force_copy = self.settings_manager.get_boolean("force-copy-video", False)
 
         if (
-            hasattr(self, "current_processing_file")
-            and self.current_processing_file == file_path
+            gpu_mode == "auto"
+            and hasattr(self, "detected_gpus")
+            and len(self.detected_gpus) > 1
+            and not force_copy
         ):
-            print(
-                f"WARNING: File {os.path.basename(file_path)} is already being processed! Skipping."
-            )
-            self.currently_converting = False
+            max_concurrent = min(
+                len(self.detected_gpus), 2
+            )  # Limit to 2 for now as per requirement
+
+            # Initialize GPU slots if empty and we haven't started yet
+            if not self.gpu_slots and not self.active_conversions:
+                self.logger.info(
+                    f"Initializing {max_concurrent} GPU slots for parallel processing"
+                )
+                # Add available GPUs to slots
+                for i in range(max_concurrent):
+                    # Create slot info with GPU type and device path
+                    gpu_info = self.detected_gpus[i]
+                    slot = {
+                        "id": i,
+                        "type": "auto",  # Will be refined by conversion_page logic
+                        "device": gpu_info["device"],
+                        "name": gpu_info.get("name", "Unknown GPU"),
+                    }
+
+                    # Refine type based on name
+                    name_lower = slot["name"].lower()
+                    if "intel" in name_lower:
+                        slot["type"] = "intel"
+                    elif "nvidia" in name_lower:
+                        slot["type"] = "nvidia"
+                    elif "amd" in name_lower:
+                        slot["type"] = "amd"
+
+                    self.gpu_slots.append(slot)
+
+        # Check if we reached capacity
+        if len(self.active_conversions) >= max_concurrent:
+            # We're full, wait for a completion
             return False
 
-        self.current_processing_file = file_path
-        print(f"Processing file: {os.path.basename(file_path)}")
+        # Check if queue is empty
+        if not self.conversion_queue:
+            # Only finish if no active conversions remain
+            if not self.active_conversions:
+                print("Queue processing complete")
+                self.header_bar.set_buttons_sensitive(True)
+                self.is_cancellation_requested = False
+                self.currently_converting = False
 
-        if hasattr(self, "conversion_page"):
-            self.conversion_page.set_file(file_path)
-            GLib.timeout_add(300, self._force_start_conversion)
+                # Show completion summary on progress page
+                if hasattr(self, "progress_page"):
+                    self.progress_page.show_completion_summary()
+
+                if hasattr(self, "is_minimized") and self.is_minimized:
+                    self.send_system_notification(
+                        _("Batch Conversion Complete"),
+                        _("All queued files have been processed."),
+                    )
+            return False
+
+        # Get next file
+        next_file = self.conversion_queue.popleft()
+
+        # Verify file exists
+        if not os.path.exists(next_file):
+            print(f"Skipping missing file: {next_file}")
+            # Try next one immediately
+            GLib.idle_add(self.process_next_in_queue)
+            return False
+
+        # Prepare for conversion
+        # We don't set current_file_path on conversion_page directly if
+        # we want to support parallel, as it might overwrite.
+        # But `force_start_conversion` uses it.
+        # We should set it right before calling.
+        # Prepare for conversion
+        # We don't set current_file_path on conversion_page directly wait until called
+        self.conversion_page.current_file_path = next_file
+
+        # Allocate a GPU slot if using parallel processing
+        gpu_slot = None
+        if max_concurrent > 1 and self.gpu_slots:
+            gpu_slot = self.gpu_slots.popleft()
+            self.logger.info(
+                f"Allocated GPU slot for {os.path.basename(next_file)}: {gpu_slot['name']}"
+            )
+
+        # Add to active conversions tracking with lock
+        conversion_info = {
+            "file_path": next_file,
+            "gpu_slot": gpu_slot,
+            "start_time": GLib.get_real_time(),
+        }
+
+        with self.conversions_lock:
+            self.active_conversions.append(conversion_info)
+
+        self.currently_converting = True
+
+        # Update UI queue display
+        GLib.idle_add(self.conversion_page.update_queue_display)
+
+        # Start conversion with override if slot allocated
+        result = self.conversion_page.force_start_conversion(gpu_override=gpu_slot)
+
+        if result is False:
+            # Failed to start
+            self.logger.error(f"Failed to start conversion for {next_file}")
+            with self.conversions_lock:
+                if conversion_info in self.active_conversions:
+                    self.active_conversions.remove(conversion_info)
+
+            if gpu_slot:
+                self.gpu_slots.append(gpu_slot)  # Return slot
+
+            # Try next one
+            GLib.idle_add(self.process_next_in_queue)
+
+        # Try to start another if we have capacity (active < max)
+        with self.conversions_lock:
+            active_count = len(self.active_conversions)
+
+        if active_count < max_concurrent and self.conversion_queue:
+            GLib.timeout_add(500, self.process_next_in_queue)
 
         return False
 
@@ -1228,119 +1568,66 @@ class VideoConverterApp(Adw.Application):
 
     def conversion_completed(self, success, skip_tracking=False):
         """Called when a conversion is completed"""
-        if hasattr(self, "_processing_completion") and self._processing_completion:
-            print(
-                "WARNING: conversion_completed is already being processed, ignoring duplicate call"
-            )
-            return
-
-        self._processing_completion = True
+        with self.completion_lock:
+            if self._processing_completion:
+                self.logger.warning(
+                    "WARNING: conversion_completed is already being processed, ignoring duplicate call"
+                )
+                return
+            self._processing_completion = True
 
         try:
-            print(f"\n=== conversion_completed called with success={success} ===")
+            self.logger.info(f"conversion_completed called with success={success}")
 
-            # Reset core state immediately to prevent re-entry
-            self.currently_converting = False
-
-            # Handle cancellation first - it's a full stop.
+            # Handle cancellation
             if self.is_cancellation_requested:
-                print("Cancellation requested. Stopping queue processing.")
+                self.logger.info("Cancellation requested. Stopping.")
                 self.is_cancellation_requested = False
-                self.current_processing_file = None
+                with self.conversions_lock:
+                    self.active_conversions = []
+                self.currently_converting = False
                 GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
-                GLib.idle_add(self.return_to_main_view)
+                self.return_to_main_view()
                 return
 
-            # Track the file that just finished.
+            # Release GPU slot & Tracking
+            with self.conversions_lock:
+                if self.active_conversions:
+                    finished_conversion = self.active_conversions.pop(0)
+                    if finished_conversion.get("gpu_slot"):
+                        self.logger.info(
+                            f"Releasing GPU slot: {finished_conversion['gpu_slot']['name']}"
+                        )
+                        self.gpu_slots.append(finished_conversion["gpu_slot"])
+
+                if not self.active_conversions:
+                    self.currently_converting = False
+
+            # (Legacy tracking code removed)
+            # Check single file conversion mode
             if (
-                not skip_tracking
-                and hasattr(self, "current_processing_file")
-                and self.current_processing_file
+                hasattr(self, "_single_file_conversion")
+                and self._single_file_conversion
             ):
-                file_info = {
-                    "input_file": self.current_processing_file,
-                    "output_file": "",
-                    "success": success,
-                }
-                if self.current_processing_file not in [
-                    f["input_file"] for f in self.completed_conversions
-                ]:
-                    self.completed_conversions.append(file_info)
-
-                if success:
-                    self.send_system_notification(
-                        _("Conversion Complete"),
-                        _("Successfully converted {0}").format(
-                            os.path.basename(self.current_processing_file)
-                        ),
-                    )
-
-            # Handle the two distinct modes: single file vs. queue.
-            is_single_file_conversion = getattr(self, "_single_file_conversion", False)
-
-            if is_single_file_conversion:
-                print("Single file conversion finished. Cleaning up.")
-                converted_file = self.current_processing_file
                 self._single_file_conversion = False
-                if hasattr(self, "_single_file_to_convert"):
-                    delattr(self, "_single_file_to_convert")
+                # Restore original queue
                 if hasattr(self, "_original_queue_before_single_conversion"):
-                    # Remove the converted file from the original queue before restoring
-                    original_queue = list(self._original_queue_before_single_conversion)
-                    if converted_file in original_queue:
-                        original_queue.remove(converted_file)
-                        print(f"Removed {os.path.basename(converted_file)} from queue after single file conversion")
-                    self.conversion_queue = deque(original_queue)
-                    delattr(self, "_original_queue_before_single_conversion")
-                else:
-                    self.conversion_queue.clear()
-
-                self.current_processing_file = None  # CRITICAL: Clean this state.
-
-                if hasattr(self, "conversion_page"):
-                    GLib.idle_add(self.conversion_page.update_queue_display)
-                GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
-
-                if self.completed_conversions:
-                    self.show_completion_screen()
-                else:
-                    self.return_to_main_view()
-
-                return  # End of path for single file conversion.
-
-            # If not single file, it's queue processing.
-            else:
-                # Remove the processed file from the queue.
-                if (
-                    self.conversion_queue
-                    and self.conversion_queue[0] == self.current_processing_file
-                ):
-                    try:
-                        self.conversion_queue.popleft()
-                    except IndexError:
-                        pass  # Should not happen, but safe.
-
-                self.current_processing_file = None  # Clean state.
-
-                if hasattr(self, "conversion_page"):
-                    GLib.idle_add(self.conversion_page.update_queue_display)
-
-                # Decide what to do next.
-                if self.conversion_queue:
-                    print(
-                        f"Queue has {len(self.conversion_queue)} items left. Processing next."
+                    self.conversion_queue = deque(
+                        self._original_queue_before_single_conversion
                     )
-                    GLib.timeout_add(500, self.process_next_in_queue)
-                else:
-                    print("Queue finished.")
-                    GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
-                    if self.completed_conversions:
-                        self.show_completion_screen()
-                    else:
-                        self.return_to_main_view()
+                    # Update UI to show original queue
+                    if hasattr(self, "conversion_page"):
+                        GLib.idle_add(self.conversion_page.update_queue_display)
+
+                GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
+                return
+
+            # Continue queue processing
+            GLib.idle_add(self.process_next_in_queue)
 
         finally:
-            self._processing_completion = False
+            with self.completion_lock:
+                self._processing_completion = False
 
     # UI Navigation
     def show_queue_view(self):
@@ -1475,7 +1762,7 @@ class VideoConverterApp(Adw.Application):
     def get_selected_format_extension(self):
         """Return the extension of the selected file format"""
         format_index = self.settings_manager.load_setting("output-format-index", 0)
-        format_extensions = {0: ".mp4", 1: ".mkv"}
+        format_extensions = {0: ".mp4", 1: ".mkv", 2: ".mov", 3: ".webm"}
         return format_extensions.get(format_index, ".mp4")
 
     def get_selected_format_name(self):
@@ -1696,7 +1983,217 @@ class VideoConverterApp(Adw.Application):
                         )
                     )
         except Exception as error:
-            print(f"Files not selected: {error}")
+            if self.logger:
+                self.logger.warning(f"Files not selected: {error}")
+
+    def show_network_file_dialog(self):
+        """Show dialog to add files from network locations (SFTP, SMB, FTP)"""
+        dialog = Adw.Dialog()
+        dialog.set_title(_("Add Network File"))
+        dialog.set_content_width(480)
+        dialog.set_content_height(420)
+
+        toolbar_view = Adw.ToolbarView()
+        header = Adw.HeaderBar()
+        toolbar_view.add_top_bar(header)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        content.set_margin_top(16)
+        content.set_margin_bottom(16)
+        content.set_margin_start(16)
+        content.set_margin_end(16)
+
+        # Info label
+        info_label = Gtk.Label(
+            label=_(
+                "Connect to a remote server to browse and add video files.\n"
+                "Files are accessed directly from the network without downloading."
+            )
+        )
+        info_label.set_wrap(True)
+        info_label.set_xalign(0)
+        info_label.add_css_class("dim-label")
+        content.append(info_label)
+
+        # Protocol group
+        protocol_group = Adw.PreferencesGroup()
+        protocol_group.set_title(_("Connection"))
+
+        # Protocol ComboRow
+        protocol_row = Adw.ComboRow()
+        protocol_row.set_title(_("Protocol"))
+        protocol_model = Gtk.StringList()
+        for p in ["SFTP (SSH)", "SMB (Windows Share)", "FTP"]:
+            protocol_model.append(p)
+        protocol_row.set_model(protocol_model)
+        protocol_group.add(protocol_row)
+
+        # Server entry
+        server_row = Adw.EntryRow()
+        server_row.set_title(_("Server"))
+        server_row.set_text("")
+        protocol_group.add(server_row)
+
+        # Port entry
+        port_row = Adw.EntryRow()
+        port_row.set_title(_("Port"))
+        port_row.set_text("")
+        protocol_group.add(port_row)
+
+        # Username entry
+        user_row = Adw.EntryRow()
+        user_row.set_title(_("Username"))
+        user_row.set_text("")
+        protocol_group.add(user_row)
+
+        # Remote path entry
+        path_row = Adw.EntryRow()
+        path_row.set_title(_("Remote Path"))
+        path_row.set_text("/")
+        protocol_group.add(path_row)
+
+        content.append(protocol_group)
+
+        # Status label
+        status_label = Gtk.Label(label="")
+        status_label.set_wrap(True)
+        status_label.set_xalign(0)
+        status_label.set_visible(False)
+        content.append(status_label)
+
+        # Connect button
+        connect_button = Gtk.Button(label=_("Connect and Browse"))
+        connect_button.add_css_class("suggested-action")
+        connect_button.add_css_class("pill")
+        connect_button.set_halign(Gtk.Align.CENTER)
+        connect_button.set_margin_top(8)
+        content.append(connect_button)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_child(content)
+        scrolled.set_vexpand(True)
+        toolbar_view.set_content(scrolled)
+        dialog.set_child(toolbar_view)
+
+        def on_connect_clicked(button):
+            server = server_row.get_text().strip()
+            if not server:
+                status_label.set_text(_("Please enter a server address."))
+                status_label.add_css_class("error")
+                status_label.set_visible(True)
+                return
+
+            # Build URI from fields
+            protocol_idx = protocol_row.get_selected()
+            schemes = ["sftp", "smb", "ftp"]
+            scheme = schemes[protocol_idx]
+
+            user = user_row.get_text().strip()
+            port = port_row.get_text().strip()
+            remote_path = path_row.get_text().strip() or "/"
+
+            # Build URI
+            if user:
+                authority = f"{user}@{server}"
+            else:
+                authority = server
+            if port:
+                authority += f":{port}"
+
+            # SMB uses smb://server/share format
+            if scheme == "smb" and not remote_path.startswith("/"):
+                remote_path = "/" + remote_path
+
+            uri = f"{scheme}://{authority}{remote_path}"
+            print(f"Mounting network location: {uri}")
+
+            status_label.remove_css_class("error")
+            status_label.add_css_class("dim-label")
+            status_label.set_text(_("Connecting..."))
+            status_label.set_visible(True)
+            button.set_sensitive(False)
+
+            # Mount using GIO
+            gfile = Gio.File.new_for_uri(uri)
+            mount_op = Gtk.MountOperation.new(self.window)
+
+            def on_mount_finished(source, result):
+                try:
+                    gfile.mount_enclosing_volume_finish(result)
+                except GLib.Error as e:
+                    # Already mounted is not an error
+                    if "already mounted" not in str(e).lower():
+                        print(f"Mount error: {e}")
+                        GLib.idle_add(
+                            lambda: self._handle_mount_error(
+                                status_label, button, str(e)
+                            )
+                        )
+                        return
+
+                print(f"Mount successful for {uri}")
+                GLib.idle_add(lambda: self._open_network_file_browser(dialog, gfile))
+
+            gfile.mount_enclosing_volume(
+                Gio.MountMountFlags.NONE, mount_op, None, on_mount_finished
+            )
+
+        connect_button.connect("clicked", on_connect_clicked)
+        dialog.present(self.window)
+
+    def _handle_mount_error(self, status_label, button, error_msg):
+        """Handle mount error in network dialog"""
+        status_label.remove_css_class("dim-label")
+        status_label.add_css_class("error")
+        status_label.set_text(_("Connection failed: {}").format(error_msg))
+        status_label.set_visible(True)
+        button.set_sensitive(True)
+
+    def _open_network_file_browser(self, network_dialog, gfile):
+        """Open file browser at the mounted network location"""
+        network_dialog.close()
+
+        # Resolve GVFS local path
+        local_path = gfile.get_path()
+        if not local_path:
+            # Try to find the GVFS mount point
+            try:
+                mount = gfile.find_enclosing_mount(None)
+                root = mount.get_root()
+                local_path = root.get_path()
+            except Exception as e:
+                self.logger.error(f"Could not resolve GVFS path: {e}")
+                self.show_error_dialog(
+                    _("Error"),
+                    _(
+                        "Connected but could not resolve local path. Try browsing via file manager."
+                    ),
+                )
+                return
+
+        print(f"Browsing network files at: {local_path}")
+
+        # Open file dialog at the mounted location
+        dialog = Gtk.FileDialog()
+        dialog.set_title(_("Select Network Video Files"))
+        dialog.set_modal(True)
+
+        try:
+            initial_folder = Gio.File.new_for_path(local_path)
+            dialog.set_initial_folder(initial_folder)
+        except Exception as e:
+            print(f"Error setting initial folder: {e}")
+
+        filter = Gtk.FileFilter()
+        filter.set_name(_("Video Files"))
+        for mime_type in VIDEO_FILE_MIME_TYPES:
+            filter.add_mime_type(mime_type)
+
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+        filters.append(filter)
+        dialog.set_filters(filters)
+
+        dialog.open_multiple(self.window, None, self._on_files_selected)
 
     def _show_dependency_install_dialog(self):
         """Shows the dialog to install required dependencies (FFmpeg and MPV)."""
@@ -1704,7 +2201,9 @@ class VideoConverterApp(Adw.Application):
         if not install_info:
             self.show_error_dialog(
                 _("Dependencies Not Found"),
-                _("FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\nPlease install them manually using your distribution's package manager.")
+                _(
+                    "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\nPlease install them manually using your distribution's package manager."
+                ),
             )
             # Disable the main window as the app is not usable
             self.window.set_sensitive(False)
@@ -1719,7 +2218,9 @@ class VideoConverterApp(Adw.Application):
                 if self.dependency_checker.are_dependencies_available():
                     self.show_info_dialog(
                         _("Installation Successful"),
-                        _("Dependencies have been installed. The application will now restart.")
+                        _(
+                            "Dependencies have been installed. The application will now restart."
+                        ),
                     )
                     # Restart the application
                     self.quit()
@@ -1727,7 +2228,9 @@ class VideoConverterApp(Adw.Application):
                 else:
                     self.show_error_dialog(
                         _("Installation Failed"),
-                        _("Dependencies were not found after installation. Please restart the application manually.")
+                        _(
+                            "Dependencies were not found after installation. Please restart the application manually."
+                        ),
                     )
                     self.quit()
             else:
@@ -1735,10 +2238,11 @@ class VideoConverterApp(Adw.Application):
                 self.quit()
 
         dialog.connect("close-request", on_dialog_close)
-        
+
         # Disable main window while this critical dialog is open
         self.window.set_sensitive(False)
         dialog.present()
+
 
 def main():
     locale_dir = "/usr/share/locale"
@@ -1749,15 +2253,19 @@ def main():
 
     gettext.bindtextdomain("big-video-converter", locale_dir)
     gettext.textdomain("big-video-converter")
-    
-    # Refresh translated constants after gettext is initialized
-    from constants import refresh_translations
-    refresh_translations()
 
     # Refresh translated constants after gettext is initialized
     from constants import refresh_translations
 
     refresh_translations()
+
+    # Configure logging
+    log_level = logging.DEBUG if os.environ.get("BVC_DEBUG") else logging.WARNING
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s %(name)s %(levelname)s %(message)s",
+        datefmt="%H:%M:%S",
+    )
 
     app = VideoConverterApp()
     return app.run(sys.argv)

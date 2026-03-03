@@ -6,7 +6,6 @@ import shlex
 import subprocess
 import time
 
-from constants import CONVERT_SCRIPT_PATH
 from gi.repository import GLib
 
 _ = gettext.gettext  # Will use the already initialized translation
@@ -280,10 +279,12 @@ def run_with_progress_dialog(
                     def remove_after_delay():
                         GLib.timeout_add(
                             50,
-                            lambda: app.progress_page.remove_conversion(
-                                progress_item.conversion_id
-                            )
-                            or False,
+                            lambda: (
+                                app.progress_page.remove_conversion(
+                                    progress_item.conversion_id
+                                )
+                                or False
+                            ),
                         )
 
                     GLib.idle_add(remove_after_delay)
@@ -377,6 +378,10 @@ def monitor_progress(app, process, progress_item, env_vars=None):
     progress_samples = []
     sample_window = 10
 
+    # Capture last stderr lines for error diagnosis
+    last_stderr_lines = []
+    max_stderr_lines = 20
+
     # Set initial status
     GLib.idle_add(progress_item.update_status, _("Starting process..."))
     GLib.idle_add(progress_item.add_output_text, _("Starting FFmpeg process..."))
@@ -402,19 +407,6 @@ def monitor_progress(app, process, progress_item, env_vars=None):
 
         # Default to the original string if no pattern matches
         return technical_mode
-
-    # Helper function to update status with consistent format
-    def update_status_with_mode_and_speed(fps_value=None):
-        fps_display = f"{fps_value:.1f}" if fps_value is not None else "N/A"
-        friendly_mode = get_friendly_encode_mode(encode_mode)
-
-        if fps_value is not None:
-            status_msg = f"{friendly_mode} | {fps_display} fps"
-        else:
-            status_msg = f"{friendly_mode}"
-
-        GLib.idle_add(progress_item.update_status, status_msg)
-        return friendly_mode
 
     try:
         import threading
@@ -528,6 +520,13 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         )
 
                 if source == "stderr":
+                    # Collect last stderr lines for error diagnosis
+                    stripped = line.strip()
+                    if stripped:
+                        last_stderr_lines.append(stripped)
+                        if len(last_stderr_lines) > max_stderr_lines:
+                            last_stderr_lines.pop(0)
+
                     # Original stderr processing for other patterns
                     # Check if the process was cancelled
                     if progress_item.was_cancelled():
@@ -661,7 +660,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                             + int(s)
                                             + (int(ms) / 100)
                                         )
-                                    except Exception as e:
+                                    except Exception:
                                         pass  # Ignore time parsing errors
 
                             # Get info about current fps
@@ -762,10 +761,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                             else "N/A"
                                         )
 
-                                        # Get the friendly encode mode for display
-                                        friendly_mode = encode_mode
-                                        if encode_mode in encode_mode_map:
-                                            friendly_mode = encode_mode_map[encode_mode]
+                                        friendly_mode = encode_mode_map.get(
+                                            encode_mode, encode_mode
+                                        )
 
                                         status_msg = f"{friendly_mode} | {fps_display} fps"
                                         GLib.idle_add(
@@ -820,12 +818,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                                 else "N/A"
                                             )
 
-                                            # Get the friendly encode mode for display
-                                            friendly_mode = encode_mode
-                                            if encode_mode in encode_mode_map:
-                                                friendly_mode = encode_mode_map[
-                                                    encode_mode
-                                                ]
+                                            friendly_mode = encode_mode_map.get(
+                                                encode_mode, encode_mode
+                                            )
 
                                             status_msg = f"{friendly_mode} | {fps_display} fps"
                                             GLib.idle_add(
@@ -877,19 +872,12 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                         continue
 
                                 # Modified status message for indeterminate progress
+                                friendly_mode = encode_mode_map.get(
+                                    encode_mode, encode_mode
+                                )
                                 if current_fps is not None:
-                                    # Get the friendly encode mode for display
-                                    friendly_mode = encode_mode
-                                    if encode_mode in encode_mode_map:
-                                        friendly_mode = encode_mode_map[encode_mode]
-
                                     status_msg = f"{friendly_mode} | {current_fps:.1f} fps"
                                 else:
-                                    # Get the friendly encode mode for display
-                                    friendly_mode = encode_mode
-                                    if encode_mode in encode_mode_map:
-                                        friendly_mode = encode_mode_map[encode_mode]
-
                                     status_msg = f"{friendly_mode}"
 
                                 # Use an arbitrary progress value based on frames processed
@@ -1212,8 +1200,33 @@ def monitor_progress(app, process, progress_item, env_vars=None):
             else:
                 # Mark as failed
                 GLib.idle_add(progress_item.mark_failure)
-                
+
+                # Extract meaningful error from last stderr lines
+                error_detail = ""
+                for line in last_stderr_lines:
+                    if any(
+                        kw in line.lower()
+                        for kw in [
+                            "error",
+                            "invalid",
+                            "no such",
+                            "not found",
+                            "unknown",
+                            "unsupported",
+                            "failed",
+                            "cannot",
+                            "permission denied",
+                            "no space",
+                        ]
+                    ):
+                        error_detail = line
+                        break
+                if not error_detail and last_stderr_lines:
+                    error_detail = last_stderr_lines[-1]
+
                 error_msg = _("Conversion failed with code {0}").format(return_code)
+                if error_detail:
+                    error_msg += f"\n{error_detail}"
                 GLib.idle_add(progress_item.update_progress, 0.0, _("Error!"))
                 GLib.idle_add(progress_item.update_status, error_msg)
                 GLib.idle_add(progress_item.add_output_text, error_msg)
@@ -1226,14 +1239,20 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     hasattr(progress_item, "is_segment_batch")
                     and progress_item.is_segment_batch
                 )
+
+                # Build detailed error message for dialog
+                detail_text = _("The conversion failed with error code {0}.").format(
+                    return_code
+                )
+                if error_detail:
+                    detail_text += f"\n\n{_('Error detail')}:\n{error_detail}"
+                detail_text += f"\n\n{_('Check the log for more details.')}"
+
                 if not is_queue_processing and not is_segment_batch:
                     GLib.idle_add(
                         lambda: show_error_dialog_and_close_progress(
                             app,
-                            _(
-                                "The conversion failed with error code {0}.\n\n"
-                                "Check the log for more details."
-                            ).format(return_code),
+                            detail_text,
                             progress_item,
                         )
                     )
@@ -1296,85 +1315,3 @@ def show_error_dialog_and_close_progress(app, message, progress_item):
         5000, lambda: app.progress_page.remove_conversion(progress_item.conversion_id)
     )
     app.show_error_dialog(message)
-
-
-def build_convert_command(input_file, settings):
-    """Build the convert command and environment variables"""
-    from utils.file_info import has_audio_streams
-
-    cmd = [CONVERT_SCRIPT_PATH, input_file]
-    env_vars = os.environ.copy()
-
-    setting_keys = [
-        "gpu",
-        "video-quality",
-        "video-codec",
-        "preset",
-        "subtitle-extract",
-        "audio-handling",
-        "audio-bitrate",
-        "audio-channels",
-        "audio-codec",
-        "video-resolution",
-        "additional-options",
-        "gpu-partial",
-        "force-copy-video",
-        "only-extract-subtitles",
-        "output-folder",
-    ]
-
-    force_copy = (
-        settings.get_value("force-copy-video")
-        if hasattr(settings, "get_value")
-        else settings.get("force-copy-video")
-    )
-    is_copy_mode = force_copy in ["1", True, "true", "True"]
-
-    for key in setting_keys:
-        value = (
-            settings.get_value(key)
-            if hasattr(settings, "get_value")
-            else settings.get(key)
-        )
-
-        if is_copy_mode and key in [
-            "video-codec",
-            "video-quality",
-            "video-resolution",
-            "gpu",
-            "gpu-partial",
-            "preset",
-        ]:
-            print(f"Skipping {key} because copy mode is enabled")
-            continue
-
-        if key == "audio-handling" and value:
-            if not has_audio_streams(input_file):
-                value = "none"
-                print(
-                    f"No audio streams detected in {os.path.basename(input_file)}, overriding audio_handling to 'none'"
-                )
-
-        if value not in [None, "", False]:
-            env_key = key.replace("-", "_")
-            env_vars[env_key] = str(value)
-            print(f"Setting {env_key}={value}")
-
-    trim_start = settings.get_value("video-trim-start")
-    trim_end = settings.get_value("video-trim-end")
-
-    if trim_start > 0:
-        env_vars["trim_start"] = str(trim_start)
-        print(f"Setting trim_start={trim_start}")
-
-    if trim_end > 0:
-        env_vars["trim_end"] = str(trim_end)
-        print(f"Setting trim_end={trim_end}")
-
-    if "output_folder" not in env_vars and input_file:
-        env_vars["output_folder"] = os.path.dirname(input_file)
-        print(
-            f"Setting output folder to input file directory: {env_vars['output_folder']}"
-        )
-
-    return cmd, env_vars

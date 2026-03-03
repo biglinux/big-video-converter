@@ -2,10 +2,10 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio
-
 # Setup translation
 import gettext
+
+from gi.repository import Adw, Gio, Gtk
 
 _ = gettext.gettext
 
@@ -93,6 +93,10 @@ class HeaderBar(Gtk.Box):
         icon = Gio.ThemedIcon.new('folder-symbolic')
         menu_item.set_icon(icon)
         menu.append_item(menu_item)
+        menu_item_net = Gio.MenuItem.new(_("Add Network File"), "app.add_network_file")
+        icon_net = Gio.ThemedIcon.new("network-server-symbolic")
+        menu_item_net.set_icon(icon_net)
+        menu.append_item(menu_item_net)
         self.add_button.set_menu_model(menu)
 
         self.action_box.append(self.add_button)

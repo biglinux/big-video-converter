@@ -2,10 +2,10 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gdk, GLib, Gio, Pango
-
 # Setup translation
 import gettext
+
+from gi.repository import Adw, Gio, GLib, Gtk, Pango
 
 _ = gettext.gettext
 
@@ -35,9 +35,19 @@ class VideoEditUI:
 
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data(b".video-background { background-color: #000; }")
-        video_box.get_style_context().add_provider(
-            css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
+        display = (
+            self.page.app.get_display()
+            if hasattr(self.page.app, "get_display")
+            else None
         )
+        if display is None:
+            from gi.repository import Gdk
+
+            display = Gdk.Display.get_default()
+        if display:
+            Gtk.StyleContext.add_provider_for_display(
+                display, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
+            )
         video_box.add_css_class("video-background")
 
         # Video player widget - choose based on rendering mode

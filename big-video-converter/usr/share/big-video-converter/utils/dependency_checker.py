@@ -1,9 +1,8 @@
-import shutil
-import subprocess
-from gi.repository import GLib
-
 # Setup translation
 import gettext
+import shutil
+import subprocess
+
 _ = gettext.gettext
 
 
@@ -15,9 +14,9 @@ def get_distro_info():
             lines = f.readlines()
         for line in lines:
             if line.startswith('ID='):
-                distro_info['id'] = line.strip().split('=')[1].strip('"')
+                distro_info["id"] = line.strip().split("=")[1].strip("\"'")
             elif line.startswith('ID_LIKE='):
-                bases = line.strip().split('=')[1].strip('"').split()
+                bases = line.strip().split("=")[1].strip("\"'").split()
                 if 'arch' in bases:
                     distro_info['base'] = 'arch'
                 elif 'debian' in bases:

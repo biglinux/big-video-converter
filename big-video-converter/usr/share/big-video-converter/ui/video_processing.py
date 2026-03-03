@@ -1,15 +1,15 @@
+import json
 import os
 import subprocess
-import json
-import gi
 import threading
 
-gi.require_version("Gtk", "4.0")
-gi.require_version("GdkPixbuf", "2.0")
-from gi.repository import GLib, Gio, Gdk, GdkPixbuf
+import gi
 
+gi.require_version("Gtk", "4.0")
 # Setup translation
 import gettext
+
+from gi.repository import GLib
 
 _ = gettext.gettext
 
