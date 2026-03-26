@@ -299,6 +299,47 @@ msgstr "ビデオエディタのプレビューがどのようにレンダリン
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 231
 msgid "Restore all options to their default values. This cannot be undone."
 msgstr "すべてのオプションをデフォルト値に戻します。これは元に戻すことはできません。"
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py (export/import profile)
+msgid "Export Profile"
+msgstr "プロファイルをエクスポート"
+#
+msgid "Import Profile"
+msgstr "プロファイルをインポート"
+#
+msgid "Export / Import Profile"
+msgstr "プロファイルのエクスポート / インポート"
+#
+msgid "Save your current conversion settings to a file or load settings from a previously exported profile."
+msgstr "現在の変換設定をファイルに保存するか、以前にエクスポートしたプロファイルから設定を読み込みます。"
+#
+msgid "Profile Exported"
+msgstr "プロファイルをエクスポートしました"
+#
+msgid "Settings saved to:\n{}"
+msgstr "設定の保存先:\n{}"
+#
+msgid "Export Failed"
+msgstr "エクスポートに失敗しました"
+#
+msgid "Could not save the profile file."
+msgstr "プロファイルファイルを保存できませんでした。"
+#
+msgid "Profile files (*.json)"
+msgstr "プロファイルファイル (*.json)"
+#
+msgid "Profile Imported"
+msgstr "プロファイルをインポートしました"
+#
+msgid "Settings loaded from:\n{}"
+msgstr "設定の読み込み元:\n{}"
+#
+msgid "Import Failed"
+msgstr "インポートに失敗しました"
+#
+msgid "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
+msgstr "プロファイルを読み込めませんでした。有効なBig Video Converterプロファイルファイルであることを確認してください。"
+#
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 31
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 219
@@ -1213,7 +1254,7 @@ msgstr "閉じる"
 msgid ""
 "Starting installation...\n"
 "\n"
-msgstr "インストールを開始しています..."
+msgstr "インストールを開始しています...\n\n"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 172
 msgid "Installation completed successfully!"

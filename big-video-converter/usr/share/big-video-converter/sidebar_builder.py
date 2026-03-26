@@ -42,23 +42,14 @@ class SidebarBuilderMixin:
 
         # Create title box with label and (optionally) app icon
         if not window_buttons_left:
-            # App icon on left if window buttons are on right, text truly centered
+            # Text truly centered, no icon
             center_box = Gtk.CenterBox()
             center_box.set_hexpand(True)
-            app_icon = Gtk.Image.new_from_icon_name("big-video-converter")
-            app_icon.set_pixel_size(20)
-            app_icon.set_halign(Gtk.Align.START)
-            app_icon.set_valign(Gtk.Align.START)
-            app_icon.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
-            # Do not expand icon
-            app_icon.set_hexpand(False)
-            center_box.set_start_widget(app_icon)
             title_label = Gtk.Label(label="Big Video Converter")
             title_label.set_halign(Gtk.Align.CENTER)
             title_label.set_valign(Gtk.Align.START)
             title_label.set_hexpand(True)
             center_box.set_center_widget(title_label)
-            # No end widget
             left_header.set_title_widget(center_box)
         else:
             title_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -440,7 +431,6 @@ class SidebarBuilderMixin:
         self._radio_smaller = Gtk.CheckButton(group=self._radio_copy)
         self._radio_quality = Gtk.CheckButton(group=self._radio_copy)
         self._radio_custom = Gtk.CheckButton(group=self._radio_copy)
-        self._radio_custom.set_visible(False)
 
         self._profile_guard = False  # Prevent recursive signal loops
 
@@ -479,9 +469,8 @@ class SidebarBuilderMixin:
         self.tooltip_helper.add_tooltip(self._smallest_row, "profile_smaller")
 
         self._customize_row = Adw.ActionRow(title=_("Customize encoding..."))
-        self._customize_row.add_prefix(
-            Gtk.Image.new_from_icon_name("video-x-generic-symbolic")
-        )
+        self._customize_row.add_prefix(self._radio_custom)
+        self._customize_row.set_activatable_widget(self._radio_custom)
         self._customize_row.add_suffix(
             Gtk.Image.new_from_icon_name("go-next-symbolic")
         )

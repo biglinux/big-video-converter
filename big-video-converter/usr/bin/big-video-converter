@@ -1019,7 +1019,7 @@ function attempt_conversion() {
 	# Only extract once - skip if already extracted in a previous attempt_conversion call
 	if [[ -n "$subtitle_cmd" && "$subtitle_extract" == "extract" && "$subtitles_already_extracted" != "true" ]]; then
 		echo "Extracting subtitles..."
-		if eval $ffmpeg_executable -i \"$input_file\" $subtitle_cmd 2>/dev/null; then
+		if eval $ffmpeg_executable -y -i \"$input_file\" $subtitle_cmd 2>/dev/null; then
 			subtitles_already_extracted=true
 		else
 			echo "Warning: Subtitle extraction failed (non-critical, continuing with conversion)"
