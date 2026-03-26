@@ -11,7 +11,7 @@ _ = gettext.gettext
 # Application metadata
 APP_ID = "br.com.biglinux.converter"
 APP_NAME = "Big Video Converter"
-APP_VERSION = "3.9.36"
+APP_VERSION = "3.9.37"
 
 APP_DEVELOPERS = ["Tales A. Mendonça", "Bruno Gonçalves Araujo"]
 APP_WEBSITES = ["communitybig.org", "biglinux.com.br"]
@@ -35,8 +35,14 @@ elif os.path.exists("/usr/bin/big-video-converter"):
     # System install
     CONVERT_SCRIPT_PATH = "/usr/bin/big-video-converter"
 else:
-    # Development/local
-    CONVERT_SCRIPT_PATH = "./big-video-converter"
+    # Development/local — resolve relative to this file's location
+    _constants_dir = os.path.dirname(
+        os.path.abspath(__file__)
+    )  # usr/share/big-video-converter
+    _usr_dir = os.path.dirname(os.path.dirname(_constants_dir))  # usr
+    CONVERT_SCRIPT_PATH = os.path.join(
+        os.path.dirname(_usr_dir), "usr", "bin", "big-video-converter"
+    )
 
 # File dialog filters
 VIDEO_FILE_MIME_TYPES = [

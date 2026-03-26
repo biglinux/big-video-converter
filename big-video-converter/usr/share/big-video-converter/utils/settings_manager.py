@@ -225,6 +225,63 @@ class SettingsManager:
             logger.error(f"Error: Could not convert {value} to float")
             return False
 
+    # Keys excluded from profile export (UI state, not conversion settings)
+    _PROFILE_EXCLUDE_KEYS = {
+        "last-accessed-directory",
+        "output-folder",
+        "search-directory",
+        "window-width",
+        "window-height",
+        "window-maximized",
+        "sidebar-position",
+        "show-single-help-on-startup",
+        "show-conversion-help-on-startup",
+        "log-file",
+    }
+
+    def export_profile(self, filepath: str) -> bool:
+        """Export current conversion settings to a JSON profile file."""
+        try:
+            profile = {
+                "_profile_version": 1,
+                "_app": "big-video-converter",
+            }
+            all_keys = set(self.DEFAULT_VALUES.keys()) | set(self.settings.keys())
+            for key in sorted(all_keys - self._PROFILE_EXCLUDE_KEYS):
+                profile[key] = self.settings.get(key, self.DEFAULT_VALUES.get(key, ""))
+            os.makedirs(os.path.dirname(filepath) or ".", exist_ok=True)
+            with open(filepath, "w") as f:
+                json.dump(profile, f, indent=2, ensure_ascii=False)
+            logger.info(f"Profile exported to: {filepath}")
+            return True
+        except OSError as e:
+            logger.error(f"Error exporting profile: {e}")
+            return False
+
+    def import_profile(self, filepath: str) -> bool:
+        """Import conversion settings from a JSON profile file."""
+        try:
+            with open(filepath, "r") as f:
+                profile = json.load(f)
+            if not isinstance(profile, dict):
+                logger.error("Invalid profile: not a JSON object")
+                return False
+            if profile.get("_app") != "big-video-converter":
+                logger.error("Invalid profile: wrong app identifier")
+                return False
+            with self.batch_update():
+                for key, value in profile.items():
+                    if key.startswith("_"):
+                        continue
+                    if key in self._PROFILE_EXCLUDE_KEYS:
+                        continue
+                    self.set_value(key, value)
+            logger.info(f"Profile imported from: {filepath}")
+            return True
+        except (OSError, json.JSONDecodeError, ValueError) as e:
+            logger.error(f"Error importing profile: {e}")
+            return False
+
     # Simple aliases for unified API
     def load_setting(self, key: str, default=None):
         return self.get_value(key, default)

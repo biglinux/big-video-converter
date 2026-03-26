@@ -1,16 +1,19 @@
 """
 Dialog for extra / advanced settings.
-FFmpeg custom flags, preview rendering and reset.
+FFmpeg custom flags, preview rendering, profile export/import and reset.
 """
 
 import gettext
+import logging
 import os
 
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, Gio, GLib, Gtk
+
+logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
 
@@ -212,6 +215,42 @@ def show_extra_dialog(parent_window, app) -> None:
         )
     )
 
+    # --- Export / Import Profile ---
+    profile_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+
+    export_btn = Gtk.Button(label=_("Export Profile"))
+    export_btn.add_css_class("suggested-action")
+    export_btn.add_css_class("pill")
+    export_btn.set_valign(Gtk.Align.CENTER)
+
+    import_btn = Gtk.Button(label=_("Import Profile"))
+    import_btn.add_css_class("pill")
+    import_btn.set_valign(Gtk.Align.CENTER)
+
+    profile_box.append(export_btn)
+    profile_box.append(import_btn)
+
+    def _on_export(_btn):
+        _export_profile(dialog, parent_window, app)
+
+    def _on_import(_btn):
+        _import_profile(dialog, parent_window, app)
+
+    export_btn.connect("clicked", _on_export)
+    import_btn.connect("clicked", _on_import)
+
+    content.append(
+        _make_card(
+            "preset_speed.svg",
+            _("Export / Import Profile"),
+            _(
+                "Save your current conversion settings to a file "
+                "or load settings from a previously exported profile."
+            ),
+            profile_box,
+        )
+    )
+
     # --- Reset All Settings ---
     reset_btn = Gtk.Button(label=_("Reset All Settings"))
     reset_btn.add_css_class("destructive-action")
@@ -239,3 +278,91 @@ def show_extra_dialog(parent_window, app) -> None:
     toolbar.set_content(scroll)
     dialog.set_child(toolbar)
     dialog.present(parent_window)
+
+
+def _export_profile(dialog, parent_window, app) -> None:
+    """Show a save dialog and export the current profile."""
+    file_dialog = Gtk.FileDialog()
+    file_dialog.set_title(_("Export Profile"))
+
+    json_filter = Gtk.FileFilter()
+    json_filter.set_name(_("Profile files (*.json)"))
+    json_filter.add_pattern("*.json")
+    filters = Gio.ListStore.new(Gtk.FileFilter)
+    filters.append(json_filter)
+    file_dialog.set_filters(filters)
+    file_dialog.set_initial_name("big-video-converter-profile.json")
+
+    def _on_save_response(dlg, result):
+        try:
+            gfile = dlg.save_finish(result)
+        except GLib.Error:
+            return
+        if not gfile:
+            return
+        filepath = gfile.get_path()
+        if not filepath:
+            return
+        if not filepath.endswith(".json"):
+            filepath += ".json"
+        ok = app.settings_manager.export_profile(filepath)
+        msg = Gtk.AlertDialog()
+        if ok:
+            msg.set_message(_("Profile Exported"))
+            msg.set_detail(_("Settings saved to:\n{}").format(filepath))
+        else:
+            msg.set_message(_("Export Failed"))
+            msg.set_detail(_("Could not save the profile file."))
+        msg.show(parent_window)
+
+    file_dialog.save(parent_window, None, _on_save_response)
+
+
+def _import_profile(dialog, parent_window, app) -> None:
+    """Show an open dialog and import a profile."""
+    file_dialog = Gtk.FileDialog()
+    file_dialog.set_title(_("Import Profile"))
+
+    json_filter = Gtk.FileFilter()
+    json_filter.set_name(_("Profile files (*.json)"))
+    json_filter.add_pattern("*.json")
+    filters = Gio.ListStore.new(Gtk.FileFilter)
+    filters.append(json_filter)
+    file_dialog.set_filters(filters)
+
+    def _on_open_response(dlg, result):
+        try:
+            gfile = dlg.open_finish(result)
+        except GLib.Error:
+            return
+        if not gfile:
+            return
+        filepath = gfile.get_path()
+        if not filepath:
+            return
+        ok = app.settings_manager.import_profile(filepath)
+        msg = Gtk.AlertDialog()
+        if ok:
+            msg.set_message(_("Profile Imported"))
+            msg.set_detail(_("Settings loaded from:\n{}").format(filepath))
+            # Reload UI to reflect imported settings
+            if hasattr(app, "settings_page"):
+                app.settings_page._load_settings()
+            if hasattr(app, "_load_left_pane_settings"):
+                app._load_left_pane_settings()
+            force_copy = app.settings_manager.load_setting("force-copy-video", False)
+            if hasattr(app, "settings_page"):
+                app.settings_page.update_for_force_copy_state(force_copy)
+            if hasattr(app, "_update_encoding_options_state"):
+                app._update_encoding_options_state(force_copy)
+        else:
+            msg.set_message(_("Import Failed"))
+            msg.set_detail(
+                _(
+                    "Could not load the profile. Make sure it is a valid "
+                    "Big Video Converter profile file."
+                )
+            )
+        msg.show(parent_window)
+
+    file_dialog.open(parent_window, None, _on_open_response)

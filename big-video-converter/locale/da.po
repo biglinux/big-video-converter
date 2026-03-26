@@ -303,9 +303,74 @@ msgstr ""
 "Hvordan videoredigeringspreviewet gengives. 'Automatisk' fungerer bedst for de fleste systemer. "
 "Prøv 'Software', hvis du ser visningsproblemer. Kræver genstart."
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py (export/import profile)
+msgid "Export Profile"
+msgstr "Eksportér profil"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 226
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 324
+msgid "Import Profile"
+msgstr "Importér profil"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 245
+msgid "Export / Import Profile"
+msgstr "Eksportér / Importér profil"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 247
+msgid "Save your current conversion settings to a file or load settings from a previously exported profile."
+msgstr ""
+"Gem dine nuværende konverteringsindstillinger til en fil, eller indlæs indstillinger fra en "
+"tidligere eksporteret profil."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 231
 msgid "Restore all options to their default values. This cannot be undone."
 msgstr "Gendan alle indstillinger til deres standardværdier. Dette kan ikke fortrydes."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 289
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 327
+msgid "Profile files (*.json)"
+msgstr "Profilfiler (*.json)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 311
+msgid "Profile Exported"
+msgstr "Profil eksporteret"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 312
+msgid ""
+"Settings saved to:\n"
+"{}"
+msgstr ""
+"Indstillinger gemt i:\n"
+"{}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 314
+msgid "Export Failed"
+msgstr "Eksport mislykkedes"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 315
+msgid "Could not save the profile file."
+msgstr "Kunne ikke gemme profilfilen."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 346
+msgid "Profile Imported"
+msgstr "Profil importeret"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 347
+msgid ""
+"Settings loaded from:\n"
+"{}"
+msgstr ""
+"Indstillinger indlæst fra:\n"
+"{}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 359
+msgid "Import Failed"
+msgstr "Import mislykkedes"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 362
+msgid "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
+msgstr "Kunne ikke indlæse profilen. Sørg for, at det er en gyldig Big Video Converter-profilfil."
+# 
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 31
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 219
@@ -351,6 +416,26 @@ msgid "This will stop all active conversions and skip all pending items. This ac
 msgstr ""
 "Dette vil stoppe alle aktive konverteringer og springe over alle ventende elementer. Denne handling "
 "kan ikke fortrydes."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 148
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 148
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 148
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 148
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
@@ -1248,7 +1333,9 @@ msgstr "Luk"
 msgid ""
 "Starting installation...\n"
 "\n"
-msgstr "Starter installation..."
+msgstr ""
+"Starter installation...\n"
+"\n"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 172
 msgid "Installation completed successfully!"
@@ -2246,6 +2333,14 @@ msgstr "Opus (bedste kvalitet)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 141
 msgid "AC3 (Dolby Digital)"
 msgstr "AC3 (Dolby Digital)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 190
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 190
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 190
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 190
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 184
 # 

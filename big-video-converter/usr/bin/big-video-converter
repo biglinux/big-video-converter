@@ -127,6 +127,24 @@ fi
 # Use the first argument as the input file
 input_file="$1"
 
+# Validate that input file exists and is readable
+if [[ ! -f "$input_file" ]]; then
+	echo "ERROR: Input file not found: $input_file"
+	exit 1
+fi
+
+if [[ ! -r "$input_file" ]]; then
+	echo "ERROR: Input file is not readable: $input_file"
+	exit 1
+fi
+
+# Validate that ffprobe can read the input file container
+if ! ffprobe -v error -show_entries format=format_name -of csv=p=0 "$input_file" >/dev/null 2>&1; then
+	echo "ERROR: Input file is corrupted or not a valid video file: $input_file"
+	echo "The file container could not be read. It may be a corrupted download or an unsupported format."
+	exit 2
+fi
+
 # Detect bit depth and codec of input video
 echo "Iniciando o processo FFmpeg..."
 echo "Analyzing input video..."
@@ -142,6 +160,9 @@ elif [[ $video_profile =~ .*10.* || $video_profile =~ .*High\ 10.* || $video_pro
 	is_10bit=true
 	echo "Detected 10-bit video input (profile: $video_profile)"
 else
+	if [[ -z "$pix_fmt" ]]; then
+		echo "⚠️  Warning: Could not detect pixel format - file may be corrupted or use an unusual format"
+	fi
 	echo "ℹ️  Detected 8-bit video ($pix_fmt) - using standard profile"
 fi
 
@@ -995,9 +1016,14 @@ function attempt_conversion() {
 	# --- Execute Conversion Attempts ---
 
 	# Extract subtitles first if needed (separate command to avoid output conflicts)
-	if [[ -n "$subtitle_cmd" && "$subtitle_extract" == "extract" ]]; then
+	# Only extract once - skip if already extracted in a previous attempt_conversion call
+	if [[ -n "$subtitle_cmd" && "$subtitle_extract" == "extract" && "$subtitles_already_extracted" != "true" ]]; then
 		echo "Extracting subtitles..."
-		eval $ffmpeg_executable -i \"$input_file\" $subtitle_cmd 2>/dev/null
+		if eval $ffmpeg_executable -y -i \"$input_file\" $subtitle_cmd 2>/dev/null; then
+			subtitles_already_extracted=true
+		else
+			echo "Warning: Subtitle extraction failed (non-critical, continuing with conversion)"
+		fi
 	fi
 
 	# === Parallel NR Pipeline ===
@@ -1232,6 +1258,9 @@ function attempt_conversion() {
 }
 
 # --- First Pass ---
+# Track if subtitles were already extracted to avoid re-extracting in fallback
+subtitles_already_extracted=false
+
 # Build commands with initial user settings and attempt conversion.
 build_audio_cmd
 build_encoder_commands
@@ -1240,7 +1269,7 @@ attempt_conversion
 # --- Audio Fallback Pass ---
 # If the first pass failed and we were trying to copy audio, it's likely due to an
 # incompatible audio codec for the container. Let's try again by re-encoding the audio.
-if [[ $exit_code != 0 && $exit_code != 255 && "$original_audio_handling" == "copy" ]]; then
+if [[ $exit_code != 0 && $exit_code != 255 && $exit_code != 2 && "$original_audio_handling" == "copy" ]]; then
 	echo -e "${COLOR_YELLOW}Audio stream copy may have failed. Retrying with audio re-encoding...${COLOR_RESET}"
 
 	# Force re-encode and rebuild all commands

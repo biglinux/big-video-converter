@@ -301,9 +301,72 @@ msgstr ""
 "Jak je náhled video editoru vykreslen. 'Automatický' funguje nejlépe pro většinu systémů. Zkuste "
 "'Software', pokud vidíte problémy s displejem. Vyžaduje restart."
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py (export/import profile)
+msgid "Export Profile"
+msgstr "Exportovat profil"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 226
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 324
+msgid "Import Profile"
+msgstr "Importovat profil"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 245
+msgid "Export / Import Profile"
+msgstr "Export / Import profilu"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 247
+msgid "Save your current conversion settings to a file or load settings from a previously exported profile."
+msgstr "Uložte aktuální nastavení konverze do souboru nebo načtěte nastavení z dříve exportovaného profilu."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 231
 msgid "Restore all options to their default values. This cannot be undone."
 msgstr "Obnovit všechny možnosti na jejich výchozí hodnoty. Toto nelze vrátit zpět."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 289
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 327
+msgid "Profile files (*.json)"
+msgstr "Soubory profilů (*.json)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 311
+msgid "Profile Exported"
+msgstr "Profil exportován"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 312
+msgid ""
+"Settings saved to:\n"
+"{}"
+msgstr ""
+"Nastavení uloženo do:\n"
+"{}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 314
+msgid "Export Failed"
+msgstr "Export se nezdařil"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 315
+msgid "Could not save the profile file."
+msgstr "Soubor profilu se nepodařilo uložit."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 346
+msgid "Profile Imported"
+msgstr "Profil importován"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 347
+msgid ""
+"Settings loaded from:\n"
+"{}"
+msgstr ""
+"Nastavení načteno z:\n"
+"{}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 359
+msgid "Import Failed"
+msgstr "Import se nezdařil"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 362
+msgid "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
+msgstr "Profil se nepodařilo načíst. Ujistěte se, že se jedná o platný soubor profilu Big Video Converter."
+# 
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 31
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 219
@@ -349,6 +412,26 @@ msgid "This will stop all active conversions and skip all pending items. This ac
 msgstr ""
 "Tím se zastaví všechny aktivní převody a přeskočí se všechny čekající položky. Tuto akci nelze "
 "vrátit zpět."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 148
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 148
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 148
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 148
 # 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 # 
@@ -1244,7 +1327,9 @@ msgstr "Zavřít"
 msgid ""
 "Starting installation...\n"
 "\n"
-msgstr "Zahájení instalace..."
+msgstr ""
+"Zahájení instalace...\n"
+"\n"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 172
 msgid "Installation completed successfully!"
@@ -1773,6 +1858,18 @@ msgstr "Kopírovat formát pixelů"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 592
 msgid "Language"
 msgstr "Jazyk"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 375
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 510
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 375
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 510
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 375
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 510
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 375
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 510
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 375
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 510
@@ -2811,6 +2908,14 @@ msgstr "Opus (nejlepší kvalita)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 141
 msgid "AC3 (Dolby Digital)"
 msgstr "AC3 (Dolby Digital)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 190
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 190
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 190
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 190
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 184
 # 
