@@ -15,6 +15,1410 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: attranslate\n"
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 482
+msgid "Audio"
+msgstr "오디오"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py, line: 122
+msgid ""
+"Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding "
+"allows changes."
+msgstr "오디오 트랙 처리 방식을 설정합니다. 복사는 원본 품질을 유지합니다. 재인코딩은 변경을 허용합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py, line: 139
+msgid "Audio Handling"
+msgstr "오디오 처리"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py, line: 141
+msgid ""
+"Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing "
+"codec, bitrate and applying audio cleaning."
+msgstr "오디오 트랙으로 무엇을 할지 선택하세요. '복사'는 원본을 유지합니다. '재인코딩'은 코덱, 비트 전송률을 변경하고 오디오 정리를 적용할 수 있습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py, line: 156
+msgid "Audio Codec"
+msgstr "오디오 코덱"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py, line: 158
+msgid ""
+"The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower "
+"bitrates. Choose 'Copy' in audio handling to keep the original codec."
+msgstr ""
+"오디오를 압축하는 데 사용되는 형식입니다. AAC는 널리 호환됩니다. Opus는 더 낮은 비트 전송률에서 더 나은 품질을 제공합니다. 원본 코덱을 유지하려면 오디오 처리에서 "
+"'복사'를 선택하십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py, line: 173
+msgid "Audio Bitrate"
+msgstr "오디오 비트 전송률"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py, line: 175
+msgid "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
+msgstr "더 높은 비트 전송률은 더 나은 오디오 품질을 의미하지만 파일 크기가 더 큽니다. 192k는 대부분의 콘텐츠에 적합한 균형입니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 221
+msgid "Custom bitrate"
+msgstr "사용자 정의 비트 전송률"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py, line: 228
+msgid "Audio Channels"
+msgstr "오디오 채널"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py, line: 230
+msgid ""
+"'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) "
+"for voice only. 5.1 (6) for surround sound."
+msgstr "'기본값'은 소스 비디오의 원래 채널 수를 유지합니다. 스테레오(2)는 표준입니다. 모노(1)는 음성 전용입니다. 5.1(6)은 서라운드 사운드입니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 251
+msgid "Custom channels"
+msgstr "사용자 정의 채널"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 91
+msgid "Reset All Settings"
+msgstr "모든 설정 초기화"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 104
+msgid "Encoding Settings"
+msgstr "인코딩 설정"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 117
+msgid "GPU partial mode"
+msgstr "GPU 부분 모드"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 118
+msgid "Decode using CPU, encode using GPU"
+msgstr "CPU를 사용하여 디코딩하고, GPU를 사용하여 인코딩합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 179
+msgid "Compression preset"
+msgstr "압축 프리셋"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 149
+msgid "Speed vs compression ratio"
+msgstr "속도 대 압축 비율"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 159
+msgid "Output Format"
+msgstr "출력 형식"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 159
+msgid "Container format for output file"
+msgstr "출력 파일의 컨테이너 형식"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 157
+msgid "Video resolution"
+msgstr "비디오 해상도"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 158
+msgid "Select output resolution"
+msgstr "출력 해상도 선택"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 163
+msgid "Custom resolution"
+msgstr "사용자 정의 해상도"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 164
+msgid "Ex: 1280x720, 1920x1080"
+msgstr "1280x720, 1920x1080"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 197
+msgid "Audio Settings"
+msgstr "오디오 설정"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 146
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 202
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 236
+msgid "Default"
+msgstr "기본값"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 152
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 208
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 240
+msgid "Custom"
+msgstr "사용자 정의"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 213
+msgid "Audio bitrate"
+msgstr "오디오 비트 전송률"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 215
+msgid "Select common bitrate or enter custom value"
+msgstr "일반 비트 전송률을 선택하거나 사용자 정의 값을 입력하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 222
+msgid "Ex: 128k, 192k, 256k"
+msgstr "128k, 192k, 256k"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 245
+msgid "Audio channels"
+msgstr "오디오 채널"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 246
+msgid "Select common channel configuration"
+msgstr "공통 채널 구성 선택"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 252
+msgid "Ex: 2 (stereo), 6 (5.1)"
+msgstr "예: 2 (스테레오), 6 (5.1)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 269
+msgid "Audio codec"
+msgstr "오디오 코덱"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 270
+msgid "Codec to use when re-encoding audio"
+msgstr "오디오를 다시 인코딩할 때 사용할 코덱"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 275
+msgid "General Options"
+msgstr "일반 옵션"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 278
+msgid "Additional FFmpeg options"
+msgstr "추가 FFmpeg 옵션"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 279
+msgid "Ex: -ss 60 -t 30"
+msgstr "-ss 60 -t 30"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 289
+msgid "Only extract subtitles"
+msgstr "자막만 추출하기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 292
+msgid "Extract subtitles to .srt files"
+msgstr ".srt 파일로 자막 추출"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 284
+msgid "Automatic"
+msgstr "자동적"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 285
+msgid "OpenGL (hardware accelerated)"
+msgstr "OpenGL (하드웨어 가속)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 286
+msgid "Software (compatible mode)"
+msgstr "소프트웨어 (호환 모드)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 291
+msgid "Video preview rendering"
+msgstr "비디오 미리보기 렌더링"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 293
+msgid "Rendering mode for video editor preview. Restart required to apply."
+msgstr "비디오 편집기 미리보기의 렌더링 모드. 적용하려면 재시작이 필요합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 483
+msgid "Restart Required"
+msgstr "재시작 필요"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 485
+msgid ""
+"The video preview rendering mode has been changed.\n"
+"\n"
+"Please close and reopen the application for the change to take effect."
+msgstr ""
+"비디오 미리보기 렌더링 모드가 변경되었습니다.\n"
+"\n"
+"변경 사항을 적용하려면 애플리케이션을 닫았다가 다시 열어주세요."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+msgid "OK"
+msgstr "알겠습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 684
+msgid "Reset All Settings?"
+msgstr "모든 설정 초기화?"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 686
+msgid "This will reset all settings to their default values. This action cannot be undone."
+msgstr "이 작업은 모든 설정을 기본값으로 재설정합니다. 이 작업은 실행 취소할 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 318
+msgid "Cancel"
+msgstr "취소"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 268
+msgid "Reset"
+msgstr "재설정"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 705
+msgid "Settings Reset"
+msgstr "설정 초기화"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 706
+msgid "All settings have been reset to their default values."
+msgstr "모든 설정이 기본값으로 재설정되었습니다."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 99
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 537
+msgid "Extra"
+msgstr "추가"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 119
+msgid "Additional options for advanced users. The defaults work well for most cases."
+msgstr "고급 사용자를 위한 추가 옵션. 기본값은 대부분의 경우에 잘 작동합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 133
+msgid "e.g.: -ss 60 -t 30"
+msgstr "-ss 60 -t 30"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 171
+msgid "Additional FFmpeg Options"
+msgstr "추가 FFmpeg 옵션"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 179
+msgid ""
+"Custom flags passed directly to FFmpeg. Example: '-ss 60 -t 30' to convert only 30 seconds starting "
+"at 1 minute."
+msgstr "FFmpeg에 직접 전달된 사용자 정의 플래그. 예: '-ss 60 -t 30'은 1분부터 시작하여 30초만 변환합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 205
+msgid "Video Preview Rendering"
+msgstr "비디오 미리보기 렌더링"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 207
+msgid ""
+"How the video editor preview is rendered. 'Automatic' works best for most systems. Try 'Software' "
+"if you see display issues. Requires restart."
+msgstr "비디오 편집기 미리보기가 렌더링되는 방식입니다. '자동'이 대부분의 시스템에서 가장 잘 작동합니다. 표시 문제가 발생하면 '소프트웨어'를 시도해 보세요. 재시작이 필요합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/extra_dialog.py, line: 231
+msgid "Restore all options to their default values. This cannot be undone."
+msgstr "모든 옵션을 기본값으로 복원합니다. 이는 실행 취소할 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 31
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 219
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 222
+msgid "Converting Videos"
+msgstr "비디오 변환 중"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 587
+msgid "Queue"
+msgstr "대기열"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 94
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 323
+msgid "Cancel All"
+msgstr "모두 취소"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 699
+msgid "Completed"
+msgstr "완료됨"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 789
+msgid "Completed!"
+msgstr "완료되었습니다!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 283
+msgid "All {} videos converted successfully!"
+msgstr "모든 {} 비디오가 성공적으로 변환되었습니다!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 288
+msgid "{} completed, {} failed, {} cancelled"
+msgstr "{} 완료, {} 실패, {} 취소됨"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 293
+msgid "All conversions failed or were cancelled"
+msgstr "모든 변환이 실패했거나 취소되었습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 320
+msgid "Cancel All Conversions?"
+msgstr "모든 변환 취소?"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 321
+msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
+msgstr "이 작업은 모든 활성 변환을 중지하고 모든 대기 항목을 건너뜁니다. 이 작업은 취소할 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+msgid "Continue"
+msgstr "계속하십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 436
+msgid "Unknown file"
+msgstr "알 수 없는 파일"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 447
+msgid "Waiting in queue"
+msgstr "대기 중"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 528
+msgid "FFmpeg Command"
+msgstr "FFmpeg 명령"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 544
+msgid "Process Output"
+msgstr "프로세스 출력"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 629
+msgid "Converting..."
+msgstr "변환 중..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 737
+#, python-brace-format
+msgid "{mins}m {secs}s"
+msgstr "{mins}분 {secs}초"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 737
+#, python-brace-format
+msgid "{secs}s"
+msgstr "{secs}초"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 703
+msgid "Failed"
+msgstr "실패했습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 766
+msgid "Cancelled"
+msgstr "취소됨"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_options_dialog.py, line: 94
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_options_dialog.py, line: 166
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 263
+msgid "Conversion Speed"
+msgstr "변환 속도"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_options_dialog.py, line: 96
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 265
+msgid "Slower conversion produces smaller files. Faster presets create larger files but finish sooner."
+msgstr "느린 변환은 더 작은 파일을 생성합니다. 빠른 프리셋은 더 큰 파일을 생성하지만 더 빨리 완료됩니다."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_options_dialog.py, line: 117
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_options_dialog.py, line: 200
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 210
+msgid "Output Resolution"
+msgstr "출력 해상도"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_options_dialog.py, line: 119
+msgid "Change the video size. 'Original' keeps it as-is. Lower resolutions create smaller files."
+msgstr "비디오 크기를 변경합니다. '원본'은 그대로 유지합니다. 낮은 해상도는 더 작은 파일을 생성합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_options_dialog.py, line: 135
+msgid "Video Options"
+msgstr "비디오 옵션"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_options_dialog.py, line: 156
+msgid "Choose how your video will be encoded. The defaults work well for most cases."
+msgstr "비디오 인코딩 방식을 선택하세요. 기본값은 대부분의 경우에 잘 작동합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 125
+msgid "Video Encoding"
+msgstr "비디오 인코딩"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 145
+msgid "Configure how your video will be encoded. The defaults work well for most cases."
+msgstr "비디오 인코딩 방식을 구성하세요. 기본값은 대부분의 경우에 잘 작동합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 164
+msgid "The container that holds audio and video. MP4 is the most compatible. MKV supports all codecs."
+msgstr "오디오와 비디오를 담고 있는 컨테이너입니다. MP4는 가장 호환성이 높습니다. MKV는 모든 코덱을 지원합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 468
+msgid "Video Codec"
+msgstr "비디오 코덱"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 180
+msgid ""
+"Choose the compression format. H.264 is the most compatible. H.265 and AV1 produce smaller files "
+"but need more processing power."
+msgstr "압축 형식을 선택하세요. H.264는 가장 호환성이 높습니다. H.265와 AV1은 더 작은 파일을 생성하지만 더 많은 처리 능력이 필요합니다."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 194
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 140
+msgid "Image Quality"
+msgstr "이미지 품질"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 196
+msgid ""
+"Higher quality keeps more detail but creates larger files. 'Good' is a balanced choice for most "
+"videos."
+msgstr "더 높은 품질은 더 많은 세부 정보를 유지하지만 더 큰 파일을 생성합니다. '좋음'은 대부분의 비디오에 대한 균형 잡힌 선택입니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 212
+msgid ""
+"Increasing beyond the original resolution does not improve quality. Reducing the resolution creates "
+"smaller files."
+msgstr "원래 해상도를 초과하여 증가시키는 것은 품질을 향상시키지 않습니다. 해상도를 줄이면 파일 크기가 작아집니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 279
+msgid "GPU Acceleration"
+msgstr "GPU 가속"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 281
+msgid ""
+"Use your graphics card to speed up encoding. 'Auto' detects the best option. Disable if you "
+"experience issues."
+msgstr "그래픽 카드를 사용하여 인코딩 속도를 높이세요. '자동'은 최적의 옵션을 감지합니다. 문제가 발생하면 비활성화하세요."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 296
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 153
+msgid "GPU Device"
+msgstr "GPU 장치"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 298
+msgid "Select which graphics card to use for encoding when multiple GPUs are available."
+msgstr "여러 개의 GPU가 있을 때 인코딩에 사용할 그래픽 카드를 선택하십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 312
+msgid "Decode Using Software"
+msgstr "소프트웨어를 사용하여 디코드하기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_encoding_dialog.py, line: 314
+msgid "Decode on CPU and only encode on GPU. Enable this if GPU decoding causes errors or artifacts."
+msgstr "CPU에서 디코딩하고 GPU에서만 인코딩합니다. GPU 디코딩으로 인해 오류나 아티팩트가 발생하는 경우 이 옵션을 활성화하십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 97
+msgid "Mark segment point"
+msgstr "세그먼트 포인트 표시"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 107
+msgid "Cancel current mark"
+msgstr "현재 마크 취소"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 164
+msgid "Back 1 second (Left)"
+msgstr "1초 되감기 (왼쪽)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 256
+msgid "Back 1 second"
+msgstr "1초 되돌리기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 174
+msgid "Previous frame (,)"
+msgstr "이전 프레임 (,)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 249
+msgid "Previous frame"
+msgstr "이전 프레임"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 192
+msgid "Play/Pause (Space)"
+msgstr "재생/일시정지 (스페이스)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 141
+msgid "Play/Pause"
+msgstr "재생/일시정지"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 201
+msgid "Next frame (.)"
+msgstr "다음 프레임 (.)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 291
+msgid "Next frame"
+msgstr "다음 프레임"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 217
+msgid "Forward 1 second (Right)"
+msgstr "1초 앞으로 (오른쪽)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 284
+msgid "Forward 1 second"
+msgstr "1초 앞으로 이동"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 247
+msgid "Playback Speed"
+msgstr "재생 속도"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 173
+msgid "Audio Track"
+msgstr "오디오 트랙"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 163
+msgid "Subtitles"
+msgstr "자막"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 194
+msgid "Toggle Fullscreen"
+msgstr "전체 화면 전환"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 308
+#, python-brace-format
+msgid "Frame: {current} / {total}"
+msgstr "프레임: {current} / {total}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
+msgid "Left"
+msgstr "왼쪽"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
+msgid "Right"
+msgstr "오른쪽"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
+msgid "Top"
+msgstr "상단"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
+msgid "Bottom"
+msgstr "하단"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 363
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 366
+msgid "Visual crop editor"
+msgstr "비주얼 크롭 편집기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 273
+msgid "Resolution:"
+msgstr "해상도:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 274
+msgid "Codec:"
+msgstr "코덱:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 275
+msgid "Size:"
+msgstr "크기:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 361
+msgid "Duration:"
+msgstr "기간:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 295
+msgid "Volume"
+msgstr "볼륨"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 334
+msgid "Brightness"
+msgstr "밝기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 347
+msgid "Saturation"
+msgstr "채도"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 360
+msgid "Hue"
+msgstr "색조"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 554
+msgid "Transform"
+msgstr "변환"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 558
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 562
+msgid "Rotate 90° Left"
+msgstr "90° 왼쪽으로 회전"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 569
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 573
+msgid "Rotate 90° Right"
+msgstr "90° 오른쪽으로 회전"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 581
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 585
+msgid "Flip Horizontal"
+msgstr "수평 뒤집기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 593
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 597
+msgid "Flip Vertical"
+msgstr "수직 뒤집기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 605
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 609
+msgid "Reset Transform"
+msgstr "변환 재설정"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 374
+msgid "Trim Segments"
+msgstr "세그먼트 자르기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 376
+msgid "Segments List"
+msgstr "세그먼트 목록"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 662
+msgid "Press M or use the mark button to add segments"
+msgstr "M 키를 누르거나 마크 버튼을 사용하여 세그먼트를 추가하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 406
+msgid "Add segment manually"
+msgstr "세그먼트를 수동으로 추가하십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 414
+msgid "Clear all segments"
+msgstr "모든 세그먼트 지우기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 429
+msgid "Join segments into a single file"
+msgstr "세그먼트를 단일 파일로 결합합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 430
+msgid "Save each segment as a separate file"
+msgstr "각 세그먼트를 별도의 파일로 저장하십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 439
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 471
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 502
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 533
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 710
+msgid "Reset to default"
+msgstr "기본값으로 재설정"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 67
+msgid "Edit file"
+msgstr "파일 편집"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 81
+msgid "Play file"
+msgstr "파일 재생"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 95
+msgid "Remove from queue"
+msgstr "대기열에서 제거하기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 101
+msgid "Open Containing Folder"
+msgstr "폴더 열기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 104
+msgid "More Information..."
+msgstr "자세한 정보..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 107
+msgid "Delete from Disk..."
+msgstr "디스크에서 삭제..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 188
+msgid "Delete File from Disk?"
+msgstr "디스크에서 파일 삭제?"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 191
+msgid ""
+"Are you sure you want to permanently delete '{}'?\n"
+"\n"
+"This action cannot be undone."
+msgstr ""
+"'{}'을(를) 영구적으로 삭제하시겠습니까?\n"
+"\n"
+"이 작업은 실행 취소할 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 197
+msgid "Delete"
+msgstr "삭제"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 226
+msgid "Error Deleting File"
+msgstr "파일 삭제 오류"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 227
+msgid "Could not delete file: {}"
+msgstr "파일을 삭제할 수 없습니다: {}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 282
+msgid "No Video Files"
+msgstr "비디오 파일이 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 284
+msgid "Drag files here or use the Add Files button"
+msgstr "파일을 여기에 드래그하거나 파일 추가 버튼을 사용하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 270
+msgid "Save in the same folder as the original file"
+msgstr "원본 파일과 동일한 폴더에 저장하십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 271
+msgid "Folder to save"
+msgstr "저장할 폴더"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 288
+msgid "Select folder"
+msgstr "폴더 선택"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 349
+msgid "Choose output folder"
+msgstr "출력 폴더 선택"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 315
+msgid "Delete original files"
+msgstr "원본 파일 삭제"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 561
+msgid "Select the output folder"
+msgstr "출력 폴더를 선택하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 654
+msgid "Could not open this video file"
+msgstr "이 비디오 파일을 열 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 979
+msgid "Could not open the video file with the default player"
+msgstr "기본 플레이어로 비디오 파일을 열 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 983
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1436
+msgid "Could not find this video file"
+msgstr "이 비디오 파일을 찾을 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1068
+msgid "MP4 Compatibility Warning"
+msgstr "MP4 호환성 경고"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1071
+msgid ""
+"The source file contains streams that are not compatible with MP4 container when copying without "
+"reencoding:\n"
+"\n"
+"{}\n"
+"\n"
+"To convert this file to MP4, you need to disable 'Copy video without reencoding' option to reencode "
+"the incompatible streams."
+msgstr ""
+"소스 파일에는 재인코딩 없이 복사할 때 MP4 컨테이너와 호환되지 않는 스트림이 포함되어 있습니다:\n"
+"\n"
+"{}\n"
+"\n"
+"이 파일을 MP4로 변환하려면 '재인코딩 없이 비디오 복사' 옵션을 비활성화하여 호환되지 않는 스트림을 재인코딩해야 합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1075
+msgid "Proceed Anyway"
+msgstr "계속 진행하십시오"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1466
+msgid "Conversion Complete"
+msgstr "변환 완료"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1304
+#, python-brace-format
+msgid "All {0} segments have been processed successfully!"
+msgstr "모든 {0} 세그먼트가 성공적으로 처리되었습니다!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1467
+#, python-brace-format
+msgid "All {0} segments have been joined successfully!"
+msgstr "모든 {0} 세그먼트가 성공적으로 결합되었습니다!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/subtitles_dialog.py, line: 132
+msgid "Configure how subtitles are handled during conversion."
+msgstr "변환 중 자막 처리 방식을 구성합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/subtitles_dialog.py, line: 148
+msgid "Subtitle Handling"
+msgstr "자막 처리"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/subtitles_dialog.py, line: 150
+msgid ""
+"Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. "
+"'Extract to .srt' creates separate subtitle files."
+msgstr "자막이 출력에 포함되는 방식을 선택하세요. '임베디드'는 비디오 파일 내에 자막을 유지합니다. '.srt로 추출'은 별도의 자막 파일을 생성합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/subtitles_dialog.py, line: 167
+msgid "Only Extract Subtitles"
+msgstr "자막만 추출하기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/subtitles_dialog.py, line: 169
+msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
+msgstr "비디오 변환을 완전히 건너뛰고 자막 트랙만 .srt 파일로 추출합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 53
+msgid "Welcome to Big Video Converter"
+msgstr "빅 비디오 변환기에 오신 것을 환영합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 72
+msgid "Convert Video Formats"
+msgstr "비디오 형식 변환"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 73
+msgid ""
+"MP4, MKV, AVI, WebM and many more\n"
+"with hardware acceleration support"
+msgstr "MP4, MKV, AVI, WebM 등 다수의 형식과 하드웨어 가속 지원"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 76
+msgid "Trim and Cut Videos"
+msgstr "비디오 자르기 및 다듬기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 78
+msgid ""
+"Select specific segments to keep\n"
+"and create new videos with only those parts"
+msgstr "특정 구간을 선택하여 유지하고 해당 부분만 포함된 새 비디오를 만듭니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 83
+msgid "Video Color Adjustments"
+msgstr "비디오 색상 조정"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 85
+msgid ""
+"Control brightness, saturation, and hue\n"
+"to enhance your videos"
+msgstr "비디오를 향상시키기 위해 밝기, 채도 및 색조를 조절하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 90
+msgid "Fast Copy Mode"
+msgstr "빠른 복사 모드"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 92
+msgid ""
+"Change container format without re-encoding\n"
+"for ultra-fast processing with no quality loss"
+msgstr ""
+"재인코딩 없이 컨테이너 형식 변경  \n"
+"품질 손실 없이 초고속 처리"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 109
+msgid "Crop Videos"
+msgstr "비디오 자르기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 110
+msgid ""
+"Remove unwanted areas from edges\n"
+"to focus on what matters"
+msgstr "가장 중요한 것에 집중하기 위해 가장자리에서 원하지 않는 영역을 제거하십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 113
+msgid "Audio Control"
+msgstr "오디오 제어"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 115
+msgid ""
+"Extract, copy, or re-encode audio\n"
+"with multiple codec options"
+msgstr "여러 코덱 옵션으로 오디오 추출, 복사 또는 재인코딩"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 120
+msgid "Subtitle Management"
+msgstr "자막 관리"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 122
+msgid ""
+"Extract subtitles to SRT files\n"
+"or keep them embedded in video"
+msgstr "자막을 SRT 파일로 추출하거나 비디오에 포함된 상태로 유지합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 127
+msgid "Batch Processing"
+msgstr "배치 처리"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 129
+msgid ""
+"Convert multiple videos at once\n"
+"with queue management"
+msgstr "여러 비디오를 한 번에 변환하고 대기열 관리 기능 사용"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 465
+msgid "Show dialog on startup"
+msgstr "시작 시 대화 상자 표시"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 172
+msgid "Let's Start"
+msgstr "시작하겠습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 173
+msgid "Improve your audio by removing noise, controlling volume and enhancing voice clarity."
+msgstr "노이즈 제거, 볼륨 조절 및 음성 선명도 향상을 통해 오디오를 개선하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 184
+msgid "AI Noise Cleaning"
+msgstr "AI 노이즈 제거"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 194
+msgid "Remove Background Noise"
+msgstr "배경 소음 제거"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 196
+msgid ""
+"Uses a neural network to separate voice from noise. Strength controls how aggressively noise is "
+"removed."
+msgstr "음성과 잡음을 분리하기 위해 신경망을 사용합니다. 강도는 잡음이 제거되는 정도를 조절합니다."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 209
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 201
+msgid "Strength"
+msgstr "강도"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 230
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 230
+msgid "AI Model"
+msgstr "AI 모델"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 264
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 234
+msgid "Speech Strength"
+msgstr "음성 강도"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 285
+msgid "Lookahead (ms)"
+msgstr "전방 탐색 (ms)"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 307
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 273
+msgid "Voice Recovery"
+msgstr "음성 복구"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 339
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 294
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 297
+msgid "Noise Gate"
+msgstr "노이즈 게이트"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 348
+msgid "Silence Low Sounds"
+msgstr "저음 소음 음소거"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 350
+msgid "Mutes audio below a threshold — great for removing faint hum or room noise between speech."
+msgstr "임계값 이하의 오디오를 음소거합니다. 이는 발화 사이의 미세한 허밍이나 방음 소음을 제거하는 데 유용합니다."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 362
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 498
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 305
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 338
+msgid "Intensity"
+msgstr "강도"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 392
+msgid "Audio Enhancement"
+msgstr "오디오 향상"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 402
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 361
+msgid "Remove Low Rumble"
+msgstr "저주파 제거"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 404
+msgid "Cuts low-frequency noise like wind, air conditioning or handling vibrations."
+msgstr "바람, 에어컨 또는 취급 진동과 같은 저주파 소음을 차단합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 416
+msgid "Frequency (Hz)"
+msgstr "주파수 (Hz)"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 454
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 429
+msgid "Uniform Volume"
+msgstr "균일 볼륨"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 456
+msgid "Adjusts the volume so the entire video sounds consistent, following TV and streaming standards."
+msgstr "비디오 전체의 소리가 일관되도록 볼륨을 조정하며, TV 및 스트리밍 표준을 따릅니다."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 484
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 328
+msgid "Compressor"
+msgstr "압축기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 486
+msgid "Reduces loud peaks and raises quiet parts, making the overall volume more consistent."
+msgstr "큰 피크를 줄이고 조용한 부분을 높여 전체 볼륨을 더 일관되게 만듭니다."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 535
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 388
+msgid "Equalizer"
+msgstr "이퀄라이저"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 537
+msgid ""
+"Shape the sound spectrum: boost clarity, cut rumble or apply ready-made presets like Podcast or "
+"De-esser."
+msgstr "사운드 스펙트럼을 조정하세요: 선명도를 높이고, 저주파 소음을 줄이거나 팟캐스트 또는 디-에서와 같은 미리 만들어진 프리셋을 적용하세요."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py, line: 554
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 420
+msgid "Preset"
+msgstr "프리셋"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 42
+msgid "Back"
+msgstr "뒤로"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 63
+msgid "Clear queue"
+msgstr "대기열 지우기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 69
+msgid "0 files"
+msgstr "0 파일"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 196
+msgid "Add Files"
+msgstr "파일 추가"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 230
+msgid "Add Folder"
+msgstr "폴더 추가"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 100
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 216
+msgid "Add Network File"
+msgstr "네트워크 파일 추가"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 242
+msgid "Convert All"
+msgstr "모두 변환"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 114
+msgid "Convert This File"
+msgstr "이 파일 변환하기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 133
+msgid "Main menu"
+msgstr "메인 메뉴"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 133
+msgid "Welcome Screen"
+msgstr "환영 화면"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 140
+msgid "Restore Settings"
+msgstr "설정 복원"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 68
+msgid "About"
+msgstr "정보"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 70
+msgid "Quit"
+msgstr "종료"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 189
+msgid "1 file"
+msgstr "1 파일"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 191
+msgid "{} files"
+msgstr "{} 파일"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
+msgid "Required Dependencies"
+msgstr "필수 종속성"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
+msgid "Installation Required"
+msgstr "설치 필요"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
+msgid "FFmpeg and MPV are required for this application to function."
+msgstr "이 애플리케이션이 작동하려면 FFmpeg와 MPV가 필요합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
+msgid ""
+"FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, "
+"they are not bundled."
+msgstr "변환을 위해 FFmpeg가 필요하며, 비디오 편집기 미리보기를 위해 MPV가 필요합니다. 법적 제한으로 인해 이들은 함께 제공되지 않습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
+msgid "Command to be executed"
+msgstr "실행할 명령"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 72
+msgid ""
+"<b>Administrator privileges required</b>\n"
+"You will be asked for your password to install system packages."
+msgstr ""
+"<b>관리자 권한 필요</b>  \n"
+"시스템 패키지를 설치하려면 비밀번호를 입력하라는 메시지가 표시됩니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 81
+msgid "Installation Output"
+msgstr "설치 출력"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
+msgid "Install Dependencies"
+msgstr "종속성 설치"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
+msgid "Close"
+msgstr "닫기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 125
+msgid ""
+"Starting installation...\n"
+"\n"
+msgstr "설치 시작 중..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 172
+msgid "Installation completed successfully!"
+msgstr "설치가 성공적으로 완료되었습니다!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 173
+msgid "Please restart the application."
+msgstr "애플리케이션을 다시 시작해 주세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 177
+msgid "Installation failed."
+msgstr "설치에 실패했습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 178
+msgid "Please check the errors above and try again."
+msgstr "위의 오류를 확인하고 다시 시도해 주세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 522
+#, python-brace-format
+msgid "Segment {num}: {start} → {end}"
+msgstr "세그먼트 {num}: {start} → {end}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 526
+#, python-brace-format
+msgid "Duration: {duration}"
+msgstr "기간: {duration}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 295
+msgid "Go to segment start"
+msgstr "세그먼트 시작으로 이동"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 304
+msgid "Edit segment times"
+msgstr "세그먼트 시간 편집"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 311
+msgid "Remove segment"
+msgstr "세그먼트 제거"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 394
+msgid "Edit Segment"
+msgstr "세그먼트 편집"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 396
+msgid "Edit start and end times for this segment"
+msgstr "이 세그먼트의 시작 및 종료 시간을 편집하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 406
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 532
+msgid "Start Time:"
+msgstr "시작 시간:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 414
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 538
+msgid "End Time:"
+msgstr "종료 시간:"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 423
+msgid "Save"
+msgstr "저장"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 448
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 571
+msgid "Invalid Time"
+msgstr "잘못된 시간"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 448
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 571
+msgid "Time values cannot be negative"
+msgstr "시간 값은 음수가 될 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 454
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 577
+msgid "Invalid Time Range"
+msgstr "유효하지 않은 시간 범위"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 454
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 577
+msgid "Start time must be before end time"
+msgstr "시작 시간은 종료 시간보다 빨라야 합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 714
+msgid "Error"
+msgstr "오류"
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 495
+msgid "Clear All Segments?"
+msgstr "모든 세그먼트 지우기?"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 498
+msgid "This will remove all trim segments. This action cannot be undone."
+msgstr "이 작업은 모든 트림 세그먼트를 제거합니다. 이 작업은 실행 취소할 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 502
+msgid "Clear All"
+msgstr "모두 지우기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 520
+msgid "Add Segment Manually"
+msgstr "세그먼트 수동 추가"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 522
+msgid "Enter start and end times for the new segment"
+msgstr "새 세그먼트의 시작 및 종료 시간을 입력하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 547
+msgid "Add Segment"
+msgstr "세그먼트 추가"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+msgid "Frame: {current}/{total}"
+msgstr "프레임: {현재}/{총}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 851
+msgid "Disabled"
+msgstr "비활성화됨"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 203
+msgid "Main"
+msgstr "주요"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 348
+msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+msgstr "⚠ 자막 추출 전용 모드가 활성화되었습니다 — 비디오는 변환되지 않습니다"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 592
+msgid "Editor"
+msgstr "편집기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
+msgid "Progress"
+msgstr "진행 상황"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1225
+msgid "File not found"
+msgstr "파일을 찾을 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1238
+msgid "Could not load video file"
+msgstr "비디오 파일을 로드할 수 없습니다."
+# 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1448
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1453
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 41
+msgid "All Conversions Complete"
+msgstr "모든 변환 완료"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1449
+msgid "1 video has been converted successfully!"
+msgstr "1개의 비디오가 성공적으로 변환되었습니다!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1454
+#, python-brace-format
+msgid "{0} videos have been converted successfully!"
+msgstr "{0} 비디오가 성공적으로 변환되었습니다!"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
+msgid "Dependencies Not Found"
+msgstr "종속성 없음"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
+msgid ""
+"FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
+"Please install them manually using your distribution's package manager."
+msgstr "FFmpeg 및/또는 MPV가 설치되어 있지 않으며, 귀하의 시스템에 설치하는 방법을 확인할 수 없습니다. 배포판의 패키지 관리자를 사용하여 수동으로 설치해 주십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
+msgid "Installation Successful"
+msgstr "설치 성공"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
+msgid "Dependencies have been installed. The application will now restart."
+msgstr "종속성이 설치되었습니다. 애플리케이션이 이제 재시작됩니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
+msgid "Installation Failed"
+msgstr "설치 실패"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
+msgid "Dependencies were not found after installation. Please restart the application manually."
+msgstr "설치 후 종속성을 찾을 수 없습니다. 애플리케이션을 수동으로 다시 시작해 주십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 20
+msgid "There is no space left on the disk."
+msgstr "디스크에 남은 공간이 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 21
+msgid "Permission denied — check file/folder permissions."
+msgstr "권한 거부 — 파일/폴더 권한을 확인하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 22
+msgid "File or folder not found."
+msgstr "파일이나 폴더를 찾을 수 없습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 23
+msgid "The file appears to be corrupted or in an unsupported format."
+msgstr "파일이 손상되었거나 지원되지 않는 형식입니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 24
+msgid "This codec is not supported on your system."
+msgstr "이 코덱은 귀하의 시스템에서 지원되지 않습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 25
+msgid "A required decoder is not installed."
+msgstr "필수 디코더가 설치되어 있지 않습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 26
+msgid "A required encoder is not installed."
+msgstr "필수 인코더가 설치되어 있지 않습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 27
+msgid "Failed to initialize the encoder — the selected settings may be incompatible."
+msgstr "인코더 초기화에 실패했습니다 — 선택한 설정이 호환되지 않을 수 있습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 28
+msgid "Hardware acceleration failed. Try disabling GPU encoding."
+msgstr "하드웨어 가속에 실패했습니다. GPU 인코딩을 비활성화해 보세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 29
+msgid "Not enough memory to complete the conversion."
+msgstr "변환을 완료할 메모리가 충분하지 않습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 30
+msgid "The file does not contain a valid media stream."
+msgstr "파일에 유효한 미디어 스트림이 포함되어 있지 않습니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 31
+msgid "The video file is incomplete or damaged (missing metadata)."
+msgstr "비디오 파일이 불완전하거나 손상되었습니다(메타데이터 누락)."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 32
+msgid "Could not decode the file — it may be corrupted."
+msgstr "파일을 디코딩할 수 없습니다. 파일이 손상되었을 수 있습니다."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 75
 msgid "Video Conversion"
 msgstr "비디오 변환"
@@ -74,6 +1478,23 @@ msgstr "GPU 처리"
 msgid "No progress detected. Process may be stuck."
 msgstr "진행 상황이 감지되지 않았습니다. 프로세스가 멈춘 것일 수 있습니다."
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 579
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 586
+msgid "Improving audio quality"
+msgstr "오디오 품질 향상"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 591
+msgid "Improving audio quality (GPU)..."
+msgstr "오디오 품질 향상 (GPU)..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 599
+msgid "Waiting for audio processing to finish..."
+msgstr "오디오 처리가 완료될 때까지 기다리는 중..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 604
+msgid "Combining video and processed audio..."
+msgstr "비디오와 처리된 오디오 결합 중..."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 402
 msgid "Process cancelled by user"
 msgstr "사용자에 의해 프로세스가 취소되었습니다."
@@ -82,18 +1503,10 @@ msgstr "사용자에 의해 프로세스가 취소되었습니다."
 msgid "Conversion cancelled."
 msgstr "변환이 취소되었습니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 766
-msgid "Cancelled"
-msgstr "취소됨"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 913
 #, python-brace-format
 msgid "Conversion timed out after {0} hours"
 msgstr "변환이 {0}시간 후에 시간 초과되었습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 789
-msgid "Completed!"
-msgstr "완료되었습니다!"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 928
@@ -142,16 +1555,10 @@ msgstr "변환이 코드 {0}로 실패했습니다."
 msgid "Error!"
 msgstr "오류!"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 983
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1340
 #, python-brace-format
-msgid ""
-"The conversion failed with error code {0}.\n"
-"\n"
-"Check the log for more details."
-msgstr ""
-"변환이 오류 코드 {0}로 실패했습니다.\n"
-"\n"
-"자세한 내용은 로그를 확인하세요."
+msgid "The conversion failed with error code {0}."
+msgstr "변환이 오류 코드 {0}로 실패했습니다."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/conversion.py, line: 1196
 msgid "Monitor error"
@@ -182,10 +1589,6 @@ msgstr "비디오 스트림"
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 160
 msgid "Audio Streams"
 msgstr "오디오 스트림"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 163
-msgid "Subtitles"
-msgstr "자막"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/utils/file_info.py, line: 171
 msgid "General Information"
@@ -374,6 +1777,256 @@ msgstr "파일 정보 검색 오류"
 msgid "Retry"
 msgstr "재시도"
 # 
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 287
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 37
+msgid "Conversion"
+msgstr "변환"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 417
+msgid "Editing"
+msgstr "편집"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 110
+msgid "GPU"
+msgstr "GPU"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 148
+msgid "Speeds up conversion if supported"
+msgstr "지원되는 경우 변환 속도를 높입니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 154
+msgid "Select which GPU to use"
+msgstr "사용할 GPU를 선택하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 156
+msgid "Auto"
+msgstr "자동"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 171
+msgid "Copy without re-encoding"
+msgstr "재인코딩 없이 복사"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 189
+msgid "Noise Cleaning (AI)"
+msgstr "노이즈 제거 (AI)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 190
+msgid "Remove background noise"
+msgstr "배경 소음 제거"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 193
+msgid "Enable noise reduction"
+msgstr "노이즈 감소 활성화"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 208
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 241
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 280
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 312
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 345
+msgid "0%"
+msgstr "0%"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 209
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 242
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 281
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 313
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 346
+msgid "50%"
+msgstr "50%"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 210
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 243
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 283
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 314
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 347
+msgid "100%"
+msgstr "100%"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 225
+msgid "Maximum Cleaning"
+msgstr "최대 청소"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 226
+msgid "Natural Voice"
+msgstr "자연 음성"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 227
+msgid "Smart (both combined)"
+msgstr "스마트 (두 가지 결합)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 253
+msgid "Lookahead"
+msgstr "미리 보기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 282
+msgid "75%"
+msgstr "75%"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 331
+msgid "Enable compressor"
+msgstr "압축기 활성화"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 362
+msgid "Cuts low-frequency noise like wind or AC hum"
+msgstr "바람이나 에어컨 소음과 같은 저주파 소음을 차단합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 366
+msgid "Frequency"
+msgstr "주파수"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 391
+msgid "Enable equalizer"
+msgstr "이퀄라이저 활성화"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 415
+msgid "Default Voice"
+msgstr "기본 음성"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 415
+msgid "Natural (No Effects)"
+msgstr "자연스러운 (효과 없음)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 415
+msgid "Crystal Voice"
+msgstr "크리스탈 보이스"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 416
+msgid "Radio Host"
+msgstr "라디오 진행자"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 416
+msgid "Velvet Voice"
+msgstr "벨벳 보이스"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 416
+msgid "Extra Brightness"
+msgstr "추가 밝기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 417
+msgid "Soften 'S' (De-esser)"
+msgstr "'S' 부드럽게 하기 (디-에서)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 417
+msgid "Remove Rumble"
+msgstr "럼블 제거"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 417
+msgid "Present Voice"
+msgstr "현재 음성"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 430
+msgid "Normalizes volume to TV/streaming standard"
+msgstr "TV/스트리밍 표준에 맞게 볼륨을 정규화합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 447
+msgid "Fast Copy"
+msgstr "빠른 복사"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 448
+msgid "No re-encoding, fastest"
+msgstr "재인코딩 없음, 가장 빠름"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 454
+msgid "Universal"
+msgstr "유니버설"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 455
+msgid "H.264, compatible with all devices"
+msgstr "H.264, 모든 장치와 호환됨"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 459
+msgid "Recommended"
+msgstr "추천됨"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 467
+msgid "More Efficient"
+msgstr "더 효율적입니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 468
+msgid "H.265, better compression"
+msgstr "H.265, 더 나은 압축"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 474
+msgid "Smaller File"
+msgstr "더 작은 파일"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 475
+msgid "AV1, best compression"
+msgstr "AV1, 최고의 압축"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 481
+msgid "Customize encoding..."
+msgstr "인코딩 사용자 정의..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 502
+msgid "Audio Encoding"
+msgstr "오디오 인코딩"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 882
+msgid "SW Decode"
+msgstr "SW 디코드"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 940
+msgid "Requires audio set to re-encode"
+msgstr "오디오가 재인코딩되도록 설정해야 합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 945
+msgid "AI noise removal"
+msgstr "AI 노이즈 제거"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 947
+msgid "gate"
+msgstr "게이트"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 949
+msgid "compressor"
+msgstr "압축기"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 951
+msgid "low cut"
+msgstr "로우 컷"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 953
+msgid "equalizer"
+msgstr "이퀄라이저"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 955
+msgid "normalize"
+msgstr "정규화"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 985
+msgid "Custom FFmpeg flags"
+msgstr "사용자 정의 FFmpeg 플래그"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/sidebar_builder.py, line: 986
+msgid "No customizations"
+msgstr "사용자 정의 없음"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 140
+msgid "Low disk space"
+msgstr "디스크 공간 부족"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 142
+#, python-brace-format
+msgid ""
+"The destination has {free:.1f} GB free but approximately {needed:.1f} GB may be needed.\n"
+"\n"
+"Do you want to continue anyway?"
+msgstr ""
+"대상에는 {free:.1f} GB의 여유 공간이 있지만 약 {needed:.1f} GB가 필요할 수 있습니다.\n"
+"\n"
+"그래도 계속하시겠습니까?"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 335
+msgid "Batch Conversion Complete"
+msgstr "배치 변환 완료"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/queue_manager.py, line: 336
+msgid "All queued files have been processed."
+msgstr "모든 대기 중인 파일이 처리되었습니다."
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 59
 msgid "Auto-detect"
 msgstr "자동 감지"
@@ -398,11 +2051,9 @@ msgstr "불칸"
 msgid "Software (CPU)"
 msgstr "소프트웨어 (CPU)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 146
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 202
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 236
-msgid "Default"
-msgstr "기본값"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 77
+msgid "Good (recommended)"
+msgstr "좋음 (추천)"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 73
 msgid "Very High"
@@ -429,81 +2080,93 @@ msgstr "매우 낮음"
 msgid "Super Low"
 msgstr "슈퍼 로우"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 94
-msgid "H.264 (Default)"
-msgstr "H.264 (기본)"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 103
+msgid "Copy — No re-encoding"
+msgstr "복사 — 재인코딩 없음"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 95
-msgid "H.265 (HEVC)"
-msgstr "H.265 (HEVC)"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 104
+msgid "H.264 — Universal (recommended)"
+msgstr "H.264 — 유니버설 (권장)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 96
-msgid "AV1"
-msgstr "AV1"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 97
-msgid "VP9"
-msgstr "VP9"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 105
+msgid "H.265 — More efficient"
+msgstr "H.265 — 더 효율적임"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 106
-msgid "Ultra Fast"
-msgstr "울트라 빠름"
+msgid "AV1 — Best compression"
+msgstr "AV1 — 최고의 압축"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 107
-msgid "Very Fast"
-msgstr "매우 빠름"
+msgid "VP9 — Used by YouTube"
+msgstr "VP9 — 유튜브에서 사용됨"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 108
-msgid "Faster"
-msgstr "더 빠른"
+msgid "ProRes — Professional editing"
+msgstr "ProRes — 전문 편집"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 110
-msgid "Slow"
-msgstr "느림"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 120
+msgid "Balanced (recommended)"
+msgstr "균형 잡힌 (권장)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 111
-msgid "Very Slow"
-msgstr "매우 느림"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 121
+msgid "Very fast (larger file)"
+msgstr "매우 빠름 (더 큰 파일)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 122
+msgid "Fast (larger file)"
+msgstr "빠름 (더 큰 파일)"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 123
+msgid "Slightly fast"
+msgstr "약간 빠름"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 125
+msgid "Slow (smaller file)"
+msgstr "느림 (더 작은 파일)"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 126
-msgid "Extract to SRT"
-msgstr "SRT로 추출하기"
+msgid "Very slow (smallest file)"
+msgstr "매우 느림 (가장 작은 파일)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 126
-msgid "Keep Embedded"
-msgstr "임베디드 유지하기"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 145
+msgid "Extract as separate file"
+msgstr "별도의 파일로 추출하십시오."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 145
+msgid "Keep inside the video"
+msgstr "비디오 안에 유지하세요."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 126
 msgid "Remove"
 msgstr "제거하다"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 132
-msgid "Copy (No Re-encoding)"
-msgstr "복사 (재인코딩 없음)"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 156
+msgid "Copy without changes (fastest)"
+msgstr "변경 없이 복사(가장 빠름)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 132
-msgid "Re-encode"
-msgstr "재인코딩"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 157
+msgid "Re-encode audio"
+msgstr "오디오 재인코딩"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 132
-msgid "Remove Audio"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 158
+msgid "Remove audio"
 msgstr "오디오 제거"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 139
-msgid "AAC (Default)"
-msgstr "AAC (기본값)"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 170
+msgid "AAC (recommended)"
+msgstr "AAC (권장)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 140
-msgid "Opus (Best Quality)"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 171
+msgid "Opus (best quality)"
 msgstr "오푸스 (최고 품질)"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 141
 msgid "AC3 (Dolby Digital)"
 msgstr "AC3 (돌비 디지털)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 149
-msgid "Default (Original)"
-msgstr "기본값 (원본)"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 184
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 184
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 150
 msgid "4K UHD (3840×2160)"
@@ -545,12 +2208,6 @@ msgstr "HD 세로 (720×1280)"
 msgid "SD Vertical (480×854)"
 msgstr "SD 세로 (480×854)"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 152
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 208
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 240
-msgid "Custom"
-msgstr "사용자 정의"
-# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 217
 msgid ""
 "If your GPU supports video encoding, conversion will be much faster.\n"
@@ -580,7 +2237,7 @@ msgstr ""
 "\n"
 "기본 옵션은 이미지 품질과 파일 크기 간의 좋은 균형을 제공합니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 226
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 232
 msgid ""
 "H.264: An older format that works on almost all devices. It takes up more storage space but is the "
 "fastest to convert.\n"
@@ -592,7 +2249,10 @@ msgid ""
 "conversion can be very slow.\n"
 "\n"
 "AV1: The most modern format. It offers the best compression (creating smaller files), but the "
-"conversion can also be slow if the graphics card isn't compatible."
+"conversion can also be slow if the graphics card isn't compatible.\n"
+"\n"
+"ProRes: Professional editing codec (Apple). Preserves maximum quality for video editing workflows. "
+"CPU-only, outputs .mov format."
 msgstr ""
 "H.264: 거의 모든 장치에서 작동하는 오래된 형식입니다. 더 많은 저장 공간을 차지하지만 변환 속도가 가장 빠릅니다.\n"
 "\n"
@@ -600,7 +2260,9 @@ msgstr ""
 "\n"
 "VP9: YouTube에서 널리 사용됩니다. 컴퓨터에 호환되는 그래픽 카드가 없으면 변환 속도가 매우 느릴 수 있습니다.\n"
 "\n"
-"AV1: 가장 현대적인 형식입니다. 최고의 압축(더 작은 파일 생성)을 제공하지만 그래픽 카드가 호환되지 않으면 변환 속도가 느릴 수 있습니다."
+"AV1: 가장 현대적인 형식입니다. 최고의 압축(더 작은 파일 생성)을 제공하지만 그래픽 카드가 호환되지 않으면 변환 속도가 느릴 수 있습니다.\n"
+"\n"
+"ProRes: 전문 편집 코덱(Apple). 비디오 편집 워크플로우를 위해 최대 품질을 유지합니다. CPU 전용이며 .mov 형식으로 출력됩니다."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 230
 msgid ""
@@ -672,13 +2334,17 @@ msgstr ""
 "• 세로: 휴대폰 및 소셜 미디어용\n"
 "• 사용자 정의: 원하는 크기 설정"
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 259
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 265
 msgid ""
 "• MP4: Most compatible\n"
-"• MKV: More features"
+"• MKV: More features\n"
+"• MOV: Apple/ProRes workflows\n"
+"• WebM: Web optimized (VP9/AV1)"
 msgstr ""
 "• MP4: 가장 호환성이 높음  \n"
-"• MKV: 더 많은 기능"
+"• MKV: 더 많은 기능  \n"
+"• MOV: Apple/ProRes 워크플로우  \n"
+"• WebM: 웹 최적화 (VP9/AV1)"
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 262
 msgid ""
@@ -797,6 +2463,68 @@ msgstr "남은 모든 프로세스를 건너뛰고 내장된 자막을 SRT 파�
 msgid "You’re seeing an example of help shown when hovering over an item."
 msgstr "항목 위에 마우스를 올릴 때 표시되는 도움말의 예를 보고 있습니다."
 # 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 321
+msgid ""
+"Reduces background noise from audio using the GTCRN neural network.\n"
+"\n"
+"• Requires audio re-encoding\n"
+"• Works best for constant background noise\n"
+"• Automatically re-encodes audio if set to copy"
+msgstr ""
+"오디오에서 GTCRN 신경망을 사용하여 배경 소음을 줄입니다.\n"
+"\n"
+"• 오디오 재인코딩 필요\n"
+"• 일정한 배경 소음에 가장 적합\n"
+"• 복사로 설정된 경우 자동으로 오디오를 재인코딩합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 327
+msgid ""
+"Adjust the intensity of noise reduction\n"
+"\n"
+"• 1.0: Maximum reduction (default)\n"
+"• 0.5: Moderate reduction\n"
+"• Lower values preserve more original audio"
+msgstr ""
+"노이즈 감소 강도 조정\n"
+"\n"
+"• 1.0: 최대 감소 (기본값)\n"
+"• 0.5: 중간 감소\n"
+"• 낮은 값은 더 많은 원본 오디오를 보존합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 333
+msgid ""
+"Noise gate silences audio below a volume threshold\n"
+"\n"
+"Useful combined with noise reduction to eliminate\n"
+"residual noise during pauses between speech.\n"
+"\n"
+"Adjust intensity from low to maximum."
+msgstr ""
+"노이즈 게이트는 볼륨 임계값 이하의 오디오를 침묵시킵니다.\n"
+"\n"
+"음성 사이의 일시 정지 동안 잔여 노이즈를 제거하기 위해 노이즈 감소와 함께 사용하면 유용합니다.\n"
+"\n"
+"강도를 낮음에서 최대까지 조정합니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 339
+msgid ""
+"Voice Recovery — high-frequency reconstruction\n"
+"\n"
+"Recovers frequencies above 8 kHz that the AI\n"
+"noise reduction model removes.\n"
+"\n"
+"• 0%: Cuts all HF (maximum NR)\n"
+"• 75%: Natural default\n"
+"• 100%: Full original HF preserved"
+msgstr ""
+"음성 복구 — 고주파 재구성\n"
+"\n"
+"AI 노이즈 감소 모델이 제거하는 8 kHz 이상의 주파수를 복구합니다.\n"
+"\n"
+"• 0%: 모든 고주파 차단 (최대 노이즈 감소)\n"
+"• 75%: 자연스러운 기본값\n"
+"• 100%: 전체 원본 고주파 보존"
+# 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 253
 msgid "Remove all files from the queue"
 msgstr "대기열에서 모든 파일 제거"
@@ -841,112 +2569,38 @@ msgstr "이 파일의 변환을 취소합니다."
 msgid "Skip this file and do not convert it"
 msgstr "이 파일을 건너뛰고 변환하지 마십시오."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 203
-msgid "Main"
-msgstr "주요"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 362
+msgid ""
+"Copies the video stream without re-encoding — instant and lossless.\n"
+"\n"
+"Audio can still be re-encoded, cleaned or adjusted independently.\n"
+"\n"
+"Does not allow changing video codec, resolution or applying video filters."
+msgstr ""
+"비디오 스트림을 재인코딩 없이 복사합니다 — 즉시 및 무손실.\n"
+"\n"
+"오디오는 여전히 독립적으로 재인코딩, 정리 또는 조정할 수 있습니다.\n"
+"\n"
+"비디오 코덱, 해상도 변경 또는 비디오 필터 적용을 허용하지 않습니다."
 # 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 367
+msgid ""
+"Uses H.264, the most widely supported codec. Works on virtually every device, browser and player. A "
+"great default choice when compatibility matters most."
+msgstr "H.264를 사용하며, 가장 널리 지원되는 코덱입니다. 사실상 모든 장치, 브라우저 및 플레이어에서 작동합니다. 호환성이 가장 중요할 때 훌륭한 기본 선택입니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 287
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 37
-msgid "Conversion"
-msgstr "변환"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 372
+#, python-format
+msgid ""
+"Uses H.265 (HEVC), which provides better compression than H.264 — about 30% smaller files at the "
+"same quality. Supported by most modern devices and players."
+msgstr "H.265(HEVC)를 사용하여 H.264보다 더 나은 압축을 제공하며, 동일한 품질에서 약 30% 더 작은 파일을 생성합니다. 대부분의 최신 장치와 플레이어에서 지원됩니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 417
-msgid "Editing"
-msgstr "편집"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 110
-msgid "GPU"
-msgstr "GPU"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 450
-msgid "Hardware acceleration"
-msgstr "하드웨어 가속"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 459
-msgid "Video Quality"
-msgstr "비디오 품질"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 468
-msgid "Video Codec"
-msgstr "비디오 코덱"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 482
-msgid "Audio"
-msgstr "오디오"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 283
-msgid "Copy video without reencoding"
-msgstr "재인코딩 없이 비디오 복사"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 552
-msgid "Show help on hover"
-msgstr "호버 시 도움말 표시"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 520
-msgid "Advanced Settings..."
-msgstr "고급 설정..."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 587
-msgid "Queue"
-msgstr "대기열"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 592
-msgid "Editor"
-msgstr "편집기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 290
-msgid "Progress"
-msgstr "진행 상황"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 638
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 707
-msgid "Advanced Settings"
-msgstr "고급 설정"
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "변환 완료"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1175
-#, python-brace-format
-msgid "Successfully converted {0}"
-msgstr "{0}이(가) 성공적으로 변환되었습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1225
-msgid "File not found"
-msgstr "파일을 찾을 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1238
-msgid "Could not load video file"
-msgstr "비디오 파일을 로드할 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 714
-msgid "Error"
-msgstr "오류"
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1448
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1453
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/completion_page.py, line: 41
-msgid "All Conversions Complete"
-msgstr "모든 변환 완료"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1449
-msgid "1 video has been converted successfully!"
-msgstr "1개의 비디오가 성공적으로 변환되었습니다!"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1454
-#, python-brace-format
-msgid "{0} videos have been converted successfully!"
-msgstr "{0} 비디오가 성공적으로 변환되었습니다!"
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/constants.py, line: 377
+msgid ""
+"Uses AV1, the latest generation codec with the best compression available. Produces the smallest "
+"files but encoding is slower. Ideal for archiving or uploading where size matters most."
+msgstr "AV1을 사용하며, 최고의 압축을 제공하는 최신 세대 코덱입니다. 가장 작은 파일을 생성하지만 인코딩 속도는 느립니다. 크기가 가장 중요한 아카이빙이나 업로드에 이상적입니다."
 # 
 # File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 837
 msgid "Select Video Files"
@@ -992,809 +2646,62 @@ msgstr "파일이 추가되지 않았습니다."
 msgid "No valid video files were found in your selection."
 msgstr "선택한 항목에서 유효한 비디오 파일을 찾을 수 없습니다."
 # 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1677
-msgid "Dependencies Not Found"
-msgstr "종속성 없음"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1678
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 233
 msgid ""
-"FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
-"Please install them manually using your distribution's package manager."
-msgstr "FFmpeg 및/또는 MPV가 설치되어 있지 않으며, 귀하의 시스템에 설치하는 방법을 확인할 수 없습니다. 배포판의 패키지 관리자를 사용하여 수동으로 설치해 주십시오."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "설치 성공"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "종속성이 설치되었습니다. 애플리케이션이 이제 재시작됩니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "설치 실패"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "설치 후 종속성을 찾을 수 없습니다. 애플리케이션을 수동으로 다시 시작해 주십시오."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 25
-msgid "Required Dependencies"
-msgstr "필수 종속성"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 48
-msgid "Installation Required"
-msgstr "설치 필요"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 52
-msgid "FFmpeg and MPV are required for this application to function."
-msgstr "이 애플리케이션이 작동하려면 FFmpeg와 MPV가 필요합니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 53
-msgid ""
-"FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, "
-"they are not bundled."
-msgstr "변환을 위해 FFmpeg가 필요하며, 비디오 편집기 미리보기를 위해 MPV가 필요합니다. 법적 제한으로 인해 이들은 함께 제공되지 않습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 57
-msgid "Command to be executed"
-msgstr "실행할 명령"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 72
-msgid ""
-"<b>Administrator privileges required</b>\n"
-"You will be asked for your password to install system packages."
+"Connect to a remote server to browse and add video files.\n"
+"Files are accessed directly from the network without downloading."
 msgstr ""
-"<b>관리자 권한 필요</b>  \n"
-"시스템 패키지를 설치하려면 비밀번호를 입력하라는 메시지가 표시됩니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 81
-msgid "Installation Output"
-msgstr "설치 출력"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 318
-msgid "Cancel"
-msgstr "취소"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 112
-msgid "Install Dependencies"
-msgstr "종속성 설치"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 117
-msgid "Close"
-msgstr "닫기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 125
-msgid ""
-"Starting installation...\n"
-"\n"
-msgstr "설치 시작 중..."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 172
-msgid "Installation completed successfully!"
-msgstr "설치가 성공적으로 완료되었습니다!"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 173
-msgid "Please restart the application."
-msgstr "애플리케이션을 다시 시작해 주세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 177
-msgid "Installation failed."
-msgstr "설치에 실패했습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/dependency_dialog.py, line: 178
-msgid "Please check the errors above and try again."
-msgstr "위의 오류를 확인하고 다시 시도해 주세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 295
-msgid "Go to segment start"
-msgstr "세그먼트 시작으로 이동"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 304
-msgid "Edit segment times"
-msgstr "세그먼트 시간 편집"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 311
-msgid "Remove segment"
-msgstr "세그먼트 제거"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 394
-msgid "Edit Segment"
-msgstr "세그먼트 편집"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 396
-msgid "Edit start and end times for this segment"
-msgstr "이 세그먼트의 시작 및 종료 시간을 편집하세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 406
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 532
-msgid "Start Time:"
-msgstr "시작 시간:"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 414
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 538
-msgid "End Time:"
-msgstr "종료 시간:"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 423
-msgid "Save"
-msgstr "저장"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 448
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 571
-msgid "Invalid Time"
-msgstr "잘못된 시간"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 448
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 571
-msgid "Time values cannot be negative"
-msgstr "시간 값은 음수가 될 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 454
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 577
-msgid "Invalid Time Range"
-msgstr "유효하지 않은 시간 범위"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 454
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 577
-msgid "Start time must be before end time"
-msgstr "시작 시간은 종료 시간보다 빨라야 합니다."
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
-msgid "OK"
-msgstr "알겠습니다."
-# 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 474
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 228
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 495
-msgid "Clear All Segments?"
-msgstr "모든 세그먼트 지우기?"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 498
-msgid "This will remove all trim segments. This action cannot be undone."
-msgstr "이 작업은 모든 트림 세그먼트를 제거합니다. 이 작업은 실행 취소할 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 502
-msgid "Clear All"
-msgstr "모두 지우기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 520
-msgid "Add Segment Manually"
-msgstr "세그먼트 수동 추가"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 522
-msgid "Enter start and end times for the new segment"
-msgstr "새 세그먼트의 시작 및 종료 시간을 입력하세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 547
-msgid "Add Segment"
-msgstr "세그먼트 추가"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py, line: 851
-msgid "Disabled"
-msgstr "비활성화됨"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 53
-msgid "Welcome to Big Video Converter"
-msgstr "빅 비디오 변환기에 오신 것을 환영합니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 72
-msgid "Convert Video Formats"
-msgstr "비디오 형식 변환"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 73
-msgid ""
-"MP4, MKV, AVI, WebM and many more\n"
-"with hardware acceleration support"
-msgstr "MP4, MKV, AVI, WebM 등 다수의 형식과 하드웨어 가속 지원"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 76
-msgid "Trim and Cut Videos"
-msgstr "비디오 자르기 및 다듬기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 78
-msgid ""
-"Select specific segments to keep\n"
-"and create new videos with only those parts"
-msgstr "특정 구간을 선택하여 유지하고 해당 부분만 포함된 새 비디오를 만듭니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 83
-msgid "Video Color Adjustments"
-msgstr "비디오 색상 조정"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 85
-msgid ""
-"Control brightness, saturation, and hue\n"
-"to enhance your videos"
-msgstr "비디오를 향상시키기 위해 밝기, 채도 및 색조를 조절하세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 90
-msgid "Fast Copy Mode"
-msgstr "빠른 복사 모드"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 92
-msgid ""
-"Change container format without re-encoding\n"
-"for ultra-fast processing with no quality loss"
-msgstr ""
-"재인코딩 없이 컨테이너 형식 변경  \n"
-"품질 손실 없이 초고속 처리"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 109
-msgid "Crop Videos"
-msgstr "비디오 자르기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 110
-msgid ""
-"Remove unwanted areas from edges\n"
-"to focus on what matters"
-msgstr "가장 중요한 것에 집중하기 위해 가장자리에서 원하지 않는 영역을 제거하십시오."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 113
-msgid "Audio Control"
-msgstr "오디오 제어"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 115
-msgid ""
-"Extract, copy, or re-encode audio\n"
-"with multiple codec options"
-msgstr "여러 코덱 옵션으로 오디오 추출, 복사 또는 재인코딩"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 120
-msgid "Subtitle Management"
-msgstr "자막 관리"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 122
-msgid ""
-"Extract subtitles to SRT files\n"
-"or keep them embedded in video"
-msgstr "자막을 SRT 파일로 추출하거나 비디오에 포함된 상태로 유지합니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 127
-msgid "Batch Processing"
-msgstr "배치 처리"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 129
-msgid ""
-"Convert multiple videos at once\n"
-"with queue management"
-msgstr "여러 비디오를 한 번에 변환하고 대기열 관리 기능 사용"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 465
-msgid "Show dialog on startup"
-msgstr "시작 시 대화 상자 표시"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/welcome_dialog.py, line: 172
-msgid "Let's Start"
-msgstr "시작하겠습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 97
-msgid "Mark segment point"
-msgstr "세그먼트 포인트 표시"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 107
-msgid "Cancel current mark"
-msgstr "현재 마크 취소"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 256
-msgid "Back 1 second"
-msgstr "1초 되돌리기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 249
-msgid "Previous frame"
-msgstr "이전 프레임"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 141
-msgid "Play/Pause"
-msgstr "재생/일시정지"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 291
-msgid "Next frame"
-msgstr "다음 프레임"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 284
-msgid "Forward 1 second"
-msgstr "1초 앞으로 이동"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 173
-msgid "Audio Track"
-msgstr "오디오 트랙"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 194
-msgid "Toggle Fullscreen"
-msgstr "전체 화면 전환"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
-msgid "Left"
-msgstr "왼쪽"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
-msgid "Right"
-msgstr "오른쪽"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
-msgid "Top"
-msgstr "상단"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 238
-msgid "Bottom"
-msgstr "하단"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 273
-msgid "Resolution:"
-msgstr "해상도:"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 274
-msgid "Codec:"
-msgstr "코덱:"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 275
-msgid "Size:"
-msgstr "크기:"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 361
-msgid "Duration:"
-msgstr "기간:"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 295
-msgid "Volume"
-msgstr "볼륨"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 329
-msgid "Color Adjustments"
-msgstr "색상 조정"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 334
-msgid "Brightness"
-msgstr "밝기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 347
-msgid "Saturation"
-msgstr "채도"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 360
-msgid "Hue"
-msgstr "색조"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 374
-msgid "Trim Segments"
-msgstr "세그먼트 자르기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 376
-msgid "Segments List"
-msgstr "세그먼트 목록"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 386
-msgid "No Segments Added"
-msgstr "세그먼트가 추가되지 않았습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 387
-msgid "Use the scissors button on the player to mark segments."
-msgstr "플레이어의 가위 버튼을 사용하여 구간을 표시하세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 406
-msgid "Add segment manually"
-msgstr "세그먼트를 수동으로 추가하십시오."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 414
-msgid "Clear all segments"
-msgstr "모든 세그먼트 지우기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 429
-msgid "Join segments into a single file"
-msgstr "세그먼트를 단일 파일로 결합합니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 430
-msgid "Save each segment as a separate file"
-msgstr "각 세그먼트를 별도의 파일로 저장하십시오."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 439
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 471
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 502
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 533
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 710
-msgid "Reset to default"
-msgstr "기본값으로 재설정"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 91
-msgid "Reset All Settings"
-msgstr "모든 설정 초기화"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 104
-msgid "Encoding Settings"
-msgstr "인코딩 설정"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 117
-msgid "GPU partial mode"
-msgstr "GPU 부분 모드"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 118
-msgid "Decode using CPU, encode using GPU"
-msgstr "CPU를 사용하여 디코딩하고, GPU를 사용하여 인코딩합니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 179
-msgid "Compression preset"
-msgstr "압축 프리셋"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 149
-msgid "Speed vs compression ratio"
-msgstr "속도 대 압축 비율"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 159
-msgid "Output Format"
-msgstr "출력 형식"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 159
-msgid "Container format for output file"
-msgstr "출력 파일의 컨테이너 형식"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 157
-msgid "Video resolution"
-msgstr "비디오 해상도"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 158
-msgid "Select output resolution"
-msgstr "출력 해상도 선택"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 163
-msgid "Custom resolution"
-msgstr "사용자 정의 해상도"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 164
-msgid "Ex: 1280x720, 1920x1080"
-msgstr "1280x720, 1920x1080"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 197
-msgid "Audio Settings"
-msgstr "오디오 설정"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 213
-msgid "Audio bitrate"
-msgstr "오디오 비트 전송률"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 215
-msgid "Select common bitrate or enter custom value"
-msgstr "일반 비트 전송률을 선택하거나 사용자 정의 값을 입력하세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 221
-msgid "Custom bitrate"
-msgstr "사용자 정의 비트 전송률"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 222
-msgid "Ex: 128k, 192k, 256k"
-msgstr "128k, 192k, 256k"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 245
-msgid "Audio channels"
-msgstr "오디오 채널"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 246
-msgid "Select common channel configuration"
-msgstr "공통 채널 구성 선택"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 251
-msgid "Custom channels"
-msgstr "사용자 정의 채널"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 252
-msgid "Ex: 2 (stereo), 6 (5.1)"
-msgstr "예: 2 (스테레오), 6 (5.1)"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 269
-msgid "Audio codec"
-msgstr "오디오 코덱"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 270
-msgid "Codec to use when re-encoding audio"
-msgstr "오디오를 다시 인코딩할 때 사용할 코덱"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 275
-msgid "General Options"
-msgstr "일반 옵션"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 278
-msgid "Additional FFmpeg options"
-msgstr "추가 FFmpeg 옵션"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 279
-msgid "Ex: -ss 60 -t 30"
-msgstr "-ss 60 -t 30"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 289
-msgid "Only extract subtitles"
-msgstr "자막만 추출하기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 292
-msgid "Extract subtitles to .srt files"
-msgstr ".srt 파일로 자막 추출"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 284
-msgid "Automatic"
-msgstr "자동적"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 285
-msgid "OpenGL (hardware accelerated)"
-msgstr "OpenGL (하드웨어 가속)"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 286
-msgid "Software (compatible mode)"
-msgstr "소프트웨어 (호환 모드)"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 291
-msgid "Video preview rendering"
-msgstr "비디오 미리보기 렌더링"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 293
-msgid "Rendering mode for video editor preview. Restart required to apply."
-msgstr "비디오 편집기 미리보기의 렌더링 모드. 적용하려면 재시작이 필요합니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 483
-msgid "Restart Required"
-msgstr "재시작 필요"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 485
-msgid ""
-"The video preview rendering mode has been changed.\n"
-"\n"
-"Please close and reopen the application for the change to take effect."
-msgstr ""
-"비디오 미리보기 렌더링 모드가 변경되었습니다.\n"
-"\n"
-"변경 사항을 적용하려면 애플리케이션을 닫았다가 다시 열어주세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 684
-msgid "Reset All Settings?"
-msgstr "모든 설정 초기화?"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 686
-msgid "This will reset all settings to their default values. This action cannot be undone."
-msgstr "이 작업은 모든 설정을 기본값으로 재설정합니다. 이 작업은 실행 취소할 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py, line: 268
-msgid "Reset"
-msgstr "재설정"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 705
-msgid "Settings Reset"
-msgstr "설정 초기화"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/settings_page.py, line: 706
-msgid "All settings have been reset to their default values."
-msgstr "모든 설정이 기본값으로 재설정되었습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 101
-msgid "Open Containing Folder"
-msgstr "폴더 열기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 104
-msgid "More Information..."
-msgstr "자세한 정보..."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 107
-msgid "Delete from Disk..."
-msgstr "디스크에서 삭제..."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 188
-msgid "Delete File from Disk?"
-msgstr "디스크에서 파일 삭제?"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 191
-msgid ""
-"Are you sure you want to permanently delete '{}'?\n"
-"\n"
-"This action cannot be undone."
-msgstr ""
-"'{}'을(를) 영구적으로 삭제하시겠습니까?\n"
-"\n"
-"이 작업은 실행 취소할 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 197
-msgid "Delete"
-msgstr "삭제"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 226
-msgid "Error Deleting File"
-msgstr "파일 삭제 오류"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 227
-msgid "Could not delete file: {}"
-msgstr "파일을 삭제할 수 없습니다: {}"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 282
-msgid "No Video Files"
-msgstr "비디오 파일이 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 284
-msgid "Drag files here or use the Add Files button"
-msgstr "파일을 여기에 드래그하거나 파일 추가 버튼을 사용하세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 270
-msgid "Save in the same folder as the original file"
-msgstr "원본 파일과 동일한 폴더에 저장하십시오."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 271
-msgid "Folder to save"
-msgstr "저장할 폴더"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 288
-msgid "Select folder"
-msgstr "폴더 선택"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 315
-msgid "Delete original files"
-msgstr "원본 파일 삭제"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 561
-msgid "Select the output folder"
-msgstr "출력 폴더를 선택하세요."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 654
-msgid "Could not open this video file"
-msgstr "이 비디오 파일을 열 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "기본 플레이어로 비디오 파일을 열 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 983
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1436
-msgid "Could not find this video file"
-msgstr "이 비디오 파일을 찾을 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1068
-msgid "MP4 Compatibility Warning"
-msgstr "MP4 호환성 경고"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1071
-msgid ""
-"The source file contains streams that are not compatible with MP4 container when copying without "
-"reencoding:\n"
-"\n"
-"{}\n"
-"\n"
-"To convert this file to MP4, you need to disable 'Copy video without reencoding' option to reencode "
-"the incompatible streams."
-msgstr ""
-"소스 파일에는 재인코딩 없이 복사할 때 MP4 컨테이너와 호환되지 않는 스트림이 포함되어 있습니다:\n"
-"\n"
-"{}\n"
-"\n"
-"이 파일을 MP4로 변환하려면 '재인코딩 없이 비디오 복사' 옵션을 비활성화하여 호환되지 않는 스트림을 재인코딩해야 합니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1075
-msgid "Proceed Anyway"
-msgstr "계속 진행하십시오"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1304
-#, python-brace-format
-msgid "All {0} segments have been processed successfully!"
-msgstr "모든 {0} 세그먼트가 성공적으로 처리되었습니다!"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 1467
-#, python-brace-format
-msgid "All {0} segments have been joined successfully!"
-msgstr "모든 {0} 세그먼트가 성공적으로 결합되었습니다!"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 42
-msgid "Back"
-msgstr "뒤로"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 69
-msgid "0 files"
-msgstr "0 파일"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 196
-msgid "Add Files"
-msgstr "파일 추가"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 230
-msgid "Add Folder"
-msgstr "폴더 추가"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py, line: 242
-msgid "Convert All"
-msgstr "모두 변환"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 114
-msgid "Convert This File"
-msgstr "이 파일 변환하기"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 133
-msgid "Welcome Screen"
-msgstr "환영 화면"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 68
-msgid "About"
-msgstr "정보"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 70
-msgid "Quit"
-msgstr "종료"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 189
-msgid "1 file"
-msgstr "1 파일"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/header_bar.py, line: 191
-msgid "{} files"
-msgstr "{} 파일"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 31
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 219
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 222
-msgid "Converting Videos"
-msgstr "비디오 변환 중"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 94
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 323
-msgid "Cancel All"
-msgstr "모두 취소"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 283
-msgid "All {} videos converted successfully!"
-msgstr "모든 {} 비디오가 성공적으로 변환되었습니다!"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 288
-msgid "{} completed, {} failed, {} cancelled"
-msgstr "{} 완료, {} 실패, {} 취소됨"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 293
-msgid "All conversions failed or were cancelled"
-msgstr "모든 변환이 실패했거나 취소되었습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 320
-msgid "Cancel All Conversions?"
-msgstr "모든 변환 취소?"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 321
-msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
-msgstr "이 작업은 모든 활성 변환을 중지하고 모든 대기 항목을 건너뜁니다. 이 작업은 취소할 수 없습니다."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
-msgid "Continue"
-msgstr "계속하십시오."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 322
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 436
-msgid "Unknown file"
-msgstr "알 수 없는 파일"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 447
-msgid "Waiting in queue"
-msgstr "대기 중"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 528
-msgid "FFmpeg Command"
-msgstr "FFmpeg 명령"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 544
-msgid "Process Output"
-msgstr "프로세스 출력"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 629
-msgid "Converting..."
-msgstr "변환 중..."
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 699
-msgid "Completed"
-msgstr "완료됨"
-# 
-# File: big-video-converter/big-video-converter/usr/share/big-video-converter/ui/progress_page.py, line: 703
-msgid "Failed"
-msgstr "실패했습니다."
+"원격 서버에 연결하여 비디오 파일을 탐색하고 추가합니다.  \n"
+"파일은 다운로드 없이 네트워크에서 직접 액세스됩니다."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 244
+msgid "Connection"
+msgstr "연결"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 248
+msgid "Protocol"
+msgstr "프로토콜"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 257
+msgid "Server"
+msgstr "서버"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 263
+msgid "Port"
+msgstr "포트"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 269
+msgid "Username"
+msgstr "사용자 이름"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 275
+msgid "Remote Path"
+msgstr "원격 경로"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 289
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 295
+msgid "Connect and Browse"
+msgstr "연결 및 탐색"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 308
+msgid "Please enter a server address."
+msgstr "서버 주소를 입력하세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 339
+msgid "Connecting..."
+msgstr "연결 중..."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 376
+msgid "Connection failed: {}"
+msgstr "연결 실패: {}"
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 399
+msgid "Connected but could not resolve local path. Try browsing via file manager."
+msgstr "연결되었지만 로컬 경로를 확인할 수 없습니다. 파일 관리자를 통해 찾아보세요."
+# 
+# File: big-video-converter/big-video-converter/usr/share/big-video-converter/file_handler.py, line: 408
+msgid "Select Network Video Files"
+msgstr "네트워크 비디오 파일 선택"
 # 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-python/extensions/big_video_converter_extension.py, line: 67
 msgid "Convert Video"
