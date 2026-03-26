@@ -4,9 +4,13 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 # Setup translation
 import gettext
-import constants
 
+import constants
 from gi.repository import Adw, Gtk
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
 
@@ -34,7 +38,7 @@ class SettingsPage:
         """Return the settings page widget"""
         return self.page
 
-    def update_for_force_copy_state(self, force_copy_enabled):
+    def update_for_force_copy_state(self, force_copy_enabled) -> None:
         """Update controls sensitivity based on force copy state"""
         # When force copy is enabled, most encoding options don't apply
         # Only Output Format remains functional (can choose container)
@@ -141,6 +145,8 @@ class SettingsPage:
         format_model = Gtk.StringList()
         format_model.append("MP4")
         format_model.append("MKV")
+        format_model.append("MOV")
+        format_model.append("WebM")
         output_format_row.set_model(format_model)
         self.output_format_combo = output_format_row
         encoding_group.add(output_format_row)
@@ -283,7 +289,7 @@ class SettingsPage:
         self.render_mode_labels = [
             _("Automatic"),
             _("OpenGL (hardware accelerated)"),
-            _("Software (compatible mode)")
+            _("Software (compatible mode)"),
         ]
         for label in self.render_mode_labels:
             render_mode_model.append(label)
@@ -364,12 +370,6 @@ class SettingsPage:
         # Use direct value saving instead of indexes
 
         # Additional settings
-        self.custom_resolution_row.connect(
-            "changed",
-            lambda w: self.settings_manager.save_setting(
-                "video-resolution", w.get_text()
-            ),
-        )
         self.custom_bitrate_row.connect(
             "changed",
             lambda w: self.settings_manager.save_setting("audio-bitrate", w.get_text()),
@@ -406,9 +406,7 @@ class SettingsPage:
 
         self.only_extract_subtitles_check.connect(
             "notify::active",
-            lambda w, p: self.settings_manager.save_setting(
-                "only-extract-subtitles", w.get_active()
-            ),
+            self._on_extract_subtitles_toggled,
         )
 
         # Connect resolution combo change
@@ -426,27 +424,6 @@ class SettingsPage:
             "notify::selected", self._save_render_mode_setting
         )
 
-    def _save_gpu_setting(self, index):
-        """Save GPU setting as direct value"""
-        # Use the mapping from constants to save the internal value
-        internal_value = constants.GPU_VALUES.get(index, "auto")
-        self.settings_manager.save_setting("gpu", internal_value)
-
-    def _save_quality_setting(self, index):
-        """Save video quality setting as direct value"""
-        # Use the mapping from constants to save the internal value
-        internal_value = constants.VIDEO_QUALITY_VALUES.get(index, "medium")
-        self.settings_manager.save_setting("video-quality", internal_value)
-
-    def _save_codec_setting(self, combo_box):
-        """Save video codec setting"""
-        selected = combo_box.get_selected()
-        if selected < len(constants.VIDEO_CODEC_VALUES):
-            # Get the internal value from the mapping
-            internal_value = constants.VIDEO_CODEC_VALUES[selected]
-            self.app.settings_manager.save_setting("video_encoder", internal_value)
-            print(f"Saved codec: {internal_value}")
-
     def _save_preset_setting(self, combo_box, _param=None):
         """Save preset setting"""
         selected = combo_box.get_selected()
@@ -454,7 +431,16 @@ class SettingsPage:
             # Get the internal value from the mapping
             internal_value = constants.PRESET_VALUES[selected]
             self.app.settings_manager.save_setting("preset", internal_value)
-            print(f"Saved preset: {internal_value}")
+            logger.debug(f"Saved preset: {internal_value}")
+
+    def _on_extract_subtitles_toggled(self, widget, _param):
+        """Handle extract subtitles toggle, update banner and sidebar state."""
+        active = widget.get_active()
+        self.settings_manager.save_setting("only-extract-subtitles", active)
+        if hasattr(self.app, "subtitle_banner"):
+            self.app.subtitle_banner.set_revealed(active)
+        if hasattr(self.app, "_update_sidebar_for_extract_mode"):
+            self.app._update_sidebar_for_extract_mode()
 
     def _save_audio_codec_setting(self, combo_box, _param=None):
         """Save audio codec setting"""
@@ -463,7 +449,7 @@ class SettingsPage:
             # Get the internal value from the mapping
             internal_value = constants.AUDIO_CODEC_VALUES[selected]
             self.app.settings_manager.save_setting("audio-codec", internal_value)
-            print(f"Saved audio codec: {internal_value}")
+            logger.debug(f"Saved audio codec: {internal_value}")
 
     def _save_render_mode_setting(self, combo_box, _param=None):
         """Save video preview render mode setting"""
@@ -476,7 +462,7 @@ class SettingsPage:
             if internal_value != current_value:
                 # Save the new value
                 self.app.settings_manager.save_setting("video-preview-render-mode", internal_value)
-                print(f"Saved render mode: {internal_value} (restart required to apply)")
+                logger.debug(f"Saved render mode: {internal_value} (restart required to apply)")
                 
                 # Show dialog informing user that restart is required
                 dialog = Gtk.AlertDialog()
@@ -603,56 +589,6 @@ class SettingsPage:
             pass  # Use default if not found
         self.render_mode_combo.set_selected(render_mode_index)
 
-    def _find_gpu_index(self, value):
-        """Find index of GPU value in GPU_OPTIONS using reverse mapping"""
-        value = value.lower()
-
-        # Check for key words in the value
-        if "nvenc" in value or "nvidia" in value:
-            return 1
-        elif "vaapi" in value or "amd" in value:
-            return 2
-        elif "qsv" in value or "intel" in value:
-            return 3
-        elif "vulkan" in value:
-            return 4
-        elif "software" in value:
-            return 5
-        elif value == "auto" or "auto-detect" in value:
-            return 0
-
-        # Reverse lookup in constants.GPU_VALUES
-        for index, internal_value in constants.GPU_VALUES.items():
-            if internal_value == value:
-                return index
-
-        # Default to Auto-detect
-        return 0
-
-    def _find_quality_index(self, value):
-        """Find index of quality value using reverse mapping"""
-        value = value.lower()
-
-        # Reverse lookup in constants.VIDEO_QUALITY_VALUES
-        for index, internal_value in constants.VIDEO_QUALITY_VALUES.items():
-            if internal_value == value:
-                return index
-
-        # Default to Medium (index 3)
-        return 3
-
-    def _find_codec_index(self, value):
-        """Find index of codec value using reverse mapping"""
-        value = value.lower()
-
-        # Reverse lookup in constants.VIDEO_CODEC_VALUES
-        for index, internal_value in constants.VIDEO_CODEC_VALUES.items():
-            if internal_value == value:
-                return index
-
-        # Default to H.264 (index 0)
-        return 0
-
     def _find_preset_index(self, value):
         """Find index of preset value using reverse mapping"""
         value = value.lower()
@@ -679,7 +615,6 @@ class SettingsPage:
 
     def _on_reset_button_clicked(self, button):
         """Handle reset settings button click"""
-        print("DEBUG: Reset button clicked")
         # Show a confirmation dialog before resetting
         dialog = Gtk.AlertDialog()
         dialog.set_message(_("Reset All Settings?"))
@@ -693,15 +628,12 @@ class SettingsPage:
         dialog.set_default_button(0)
 
         dialog.choose(self.app.window, None, self._on_reset_confirmation_response)
-        print("DEBUG: Reset confirmation dialog shown")
 
     def _on_reset_confirmation_response(self, dialog, result):
         """Handle response from reset confirmation dialog"""
         try:
             response = dialog.choose_finish(result)
-            print(f"DEBUG: Reset confirmation response: {response}")
             if response == 1:  # User clicked Reset
-                print("DEBUG: User confirmed reset, calling _reset_all_settings()")
                 # Reset all settings to defaults
                 self._reset_all_settings()
 
@@ -713,30 +645,30 @@ class SettingsPage:
                 )
                 success_dialog.show(self.app.window)
             else:
-                print("DEBUG: User cancelled reset")
-        except Exception as e:
-            print(f"DEBUG: Error in reset confirmation: {e}")
+                pass
+        except Exception:
+            pass
 
     def _reset_all_settings(self):
         """Reset all settings to their default values"""
         # Get all default values from settings manager
         default_values = self.settings_manager.DEFAULT_VALUES
 
-        # Reset each setting to its default value
-        for key, value in default_values.items():
-            print(f"Resetting {key} to {value}")
+        # Batch all resets into a single disk write
+        with self.settings_manager.batch_update():
+            for key, value in default_values.items():
+                logger.debug(f"Resetting {key} to {value}")
 
-            # Use the appropriate setter method based on the value type
-            if isinstance(value, bool):
-                self.settings_manager.set_boolean(key, value)
-            elif isinstance(value, int):
-                self.settings_manager.set_int(key, value)
-            elif isinstance(value, float):
-                self.settings_manager.set_double(key, value)
-            else:
-                self.settings_manager.set_string(
-                    key, str(value) if value is not None else ""
-                )
+                if isinstance(value, bool):
+                    self.settings_manager.set_boolean(key, value)
+                elif isinstance(value, int):
+                    self.settings_manager.set_int(key, value)
+                elif isinstance(value, float):
+                    self.settings_manager.set_double(key, value)
+                else:
+                    self.settings_manager.set_string(
+                        key, str(value) if value is not None else ""
+                    )
 
         # Reload settings to update Advanced Settings UI
         self._load_settings()

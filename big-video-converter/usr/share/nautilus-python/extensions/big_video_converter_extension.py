@@ -139,7 +139,7 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
                 f'--app-name={APP_NAME}',
                 title,
                 message
-            ], check=False)
+            ], check=False, timeout=5)
         except FileNotFoundError:
             # Fallback if 'notify-send' is not installed.
             print(f"ERROR: [{title}] {message}")

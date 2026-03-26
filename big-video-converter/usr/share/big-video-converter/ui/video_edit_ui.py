@@ -2,20 +2,22 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gdk, GLib, Gio, Pango
-
 # Setup translation
 import gettext
+
+from gi.repository import Adw, Gio, GLib, Gtk, Pango
 
 _ = gettext.gettext
 
 # Import MPVPlayer to check rendering mode
 from ui.mpv_player import MPVPlayer
+from ui.crop_overlay import CropOverlay
 
 
 class VideoEditUI:
     def __init__(self, page):
         self.page = page
+        self._handler_ids: list[tuple] = []  # [(widget, handler_id), ...]
 
     def create_page(self):
         """Create the main page layout and all UI elements"""
@@ -35,9 +37,19 @@ class VideoEditUI:
 
         css_provider = Gtk.CssProvider()
         css_provider.load_from_data(b".video-background { background-color: #000; }")
-        video_box.get_style_context().add_provider(
-            css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
+        display = (
+            self.page.app.get_display()
+            if hasattr(self.page.app, "get_display")
+            else None
         )
+        if display is None:
+            from gi.repository import Gdk
+
+            display = Gdk.Display.get_default()
+        if display:
+            Gtk.StyleContext.add_provider_for_display(
+                display, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
+            )
         video_box.add_css_class("video-background")
 
         # Video player widget - choose based on rendering mode
@@ -57,6 +69,12 @@ class VideoEditUI:
         video_box.append(self.preview_video)
 
         self.video_overlay.set_child(video_box)
+
+        # Crop overlay (hidden by default, shown in crop edit mode)
+        self.crop_overlay = CropOverlay()
+        self.crop_overlay.set_visible(False)
+        self.video_overlay.add_overlay(self.crop_overlay)
+
         self._create_overlay_controls(self.video_overlay)
         page.append(self.video_overlay)
 
@@ -88,6 +106,10 @@ class VideoEditUI:
         self.page.position_changed_handler_id = self.position_scale.connect(
             "value-changed", self.page.on_position_changed
         )
+        self._handler_ids.append((
+            self.position_scale,
+            self.page.position_changed_handler_id,
+        ))
         self.position_scale.set_can_target(False)
 
         slider_overlay.set_child(self.position_scale)
@@ -107,6 +129,10 @@ class VideoEditUI:
         # --- New Single Mark Button ---
         mark_button = Gtk.Button(icon_name="bookmark-new-symbolic")
         mark_button.set_tooltip_text(_("Mark segment point"))
+        mark_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Mark segment point")],
+        )
         mark_button.connect("clicked", self.page.on_mark_segment_point)
         button_row.append(mark_button)
 
@@ -117,6 +143,10 @@ class VideoEditUI:
 
         self.mark_cancel_button = Gtk.Button(icon_name="edit-clear-symbolic")
         self.mark_cancel_button.set_tooltip_text(_("Cancel current mark"))
+        self.mark_cancel_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Cancel current mark")],
+        )
         self.mark_cancel_button.add_css_class("flat")
         self.mark_cancel_button.connect("clicked", self.page.on_mark_cancel)
         self.mark_cancel_button.set_visible(False)
@@ -130,13 +160,22 @@ class VideoEditUI:
 
         # Seek buttons
         seek_back_button = Gtk.Button(
-            icon_name="media-seek-backward-symbolic", tooltip_text=_("Back 1 second")
+            icon_name="media-seek-backward-symbolic",
+            tooltip_text=_("Back 1 second (Left)"),
+        )
+        seek_back_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Back 1 second")],
         )
         seek_back_button.connect("clicked", lambda b: self.page.seek_relative(-1))
         button_row.append(seek_back_button)
 
         prev_frame_button = Gtk.Button(
-            icon_name='go-previous-symbolic', tooltip_text=_("Previous frame")
+            icon_name="go-previous-symbolic", tooltip_text=_("Previous frame (,)")
+        )
+        prev_frame_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Previous frame")],
         )
         prev_frame_button.connect(
             "clicked",
@@ -150,12 +189,20 @@ class VideoEditUI:
         self.play_pause_button = Gtk.Button()
         self.play_pause_button.set_icon_name('media-playback-start-symbolic')
         self.play_pause_button.add_css_class("circular")
-        self.play_pause_button.set_tooltip_text(_("Play/Pause"))
+        self.play_pause_button.set_tooltip_text(_("Play/Pause (Space)"))
+        self.play_pause_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Play/Pause")],
+        )
         self.play_pause_button.connect("clicked", self.page.on_play_pause_clicked)
         button_row.append(self.play_pause_button)
 
         next_frame_button = Gtk.Button(
-            icon_name="go-next-symbolic", tooltip_text=_("Next frame")
+            icon_name="go-next-symbolic", tooltip_text=_("Next frame (.)")
+        )
+        next_frame_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Next frame")],
         )
         next_frame_button.connect(
             "clicked",
@@ -166,10 +213,40 @@ class VideoEditUI:
         button_row.append(next_frame_button)
 
         seek_fwd_button = Gtk.Button(
-            icon_name="media-seek-forward-symbolic", tooltip_text=_("Forward 1 second")
+            icon_name="media-seek-forward-symbolic",
+            tooltip_text=_("Forward 1 second (Right)"),
+        )
+        seek_fwd_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Forward 1 second")],
         )
         seek_fwd_button.connect("clicked", lambda b: self.page.seek_relative(1))
         button_row.append(seek_fwd_button)
+
+        # Playback speed button with popover
+        self._speed_values = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
+        self._current_speed = 1.0
+
+        speed_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        speed_box.set_margin_top(6)
+        speed_box.set_margin_bottom(6)
+        speed_box.set_margin_start(6)
+        speed_box.set_margin_end(6)
+        for sv in self._speed_values:
+            btn = Gtk.Button(label=f"{sv}x")
+            btn.add_css_class("flat")
+            btn.connect("clicked", self._on_speed_btn_clicked, sv)
+            speed_box.append(btn)
+
+        speed_popover = Gtk.Popover(child=speed_box)
+        speed_popover.set_autohide(True)
+
+        self.speed_button = Gtk.MenuButton(
+            label="1x",
+            popover=speed_popover,
+            tooltip_text=_("Playback Speed"),
+        )
+        button_row.append(self.speed_button)
 
         button_row.append(
             Gtk.Separator(
@@ -182,14 +259,22 @@ class VideoEditUI:
         button_row.append(self.volume_button)
 
         self.audio_track_button = Gtk.MenuButton(
-            icon_name="audio-input-microphone-symbolic", tooltip_text=_("Audio Track")
+            icon_name="audio-speakers-symbolic", tooltip_text=_("Audio Track")
+        )
+        self.audio_track_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Audio Track")],
         )
         self.audio_track_menu = Gio.Menu()
         self.audio_track_button.set_menu_model(self.audio_track_menu)
         button_row.append(self.audio_track_button)
 
         self.subtitle_button = Gtk.MenuButton(
-            icon_name="media-view-subtitles-symbolic", tooltip_text=_("Subtitles")
+            icon_name="format-text-underline-symbolic", tooltip_text=_("Subtitles")
+        )
+        self.subtitle_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Subtitles")],
         )
         self.subtitle_menu = Gio.Menu()
         self.subtitle_button.set_menu_model(self.subtitle_menu)
@@ -204,6 +289,10 @@ class VideoEditUI:
         self.fullscreen_button = Gtk.Button()
         self.fullscreen_button.set_icon_name('view-fullscreen-symbolic')
         self.fullscreen_button.set_tooltip_text(_("Toggle Fullscreen"))
+        self.fullscreen_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Toggle Fullscreen")],
+        )
         self.fullscreen_button.connect("clicked", self.page.on_toggle_fullscreen)
         button_row.append(self.fullscreen_button)
 
@@ -215,7 +304,9 @@ class VideoEditUI:
         self.position_label.set_hexpand(True)
         labels_box.append(self.position_label)
 
-        self.frame_label = Gtk.Label(label="Frame: 0 / 0")
+        self.frame_label = Gtk.Label(
+            label=_("Frame: {current} / {total}").format(current=0, total=0)
+        )
         self.frame_label.set_halign(Gtk.Align.END)
         self.frame_label.set_hexpand(True)
         labels_box.append(self.frame_label)
@@ -266,11 +357,26 @@ class VideoEditUI:
         setattr(self, "crop_top_spin", self.crop_spins["top"])
         setattr(self, "crop_bottom_spin", self.crop_spins["bottom"])
 
+        # Crop edit toggle button
+        self.crop_edit_btn = Gtk.ToggleButton()
+        self.crop_edit_btn.set_icon_name("tool-crop-symbolic")
+        self.crop_edit_btn.set_tooltip_text(_("Visual crop editor"))
+        self.crop_edit_btn.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Visual crop editor")],
+        )
+        self.crop_edit_btn.set_valign(Gtk.Align.CENTER)
+        self.crop_edit_btn.connect("toggled", self._on_crop_edit_toggled)
+
+        crop_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        crop_box.append(crop_grid)
+        crop_box.append(self.crop_edit_btn)
+
         # Add tooltip to crop grid
         if hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(crop_grid, "crop")
 
-        toolbar_box.append(crop_grid)
+        toolbar_box.append(crop_box)
         toolbar_box.append(
             Gtk.Separator(
                 orientation=Gtk.Orientation.VERTICAL, margin_start=6, margin_end=6
@@ -301,10 +407,26 @@ class VideoEditUI:
         grid.attach(value_label, 1, row_index, 1, 1)
         return value_label
 
+    def _on_speed_btn_clicked(self, button, speed_value):
+        """Handle playback speed selection from popover button."""
+        self._current_speed = speed_value
+        self.speed_button.set_label(f"{speed_value}x")
+        self.speed_button.get_popover().popdown()
+        self.page.on_speed_changed(speed_value)
+
+    def _on_crop_edit_toggled(self, button):
+        """Toggle visual crop editor mode."""
+        active = button.get_active()
+        self.page.on_crop_edit_toggled(active)
+
     def _create_volume_button(self):
         """Creates the volume button with its popover."""
         volume_button = Gtk.MenuButton(
             icon_name='audio-volume-high-symbolic', tooltip_text=_("Volume")
+        )
+        volume_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Volume")],
         )
 
         volume_popover = Gtk.Popover()
@@ -332,13 +454,49 @@ class VideoEditUI:
         volume_button.set_popover(volume_popover)
         return volume_button
 
-    def populate_sidebar(self, sidebar_box):
+    def _create_nr_sidebar_group(self):
+        """Creates the noise reduction group for the editing sidebar."""
+        nr_group = Adw.PreferencesGroup()
+
+        # Row to open the full noise dialog — mirrors main screen's Audio Cleaning row
+        self.nr_settings_row = Adw.ActionRow(title=_("Audio Settings"))
+        self.nr_settings_row.add_prefix(
+            Gtk.Image.new_from_icon_name("audio-volume-high-symbolic")
+        )
+        self.nr_settings_row.add_suffix(
+            Gtk.Image.new_from_icon_name("go-next-symbolic")
+        )
+        self.nr_settings_row.set_activatable(True)
+        self.nr_settings_row.connect("activated", self._on_nr_settings_activated)
+        nr_group.add(self.nr_settings_row)
+
+        # Set initial subtitle from the main screen's audio cleaning row
+        self._sync_nr_subtitle()
+
+        return nr_group
+
+    def _sync_nr_subtitle(self):
+        """Sync the editor's Audio Cleaning subtitle with the main sidebar row."""
+        if not hasattr(self, "nr_settings_row"):
+            return
+        app = self.page.app
+        if hasattr(app, "_audio_cleaning_row"):
+            subtitle = app._audio_cleaning_row.get_subtitle()
+            self.nr_settings_row.set_subtitle(subtitle or "")
+
+    def _on_nr_settings_activated(self, _row):
+        """Open the noise cleaning dialog from the editing sidebar."""
+        from ui.noise_dialog import show_noise_dialog
+
+        show_noise_dialog(self.page.app.window, self.page.app)
+
+    def populate_sidebar(self, sidebar_box) -> None:
         """Populate the sidebar with video adjustment controls and trim marking"""
         while child := sidebar_box.get_first_child():
             sidebar_box.remove(child)
 
         # --- Video Adjustments Group ---
-        adjust_group = Adw.PreferencesGroup(title=_("Color Adjustments"))
+        adjust_group = Adw.PreferencesGroup()
         self.adjust_group = adjust_group  # Store reference for enable/disable
 
         self.brightness_scale, brightness_row = self._create_adjustment_row(
@@ -389,28 +547,125 @@ class VideoEditUI:
 
         sidebar_box.append(adjust_group)
 
+        # --- Rotation / Flip Group ---
+        transform_group = Adw.PreferencesGroup()
+        self.transform_group = transform_group
+
+        transform_row = Adw.ActionRow(title=_("Transform"))
+        transform_buttons = Gtk.Box(spacing=6, valign=Gtk.Align.CENTER)
+
+        rotate_ccw_btn = Gtk.Button(
+            icon_name="object-rotate-left-symbolic", tooltip_text=_("Rotate 90° Left")
+        )
+        rotate_ccw_btn.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Rotate 90° Left")],
+        )
+        rotate_ccw_btn.add_css_class("flat")
+        rotate_ccw_btn.connect("clicked", lambda b: self.page.on_rotate(-90))
+        transform_buttons.append(rotate_ccw_btn)
+
+        rotate_cw_btn = Gtk.Button(
+            icon_name="object-rotate-right-symbolic", tooltip_text=_("Rotate 90° Right")
+        )
+        rotate_cw_btn.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Rotate 90° Right")],
+        )
+        rotate_cw_btn.add_css_class("flat")
+        rotate_cw_btn.connect("clicked", lambda b: self.page.on_rotate(90))
+        transform_buttons.append(rotate_cw_btn)
+
+        flip_h_btn = Gtk.Button(
+            icon_name="object-flip-horizontal-symbolic",
+            tooltip_text=_("Flip Horizontal"),
+        )
+        flip_h_btn.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Flip Horizontal")],
+        )
+        flip_h_btn.add_css_class("flat")
+        flip_h_btn.connect("clicked", lambda b: self.page.on_flip("horizontal"))
+        self.flip_h_btn = flip_h_btn
+        transform_buttons.append(flip_h_btn)
+
+        flip_v_btn = Gtk.Button(
+            icon_name="object-flip-vertical-symbolic", tooltip_text=_("Flip Vertical")
+        )
+        flip_v_btn.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Flip Vertical")],
+        )
+        flip_v_btn.add_css_class("flat")
+        flip_v_btn.connect("clicked", lambda b: self.page.on_flip("vertical"))
+        self.flip_v_btn = flip_v_btn
+        transform_buttons.append(flip_v_btn)
+
+        reset_transform_btn = Gtk.Button(
+            icon_name="edit-undo-symbolic", tooltip_text=_("Reset Transform")
+        )
+        reset_transform_btn.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Reset Transform")],
+        )
+        reset_transform_btn.add_css_class("flat")
+        reset_transform_btn.connect("clicked", lambda b: self.page.on_reset_transform())
+        transform_buttons.append(reset_transform_btn)
+
+        transform_row.add_suffix(transform_buttons)
+        transform_group.add(transform_row)
+        sidebar_box.append(transform_group)
+
+        # --- Audio Cleaning Group (visible only when re-encode active) ---
+        self.nr_sidebar_group = self._create_nr_sidebar_group()
+        self.nr_sidebar_group.set_visible(False)
+        sidebar_box.append(self.nr_sidebar_group)
+
         # --- Trim Segments Group ---
         trim_group = Adw.PreferencesGroup(title=_("Trim Segments"))
         self.trim_group = trim_group  # Store reference for tooltip reapplication
 
         list_row = Adw.ActionRow(title=_("Segments List"))
+        list_row.set_visible(False)
 
-        scrolled_window = Gtk.ScrolledWindow(min_content_height=150, vexpand=True)
-        scrolled_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.segments_scrolled = Gtk.ScrolledWindow(
+            min_content_height=120, vexpand=True
+        )
+        self.segments_scrolled.set_policy(
+            Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC
+        )
+        self.segments_scrolled.set_max_content_height(300)
+        self.segments_scrolled.set_propagate_natural_height(True)
 
         self.segments_listbox = Gtk.ListBox(
             selection_mode=Gtk.SelectionMode.NONE, css_classes=["boxed-list"]
         )
-        placeholder = Adw.StatusPage(
-            icon_name="video-trim-symbolic",
-            title=_("No Segments Added"),
-            description=_("Use the scissors button on the player to mark segments."),
-        )
-        self.segments_listbox.set_placeholder(placeholder)
 
-        scrolled_window.set_child(self.segments_listbox)
-        list_row.set_child(scrolled_window)
+        self.segments_scrolled.set_child(self.segments_listbox)
+        list_row.set_child(self.segments_scrolled)
+        self.segments_list_row = list_row
         trim_group.add(list_row)
+
+        # Placeholder shown when no segments
+        self.segments_placeholder_row = Adw.ActionRow()
+        placeholder_box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL,
+            spacing=4,
+            margin_top=12,
+            margin_bottom=12,
+        )
+        placeholder_box.set_halign(Gtk.Align.CENTER)
+        placeholder_icon = Gtk.Image(
+            icon_name="bookmark-new-symbolic", pixel_size=32, css_classes=["dim-label"]
+        )
+        placeholder_label = Gtk.Label(
+            label=_("Press M or use the mark button to add segments"),
+            css_classes=["dim-label"],
+        )
+        placeholder_box.append(placeholder_icon)
+        placeholder_box.append(placeholder_label)
+        self.segments_placeholder_row.set_child(placeholder_box)
+        trim_group.add(self.segments_placeholder_row)
 
         # Action buttons row with + and trash icons
         actions_row = Adw.ActionRow()
@@ -424,6 +679,10 @@ class VideoEditUI:
         add_button.add_css_class("circular")
         add_button.add_css_class("suggested-action")
         add_button.set_tooltip_text(_("Add segment manually"))
+        add_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Add segment manually")],
+        )
         add_button.connect("clicked", self.page._on_add_manual_segment_clicked)
         button_box.append(add_button)
 
@@ -432,6 +691,10 @@ class VideoEditUI:
         clear_button.add_css_class("circular")
         clear_button.add_css_class("destructive-action")
         clear_button.set_tooltip_text(_("Clear all segments"))
+        clear_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Clear all segments")],
+        )
         clear_button.connect(
             "clicked", self.page._on_clear_all_segments_with_confirmation
         )
@@ -464,7 +727,7 @@ class VideoEditUI:
 
         sidebar_box.append(trim_group)
 
-    def update_for_force_copy_state(self, force_copy_enabled):
+    def update_for_force_copy_state(self, force_copy_enabled) -> None:
         """Enable/disable editing controls based on force copy state"""
         # When force copy is enabled, color adjustments and crop don't work
         # Only trim segments continue to work
@@ -477,6 +740,14 @@ class VideoEditUI:
         # Disable/enable crop controls
         if hasattr(self, "crop_grid"):
             self.crop_grid.set_sensitive(enable_editing_options)
+        if hasattr(self, "crop_edit_btn"):
+            self.crop_edit_btn.set_sensitive(enable_editing_options)
+            if force_copy_enabled and self.crop_edit_btn.get_active():
+                self.crop_edit_btn.set_active(False)
+
+        # Disable/enable transform controls
+        if hasattr(self, "transform_group"):
+            self.transform_group.set_sensitive(enable_editing_options)
 
         # Trim segments always stay enabled - they work with stream copy
 
@@ -503,6 +774,10 @@ class VideoEditUI:
 
         reset_button = Gtk.Button(
             icon_name="edit-undo-symbolic", tooltip_text=_("Reset to default")
+        )
+        reset_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Reset to default")],
         )
         reset_button.connect("clicked", lambda b: on_reset())
 
@@ -558,7 +833,7 @@ class VideoEditUI:
                 cr.line_to(end_x, height)
                 cr.stroke()
 
-    def update_segment_markers(self):
+    def update_segment_markers(self) -> None:
         """Request redraw of segment markers"""
         if hasattr(self, "segment_markers_canvas"):
             self.segment_markers_canvas.queue_draw()
@@ -693,9 +968,16 @@ class VideoEditUI:
                 and self.audio_track_button.get_active()
             )
             or (hasattr(self, "subtitle_button") and self.subtitle_button.get_active())
+            or (
+                hasattr(self, "speed_button")
+                and self.speed_button.get_popover()
+                and self.speed_button.get_popover().is_visible()
+            )
         )
 
     def _show_controls(self):
+        if getattr(self.page, "crop_edit_mode", False):
+            return
         if hasattr(self, "overlay_controls"):
             self.overlay_controls.set_visible(True)
             self.controls_visible = True
@@ -719,7 +1001,7 @@ class VideoEditUI:
         self.hide_timer_id = None
         return False
 
-    def apply_tooltips(self):
+    def apply_tooltips(self) -> None:
         """Apply tooltips to all video edit UI elements"""
         if not hasattr(self.page.app, "tooltip_helper"):
             return
@@ -737,3 +1019,25 @@ class VideoEditUI:
             tooltip_helper.add_tooltip(self.hue_row, "hue")
         if hasattr(self, "trim_group") and self.trim_group:
             tooltip_helper.add_tooltip(self.trim_group, "segments")
+
+    def disconnect_all_handlers(self) -> None:
+        """Disconnect all tracked signal handlers."""
+        for widget, hid in self._handler_ids:
+            try:
+                widget.disconnect(hid)
+            except Exception:
+                pass
+        self._handler_ids.clear()
+        # Reset the handler ID so stale references are not used after cleanup
+        self.page.position_changed_handler_id = None
+
+    def reconnect_handlers(self) -> None:
+        """Reconnect signal handlers after cleanup."""
+        if self.page.position_changed_handler_id is None:
+            self.page.position_changed_handler_id = self.position_scale.connect(
+                "value-changed", self.page.on_position_changed
+            )
+            self._handler_ids.append((
+                self.position_scale,
+                self.page.position_changed_handler_id,
+            ))

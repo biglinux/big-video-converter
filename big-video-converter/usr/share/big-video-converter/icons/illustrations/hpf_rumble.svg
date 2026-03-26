@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Frequency spectrum with low-cut filter -->
+  <!-- X axis -->
+  <line x1="15" y1="58" x2="110" y2="58" stroke="#999" stroke-width="1"/>
+  <!-- Y axis -->
+  <line x1="15" y1="12" x2="15" y2="58" stroke="#999" stroke-width="1"/>
+  <!-- Low frequency rumble area (red, being cut) -->
+  <path d="M15,58 L15,30 Q25,28 35,30 L35,58 Z" fill="#e01b24" fill-opacity="0.15"/>
+  <!-- Filter cutoff line -->
+  <path d="M35,58 L35,18" stroke="#e01b24" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <!-- Remaining frequency curve (kept) -->
+  <path d="M35,30 Q50,20 65,24 Q80,28 95,22 Q105,20 110,25" fill="none" stroke="#3584e4" stroke-width="2"/>
+  <!-- Cut symbol -->
+  <line x1="20" y1="35" x2="30" y2="45" stroke="#e01b24" stroke-width="1.5"/>
+  <line x1="30" y1="35" x2="20" y2="45" stroke="#e01b24" stroke-width="1.5"/>
+  <!-- Labels -->
+  <text x="25" y="72" font-family="sans-serif" font-size="4.5" fill="#e01b24" text-anchor="middle">Low Hz</text>
+  <text x="75" y="72" font-family="sans-serif" font-size="4.5" fill="#3584e4" text-anchor="middle">Kept</text>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Circular arrow (reset symbol) -->
+  <path d="M60,18 A22,22 0 1,1 38,40" fill="none" stroke="#e01b24" stroke-width="2.5"/>
+  <polygon points="38,32 32,42 44,42" fill="#e01b24"/>
+  <!-- Gear in center -->
+  <circle cx="60" cy="40" r="8" fill="none" stroke="#999" stroke-width="1.5"/>
+  <circle cx="60" cy="40" r="3" fill="#999"/>
+  <!-- Teeth -->
+  <line x1="60" y1="31" x2="60" y2="33" stroke="#999" stroke-width="2"/>
+  <line x1="60" y1="47" x2="60" y2="49" stroke="#999" stroke-width="2"/>
+  <line x1="51" y1="40" x2="53" y2="40" stroke="#999" stroke-width="2"/>
+  <line x1="67" y1="40" x2="69" y2="40" stroke="#999" stroke-width="2"/>
+  <!-- Label -->
+  <text x="60" y="74" font-family="sans-serif" font-size="5" fill="#e01b24" text-anchor="middle">Reset to defaults</text>
+</svg>

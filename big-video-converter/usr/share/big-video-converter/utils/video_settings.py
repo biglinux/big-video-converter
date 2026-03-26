@@ -3,6 +3,12 @@ Unified video settings management module.
 Provides constants, utilities, and management for video adjustments.
 """
 
+import math
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Video Adjustment Default Values
 VIDEO_ADJUSTMENT_DEFAULTS = {
     "brightness": 0.0,  # Preview player: -1.0 to 1.0, FFmpeg: -1.0 to 1.0 (direct map)
@@ -39,7 +45,7 @@ DEFAULT_VALUES = VIDEO_ADJUSTMENT_DEFAULTS
 #
 # Value Access Functions
 #
-def get_adjustment_value(settings, name):
+def get_adjustment_value(settings, name: str):
     """Get adjustment value from settings"""
     setting_key = SETTING_KEYS.get(name)
     if not setting_key:
@@ -55,7 +61,7 @@ def get_adjustment_value(settings, name):
         return settings.get_value(setting_key, DEFAULT_VALUES.get(name, 0.0))
 
 
-def save_adjustment_value(settings, name, value):
+def save_adjustment_value(settings, name: str, value: str):
     """Save an adjustment value to settings"""
     setting_key = SETTING_KEYS.get(name)
     if not setting_key:
@@ -112,9 +118,6 @@ def preview_hue_to_ffmpeg(hue):
     - Preview hue =  0.0 → FFmpeg hue =  0  (0°)
     - Preview hue = +1.0 → FFmpeg hue = +π (+180°)
     """
-    # Map from preview normalized [-1.0, 1.0] to FFmpeg radians [-π, π]
-    import math
-
     return hue * math.pi
 
 
@@ -128,14 +131,13 @@ gstreamer_hue_to_ffmpeg = preview_hue_to_ffmpeg
 # FFmpeg Filter Generation
 #
 def generate_video_filters(
-    settings, video_width=None, video_height=None, input_file=None
+    settings, video_width: int = None, video_height: int = None, input_file: str = None
 ):
     """
     Generate all needed FFmpeg filters in one go.
     """
     filters = []
 
-    # ... (O resto da função, como a detecção de HEVC 10-bit, permanece o mesmo) ...
     is_hevc_10bit_to_h264 = False
     if input_file:
         try:
@@ -156,6 +158,7 @@ def generate_video_filters(
                 ],
                 capture_output=True,
                 text=True,
+                timeout=10,
             )
 
             output = result.stdout.strip().split(",")
@@ -169,11 +172,11 @@ def generate_video_filters(
 
                 if is_10bit and is_hevc and is_h264_output:
                     is_hevc_10bit_to_h264 = True
-        except:
+        except (subprocess.SubprocessError, OSError):
             pass
 
     if is_hevc_10bit_to_h264:
-        print(
+        logger.debug(
             "Skipping custom video filters for optimized H.265 10-bit to H.264 GPU conversion"
         )
         return []
@@ -183,9 +186,13 @@ def generate_video_filters(
     crop_right = get_adjustment_value(settings, "crop_right")
     crop_top = get_adjustment_value(settings, "crop_top")
     crop_bottom = get_adjustment_value(settings, "crop_bottom")
-    
-    print(f"DEBUG generate_video_filters: crop_left={crop_left}, crop_right={crop_right}, crop_top={crop_top}, crop_bottom={crop_bottom}")
-    print(f"DEBUG generate_video_filters: video_width={video_width}, video_height={video_height}")
+
+    logger.debug(
+        f"DEBUG generate_video_filters: crop_left={crop_left}, crop_right={crop_right}, crop_top={crop_top}, crop_bottom={crop_bottom}"
+    )
+    logger.debug(
+        f"DEBUG generate_video_filters: video_width={video_width}, video_height={video_height}"
+    )
 
     if (
         (crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0)
@@ -196,7 +203,6 @@ def generate_video_filters(
         crop_height = video_height - crop_top - crop_bottom
 
         if crop_width > 0 and crop_height > 0:
-            print(f"DEBUG: Adding crop filter: crop={crop_width}:{crop_height}:{crop_left}:{crop_top}")
             filters.append(f"crop={crop_width}:{crop_height}:{crop_left}:{crop_top}")
 
     # 2. Add eq filter with calibrated values (brightness, saturation)
@@ -218,14 +224,33 @@ def generate_video_filters(
     # 3. Add hue filter separately (FFmpeg requires separate hue filter, not in eq)
     hue = get_adjustment_value(settings, "hue")
     if abs(hue) > FLOAT_THRESHOLD:
-        ffmpeg_hue = gstreamer_hue_to_ffmpeg(hue) * 180 / 3.14159
+        ffmpeg_hue = gstreamer_hue_to_ffmpeg(hue) * 180 / math.pi
         filters.append(f"hue=h={ffmpeg_hue:.3f}")
+
+    # 4. Rotation (transpose for 90/270, hflip+vflip for 180)
+    rotation = int(settings.load_setting("preview-rotation", 0))
+    rotation = rotation % 360
+    if rotation == 90:
+        filters.append("transpose=1")
+    elif rotation == 180:
+        filters.append("hflip")
+        filters.append("vflip")
+    elif rotation == 270:
+        filters.append("transpose=2")
+
+    # 5. Flip (applied after rotation to match mpv behavior)
+    flip_h = settings.get_boolean("preview-flip-h", False)
+    flip_v = settings.get_boolean("preview-flip-v", False)
+    if flip_h:
+        filters.append("hflip")
+    if flip_v:
+        filters.append("vflip")
 
     return filters
 
 
 def get_ffmpeg_filter_string(
-    settings, video_width=None, video_height=None, input_file=None
+    settings, video_width: int = None, video_height: int = None, input_file: str = None
 ):
     """Get the complete FFmpeg filter string for command-line use"""
     filters = generate_video_filters(settings, video_width, video_height, input_file)
@@ -252,10 +277,10 @@ class VideoAdjustmentManager:
         self.page = page
         self.values = {name: self.get_value(name) for name in DEFAULT_VALUES}
 
-    def get_value(self, name):
+    def get_value(self, name: str):
         return get_adjustment_value(self.settings, name)
 
-    def set_value(self, name, value, update_ui=True):
+    def set_value(self, name: str, value: str, update_ui: bool = True):
         setting_key = SETTING_KEYS.get(name)
         if not setting_key:
             return False
@@ -272,6 +297,7 @@ class VideoAdjustmentManager:
         ui_controls = {
             "brightness": getattr(ui, "brightness_scale", None),
             "saturation": getattr(ui, "saturation_scale", None),
+            "hue": getattr(ui, "hue_scale", None),
             "crop_left": getattr(ui, "crop_left_spin", None),
             "crop_right": getattr(ui, "crop_right_spin", None),
             "crop_top": getattr(ui, "crop_top_spin", None),

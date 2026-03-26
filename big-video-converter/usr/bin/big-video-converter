@@ -148,14 +148,14 @@ fi
 # Detect bit depth and codec of input video
 echo "Iniciando o processo FFmpeg..."
 echo "Analyzing input video..."
-pix_fmt=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of csv=p=0 "$1" 2>/dev/null)
-video_profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profile -of csv=p=0 "$1" 2>/dev/null)
+pix_fmt=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of csv=p=0 "$1" 2>/dev/null | sed 's/,$//')
+video_profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profile -of csv=p=0 "$1" 2>/dev/null | sed 's/,$//')
 
 # Determine if video is 10-bit based on pixel format and profile
 is_10bit=false
-if [[ $pix_fmt =~ yuv.*p10 || $pix_fmt =~ yuv.*10le || $pix_fmt =~ .*10bit.* ]]; then
+if [[ $pix_fmt =~ yuv.*p10 || $pix_fmt =~ yuv.*10le || $pix_fmt =~ .*10bit.* || $pix_fmt =~ yuv.*p12 || $pix_fmt =~ yuv.*12le ]]; then
 	is_10bit=true
-	echo "Detected 10-bit video input (pixel format: $pix_fmt)"
+	echo "Detected high bit depth video input (pixel format: $pix_fmt)"
 elif [[ $video_profile =~ .*10.* || $video_profile =~ .*High\ 10.* || $video_profile =~ .*Main\ 10.* ]]; then
 	is_10bit=true
 	echo "Detected 10-bit video input (profile: $video_profile)"
@@ -164,6 +164,14 @@ else
 		echo "⚠️  Warning: Could not detect pixel format - file may be corrupted or use an unusual format"
 	fi
 	echo "ℹ️  Detected 8-bit video ($pix_fmt) - using standard profile"
+fi
+
+# Detect pixel formats with implicit GBR color matrix (e.g. ProRes 4444/XQ yuv444p12le)
+# These formats cause swscaler conversion failures and need zscale to override color matrix
+needs_gbr_matrix_fix=false
+if [[ $pix_fmt =~ 444p12 || $pix_fmt =~ ^gbrp ]]; then
+	needs_gbr_matrix_fix=true
+	echo "Detected video with GBR-incompatible pixel format ($pix_fmt) - zscale color fix will be applied"
 fi
 
 echo "Detecting source video codec..."
@@ -209,13 +217,13 @@ fi
 shopt -u nocasematch
 
 # Info about the input file
-ffprobe_result=$(ffprobe -select_streams s -show_entries stream=index:stream_tags=language,title:stream_disposition=forced -of csv=p=0 "$input_file" 2>&1)
+ffprobe_result=$(ffprobe -select_streams s -show_entries stream=index:stream_tags=language,title:stream_disposition=forced -of csv=p=0 "$input_file" 2>&1 | sed 's/,$//')
 
 ##############
 # Subtitles
 ##############
 # Get subtitle codec information to filter only SRT subtitles
-subtitle_codec_info=$(ffprobe -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file")
+subtitle_codec_info=$(ffprobe -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file" | sed 's/,$//')
 
 # Extract IDs of SRT (subrip) subtitles
 subtitle_list_srt_ids=""
@@ -242,7 +250,7 @@ if [[ $subtitle_extract == "embedded" ]]; then
 	if [[ "$output_extension" == "mp4" ]]; then
 		# For MP4, find compatible SRT streams and convert them to mov_text
 		map_cmd=""
-		subtitle_info_for_embed=$(ffprobe -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file")
+		subtitle_info_for_embed=$(ffprobe -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file" | sed 's/,$//')
 		while IFS=, read -r index codec_name; do
 			if [[ "$codec_name" == "subrip" ]]; then
 				map_cmd+=" -map 0:$index"
@@ -327,11 +335,110 @@ original_audio_handling=$audio_handling
 # If audio codec not specified, use aac
 : ${audio_codec:=aac}
 
+##############
+##############
+# Audio Processing Filter Chain
+# Build filter chain: HPF → Compressor → Normalize → [NR] → Gate → EQ
+# Each filter works independently — NR is just one optional filter
+noise_audio_filter=""
+nr_requires_mono=false
+local_filters=()
+
+# 1. High-Pass Filter
+if [[ $hpf_enabled == "1" ]]; then
+	: ${hpf_frequency:=80}
+	local_filters+=("highpass=f=${hpf_frequency}:poles=2")
+	echo "HPF enabled: frequency=${hpf_frequency}Hz"
+fi
+
+# 2. Compressor (before NR to even out dynamics)
+if [[ $compressor_enabled == "1" ]]; then
+	: ${compressor_intensity:=1.0}
+	comp_threshold_db=$(echo "scale=6; -20 - ${compressor_intensity} * 20" | bc -l)
+	comp_ratio=$(echo "scale=6; 3 + ${compressor_intensity} * 7" | bc -l)
+	comp_makeup_db=$(echo "scale=6; 6 + ${compressor_intensity} * 12" | bc -l)
+	comp_knee_db=$(echo "scale=6; 12 + ${compressor_intensity} * 4" | bc -l)
+	comp_threshold_linear=$(echo "scale=6; e(${comp_threshold_db}/20 * l(10))" | bc -l)
+	comp_makeup_linear=$(echo "scale=6; e(${comp_makeup_db}/20 * l(10))" | bc -l)
+	comp_knee_linear=$(echo "scale=6; e(${comp_knee_db}/20 * l(10))" | bc -l)
+	local_filters+=("acompressor=threshold=${comp_threshold_linear}:ratio=${comp_ratio}:attack=150:release=800:makeup=${comp_makeup_linear}:knee=${comp_knee_linear}:detection=rms")
+	echo "Compressor enabled: intensity=${compressor_intensity} threshold=${comp_threshold_db}dB ratio=${comp_ratio}"
+fi
+
+# 3. Volume Normalization (before NR for consistent input level)
+# speechnorm: fast, no internal resampling, no pumping artifacts
+if [[ $normalize_enabled == "1" ]]; then
+	local_filters+=("speechnorm=e=12.5:r=0.0001:l=1")
+	echo "Volume normalization enabled (speechnorm)"
+fi
+
+# 4. GTCRN Noise Reduction (requires mono processing via LADSPA)
+if [[ $noise_reduction == "1" ]]; then
+	if [[ -e /usr/lib/ladspa/libgtcrn_ladspa.so ]]; then
+		: ${noise_strength:=1.0}
+		: ${noise_model:=0}
+		: ${noise_speech_strength:=1.0}
+		: ${noise_lookahead:=0}
+		: ${noise_model_blend:=0}
+		: ${noise_voice_recovery:=0.75}
+		local_filters+=("ladspa=file=libgtcrn_ladspa:plugin=gtcrn_mono:controls=c0=1|c1=${noise_strength}|c2=${noise_model}|c3=${noise_speech_strength}|c4=${noise_lookahead}|c5=${noise_model_blend}|c6=${noise_voice_recovery}")
+		echo "Noise reduction enabled: strength=${noise_strength} model=${noise_model}"
+		nr_requires_mono=true
+	else
+		echo "WARNING: Noise reduction requested but GTCRN LADSPA plugin not found at /usr/lib/ladspa/libgtcrn_ladspa.so"
+	fi
+fi
+
+# 5. Noise Gate (after NR — post-NR audio is mostly speech, so full-band detection is effective)
+if [[ $noise_gate == "1" ]]; then
+	: ${gate_intensity:=0.5}
+	gate_threshold_db=$(echo "scale=1; -50 + sqrt(${gate_intensity}) * 35" | bc -l)
+	gate_range_db=$(echo "scale=1; -40 - sqrt(${gate_intensity}) * 50" | bc -l)
+	gate_threshold_linear=$(echo "scale=6; e(${gate_threshold_db}/20 * l(10))" | bc -l)
+	gate_range_linear=$(echo "scale=6; e(${gate_range_db}/20 * l(10))" | bc -l)
+	local_filters+=("agate=threshold=${gate_threshold_linear}:range=${gate_range_linear}:attack=10:release=250:ratio=4:detection=rms")
+	echo "Noise gate enabled: intensity=${gate_intensity} threshold=${gate_threshold_db}dB range=${gate_range_db}dB"
+fi
+
+# 6. Equalizer (10-band parametric)
+if [[ $eq_enabled == "1" ]]; then
+	: ${eq_bands:="0,0,0,0,0,0,0,0,0,0"}
+	IFS=',' read -ra bands_arr <<< "$eq_bands"
+	eq_freqs=(31 63 125 250 500 1000 2000 4000 8000 16000)
+	eq_widths=(1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5)
+	eq_parts=()
+	for idx in "${!eq_freqs[@]}"; do
+		gain="${bands_arr[$idx]:-0}"
+		if [[ $(echo "${gain} != 0" | bc -l) -eq 1 ]]; then
+			eq_parts+=("equalizer=f=${eq_freqs[$idx]}:width_type=o:w=${eq_widths[$idx]}:g=${gain}")
+		fi
+	done
+	if [[ ${#eq_parts[@]} -gt 0 ]]; then
+		eq_filter=$(IFS=','; echo "${eq_parts[*]}")
+		local_filters+=("${eq_filter}")
+		echo "Equalizer enabled: ${#eq_parts[@]} active bands"
+	fi
+fi
+
+# Join all filters with comma
+if [[ ${#local_filters[@]} -gt 0 ]]; then
+	noise_audio_filter=$(IFS=','; echo "${local_filters[*]}")
+	echo "Audio filter chain: ${noise_audio_filter}"
+
+	# Force re-encode if audio is set to copy (audio processing requires it)
+	if [[ $audio_handling == "copy" ]]; then
+		echo "Audio processing requires audio re-encoding, switching from copy to reencode"
+		audio_handling="reencode"
+	fi
+fi
+
 # Function to build the audio command string based on the current audio_handling value
 function build_audio_cmd() {
 	audio_cmd="" # Reset audio command
+	audio_inputs="" # Additional audio inputs for NR pre-processing
+	nr_deferred_preprocess=false # Reset deferred NR flag
 	if [[ $audio_handling == "copy" ]]; then
-		audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
+		audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file" | sed 's/,$//')
 		mapfile -t audio_streams <<<"$audio_info"
 		echo "DEBUG: Found ${#audio_streams[@]} audio streams"
 		for i in "${!audio_streams[@]}"; do
@@ -341,53 +448,239 @@ function build_audio_cmd() {
 		done
 		echo "DEBUG: Final audio_cmd: $audio_cmd"
 	elif [[ $audio_handling == "reencode" ]]; then
-		audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file")
+		audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file" | sed 's/,$//')
 		mapfile -t audio_streams <<<"$audio_info"
-		unset i
-		for i in "${!audio_streams[@]}"; do
-			IFS=',' read -r index_audio language_audio <<<"${audio_streams[$i]}"
+		local num_audio=${#audio_streams[@]}
 
-			# Get the number of channels for this specific audio track
-			if [[ -n $audio_channels ]]; then
-				channels=$audio_channels
-			else
-				channels=$(ffprobe -v error -select_streams a:$i -show_entries stream=channels -of csv=p=0 "$input_file")
-			fi
+		if [[ -n $noise_audio_filter && $nr_requires_mono == true ]]; then
+			# LADSPA NR active — defer to parallel preprocess (mono split/merge)
+			nr_deferred_preprocess=true
+			nr_temp_dir=$(mktemp -d)
+			trap 'rm -rf "$nr_temp_dir"' EXIT
 
-			# Remove white spaces from the language_audio
-			language_audio=${language_audio// /}
+			# Collect per-stream info for NR processing and mux
+			nr_stream_channels=()
+			nr_stream_layouts=()
+			nr_stream_indices=()
+			nr_stream_bitrates=()
 
-			# Verify if the language_audio is empty, if not set it to undetermined
-			if [[ -z $language_audio ]]; then
-				language_audio="und"
-			fi
+			for i in "${!audio_streams[@]}"; do
+				IFS=',' read -r index_audio language_audio <<<"${audio_streams[$i]}"
+				if [[ -n $audio_channels ]]; then
+					channels=$audio_channels
+				else
+					channels=$(ffprobe -v error -select_streams a:$i -show_entries stream=channels -of csv=p=0 "$input_file" | sed 's/,$//')
+				fi
+				local nr_layout
+				nr_layout=$(ffprobe -v error -select_streams a:$i -show_entries stream=channel_layout -of csv=p=0 "$input_file" | sed 's/,$//')
+				: "${channels:=2}"
+				: "${nr_layout:=stereo}"
 
-		if [[ -z $audio_bitrate ]]; then
-			audio_bitrate_value=$((channels * 32))k
+				if [[ -z $audio_bitrate ]]; then
+					audio_bitrate_value=$((channels * 32))k
+				else
+					audio_bitrate_value=$audio_bitrate
+				fi
+
+				nr_stream_channels+=("$channels")
+				nr_stream_layouts+=("$nr_layout")
+				nr_stream_indices+=("$index_audio")
+				nr_stream_bitrates+=("$audio_bitrate_value")
+			done
+
+			# Build audio_cmd referencing temp files (created by preprocess_audio_nr in background)
+			# Used for the mux step after parallel video+audio processing
+			for i in "${!audio_streams[@]}"; do
+				local temp_audio="$nr_temp_dir/audio_${i}.flac"
+				local input_idx=$((i + 1))
+				audio_inputs+="-i \"$temp_audio\" "
+				local brate="${nr_stream_bitrates[$i]}"
+				local ch="${nr_stream_channels[$i]}"
+				case $audio_codec in
+				opus)
+					audio_cmd+="-map $input_idx:a:0 -c:a:$i libopus -b:a:$i $brate -ac:a:$i $ch "
+					;;
+				ac3)
+					audio_cmd+="-map $input_idx:a:0 -c:a:$i ac3 -b:a:$i $brate -ac:a:$i $ch "
+					;;
+				*)
+					audio_cmd+="-map $input_idx:a:0 -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $brate -ac:a:$i $ch "
+					;;
+				esac
+			done
+
+			echo "Audio NR deferred for parallel processing ($num_audio streams)"
 		else
-			audio_bitrate_value=$audio_bitrate
+			# No NR, or non-NR filters only — build audio_cmd with optional inline filters
+			for i in "${!audio_streams[@]}"; do
+				IFS=',' read -r index_audio language_audio <<<"${audio_streams[$i]}"
+
+				if [[ -n $audio_channels ]]; then
+					channels=$audio_channels
+				else
+					channels=$(ffprobe -v error -select_streams a:$i -show_entries stream=channels -of csv=p=0 "$input_file" | sed 's/,$//')
+				fi
+				language_audio=${language_audio// /}
+				if [[ -z $language_audio ]]; then
+					language_audio="und"
+				fi
+
+				if [[ -z $audio_bitrate ]]; then
+					audio_bitrate_value=$((channels * 32))k
+				else
+					audio_bitrate_value=$audio_bitrate
+				fi
+
+				local filter_opt=""
+				if [[ -n $noise_audio_filter ]]; then
+					filter_opt="-filter:a:$i $noise_audio_filter "
+				fi
+
+				case $audio_codec in
+				opus)
+					audio_cmd+="-map 0:$index_audio -c:a:$i libopus -b:a:$i $audio_bitrate_value -ac:a:$i $channels $filter_opt"
+					;;
+				ac3)
+					audio_cmd+="-map 0:$index_audio -c:a:$i ac3 -b:a:$i $audio_bitrate_value -ac:a:$i $channels $filter_opt"
+					;;
+				*)
+					audio_cmd+="-map 0:$index_audio -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $audio_bitrate_value -ac:a:$i $channels $filter_opt"
+					;;
+				esac
+			done
 		fi
-
-		# Build audio encoding command based on codec
-		case $audio_codec in
-		opus)
-			# Opus: excellent quality, especially at lower bitrates
-			audio_cmd+="-map 0:$index_audio -c:a:$i libopus -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
-			;;
-		ac3)
-			# AC3 (Dolby Digital): for multichannel audio
-			audio_cmd+="-map 0:$index_audio -c:a:$i ac3 -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
-			;;
-		*)
-			# AAC: default, best compatibility
-			audio_cmd+="-map 0:$index_audio -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $audio_bitrate_value -ac:a:$i $channels "
-			;;
-		esac
-
-	done
 	elif [[ $audio_handling == "none" ]]; then
 		audio_cmd="-an"
 	fi
+}
+
+# Pre-process all audio streams with noise reduction.
+# Called from attempt_conversion() as a background process to run in parallel
+# with video encoding. Creates $nr_temp_dir/audio_N.flac for each stream.
+# Uses 3-stage pipeline: extract → NR per-channel (parallel) → merge.
+function preprocess_audio_nr() {
+	local num_streams=${#nr_stream_indices[@]}
+	echo "NR: Processing $num_streams audio streams in parallel..."
+
+	# Stage A: Extract each audio stream / apply NR directly for mono
+	local -a extract_pids=()
+	for i in $(seq 0 $((num_streams - 1))); do
+		local index_audio="${nr_stream_indices[$i]}"
+		local channels="${nr_stream_channels[$i]}"
+		local nr_layout="${nr_stream_layouts[$i]}"
+		local temp_audio="$nr_temp_dir/audio_${i}.flac"
+
+		echo "  NR stream $i: index=$index_audio, ${channels}ch, layout=$nr_layout"
+
+		if [[ $channels -le 1 ]]; then
+			# Mono: apply NR directly (no split/merge needed)
+			$ffmpeg_executable -i "$input_file" -map "0:$index_audio" \
+				-filter:a "$noise_audio_filter" \
+				-c:a flac -y "$temp_audio" </dev/null 2>/dev/null &
+			extract_pids+=("$!:direct")
+		else
+			# Multi-channel: extract stream as FLAC first
+			local stream_raw="$nr_temp_dir/raw_stream_${i}.flac"
+			$ffmpeg_executable -i "$input_file" -vn -map "0:$index_audio" \
+				-c:a flac -y "$stream_raw" </dev/null 2>/dev/null &
+			extract_pids+=("$!:extract:$i")
+		fi
+	done
+
+	# Wait for Stage A
+	local -a extract_failed=()
+	for entry in "${extract_pids[@]}"; do
+		local pid="${entry%%:*}"
+		if ! wait "$pid"; then
+			extract_failed+=("$entry")
+		fi
+	done
+	if [[ ${#extract_failed[@]} -gt 0 ]]; then
+		echo "WARNING: Audio extraction failed for: ${extract_failed[*]}"
+	fi
+
+	# Stage B: Split into mono channels + apply NR in parallel
+	local -a nr_pids=()
+	local -a nr_pid_stream=()
+	for i in $(seq 0 $((num_streams - 1))); do
+		local channels="${nr_stream_channels[$i]}"
+		[[ $channels -le 1 ]] && continue
+
+		local stream_raw="$nr_temp_dir/raw_stream_${i}.flac"
+		local ch_dir="$nr_temp_dir/stream_${i}"
+		mkdir -p "$ch_dir"
+
+		for ((ch=0; ch<channels; ch++)); do
+			$ffmpeg_executable -i "$stream_raw" \
+				-filter:a "pan=mono|c0=c${ch},${noise_audio_filter}" \
+				-c:a flac -y "$ch_dir/ch${ch}.flac" </dev/null 2>/dev/null &
+			nr_pids+=($!)
+			nr_pid_stream+=("$i:$ch")
+		done
+	done
+
+	if [[ ${#nr_pids[@]} -gt 0 ]]; then
+		echo "  NR: Waiting for ${#nr_pids[@]} per-channel processes..."
+		local -a nr_failed=()
+		for pidx in "${!nr_pids[@]}"; do
+			if ! wait "${nr_pids[$pidx]}"; then
+				nr_failed+=("${nr_pid_stream[$pidx]}")
+			fi
+		done
+		if [[ ${#nr_failed[@]} -gt 0 ]]; then
+			echo "WARNING: NR per-channel failed for: ${nr_failed[*]}"
+		fi
+	fi
+
+	# Stage C: Merge channels back to original layout (parallel per stream)
+	local -a merge_pids=()
+	for i in $(seq 0 $((num_streams - 1))); do
+		local channels="${nr_stream_channels[$i]}"
+		[[ $channels -le 1 ]] && continue
+
+		local nr_layout="${nr_stream_layouts[$i]}"
+		local temp_audio="$nr_temp_dir/audio_${i}.flac"
+		local ch_dir="$nr_temp_dir/stream_${i}"
+
+		# Build pan expression to restore original channel layout
+		local pan_expr=""
+		case "$nr_layout" in
+		mono)        pan_expr="mono|c0=c0" ;;
+		stereo)      pan_expr="stereo|FL=c0|FR=c1" ;;
+		3.0)         pan_expr="3.0|FL=c0|FR=c1|FC=c2" ;;
+		quad)        pan_expr="quad|FL=c0|FR=c1|BL=c2|BR=c3" ;;
+		5.0*)        pan_expr="5.0|FL=c0|FR=c1|FC=c2|BL=c3|BR=c4" ;;
+		5.1*)        pan_expr="5.1|FL=c0|FR=c1|FC=c2|LFE=c3|BL=c4|BR=c5" ;;
+		6.1*)        pan_expr="6.1|FL=c0|FR=c1|FC=c2|LFE=c3|BL=c4|BR=c5|BC=c6" ;;
+		7.1*)        pan_expr="7.1|FL=c0|FR=c1|FC=c2|LFE=c3|BL=c4|BR=c5|SL=c6|SR=c7" ;;
+		*)           pan_expr="" ;;
+		esac
+
+		local merge_inputs=""
+		for ((ch=0; ch<channels; ch++)); do
+			merge_inputs+="-i $ch_dir/ch${ch}.flac "
+		done
+		local merge_filter="amerge=inputs=${channels}"
+		if [[ -n "$pan_expr" ]]; then
+			merge_filter+=",pan=${pan_expr}"
+		fi
+
+		eval $ffmpeg_executable $merge_inputs \
+			-filter_complex "'${merge_filter}'" \
+			-c:a flac -y "'$temp_audio'" </dev/null 2>/dev/null &
+		merge_pids+=($!)
+	done
+
+	# Wait for merges
+	for pid in "${merge_pids[@]}"; do
+		wait "$pid"
+	done
+
+	# Clean up intermediate files
+	rm -f "$nr_temp_dir"/raw_stream_*.flac
+	rm -rf "$nr_temp_dir"/stream_*
+
+	echo "  NR: All audio streams processed."
 }
 
 ##############
@@ -405,38 +698,47 @@ veryhigh)
 	qp_value=18
 	global_quality=18
 	cq_value_nvidia=19
+	qp_hevc=22
 	;;
 high)
 	cq_value=24
 	qp_value=21
 	global_quality=21
 	cq_value_nvidia=24
+	qp_hevc=25
 	;;
 medium)
 	cq_value=28
 	qp_value=24
 	global_quality=24
 	cq_value_nvidia=28
+	qp_hevc=28
 	;;
 low)
 	cq_value=31
 	qp_value=27
 	global_quality=27
 	cq_value_nvidia=31
+	qp_hevc=31
 	;;
 verylow)
 	cq_value=34
 	qp_value=30
 	global_quality=30
 	cq_value_nvidia=34
+	qp_hevc=34
 	;;
 superlow)
 	cq_value=38
 	qp_value=33
 	global_quality=33
 	cq_value_nvidia=38
+	qp_hevc=37
 	;;
 esac
+
+# QSV HEVC needs lower global_quality values than NVENC qp for same visual quality
+qp_hevc_qsv=$((qp_hevc - 4))
 
 if [[ $preset == "default" ]]; then
 	unset preset
@@ -461,42 +763,84 @@ veryslow) nvidia_preset=6 ;;
 *) nvidia_preset=4 ;; # Default to medium
 esac
 
+# Convert preset for SVT-AV1 (6=best quality, 12=fastest)
+# Presets below 6 add minimal quality gain with extreme slowdown
+case $software_preset in
+ultrafast) svtav1_preset=12 ;;
+veryfast) svtav1_preset=11 ;;
+faster) svtav1_preset=10 ;;
+medium) svtav1_preset=9 ;;
+slow) svtav1_preset=7 ;;
+veryslow) svtav1_preset=6 ;;
+*) svtav1_preset=10 ;; # Default to faster
+esac
+
+# Convert preset for VP9 cpu-used (0=slowest/best, 8=fastest/worst)
+case $software_preset in
+ultrafast) vpx_cpu_used=6 ;;
+veryfast) vpx_cpu_used=5 ;;
+faster) vpx_cpu_used=4 ;;
+medium) vpx_cpu_used=3 ;;
+slow) vpx_cpu_used=2 ;;
+veryslow) vpx_cpu_used=1 ;;
+*) vpx_cpu_used=3 ;; # Default to medium
+esac
+
 #######################
 # Create ffmpeg command
 #######################
 # Function to build the main encoder command strings
 function build_encoder_commands() {
-	general_params="-i \"$input_file\" -map 0:v:0 $audio_cmd"
+	general_params="-i \"$input_file\" $audio_inputs -map 0:v:0 $audio_cmd"
 	copy_video="$general_params -c:v copy"
 
 	# Select appropriate encoder command based on the specified video encoder
 	case $video_encoder in
 	h265)
-		encoder_nvenc="$general_params -c:v hevc_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-		encoder_vulkan="$general_params -c:v hevc_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_vaapi="$general_params -c:v hevc_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_qsv="$general_params -c:v hevc_qsv -preset $preset -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
-		encoder_software="$general_params -c:v libx265 -preset $software_preset -look_ahead_depth 100 -crf $qp_value"
+		encoder_nvenc="$general_params -c:v hevc_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -spatial-aq 1 -b_ref_mode middle -rc-lookahead 100"
+		encoder_vulkan="$general_params -c:v hevc_vulkan -qp $qp_hevc -tune hq"
+		encoder_vaapi="$general_params -c:v hevc_vaapi -global_quality $qp_hevc -rc_mode ICQ"
+		encoder_qsv="$general_params -c:v hevc_qsv -preset $preset -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $qp_hevc_qsv -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+		encoder_software="$general_params -c:v libx265 -preset $software_preset -crf $qp_hevc -x265-params log-level=warning"
 		;;
 	av1)
-		encoder_nvenc="$general_params -c:v av1_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-		encoder_vaapi="$general_params -c:v av1_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+		encoder_nvenc="$general_params -c:v av1_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -spatial-aq 1 -b_ref_mode middle -rc-lookahead 100"
+		encoder_vulkan="$general_params -c:v av1_vulkan -qp $qp_value -tune hq"
+		encoder_vaapi="$general_params -c:v av1_vaapi -global_quality $global_quality -rc_mode CQP"
 		encoder_qsv="$general_params -c:v av1_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_software="$general_params -c:v libsvtav1 -crf $cq_value"
+		encoder_software="$general_params -c:v libsvtav1 -preset $svtav1_preset -crf $cq_value -pix_fmt yuv420p10le -svtav1-params tune=0"
 		;;
 	vp9)
-		encoder_nvenc="$general_params -c:v vp9_nvenc -rc:v constqp -qp $qp_value -b:v 0K -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-		encoder_vaapi="$general_params -c:v vp9_vaapi -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
+		encoder_nvenc="$general_params -c:v vp9_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
+		encoder_vaapi="$general_params -c:v vp9_vaapi -global_quality $global_quality -rc_mode CQP"
 		encoder_qsv="$general_params -c:v vp9_qsv -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_software="$general_params -c:v libvpx-vp9 -preset $software_preset -look_ahead_depth 100 -crf $cq_value  -speed 1"
+		encoder_software="$general_params -c:v libvpx-vp9 -crf $cq_value -b:v 0 -quality good -cpu-used $vpx_cpu_used -row-mt 1"
+		;;
+	prores)
+		# ProRes is a software-only codec, map quality to profile
+		# profile 0=Proxy, 1=LT, 2=Standard, 3=HQ, 4=4444, 5=4444XQ
+		local prores_profile
+		case $video_quality in
+			superlow|verylow) prores_profile=0 ;; # Proxy
+			low) prores_profile=1 ;;               # LT
+			medium|default) prores_profile=2 ;;    # Standard
+			high) prores_profile=3 ;;              # HQ
+			veryhigh) prores_profile=4 ;;          # 4444
+			*) prores_profile=2 ;;                 # Standard
+		esac
+		encoder_nvenc=""
+		encoder_vulkan=""
+		encoder_vaapi=""
+		encoder_qsv=""
+		encoder_software="$general_params -c:v prores_ks -profile:v $prores_profile -vendor apl0 -pix_fmt yuva444p10le"
 		;;
 	*)
 		# Default is h264
 		encoder_nvenc="$general_params -c:v h264_nvenc -rc:v vbr -cq $cq_value_nvidia -tune:v hq -preset:v p$nvidia_preset -temporal-aq 1 -rc-lookahead 100"
-		encoder_vulkan="$general_params -c:v h264_vulkan -preset $preset -look_ahead_depth 100 -global_quality $global_quality"
-		encoder_vaapi="$general_params -c:v h264_vaapi -preset $preset -profile:v high -level:v 4.1 -rc_mode 1 -fps_mode cfr -g 60 -keyint_min 60 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality"
-		encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v high -level:v 4.1 -fps_mode cfr -g 48 -keyint_min 48 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
-		encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v high -level:v 4.1 -crf $qp_value -look_ahead_depth 100"
+		encoder_vulkan="$general_params -c:v h264_vulkan -qp $global_quality"
+		encoder_vaapi="$general_params -c:v h264_vaapi -profile:v high -level:v 4.1 -rc_mode CQP -global_quality $global_quality"
+		encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v high -level:v 4.1 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
+		encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v high -level:v 4.1 -crf $qp_value"
 		;;
 	esac
 }
@@ -505,7 +849,13 @@ function build_encoder_commands() {
 gpu=${gpu/auto/}
 
 # Generic options for ffmpeg
-ffmpeg_generic_options="-movflags +faststart -y \"$output_file\""
+# Only apply -movflags +faststart for MP4/MOV containers (it's invalid for MKV/WebM)
+output_extension="${output_file##*.}"
+if [[ "${output_extension,,}" == "mp4" || "${output_extension,,}" == "mov" || "${output_extension,,}" == "m4v" ]]; then
+	ffmpeg_generic_options="-movflags +faststart -y \"$output_file\""
+else
+	ffmpeg_generic_options="-y \"$output_file\""
+fi
 
 if [[ $only_extract_subtitles = 1 ]]; then
 	general_params="-i \"$input_file\" $subtitle_cmd"
@@ -529,51 +879,77 @@ function attempt_conversion() {
 	init_vaapi='-init_hw_device vaapi'
 	init_vulkan='-init_hw_device vulkan'
 	init_nvidia='-init_hw_device cuda'
+
+	# Use specific GPU device if provided
+	if [[ -n "$gpu_device" ]]; then
+		init_vaapi="-init_hw_device vaapi=va:$gpu_device"
+		init_vulkan="-init_hw_device vulkan=vk:$gpu_device"
+		init_nvidia="-init_hw_device cuda=cu:$gpu_device"
+	fi
 	decoder_qsv='-filter_hw_device qs -hwaccel qsv -hwaccel_output_format qsv'
 	decoder_vaapi='-hwaccel vaapi -hwaccel_output_format vaapi'
 	decoder_vulkan='-hwaccel vulkan -hwaccel_output_format vulkan'
 	decoder_cuda='-hwaccel cuda -hwaccel_output_format cuda'
 
 	local scale_filter_name="scale"
+	local detected_encoder_var=""  # Track which encoder var was selected
 
 	# Handle explicit software encoding request
 	if [[ "$gpu" == "software" ]]; then
 		encoder_format=$encoder_software
+		detected_encoder_var="encoder_software"
+		force_software=1
+	# ProRes is always software-only
+	elif [[ "$video_encoder" == "prores" ]]; then
+		encoder_format=$encoder_software
+		detected_encoder_var="encoder_software"
 		force_software=1
 	elif [[ "$force_encoder" == "vulkan" || "$gpu" == "vulkan" ]]; then
 		decoder_format="$decoder_vulkan"
 		encoder_format="$encoder_vulkan"
+		detected_encoder_var="encoder_vulkan"
 		init_hardware="$init_vulkan"
 		scale_filter_name="scale_vulkan"
 	elif grep -qiE '(VGA|Display controller|3d).*nvidia' <<<"$devices"; then
 		decoder_format="$decoder_cuda"
 		encoder_format="$encoder_nvenc"
+		detected_encoder_var="encoder_nvenc"
 		init_hardware="$init_nvidia"
 		scale_filter_name="scale_cuda"
 	elif grep -qiE '(VGA|Display controller).*(\bAMD\b|\bATI\b)' <<<"$devices"; then
+		# AMD VAAPI doesn't support ICQ mode - use CQP for HEVC
+		if [[ "$video_encoder" == "h265" ]]; then
+			encoder_vaapi="$general_params -c:v hevc_vaapi -global_quality $qp_hevc -rc_mode CQP"
+		fi
 		decoder_format="$decoder_vaapi"
 		encoder_format="$encoder_vaapi"
+		detected_encoder_var="encoder_vaapi"
 		init_hardware="$init_vaapi"
 		scale_filter_name="scale_vaapi"
 	elif grep -qiE '(VGA|Display controller).*intel' <<<"$devices"; then
 		decoder_format="$decoder_qsv"
 		encoder_format="$encoder_qsv"
+		detected_encoder_var="encoder_qsv"
 		init_hardware="$init_qsv"
 		scale_filter_name="scale_qsv"
 	else
 		encoder_format=$encoder_software
+		detected_encoder_var="encoder_software"
 	fi
 
 	if [[ $force_software = 1 ]]; then
 		encoder_format=$encoder_software
+		detected_encoder_var="encoder_software"
 	fi
 
 	if [[ $force_copy_video = 1 ]]; then
 		encoder_format=$copy_video
+		detected_encoder_var="copy_video"
 	fi
 	if [[ -n $force_encoder ]]; then
 		encoder_var="encoder_${force_encoder}"
 		encoder_format=${!encoder_var}
+		detected_encoder_var="$encoder_var"
 		init_hardware="${!encoder_var/init/}"
 	fi
 
@@ -628,6 +1004,15 @@ function attempt_conversion() {
 
 	fi
 
+	# Force software decode on NVIDIA when vflip is present.
+	# CUDA hwdownload→vflip→hwupload pipeline produces green screen for HEVC/AV1 decoders.
+	# H264 already fails Stage 1 and falls back, but HEVC/AV1 silently corrupt frames.
+	# Skipping directly to Stage 2 (software decode + GPU encode) avoids the issue.
+	if [[ "$video_filter" == *"vflip"* && "$detected_encoder_var" == "encoder_nvenc" ]]; then
+		gpu_partial=1
+		echo "vflip detected on NVIDIA: forcing software decode (Stage 2)"
+	fi
+
 	# --- Execute Conversion Attempts ---
 
 	# Extract subtitles first if needed (separate command to avoid output conflicts)
@@ -641,16 +1026,58 @@ function attempt_conversion() {
 		fi
 	fi
 
+	# === Parallel NR Pipeline ===
+	# When NR is active, audio and video are processed in parallel:
+	#   1. Audio NR runs in background (per-channel parallel)
+	#   2. Video encodes through 3-stage fallback (GPU → partial → software)
+	#   3. Wait for audio NR, then mux video + audio
+	# Total time ≈ max(video, audio) instead of audio + video sequentially.
+	# Works with ALL encoders (CUDA, VAAPI, QSV, software).
+	local nr_parallel_mode=false
+	local nr_bg_pid=""
+	local nr_video_file=""
+	local saved_audio_cmd=""
+	local saved_audio_inputs=""
+	local saved_ffmpeg_generic=""
+
+	if [[ $nr_deferred_preprocess == true ]]; then
+		nr_parallel_mode=true
+		nr_video_file=$(mktemp --suffix=.mkv)
+
+		# Start audio NR in background
+		preprocess_audio_nr &
+		nr_bg_pid=$!
+		echo "Parallel pipeline: audio NR (PID $nr_bg_pid) + video encoding"
+
+		# Switch to video-only encoding
+		saved_audio_cmd="$audio_cmd"
+		saved_audio_inputs="$audio_inputs"
+		saved_ffmpeg_generic="$ffmpeg_generic_options"
+		audio_cmd="-an"
+		audio_inputs=""
+		build_encoder_commands
+		# Re-derive encoder_format after rebuild (it was a value copy from detection)
+		if [[ -n "$detected_encoder_var" ]]; then
+			encoder_format="${!detected_encoder_var}"
+		fi
+		ffmpeg_generic_options="-y \"$nr_video_file\""
+	fi
+
 	if [[ "$force_copy_video" = "1" ]]; then
 		echo "Generating file without re-encoding"
 		echo "Running command: $ffmpeg_executable $options $decoder_format $encoder_format  $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$options" "$decoder_format" "$encoder_format" "$ffmpeg_generic_options"
-		# After copy always exit
-		exit $?
+		if [[ $nr_parallel_mode != true ]]; then
+			# After copy always exit (when not in parallel NR mode)
+			exit $?
+		fi
+		exit_code=$?
 	fi
-	
-	# Try to encode with the GPU
-	if [[ "$encoder_format" != "$encoder_software" && "$gpu_partial" != "1" ]]; then
+
+	# --- 3-stage encoder fallback ---
+	# Stage 1: Full GPU (decode + encode on GPU)
+	# Skip if force_copy_video already handled the video
+	if [[ "$force_copy_video" != "1" && "$encoder_format" != "$encoder_software" && "$gpu_partial" != "1" ]]; then
 		echo "Encode mode: Decode GPU, encode GPU"
 		echo "Detected encode mode: Decode GPU, encode GPU (Aceleração total de GPU)"
 		echo "Running command: $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
@@ -658,51 +1085,52 @@ function attempt_conversion() {
 		echo "FFmpeg command:"
 		echo "$ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$init_hardware" "$options" "$decoder_format" "$encoder_format" "$video_filter_chain" "$ffmpeg_generic_options"
-		# Store the exit code while preserving $? for later checks
 		exit_code=$?
 		if [[ $exit_code != 0 ]]; then
 			echo "Conversion failed!"
 		fi
 	else
-		# GPU encoding skipped, set exit_code to trigger software encoding
 		exit_code=1
 	fi
 
-	# If encoding not successful, and not exit with 255 (interrupted by user), and not software encoding, try with the second option
+	# Stage 2: Partial GPU (decode CPU, encode GPU)
 	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1" ]]; then
 		echo "Encode mode: Decode Software, Encode GPU"
 		echo "Detected encode mode: Decode Software, Encode GPU (Decodificação de Software e codificação por GPU)"
 
-		#####################################################
-		# --- Encode GPU Decode CPU filter chain ---
-		#####################################################
 		local partial_video_filter_chain=""
 		local partial_filter_parts=()
 
-		# For partial GPU, we need to add hwupload at the beginning of the filter chain.
-		# This moves the software-decoded frame (e.g., nv12) to the GPU's memory.
-		if [[ ${encoder_format,,} =~ nvenc ]]; then
-			partial_filter_parts+=("format=nv12" "hwupload_cuda")
-		elif [[ ${encoder_format,,} =~ vulkan ]]; then
-			partial_filter_parts+=("format=nv12" "hwupload=derive_device=vulkan")
-		elif [[ ${encoder_format,,} =~ vaapi ]]; then
-			partial_filter_parts+=("format=nv12" "hwupload=derive_device=vaapi")
-		elif [[ ${encoder_format,,} =~ qsv ]]; then
-			partial_filter_parts+=("format=nv12" "hwupload=extra_hw_frames=64,format=qsv")
+		if [[ $needs_gbr_matrix_fix == true ]]; then
+			partial_filter_parts+=("zscale=min=709:m=709:tin=709:t=709:pin=709:p=709:r=tv")
 		fi
 
-		# Add user-provided filters after the upload
+		# User video filters (crop, rotation, flip, etc) — must run in software space
 		if [[ -n "$video_filter" ]]; then
 			partial_filter_parts+=("$video_filter")
 		fi
 
-		# Add scaling filter if specified
+		local hw_pix_fmt="nv12"
+		if [[ $video_encoder == "av1" ]]; then
+			hw_pix_fmt="p010le"
+		elif [[ $is_10bit == true && $needs_10bit_to_8bit_conversion == false ]]; then
+			hw_pix_fmt="p010le"
+		fi
+
+		if [[ ${encoder_format,,} =~ nvenc ]]; then
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload_cuda")
+		elif [[ ${encoder_format,,} =~ vulkan ]]; then
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload=derive_device=vulkan")
+		elif [[ ${encoder_format,,} =~ vaapi ]]; then
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload=derive_device=vaapi")
+		elif [[ ${encoder_format,,} =~ qsv ]]; then
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload=extra_hw_frames=64,format=qsv")
+		fi
+
 		if [[ -n "$video_resolution" ]]; then
-			# For partial mode, scaling happens on the GPU after upload
 			partial_filter_parts+=("$scale_filter_name=${video_resolution/x/:}")
 		fi
 
-		# Build the final filter chain string if there are any filters
 		if [[ ${#partial_filter_parts[@]} -gt 0 ]]; then
 			partial_video_filter_chain="-vf $(IFS=,; echo "${partial_filter_parts[*]}")"
 		fi
@@ -718,21 +1146,34 @@ function attempt_conversion() {
 		fi
 	fi
 
-	# If encoding not successful, and not exit with 255 (interrupted by user), try with software
+	# Stage 3: Full software (decode + encode on CPU)
 	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || $force_software == 1 || ("$encoder_format" == "$encoder_software") ]]; then
 		echo "Encode mode: Decode Software, Encode Software"
 		echo "Detected encode mode: Decode Software, Encode Software (Codificação de software)"
-		# Software mode uses the original video_filter variable without hw acceleration
 		local software_filter_chain=""
-		if [[ -n "$video_filter" ]]; then
-			software_filter_chain="-vf $video_filter"
-		fi
-		if [[ -n "$video_resolution" ]]; then
-			if [[ -z "$software_filter_chain" ]]; then
-				software_filter_chain="-vf scale=${video_resolution/x/:}"
+		local sw_filter_parts=()
+
+		if [[ $needs_gbr_matrix_fix == true ]]; then
+			sw_filter_parts+=("zscale=min=709:m=709:tin=709:t=709:pin=709:p=709:r=tv")
+			if [[ $video_encoder == "av1" ]]; then
+				sw_filter_parts+=("format=yuv420p10le")
+			elif [[ $is_10bit == true && $needs_10bit_to_8bit_conversion == false ]]; then
+				sw_filter_parts+=("format=yuv420p10le")
 			else
-				software_filter_chain+=",scale=${video_resolution/x/:}"
+				sw_filter_parts+=("format=yuv420p")
 			fi
+		fi
+
+		if [[ -n "$video_filter" ]]; then
+			sw_filter_parts+=("$video_filter")
+		fi
+
+		if [[ -n "$video_resolution" ]]; then
+			sw_filter_parts+=("scale=${video_resolution/x/:}")
+		fi
+
+		if [[ ${#sw_filter_parts[@]} -gt 0 ]]; then
+			software_filter_chain="-vf $(IFS=,; echo "${sw_filter_parts[*]}")"
 		fi
 
 		echo "Running command: $ffmpeg_executable $options $encoder_software $software_filter_chain $ffmpeg_generic_options"
@@ -741,6 +1182,78 @@ function attempt_conversion() {
 		echo "$ffmpeg_executable $options $encoder_software $software_filter_chain $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$options" "$encoder_software" "$software_filter_chain" "$ffmpeg_generic_options"
 		exit_code=$?
+	fi
+
+	# === NR Parallel Teardown: wait for audio NR and mux ===
+	if [[ $nr_parallel_mode == true ]]; then
+		# Restore audio state for potential fallback passes
+		audio_cmd="$saved_audio_cmd"
+		audio_inputs="$saved_audio_inputs"
+		ffmpeg_generic_options="$saved_ffmpeg_generic"
+		build_encoder_commands
+
+		if [[ $exit_code -eq 0 && -s "$nr_video_file" ]]; then
+			echo "Video encoding done. Waiting for audio NR to finish..."
+			wait "$nr_bg_pid"
+			local nr_exit=$?
+
+			if [[ $nr_exit -eq 0 ]]; then
+				echo "Audio NR complete. Muxing video + processed audio..."
+				# Build mux command: video from temp, audio from temp FLAC files
+				local mux_audio_inputs=""
+				local mux_audio_map=""
+				local num_streams=${#nr_stream_indices[@]}
+				for i in $(seq 0 $((num_streams - 1))); do
+					local temp_audio="$nr_temp_dir/audio_${i}.flac"
+					if [[ -s "$temp_audio" ]]; then
+						mux_audio_inputs+="-i \"$temp_audio\" "
+						local input_idx=$((i + 1))
+						local channels="${nr_stream_channels[$i]}"
+						local brate="${nr_stream_bitrates[$i]}"
+						case $audio_codec in
+						opus)
+							mux_audio_map+="-map $input_idx:a:0 -c:a:$i libopus -b:a:$i $brate -ac:a:$i $channels "
+							;;
+						ac3)
+							mux_audio_map+="-map $input_idx:a:0 -c:a:$i ac3 -b:a:$i $brate -ac:a:$i $channels "
+							;;
+						*)
+							mux_audio_map+="-map $input_idx:a:0 -c:a:$i aac -aac_coder fast -profile:a aac_low -b:a:$i $brate -ac:a:$i $channels "
+							;;
+						esac
+					else
+						echo "WARNING: NR output missing for stream $i"
+					fi
+				done
+
+				# Movflags for MP4/MOV containers
+				local mux_movflags=""
+				local final_ext="${output_file##*.}"
+				if [[ "${final_ext,,}" == "mp4" || "${final_ext,,}" == "mov" || "${final_ext,,}" == "m4v" ]]; then
+					mux_movflags="-movflags +faststart"
+				fi
+
+				eval $ffmpeg_executable -i \"$nr_video_file\" $mux_audio_inputs \
+					-map 0:v:0 $mux_audio_map \
+					-c:v copy $mux_movflags -y \"$output_file\"
+				exit_code=$?
+
+				if [[ $exit_code -eq 0 ]]; then
+					echo "Muxing complete: $output_file"
+				else
+					echo "WARNING: Muxing failed (exit $exit_code)"
+				fi
+			else
+				echo "WARNING: Audio NR failed (exit $nr_exit)"
+				exit_code=1
+			fi
+		else
+			echo "Video encoding failed. Killing audio NR..."
+			kill "$nr_bg_pid" 2>/dev/null
+			wait "$nr_bg_pid" 2>/dev/null
+		fi
+
+		rm -f "$nr_video_file"
 	fi
 }
 
@@ -765,6 +1278,20 @@ if [[ $exit_code != 0 && $exit_code != 255 && $exit_code != 2 && "$original_audi
 	build_encoder_commands
 
 	# Attempt the conversion again with the new settings
+	attempt_conversion
+fi
+
+# --- Audio Codec Fallback Pass ---
+# If re-encoding with a specific codec failed (e.g. Opus in MP4), try with AAC
+if [[ $exit_code != 0 && $exit_code != 255 && "$audio_handling" == "reencode" && "$audio_codec" != "aac" ]]; then
+	echo -e "${COLOR_YELLOW}Audio re-encoding with $audio_codec may have failed. Retrying with AAC codec...${COLOR_RESET}"
+
+	# Switch to AAC (most compatible codec) and rebuild all commands
+	audio_codec="aac"
+	build_audio_cmd
+	build_encoder_commands
+
+	# Attempt the conversion again with AAC
 	attempt_conversion
 fi
 

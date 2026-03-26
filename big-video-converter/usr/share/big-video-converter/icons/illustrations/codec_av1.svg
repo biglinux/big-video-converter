@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Very small file icon -->
+  <rect x="10" y="24" width="14" height="18" rx="2" fill="none" stroke="#3584e4" stroke-width="1.5"/>
+  <text x="17" y="36" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">AV1</text>
+  <!-- Star/diamond icon -->
+  <polygon points="17,10 19,16 25,16 20,20 22,26 17,22 12,26 14,20 9,16 15,16" fill="#3584e4" opacity="0.7"/>
+  <!-- Arrow to clock -->
+  <line x1="32" y1="33" x2="50" y2="33" stroke="#999" stroke-width="1.2"/>
+  <polygon points="50,30 56,33 50,36" fill="#999"/>
+  <!-- Clock icon (slow) -->
+  <circle cx="75" cy="30" r="16" fill="none" stroke="#999" stroke-width="1.5"/>
+  <line x1="75" y1="30" x2="75" y2="20" stroke="#999" stroke-width="1.5"/>
+  <line x1="75" y1="30" x2="83" y2="33" stroke="#999" stroke-width="1.5"/>
+  <!-- Turtle-like slow indicator -->
+  <text x="75" y="52" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">SLOW</text>
+  <!-- Labels -->
+  <text x="17" y="50" font-family="sans-serif" font-size="4.5" fill="#3584e4" text-anchor="middle">Smallest</text>
+  <text x="60" y="72" font-family="sans-serif" font-size="5.5" fill="#999" text-anchor="middle">Best compression but slow encoding</text>
+</svg>

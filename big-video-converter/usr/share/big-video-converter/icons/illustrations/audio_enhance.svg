@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Weak voice wave (left) -->
+  <path d="M8,38 Q11,34 14,38 Q17,42 20,38 Q23,35 26,38 Q29,41 32,38" 
+        stroke="#999" stroke-width="1" fill="none"/>
+  <!-- Small speaker icon -->
+  <rect x="12" y="22" width="6" height="8" rx="1" fill="#999"/>
+  <polygon points="18,20 24,16 24,34 18,30" fill="none" stroke="#999" stroke-width="1"/>
+  <!-- Arrow -->
+  <line x1="38" y1="36" x2="52" y2="36" stroke="#3584e4" stroke-width="1.5"/>
+  <polygon points="52,32 59,36 52,40" fill="#3584e4"/>
+  <!-- Strong clear voice wave (right) -->
+  <path d="M64,36 Q68,20 72,36 Q76,52 80,36 Q84,20 88,36 Q92,52 96,36 Q100,20 104,36" 
+        stroke="#3584e4" stroke-width="2" fill="none"/>
+  <!-- Sparkle -->
+  <polygon points="106,16 108,22 114,22 109,26 111,32 106,28 101,32 103,26 98,22 104,22" fill="#3584e4" opacity="0.7"/>
+  <!-- Labels -->
+  <text x="20" y="56" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">Weak</text>
+  <text x="84" y="56" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">Clear</text>
+  <text x="60" y="74" font-family="sans-serif" font-size="5.5" fill="#999" text-anchor="middle">Enhances voice clarity</text>
+</svg>

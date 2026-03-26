@@ -1,15 +1,20 @@
+import json
 import os
 import subprocess
-import json
-import gi
 import threading
+
+import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, GLib, Gdk
-
 # For translations
 import gettext
+
+from gi.repository import Adw, Gdk, GLib, Gtk
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
 
@@ -102,7 +107,7 @@ class VideoInfoDialog:
         # Set dialog content
         self.dialog.set_content(content_box)
 
-    def show(self):
+    def show(self) -> None:
         """Show the dialog and start loading file information"""
         self.dialog.present()
 
@@ -117,7 +122,7 @@ class VideoInfoDialog:
             info_thread.daemon = True
             info_thread.start()
             return False
-        except Exception as e:
+        except (GLib.Error, OSError) as e:
             self._show_error(str(e))
             return False
 
@@ -126,7 +131,7 @@ class VideoInfoDialog:
         try:
             info = get_video_file_info(self.file_path)
             GLib.idle_add(self._update_ui_with_info, info)
-        except Exception as e:
+        except (GLib.Error, OSError) as e:
             GLib.idle_add(self._show_error, str(e))
 
     def _update_ui_with_info(self, info):
@@ -175,12 +180,7 @@ class VideoInfoDialog:
         file_name_row = Adw.ActionRow(title=file_name)
         file_name_row.set_subtitle(_("File Name"))
 
-        # Add a copy button to copy the file name
-        copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-        copy_button.add_css_class("flat")
-        copy_button.set_tooltip_text(_("Copy file name"))
-        copy_button.connect("clicked", lambda btn: self._copy_to_clipboard(file_name))
-        file_name_row.add_suffix(copy_button)
+        file_name_row.add_suffix(self._make_copy_button(_("Copy file name"), file_name))
         group.add(file_name_row)
 
         # File path (location) - show the directory first, "Location" as subtitle
@@ -205,14 +205,7 @@ class VideoInfoDialog:
             size_row = Adw.ActionRow(title=size_str)
             size_row.set_subtitle(_("File Size"))
 
-            # Add copy button
-            copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-            copy_button.add_css_class("flat")
-            copy_button.set_tooltip_text(_("Copy file size"))
-            copy_button.connect(
-                "clicked", lambda btn: self._copy_to_clipboard(size_str)
-            )
-            size_row.add_suffix(copy_button)
+            size_row.add_suffix(self._make_copy_button(_("Copy file size"), size_str))
 
             group.add(size_row)
 
@@ -227,14 +220,9 @@ class VideoInfoDialog:
             duration_row = Adw.ActionRow(title=duration_time)
             duration_row.set_subtitle(_("Duration"))
 
-            # Add copy button
-            copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-            copy_button.add_css_class("flat")
-            copy_button.set_tooltip_text(_("Copy duration"))
-            copy_button.connect(
-                "clicked", lambda btn: self._copy_to_clipboard(duration_time)
+            duration_row.add_suffix(
+                self._make_copy_button(_("Copy duration"), duration_time)
             )
-            duration_row.add_suffix(copy_button)
 
             group.add(duration_row)
 
@@ -244,14 +232,7 @@ class VideoInfoDialog:
             format_row = Adw.ActionRow(title=format_name)
             format_row.set_subtitle(_("Format"))
 
-            # Add copy button
-            copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-            copy_button.add_css_class("flat")
-            copy_button.set_tooltip_text(_("Copy format"))
-            copy_button.connect(
-                "clicked", lambda btn: self._copy_to_clipboard(format_name)
-            )
-            format_row.add_suffix(copy_button)
+            format_row.add_suffix(self._make_copy_button(_("Copy format"), format_name))
 
             group.add(format_row)
 
@@ -262,14 +243,9 @@ class VideoInfoDialog:
             bitrate_row = Adw.ActionRow(title=bitrate_value)
             bitrate_row.set_subtitle(_("Bitrate"))
 
-            # Add copy button
-            copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-            copy_button.add_css_class("flat")
-            copy_button.set_tooltip_text(_("Copy bitrate"))
-            copy_button.connect(
-                "clicked", lambda btn: self._copy_to_clipboard(bitrate_value)
+            bitrate_row.add_suffix(
+                self._make_copy_button(_("Copy bitrate"), bitrate_value)
             )
-            bitrate_row.add_suffix(copy_button)
 
             group.add(bitrate_row)
 
@@ -280,17 +256,25 @@ class VideoInfoDialog:
         clipboard = Gdk.Display.get_default().get_clipboard()
         clipboard.set(text)
 
+    def _make_copy_button(self, tooltip, value):
+        """Create a flat copy button that copies value to clipboard on click."""
+        btn = Gtk.Button.new_from_icon_name("edit-copy-symbolic")
+        btn.add_css_class("flat")
+        btn.set_tooltip_text(tooltip)
+        btn.connect("clicked", lambda b, v=value: self._copy_to_clipboard(v))
+        return btn
+
     def _open_containing_folder(self, folder_path):
         """Open the containing folder in the file manager"""
         try:
             Gtk.show_uri(self.dialog, f"file://{folder_path}", Gdk.CURRENT_TIME)
         except Exception as e:
-            print(f"Error opening folder: {e}")
+            logger.error(f"Error opening folder: {e}")
             # Fallback method using subprocess
             try:
                 subprocess.Popen(["xdg-open", folder_path])
-            except Exception as e2:
-                print(f"Fallback error opening folder: {e2}")
+            except (subprocess.SubprocessError, OSError) as e2:
+                logger.error(f"Fallback error opening folder: {e2}")
 
     def _add_stream_group(self, title, streams):
         """Add a group of streams (video, audio, subtitles)"""
@@ -307,15 +291,9 @@ class VideoInfoDialog:
                     codec_row = Adw.ActionRow(title=codec_name)
                     codec_row.set_subtitle(_("Codec"))
 
-                    # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                    copy_button.add_css_class("flat")
-                    copy_button.set_tooltip_text(_("Copy codec"))
-                    copy_button.connect(
-                        "clicked",
-                        lambda btn, val=codec_name: self._copy_to_clipboard(val),
+                    codec_row.add_suffix(
+                        self._make_copy_button(_("Copy codec"), codec_name)
                     )
-                    codec_row.add_suffix(copy_button)
 
                     group.add(codec_row)
 
@@ -339,15 +317,9 @@ class VideoInfoDialog:
                         res_label.add_css_class("accent")
                         res_row.add_suffix(res_label)
 
-                    # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                    copy_button.add_css_class("flat")
-                    copy_button.set_tooltip_text(_("Copy resolution"))
-                    copy_button.connect(
-                        "clicked",
-                        lambda btn, val=res_value: self._copy_to_clipboard(val),
+                    res_row.add_suffix(
+                        self._make_copy_button(_("Copy resolution"), res_value)
                     )
-                    res_row.add_suffix(copy_button)
 
                     group.add(res_row)
 
@@ -360,15 +332,9 @@ class VideoInfoDialog:
                         fps_row = Adw.ActionRow(title=fps_value)
                         fps_row.set_subtitle(_("Frame Rate"))
 
-                        # Add copy button
-                        copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                        copy_button.add_css_class("flat")
-                        copy_button.set_tooltip_text(_("Copy frame rate"))
-                        copy_button.connect(
-                            "clicked",
-                            lambda btn, val=fps_value: self._copy_to_clipboard(val),
+                        fps_row.add_suffix(
+                            self._make_copy_button(_("Copy frame rate"), fps_value)
                         )
-                        fps_row.add_suffix(copy_button)
 
                         group.add(fps_row)
                     except (ValueError, ZeroDivisionError):
@@ -380,14 +346,9 @@ class VideoInfoDialog:
                     pix_row = Adw.ActionRow(title=pix_fmt)
                     pix_row.set_subtitle(_("Pixel Format"))
 
-                    # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                    copy_button.add_css_class("flat")
-                    copy_button.set_tooltip_text(_("Copy pixel format"))
-                    copy_button.connect(
-                        "clicked", lambda btn, val=pix_fmt: self._copy_to_clipboard(val)
+                    pix_row.add_suffix(
+                        self._make_copy_button(_("Copy pixel format"), pix_fmt)
                     )
-                    pix_row.add_suffix(copy_button)
 
                     group.add(pix_row)
 
@@ -398,15 +359,9 @@ class VideoInfoDialog:
                     bitrate_row = Adw.ActionRow(title=bitrate_value)
                     bitrate_row.set_subtitle(_("Bitrate"))
 
-                    # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                    copy_button.add_css_class("flat")
-                    copy_button.set_tooltip_text(_("Copy bitrate"))
-                    copy_button.connect(
-                        "clicked",
-                        lambda btn, val=bitrate_value: self._copy_to_clipboard(val),
+                    bitrate_row.add_suffix(
+                        self._make_copy_button(_("Copy bitrate"), bitrate_value)
                     )
-                    bitrate_row.add_suffix(copy_button)
 
                     group.add(bitrate_row)
 
@@ -416,15 +371,9 @@ class VideoInfoDialog:
                     lang_row = Adw.ActionRow(title=lang_code)
                     lang_row.set_subtitle(_("Language"))
 
-                    # Add copy button
-                    copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                    copy_button.add_css_class("flat")
-                    copy_button.set_tooltip_text(_("Copy language code"))
-                    copy_button.connect(
-                        "clicked",
-                        lambda btn, val=lang_code: self._copy_to_clipboard(val),
+                    lang_row.add_suffix(
+                        self._make_copy_button(_("Copy language code"), lang_code)
                     )
-                    lang_row.add_suffix(copy_button)
 
                     group.add(lang_row)
 
@@ -461,7 +410,7 @@ class VideoInfoDialog:
 
                 # Add icon suffix if we have one
                 if stream_icon:
-                    icon = Gtk.Image.new_from_file(icon_path(stream_icon))
+                    icon = Gtk.Image.new_from_icon_name(stream_icon)
                     icon.add_css_class("dim-label")
                     expander.add_prefix(icon)
 
@@ -473,20 +422,14 @@ class VideoInfoDialog:
                     codec_row = Adw.ActionRow(title=codec_name)
                     codec_row.set_subtitle(_("Codec"))
 
-                    # Add copy button for codec
-                    codec_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                    codec_copy_button.add_css_class("flat")
-                    codec_copy_button.set_tooltip_text(_("Copy codec"))
-                    codec_copy_button.connect(
-                        "clicked",
-                        lambda btn, val=codec_name: self._copy_to_clipboard(val),
+                    codec_row.add_suffix(
+                        self._make_copy_button(_("Copy codec"), codec_name)
                     )
-                    codec_row.add_suffix(codec_copy_button)
 
                     # Add codec icon suffix
-                    codec_icon = Gtk.Image.new_from_file(icon_path(
+                    codec_icon = Gtk.Image.new_from_icon_name(
                         "application-x-executable-symbolic"
-                    ))
+                    )
                     codec_icon.add_css_class("dim-label")
                     codec_row.add_suffix(codec_icon)
 
@@ -502,15 +445,9 @@ class VideoInfoDialog:
                         sample_row = Adw.ActionRow(title=sample_value)
                         sample_row.set_subtitle(_("Sample Rate"))
 
-                        # Add copy button for sample rate
-                        sample_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                        sample_copy_button.add_css_class("flat")
-                        sample_copy_button.set_tooltip_text(_("Copy sample rate"))
-                        sample_copy_button.connect(
-                            "clicked",
-                            lambda btn, val=sample_value: self._copy_to_clipboard(val),
+                        sample_row.add_suffix(
+                            self._make_copy_button(_("Copy sample rate"), sample_value)
                         )
-                        sample_row.add_suffix(sample_copy_button)
 
                         # Add suffix for quality indicator
                         if sample_rate >= 44100:
@@ -541,15 +478,9 @@ class VideoInfoDialog:
                         channels_row = Adw.ActionRow(title=channels_str)
                         channels_row.set_subtitle(_("Channels"))
 
-                        # Add copy button for channels
-                        channels_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                        channels_copy_button.add_css_class("flat")
-                        channels_copy_button.set_tooltip_text(_("Copy channels"))
-                        channels_copy_button.connect(
-                            "clicked",
-                            lambda btn, val=channels_str: self._copy_to_clipboard(val),
+                        channels_row.add_suffix(
+                            self._make_copy_button(_("Copy channels"), channels_str)
                         )
-                        channels_row.add_suffix(channels_copy_button)
 
                         expander.add_row(channels_row)
 
@@ -560,15 +491,9 @@ class VideoInfoDialog:
                         bitrate_row = Adw.ActionRow(title=bitrate_value)
                         bitrate_row.set_subtitle(_("Bitrate"))
 
-                        # Add copy button for bitrate
-                        bitrate_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                        bitrate_copy_button.add_css_class("flat")
-                        bitrate_copy_button.set_tooltip_text(_("Copy bitrate"))
-                        bitrate_copy_button.connect(
-                            "clicked",
-                            lambda btn, val=bitrate_value: self._copy_to_clipboard(val),
+                        bitrate_row.add_suffix(
+                            self._make_copy_button(_("Copy bitrate"), bitrate_value)
                         )
-                        bitrate_row.add_suffix(bitrate_copy_button)
 
                         expander.add_row(bitrate_row)
 
@@ -581,15 +506,9 @@ class VideoInfoDialog:
                         lang_row = Adw.ActionRow(title=lang_code)
                         lang_row.set_subtitle(_("Language"))
 
-                        # Add copy button for language
-                        lang_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                        lang_copy_button.add_css_class("flat")
-                        lang_copy_button.set_tooltip_text(_("Copy language code"))
-                        lang_copy_button.connect(
-                            "clicked",
-                            lambda btn, val=lang_code: self._copy_to_clipboard(val),
+                        lang_row.add_suffix(
+                            self._make_copy_button(_("Copy language code"), lang_code)
                         )
-                        lang_row.add_suffix(lang_copy_button)
 
                         # Try to get the full language name
                         try:
@@ -605,7 +524,7 @@ class VideoInfoDialog:
                                     lang_label = Gtk.Label(label=lang_name)
                                     lang_label.add_css_class("caption")
                                     lang_row.add_suffix(lang_label)
-                        except:
+                        except (ImportError, locale.Error, ValueError):
                             pass  # Ignore language name lookup errors
 
                         expander.add_row(lang_row)
@@ -616,17 +535,9 @@ class VideoInfoDialog:
                             tag_row = Adw.ActionRow(title=str(value))
                             tag_row.set_subtitle(tag.capitalize())
 
-                            # Add copy button for tag value
-                            tag_copy_button = Gtk.Button.new_from_icon_name('edit-copy-symbolic')
-                            tag_copy_button.add_css_class("flat")
-                            tag_copy_button.set_tooltip_text(_("Copy value"))
-                            tag_copy_button.connect(
-                                "clicked",
-                                lambda btn, val=value: self._copy_to_clipboard(
-                                    str(val)
-                                ),
+                            tag_row.add_suffix(
+                                self._make_copy_button(_("Copy value"), str(value))
                             )
-                            tag_row.add_suffix(tag_copy_button)
 
                             expander.add_row(tag_row)
 
@@ -740,7 +651,7 @@ class VideoInfoDialog:
         GLib.idle_add(self._load_file_info)
 
 
-def get_video_file_info(file_path):
+def get_video_file_info(file_path: str):
     """
     Get detailed information about a video file using ffprobe
 
@@ -768,7 +679,7 @@ def get_video_file_info(file_path):
             file_path,
         ]
 
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        result = subprocess.run(command, capture_output=True, text=True, check=True, timeout=15)
 
         # Parse JSON output
         info = json.loads(result.stdout)
@@ -791,8 +702,8 @@ def get_video_file_info(file_path):
     except json.JSONDecodeError:
         # Invalid JSON output
         return None
-    except Exception as e:
-        print(f"Error getting file info: {e}")
+    except (subprocess.SubprocessError, OSError) as e:
+        logger.error(f"Error getting file info: {e}")
         return None
 
 def format_file_size(size_bytes):
@@ -807,7 +718,7 @@ def format_file_size(size_bytes):
         return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
-def has_audio_streams(file_path):
+def has_audio_streams(file_path: str):
     """
     Check if a video file has audio streams.
 
@@ -836,18 +747,18 @@ def has_audio_streams(file_path):
             file_path,
         ]
 
-        result = subprocess.run(command, capture_output=True, text=True)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
 
         # If we get output, it means there's at least one audio stream
         return bool(result.stdout.strip())
 
-    except Exception as e:
-        print(f"Error checking audio streams: {e}")
+    except (subprocess.SubprocessError, OSError) as e:
+        logger.error(f"Error checking audio streams: {e}")
         # On error, assume there might be audio to avoid accidentally removing it
         return True
 
 
-def check_mp4_compatibility(file_path):
+def check_mp4_compatibility(file_path: str):
     """
     Check if video/audio codecs are compatible with MP4 container when copying without reencoding.
 
@@ -900,6 +811,6 @@ def check_mp4_compatibility(file_path):
 
         return len(incompatible) == 0, incompatible
 
-    except Exception as e:
-        print(f"Error checking MP4 compatibility: {e}")
+    except OSError as e:
+        logger.error(f"Error checking MP4 compatibility: {e}")
         return True, []  # On error, assume compatible to avoid blocking conversion

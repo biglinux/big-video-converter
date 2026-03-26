@@ -4,8 +4,12 @@ Handles extraction, merging, and embedding of subtitles across multiple segments
 """
 
 import os
-import subprocess
 import re
+import subprocess
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class SubtitleProcessor:
@@ -44,7 +48,7 @@ class SubtitleProcessor:
         # Get subtitle streams from source
         subtitle_streams = self._get_subtitle_streams()
         if not subtitle_streams:
-            print("No subtitle streams found in source video")
+            logger.debug("No subtitle streams found in source video")
             return []
         
         # Process each subtitle stream
@@ -53,7 +57,7 @@ class SubtitleProcessor:
             stream_index = parts[0]
             language = parts[1] if len(parts) > 1 else "und"
             
-            print(f"Processing subtitle stream {stream_index} (language: {language})")
+            logger.debug(f"Processing subtitle stream {stream_index} (language: {language})")
             
             # Extract and merge subtitles for this stream
             merged_content = self._merge_subtitle_stream(stream_index, language)
@@ -78,11 +82,11 @@ class SubtitleProcessor:
         ]
         
         try:
-            result = subprocess.run(probe_cmd, capture_output=True, text=True)
+            result = subprocess.run(probe_cmd, capture_output=True, text=True, timeout=10)
             if result.stdout.strip():
                 return result.stdout.strip().split("\n")
-        except Exception as e:
-            print(f"Error probing subtitle streams: {e}")
+        except (subprocess.SubprocessError, OSError) as e:
+            logger.error(f"Error probing subtitle streams: {e}")
         
         return []
     
@@ -108,7 +112,6 @@ class SubtitleProcessor:
             
             start = segment["start"]
             end = segment["end"]
-            duration = end - start
             
             # Extract subtitle for this segment
             if self._extract_segment_subtitle(seg_sub_file, stream_index):
@@ -121,8 +124,8 @@ class SubtitleProcessor:
                 )
                 if filtered.strip():
                     merged_subs.append(filtered)
-            
-            cumulative_time += duration
+
+            cumulative_time += end - start
         
         return "\n\n".join(merged_subs) if merged_subs else ""
     
@@ -146,10 +149,10 @@ class SubtitleProcessor:
         ]
         
         try:
-            subprocess.run(extract_cmd, capture_output=True, timeout=60)
-            return os.path.exists(output_file)
-        except Exception as e:
-            print(f"Error extracting subtitle: {e}")
+            result = subprocess.run(extract_cmd, capture_output=True, timeout=60)
+            return result.returncode == 0 and os.path.exists(output_file)
+        except (subprocess.SubprocessError, OSError) as e:
+            logger.error(f"Error extracting subtitle: {e}")
             return False
     
     def _filter_subtitle_range(self, subtitle_file, start_time, end_time, time_offset):
@@ -168,8 +171,8 @@ class SubtitleProcessor:
         try:
             with open(subtitle_file, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
-        except Exception as e:
-            print(f"Error reading subtitle file: {e}")
+        except OSError as e:
+            logger.error(f"Error reading subtitle file: {e}")
             return ""
         
         # Parse SRT format
@@ -180,9 +183,8 @@ class SubtitleProcessor:
         )
         
         filtered_subs = []
-        
+
         for match in subtitle_pattern.finditer(content):
-            seq_num = match.group(1)
             start_tc = match.group(2)
             end_tc = match.group(3)
             text = match.group(4)
@@ -215,7 +217,7 @@ class SubtitleProcessor:
             h, m, s = map(int, time_part.split(':'))
             ms = int(ms_part)
             return h * 3600 + m * 60 + s + ms / 1000.0
-        except:
+        except (ValueError, AttributeError):
             return 0.0
     
     def _seconds_to_timecode(self, seconds):
@@ -252,5 +254,5 @@ class SubtitleProcessor:
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(content)
         
-        print(f"Created merged subtitle: {output_file}")
+        logger.debug(f"Created merged subtitle: {output_file}")
         return output_file

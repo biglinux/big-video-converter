@@ -1,9 +1,12 @@
-import shutil
-import subprocess
-from gi.repository import GLib
-
 # Setup translation
 import gettext
+import shutil
+import subprocess
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 _ = gettext.gettext
 
 
@@ -15,9 +18,9 @@ def get_distro_info():
             lines = f.readlines()
         for line in lines:
             if line.startswith('ID='):
-                distro_info['id'] = line.strip().split('=')[1].strip('"')
+                distro_info["id"] = line.strip().split("=")[1].strip("\"'")
             elif line.startswith('ID_LIKE='):
-                bases = line.strip().split('=')[1].strip('"').split()
+                bases = line.strip().split("=")[1].strip("\"'").split()
                 if 'arch' in bases:
                     distro_info['base'] = 'arch'
                 elif 'debian' in bases:
@@ -46,7 +49,7 @@ class DependencyChecker:
         self.ffmpeg_path = shutil.which('ffmpeg')
         self.mpv_path = shutil.which('mpv')
 
-    def are_dependencies_available(self):
+    def are_dependencies_available(self) -> bool:
        """Check if ffmpeg and mpv executables are in PATH and are the correct versions."""
        # First, a basic check if the executables exist at all.
        if not self.ffmpeg_path or not self.mpv_path:
@@ -57,17 +60,17 @@ class DependencyChecker:
            try:
                # Ask the system which package owns the ffmpeg executable.
                command = ['rpm', '-qf', self.ffmpeg_path]
-               result = subprocess.run(command, capture_output=True, text=True, check=True)
+               result = subprocess.run(command, capture_output=True, text=True, check=True, timeout=5)
                
                package_name = result.stdout.strip()
 
                # If the owner package is 'ffmpeg-free', the dependency is not met.
                if 'ffmpeg-free' in package_name:
-                   print("Found 'ffmpeg-free' package. Triggering installation of the full version.")
+                   logger.debug("Found 'ffmpeg-free' package. Triggering installation of the full version.")
                    return False
            except (subprocess.CalledProcessError, FileNotFoundError) as e:
                # If the check fails for any reason, it's safer to assume the dependency is not met.
-               print(f"Warning: Could not verify the ffmpeg package provider: {e}")
+               logger.error(f"Warning: Could not verify the ffmpeg package provider: {e}")
                return False
 
        # If we passed all checks, the dependencies are considered available.
