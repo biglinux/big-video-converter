@@ -8,10 +8,42 @@ import time
 
 from gi.repository import GLib
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 _ = gettext.gettext  # Will use the already initialized translation
 
+# Map common FFmpeg error patterns to user-friendly messages.
+# Keys are lowercased substrings matched against stderr lines.
+_FFMPEG_ERROR_MAP: list[tuple[str, str]] = [
+    ("no space left on device", _("There is no space left on the disk.")),
+    ("permission denied", _("Permission denied — check file/folder permissions.")),
+    ("no such file or directory", _("File or folder not found.")),
+    ("invalid data found when processing input", _("The file appears to be corrupted or in an unsupported format.")),
+    ("codec not currently supported", _("This codec is not supported on your system.")),
+    ("unknown decoder", _("A required decoder is not installed.")),
+    ("unknown encoder", _("A required encoder is not installed.")),
+    ("encoder setup failed", _("Failed to initialize the encoder — the selected settings may be incompatible.")),
+    ("hardware accel", _("Hardware acceleration failed. Try disabling GPU encoding.")),
+    ("out of memory", _("Not enough memory to complete the conversion.")),
+    ("does not contain any stream", _("The file does not contain a valid media stream.")),
+    ("moov atom not found", _("The video file is incomplete or damaged (missing metadata).")),
+    ("decoding for stream", _("Could not decode the file — it may be corrupted.")),
+]
 
-def detect_bit_depth_info(file_path):
+
+def _friendly_ffmpeg_error(stderr_lines: list[str]) -> str:
+    """Return a user-friendly message for the first matching FFmpeg error pattern."""
+    for line in stderr_lines:
+        lower = line.lower()
+        for pattern, message in _FFMPEG_ERROR_MAP:
+            if pattern in lower:
+                return message
+    return ""
+
+
+def detect_bit_depth_info(file_path: str):
     """Detect and log bit depth and codec information for user awareness"""
     try:
         # Get both pixel format and codec information
@@ -30,6 +62,7 @@ def detect_bit_depth_info(file_path):
             ],
             capture_output=True,
             text=True,
+            timeout=10,
         )
 
         output = result.stdout.strip().split(",")
@@ -51,21 +84,11 @@ def detect_bit_depth_info(file_path):
             return "ℹ️  Detected H.265 8-bit video - using standard conversion"
         else:
             return f"ℹ️  Detected 8-bit video ({codec}) - using standard profile"
-    except:
+    except (OSError, subprocess.CalledProcessError, ValueError):
         return "ℹ️  Video analysis complete"
 
 
-def run_with_progress_dialog(
-    app,
-    cmd,
-    title_suffix,
-    input_file=None,
-    delete_original=False,
-    env_vars=None,
-    wait_for_completion=False,
-    is_segment_batch=False,
-    segment_duration=None,
-):
+def run_with_progress_dialog(app, cmd: list, title_suffix, input_file: str=None, delete_original: bool=False, env_vars=None, wait_for_completion: bool=False, is_segment_batch: bool=False, segment_duration=None) -> None:
     """Run a conversion command and show progress on the Progress page
 
     Args:
@@ -92,16 +115,16 @@ def run_with_progress_dialog(
             output_folder = output_folder[:-1]
 
         env_vars["output_folder"] = output_folder
-        print(f"Set output folder: {output_folder}")
+        logger.debug(f"Set output folder: {output_folder}")
 
     # Ensure trim environment variables are properly set
     # Print trim-related environment variables for debugging
     if "trim_start" in env_vars:
-        print(f"Trim setting: trim_start={env_vars['trim_start']}")
+        logger.debug(f"Trim setting: trim_start={env_vars['trim_start']}")
     if "trim_end" in env_vars:
-        print(f"Trim setting: trim_end={env_vars['trim_end']}")
+        logger.debug(f"Trim setting: trim_end={env_vars['trim_end']}")
     if "trim_duration" in env_vars:
-        print(f"Trim setting: trim_duration={env_vars['trim_duration']}")
+        logger.debug(f"Trim setting: trim_duration={env_vars['trim_duration']}")
 
     if not title_suffix or title_suffix == "Unknown file":
         if input_file:
@@ -117,19 +140,22 @@ def run_with_progress_dialog(
     # Start process
     try:
         # Print command for debugging
-        print(f"Executing command: {cmd_str}")
+        logger.debug(f"Executing command: {cmd_str}")
 
         # Create a process with proper flags to ensure child processes are terminated
         kwargs = {}
+        # Start in new session so killpg won't kill the main app
+        kwargs["start_new_session"] = True
 
         # Print the final environment variables for debugging
-        print("Final environment variables for conversion:")
+        logger.debug("Final environment variables for conversion:")
         for key in sorted([
             k
             for k in env_vars.keys()
             if k
             in [
                 "gpu",
+                "gpu_device",
                 "video_quality",
                 "video_encoder",
                 "preset",
@@ -151,7 +177,7 @@ def run_with_progress_dialog(
                 "trim_duration",
             ]
         ]):
-            print(f"  {key}={env_vars[key]}")
+            logger.debug(f"  {key}={env_vars[key]}")
 
         # Use PIPE for stdout and stderr to monitor progress
         process = subprocess.Popen(
@@ -178,7 +204,7 @@ def run_with_progress_dialog(
 
         if is_main_thread:
             # We're already on the main thread, call directly
-            print("Creating progress item directly (already on main thread)")
+            logger.debug("Creating progress item directly (already on main thread)")
             try:
                 progress_item_container[0] = app.progress_page.add_conversion(
                     title_suffix, input_file, process
@@ -187,10 +213,10 @@ def run_with_progress_dialog(
                 exception_container[0] = e
         else:
             # We're on a background thread, schedule on main thread and wait
-            print("Scheduling progress item creation on main thread")
+            logger.debug("Scheduling progress item creation on main thread")
             creation_complete = threading.Event()
 
-            def create_progress_item():
+            def create_progress_item() -> None:
                 try:
                     progress_item_container[0] = app.progress_page.add_conversion(
                         title_suffix, input_file, process
@@ -222,7 +248,7 @@ def run_with_progress_dialog(
         # We need to use the segment duration for accurate progress calculation
         if segment_duration is not None and segment_duration > 0:
             progress_item.expected_duration = segment_duration
-            print(
+            logger.debug(
                 f"Segment mode: expected duration={segment_duration:.2f}s (will override ffmpeg-detected duration for progress calculation)"
             )
         else:
@@ -254,7 +280,7 @@ def run_with_progress_dialog(
         monitor_thread.start()
 
         # Function to handle process completion
-        def on_conversion_complete(process, result):
+        def on_conversion_complete(process, result) -> None:
             try:
                 # Cleanup if we were asked to delete the original file after successful conversion
                 if (
@@ -265,18 +291,18 @@ def run_with_progress_dialog(
                 ):
                     try:
                         os.remove(input_file)
-                        print(f"Deleted original file: {input_file}")
-                    except Exception as del_error:
-                        print(f"Error deleting file {input_file}: {del_error}")
+                        logger.debug(f"Deleted original file: {input_file}")
+                    except OSError as del_error:
+                        logger.error(f"Error deleting file {input_file}: {del_error}")
 
                 # Auto-remove successful segment batch items to keep UI clean
                 if is_segment_batch and result == 0:
-                    print(
+                    logger.debug(
                         f"Auto-removing successful segment batch item: {progress_item.conversion_id}"
                     )
 
                     # Small delay before removal to show completion briefly
-                    def remove_after_delay():
+                    def remove_after_delay() -> None:
                         GLib.timeout_add(
                             50,
                             lambda: (
@@ -293,26 +319,26 @@ def run_with_progress_dialog(
                 if not is_segment_batch:
                     GLib.idle_add(lambda: app.conversion_completed(result == 0))
                 else:
-                    print(
+                    logger.debug(
                         "Skipping conversion_completed callback for segment batch item"
                     )
 
-            except Exception as e:
-                print(f"Error in conversion completion handler: {e}")
+            except OSError as e:
+                logger.error(f"Error in conversion completion handler: {e}")
                 # Still notify app even if there's an error in the handler (skip for segment batch)
                 if not is_segment_batch:
                     GLib.idle_add(lambda: app.conversion_completed(False))
 
         # Wait for completion if requested (for sequential processing)
         if wait_for_completion:
-            print(f"Waiting for conversion to complete: {title_suffix}")
+            logger.debug(f"Waiting for conversion to complete: {title_suffix}")
             returncode = process.wait()
-            print(f"Conversion finished with return code: {returncode}")
+            logger.debug(f"Conversion finished with return code: {returncode}")
             on_conversion_complete(process, returncode)
             # Also wait for monitor thread to finish
             monitor_thread.join(timeout=5.0)
 
-    except Exception as e:
+    except (subprocess.SubprocessError, OSError) as e:
         app.show_error_dialog(_("Error starting conversion: {0}").format(e))
         import traceback
 
@@ -344,6 +370,28 @@ def monitor_progress(app, process, progress_item, env_vars=None):
     encode_mode_pattern = re.compile(r"Encode mode:\s*(.*)")
     running_command_pattern = re.compile(r"Running command:\s*(.*)")
 
+    # Noise-reduction pre-processing patterns (stdout from bash script)
+    nr_preprocess_start_pattern = re.compile(
+        r"Pre-processing (\d+) audio streams? with noise reduction"
+    )
+    nr_stream_pattern = re.compile(
+        r"NR pre-processing audio stream (\d+).*?(\d+)ch"
+    )
+    nr_cuda_pattern = re.compile(
+        r"Noise reduction active with CUDA.*parallel"
+    )
+    nr_bg_started_pattern = re.compile(
+        r"Audio NR started in background.*?(\d+) channels"
+    )
+    nr_waiting_pattern = re.compile(
+        r"waiting for audio NR to finish|Waiting for \d+ parallel NR"
+    )
+    nr_muxing_pattern = re.compile(
+        r"Audio NR complete.*Muxing"
+    )
+    nr_mux_done_pattern = re.compile(r"Muxing complete:")
+    nr_complete_pattern = re.compile(r"NR pre-processing complete")
+
     # Map technical encode modes to user-friendly translations
     encode_mode_map = {
         "": _("Software encoding"),
@@ -353,9 +401,11 @@ def monitor_progress(app, process, progress_item, env_vars=None):
     }
 
     # Track when we detect the encode mode
-    encode_mode_detected = False
     encode_mode = _("Unknown")  # Default value
-    full_command = None
+
+    # Track noise reduction pre-processing phase
+    nr_phase = False
+    nr_total_streams = 0
 
     # Values to track progress
     duration_secs = None
@@ -417,13 +467,13 @@ def monitor_progress(app, process, progress_item, env_vars=None):
         output_queue = Queue()
 
         # Threads to read from stdout and stderr
-        def read_stdout():
+        def read_stdout() -> None:
             for line in iter(process.stdout.readline, ""):
                 if line:
                     output_queue.put(("stdout", line))
             output_queue.put(("stdout_end", None))
 
-        def read_stderr():
+        def read_stderr() -> None:
             for line in iter(process.stderr.readline, ""):
                 if line:
                     output_queue.put(("stderr", line))
@@ -448,11 +498,13 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     source, line = output_queue.get(timeout=0.1)
                 except Empty:
                     # This is normal - just check if we should continue waiting
-                    if time.time() - last_output_time > 15:
+                    # During NR pre-processing, no output is expected for long
+                    # periods — skip the "stuck" warning entirely in that phase.
+                    if not nr_phase and time.time() - last_output_time > 15:
                         timeout_msg = _("No progress detected. Process may be stuck.")
                         GLib.idle_add(progress_item.update_status, timeout_msg)
                         GLib.idle_add(progress_item.add_output_text, timeout_msg)
-                        print("Process may be stuck - no output for 15 seconds")
+                        logger.debug("Process may be stuck - no output for 15 seconds")
                     continue
 
                 if source == "stdout_end":
@@ -470,7 +522,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     continue
 
                 # Print the raw output for debugging with a simpler format
-                print(f"FFMPEG: {line.strip()}")
+                logger.debug(f"FFMPEG: {line.strip()}")
 
                 # Send output to terminal view
                 GLib.idle_add(progress_item.add_output_text, line)
@@ -481,13 +533,12 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     detected_mode = mode_match.group(1).strip()
                     if detected_mode:  # Make sure we got a non-empty string
                         encode_mode = detected_mode
-                        encode_mode_detected = True
 
                         # Get user-friendly mode name using helper function
                         friendly_mode = get_friendly_encode_mode(detected_mode)
 
-                        print(f"Detected encode mode from {source}: {encode_mode}")
-                        print(f"Converted to friendly mode: {friendly_mode}")
+                        logger.debug(f"Detected encode mode from {source}: {encode_mode}")
+                        logger.debug(f"Converted to friendly mode: {friendly_mode}")
 
                         GLib.idle_add(
                             progress_item.add_output_text,
@@ -519,6 +570,53 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                             )
                         )
 
+                # --- Noise reduction pre-processing phase detection ---
+                if source == "stdout":
+                    nr_start = nr_preprocess_start_pattern.search(line)
+                    if nr_start:
+                        nr_phase = True
+                        nr_total_streams = int(nr_start.group(1))
+                        status = _("Improving audio quality") + f" (0/{nr_total_streams})..."
+                        GLib.idle_add(progress_item.update_status, status)
+                        GLib.idle_add(progress_item.start_pulse)
+
+                    nr_stream = nr_stream_pattern.search(line)
+                    if nr_stream and nr_phase:
+                        stream_num = int(nr_stream.group(1)) + 1
+                        status = _("Improving audio quality") + f" ({stream_num}/{nr_total_streams})..."
+                        GLib.idle_add(progress_item.update_status, status)
+
+                    if nr_cuda_pattern.search(line):
+                        nr_phase = True
+                        status = _("Improving audio quality (GPU)...")
+                        GLib.idle_add(progress_item.update_status, status)
+                        GLib.idle_add(progress_item.start_pulse)
+
+                    if nr_bg_started_pattern.search(line):
+                        nr_phase = True
+
+                    if nr_waiting_pattern.search(line):
+                        status = _("Waiting for audio processing to finish...")
+                        GLib.idle_add(progress_item.update_status, status)
+                        GLib.idle_add(progress_item.start_pulse)
+
+                    if nr_muxing_pattern.search(line):
+                        status = _("Combining video and processed audio...")
+                        GLib.idle_add(progress_item.update_status, status)
+
+                    if nr_mux_done_pattern.search(line):
+                        nr_phase = False
+                        GLib.idle_add(progress_item.stop_pulse)
+
+                    if nr_complete_pattern.search(line):
+                        nr_phase = False
+                        GLib.idle_add(progress_item.stop_pulse)
+
+                    # When the actual encoding starts, stop NR phase pulse
+                    if nr_phase and encode_mode_pattern.search(line):
+                        nr_phase = False
+                        GLib.idle_add(progress_item.stop_pulse)
+
                 if source == "stderr":
                     # Collect last stderr lines for error diagnosis
                     stripped = line.strip()
@@ -530,7 +628,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     # Original stderr processing for other patterns
                     # Check if the process was cancelled
                     if progress_item.was_cancelled():
-                        print("Process was cancelled, stopping monitor thread")
+                        logger.debug("Process was cancelled, stopping monitor thread")
                         GLib.idle_add(
                             progress_item.add_output_text,
                             _("Process cancelled by user"),
@@ -542,7 +640,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         output_match = output_file_pattern.search(line)
                         if output_match:
                             output_file = output_match.group(1)
-                            print(f"Detected output file: {output_file}")
+                            logger.debug(f"Detected output file: {output_file}")
                             GLib.idle_add(
                                 progress_item.add_output_text,
                                 f"Output file: {output_file}",
@@ -555,20 +653,20 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         if fps_match:
                             try:
                                 video_fps = float(fps_match.group(1))
-                                print(f"Detected video frame rate: {video_fps} fps")
+                                logger.debug(f"Detected video frame rate: {video_fps} fps")
                                 GLib.idle_add(
                                     progress_item.add_output_text,
                                     f"Detected video frame rate: {video_fps} fps",
                                 )
                             except (ValueError, TypeError) as e:
-                                print(f"Error converting fps: {e}")
+                                logger.error(f"Error converting fps: {e}")
                         else:
                             # Try alternative pattern
                             alt_match = alt_fps_pattern.search(line)
                             if alt_match:
                                 try:
                                     video_fps = float(alt_match.group(1))
-                                    print(
+                                    logger.debug(
                                         f"Detected video frame rate (alt pattern): {video_fps} fps"
                                     )
                                     GLib.idle_add(
@@ -576,7 +674,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                         f"Detected video frame rate: {video_fps} fps",
                                     )
                                 except (ValueError, TypeError) as e:
-                                    print(f"Error converting fps (alt pattern): {e}")
+                                    logger.error(f"Error converting fps (alt pattern): {e}")
 
                     # Extract duration if not already done
                     if not duration_detected and "Duration" in line:
@@ -604,12 +702,12 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                     and progress_item.expected_duration is not None
                                 ):
                                     duration_secs = progress_item.expected_duration
-                                    print(
+                                    logger.debug(
                                         f"FFmpeg detected duration: {detected_duration_secs:.2f}s (full video), using expected segment duration: {duration_secs:.2f}s for progress calculation"
                                     )
                                 else:
                                     duration_secs = detected_duration_secs
-                                    print(
+                                    logger.debug(
                                         f"Detected duration: {duration_str} ({duration_secs:.3f} seconds)"
                                     )
 
@@ -625,17 +723,17 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                     # Sanity check - make sure fps is reasonable (1-120)
                                     if 1 <= video_fps <= 120:
                                         total_frames = int(duration_secs * video_fps)
-                                        print(f"Estimated total frames: {total_frames}")
+                                        logger.debug(f"Estimated total frames: {total_frames}")
                                         GLib.idle_add(
                                             progress_item.add_output_text,
                                             f"Estimated total frames: {total_frames}",
                                         )
                                     else:
-                                        print(
+                                        logger.debug(
                                             f"Unreasonable fps detected: {video_fps}, not calculating total frames"
                                         )
-                            except Exception as e:
-                                print(f"Error parsing duration: {e}")
+                            except (ValueError, TypeError) as e:
+                                logger.error(f"Error parsing duration: {e}")
 
                 # Process frame counts from either stream
                 if "frame=" in line:
@@ -660,7 +758,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                             + int(s)
                                             + (int(ms) / 100)
                                         )
-                                    except Exception:
+                                    except (ValueError, TypeError):
                                         pass  # Ignore time parsing errors
 
                             # Get info about current fps
@@ -681,7 +779,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 # Try to use video_fps first (from Stream info)
                                 if video_fps is not None and 1 <= video_fps <= 120:
                                     total_frames = int(duration_secs * video_fps)
-                                    print(
+                                    logger.debug(
                                         f"Estimated total frames from video fps: {total_frames} (duration={duration_secs:.2f}s, fps={video_fps})"
                                     )
                                     GLib.idle_add(
@@ -691,7 +789,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 # Fallback: use current_fps if available and reasonable
                                 elif current_fps is not None and 1 <= current_fps <= 120:
                                     total_frames = int(duration_secs * current_fps)
-                                    print(
+                                    logger.debug(
                                         f"Estimated total frames from current fps: {total_frames} (duration={duration_secs:.2f}s, fps={current_fps})"
                                     )
                                     GLib.idle_add(
@@ -723,7 +821,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                             else 0
                                         )
                                         if estimated_total > total_frames:
-                                            print(
+                                            logger.debug(
                                                 f"Adjusting total frame estimate from {total_frames} to {estimated_total}"
                                             )
                                             total_frames = estimated_total
@@ -761,9 +859,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                             else "N/A"
                                         )
 
-                                        friendly_mode = encode_mode_map.get(
-                                            encode_mode, encode_mode
-                                        )
+                                        friendly_mode = get_friendly_encode_mode(encode_mode)
 
                                         status_msg = f"{friendly_mode} | {fps_display} fps"
                                         GLib.idle_add(
@@ -818,9 +914,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                                 else "N/A"
                                             )
 
-                                            friendly_mode = encode_mode_map.get(
-                                                encode_mode, encode_mode
-                                            )
+                                            friendly_mode = get_friendly_encode_mode(encode_mode)
 
                                             status_msg = f"{friendly_mode} | {fps_display} fps"
                                             GLib.idle_add(
@@ -831,8 +925,8 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                             GLib.idle_add(
                                                 progress_item.update_status, status_msg
                                             )
-                                    except Exception as e:
-                                        print(f"Error calculating time progress: {e}")
+                                    except (ValueError, TypeError) as e:
+                                        logger.error(f"Error calculating time progress: {e}")
 
                             # If neither frame nor time progress works, try to estimate from current data
                             else:
@@ -848,7 +942,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                     estimated_fps = current_frame / current_time_secs
                                     if 1 <= estimated_fps <= 120:
                                         total_frames = int(duration_secs * estimated_fps)
-                                        print(
+                                        logger.debug(
                                             f"Estimated total frames from progress data: {total_frames} (fps={estimated_fps:.2f}, duration={duration_secs:.2f}s)"
                                         )
                                         GLib.idle_add(
@@ -858,7 +952,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                         # Now recalculate progress with new total_frames
                                         progress = min(0.99, current_frame / total_frames)
                                         fps_display = f"{current_fps:.1f}" if current_fps is not None else f"{estimated_fps:.1f}"
-                                        friendly_mode = encode_mode_map.get(encode_mode, encode_mode)
+                                        friendly_mode = get_friendly_encode_mode(encode_mode)
                                         status_msg = f"{friendly_mode} | {fps_display} fps"
                                         GLib.idle_add(
                                             progress_item.update_progress,
@@ -872,9 +966,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                         continue
 
                                 # Modified status message for indeterminate progress
-                                friendly_mode = encode_mode_map.get(
-                                    encode_mode, encode_mode
-                                )
+                                friendly_mode = get_friendly_encode_mode(encode_mode)
                                 if current_fps is not None:
                                     status_msg = f"{friendly_mode} | {current_fps:.1f} fps"
                                 else:
@@ -896,12 +988,12 @@ def monitor_progress(app, process, progress_item, env_vars=None):
 
                                 GLib.idle_add(progress_item.update_status, status_msg)
 
-                        except Exception as e:
-                            print(f"Error processing frame progress: {e}")
+                        except (ValueError, TypeError) as e:
+                            logger.error(f"Error processing frame progress: {e}")
 
-            except Exception as e:
+            except (ValueError, TypeError) as e:
                 if not isinstance(e, Empty):  # Don't log Empty exceptions
-                    print(f"Error processing output line: {e}")
+                    logger.error(f"Error processing output line: {e}")
                     import traceback
 
                     traceback.print_exc()
@@ -909,11 +1001,11 @@ def monitor_progress(app, process, progress_item, env_vars=None):
     except (BrokenPipeError, IOError) as e:
         # This can happen if the process is killed during readline
         error_msg = f"Process pipe error: {e} - process likely terminated"
-        print(error_msg)
+        logger.error(error_msg)
         GLib.idle_add(progress_item.add_output_text, error_msg)
-    except Exception as e:
+    except (ValueError, TypeError) as e:
         error_msg = f"Error reading process output: {e}"
-        print(error_msg)
+        logger.error(error_msg)
         GLib.idle_add(progress_item.add_output_text, error_msg)
 
     # Process finished or was canceled
@@ -921,7 +1013,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
         if progress_item.was_cancelled():
             # This block is now the primary handler for user cancellation.
             # It signals the main app to stop everything.
-            print("Monitor detected cancellation. Notifying app to stop queue.")
+            logger.debug("Monitor detected cancellation. Notifying app to stop queue.")
             GLib.idle_add(lambda: app.conversion_completed(False))
 
             # Update UI for this specific item
@@ -944,7 +1036,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                 return_code = process.wait(timeout=max_wait_seconds)
             except subprocess.TimeoutExpired:
                 timeout_error = f"ERROR: Process exceeded maximum time limit ({max_wait_seconds / 3600:.1f} hours). Force terminating..."
-                print(timeout_error)
+                logger.error(timeout_error)
                 GLib.idle_add(progress_item.add_output_text, timeout_error)
 
                 try:
@@ -954,11 +1046,11 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         process.kill()
                         time.sleep(1)
                 except Exception as e:
-                    print(f"Error terminating stuck process: {e}")
+                    logger.error(f"Error terminating stuck process: {e}")
 
                 try:
                     return_code = process.wait(timeout=5)
-                except:
+                except (OSError, subprocess.TimeoutExpired):
                     return_code = -1
 
                 timeout_msg = _("Conversion timed out after {0} hours").format(
@@ -968,7 +1060,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                 GLib.idle_add(progress_item.add_output_text, timeout_msg)
 
             finish_msg = f"Process finished with return code: {return_code}"
-            print(finish_msg)
+            logger.debug(finish_msg)
             GLib.idle_add(progress_item.add_output_text, finish_msg)
 
             # Update user interface from main thread
@@ -988,7 +1080,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     debug_msg = (
                         f"Checking if original file should be deleted: {input_file}"
                     )
-                    print(debug_msg)
+                    logger.debug(debug_msg)
                     GLib.idle_add(progress_item.add_output_text, debug_msg)
 
                     output_file_to_check = None
@@ -1000,7 +1092,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     if os.path.exists(possible_mp4):
                         output_file_to_check = possible_mp4
                         debug_msg = f"Found MP4 output: {output_file_to_check}"
-                        print(debug_msg)
+                        logger.debug(debug_msg)
                         GLib.idle_add(progress_item.add_output_text, debug_msg)
                     elif (
                         output_file
@@ -1009,7 +1101,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     ):
                         output_file_to_check = output_file
                         debug_msg = f"Using FFmpeg detected video: {output_file}"
-                        print(debug_msg)
+                        logger.debug(debug_msg)
                         GLib.idle_add(progress_item.add_output_text, debug_msg)
                     else:
                         output_folder = os.path.dirname(input_file)
@@ -1028,13 +1120,13 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                         debug_msg = (
                                             f"Found recent MP4 in folder: {file_path}"
                                         )
-                                        print(debug_msg)
+                                        logger.debug(debug_msg)
                                         GLib.idle_add(
                                             progress_item.add_output_text, debug_msg
                                         )
                                         break
-                        except Exception as e:
-                            print(f"Error searching for MP4 files: {e}")
+                        except OSError as e:
+                            logger.error(f"Error searching for MP4 files: {e}")
                             GLib.idle_add(
                                 progress_item.add_output_text,
                                 f"Error searching for MP4 files: {e}",
@@ -1049,7 +1141,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         percentage = (output_size / input_size) * 100
 
                         size_info = f"Compare: Input={input_size_mb:.2f}MB, Output={output_size_mb:.2f}MB ({percentage:.1f}% of original)"
-                        print(size_info)
+                        logger.debug(size_info)
                         GLib.idle_add(progress_item.add_output_text, size_info)
 
                         min_size_threshold = input_size * 0.15
@@ -1058,7 +1150,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                             try:
                                 os.remove(input_file)
                                 delete_msg = f"Original file deleted: {input_file}"
-                                print(delete_msg)
+                                logger.debug(delete_msg)
                                 GLib.idle_add(progress_item.add_output_text, delete_msg)
                                 is_queue_processing = (
                                     hasattr(progress_item, "is_queue_processing")
@@ -1079,9 +1171,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                             progress_item,
                                         )
                                     )
-                            except Exception as e:
+                            except OSError as e:
                                 error_msg = f"Could not delete the original file: {e}"
-                                print(error_msg)
+                                logger.error(error_msg)
                                 GLib.idle_add(progress_item.add_output_text, error_msg)
                                 is_queue_processing = (
                                     hasattr(progress_item, "is_queue_processing")
@@ -1104,7 +1196,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                     )
                         else:
                             size_warning = "The converted file size is suspicious, so the original file was not removed."
-                            print(size_warning)
+                            logger.warning(size_warning)
                             GLib.idle_add(progress_item.add_output_text, size_warning)
                             is_queue_processing = (
                                 hasattr(progress_item, "is_queue_processing")
@@ -1129,7 +1221,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         error_msg = (
                             f"Output file not found or not accessible: {output_file}"
                         )
-                        print(error_msg)
+                        logger.error(error_msg)
                         GLib.idle_add(progress_item.add_output_text, error_msg)
                         if output_file_to_check:
                             output_dir = os.path.dirname(output_file_to_check)
@@ -1138,10 +1230,10 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                                 files_info = (
                                     f"Files in output directory: {', '.join(files)}"
                                 )
-                                print(files_info)
+                                logger.debug(files_info)
                                 GLib.idle_add(progress_item.add_output_text, files_info)
                             except Exception as e:
-                                print(f"Error listing directory: {e}")
+                                logger.error(f"Error listing directory: {e}")
 
                         is_queue_processing = (
                             hasattr(progress_item, "is_queue_processing")
@@ -1203,6 +1295,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
 
                 # Extract meaningful error from last stderr lines
                 error_detail = ""
+                friendly = _friendly_ffmpeg_error(last_stderr_lines)
                 for line in last_stderr_lines:
                     if any(
                         kw in line.lower()
@@ -1224,7 +1317,10 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                 if not error_detail and last_stderr_lines:
                     error_detail = last_stderr_lines[-1]
 
-                error_msg = _("Conversion failed with code {0}").format(return_code)
+                if friendly:
+                    error_msg = friendly
+                else:
+                    error_msg = _("Conversion failed with code {0}").format(return_code)
                 if error_detail:
                     error_msg += f"\n{error_detail}"
                 GLib.idle_add(progress_item.update_progress, 0.0, _("Error!"))
@@ -1269,9 +1365,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     GLib.idle_add(lambda: app.conversion_completed(False))
 
             GLib.idle_add(progress_item.cancel_button.set_sensitive, False)
-    except Exception as e:
+    except (subprocess.SubprocessError, OSError) as e:
         error_msg = f"FATAL: Exception in progress monitor: {e}"
-        print(error_msg)
+        logger.error(error_msg)
         import traceback
 
         traceback.print_exc()
@@ -1279,7 +1375,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
         try:
             GLib.idle_add(progress_item.add_output_text, error_msg)
             GLib.idle_add(progress_item.update_status, _("Monitor error"))
-        except:
+        except Exception:
             pass
 
         is_segment_batch = (
@@ -1287,21 +1383,21 @@ def monitor_progress(app, process, progress_item, env_vars=None):
             and progress_item.is_segment_batch
         )
         if not is_segment_batch:
-            print("Notifying app of conversion failure due to monitor exception")
+            logger.debug("Notifying app of conversion failure due to monitor exception")
             GLib.idle_add(lambda: app.conversion_completed(False))
     finally:
         app.conversions_running -= 1
         completion_msg = (
             f"Conversion finished, active conversions: {app.conversions_running}"
         )
-        print(completion_msg)
+        logger.debug(completion_msg)
         try:
             GLib.idle_add(progress_item.add_output_text, completion_msg)
-        except:
+        except Exception:
             pass
 
 
-def show_info_dialog_and_close_progress(app, message, progress_item):
+def show_info_dialog_and_close_progress(app, message: str, progress_item) -> None:
     """Shows a system notification instead of dialog"""
     GLib.timeout_add(
         5000, lambda: app.progress_page.remove_conversion(progress_item.conversion_id)
@@ -1309,7 +1405,7 @@ def show_info_dialog_and_close_progress(app, message, progress_item):
     app.send_system_notification(_("Information"), message)
 
 
-def show_error_dialog_and_close_progress(app, message, progress_item):
+def show_error_dialog_and_close_progress(app, message: str, progress_item) -> None:
     """Shows an error dialog"""
     GLib.timeout_add(
         5000, lambda: app.progress_page.remove_conversion(progress_item.conversion_id)

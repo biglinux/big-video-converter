@@ -74,7 +74,7 @@ GPU_VALUES = {0: "auto", 1: "nvidia", 2: "amd", 3: "intel", 4: "vulkan", 5: "sof
 def get_video_quality_options():
     """Return translated video quality options"""
     return [
-        _("Default"),
+        _("Good (recommended)"),
         _("Very High"),
         _("High"),
         _("Medium"),
@@ -100,29 +100,30 @@ VIDEO_QUALITY_VALUES = {
 def get_video_codec_options():
     """Return translated video codec options"""
     return [
-        _("H.264 (Default)"),
-        _("H.265 (HEVC)"),
-        _("AV1"),
-        _("VP9"),
-        _("ProRes"),
+        _("Copy — No re-encoding"),
+        _("H.264 — Universal (recommended)"),
+        _("H.265 — More efficient"),
+        _("AV1 — Best compression"),
+        _("VP9 — Used by YouTube"),
+        _("ProRes — Professional editing"),
     ]
 
 VIDEO_CODEC_OPTIONS = get_video_codec_options()  # Default initialization
 
-# Internal codec values for ffmpeg
-VIDEO_CODEC_VALUES = {0: "h264", 1: "h265", 2: "av1", 3: "vp9", 4: "prores"}
+# Internal codec values for ffmpeg (index 0 = copy)
+VIDEO_CODEC_VALUES = {0: "copy", 1: "h264", 2: "h265", 3: "av1", 4: "vp9", 5: "prores"}
 
 # User-friendly preset names
 def get_preset_options():
     """Return translated preset options"""
     return [
-        _("Default"),
-        _("Ultra Fast"),
-        _("Very Fast"),
-        _("Faster"),
+        _("Balanced (recommended)"),
+        _("Very fast (larger file)"),
+        _("Fast (larger file)"),
+        _("Slightly fast"),
         _("Medium"),
-        _("Slow"),
-        _("Very Slow"),
+        _("Slow (smaller file)"),
+        _("Very slow (smallest file)"),
     ]
 
 PRESET_OPTIONS = get_preset_options()  # Default initialization
@@ -141,7 +142,7 @@ PRESET_VALUES = {
 # User-friendly subtitle options
 def get_subtitle_options():
     """Return translated subtitle options"""
-    return [_("Extract to SRT"), _("Keep Embedded"), _("Remove")]
+    return [_("Extract as separate file"), _("Keep inside the video"), _("Remove")]
 
 SUBTITLE_OPTIONS = get_subtitle_options()  # Default initialization
 
@@ -151,7 +152,11 @@ SUBTITLE_VALUES = {0: "extract", 1: "embedded", 2: "none"}
 # User-friendly audio handling options
 def get_audio_options():
     """Return translated audio options"""
-    return [_("Copy (No Re-encoding)"), _("Re-encode"), _("Remove Audio")]
+    return [
+        _("Copy without changes (fastest)"),
+        _("Re-encode audio"),
+        _("Remove audio"),
+    ]
 
 AUDIO_OPTIONS = get_audio_options()  # Default initialization
 
@@ -162,8 +167,8 @@ AUDIO_VALUES = {0: "copy", 1: "reencode", 2: "none"}
 def get_audio_codec_options():
     """Return translated audio codec options"""
     return [
-        _("AAC (Default)"),
-        _("Opus (Best Quality)"),
+        _("AAC (recommended)"),
+        _("Opus (best quality)"),
         _("AC3 (Dolby Digital)"),
     ]
 
@@ -176,7 +181,7 @@ AUDIO_CODEC_VALUES = {0: "aac", 1: "opus", 2: "ac3"}
 def get_video_resolution_options():
     """Return translated video resolution options"""
     return [
-        _("Default (Original)"),
+        _("Original (no change)"),
         _("4K UHD (3840×2160)"),
         _("2K QHD (2560×1440)"),
         _("Full HD (1920×1080)"),
@@ -328,27 +333,15 @@ def get_tooltips():
             "Noise gate silences audio below a volume threshold\n\n"
             "Useful combined with noise reduction to eliminate\n"
             "residual noise during pauses between speech.\n\n"
-            "Expand to adjust threshold, range, attack and release."
+            "Adjust intensity from low to maximum."
         ),
-        "gate_threshold": _(
-            "Volume level below which the gate closes\n\n"
-            "• Higher values (e.g. -20 dB): Gate closes more often\n"
-            "• Lower values (e.g. -50 dB): Gate only closes in near-silence"
-        ),
-        "gate_range": _(
-            "How much the audio is attenuated when the gate closes\n\n"
-            "• -60 dB: Nearly silent (default)\n"
-            "• -30 dB: Quieter but still audible"
-        ),
-        "gate_attack": _(
-            "How quickly the gate opens when signal exceeds threshold\n\n"
-            "• Lower values: Faster response\n"
-            "• Higher values: Smoother transitions"
-        ),
-        "gate_release": _(
-            "How quickly the gate closes after signal drops below threshold\n\n"
-            "• Lower values: Gate closes quickly\n"
-            "• Higher values: Longer tail, smoother fade-out"
+        "noise_voice_recovery": _(
+            "Voice Recovery — high-frequency reconstruction\n\n"
+            "Recovers frequencies above 8 kHz that the AI\n"
+            "noise reduction model removes.\n\n"
+            "• 0%: Cuts all HF (maximum NR)\n"
+            "• 75%: Natural default\n"
+            "• 100%: Full original HF preserved"
         ),
         # Header bar buttons
         "clear_queue_button": _("Remove all files from the queue"),
@@ -364,10 +357,32 @@ def get_tooltips():
         "progress_show_log": _("Show conversion log output"),
         "progress_cancel_file": _("Cancel conversion of this file"),
         "progress_skip_file": _("Skip this file and do not convert it"),
+        # Sidebar profiles
+        "profile_copy": _(
+            "Copies the video stream without re-encoding — instant and lossless.\n\n"
+            "Audio can still be re-encoded, cleaned or adjusted independently.\n\n"
+            "Does not allow changing video codec, resolution or applying video filters."
+        ),
+        "profile_universal": _(
+            "Uses H.264, the most widely supported codec. Works on "
+            "virtually every device, browser and player. A great "
+            "default choice when compatibility matters most."
+        ),
+        "profile_efficient": _(
+            "Uses H.265 (HEVC), which provides better "
+            "compression than H.264 — about 30% smaller files at the "
+            "same quality. Supported by most modern devices and players."
+        ),
+        "profile_smaller": _(
+            "Uses AV1, the latest generation codec with the best "
+            "compression available. Produces the smallest files but "
+            "encoding is slower. Ideal for archiving or uploading "
+            "where size matters most."
+        ),
     }
 
 
-def refresh_translations():
+def refresh_translations() -> None:
     """Refresh all translated constants after gettext is properly initialized"""
     global GPU_OPTIONS, VIDEO_QUALITY_OPTIONS, VIDEO_CODEC_OPTIONS, PRESET_OPTIONS
     global SUBTITLE_OPTIONS, AUDIO_OPTIONS, AUDIO_CODEC_OPTIONS, VIDEO_RESOLUTION_OPTIONS

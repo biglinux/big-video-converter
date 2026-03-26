@@ -24,7 +24,7 @@ class WelcomeDialog:
 
         self.setup_ui()
 
-    def setup_ui(self):
+    def setup_ui(self) -> None:
         """Set up the UI components"""
         # Create scrolled window for content
         scrolled = Gtk.ScrolledWindow()
@@ -44,6 +44,7 @@ class WelcomeDialog:
 
         app_icon = Gtk.Image.new_from_icon_name("big-video-converter")
         app_icon.set_pixel_size(64)
+        app_icon.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
         header_box.append(app_icon)
 
         title = Gtk.Label()
@@ -189,7 +190,7 @@ class WelcomeDialog:
         # Set the scrolled window as the child
         self.dialog.set_child(scrolled)
 
-    def present(self):
+    def present(self) -> None:
         """Present the dialog"""
         if self.dialog and self.parent_window:
             self.dialog.present(self.parent_window)
@@ -215,7 +216,7 @@ class WelcomeDialog:
 
         return box
 
-    def on_close_clicked(self, button):
+    def on_close_clicked(self, button) -> None:
         """Handle close button click"""
         # Get the switch state and save preference
         if self.show_switch:

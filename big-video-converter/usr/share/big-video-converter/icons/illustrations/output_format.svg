@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Container box -->
+  <rect x="10" y="10" width="40" height="50" rx="3" fill="none" stroke="#3584e4" stroke-width="1.5"/>
+  <!-- Video track inside -->
+  <rect x="16" y="18" width="28" height="14" rx="1" fill="none" stroke="#999" stroke-width="1"/>
+  <polygon points="24,21 24,29 32,25" fill="#999"/>
+  <!-- Audio track inside -->
+  <rect x="16" y="38" width="28" height="10" rx="1" fill="none" stroke="#999" stroke-width="1"/>
+  <path d="M22,40 L22,46 M26,41 L26,47 M30,39 L30,45 M34,42 L34,46 M38,40 L38,44" stroke="#999" stroke-width="0.8"/>
+  <!-- Format labels -->
+  <text x="30" y="70" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">.mp4</text>
+  <!-- Arrow to other formats -->
+  <line x1="56" y1="35" x2="68" y2="20" stroke="#999" stroke-width="1"/>
+  <line x1="56" y1="35" x2="68" y2="35" stroke="#999" stroke-width="1"/>
+  <line x1="56" y1="35" x2="68" y2="50" stroke="#999" stroke-width="1"/>
+  <!-- Format tags -->
+  <rect x="70" y="13" width="24" height="13" rx="2" fill="#3584e4" fill-opacity="0.1" stroke="#3584e4" stroke-width="1"/>
+  <text x="82" y="22" font-family="sans-serif" font-size="6" fill="#3584e4" text-anchor="middle">MP4</text>
+  <rect x="70" y="30" width="24" height="13" rx="2" fill="none" stroke="#999" stroke-width="1"/>
+  <text x="82" y="39" font-family="sans-serif" font-size="6" fill="#999" text-anchor="middle">MKV</text>
+  <rect x="70" y="47" width="24" height="13" rx="2" fill="none" stroke="#999" stroke-width="1"/>
+  <text x="82" y="56" font-family="sans-serif" font-size="6" fill="#999" text-anchor="middle">WebM</text>
+</svg>

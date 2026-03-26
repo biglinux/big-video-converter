@@ -1,6 +1,10 @@
 import json
 import os
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 # Remove translation imports if not directly used in this file
 
 
@@ -49,11 +53,30 @@ class SettingsManager:
         # Noise reduction settings
         "noise-reduction": False,
         "noise-reduction-strength": 1.0,
+        "noise-model": 0,
+        "noise-model-blend": False,
+        "noise-speech-strength": 1.0,
+        "noise-lookahead": 50,
+        "noise-voice-recovery": 0.75,
         "noise-gate-enabled": False,
+        "noise-gate-intensity": 0.5,
         "noise-gate-threshold": -30,
         "noise-gate-range": -60,
         "noise-gate-attack": 20.0,
         "noise-gate-release": 150.0,
+        # Compressor settings
+        "compressor-enabled": False,
+        "compressor-intensity": 1.0,
+        # HPF settings
+        "hpf-enabled": False,
+        "hpf-frequency": 80,
+        # Transient settings
+        # EQ settings
+        "eq-enabled": False,
+        "eq-preset": "flat",
+        "eq-bands": "0,0,0,0,0,0,0,0,0,0",
+        # Normalize
+        "normalize-enabled": False,
         # Preview settings
         "preview-crop-left": 0,
         "preview-crop-right": 0,
@@ -90,21 +113,21 @@ class SettingsManager:
         # Load settings
         self.load_from_disk()
 
-    def load_from_disk(self):
+    def load_from_disk(self) -> None:
         """Load settings from JSON file"""
         try:
             if os.path.exists(self.settings_file):
                 with open(self.settings_file, "r") as f:
                     self.settings = json.load(f)
-                print(f"Loaded settings from: {self.settings_file}")
+                logger.debug(f"Loaded settings from: {self.settings_file}")
             else:
-                print("Settings file not found, will use defaults")
+                logger.debug("Settings file not found, will use defaults")
                 self.settings = {}
-        except Exception as e:
-            print(f"Error loading settings: {e}")
+        except (ValueError, KeyError, OSError) as e:
+            logger.error(f"Error loading settings: {e}")
             self.settings = {}
 
-    def save_to_disk(self):
+    def save_to_disk(self) -> bool:
         """Save settings to JSON file"""
         try:
             # Make sure the directory exists
@@ -114,12 +137,12 @@ class SettingsManager:
             with open(self.settings_file, "w") as f:
                 json.dump(self.settings, f, indent=2)
             return True
-        except Exception as e:
-            print(f"Error saving settings: {e}")
+        except (ValueError, KeyError, OSError) as e:
+            logger.error(f"Error saving settings: {e}")
             return False
 
     # Simplified type-specific methods
-    def get_value(self, key, default=None):
+    def get_value(self, key: str, default=None):
         """Get setting value with appropriate type conversion"""
         if default is None:
             default = self.DEFAULT_VALUES.get(key, "")
@@ -146,7 +169,7 @@ class SettingsManager:
         else:
             return str(value) if value is not None else ""
 
-    def set_value(self, key, value):
+    def set_value(self, key: str, value: str):
         """Set setting value and save to disk (unless in batch mode)"""
         self.settings[key] = value
         if self._batch_mode:
@@ -176,35 +199,35 @@ class SettingsManager:
             return False
 
     # Legacy methods for compatibility
-    def get_string(self, key, default=None):
+    def get_string(self, key: str, default=None):
         return self.get_value(key, default)
 
-    def get_boolean(self, key, default=None):
+    def get_boolean(self, key: str, default=None):
         return self.get_value(key, default if default is not None else False)
 
-    def set_string(self, key, value):
+    def set_string(self, key: str, value: str):
         return self.set_value(key, str(value) if value is not None else "")
 
-    def set_boolean(self, key, value):
+    def set_boolean(self, key: str, value: str):
         return self.set_value(key, bool(value))
 
-    def set_int(self, key, value):
+    def set_int(self, key: str, value: str):
         try:
             return self.set_value(key, int(value))
         except (ValueError, TypeError):
-            print(f"Error: Could not convert {value} to integer")
+            logger.error(f"Error: Could not convert {value} to integer")
             return False
 
-    def set_double(self, key, value):
+    def set_double(self, key: str, value: str):
         try:
             return self.set_value(key, float(value))
         except (ValueError, TypeError):
-            print(f"Error: Could not convert {value} to float")
+            logger.error(f"Error: Could not convert {value} to float")
             return False
 
     # Simple aliases for unified API
-    def load_setting(self, key, default=None):
+    def load_setting(self, key: str, default=None):
         return self.get_value(key, default)
 
-    def save_setting(self, key, value):
+    def save_setting(self, key: str, value: str):
         return self.set_value(key, value)

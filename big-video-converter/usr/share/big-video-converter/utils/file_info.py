@@ -12,6 +12,10 @@ import gettext
 
 from gi.repository import Adw, Gdk, GLib, Gtk
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 _ = gettext.gettext
 
 
@@ -103,7 +107,7 @@ class VideoInfoDialog:
         # Set dialog content
         self.dialog.set_content(content_box)
 
-    def show(self):
+    def show(self) -> None:
         """Show the dialog and start loading file information"""
         self.dialog.present()
 
@@ -118,7 +122,7 @@ class VideoInfoDialog:
             info_thread.daemon = True
             info_thread.start()
             return False
-        except Exception as e:
+        except (GLib.Error, OSError) as e:
             self._show_error(str(e))
             return False
 
@@ -127,7 +131,7 @@ class VideoInfoDialog:
         try:
             info = get_video_file_info(self.file_path)
             GLib.idle_add(self._update_ui_with_info, info)
-        except Exception as e:
+        except (GLib.Error, OSError) as e:
             GLib.idle_add(self._show_error, str(e))
 
     def _update_ui_with_info(self, info):
@@ -265,12 +269,12 @@ class VideoInfoDialog:
         try:
             Gtk.show_uri(self.dialog, f"file://{folder_path}", Gdk.CURRENT_TIME)
         except Exception as e:
-            print(f"Error opening folder: {e}")
+            logger.error(f"Error opening folder: {e}")
             # Fallback method using subprocess
             try:
                 subprocess.Popen(["xdg-open", folder_path])
-            except Exception as e2:
-                print(f"Fallback error opening folder: {e2}")
+            except (subprocess.SubprocessError, OSError) as e2:
+                logger.error(f"Fallback error opening folder: {e2}")
 
     def _add_stream_group(self, title, streams):
         """Add a group of streams (video, audio, subtitles)"""
@@ -520,7 +524,7 @@ class VideoInfoDialog:
                                     lang_label = Gtk.Label(label=lang_name)
                                     lang_label.add_css_class("caption")
                                     lang_row.add_suffix(lang_label)
-                        except:
+                        except (ImportError, locale.Error, ValueError):
                             pass  # Ignore language name lookup errors
 
                         expander.add_row(lang_row)
@@ -647,7 +651,7 @@ class VideoInfoDialog:
         GLib.idle_add(self._load_file_info)
 
 
-def get_video_file_info(file_path):
+def get_video_file_info(file_path: str):
     """
     Get detailed information about a video file using ffprobe
 
@@ -675,7 +679,7 @@ def get_video_file_info(file_path):
             file_path,
         ]
 
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        result = subprocess.run(command, capture_output=True, text=True, check=True, timeout=15)
 
         # Parse JSON output
         info = json.loads(result.stdout)
@@ -698,8 +702,8 @@ def get_video_file_info(file_path):
     except json.JSONDecodeError:
         # Invalid JSON output
         return None
-    except Exception as e:
-        print(f"Error getting file info: {e}")
+    except (subprocess.SubprocessError, OSError) as e:
+        logger.error(f"Error getting file info: {e}")
         return None
 
 def format_file_size(size_bytes):
@@ -714,7 +718,7 @@ def format_file_size(size_bytes):
         return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
-def has_audio_streams(file_path):
+def has_audio_streams(file_path: str):
     """
     Check if a video file has audio streams.
 
@@ -743,18 +747,18 @@ def has_audio_streams(file_path):
             file_path,
         ]
 
-        result = subprocess.run(command, capture_output=True, text=True)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
 
         # If we get output, it means there's at least one audio stream
         return bool(result.stdout.strip())
 
-    except Exception as e:
-        print(f"Error checking audio streams: {e}")
+    except (subprocess.SubprocessError, OSError) as e:
+        logger.error(f"Error checking audio streams: {e}")
         # On error, assume there might be audio to avoid accidentally removing it
         return True
 
 
-def check_mp4_compatibility(file_path):
+def check_mp4_compatibility(file_path: str):
     """
     Check if video/audio codecs are compatible with MP4 container when copying without reencoding.
 
@@ -807,6 +811,6 @@ def check_mp4_compatibility(file_path):
 
         return len(incompatible) == 0, incompatible
 
-    except Exception as e:
-        print(f"Error checking MP4 compatibility: {e}")
+    except OSError as e:
+        logger.error(f"Error checking MP4 compatibility: {e}")
         return True, []  # On error, assume compatible to avoid blocking conversion

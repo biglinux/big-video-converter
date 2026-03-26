@@ -11,6 +11,10 @@ import gettext
 
 from gi.repository import GLib
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 _ = gettext.gettext
 
 
@@ -18,10 +22,10 @@ class VideoProcessor:
     def __init__(self, page):
         self.page = page
 
-    def load_video(self, file_path):
+    def load_video(self, file_path: str) -> bool:
         """Starts the asynchronous process of loading video metadata."""
         if not file_path or not os.path.exists(file_path):
-            print(f"Cannot load video - invalid path: {file_path}")
+            logger.error(f"Cannot load video - invalid path: {file_path}")
             self.page.loading_video = False
             return False
 
@@ -49,13 +53,13 @@ class VideoProcessor:
                 "-show_streams",
                 file_path,
             ]
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=15)
             info = json.loads(result.stdout)
             # Post the successful result back to the main GTK thread
             GLib.idle_add(self._on_video_info_loaded, info, file_path)
-        except Exception as e:
+        except (subprocess.SubprocessError, OSError) as e:
             error_message = f"Error getting video info: {e}"
-            print(error_message)
+            logger.error(error_message)
             # Post the error back to the main GTK thread and release the lock
             GLib.idle_add(self._on_video_info_error, error_message)
 
@@ -69,7 +73,7 @@ class VideoProcessor:
         # CRITICAL FIX: Check against the requested path, not the current path,
         # as current_path might be cleared by cleanup before this callback runs.
         if file_path != self.page.requested_video_path:
-            print(f"Ignoring stale video info for: {os.path.basename(file_path)}")
+            logger.debug(f"Ignoring stale video info for: {os.path.basename(file_path)}")
             # If this was a stale request, we still need to ensure the loading lock isn't stuck.
             # However, only the *correct* callback should release the lock.
             # This logic is now safer because the gatekeeper in set_video is stronger.
@@ -157,4 +161,4 @@ class VideoProcessor:
 
         # Finally, release the loading lock
         self.page.loading_video = False
-        print(f"Successfully loaded video: {os.path.basename(file_path)}")
+        logger.debug(f"Successfully loaded video: {os.path.basename(file_path)}")

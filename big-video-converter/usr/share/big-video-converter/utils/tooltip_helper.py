@@ -13,6 +13,10 @@ gi.require_version("Adw", "1")
 from constants import get_tooltips
 from gi.repository import Adw, Gdk, GLib, Gtk
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 def _is_x11_backend() -> bool:
     """Check if we're running on X11 backend (not Wayland)."""
@@ -111,7 +115,7 @@ class TooltipHelper:
     def is_enabled(self):
         return self.settings_manager.load_setting("show-tooltips", True)
 
-    def add_tooltip(self, widget, tooltip_key):
+    def add_tooltip(self, widget, tooltip_key) -> None:
         """Connects a widget to the tooltip management system."""
         tooltip_text = self.tooltips.get(tooltip_key, "")
         
@@ -205,7 +209,7 @@ class TooltipHelper:
             self.popover.set_parent(self.active_widget)
             self.popover.popup()
         except Exception as e:
-            print(f"Tooltip error: {e}")
+            logger.error(f"Tooltip error: {e}")
             self.active_widget = None
         
         self.show_timer_id = None
@@ -240,7 +244,7 @@ class TooltipHelper:
         except Exception:
             pass
 
-    def update_colors(self):
+    def update_colors(self) -> None:
         """Update tooltip colors based on current GTK/Adwaita theme."""
         # Skip on X11 - using native tooltips
         if self._use_native_tooltips:
@@ -351,7 +355,7 @@ class TooltipHelper:
         except (ValueError, IndexError):
             return bg_color
 
-    def cleanup(self):
+    def cleanup(self) -> None:
         """Call this when the application is shutting down."""
         self._clear_timer()
         

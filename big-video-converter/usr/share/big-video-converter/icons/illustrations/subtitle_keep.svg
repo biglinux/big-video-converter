@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Video file container -->
+  <rect x="20" y="6" width="56" height="50" rx="3" fill="none" stroke="#3584e4" stroke-width="1.5"/>
+  <!-- Video content area -->
+  <rect x="26" y="12" width="44" height="24" rx="1" fill="none" stroke="#999" stroke-width="1"/>
+  <polygon points="40,18 40,30 52,24" fill="#999"/>
+  <!-- Subtitle text embedded inside container -->
+  <rect x="28" y="40" width="36" height="7" rx="1" fill="#3584e4" opacity="0.25"/>
+  <text x="46" y="46" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">Subtitles</text>
+  <!-- Container label -->
+  <text x="70" y="14" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="end">MP4</text>
+  <!-- Check mark (keeping) -->
+  <circle cx="90" cy="26" r="10" fill="#26a269"/>
+  <path d="M85,26 L88,30 L96,22" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Embedded indicator arrows pointing inward -->
+  <line x1="14" y1="44" x2="20" y2="44" stroke="#3584e4" stroke-width="1.2"/>
+  <polygon points="18,42 22,44 18,46" fill="#3584e4"/>
+  <line x1="82" y1="44" x2="76" y2="44" stroke="#3584e4" stroke-width="1.2"/>
+  <polygon points="78,42 74,44 78,46" fill="#3584e4"/>
+  <!-- Label -->
+  <text x="56" y="72" font-family="sans-serif" font-size="5.5" fill="#999" text-anchor="middle">Keep subtitles embedded</text>
+</svg>

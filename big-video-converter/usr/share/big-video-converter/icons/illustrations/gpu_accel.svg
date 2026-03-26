@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- CPU chip (left) -->
+  <rect x="5" y="14" width="24" height="24" rx="2" fill="none" stroke="#999" stroke-width="1.5"/>
+  <text x="17" y="24" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">CPU</text>
+  <!-- Turtle silhouette -->
+  <ellipse cx="17" cy="32" rx="6" ry="3" fill="#999"/>
+  <circle cx="12" cy="30" r="2" fill="#999"/>
+  <!-- CPU pins -->
+  <line x1="10" y1="12" x2="10" y2="8" stroke="#999" stroke-width="1"/>
+  <line x1="17" y1="12" x2="17" y2="8" stroke="#999" stroke-width="1"/>
+  <line x1="24" y1="12" x2="24" y2="8" stroke="#999" stroke-width="1"/>
+  <text x="17" y="48" font-family="sans-serif" font-size="6" fill="#e01b24" text-anchor="middle">30min</text>
+  <!-- Arrow -->
+  <line x1="38" y1="26" x2="52" y2="26" stroke="#3584e4" stroke-width="1.5"/>
+  <polygon points="52,22 58,26 52,30" fill="#3584e4"/>
+  <!-- GPU chip (right) -->
+  <rect x="62" y="14" width="24" height="24" rx="2" fill="none" stroke="#3584e4" stroke-width="1.5"/>
+  <text x="74" y="24" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">GPU</text>
+  <!-- Rocket silhouette -->
+  <polygon points="74,36 71,31 74,26 77,31" fill="#3584e4"/>
+  <line x1="72" y1="36" x2="71" y2="38" stroke="#3584e4" stroke-width="1"/>
+  <line x1="76" y1="36" x2="77" y2="38" stroke="#3584e4" stroke-width="1"/>
+  <!-- GPU pins -->
+  <line x1="67" y1="12" x2="67" y2="8" stroke="#3584e4" stroke-width="1"/>
+  <line x1="74" y1="12" x2="74" y2="8" stroke="#3584e4" stroke-width="1"/>
+  <line x1="81" y1="12" x2="81" y2="8" stroke="#3584e4" stroke-width="1"/>
+  <text x="74" y="48" font-family="sans-serif" font-size="6" fill="#26a269" text-anchor="middle">3min</text>
+  <!-- Speed label -->
+  <text x="50" y="62" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">10× faster</text>
+  <text x="60" y="74" font-family="sans-serif" font-size="5.5" fill="#999" text-anchor="middle">GPU acceleration is much faster</text>
+</svg>

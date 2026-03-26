@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Terminal window -->
+  <rect x="15" y="10" width="90" height="55" rx="3" fill="none" stroke="#999" stroke-width="1.5"/>
+  <!-- Title bar — Linux style (text left, buttons right) -->
+  <text x="22" y="19" font-family="sans-serif" font-size="5" fill="#999">Terminal</text>
+  <!-- Minimize -->
+  <line x1="84" y1="17" x2="88" y2="17" stroke="#999" stroke-width="1.2"/>
+  <!-- Maximize (square) -->
+  <rect x="91" y="14" width="5" height="5" rx="0.5" fill="none" stroke="#999" stroke-width="1"/>
+  <!-- Close X -->
+  <line x1="99" y1="14" x2="103" y2="19" stroke="#999" stroke-width="1.2"/>
+  <line x1="103" y1="14" x2="99" y2="19" stroke="#999" stroke-width="1.2"/>
+  <!-- Divider line -->
+  <line x1="15" y1="23" x2="105" y2="23" stroke="#999" stroke-width="0.8"/>
+  <!-- Command text -->
+  <text x="22" y="34" font-family="monospace" font-size="5" fill="#3584e4">$ ffmpeg</text>
+  <text x="22" y="42" font-family="monospace" font-size="4.5" fill="#999">-vf scale=...</text>
+  <text x="22" y="50" font-family="monospace" font-size="4.5" fill="#999">-c:a copy</text>
+  <text x="22" y="58" font-family="monospace" font-size="5" fill="#26a269">Custom flags</text>
+</svg>

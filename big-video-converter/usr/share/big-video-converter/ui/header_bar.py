@@ -58,6 +58,10 @@ class HeaderBar(Gtk.Box):
         self.app.tooltip_helper.add_tooltip(
             self.clear_queue_button, "clear_queue_button"
         )
+        self.clear_queue_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Clear queue")],
+        )
         self.clear_queue_button.add_css_class("circular")
         self.clear_queue_button.add_css_class("destructive-action")
         self.clear_queue_button.connect("clicked", self._on_clear_queue_clicked)
@@ -124,11 +128,16 @@ class HeaderBar(Gtk.Box):
         # Add menu button (three dots) at the end
         self.menu_button = Gtk.MenuButton()
         self.menu_button.set_icon_name('open-menu-symbolic')
+        self.menu_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Main menu")],
+        )
         self.app.tooltip_helper.add_tooltip(self.menu_button, "menu_button")
 
         # Create menu model
         menu = Gio.Menu.new()
         menu.append(_("Welcome Screen"), "app.welcome")
+        menu.append(_("Restore Settings"), "app.restore_settings")
         menu.append(_("About"), "app.about")
         menu.append(_("Quit"), "app.quit")
 
@@ -144,6 +153,7 @@ class HeaderBar(Gtk.Box):
             app_icon.set_pixel_size(20)
             app_icon.set_halign(Gtk.Align.END)
             app_icon.set_valign(Gtk.Align.CENTER)
+            app_icon.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
             icon_box.append(app_icon)
             self.header_bar.pack_end(icon_box)
         else:
@@ -178,13 +188,13 @@ class HeaderBar(Gtk.Box):
         if hasattr(self.app, "convert_current_file"):
             self.app.convert_current_file()
 
-    def set_buttons_sensitive(self, sensitive):
+    def set_buttons_sensitive(self, sensitive: bool) -> None:
         """Enable or disable action buttons"""
         self.add_button.set_sensitive(sensitive)
         self.clear_queue_button.set_sensitive(sensitive)
         self.convert_button.set_sensitive(sensitive)
 
-    def update_queue_size(self, count):
+    def update_queue_size(self, count: int) -> None:
         """Update queue size label and show/hide clear button based on file count"""
         # Update label text
         if count == 1:
@@ -198,7 +208,7 @@ class HeaderBar(Gtk.Box):
         self.clear_queue_button.set_visible(has_multiple_files)
         self.queue_size_label.set_visible(has_multiple_files)
 
-    def set_view(self, view_name):
+    def set_view(self, view_name) -> None:
         """Set the header bar context based on current view
         Args:
             view_name: 'queue' or 'editor'

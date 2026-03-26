@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Input waveform (dynamic range wide) -->
+  <path d="M10,40 L15,15 L20,55 L25,10 L30,60 L35,18 L40,52 L45,25 L50,40" fill="none" stroke="#999" stroke-width="1.2"/>
+  <!-- Threshold lines -->
+  <line x1="10" y1="20" x2="50" y2="20" stroke="#e5a50a" stroke-width="0.8" stroke-dasharray="3,2"/>
+  <line x1="10" y1="55" x2="50" y2="55" stroke="#e5a50a" stroke-width="0.8" stroke-dasharray="3,2"/>
+  <!-- Arrow -->
+  <line x1="54" y1="38" x2="66" y2="38" stroke="#3584e4" stroke-width="1.5"/>
+  <polygon points="66,34 73,38 66,42" fill="#3584e4"/>
+  <!-- Compressed waveform (narrower range) -->
+  <path d="M78,40 L82,28 L86,48 L90,25 L94,50 L98,30 L102,46 L106,32 L110,40" fill="none" stroke="#26a269" stroke-width="1.2"/>
+  <!-- Narrower threshold lines -->
+  <line x1="78" y1="24" x2="110" y2="24" stroke="#26a269" stroke-width="0.8" stroke-dasharray="3,2"/>
+  <line x1="78" y1="52" x2="110" y2="52" stroke="#26a269" stroke-width="0.8" stroke-dasharray="3,2"/>
+  <!-- Labels -->
+  <text x="30" y="72" font-family="sans-serif" font-size="4.5" fill="#999" text-anchor="middle">Wide range</text>
+  <text x="94" y="72" font-family="sans-serif" font-size="4.5" fill="#26a269" text-anchor="middle">Compressed</text>
+</svg>

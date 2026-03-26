@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Speech wave left -->
+  <path d="M5,36 Q8,24 11,36 Q14,48 17,36 Q20,24 23,36 Q26,48 29,36" 
+        stroke="#3584e4" stroke-width="1.5" fill="none"/>
+  <!-- Silent gap with gate -->
+  <rect x="36" y="18" width="3" height="36" rx="1" fill="#999"/>
+  <rect x="51" y="18" width="3" height="36" rx="1" fill="#999"/>
+  <!-- Gate closing lines -->
+  <line x1="39" y1="26" x2="51" y2="26" stroke="#999" stroke-width="1" stroke-dasharray="2,1"/>
+  <line x1="39" y1="36" x2="51" y2="36" stroke="#999" stroke-width="1" stroke-dasharray="2,1"/>
+  <line x1="39" y1="46" x2="51" y2="46" stroke="#999" stroke-width="1" stroke-dasharray="2,1"/>
+  <!-- Flat silent line -->
+  <line x1="36" y1="36" x2="54" y2="36" stroke="#e8e8e8" stroke-width="1"/>
+  <!-- Speech wave right -->
+  <path d="M60,36 Q63,24 66,36 Q69,48 72,36 Q75,24 78,36 Q81,48 84,36" 
+        stroke="#3584e4" stroke-width="1.5" fill="none"/>
+  <!-- Gate label -->
+  <text x="45" y="14" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">GATE</text>
+  <!-- Mute icon in gap -->
+  <text x="45" y="62" font-family="sans-serif" font-size="5" fill="#e01b24" text-anchor="middle">MUTE</text>
+  <!-- Label -->
+  <text x="60" y="74" font-family="sans-serif" font-size="5.5" fill="#999" text-anchor="middle">Silences gaps between speech</text>
+</svg>

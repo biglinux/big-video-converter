@@ -10,6 +10,10 @@ import gettext
 
 from gi.repository import Adw, GLib, Gtk, Pango
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 _ = gettext.gettext
 
 
@@ -192,7 +196,7 @@ class ProgressPage:
     def get_page(self):
         return self.toolbar_view
 
-    def initialize_queue(self, queue_items):
+    def initialize_queue(self, queue_items) -> None:
         """Initialize the queue display with all items as pending"""
         self.reset()
         self.total_queue_items = len(queue_items)
@@ -218,7 +222,7 @@ class ProgressPage:
         else:
             self.title_label.set_label(_("Converting Videos"))
 
-    def add_conversion(self, command_title, input_file, process):
+    def add_conversion(self, command_title, input_file: str, process):
         """Start tracking a conversion for a file"""
         conversion_id = f"conversion_{self.count}"
         self.count += 1
@@ -247,7 +251,7 @@ class ProgressPage:
         self._update_overall_progress()
         return row
 
-    def mark_conversion_complete(self, conversion_id, success=True, output_file=None):
+    def mark_conversion_complete(self, conversion_id: int, success: bool=True, output_file: str=None) -> None:
         """Mark a conversion as complete"""
         if conversion_id in self.active_conversions:
             conv_data = self.active_conversions[conversion_id]
@@ -312,7 +316,7 @@ class ProgressPage:
 
         return False
 
-    def remove_conversion(self, conversion_id):
+    def remove_conversion(self, conversion_id: int) -> None:
         if conversion_id in self.active_conversions:
             del self.active_conversions[conversion_id]
 
@@ -364,7 +368,7 @@ class ProgressPage:
         """Go back to main view"""
         self.app.return_to_main_view()
 
-    def reset(self):
+    def reset(self) -> None:
         self.active_conversions.clear()
         self.queue_items.clear()
         self.total_queue_items = 0
@@ -388,7 +392,7 @@ class ProgressPage:
             self.header_bar.set_decoration_layout(":minimize,maximize")
         self._update_overall_progress()
 
-    def show_completion_summary(self):
+    def show_completion_summary(self) -> None:
         """Public method called from main.py"""
         self._show_completion_summary()
 
@@ -407,6 +411,7 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.status = "pending"
         self.current_progress = 0.0
         self._cancelled = False
+        self._pulse_source_id = None
 
         # Compatibility attributes for conversion.py
         self.input_file = self.file_path
@@ -650,7 +655,7 @@ class QueueItemRow(Gtk.ListBoxRow):
             "view-more-horizontal-symbolic" if is_active else "view-more-symbolic"
         )
 
-    def start_conversion(self, process, conversion_id):
+    def start_conversion(self, process, conversion_id: int) -> None:
         self.process = process
         self.conversion_id = conversion_id
         self.status = "active"
@@ -667,7 +672,27 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.details_button.set_sensitive(True)
         self.cancel_button.set_visible(True)
 
-    def update_progress(self, fraction, text=None):
+    def start_pulse(self) -> None:
+        """Start indeterminate pulsing progress bar."""
+        if self._pulse_source_id is not None:
+            return
+        self.progress_bar.set_visible(True)
+
+        def _do_pulse():
+            self.progress_bar.pulse()
+            return True  # keep repeating
+
+        self._pulse_source_id = GLib.timeout_add(150, _do_pulse)
+
+    def stop_pulse(self) -> None:
+        """Stop pulsing and reset progress bar to 0."""
+        if self._pulse_source_id is not None:
+            GLib.source_remove(self._pulse_source_id)
+            self._pulse_source_id = None
+        self.progress_bar.set_fraction(0)
+
+    def update_progress(self, fraction, text: str=None) -> None:
+        self.stop_pulse()
         self.current_progress = fraction
         self.progress_bar.set_fraction(min(1.0, fraction))
 
@@ -683,7 +708,7 @@ class QueueItemRow(Gtk.ListBoxRow):
         else:
             self.status_label.set_text(f"{_('Converting')}... {int(fraction * 100)}%")
 
-    def update_status(self, status):
+    def update_status(self, status) -> None:
         # Check if status contains FPS info with " | " separator
         if " | " in status:
             parts = status.split(" | ", 1)
@@ -694,13 +719,14 @@ class QueueItemRow(Gtk.ListBoxRow):
             self.status_label.set_text(status)
             # Don't hide FPS label here as it may have been set separately
 
-    def add_output_text(self, text):
+    def add_output_text(self, text: str) -> None:
         if not text:
             return
         end_iter = self.terminal_buffer.get_end_iter()
         self.terminal_buffer.insert(end_iter, text)
 
-    def mark_complete(self, success=True, output_file=None):
+    def mark_complete(self, success: bool=True, output_file: str=None) -> None:
+        self.stop_pulse()
         self.end_time = datetime.now()
         self.process = None
 
@@ -708,7 +734,7 @@ class QueueItemRow(Gtk.ListBoxRow):
             duration = self.end_time - self.start_time
             total_seconds = int(duration.total_seconds())
             mins, secs = divmod(total_seconds, 60)
-            self.time_label_2.set_text(f"{mins}m {secs}s" if mins else f"{secs}s")
+            self.time_label_2.set_text(_("{mins}m {secs}s").format(mins=mins, secs=secs) if mins else _("{secs}s").format(secs=secs))
 
         self.progress_bar.set_visible(False)
         self.cancel_button.set_visible(False)
@@ -722,7 +748,8 @@ class QueueItemRow(Gtk.ListBoxRow):
             self._set_state("failed")
             self.status_label.set_text(_("Failed"))
 
-    def mark_cancelled(self):
+    def mark_cancelled(self) -> None:
+        self.stop_pulse()
         self.status = "cancelled"
         self.end_time = datetime.now()
         self._set_state("cancelled")
@@ -730,7 +757,7 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.progress_bar.set_visible(False)
         self.cancel_button.set_visible(False)
 
-    def cancel(self, cancel_all=False):
+    def cancel(self, cancel_all: bool=False) -> None:
         if self.status not in ("active", "pending"):
             return
 
@@ -750,7 +777,7 @@ class QueueItemRow(Gtk.ListBoxRow):
                 else:
                     self.process.terminate()
             except Exception as e:
-                print(f"Error cancelling: {e}")
+                logger.error(f"Error cancelling: {e}")
 
         # For pending items, also remove from the conversion queue
         if was_pending and self.file_path:
@@ -759,7 +786,7 @@ class QueueItemRow(Gtk.ListBoxRow):
                 and self.file_path in self.app.conversion_queue
             ):
                 self.app.conversion_queue.remove(self.file_path)
-                print(f"Removed {os.path.basename(self.file_path)} from queue")
+                logger.debug(f"Removed {os.path.basename(self.file_path)} from queue")
 
         self.mark_cancelled()
 
@@ -777,17 +804,17 @@ class QueueItemRow(Gtk.ListBoxRow):
             self.app.conversion_completed(success=False)
         return False
 
-    def set_delete_original(self, delete_original):
+    def set_delete_original(self, delete_original: bool) -> None:
         self.delete_original = delete_original
 
-    def mark_success(self):
+    def mark_success(self) -> None:
         self.mark_complete(success=True)
         if self.progress_page:
             self.progress_page.mark_conversion_complete(
                 self.conversion_id, success=True
             )
 
-    def mark_failure(self):
+    def mark_failure(self) -> None:
         self.mark_complete(success=False)
         if self.progress_page:
             self.progress_page.mark_conversion_complete(

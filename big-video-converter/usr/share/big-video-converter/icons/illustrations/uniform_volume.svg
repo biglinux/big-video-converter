@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Waveform before (uneven) -->
+  <text x="30" y="10" font-family="sans-serif" font-size="4" fill="#999" text-anchor="middle">Before</text>
+  <path d="M8,28 L15,18 L20,35 L25,12 L30,38 L35,22 L40,32 L45,15 L52,28" fill="none" stroke="#999" stroke-width="1.2"/>
+  <!-- Arrow -->
+  <line x1="56" y1="28" x2="66" y2="28" stroke="#3584e4" stroke-width="1.5"/>
+  <polygon points="66,24 73,28 66,32" fill="#3584e4"/>
+  <!-- Waveform after (uniform) -->
+  <text x="93" y="10" font-family="sans-serif" font-size="4" fill="#26a269" text-anchor="middle">After</text>
+  <path d="M76,28 L82,21 L86,33 L90,19 L94,34 L98,20 L102,33 L106,22 L112,28" fill="none" stroke="#26a269" stroke-width="1.2"/>
+  <!-- Volume level lines -->
+  <line x1="76" y1="18" x2="112" y2="18" stroke="#26a269" stroke-width="0.5" stroke-dasharray="2,2"/>
+  <line x1="76" y1="36" x2="112" y2="36" stroke="#26a269" stroke-width="0.5" stroke-dasharray="2,2"/>
+  <!-- Label -->
+  <text x="60" y="60" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">Consistent loudness</text>
+</svg>

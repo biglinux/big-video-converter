@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Timeline bar -->
+  <rect x="8" y="24" width="104" height="16" rx="2" fill="#e8e8e8"/>
+  <!-- Selected segment -->
+  <rect x="34" y="24" width="40" height="16" rx="0" fill="#3584e4" opacity="0.3"/>
+  <rect x="34" y="24" width="40" height="16" rx="0" fill="none" stroke="#3584e4" stroke-width="1.5"/>
+  <!-- Left handle -->
+  <rect x="32" y="22" width="4" height="20" rx="1" fill="#3584e4"/>
+  <!-- Right handle -->
+  <rect x="72" y="22" width="4" height="20" rx="1" fill="#3584e4"/>
+  <!-- Scissors (left cut) -->
+  <circle cx="34" cy="50" r="4" fill="none" stroke="#e01b24" stroke-width="1.2"/>
+  <circle cx="34" cy="58" r="4" fill="none" stroke="#e01b24" stroke-width="1.2"/>
+  <line x1="36" y1="48" x2="40" y2="42" stroke="#e01b24" stroke-width="1.2"/>
+  <line x1="36" y1="56" x2="40" y2="42" stroke="#e01b24" stroke-width="1.2"/>
+  <!-- Time markers -->
+  <text x="8" y="20" font-family="sans-serif" font-size="4.5" fill="#999">0:00</text>
+  <text x="42" y="20" font-family="sans-serif" font-size="4.5" fill="#3584e4">1:30</text>
+  <text x="64" y="20" font-family="sans-serif" font-size="4.5" fill="#3584e4">4:00</text>
+  <text x="98" y="20" font-family="sans-serif" font-size="4.5" fill="#999">6:00</text>
+  <!-- Label -->
+  <text x="60" y="74" font-family="sans-serif" font-size="5.5" fill="#999" text-anchor="middle">Cut video segments</text>
+</svg>

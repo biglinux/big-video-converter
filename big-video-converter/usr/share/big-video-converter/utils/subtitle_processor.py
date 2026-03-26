@@ -7,6 +7,10 @@ import os
 import re
 import subprocess
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class SubtitleProcessor:
     """Processes subtitles for joined video segments."""
@@ -44,7 +48,7 @@ class SubtitleProcessor:
         # Get subtitle streams from source
         subtitle_streams = self._get_subtitle_streams()
         if not subtitle_streams:
-            print("No subtitle streams found in source video")
+            logger.debug("No subtitle streams found in source video")
             return []
         
         # Process each subtitle stream
@@ -53,7 +57,7 @@ class SubtitleProcessor:
             stream_index = parts[0]
             language = parts[1] if len(parts) > 1 else "und"
             
-            print(f"Processing subtitle stream {stream_index} (language: {language})")
+            logger.debug(f"Processing subtitle stream {stream_index} (language: {language})")
             
             # Extract and merge subtitles for this stream
             merged_content = self._merge_subtitle_stream(stream_index, language)
@@ -78,11 +82,11 @@ class SubtitleProcessor:
         ]
         
         try:
-            result = subprocess.run(probe_cmd, capture_output=True, text=True)
+            result = subprocess.run(probe_cmd, capture_output=True, text=True, timeout=10)
             if result.stdout.strip():
                 return result.stdout.strip().split("\n")
-        except Exception as e:
-            print(f"Error probing subtitle streams: {e}")
+        except (subprocess.SubprocessError, OSError) as e:
+            logger.error(f"Error probing subtitle streams: {e}")
         
         return []
     
@@ -147,8 +151,8 @@ class SubtitleProcessor:
         try:
             result = subprocess.run(extract_cmd, capture_output=True, timeout=60)
             return result.returncode == 0 and os.path.exists(output_file)
-        except Exception as e:
-            print(f"Error extracting subtitle: {e}")
+        except (subprocess.SubprocessError, OSError) as e:
+            logger.error(f"Error extracting subtitle: {e}")
             return False
     
     def _filter_subtitle_range(self, subtitle_file, start_time, end_time, time_offset):
@@ -167,8 +171,8 @@ class SubtitleProcessor:
         try:
             with open(subtitle_file, "r", encoding="utf-8", errors="ignore") as f:
                 content = f.read()
-        except Exception as e:
-            print(f"Error reading subtitle file: {e}")
+        except OSError as e:
+            logger.error(f"Error reading subtitle file: {e}")
             return ""
         
         # Parse SRT format
@@ -250,5 +254,5 @@ class SubtitleProcessor:
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(content)
         
-        print(f"Created merged subtitle: {output_file}")
+        logger.debug(f"Created merged subtitle: {output_file}")
         return output_file

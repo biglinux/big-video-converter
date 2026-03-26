@@ -8,6 +8,10 @@ import gettext
 import constants
 from gi.repository import Adw, Gtk
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 _ = gettext.gettext
 
 
@@ -34,7 +38,7 @@ class SettingsPage:
         """Return the settings page widget"""
         return self.page
 
-    def update_for_force_copy_state(self, force_copy_enabled):
+    def update_for_force_copy_state(self, force_copy_enabled) -> None:
         """Update controls sensitivity based on force copy state"""
         # When force copy is enabled, most encoding options don't apply
         # Only Output Format remains functional (can choose container)
@@ -427,14 +431,16 @@ class SettingsPage:
             # Get the internal value from the mapping
             internal_value = constants.PRESET_VALUES[selected]
             self.app.settings_manager.save_setting("preset", internal_value)
-            print(f"Saved preset: {internal_value}")
+            logger.debug(f"Saved preset: {internal_value}")
 
     def _on_extract_subtitles_toggled(self, widget, _param):
-        """Handle extract subtitles toggle and update the banner"""
+        """Handle extract subtitles toggle, update banner and sidebar state."""
         active = widget.get_active()
         self.settings_manager.save_setting("only-extract-subtitles", active)
         if hasattr(self.app, "subtitle_banner"):
             self.app.subtitle_banner.set_revealed(active)
+        if hasattr(self.app, "_update_sidebar_for_extract_mode"):
+            self.app._update_sidebar_for_extract_mode()
 
     def _save_audio_codec_setting(self, combo_box, _param=None):
         """Save audio codec setting"""
@@ -443,7 +449,7 @@ class SettingsPage:
             # Get the internal value from the mapping
             internal_value = constants.AUDIO_CODEC_VALUES[selected]
             self.app.settings_manager.save_setting("audio-codec", internal_value)
-            print(f"Saved audio codec: {internal_value}")
+            logger.debug(f"Saved audio codec: {internal_value}")
 
     def _save_render_mode_setting(self, combo_box, _param=None):
         """Save video preview render mode setting"""
@@ -456,7 +462,7 @@ class SettingsPage:
             if internal_value != current_value:
                 # Save the new value
                 self.app.settings_manager.save_setting("video-preview-render-mode", internal_value)
-                print(f"Saved render mode: {internal_value} (restart required to apply)")
+                logger.debug(f"Saved render mode: {internal_value} (restart required to apply)")
                 
                 # Show dialog informing user that restart is required
                 dialog = Gtk.AlertDialog()
@@ -651,7 +657,7 @@ class SettingsPage:
         # Batch all resets into a single disk write
         with self.settings_manager.batch_update():
             for key, value in default_values.items():
-                print(f"Resetting {key} to {value}")
+                logger.debug(f"Resetting {key} to {value}")
 
                 if isinstance(value, bool):
                     self.settings_manager.set_boolean(key, value)
