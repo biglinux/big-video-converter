@@ -23,14 +23,14 @@ from gi.repository import GObject, Nautilus
 APP_NAME = "big-video-converter"
 
 try:
-    # Set the default domain for this script. gettext will automatically find
-    # the message catalogs in the system's standard locale directories.
-    gettext.textdomain(APP_NAME)
+    gettext.bindtextdomain(APP_NAME, "/usr/share/locale")
 except Exception as e:
     print(f"Big Video Converter Extension: Could not set up localization: {e}")
 
-# Define the global translation function.
-_ = gettext.gettext
+
+def _(message):
+    """Domain-specific translation to avoid conflict with Nautilus' own textdomain."""
+    return gettext.dgettext(APP_NAME, message)
 
 
 class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
