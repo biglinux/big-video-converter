@@ -18,20 +18,30 @@ if [[ $show_executable == 1 ]]; then
 	exit 0
 fi
 
-# If vainfo is available, check for VAAPI encoders before ffmpeg to faster result
-# Only check if not using software encoding
-if [[ "$gpu" != "software" && "$force_software" != "1" ]]; then
-	if ! command -v vainfo >/dev/null; then
-		echo "Command vainfo not found"
-		exit 1
+# GPU detection helpers.
+#
+# Neither vainfo nor lspci is required: vainfo is not used anywhere in this
+# script, and lspci is missing on minimal installs (Ubuntu inside an AppImage,
+# containers), where refusing to run would break every GPU conversion. When
+# lspci is unavailable the PCI vendor IDs exported by the kernel are used
+# instead, formatted so the vendor matching below keeps working.
+detect_gpu_devices() {
+	if command -v lspci >/dev/null; then
+		lspci
+		return
 	fi
 
-	# If vainfo is available, check for VAAPI encoders before ffmpeg to faster result
-	if ! command -v lspci >/dev/null; then
-		echo "Command lspci not found"
-		exit 1
-	fi
-fi
+	local vendor_file vendor
+	for vendor_file in /sys/class/drm/card[0-9]*/device/vendor; do
+		[[ -r $vendor_file ]] || continue
+		vendor=$(<"$vendor_file")
+		case $vendor in
+		0x10de) echo "VGA compatible controller: NVIDIA Corporation device" ;;
+		0x1002 | 0x1022) echo "VGA compatible controller: AMD/ATI device" ;;
+		0x8086) echo "VGA compatible controller: Intel Corporation device" ;;
+		esac
+	done | sort -u
+}
 
 # Define color variables
 COLOR_RESET="\e[0m"
@@ -138,18 +148,129 @@ if [[ ! -r "$input_file" ]]; then
 	exit 1
 fi
 
-# Validate that ffprobe can read the input file container
-if ! ffprobe -v error -show_entries format=format_name -of csv=p=0 "$input_file" >/dev/null 2>&1; then
-	echo "ERROR: Input file is corrupted or not a valid video file: $input_file"
-	echo "The file container could not be read. It may be a corrupted download or an unsupported format."
-	exit 2
+#############################################################################
+# Probing helpers
+#
+# ffprobe exits non-zero and prints nothing when it cannot open a decoder for
+# ANY stream of the file. Some MKVs with dvd_subtitle tracks trigger this on
+# FFmpeg 9 ("Could not open codec for input stream N") even though the
+# container and the video stream are perfectly readable and ffmpeg converts
+# the file without any trouble. So never treat an ffprobe failure as "the file
+# is corrupted": fall back to parsing `ffmpeg -i` output instead.
+#############################################################################
+ffmpeg_probe_output=""
+
+# Raw `ffmpeg -i` report for the input file (cached).
+ffmpeg_probe() {
+	if [[ -z $ffmpeg_probe_output ]]; then
+		ffmpeg_probe_output=$($ffmpeg_executable -hide_banner -i "$input_file" -t 0 -f null - 2>&1)
+	fi
+	printf '%s\n' "$ffmpeg_probe_output"
+}
+
+# Only the input stream declarations, so the Output/mapping lines don't leak in.
+ffmpeg_probe_input_block() {
+	ffmpeg_probe | sed -n '/^Input #0/,/^Output #/p'
+}
+
+# Emits "index|language|codec" for every input stream of the given kind
+# (Video, Audio or Subtitle), parsed from ffmpeg's own report.
+ffmpeg_probe_streams() {
+	local kind="$1" line
+	local stream_re='Stream #0:([0-9]+)(\(([a-zA-Z]{2,3})\))?[^:]*: ([A-Za-z]+): ([A-Za-z0-9_]+)'
+	while IFS= read -r line; do
+		if [[ $line =~ $stream_re ]]; then
+			[[ ${BASH_REMATCH[4]} == "$kind" ]] || continue
+			printf '%s|%s|%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[3]}" "${BASH_REMATCH[5]}"
+		fi
+	done < <(ffmpeg_probe_input_block)
+}
+
+# Fallbacks mirroring the CSV layout of the ffprobe calls they replace.
+fb_audio_info() { # index,language
+	local idx lang codec
+	while IFS='|' read -r idx lang codec; do
+		printf '%s,%s\n' "$idx" "$lang"
+	done < <(ffmpeg_probe_streams Audio)
+}
+
+fb_subtitle_codecs() { # index,codec_name
+	local idx lang codec
+	while IFS='|' read -r idx lang codec; do
+		printf '%s,%s\n' "$idx" "$codec"
+	done < <(ffmpeg_probe_streams Subtitle)
+}
+
+fb_subtitle_info() { # index,forced,language,title
+	local idx lang codec
+	while IFS='|' read -r idx lang codec; do
+		printf '%s,0,%s,\n' "$idx" "$lang"
+	done < <(ffmpeg_probe_streams Subtitle)
+}
+
+# Channel count / layout of an audio stream, by absolute stream index.
+fb_audio_layout() {
+	local want="$1" line
+	local layout_re="Stream #0:${want}[^:]*: Audio: [^,]+, [0-9]+ Hz, ([^,]+)"
+	while IFS= read -r line; do
+		[[ $line =~ $layout_re ]] || continue
+		printf '%s\n' "${BASH_REMATCH[1]}"
+		return
+	done < <(ffmpeg_probe_input_block)
+}
+
+fb_audio_channels() {
+	local layout
+	layout=$(fb_audio_layout "$1")
+	case ${layout%%(*} in
+	mono) echo 1 ;;
+	stereo) echo 2 ;;
+	2.1 | 3.0) echo 3 ;;
+	quad | 4.0 | 3.1) echo 4 ;;
+	5.0) echo 5 ;;
+	5.1 | 6.0) echo 6 ;;
+	6.1 | 7.0) echo 7 ;;
+	7.1) echo 8 ;;
+	*) echo "" ;;
+	esac
+}
+
+# Is ffprobe usable for this particular file?
+ffprobe_usable=true
+if [[ -z $(ffprobe -v error -show_entries format=format_name -of csv=p=0 "$input_file" 2>/dev/null) ]]; then
+	ffprobe_usable=false
+fi
+
+# Validate the input: only reject the file when ffmpeg itself sees no video.
+if [[ $ffprobe_usable == false ]]; then
+	if ! grep -qE 'Stream #0:[0-9]+.*: Video:' <<<"$(ffmpeg_probe_input_block)"; then
+		echo "ERROR: Input file is corrupted or not a valid video file: $input_file"
+		echo "The file container could not be read. It may be a corrupted download or an unsupported format."
+		exit 2
+	fi
+	echo "⚠️  ffprobe could not analyze this file; using ffmpeg metadata instead."
 fi
 
 # Detect bit depth and codec of input video
 echo "Iniciando o processo FFmpeg..."
 echo "Analyzing input video..."
-pix_fmt=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of csv=p=0 "$1" 2>/dev/null | sed 's/,$//')
-video_profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profile -of csv=p=0 "$1" 2>/dev/null | sed 's/,$//')
+if [[ $ffprobe_usable == true ]]; then
+	pix_fmt=$(ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt -of csv=p=0 "$input_file" 2>/dev/null | sed 's/,$//')
+	video_profile=$(ffprobe -v error -select_streams v:0 -show_entries stream=profile -of csv=p=0 "$input_file" 2>/dev/null | sed 's/,$//')
+else
+	# "Video: h264 (Main), yuv420p(tv, bt709), 1920x820" → profile / pixel format
+	probe_video_line=$(ffmpeg_probe_input_block | grep -m1 -E 'Stream #0:[0-9]+.*: Video:')
+	pix_fmt=""
+	video_profile=""
+	profile_re='Video: [A-Za-z0-9_]+ \(([^)]*)\)'
+	pix_fmt_re='Video: [^,]+, ([a-z0-9]+)'
+	if [[ $probe_video_line =~ $profile_re ]]; then
+		video_profile="${BASH_REMATCH[1]}"
+	fi
+	if [[ $probe_video_line =~ $pix_fmt_re ]]; then
+		pix_fmt="${BASH_REMATCH[1]}"
+	fi
+fi
 
 # Determine if video is 10-bit based on pixel format and profile
 is_10bit=false
@@ -175,7 +296,11 @@ if [[ $pix_fmt =~ 444p12 || $pix_fmt =~ ^gbrp ]]; then
 fi
 
 echo "Detecting source video codec..."
-source_video_codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$input_file" 2>/dev/null | head -n1)
+if [[ $ffprobe_usable == true ]]; then
+	source_video_codec=$(ffprobe -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$input_file" 2>/dev/null | head -n1)
+else
+	source_video_codec=$(ffmpeg_probe_streams Video | head -n1 | cut -d'|' -f3)
+fi
 echo "Source video codec detected: $source_video_codec"
 
 # Determine if we need to convert 10-bit video to 8-bit for H.264 compatibility
@@ -196,8 +321,16 @@ if [[ -n $output_folder && -z $output_file ]]; then
 	output_file="$output_folder/$input_file_without_extension"
 fi
 
-# If variable output_file is not set, use same folder as input file
-: ${output_file:="$input_file_without_extension"}
+# If variable output_file is not set, write next to the input file. Using just
+# the basename would put the result in the caller's working directory, which is
+# not where the user expects it (and is unwritable in some launchers).
+if [[ -z $output_file ]]; then
+	# Pure parameter expansion instead of dirname: no external command needed,
+	# which also keeps this working in minimal environments.
+	input_dir=${input_file%/*}
+	[[ $input_dir == "$input_file" ]] && input_dir="."
+	output_file="$input_dir/$input_file_without_extension"
+fi
 
 # Change to case insensitive
 shopt -s nocasematch
@@ -216,14 +349,32 @@ fi
 # Back to case sensitive
 shopt -u nocasematch
 
+# Never let the output overwrite the input: ffmpeg would truncate the source
+# file while still reading from it, destroying the original. "-ef" is a bash
+# builtin comparing device+inode, so symlinks and different spellings of the
+# same path are covered without depending on realpath.
+if [[ -e $output_file && $output_file -ef $input_file ]]; then
+	echo "ERROR: The output file is the same as the input file: $output_file"
+	echo "Choose a different output folder or format."
+	exit 1
+fi
+
 # Info about the input file
-ffprobe_result=$(ffprobe -select_streams s -show_entries stream=index:stream_tags=language,title:stream_disposition=forced -of csv=p=0 "$input_file" 2>&1 | sed 's/,$//')
+if [[ $ffprobe_usable == true ]]; then
+	ffprobe_result=$(ffprobe -v error -select_streams s -show_entries stream=index:stream_tags=language,title:stream_disposition=forced -of csv=p=0 "$input_file" | sed 's/,$//')
+else
+	ffprobe_result=$(fb_subtitle_info)
+fi
 
 ##############
 # Subtitles
 ##############
 # Get subtitle codec information to filter only SRT subtitles
-subtitle_codec_info=$(ffprobe -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file" | sed 's/,$//')
+if [[ $ffprobe_usable == true ]]; then
+	subtitle_codec_info=$(ffprobe -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file" | sed 's/,$//')
+else
+	subtitle_codec_info=$(fb_subtitle_codecs)
+fi
 
 # Extract IDs of SRT (subrip) subtitles
 subtitle_list_srt_ids=""
@@ -250,7 +401,7 @@ if [[ $subtitle_extract == "embedded" ]]; then
 	if [[ "$output_extension" == "mp4" ]]; then
 		# For MP4, find compatible SRT streams and convert them to mov_text
 		map_cmd=""
-		subtitle_info_for_embed=$(ffprobe -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file" | sed 's/,$//')
+		subtitle_info_for_embed="$subtitle_codec_info"
 		while IFS=, read -r index codec_name; do
 			if [[ "$codec_name" == "subrip" ]]; then
 				map_cmd+=" -map 0:$index"
@@ -335,6 +486,26 @@ original_audio_handling=$audio_handling
 # If audio codec not specified, use aac
 : ${audio_codec:=aac}
 
+# Floating point maths. bc is not installed by default on Debian/Ubuntu
+# (and therefore inside minimal AppImage hosts), so fall back to awk, which is
+# part of every base system. Expressions are written in awk syntax
+# (exp/log/sqrt) and translated for bc when bc is used.
+calc() {
+	local expr="$1"
+	if command -v bc >/dev/null; then
+		expr=${expr//exp(/e(}
+		expr=${expr//log(/l(}
+		echo "scale=6; $expr" | bc -l
+	else
+		awk "BEGIN { printf \"%.6f\", $expr }"
+	fi
+}
+
+# Evaluates a comparison, echoing 1 or 0.
+calc_bool() {
+	awk "BEGIN { print (($1) ? 1 : 0) }"
+}
+
 ##############
 ##############
 # Audio Processing Filter Chain
@@ -354,13 +525,13 @@ fi
 # 2. Compressor (before NR to even out dynamics)
 if [[ $compressor_enabled == "1" ]]; then
 	: ${compressor_intensity:=1.0}
-	comp_threshold_db=$(echo "scale=6; -20 - ${compressor_intensity} * 20" | bc -l)
-	comp_ratio=$(echo "scale=6; 3 + ${compressor_intensity} * 7" | bc -l)
-	comp_makeup_db=$(echo "scale=6; 6 + ${compressor_intensity} * 12" | bc -l)
-	comp_knee_db=$(echo "scale=6; 12 + ${compressor_intensity} * 4" | bc -l)
-	comp_threshold_linear=$(echo "scale=6; e(${comp_threshold_db}/20 * l(10))" | bc -l)
-	comp_makeup_linear=$(echo "scale=6; e(${comp_makeup_db}/20 * l(10))" | bc -l)
-	comp_knee_linear=$(echo "scale=6; e(${comp_knee_db}/20 * l(10))" | bc -l)
+	comp_threshold_db=$(calc "-20 - ${compressor_intensity} * 20")
+	comp_ratio=$(calc "3 + ${compressor_intensity} * 7")
+	comp_makeup_db=$(calc "6 + ${compressor_intensity} * 12")
+	comp_knee_db=$(calc "12 + ${compressor_intensity} * 4")
+	comp_threshold_linear=$(calc "exp(${comp_threshold_db}/20 * log(10))")
+	comp_makeup_linear=$(calc "exp(${comp_makeup_db}/20 * log(10))")
+	comp_knee_linear=$(calc "exp(${comp_knee_db}/20 * log(10))")
 	local_filters+=("acompressor=threshold=${comp_threshold_linear}:ratio=${comp_ratio}:attack=150:release=800:makeup=${comp_makeup_linear}:knee=${comp_knee_linear}:detection=rms")
 	echo "Compressor enabled: intensity=${compressor_intensity} threshold=${comp_threshold_db}dB ratio=${comp_ratio}"
 fi
@@ -392,10 +563,10 @@ fi
 # 5. Noise Gate (after NR — post-NR audio is mostly speech, so full-band detection is effective)
 if [[ $noise_gate == "1" ]]; then
 	: ${gate_intensity:=0.5}
-	gate_threshold_db=$(echo "scale=1; -50 + sqrt(${gate_intensity}) * 35" | bc -l)
-	gate_range_db=$(echo "scale=1; -40 - sqrt(${gate_intensity}) * 50" | bc -l)
-	gate_threshold_linear=$(echo "scale=6; e(${gate_threshold_db}/20 * l(10))" | bc -l)
-	gate_range_linear=$(echo "scale=6; e(${gate_range_db}/20 * l(10))" | bc -l)
+	gate_threshold_db=$(calc "-50 + sqrt(${gate_intensity}) * 35")
+	gate_range_db=$(calc "-40 - sqrt(${gate_intensity}) * 50")
+	gate_threshold_linear=$(calc "exp(${gate_threshold_db}/20 * log(10))")
+	gate_range_linear=$(calc "exp(${gate_range_db}/20 * log(10))")
 	local_filters+=("agate=threshold=${gate_threshold_linear}:range=${gate_range_linear}:attack=10:release=250:ratio=4:detection=rms")
 	echo "Noise gate enabled: intensity=${gate_intensity} threshold=${gate_threshold_db}dB range=${gate_range_db}dB"
 fi
@@ -409,7 +580,7 @@ if [[ $eq_enabled == "1" ]]; then
 	eq_parts=()
 	for idx in "${!eq_freqs[@]}"; do
 		gain="${bands_arr[$idx]:-0}"
-		if [[ $(echo "${gain} != 0" | bc -l) -eq 1 ]]; then
+		if [[ $(calc_bool "${gain} != 0") -eq 1 ]]; then
 			eq_parts+=("equalizer=f=${eq_freqs[$idx]}:width_type=o:w=${eq_widths[$idx]}:g=${gain}")
 		fi
 	done
@@ -432,13 +603,42 @@ if [[ ${#local_filters[@]} -gt 0 ]]; then
 	fi
 fi
 
+# Audio stream queries, honouring the ffprobe fallback.
+# probe_audio_info emits "index,language"; the channel/layout helpers take the
+# relative audio stream number and its absolute index in the container.
+function probe_audio_info() {
+	if [[ $ffprobe_usable == true ]]; then
+		ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file" | sed 's/,$//'
+	else
+		fb_audio_info
+	fi
+}
+
+function probe_audio_channels() {
+	local rel="$1" abs="$2"
+	if [[ $ffprobe_usable == true ]]; then
+		ffprobe -v error -select_streams "a:$rel" -show_entries stream=channels -of csv=p=0 "$input_file" | sed 's/,$//'
+	else
+		fb_audio_channels "$abs"
+	fi
+}
+
+function probe_audio_layout() {
+	local rel="$1" abs="$2"
+	if [[ $ffprobe_usable == true ]]; then
+		ffprobe -v error -select_streams "a:$rel" -show_entries stream=channel_layout -of csv=p=0 "$input_file" | sed 's/,$//'
+	else
+		fb_audio_layout "$abs"
+	fi
+}
+
 # Function to build the audio command string based on the current audio_handling value
 function build_audio_cmd() {
 	audio_cmd="" # Reset audio command
 	audio_inputs="" # Additional audio inputs for NR pre-processing
 	nr_deferred_preprocess=false # Reset deferred NR flag
 	if [[ $audio_handling == "copy" ]]; then
-		audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file" | sed 's/,$//')
+		audio_info=$(probe_audio_info)
 		mapfile -t audio_streams <<<"$audio_info"
 		echo "DEBUG: Found ${#audio_streams[@]} audio streams"
 		for i in "${!audio_streams[@]}"; do
@@ -448,7 +648,7 @@ function build_audio_cmd() {
 		done
 		echo "DEBUG: Final audio_cmd: $audio_cmd"
 	elif [[ $audio_handling == "reencode" ]]; then
-		audio_info=$(ffprobe -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file" | sed 's/,$//')
+		audio_info=$(probe_audio_info)
 		mapfile -t audio_streams <<<"$audio_info"
 		local num_audio=${#audio_streams[@]}
 
@@ -469,10 +669,10 @@ function build_audio_cmd() {
 				if [[ -n $audio_channels ]]; then
 					channels=$audio_channels
 				else
-					channels=$(ffprobe -v error -select_streams a:$i -show_entries stream=channels -of csv=p=0 "$input_file" | sed 's/,$//')
+					channels=$(probe_audio_channels "$i" "$index_audio")
 				fi
 				local nr_layout
-				nr_layout=$(ffprobe -v error -select_streams a:$i -show_entries stream=channel_layout -of csv=p=0 "$input_file" | sed 's/,$//')
+				nr_layout=$(probe_audio_layout "$i" "$index_audio")
 				: "${channels:=2}"
 				: "${nr_layout:=stereo}"
 
@@ -518,7 +718,7 @@ function build_audio_cmd() {
 				if [[ -n $audio_channels ]]; then
 					channels=$audio_channels
 				else
-					channels=$(ffprobe -v error -select_streams a:$i -show_entries stream=channels -of csv=p=0 "$input_file" | sed 's/,$//')
+					channels=$(probe_audio_channels "$i" "$index_audio")
 				fi
 				language_audio=${language_audio// /}
 				if [[ -z $language_audio ]]; then
@@ -746,7 +946,6 @@ fi
 
 # If preset is not specified, use medium for GPU and faster for software encoding
 if [[ -z $preset ]]; then
-	language_audio="und"
 	preset=medium
 	software_preset=faster
 else
@@ -840,7 +1039,10 @@ function build_encoder_commands() {
 		encoder_vulkan="$general_params -c:v h264_vulkan -qp $global_quality"
 		encoder_vaapi="$general_params -c:v h264_vaapi -profile:v high -level:v 4.1 -rc_mode CQP -global_quality $global_quality"
 		encoder_qsv="$general_params -c:v h264_qsv -preset $preset -profile:v high -level:v 4.1 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality $global_quality -mbbrc 1 -adaptive_i 1 -adaptive_b 1"
-		encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v high -level:v 4.1 -crf $qp_value"
+		# -pix_fmt yuv420p is required: H.264 "high" profile has no 4:4:4/4:2:2
+		# support, so 444/422 sources (ProRes, screen captures) fail to encode
+		# without an explicit downsample.
+		encoder_software="$general_params -c:v libx264 -preset $software_preset -profile:v high -level:v 4.1 -crf $qp_value -pix_fmt yuv420p"
 		;;
 	esac
 }
@@ -870,7 +1072,10 @@ function attempt_conversion() {
 
 	# If gpu empty auto detect
 	if [[ -z $gpu ]]; then
-		devices=$(lspci)
+		devices=$(detect_gpu_devices)
+		if [[ -z $devices ]]; then
+			echo "No GPU detected (lspci and sysfs gave no result) - using software encoding"
+		fi
 	else
 		devices="VGA $gpu"
 	fi
@@ -1067,23 +1272,21 @@ function attempt_conversion() {
 		echo "Generating file without re-encoding"
 		echo "Running command: $ffmpeg_executable $options $decoder_format $encoder_format  $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$options" "$decoder_format" "$encoder_format" "$ffmpeg_generic_options"
+		exit_code=$?
 		if [[ $nr_parallel_mode != true ]]; then
 			# After copy always exit (when not in parallel NR mode)
-			exit $?
+			exit $exit_code
 		fi
-		exit_code=$?
 	fi
 
 	# --- 3-stage encoder fallback ---
 	# Stage 1: Full GPU (decode + encode on GPU)
 	# Skip if force_copy_video already handled the video
 	if [[ "$force_copy_video" != "1" && "$encoder_format" != "$encoder_software" && "$gpu_partial" != "1" ]]; then
+		# The GUI parses "Encode mode:" and "Running command:"; keep one line
+		# each and let the interface handle wording and translation.
 		echo "Encode mode: Decode GPU, encode GPU"
-		echo "Detected encode mode: Decode GPU, encode GPU (Aceleração total de GPU)"
 		echo "Running command: $ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
-		echo ""
-		echo "FFmpeg command:"
-		echo "$ffmpeg_executable $init_hardware $options $decoder_format $encoder_format $video_filter_chain $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$init_hardware" "$options" "$decoder_format" "$encoder_format" "$video_filter_chain" "$ffmpeg_generic_options"
 		exit_code=$?
 		if [[ $exit_code != 0 ]]; then
@@ -1096,7 +1299,6 @@ function attempt_conversion() {
 	# Stage 2: Partial GPU (decode CPU, encode GPU)
 	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1" ]]; then
 		echo "Encode mode: Decode Software, Encode GPU"
-		echo "Detected encode mode: Decode Software, Encode GPU (Decodificação de Software e codificação por GPU)"
 
 		local partial_video_filter_chain=""
 		local partial_filter_parts=()
@@ -1136,9 +1338,6 @@ function attempt_conversion() {
 		fi
 
 		echo "Running command: $ffmpeg_executable $init_hardware $options $encoder_format $partial_video_filter_chain $ffmpeg_generic_options"
-		echo ""
-		echo "FFmpeg command:"
-		echo "$ffmpeg_executable $init_hardware $options $encoder_format $partial_video_filter_chain $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$init_hardware" "$options" "$encoder_format" "$partial_video_filter_chain" "$ffmpeg_generic_options"
 		exit_code=$?
 		if [[ $exit_code != 0 ]]; then
@@ -1149,7 +1348,6 @@ function attempt_conversion() {
 	# Stage 3: Full software (decode + encode on CPU)
 	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || $force_software == 1 || ("$encoder_format" == "$encoder_software") ]]; then
 		echo "Encode mode: Decode Software, Encode Software"
-		echo "Detected encode mode: Decode Software, Encode Software (Codificação de software)"
 		local software_filter_chain=""
 		local sw_filter_parts=()
 
@@ -1177,9 +1375,6 @@ function attempt_conversion() {
 		fi
 
 		echo "Running command: $ffmpeg_executable $options $encoder_software $software_filter_chain $ffmpeg_generic_options"
-		echo ""
-		echo "FFmpeg command:"
-		echo "$ffmpeg_executable $options $encoder_software $software_filter_chain $ffmpeg_generic_options"
 		eval $ffmpeg_executable "$options" "$encoder_software" "$software_filter_chain" "$ffmpeg_generic_options"
 		exit_code=$?
 	fi

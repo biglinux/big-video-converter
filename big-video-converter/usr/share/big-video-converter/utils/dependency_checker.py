@@ -1,5 +1,6 @@
 # Setup translation
 import gettext
+import os
 import shutil
 import subprocess
 
@@ -45,8 +46,13 @@ class DependencyChecker:
     """Checks for ffmpeg and provides installation commands."""
 
     def __init__(self):
+        from utils.ffmpeg_path import get_ffmpeg_executable
+
         self.distro = get_distro_info()
-        self.ffmpeg_path = shutil.which('ffmpeg')
+        # Resolve the same way conversions do, so a bundled or jellyfin build
+        # counts as "available" even when nothing is on PATH.
+        ffmpeg = get_ffmpeg_executable()
+        self.ffmpeg_path = ffmpeg if os.access(ffmpeg, os.X_OK) else shutil.which(ffmpeg)
         self.mpv_path = shutil.which('mpv')
 
     def are_dependencies_available(self) -> bool:

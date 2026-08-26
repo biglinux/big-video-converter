@@ -380,12 +380,7 @@ class SettingsPage:
                 "audio-channels", w.get_text()
             ),
         )
-        self.options_entry.connect(
-            "changed",
-            lambda w: self.settings_manager.save_setting(
-                "additional-options", w.get_text()
-            ),
-        )
+        self.options_entry.connect("changed", self._on_additional_options_changed)
         self.gpu_partial_check.connect(
             "notify::active",
             lambda w, p: self.settings_manager.save_setting(
@@ -423,6 +418,22 @@ class SettingsPage:
         self.render_mode_combo.connect(
             "notify::selected", self._save_render_mode_setting
         )
+
+    def _on_additional_options_changed(self, entry):
+        """Save the extra FFmpeg options and flag invalid input right away."""
+        from utils.ffmpeg_options import validate_additional_options
+
+        text = entry.get_text()
+        self.settings_manager.save_setting("additional-options", text)
+
+        is_valid, message = validate_additional_options(text)
+        if is_valid:
+            entry.remove_css_class("error")
+            entry.set_tooltip_text(None)
+        else:
+            # Only a hint here — the conversion refuses these options anyway.
+            entry.add_css_class("error")
+            entry.set_tooltip_text(message)
 
     def _save_preset_setting(self, combo_box, _param=None):
         """Save preset setting"""

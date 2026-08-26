@@ -8,36 +8,52 @@ import time
 
 from gi.repository import GLib
 
+from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+
 import logging
 
 logger = logging.getLogger(__name__)
 
 _ = gettext.gettext  # Will use the already initialized translation
 
-# Map common FFmpeg error patterns to user-friendly messages.
-# Keys are lowercased substrings matched against stderr lines.
-_FFMPEG_ERROR_MAP: list[tuple[str, str]] = [
-    ("no space left on device", _("There is no space left on the disk.")),
-    ("permission denied", _("Permission denied — check file/folder permissions.")),
-    ("no such file or directory", _("File or folder not found.")),
-    ("invalid data found when processing input", _("The file appears to be corrupted or in an unsupported format.")),
-    ("codec not currently supported", _("This codec is not supported on your system.")),
-    ("unknown decoder", _("A required decoder is not installed.")),
-    ("unknown encoder", _("A required encoder is not installed.")),
-    ("encoder setup failed", _("Failed to initialize the encoder — the selected settings may be incompatible.")),
-    ("hardware accel", _("Hardware acceleration failed. Try disabling GPU encoding.")),
-    ("out of memory", _("Not enough memory to complete the conversion.")),
-    ("does not contain any stream", _("The file does not contain a valid media stream.")),
-    ("moov atom not found", _("The video file is incomplete or damaged (missing metadata).")),
-    ("decoding for stream", _("Could not decode the file — it may be corrupted.")),
-]
+# Quiet period before warning that a conversion looks stuck. Software encodes of
+# large files legitimately go minutes without writing a progress line.
+STUCK_WARNING_SECONDS = 180
+
+# Hard ceiling for a single conversion. Long 4K/AV1 software encodes can run for
+# many hours, so this only exists to catch a truly hung process.
+MAX_CONVERSION_SECONDS = 24 * 3600
+
+def _ffmpeg_error_map() -> list[tuple[str, str]]:
+    """Common FFmpeg error patterns mapped to user-friendly messages.
+
+    Built on every call, not at import time: this module is imported before
+    gettext is bound, so a module-level list would freeze the English strings.
+    Keys are lowercased substrings matched against stderr lines.
+    """
+    return [
+        ("no space left on device", _("There is no space left on the disk.")),
+        ("permission denied", _("Permission denied — check file/folder permissions.")),
+        ("no such file or directory", _("File or folder not found.")),
+        ("invalid data found when processing input", _("The file appears to be corrupted or in an unsupported format.")),
+        ("codec not currently supported", _("This codec is not supported on your system.")),
+        ("unknown decoder", _("A required decoder is not installed.")),
+        ("unknown encoder", _("A required encoder is not installed.")),
+        ("encoder setup failed", _("Failed to initialize the encoder — the selected settings may be incompatible.")),
+        ("hardware accel", _("Hardware acceleration failed. Try disabling GPU encoding.")),
+        ("out of memory", _("Not enough memory to complete the conversion.")),
+        ("does not contain any stream", _("The file does not contain a valid media stream.")),
+        ("moov atom not found", _("The video file is incomplete or damaged (missing metadata).")),
+        ("decoding for stream", _("Could not decode the file — it may be corrupted.")),
+    ]
 
 
 def _friendly_ffmpeg_error(stderr_lines: list[str]) -> str:
     """Return a user-friendly message for the first matching FFmpeg error pattern."""
+    error_map = _ffmpeg_error_map()
     for line in stderr_lines:
         lower = line.lower()
-        for pattern, message in _FFMPEG_ERROR_MAP:
+        for pattern, message in error_map:
             if pattern in lower:
                 return message
     return ""
@@ -49,7 +65,7 @@ def detect_bit_depth_info(file_path: str):
         # Get both pixel format and codec information
         result = subprocess.run(
             [
-                "ffprobe",
+                get_ffprobe_executable(),
                 "-v",
                 "error",
                 "-select_streams",
@@ -64,6 +80,11 @@ def detect_bit_depth_info(file_path: str):
             text=True,
             timeout=10,
         )
+
+        if not result.stdout.strip():
+            # ffprobe bailed out (it does that when a decoder for any stream in
+            # the file cannot be opened) — don't claim a bit depth we don't know.
+            return "ℹ️  Could not analyze the video stream with ffprobe"
 
         output = result.stdout.strip().split(",")
         if len(output) >= 2:
@@ -96,13 +117,21 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file: str=None,
         is_segment_batch: If True, suppresses completion dialogs for individual segments in a batch
         segment_duration: Expected duration of this segment in seconds (overrides ffmpeg-detected duration for progress calculation)
     """
-    # Use app's global setting for deleting original files if not explicitly set
-    if hasattr(app, "delete_original_after_conversion"):
+    # Fall back to the app's global setting only when the caller didn't ask for
+    # a specific behaviour (segment batches pass delete_original=False on purpose).
+    if not delete_original and hasattr(app, "delete_original_after_conversion"):
         delete_original = app.delete_original_after_conversion
 
     # Initialize env_vars if None
     if env_vars is None:
         env_vars = os.environ.copy()
+
+    # Make the script use the very same ffmpeg the GUI probed with (matters for
+    # AppImage bundles and jellyfin-ffmpeg installs).
+    if "ffmpeg_executable" not in env_vars:
+        ffmpeg_binary = get_ffmpeg_executable()
+        if os.path.isabs(ffmpeg_binary) and os.access(ffmpeg_binary, os.X_OK):
+            env_vars["ffmpeg_executable"] = ffmpeg_binary
 
     # Handle output folder settings - Critical fix for path duplication
     output_folder = app.settings_manager.load_setting("output-folder", "")
@@ -136,6 +165,10 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file: str=None,
 
     # Increment counter of active conversions
     app.conversions_running += 1
+
+    # Once the monitor thread runs it owns the counter and the completion
+    # callback, so the error handler below must not touch them anymore.
+    monitor_started = False
 
     # Start process
     try:
@@ -278,6 +311,7 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file: str=None,
         )
         monitor_thread.daemon = True
         monitor_thread.start()
+        monitor_started = True
 
         # Function to handle process completion
         def on_conversion_complete(process, result) -> None:
@@ -317,7 +351,11 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file: str=None,
 
                 # Notify the application that conversion is complete (skip for segment batch)
                 if not is_segment_batch:
-                    GLib.idle_add(lambda: app.conversion_completed(result == 0))
+                    GLib.idle_add(
+                        lambda: app.conversion_completed(
+                            result == 0, file_path=input_file
+                        )
+                    )
                 else:
                     logger.debug(
                         "Skipping conversion_completed callback for segment batch item"
@@ -327,7 +365,9 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file: str=None,
                 logger.error(f"Error in conversion completion handler: {e}")
                 # Still notify app even if there's an error in the handler (skip for segment batch)
                 if not is_segment_batch:
-                    GLib.idle_add(lambda: app.conversion_completed(False))
+                    GLib.idle_add(
+                        lambda: app.conversion_completed(False, file_path=input_file)
+                    )
 
         # Wait for completion if requested (for sequential processing)
         if wait_for_completion:
@@ -338,16 +378,29 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file: str=None,
             # Also wait for monitor thread to finish
             monitor_thread.join(timeout=5.0)
 
-    except (subprocess.SubprocessError, OSError) as e:
+    except Exception as e:
+        # Catch everything: anything escaping here (including the progress-item
+        # creation failures raised above) would otherwise leak the running
+        # counter and leave the queue stuck waiting for a conversion that
+        # never started.
         app.show_error_dialog(_("Error starting conversion: {0}").format(e))
         import traceback
 
         traceback.print_exc()
-        app.conversions_running -= 1
+
+        if not monitor_started:
+            app.conversions_running -= 1
+            if not is_segment_batch:
+                GLib.idle_add(
+                    lambda: app.conversion_completed(False, file_path=input_file)
+                )
 
 
 def monitor_progress(app, process, progress_item, env_vars=None):
     """Monitor the progress of a running conversion process"""
+    # Which queue entry this monitor belongs to — used to release the right
+    # GPU slot when several conversions run in parallel.
+    monitored_file = getattr(progress_item, "input_file", None)
     # Detect and display bit depth information
     if hasattr(progress_item, "input_file") and progress_item.input_file:
         bit_depth_info = detect_bit_depth_info(progress_item.input_file)
@@ -414,6 +467,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
     output_file = None
     last_output_time = time.time()
     processing_start_time = time.time()
+    stuck_warning_shown = False
 
     # Variables for frame-based progress tracking
     total_frames = None
@@ -497,14 +551,24 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                 try:
                     source, line = output_queue.get(timeout=0.1)
                 except Empty:
-                    # This is normal - just check if we should continue waiting
+                    # This is normal - just check if we should continue waiting.
                     # During NR pre-processing, no output is expected for long
                     # periods — skip the "stuck" warning entirely in that phase.
-                    if not nr_phase and time.time() - last_output_time > 15:
+                    # Slow software encodes of large files can also stay quiet
+                    # for a while, so wait a couple of minutes and warn only
+                    # once instead of flooding the log every 100 ms.
+                    if (
+                        not nr_phase
+                        and not stuck_warning_shown
+                        and time.time() - last_output_time > STUCK_WARNING_SECONDS
+                    ):
+                        stuck_warning_shown = True
                         timeout_msg = _("No progress detected. Process may be stuck.")
                         GLib.idle_add(progress_item.update_status, timeout_msg)
                         GLib.idle_add(progress_item.add_output_text, timeout_msg)
-                        logger.debug("Process may be stuck - no output for 15 seconds")
+                        logger.debug(
+                            f"Process may be stuck - no output for {STUCK_WARNING_SECONDS} seconds"
+                        )
                     continue
 
                 if source == "stdout_end":
@@ -516,6 +580,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
 
                 # Reset timeout counter with each line of output
                 last_output_time = time.time()
+                stuck_warning_shown = False
 
                 # Skip processing if line is None
                 if line is None:
@@ -553,9 +618,11 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                 if cmd_match:
                     detected_cmd = cmd_match.group(1).strip()
                     if detected_cmd:  # Make sure we got a non-empty string
-                        # Update the command text display in the UI
+                        # Update the command text display in the UI.
+                        # Bind the value now: the idle callback runs later, when
+                        # detected_cmd already holds a different line.
                         GLib.idle_add(
-                            lambda: progress_item.cmd_text.set_text(detected_cmd)
+                            lambda cmd=detected_cmd: progress_item.cmd_text.set_text(cmd)
                         )
 
                         # Don't automatically expand the command expander anymore
@@ -564,9 +631,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         # Add as a special entry to the terminal with highlighting
                         highlight_text = f"\n{_('FFmpeg command')}:\n{detected_cmd}\n"
                         GLib.idle_add(
-                            lambda: progress_item.terminal_buffer.insert(
+                            lambda text=highlight_text: progress_item.terminal_buffer.insert(
                                 progress_item.terminal_buffer.get_end_iter(),
-                                highlight_text,
+                                text,
                             )
                         )
 
@@ -1003,7 +1070,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
         error_msg = f"Process pipe error: {e} - process likely terminated"
         logger.error(error_msg)
         GLib.idle_add(progress_item.add_output_text, error_msg)
-    except (ValueError, TypeError) as e:
+    except Exception as e:
+        # Never let an unexpected error skip the completion handling below —
+        # that would leak app.conversions_running and stall the queue.
         error_msg = f"Error reading process output: {e}"
         logger.error(error_msg)
         GLib.idle_add(progress_item.add_output_text, error_msg)
@@ -1014,7 +1083,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
             # This block is now the primary handler for user cancellation.
             # It signals the main app to stop everything.
             logger.debug("Monitor detected cancellation. Notifying app to stop queue.")
-            GLib.idle_add(lambda: app.conversion_completed(False))
+            GLib.idle_add(
+                lambda: app.conversion_completed(False, file_path=monitored_file)
+            )
 
             # Update UI for this specific item
             cancel_msg = _("Conversion cancelled.")
@@ -1031,7 +1102,7 @@ def monitor_progress(app, process, progress_item, env_vars=None):
             )
         else:
             # Process finished normally, get return code with timeout
-            max_wait_seconds = 7200  # 2 hours
+            max_wait_seconds = MAX_CONVERSION_SECONDS
             try:
                 return_code = process.wait(timeout=max_wait_seconds)
             except subprocess.TimeoutExpired:
@@ -1138,7 +1209,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
 
                         input_size_mb = input_size / (1024 * 1024)
                         output_size_mb = output_size / (1024 * 1024)
-                        percentage = (output_size / input_size) * 100
+                        percentage = (
+                            (output_size / input_size) * 100 if input_size else 0.0
+                        )
 
                         size_info = f"Compare: Input={input_size_mb:.2f}MB, Output={output_size_mb:.2f}MB ({percentage:.1f}% of original)"
                         logger.debug(size_info)
@@ -1287,7 +1360,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                     )
 
                 if not is_segment_batch:
-                    GLib.idle_add(lambda: app.conversion_completed(True))
+                    GLib.idle_add(
+                        lambda: app.conversion_completed(True, file_path=monitored_file)
+                    )
 
             else:
                 # Mark as failed
@@ -1362,10 +1437,12 @@ def monitor_progress(app, process, progress_item, env_vars=None):
                         )
 
                 if not is_segment_batch:
-                    GLib.idle_add(lambda: app.conversion_completed(False))
+                    GLib.idle_add(
+                        lambda: app.conversion_completed(False, file_path=monitored_file)
+                    )
 
             GLib.idle_add(progress_item.cancel_button.set_sensitive, False)
-    except (subprocess.SubprocessError, OSError) as e:
+    except Exception as e:
         error_msg = f"FATAL: Exception in progress monitor: {e}"
         logger.error(error_msg)
         import traceback
@@ -1384,7 +1461,9 @@ def monitor_progress(app, process, progress_item, env_vars=None):
         )
         if not is_segment_batch:
             logger.debug("Notifying app of conversion failure due to monitor exception")
-            GLib.idle_add(lambda: app.conversion_completed(False))
+            GLib.idle_add(
+                lambda: app.conversion_completed(False, file_path=monitored_file)
+            )
     finally:
         app.conversions_running -= 1
         completion_msg = (

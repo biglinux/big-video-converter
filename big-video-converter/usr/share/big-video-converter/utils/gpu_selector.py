@@ -5,6 +5,8 @@ import os
 import subprocess
 from functools import lru_cache
 
+from utils.ffmpeg_path import get_ffmpeg_executable
+
 logger = logging.getLogger(__name__)
 
 # Encoder names per GPU type per codec
@@ -44,7 +46,7 @@ def _available_ffmpeg_encoders() -> frozenset[str]:
     """Return the set of encoder names that ffmpeg reports as available."""
     try:
         result = subprocess.run(
-            ["ffmpeg", "-hide_banner", "-encoders"],
+            [get_ffmpeg_executable(), "-hide_banner", "-encoders"],
             capture_output=True,
             text=True,
             timeout=5,

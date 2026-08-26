@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import subprocess
 import threading
 
@@ -11,6 +12,8 @@ gi.require_version("Adw", "1")
 import gettext
 
 from gi.repository import Adw, Gdk, GLib, Gtk
+
+from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
 
 import logging
 
@@ -651,6 +654,126 @@ class VideoInfoDialog:
         GLib.idle_add(self._load_file_info)
 
 
+_FFMPEG_STREAM_RE = re.compile(
+    r"^\s*Stream #0:(?P<index>\d+)"
+    r"(?:\[[^\]]*\])?"
+    r"(?:\((?P<language>[A-Za-z]{2,3})\))?"
+    r":\s*(?P<kind>Video|Audio|Subtitle|Data|Attachment):\s*(?P<rest>.*)$"
+)
+_FFMPEG_DURATION_RE = re.compile(
+    r"Duration:\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)"
+)
+
+
+def _probe_with_ffmpeg(file_path: str):
+    """Build an ffprobe-like info dict by parsing `ffmpeg -i` output.
+
+    Needed because ffprobe aborts without printing anything when it cannot open
+    a decoder for any stream of the file (dvd_subtitle tracks trigger this on
+    FFmpeg 9), even though the file itself is perfectly usable. The result only
+    carries the fields the UI actually reads.
+    """
+    try:
+        result = subprocess.run(
+            [
+                get_ffmpeg_executable(),
+                "-hide_banner",
+                "-i",
+                file_path,
+                "-t",
+                "0",
+                "-f",
+                "null",
+                "-",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (subprocess.SubprocessError, OSError) as e:
+        logger.error(f"ffmpeg fallback probe failed: {e}")
+        return None
+
+    output = result.stderr or ""
+    # Everything before the "Output #" section describes the input.
+    input_block = output.split("\nOutput #", 1)[0]
+
+    streams = []
+    for line in input_block.splitlines():
+        match = _FFMPEG_STREAM_RE.match(line)
+        if not match:
+            continue
+
+        kind = match.group("kind").lower()
+        rest = match.group("rest")
+        fields = [f.strip() for f in rest.split(",")]
+
+        stream = {
+            "index": int(match.group("index")),
+            "codec_type": "subtitle" if kind == "subtitle" else kind,
+            "codec_name": fields[0].split(" ")[0] if fields else "",
+        }
+        if match.group("language"):
+            stream["tags"] = {"language": match.group("language")}
+
+        if kind == "video":
+            for field in fields[1:]:
+                size = re.match(r"^(\d{2,5})x(\d{2,5})$", field.split(" ")[0])
+                if size:
+                    stream["width"] = int(size.group(1))
+                    stream["height"] = int(size.group(2))
+                fps = re.match(r"^([\d.]+) fps$", field)
+                if fps:
+                    stream["r_frame_rate"] = f"{int(float(fps.group(1)) * 1000)}/1000"
+            if len(fields) > 1:
+                stream["pix_fmt"] = fields[1].split("(")[0].strip()
+        elif kind == "audio":
+            for field in fields[1:]:
+                rate = re.match(r"^(\d+) Hz$", field)
+                if rate:
+                    stream["sample_rate"] = rate.group(1)
+                channels = {
+                    "mono": 1,
+                    "stereo": 2,
+                    "quad": 4,
+                    "5.0": 5,
+                    "5.1": 6,
+                    "6.1": 7,
+                    "7.1": 8,
+                }.get(field.split("(")[0].strip())
+                if channels:
+                    stream["channels"] = channels
+
+        streams.append(stream)
+
+    if not any(s["codec_type"] == "video" for s in streams):
+        return None
+
+    info = {"streams": streams, "format": {}}
+
+    duration_match = _FFMPEG_DURATION_RE.search(input_block)
+    if duration_match:
+        hours, minutes, seconds = duration_match.groups()
+        info["format"]["duration"] = str(
+            int(hours) * 3600 + int(minutes) * 60 + float(seconds)
+        )
+
+    container = re.search(r"^Input #0,\s*([^,]+(?:,[^,]+)*),\s*from", input_block, re.M)
+    if container:
+        info["format"]["format_name"] = container.group(1).strip()
+        info["format"]["format_long_name"] = container.group(1).strip()
+
+    try:
+        info["format"]["size"] = str(os.path.getsize(file_path))
+    except OSError:
+        pass
+
+    logger.debug(
+        f"ffmpeg fallback probe found {len(streams)} streams in {os.path.basename(file_path)}"
+    )
+    return info
+
+
 def get_video_file_info(file_path: str):
     """
     Get detailed information about a video file using ffprobe
@@ -668,7 +791,7 @@ def get_video_file_info(file_path: str):
 
         # Run ffprobe with JSON output
         command = [
-            "ffprobe",
+            get_ffprobe_executable(),
             "-v",
             "quiet",
             "-print_format",
@@ -679,10 +802,26 @@ def get_video_file_info(file_path: str):
             file_path,
         ]
 
-        result = subprocess.run(command, capture_output=True, text=True, check=True, timeout=15)
+        # Don't use check=True: ffprobe exits non-zero when it fails to open a
+        # decoder for any stream (e.g. dvd_subtitle tracks on FFmpeg 9) even
+        # though it already printed usable JSON for the rest of the file.
+        result = subprocess.run(command, capture_output=True, text=True, timeout=15)
 
-        # Parse JSON output
-        info = json.loads(result.stdout)
+        # ffprobe may also stop halfway through, leaving truncated JSON behind.
+        try:
+            info = json.loads(result.stdout) if result.stdout.strip() else None
+        except json.JSONDecodeError:
+            info = None
+
+        if not info or not info.get("streams"):
+            # ffprobe gave up on this file — read the metadata from ffmpeg.
+            logger.debug(
+                f"ffprobe returned no usable data for {os.path.basename(file_path)}; "
+                "falling back to ffmpeg"
+            )
+            info = _probe_with_ffmpeg(file_path)
+            if not info:
+                return None
 
         # Calculate bitrate if not provided by ffprobe
         if "format" in info:
@@ -696,12 +835,6 @@ def get_video_file_info(file_path: str):
 
         return info
 
-    except subprocess.CalledProcessError:
-        # ffprobe command failed
-        return None
-    except json.JSONDecodeError:
-        # Invalid JSON output
-        return None
     except (subprocess.SubprocessError, OSError) as e:
         logger.error(f"Error getting file info: {e}")
         return None
@@ -735,7 +868,7 @@ def has_audio_streams(file_path: str):
 
         # Run ffprobe to check for audio streams
         command = [
-            "ffprobe",
+            get_ffprobe_executable(),
             "-v",
             "quiet",
             "-select_streams",
@@ -749,8 +882,20 @@ def has_audio_streams(file_path: str):
 
         result = subprocess.run(command, capture_output=True, text=True, timeout=10)
 
-        # If we get output, it means there's at least one audio stream
-        return bool(result.stdout.strip())
+        if result.stdout.strip():
+            return True
+
+        if result.returncode != 0:
+            # ffprobe could not analyze the file at all (it bails out when a
+            # decoder for an unrelated stream cannot be opened). An empty
+            # answer here means "unknown", not "no audio" — assume there is
+            # audio so we never silently drop the audio tracks.
+            logger.warning(
+                "ffprobe failed while checking audio streams; assuming the file has audio"
+            )
+            return True
+
+        return False
 
     except (subprocess.SubprocessError, OSError) as e:
         logger.error(f"Error checking audio streams: {e}")
@@ -766,12 +911,16 @@ def check_mp4_compatibility(file_path: str):
         file_path: Path to the video file
 
     Returns:
-        tuple: (is_compatible: bool, incompatible_streams: list of str)
+        tuple: (is_compatible: bool, incompatible_streams: list of dict)
+
+        Each dict describes one offending stream so the UI can label it
+        properly: ``codec_type``, ``codec_name``, ``index``, ``language``
+        and ``title``. Translation is left to the caller.
     """
     try:
         # Ensure file exists
         if not os.path.exists(file_path):
-            return False, ["File does not exist"]
+            return False, []
 
         # Get file info
         info = get_video_file_info(file_path)
@@ -792,22 +941,35 @@ def check_mp4_compatibility(file_path: str):
         ]
 
         incompatible = []
+        # Per-type track numbers, so the UI can say "audio track 2"
+        type_counters = {"video": 0, "audio": 0}
 
         for stream in info["streams"]:
             codec_type = stream.get("codec_type")
+            if codec_type not in type_counters:
+                continue
+
+            type_counters[codec_type] += 1
             codec_name = stream.get("codec_name", "").lower()
+            if not codec_name:
+                continue
 
-            if codec_type == "video":
-                if codec_name and codec_name not in mp4_video_codecs:
-                    incompatible.append(
-                        f"Video codec '{codec_name}' is not compatible with MP4"
-                    )
+            allowed = (
+                mp4_video_codecs if codec_type == "video" else mp4_audio_codecs
+            )
+            if codec_name in allowed:
+                continue
 
-            elif codec_type == "audio":
-                if codec_name and codec_name not in mp4_audio_codecs:
-                    incompatible.append(
-                        f"Audio codec '{codec_name}' is not compatible with MP4"
-                    )
+            tags = stream.get("tags") or {}
+            incompatible.append(
+                {
+                    "codec_type": codec_type,
+                    "codec_name": codec_name,
+                    "index": type_counters[codec_type],
+                    "language": tags.get("language", ""),
+                    "title": tags.get("title", ""),
+                }
+            )
 
         return len(incompatible) == 0, incompatible
 

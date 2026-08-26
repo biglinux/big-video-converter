@@ -5,6 +5,8 @@ Provides constants, utilities, and management for video adjustments.
 
 import math
 
+from utils.ffmpeg_path import get_ffprobe_executable
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -40,6 +42,44 @@ FLOAT_THRESHOLD = 0.01
 
 # Alias for backward compatibility
 DEFAULT_VALUES = VIDEO_ADJUSTMENT_DEFAULTS
+
+
+class SettingsOverride:
+    """Read-only settings view with per-file overrides.
+
+    A conversion must not write its per-file crop/colour values into the global
+    settings: with parallel conversions the second file overwrites the first
+    one's values before its FFmpeg command is built, so both end up with the
+    wrong filters. Wrapping the manager keeps the per-file values local to the
+    conversion that owns them.
+
+    Only reads are overridden; anything else is delegated to the real manager.
+    """
+
+    def __init__(self, settings, overrides: dict):
+        self._settings = settings
+        self._overrides = overrides or {}
+
+    def get_value(self, key: str, default=None):
+        if key in self._overrides:
+            return self._overrides[key]
+        return self._settings.get_value(key, default)
+
+    def load_setting(self, key: str, default=None):
+        return self.get_value(key, default)
+
+    def get_string(self, key: str, default=None):
+        value = self.get_value(key, default)
+        return value if value is None else str(value)
+
+    def get_boolean(self, key: str, default=None):
+        if key in self._overrides:
+            return bool(self._overrides[key])
+        return self._settings.get_boolean(key, default)
+
+    def __getattr__(self, name):
+        # Delegate everything else (set_*, save_setting, ...) to the manager.
+        return getattr(self._settings, name)
 
 
 #
@@ -145,7 +185,7 @@ def generate_video_filters(
 
             result = subprocess.run(
                 [
-                    "ffprobe",
+                    get_ffprobe_executable(),
                     "-v",
                     "error",
                     "-select_streams",
