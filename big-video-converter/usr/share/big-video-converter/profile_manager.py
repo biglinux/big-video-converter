@@ -57,32 +57,6 @@ class ProfileManagerMixin:
         btn.set_active(True)
         self._profile_guard = False
 
-    # Codec index / copy flag that identify each profile. Quality is not part
-    # of the identity: a profile keeps its name when only the quality differs.
-    _PROFILE_SIGNATURE = {
-        "copy": (0, True),
-        "universal": (1, False),
-        "smaller": (2, False),
-        "quality": (3, False),
-    }
-
-    def _restored_profile(self) -> str:
-        """Profile to show after loading settings.
-
-        Prefers the profile the user actually saved (or imported) over pure
-        widget detection: an imported profile with a non-default quality would
-        otherwise show up as "Customize encoding...", and clicking any preset
-        to fix that silently replaces the imported settings.
-        """
-        saved = self.settings_manager.load_setting("video-profile", "")
-        signature = (
-            self.video_codec_combo.get_selected(),
-            self.force_copy_video_check.get_active(),
-        )
-        if self._PROFILE_SIGNATURE.get(saved) == signature:
-            return saved
-        return self._detect_current_profile()
-
     def _detect_current_profile(self) -> str:
         """Detect which profile matches current widget state."""
         codec_idx = self.video_codec_combo.get_selected()

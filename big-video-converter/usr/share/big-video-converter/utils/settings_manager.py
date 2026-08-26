@@ -107,6 +107,7 @@ class SettingsManager:
         self.app_id = app_id
         self.settings = {}
         self._batch_mode = False  # When True, defer disk writes
+        self._suspended = False  # When True, writes are ignored (UI loading)
 
         # Simplified path handling
         config_dir = os.path.expanduser("~/.config/big-video-converter")
@@ -221,10 +222,37 @@ class SettingsManager:
 
     def set_value(self, key: str, value: str):
         """Set setting value and save to disk (unless in batch mode)"""
+        if self._suspended:
+            # Restoring the UI: widget signals must not write anything back.
+            return True
         self.settings[key] = value
         if self._batch_mode:
             return True
         return self.save_to_disk()
+
+    def suspend_writes(self):
+        """Context manager that drops writes while the UI restores itself.
+
+        Setting a widget emits its "changed" signal, whose handler saves the
+        value back. That is harmless when it round-trips the same value, but if
+        anything fails halfway through the restore, the widgets still holding
+        their default values overwrite the user's configuration — losing it on
+        what looks like a simple application update. Suspending writes makes
+        loading strictly read-only, so only real user actions persist.
+        """
+        return self._SuspendContext(self)
+
+    class _SuspendContext:
+        def __init__(self, manager):
+            self.manager = manager
+
+        def __enter__(self):
+            self.manager._suspended = True
+            return self.manager
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.manager._suspended = False
+            return False
 
     def batch_update(self):
         """Context manager to defer disk writes until all settings are updated.

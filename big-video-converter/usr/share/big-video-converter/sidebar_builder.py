@@ -691,7 +691,18 @@ class SidebarBuilderMixin:
         )
 
     def _load_left_pane_settings(self):
-        """Load settings for left pane controls"""
+        """Load settings for left pane controls.
+
+        Restoring widgets emits their signals, whose handlers write back to the
+        settings. Writes are suspended for the whole restore so that a failure
+        halfway through cannot leave the user's configuration replaced by the
+        widgets' default values.
+        """
+        with self.settings_manager.suspend_writes():
+            self._load_left_pane_settings_inner()
+
+    def _load_left_pane_settings_inner(self):
+        """Actual widget restore; never writes settings (see caller)."""
         # GPU
         gpu_value = self.settings_manager.load_setting("gpu", "auto")
         gpu_index = self._find_gpu_index(gpu_value)
@@ -823,7 +834,7 @@ class SidebarBuilderMixin:
         # Show tooltips — state loaded via tooltip_action in _setup_actions
 
         # Update all sidebar subtitles
-        self._select_profile_radio(self._restored_profile())
+        self._select_profile_radio(self._detect_current_profile())
         self._update_customize_subtitle()
         self._update_audio_subtitle()
         self._update_audio_cleaning_subtitle()

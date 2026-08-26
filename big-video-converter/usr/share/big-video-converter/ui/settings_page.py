@@ -487,7 +487,17 @@ class SettingsPage:
                 dialog.show(self.app.window)
 
     def _load_settings(self):
-        """Load settings and update UI components"""
+        """Load settings and update UI components.
+
+        Writes are suspended: restoring a widget triggers its handler, and a
+        failure in the middle of the restore would otherwise persist default
+        values over the user's configuration.
+        """
+        with self.settings_manager.suspend_writes():
+            self._load_settings_inner()
+
+    def _load_settings_inner(self):
+        """Actual widget restore; never writes settings (see caller)."""
 
         # Load video resolution setting
         saved_resolution = self.settings_manager.load_setting("video-resolution", "")
