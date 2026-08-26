@@ -823,7 +823,7 @@ class SidebarBuilderMixin:
         # Show tooltips — state loaded via tooltip_action in _setup_actions
 
         # Update all sidebar subtitles
-        self._select_profile_radio(self._detect_current_profile())
+        self._select_profile_radio(self._restored_profile())
         self._update_customize_subtitle()
         self._update_audio_subtitle()
         self._update_audio_cleaning_subtitle()

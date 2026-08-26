@@ -396,7 +396,19 @@ class ConversionPage:
         # Load settings and update UI
         output_folder = settings.load_setting("output-folder", "")
         delete_original = settings.load_setting("delete-original", False)
-        use_custom_folder = settings.load_setting("use-custom-output-folder", False)
+        # Check the stored dict directly: a missing key must be told apart from
+        # a stored False, which load_setting() cannot do.
+        if "use-custom-output-folder" in getattr(settings, "settings", {}):
+            use_custom_folder = settings.load_setting("use-custom-output-folder", False)
+        else:
+            # Settings written by an older version: infer the mode from the
+            # folder itself, otherwise a configured destination silently falls
+            # back to "same folder as the original file".
+            use_custom_folder = bool(output_folder and os.path.isdir(output_folder))
+            settings.save_setting("use-custom-output-folder", use_custom_folder)
+            logger.debug(
+                f"Inferred output folder mode from the saved path: custom={use_custom_folder}"
+            )
 
         # Set folder combo selection and visibility
         self.folder_combo.set_selected(1 if use_custom_folder else 0)
@@ -405,13 +417,14 @@ class ConversionPage:
         # Set output folder path if using custom folder
         self.output_folder_entry.set_text(output_folder)
 
+        # Connect signals
+        # Only persist what the user typed: set_file() also writes into this
+        # entry to display the input folder, and that must not overwrite the
+        # destination the user configured.
+        self.output_folder_entry.connect("changed", self._on_output_folder_entry_changed)
+
         # Set delete original switch
         self.delete_original_check.set_active(delete_original)
-
-        # Connect signals
-        self.output_folder_entry.connect(
-            "changed", lambda w: settings.save_setting("output-folder", w.get_text())
-        )
 
         self.delete_original_check.connect(
             "notify::active",
@@ -1848,6 +1861,17 @@ class ConversionPage:
         milliseconds = int((seconds - int(seconds)) * 1000)
         return f"{hours:02d}:{minutes:02d}:{seconds_remainder:02d}.{milliseconds:03d}"
 
+    def _on_output_folder_entry_changed(self, entry) -> None:
+        """Persist the destination folder, but only while it is in use.
+
+        set_file() writes the input folder into this entry when the "same
+        folder as the original file" mode is active; saving that would replace
+        the destination the user configured.
+        """
+        if self.folder_combo.get_selected() != 1:
+            return
+        self.app.settings_manager.save_setting("output-folder", entry.get_text())
+
     def _on_folder_type_changed(self, combo, param):
         """Handle folder type combo change"""
         selected = combo.get_selected()
@@ -1861,9 +1885,10 @@ class ConversionPage:
             "use-custom-output-folder", use_custom_folder
         )
 
-        # If not using custom folder, clear the path
-        if not use_custom_folder:
-            self.app.settings_manager.save_setting("output-folder", "")
+        # Keep the configured path: switching back to "same folder as the
+        # original" should not throw away the folder the user chose, so it is
+        # still there when they switch the option on again. The path is simply
+        # ignored while this mode is active.
 
     def _filter_subtitle_range(self, srt_content, start_time, end_time, offset_seconds):
         """Filter subtitles within time range and adjust timecodes by offset."""

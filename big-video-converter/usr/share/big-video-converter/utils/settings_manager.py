@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 
 import logging
 
@@ -77,6 +78,14 @@ class SettingsManager:
         "eq-bands": "0,0,0,0,0,0,0,0,0,0",
         # Normalize
         "normalize-enabled": False,
+        "use-custom-output-folder": False,
+        # Sidebar state
+        "video-profile": "universal",
+        "gpu-device-index": 0,
+        "show-welcome-dialog": True,
+        "preview-rotation": 0,
+        "preview-flip-h": False,
+        "preview-flip-v": False,
         # Preview settings
         "preview-crop-left": 0,
         "preview-crop-right": 0,
@@ -113,29 +122,70 @@ class SettingsManager:
         # Load settings
         self.load_from_disk()
 
-    def load_from_disk(self) -> None:
-        """Load settings from JSON file"""
+    def _read_file(self, path: str):
+        """Read one settings file, returning None when it is unusable."""
         try:
-            if os.path.exists(self.settings_file):
-                with open(self.settings_file, "r") as f:
-                    self.settings = json.load(f)
-                logger.debug(f"Loaded settings from: {self.settings_file}")
-            else:
-                logger.debug("Settings file not found, will use defaults")
-                self.settings = {}
-        except (ValueError, KeyError, OSError) as e:
-            logger.error(f"Error loading settings: {e}")
+            with open(path, "r") as f:
+                data = json.load(f)
+        except FileNotFoundError:
+            return None
+        except (ValueError, OSError) as e:
+            logger.warning(f"Could not read settings from {path}: {e}")
+            return None
+
+        if not isinstance(data, dict):
+            logger.warning(f"Ignoring settings from {path}: not a JSON object")
+            return None
+        return data
+
+    def load_from_disk(self) -> None:
+        """Load settings, falling back to the backup copy when needed.
+
+        A truncated settings.json (process killed while writing, power loss,
+        full disk) used to silently reset every preference: the file failed to
+        parse, settings became empty, and the next write replaced the file with
+        that single key. The backup written by save_to_disk covers that case.
+        """
+        data = self._read_file(self.settings_file)
+
+        if data is None:
+            backup = self._read_file(self.settings_file + ".bak")
+            if backup is not None:
+                logger.warning(
+                    "Settings file unreadable — restored from the backup copy"
+                )
+                self.settings = backup
+                self.save_to_disk()
+                return
+
+            logger.debug("No usable settings file, will use defaults")
             self.settings = {}
+            return
+
+        self.settings = data
+        logger.debug(f"Loaded settings from: {self.settings_file}")
 
     def save_to_disk(self) -> bool:
-        """Save settings to JSON file"""
+        """Save settings atomically, keeping the previous version as backup."""
         try:
-            # Make sure the directory exists
             os.makedirs(os.path.dirname(self.settings_file), exist_ok=True)
 
-            # Save settings
-            with open(self.settings_file, "w") as f:
+            # Keep the last known-good file before replacing it.
+            if os.path.exists(self.settings_file):
+                try:
+                    shutil.copyfile(self.settings_file, self.settings_file + ".bak")
+                except OSError as e:
+                    logger.warning(f"Could not refresh the settings backup: {e}")
+
+            # Write to a temporary file and rename it over the real one: a
+            # rename is atomic, so an interrupted save can never leave a
+            # half-written settings.json behind.
+            tmp_path = f"{self.settings_file}.tmp"
+            with open(tmp_path, "w") as f:
                 json.dump(self.settings, f, indent=2)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, self.settings_file)
             return True
         except (ValueError, KeyError, OSError) as e:
             logger.error(f"Error saving settings: {e}")
