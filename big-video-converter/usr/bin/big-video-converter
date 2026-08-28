@@ -1080,7 +1080,23 @@ function attempt_conversion() {
 		devices="VGA $gpu"
 	fi
 
-	init_qsv='-init_hw_device vaapi=va:,driver=iHD,kernel_driver=i915 -init_hw_device qsv=qs@va'
+	# Never hardcode kernel_driver=i915: Arrow Lake and newer Intel GPUs are
+	# driven by "xe", and asking for i915 there fails with "Device creation
+	# failed", which silently pushes every Intel conversion down to software
+	# encoding. Use the driver the kernel actually reports for the Intel GPU,
+	# and omit the filter when it cannot be determined.
+	intel_kernel_driver=""
+	for _vendor_file in /sys/class/drm/card[0-9]*/device/vendor; do
+		[[ -r $_vendor_file ]] || continue
+		[[ $(<"$_vendor_file") == "0x8086" ]] || continue
+		intel_kernel_driver=$(basename "$(readlink -f "${_vendor_file%/vendor}/driver" 2>/dev/null)")
+		[[ -n $intel_kernel_driver ]] && break
+	done
+	if [[ -n $intel_kernel_driver ]]; then
+		init_qsv="-init_hw_device vaapi=va:,driver=iHD,kernel_driver=$intel_kernel_driver -init_hw_device qsv=qs@va"
+	else
+		init_qsv='-init_hw_device vaapi=va:,driver=iHD -init_hw_device qsv=qs@va'
+	fi
 	init_vaapi='-init_hw_device vaapi'
 	init_vulkan='-init_hw_device vulkan'
 	init_nvidia='-init_hw_device cuda'

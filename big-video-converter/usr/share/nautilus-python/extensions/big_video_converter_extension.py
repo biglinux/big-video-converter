@@ -44,10 +44,22 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         self.app_executable = 'big-video-converter-gui'
 
         # Using a set provides O(1) lookup time, which is more efficient than a list.
+        # Both spellings of the Matroska type are listed: shared-mime-info 2.4
+        # renamed it from "video/x-matroska" to "video/matroska", and Nautilus
+        # reports the canonical name of the installed database — matching only
+        # the old one made the menu disappear for every .mkv file.
         self.supported_mimetypes = {
-            'video/mp4', 'video/x-matroska', 'video/webm', 'video/quicktime',
-            'video/x-msvideo', 'video/x-ms-wmv', 'video/mpeg', 'video/x-m4v',
-            'video/mp2t', 'video/x-flv', 'video/3gpp', 'video/ogg'
+            'video/mp4', 'video/matroska', 'video/x-matroska', 'video/webm',
+            'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv', 'video/mpeg',
+            'video/x-m4v', 'video/mp2t', 'video/x-flv', 'video/3gpp', 'video/ogg',
+            'video/x-ogm+ogg', 'video/vnd.avi', 'video/avi',
+        }
+
+        # Fallback for mimetype names that keep changing between
+        # shared-mime-info releases.
+        self.supported_extensions = {
+            '.mp4', '.mkv', '.webm', '.mov', '.avi', '.wmv', '.mpeg', '.mpg',
+            '.m4v', '.ts', '.flv', '.3gp', '.ogv',
         }
 
     def get_file_items(self, *args):
@@ -79,12 +91,18 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
 
     def _is_video_file(self, file_info: Nautilus.FileInfo) -> bool:
         """
-        Checks if a file is a supported video by its mimetype.
+        Checks if a file is a supported video by its mimetype, falling back to
+        the file extension when the mimetype is not one we know.
         """
         if not file_info or file_info.is_directory():
             return False
 
-        return file_info.get_mime_type() in self.supported_mimetypes
+        mime_type = file_info.get_mime_type() or ''
+        if mime_type in self.supported_mimetypes:
+            return True
+
+        uri = file_info.get_uri() or ''
+        return Path(unquote(uri)).suffix.lower() in self.supported_extensions
 
     def _get_file_path(self, file_info: Nautilus.FileInfo) -> str | None:
         """

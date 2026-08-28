@@ -11,7 +11,7 @@ _ = gettext.gettext
 # Application metadata
 APP_ID = "br.com.biglinux.converter"
 APP_NAME = "Big Video Converter"
-APP_VERSION = "3.9.40"
+APP_VERSION = "3.9.42"
 
 APP_DEVELOPERS = ["Tales A. Mendonça", "Bruno Gonçalves Araujo"]
 APP_WEBSITES = ["communitybig.org", "biglinux.com.br"]
@@ -47,6 +47,9 @@ else:
 # File dialog filters
 VIDEO_FILE_MIME_TYPES = [
     "video/mp4",
+    # shared-mime-info 2.4 renamed the Matroska type; keep both so the file
+    # chooser lists .mkv files on old and new systems alike.
+    "video/matroska",
     "video/x-matroska",
     "video/x-msvideo",
     "video/quicktime",
