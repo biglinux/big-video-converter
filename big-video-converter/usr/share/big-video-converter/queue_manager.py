@@ -420,8 +420,14 @@ class QueueManagerMixin:
 
         return False
 
-    def conversion_completed(self, success, skip_tracking: bool=False) -> None:
-        """Called when a conversion is completed"""
+    def conversion_completed(
+        self, success, skip_tracking: bool = False, file_path: str = None
+    ) -> None:
+        """Called when a conversion is completed.
+
+        file_path identifies which conversion finished, so the right GPU slot
+        is released when several conversions run in parallel.
+        """
         with self.completion_lock:
             if self._processing_completion:
                 self.logger.warning(
@@ -447,7 +453,20 @@ class QueueManagerMixin:
             # Release GPU slot & Tracking
             with self.conversions_lock:
                 if self.active_conversions:
-                    finished_conversion = self.active_conversions.pop(0)
+                    # Match the conversion that actually finished; fall back to
+                    # the oldest entry when the caller didn't tell us which.
+                    index = 0
+                    if file_path:
+                        for i, info in enumerate(self.active_conversions):
+                            if info.get("file_path") == file_path:
+                                index = i
+                                break
+                        else:
+                            self.logger.debug(
+                                f"No active conversion matched {file_path}; "
+                                "releasing the oldest entry"
+                            )
+                    finished_conversion = self.active_conversions.pop(index)
                     if finished_conversion.get("gpu_slot"):
                         self.logger.info(
                             f"Releasing GPU slot: {finished_conversion['gpu_slot']['name']}"

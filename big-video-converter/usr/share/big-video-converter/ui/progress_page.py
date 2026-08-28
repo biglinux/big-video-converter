@@ -722,6 +722,10 @@ class QueueItemRow(Gtk.ListBoxRow):
     def add_output_text(self, text: str) -> None:
         if not text:
             return
+        # Most callers pass plain messages without a trailing newline; append one
+        # so consecutive entries don't end up glued together in the log view.
+        if not text.endswith("\n"):
+            text += "\n"
         end_iter = self.terminal_buffer.get_end_iter()
         self.terminal_buffer.insert(end_iter, text)
 

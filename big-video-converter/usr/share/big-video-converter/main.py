@@ -735,11 +735,19 @@ class VideoConverterApp(
         return extension.lstrip(".")
 
     # Dialog helpers
-    def show_error_dialog(self, message: str) -> None:
-        """Shows an error dialog"""
+    def show_error_dialog(self, message: str, detail: str = None) -> None:
+        """Shows an error dialog.
+
+        The second argument is optional so callers can pass either
+        (message) or (title, detail).
+        """
         dialog = Gtk.AlertDialog()
-        dialog.set_message(_("Error"))
-        dialog.set_detail(message)
+        if detail is None:
+            dialog.set_message(_("Error"))
+            dialog.set_detail(message)
+        else:
+            dialog.set_message(message)
+            dialog.set_detail(detail)
         dialog.show(self.window)
 
     def show_info_dialog(self, title: str, message: str) -> None:

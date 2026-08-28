@@ -11,7 +11,9 @@ import gettext
 from constants import CONVERT_SCRIPT_PATH
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 from utils.conversion import run_with_progress_dialog
-from utils.video_settings import get_video_filter_string
+from utils.ffmpeg_options import validate_additional_options
+from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+from utils.video_settings import SettingsOverride, get_video_filter_string
 
 import logging
 
@@ -394,7 +396,19 @@ class ConversionPage:
         # Load settings and update UI
         output_folder = settings.load_setting("output-folder", "")
         delete_original = settings.load_setting("delete-original", False)
-        use_custom_folder = settings.load_setting("use-custom-output-folder", False)
+        # Check the stored dict directly: a missing key must be told apart from
+        # a stored False, which load_setting() cannot do.
+        if "use-custom-output-folder" in getattr(settings, "settings", {}):
+            use_custom_folder = settings.load_setting("use-custom-output-folder", False)
+        else:
+            # Settings written by an older version: infer the mode from the
+            # folder itself, otherwise a configured destination silently falls
+            # back to "same folder as the original file".
+            use_custom_folder = bool(output_folder and os.path.isdir(output_folder))
+            settings.save_setting("use-custom-output-folder", use_custom_folder)
+            logger.debug(
+                f"Inferred output folder mode from the saved path: custom={use_custom_folder}"
+            )
 
         # Set folder combo selection and visibility
         self.folder_combo.set_selected(1 if use_custom_folder else 0)
@@ -403,13 +417,14 @@ class ConversionPage:
         # Set output folder path if using custom folder
         self.output_folder_entry.set_text(output_folder)
 
+        # Connect signals
+        # Only persist what the user typed: set_file() also writes into this
+        # entry to display the input folder, and that must not overwrite the
+        # destination the user configured.
+        self.output_folder_entry.connect("changed", self._on_output_folder_entry_changed)
+
         # Set delete original switch
         self.delete_original_check.set_active(delete_original)
-
-        # Connect signals
-        self.output_folder_entry.connect(
-            "changed", lambda w: settings.save_setting("output-folder", w.get_text())
-        )
 
         self.delete_original_check.connect(
             "notify::active",
@@ -946,31 +961,23 @@ class ConversionPage:
                 crop_top = file_metadata.get("crop_top", 0)
                 crop_bottom = file_metadata.get("crop_bottom", 0)
 
-                # Temporarily set per-file metadata to settings_manager for filter generation
-                # (We'll use these instead of global settings for this conversion)
-                self.app.settings_manager.save_setting("preview-crop-left", crop_left)
-                self.app.settings_manager.save_setting("preview-crop-right", crop_right)
-                self.app.settings_manager.save_setting("preview-crop-top", crop_top)
-                self.app.settings_manager.save_setting(
-                    "preview-crop-bottom", crop_bottom
-                )
-                self.app.settings_manager.save_setting(
-                    "preview-brightness", file_metadata.get("brightness", 0.0)
-                )
-                self.app.settings_manager.save_setting(
-                    "preview-saturation", file_metadata.get("saturation", 1.0)
-                )
-                self.app.settings_manager.save_setting(
-                    "preview-hue", file_metadata.get("hue", 0.0)
-                )
-                self.app.settings_manager.save_setting(
-                    "preview-rotation", file_metadata.get("rotation", 0)
-                )
-                self.app.settings_manager.save_setting(
-                    "preview-flip-h", file_metadata.get("flip_h", False)
-                )
-                self.app.settings_manager.save_setting(
-                    "preview-flip-v", file_metadata.get("flip_v", False)
+                # Per-file editing values are applied through a local override
+                # instead of being written to the global settings: two parallel
+                # conversions would otherwise overwrite each other's filters.
+                filter_settings = SettingsOverride(
+                    self.app.settings_manager,
+                    {
+                        "preview-crop-left": crop_left,
+                        "preview-crop-right": crop_right,
+                        "preview-crop-top": crop_top,
+                        "preview-crop-bottom": crop_bottom,
+                        "preview-brightness": file_metadata.get("brightness", 0.0),
+                        "preview-saturation": file_metadata.get("saturation", 1.0),
+                        "preview-hue": file_metadata.get("hue", 0.0),
+                        "preview-rotation": file_metadata.get("rotation", 0),
+                        "preview-flip-h": file_metadata.get("flip_h", False),
+                        "preview-flip-v": file_metadata.get("flip_v", False),
+                    },
                 )
 
                 # Try to get video dimensions if there are crop values
@@ -989,7 +996,7 @@ class ConversionPage:
                             f"Getting video dimensions for {input_file} using ffprobe"
                         )
                         cmd = [
-                            "ffprobe",
+                            get_ffprobe_executable(),
                             "-v",
                             "error",
                             "-select_streams",
@@ -1026,26 +1033,17 @@ class ConversionPage:
 
                         traceback.print_exc()
 
-                # Important: Apply crop values to settings manager so they'll be included in video_filter
                 if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:
                     logger.debug(
-                        f"Setting crop values in settings: left={crop_left}, right={crop_right}, top={crop_top}, bottom={crop_bottom}"
+                        f"Using crop values: left={crop_left}, right={crop_right}, top={crop_top}, bottom={crop_bottom}"
                     )
 
-                    # Save crop values to settings
-                    self.app.settings_manager.set_int("preview-crop-left", crop_left)
-                    self.app.settings_manager.set_int("preview-crop-right", crop_right)
-                    self.app.settings_manager.set_int("preview-crop-top", crop_top)
-                    self.app.settings_manager.set_int(
-                        "preview-crop-bottom", crop_bottom
-                    )
-
-                # Get the unified video filter string AFTER setting crop values
+                # Get the unified video filter string from the per-file values.
                 # Skip video filters when in copy mode since filters require re-encoding
                 if not force_copy_video_enabled:
                     # Pass input file for H.265 10-bit detection
                     video_filter = get_video_filter_string(
-                        self.app.settings_manager,
+                        filter_settings,
                         video_width=video_width,
                         video_height=video_height,
                         input_file=input_file,
@@ -1063,10 +1061,21 @@ class ConversionPage:
                         "Copy mode enabled - skipping video_filter (filters require re-encoding)"
                     )
 
-                # Handle additional options
-                additional_options = self.app.settings_manager.load_setting(
+                # Handle additional options. They are expanded by the shell in
+                # the conversion script, so validate and quote them first.
+                raw_additional_options = self.app.settings_manager.load_setting(
                     "additional-options", ""
                 )
+                options_ok, additional_options = validate_additional_options(
+                    raw_additional_options
+                )
+                if not options_ok:
+                    error_message = additional_options
+                    logger.error(f"Rejected additional options: {error_message}")
+                    GLib.idle_add(
+                        lambda msg=error_message: self.app.show_error_dialog(msg)
+                    )
+                    return False
 
                 # Handle trimming based on number of segments
                 if len(trim_segments) == 0:
@@ -1193,11 +1202,6 @@ class ConversionPage:
 
             is_compatible, incompatible_streams = check_mp4_compatibility(input_file)
             if not is_compatible:
-                # Show warning dialog
-                incompatibility_msg = "\n".join(
-                    f"• {issue}" for issue in incompatible_streams
-                )
-
                 # Package all needed variables
                 conversion_context = {
                     "cmd": cmd,
@@ -1215,24 +1219,43 @@ class ConversionPage:
 
                 def show_compatibility_warning() -> None:
                     dialog = Adw.AlertDialog()
-                    dialog.set_heading(_("MP4 Compatibility Warning"))
+                    dialog.set_heading(_("These tracks can't be copied into MP4"))
                     dialog.set_body(
                         _(
-                            "The source file contains streams that are not compatible with MP4 container when copying without reencoding:\n\n{}\n\nTo convert this file to MP4, you need to disable 'Copy video without reencoding' option to reencode the incompatible streams."
-                        ).format(incompatibility_msg)
+                            "“Copy video without reencoding” keeps the original "
+                            "streams as they are, and the MP4 container does not "
+                            "accept the ones listed below."
+                        )
                     )
+                    dialog.set_extra_child(
+                        self._build_incompatible_streams_child(incompatible_streams)
+                    )
+
+                    # Wider layout when libadwaita supports it (1.5+).
+                    if hasattr(dialog, "set_prefer_wide_layout"):
+                        dialog.set_prefer_wide_layout(True)
+
                     dialog.add_response("cancel", _("Cancel"))
-                    dialog.add_response("proceed", _("Proceed Anyway"))
+                    dialog.add_response("reencode", _("Reencode (recommended)"))
+                    dialog.add_response("proceed", _("Copy anyway"))
+                    dialog.set_response_appearance(
+                        "reencode", Adw.ResponseAppearance.SUGGESTED
+                    )
                     dialog.set_response_appearance(
                         "proceed", Adw.ResponseAppearance.DESTRUCTIVE
                     )
-                    dialog.set_default_response("cancel")
+                    dialog.set_default_response("reencode")
                     dialog.set_close_response("cancel")
 
                     def on_response(dialog, response) -> None:
                         if response == "proceed":
                             # User chose to proceed, continue with conversion
                             GLib.idle_add(self._continue_conversion, conversion_context)
+                        elif response == "reencode":
+                            # Turn copy mode off and rebuild the conversion from
+                            # scratch: quality, encoder and filters were all
+                            # skipped while copy mode was on.
+                            GLib.idle_add(self._retry_without_copy_mode)
 
                     dialog.connect("response", on_response)
                     dialog.present(self.app.window)
@@ -1256,6 +1279,83 @@ class ConversionPage:
             "output_mode": output_mode,
         }
         return self._continue_conversion(conversion_context)
+
+    def _build_incompatible_streams_child(self, streams):
+        """Build the list of MP4-incompatible tracks shown in the warning dialog."""
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        # Give the dialog room to breathe: AlertDialog sizes itself around the
+        # extra child, and the default width squeezes these labels into 3 lines.
+        box.set_size_request(480, -1)
+
+        group = Adw.PreferencesGroup()
+        group.set_title(_("Incompatible tracks"))
+
+        for stream in streams:
+            codec = (stream.get("codec_name") or "").upper()
+            row = Adw.ActionRow(title=codec or _("Unknown codec"))
+
+            if stream.get("codec_type") == "video":
+                kind = _("Video track {0}").format(stream.get("index", 1))
+                icon_name = "video-x-generic-symbolic"
+            else:
+                kind = _("Audio track {0}").format(stream.get("index", 1))
+                icon_name = "audio-volume-high-symbolic"
+
+            details = [kind]
+            language = stream.get("language")
+            if language:
+                details.append(language.upper())
+            title = stream.get("title")
+            if title:
+                details.append(title)
+            row.set_subtitle(" · ".join(details))
+
+            icon = Gtk.Image.new_from_icon_name(icon_name)
+            icon.add_css_class("dim-label")
+            row.add_prefix(icon)
+
+            badge = Gtk.Label(label=_("not supported by MP4"))
+            badge.add_css_class("caption")
+            badge.add_css_class("warning")
+            badge.set_valign(Gtk.Align.CENTER)
+            row.add_suffix(badge)
+
+            group.add(row)
+
+        box.append(group)
+
+        hint = Gtk.Label()
+        hint.set_wrap(True)
+        hint.set_xalign(0)
+        hint.add_css_class("caption")
+        hint.add_css_class("dim-label")
+        hint.set_label(
+            _(
+                "Reencode converts these tracks so the MP4 plays anywhere. "
+                "Copying anyway is faster, but the result may have no sound or "
+                "may not play at all — choose MKV as the output format to keep "
+                "the original tracks untouched."
+            )
+        )
+        box.append(hint)
+
+        return box
+
+    def _retry_without_copy_mode(self) -> bool:
+        """Disable copy mode and restart the conversion of the current file."""
+        self.app.settings_manager.save_setting("force-copy-video", False)
+
+        # Keep the sidebar switch in sync (it also persists the setting).
+        switch = getattr(self.app, "force_copy_video_check", None)
+        if switch is not None and switch.get_active():
+            switch.set_active(False)
+
+        logger.debug("Copy mode disabled by the user; restarting conversion")
+
+        if self.force_start_conversion() is False:
+            self.app.conversion_completed(False)
+
+        return False
 
     def _continue_conversion(self, context):
         """Continue with the actual conversion process"""
@@ -1359,11 +1459,16 @@ class ConversionPage:
                 segment_env_vars = env_vars.copy()
                 segment_env_vars["output_file"] = output_path
 
-                # Add trim options for this segment
+                # Add trim options for this segment, keeping the user's own
+                # extra options instead of replacing them.
                 start_str = self._format_time_ffmpeg(segment["start"])
                 duration = segment["end"] - segment["start"]
                 duration_str = self._format_time_ffmpeg(duration)
-                segment_env_vars["options"] = f"-ss {start_str} -t {duration_str}"
+                base_options = env_vars.get("options", "").strip()
+                segment_options = f"-ss {start_str} -t {duration_str}"
+                segment_env_vars["options"] = (
+                    f"{base_options} {segment_options}" if base_options else segment_options
+                )
 
                 # Build command for this segment
                 segment_cmd = [CONVERT_SCRIPT_PATH, input_file]
@@ -1391,6 +1496,7 @@ class ConversionPage:
                 def process_segments_in_background() -> None:
                     # Track the next available part number across all segments
                     next_part_number = 1
+                    produced_paths = []
 
                     for i, segment in enumerate(trim_segments):
                         # Find next available filename to avoid overwriting existing segments
@@ -1424,9 +1530,19 @@ class ConversionPage:
 
                         # Use helper function to process segment
                         process_single_segment(i, segment, segment_output_path)
+                        produced_paths.append(segment_output_path)
 
-                    # Handle delete original after all segments are done
-                    if delete_original and os.path.exists(input_file):
+                    # Handle delete original — only when every segment really
+                    # got written, otherwise we'd destroy the only good copy.
+                    all_segments_ok = all(
+                        os.path.exists(p) and os.path.getsize(p) > 0
+                        for p in produced_paths
+                    )
+                    if delete_original and not all_segments_ok:
+                        logger.warning(
+                            "Some segments were not created; keeping the original file"
+                        )
+                    elif delete_original and os.path.exists(input_file):
                         try:
                             os.remove(input_file)
                             logger.debug(f"Deleted original file: {input_file}")
@@ -1500,6 +1616,34 @@ class ConversionPage:
                             i, segment, temp_segment_path, title_prefix="Join - Segment"
                         )
 
+                    # Bail out if any segment failed: concatenating what's left
+                    # would silently produce a truncated video.
+                    missing = [
+                        p
+                        for p in temp_segment_paths
+                        if not os.path.exists(p) or os.path.getsize(p) == 0
+                    ]
+                    if missing:
+                        error_msg = _(
+                            "{0} of {1} segments could not be created, so the "
+                            "segments were not joined."
+                        ).format(len(missing), len(temp_segment_paths))
+                        logger.error(f"{error_msg} Missing: {missing}")
+
+                        for temp_path in temp_segment_paths:
+                            try:
+                                if os.path.exists(temp_path):
+                                    os.remove(temp_path)
+                            except OSError as e:
+                                logger.error(f"Error removing temp file {temp_path}: {e}")
+
+                        def notify_missing() -> None:
+                            self.app.show_error_dialog(error_msg)
+                            self.app.conversion_completed(False)
+
+                        GLib.idle_add(notify_missing)
+                        return
+
                     # Now concatenate all segments
                     logger.debug(f"Concatenating {len(temp_segment_paths)} segments...")
 
@@ -1534,7 +1678,7 @@ class ConversionPage:
 
                         # Run ffmpeg concatenation
                         concat_cmd = [
-                            "ffmpeg",
+                            get_ffmpeg_executable(),
                             "-y",
                             "-f",
                             "concat",
@@ -1544,8 +1688,10 @@ class ConversionPage:
                             concat_list_path,
                             "-map",
                             "0:v",
+                            # "?" on audio too: videos without an audio track
+                            # would make the whole join fail otherwise.
                             "-map",
-                            "0:a",
+                            "0:a?",
                             "-map",
                             "0:s?",
                             "-c",
@@ -1560,7 +1706,7 @@ class ConversionPage:
                             cwd=output_folder,
                             capture_output=True,
                             text=True,
-                            timeout=300,
+                            timeout=3600,
                         )
 
                         if result.returncode == 0:
@@ -1715,6 +1861,17 @@ class ConversionPage:
         milliseconds = int((seconds - int(seconds)) * 1000)
         return f"{hours:02d}:{minutes:02d}:{seconds_remainder:02d}.{milliseconds:03d}"
 
+    def _on_output_folder_entry_changed(self, entry) -> None:
+        """Persist the destination folder, but only while it is in use.
+
+        set_file() writes the input folder into this entry when the "same
+        folder as the original file" mode is active; saving that would replace
+        the destination the user configured.
+        """
+        if self.folder_combo.get_selected() != 1:
+            return
+        self.app.settings_manager.save_setting("output-folder", entry.get_text())
+
     def _on_folder_type_changed(self, combo, param):
         """Handle folder type combo change"""
         selected = combo.get_selected()
@@ -1728,9 +1885,10 @@ class ConversionPage:
             "use-custom-output-folder", use_custom_folder
         )
 
-        # If not using custom folder, clear the path
-        if not use_custom_folder:
-            self.app.settings_manager.save_setting("output-folder", "")
+        # Keep the configured path: switching back to "same folder as the
+        # original" should not throw away the folder the user chose, so it is
+        # still there when they switch the option on again. The path is simply
+        # ignored while this mode is active.
 
     def _filter_subtitle_range(self, srt_content, start_time, end_time, offset_seconds):
         """Filter subtitles within time range and adjust timecodes by offset."""

@@ -1,4 +1,3 @@
-import json
 import os
 import subprocess
 import threading
@@ -10,6 +9,8 @@ gi.require_version("Gtk", "4.0")
 import gettext
 
 from gi.repository import GLib
+
+from utils.file_info import get_video_file_info
 
 import logging
 
@@ -41,23 +42,16 @@ class VideoProcessor:
         return True
 
     def _get_video_info_thread(self, file_path):
-        """Background thread to run ffprobe and get video info."""
+        """Background thread to read the video metadata."""
         try:
-            cmd = [
-                "ffprobe",
-                "-v",
-                "quiet",
-                "-print_format",
-                "json",
-                "-show_format",
-                "-show_streams",
-                file_path,
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True, timeout=15)
-            info = json.loads(result.stdout)
+            # Shared helper: it already falls back to parsing ffmpeg output for
+            # files ffprobe refuses to analyze.
+            info = get_video_file_info(file_path)
+            if not info:
+                raise ValueError(_("The video metadata could not be read"))
             # Post the successful result back to the main GTK thread
             GLib.idle_add(self._on_video_info_loaded, info, file_path)
-        except (subprocess.SubprocessError, OSError) as e:
+        except (subprocess.SubprocessError, OSError, ValueError) as e:
             error_message = f"Error getting video info: {e}"
             logger.error(error_message)
             # Post the error back to the main GTK thread and release the lock

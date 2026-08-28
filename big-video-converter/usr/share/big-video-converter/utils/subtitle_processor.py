@@ -7,6 +7,8 @@ import os
 import re
 import subprocess
 
+from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -73,7 +75,7 @@ class SubtitleProcessor:
     def _get_subtitle_streams(self):
         """Get list of subtitle streams from source video."""
         probe_cmd = [
-            "ffprobe",
+            get_ffprobe_executable(),
             "-v", "error",
             "-select_streams", "s",
             "-show_entries", "stream=index:stream_tags=language",
@@ -141,7 +143,7 @@ class SubtitleProcessor:
             True if extraction succeeded, False otherwise
         """
         extract_cmd = [
-            "ffmpeg",
+            get_ffmpeg_executable(),
             "-y",
             "-i", self.input_file,
             "-map", f"0:{stream_index}",

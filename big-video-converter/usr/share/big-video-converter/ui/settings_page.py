@@ -380,12 +380,7 @@ class SettingsPage:
                 "audio-channels", w.get_text()
             ),
         )
-        self.options_entry.connect(
-            "changed",
-            lambda w: self.settings_manager.save_setting(
-                "additional-options", w.get_text()
-            ),
-        )
+        self.options_entry.connect("changed", self._on_additional_options_changed)
         self.gpu_partial_check.connect(
             "notify::active",
             lambda w, p: self.settings_manager.save_setting(
@@ -423,6 +418,22 @@ class SettingsPage:
         self.render_mode_combo.connect(
             "notify::selected", self._save_render_mode_setting
         )
+
+    def _on_additional_options_changed(self, entry):
+        """Save the extra FFmpeg options and flag invalid input right away."""
+        from utils.ffmpeg_options import validate_additional_options
+
+        text = entry.get_text()
+        self.settings_manager.save_setting("additional-options", text)
+
+        is_valid, message = validate_additional_options(text)
+        if is_valid:
+            entry.remove_css_class("error")
+            entry.set_tooltip_text(None)
+        else:
+            # Only a hint here — the conversion refuses these options anyway.
+            entry.add_css_class("error")
+            entry.set_tooltip_text(message)
 
     def _save_preset_setting(self, combo_box, _param=None):
         """Save preset setting"""
@@ -476,7 +487,17 @@ class SettingsPage:
                 dialog.show(self.app.window)
 
     def _load_settings(self):
-        """Load settings and update UI components"""
+        """Load settings and update UI components.
+
+        Writes are suspended: restoring a widget triggers its handler, and a
+        failure in the middle of the restore would otherwise persist default
+        values over the user's configuration.
+        """
+        with self.settings_manager.suspend_writes():
+            self._load_settings_inner()
+
+    def _load_settings_inner(self):
+        """Actual widget restore; never writes settings (see caller)."""
 
         # Load video resolution setting
         saved_resolution = self.settings_manager.load_setting("video-resolution", "")
