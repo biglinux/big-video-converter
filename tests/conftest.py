@@ -1,9 +1,11 @@
 """Local regression tests; media is generated, never taken from a user's videos."""
+from contextlib import contextmanager
 import os
 from pathlib import Path
 import shutil
 import subprocess
 import sys
+import traceback
 
 import pytest
 
@@ -15,6 +17,47 @@ sys.path.insert(0, str(APP))
 if hasattr(os, 'sched_getaffinity'):
     available = sorted(os.sched_getaffinity(0))
     os.sched_setaffinity(0, available[:4])
+
+
+@contextmanager
+def _fail_on_callback_exceptions():
+    """Turn Python errors from C-invoked callbacks into test failures.
+
+    PyGObject sends these errors to sys.excepthook rather than propagating
+    them through the Python call that drives the GLib main context.
+    Always restore the hook, including when a fixture or assertion fails.
+    """
+    previous = sys.excepthook
+    errors = []
+
+    def record(exc_type, value, tb):
+        errors.append(''.join(traceback.format_exception(exc_type, value, tb)))
+
+    sys.excepthook = record
+    try:
+        yield
+    finally:
+        sys.excepthook = previous
+        if errors:
+            pytest.fail('Unhandled callback exception(s):\n' + '\n'.join(errors), pytrace=False)
+
+
+@pytest.hookimpl(wrapper=True, tryfirst=True)
+def pytest_runtest_setup(item):
+    with _fail_on_callback_exceptions():
+        return (yield)
+
+
+@pytest.hookimpl(wrapper=True, tryfirst=True)
+def pytest_runtest_call(item):
+    with _fail_on_callback_exceptions():
+        return (yield)
+
+
+@pytest.hookimpl(wrapper=True, tryfirst=True)
+def pytest_runtest_teardown(item):
+    with _fail_on_callback_exceptions():
+        return (yield)
 
 
 def media_command(*args):

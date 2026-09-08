@@ -81,7 +81,8 @@ jobs:
       - name: Test real media, cancellation and native GTK
         id: tests
         run: |
-          export XDG_RUNTIME_DIR="$(mktemp -d)"
+          export XDG_RUNTIME_DIR
+          XDG_RUNTIME_DIR="$(mktemp -d)"
           trap 'rm -rf -- "$XDG_RUNTIME_DIR"' EXIT
           chmod 700 "$XDG_RUNTIME_DIR"
           # Explicit bash uses -eo pipefail: tee cannot turn a test failure green.
@@ -108,8 +109,8 @@ jobs:
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
               f.write('### Backend / GTK regression results\n\n```json\n'
                       + json.dumps(counts, indent=2) + '\n```\n')
-          if counts['tests'] < 138 or any(counts[k] for k in ('failures', 'errors', 'skipped')):
-              raise SystemExit('Expected at least 138 passing regressions with no skipped tests.')
+          if counts['tests'] < 141 or any(counts[k] for k in ('failures', 'errors', 'skipped')):
+              raise SystemExit('Expected at least 141 passing regressions with no skipped tests.')
           PY
       - name: Preserve regression diagnostics
         if: ${{ !cancelled() }}
