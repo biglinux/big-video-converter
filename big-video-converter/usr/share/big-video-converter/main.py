@@ -53,7 +53,21 @@ class VideoConverterApp(
     def _window_buttons_on_left(self):
         """Detect if window buttons (close/min/max) are on the left side."""
         try:
-            settings = Gio.Settings.new("org.gnome.desktop.wm.preferences")
+            # GNOME desktop schemas are optional outside a GNOME session.
+            # Constructing GSettings for a missing schema aborts in C; it is
+            # not a Python exception, so check before calling the constructor.
+            source = Gio.SettingsSchemaSource.get_default()
+            schema = (
+                source.lookup("org.gnome.desktop.wm.preferences", True)
+                if source is not None else None
+            )
+            if (
+                schema is None
+                or not schema.has_key("button-layout")
+                or schema.get_path() is None
+            ):
+                return False
+            settings = Gio.Settings.new_full(schema, None, None)
             layout = settings.get_string("button-layout")
             if layout and ":" in layout:
                 left, right = layout.split(":", 1)
