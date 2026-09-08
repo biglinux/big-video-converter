@@ -299,5 +299,5 @@ def discard_job_paths(workspace: str | None = None) -> None:
     it told us about is not. The name is checked so a malformed announcement
     cannot point this at anything else.
     """
-    if workspace and os.path.basename(workspace).startswith(".bvc."):
+    if workspace and os.path.basename(workspace).startswith(".bvc-"):
         shutil.rmtree(workspace, ignore_errors=True)

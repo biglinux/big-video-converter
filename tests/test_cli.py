@@ -151,7 +151,7 @@ def test_encoding_failure_never_publishes_partial_output(media,tmp_path,run_cli)
     result=run_cli(media['video'],out,options='-c:v no_such_encoder')
     assert result.returncode!=0
     assert not out.exists()
-    assert not list(tmp_path.glob('.bvc.*'))
+    assert not list(tmp_path.glob('.bvc*'))
 
 
 def test_two_jobs_on_one_destination_leave_a_whole_file(media,tmp_path,cli_env):
@@ -166,4 +166,4 @@ def test_two_jobs_on_one_destination_leave_a_whole_file(media,tmp_path,cli_env):
         codes=[first.wait(timeout=30),second.wait(timeout=30)]
     assert codes==[0,0]
     assert stream_count(probe_media(str(out)),'video')==1
-    assert not list(tmp_path.glob('.bvc.*'))
+    assert not list(tmp_path.glob('.bvc*'))

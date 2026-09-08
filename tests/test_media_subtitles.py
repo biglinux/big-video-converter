@@ -88,7 +88,7 @@ def test_no_clobber_publication(tmp_path):
 
 
 def test_killed_job_leftovers_are_dropped_by_announced_path(tmp_path):
-    workspace = tmp_path/'.bvc.abcd1234'
+    workspace = tmp_path/'.bvc-12345'
     workspace.mkdir();(workspace/'video.mkv').write_bytes(b'partial')
     other = tmp_path/'not-ours';other.mkdir()
     mv.discard_job_paths(str(workspace))

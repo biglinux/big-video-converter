@@ -154,13 +154,11 @@ if [[ ! -r "$input_file" ]]; then
 	exit 1
 fi
 
-# All paths created by this process live in private directories. Never remove
-# a file merely because its name resembles one of our outputs.
-work_dir=$(mktemp -d "${TMPDIR:-/tmp}/bvc.XXXXXXXX") || exit 1
+# Everything this job writes goes next to the file it will publish. Never
+# remove a file merely because its name resembles one of our outputs.
 output_stage_dir=""
 cleanup() {
     [[ -z $output_stage_dir ]] || rm -rf -- "$output_stage_dir"
-    rm -rf -- "$work_dir"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
@@ -177,25 +175,6 @@ publish() {
 }
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
-option_parser="$script_dir/../share/big-video-converter/utils/ffmpeg_options.py"
-if ! python3 "$option_parser" --null "${options:-}" > "$work_dir/options"; then
-    echo "ERROR: Invalid additional FFmpeg options" >&2
-    exit 2
-fi
-mapfile -d '' -t option_args < "$work_dir/options"
-input_options=()
-output_options=()
-# Trim options belong before -i. After it, FFmpeg decodes and throws away
-# everything up to the cut, which costs the whole offset on every attempt and,
-# in copy mode, leaves the requested opening seconds missing from the output.
-for ((opt=0; opt<${#option_args[@]}; opt++)); do
-    case ${option_args[$opt]} in
-    -ss|-t|-to|-sseof|-itsoffset|-hwaccel|-hwaccel_output_format|-probesize|-analyzeduration|-thread_queue_size)
-        input_options+=("${option_args[$opt]}" "${option_args[$((opt+1))]}")
-        ((opt += 1)) ;;
-    *) output_options+=("${option_args[$opt]}") ;;
-    esac
-done
 
 # Use the same FFprobe distribution as the selected FFmpeg whenever possible.
 if [[ -z ${ffprobe_executable:-} ]]; then
@@ -415,9 +394,35 @@ if [[ $output_file -ef $input_file ]]; then
     echo "Choose a different output folder or format." >&2
     exit 1
 fi
-output_stage_dir=$(mktemp -d -- "${output_file%/*}/.bvc.XXXXXXXX") || exit 1
+# The job's scratch directory sits beside its own output, so publishing is a
+# rename within one filesystem and nothing large is ever written to /tmp,
+# which is RAM on most systems. The name carries our process id: no live job
+# can share it, and one left behind by a killed run says whose it was.
+output_stage_dir="${output_file%/*}/.bvc-$$"
+rm -rf -- "$output_stage_dir"
+mkdir -- "$output_stage_dir" || exit 1
 printf 'Job workspace: %s\n' "$output_stage_dir"
 staged_output="$output_stage_dir/video.${output_file##*.}"
+
+option_parser="$script_dir/../share/big-video-converter/utils/ffmpeg_options.py"
+if ! python3 "$option_parser" --null "${options:-}" > "$output_stage_dir/options"; then
+    echo "ERROR: Invalid additional FFmpeg options" >&2
+    exit 2
+fi
+mapfile -d '' -t option_args < "$output_stage_dir/options"
+input_options=()
+output_options=()
+# Trim options belong before -i. After it, FFmpeg decodes and throws away
+# everything up to the cut, which costs the whole offset on every attempt and,
+# in copy mode, leaves the requested opening seconds missing from the output.
+for ((opt=0; opt<${#option_args[@]}; opt++)); do
+    case ${option_args[$opt]} in
+    -ss|-t|-to|-sseof|-itsoffset|-hwaccel|-hwaccel_output_format|-probesize|-analyzeduration|-thread_queue_size)
+        input_options+=("${option_args[$opt]}" "${option_args[$((opt+1))]}")
+        ((opt += 1)) ;;
+    *) output_options+=("${option_args[$opt]}") ;;
+    esac
+done
 
 ##############
 # Subtitles
@@ -435,11 +440,11 @@ subtitle_input_options=()
 subtitle_packet_options=()
 defer_subtitles=false
 if [[ -n $subtitle_codec_info && ( $subtitle_extract != none || $only_extract_subtitles == 1 ) ]]; then
-    if ! python3 "$script_dir/../share/big-video-converter/utils/subtitle_timing.py" "${options:-}" > "$work_dir/subtitle-timing"; then
+    if ! python3 "$script_dir/../share/big-video-converter/utils/subtitle_timing.py" "${options:-}" > "$output_stage_dir/subtitle-timing"; then
         echo "ERROR: Invalid subtitle trim interval" >&2
         exit 2
     fi
-    mapfile -d '' -t subtitle_timing < "$work_dir/subtitle-timing"
+    mapfile -d '' -t subtitle_timing < "$output_stage_dir/subtitle-timing"
     [[ -z ${subtitle_timing[0]} ]] || subtitle_input_options=(-t "${subtitle_timing[0]}")
     if [[ -n ${subtitle_timing[1]} ]]; then
         subtitle_packet_options=(-bsf:s "${subtitle_timing[1]}")
@@ -697,7 +702,7 @@ function build_audio_cmd() {
             [[ -z $audio_channels ]] || nr_layout="${channels}c"
             if [[ -n $noise_audio_filter && $nr_requires_mono == true ]]; then
                 nr_deferred_preprocess=true
-                nr_temp_dir="$work_dir/nr"
+                nr_temp_dir="$output_stage_dir/nr"
                 mkdir -p -- "$nr_temp_dir"
                 nr_stream_channels+=("$channels")
                 nr_stream_layouts+=("${nr_layout:-${channels}c}")

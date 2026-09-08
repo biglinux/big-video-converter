@@ -10,8 +10,13 @@ is included.
 * Commands are argument arrays, not shell programs. Additional FFmpeg options
   have known arity; positional inputs/outputs, incomplete flags and unknown
   options are rejected by the same parser in the GUI and the Bash backend.
-* Input/output paths are explicit. Each job owns private temporary directories.
-  The encode goes to a private staging file and only a finished file takes the
+* Input/output paths are explicit. Every temporary file a job writes lives in
+  one directory beside that job's own output, named after the process that
+  owns it. Nothing is written to `/tmp`, which is RAM on most systems and
+  would put the noise-reduction intermediates — larger than the finished
+  video — into memory, and no published file is ever copied across a
+  filesystem boundary.
+  The encode goes to a staging file there and only a finished file takes the
   destination name, in a single rename: a failed or cancelled job never leaves
   a truncated video where a playable one was, publication needs no free space
   and no filesystem support for hard links, and the output can never be the
