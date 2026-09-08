@@ -99,6 +99,15 @@ def test_real_cli_supervisor_validates_and_finishes_once(media,tmp_path,cli_env)
     assert out.exists()
 
 
+def test_log_opens_with_the_source_codec_and_pixel_format(media,tmp_path,cli_env):
+    app=App();out=tmp_path/'logged.mkv'
+    conversion.run_with_progress_dialog(app,[str(CLI),str(media['video'])],'test',
+        str(media['video']),False,{**cli_env,'output_file':str(out)},job_id='log')
+    pump_until(lambda:bool(app.notifications))
+    lines=''.join(app.progress_page.rows[0].lines)
+    assert 'codec=h264' in lines and 'pixel format=yuv420p' in lines
+
+
 def test_finished_job_notifies_the_user(media,tmp_path,cli_env):
     app=App();out=tmp_path/'notified.mkv'
     conversion.run_with_progress_dialog(app,[str(CLI),str(media['video'])],'test',

@@ -385,6 +385,11 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             decoders[name] = codecs.getincrementaldecoder("utf-8")("replace")
             buffers[name] = ""
         updates.push(status=_("Starting process..."))
+        if source_file:
+            # The log has opened with the source's codec and pixel format since
+            # before this supervisor; it is how a user tells a 10-bit HEVC
+            # source from an 8-bit one when a conversion misbehaves.
+            updates.push(text=detect_bit_depth_info(source_file))
         try:
             duration, expected_streams = _expected_media(source_file, env, duration, destination)
         except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as error:

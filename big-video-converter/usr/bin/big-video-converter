@@ -1504,7 +1504,7 @@ fi
 
 # --- Audio Codec Fallback Pass ---
 # If re-encoding with a specific codec failed (e.g. Opus in MP4), try with AAC
-if [[ $exit_code != 0 && $exit_code != 255 && "$audio_handling" == "reencode" && "$audio_codec" != "aac" ]]; then
+if [[ $exit_code != 0 && $exit_code != 255 && $exit_code != 2 && "$audio_handling" == "reencode" && "$audio_codec" != "aac" ]]; then
 	echo -e "${COLOR_YELLOW}Audio re-encoding with $audio_codec may have failed. Retrying with AAC codec...${COLOR_RESET}"
 
 	# Switch to AAC (most compatible codec) and rebuild all commands
