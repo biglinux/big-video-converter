@@ -22,12 +22,14 @@ jobs:
       DEBIAN_FRONTEND: noninteractive
       LIBGL_ALWAYS_SOFTWARE: '1'
       GSK_RENDERER: ngl
+      PYTHONUNBUFFERED: '1'
+      PYTHONFAULTHANDLER: '1'
     steps:
       - name: Install test dependencies
         run: |
           if ! { apt-get update && apt-get install -y --no-install-recommends \
             git ca-certificates bash shellcheck ffmpeg python3 python3-pytest \
-            python3-gi python3-gi-cairo python3-cairo python3-mpv \
+            python3-gi python3-gi-cairo python3-cairo python3-cairo python3-mpv \
             python3-opengl python3-numpy python3-polib \
             gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-vte-3.91 \
             libmpv2 libgl1-mesa-dri libegl1 xauth xvfb dbus-x11; \
@@ -51,8 +53,10 @@ jobs:
           export XDG_RUNTIME_DIR="$(mktemp -d)"
           trap 'rm -rf "$XDG_RUNTIME_DIR"' EXIT
           chmod 700 "$XDG_RUNTIME_DIR"
+          echo 'Installed GSettings schemas:'
+          gsettings list-schemas
           xvfb-run -a -s '-screen 0 1440x1000x24' \
-            dbus-run-session -- python3 -m pytest -q tests --junitxml=results.xml
+            dbus-run-session -- python3 -X faulthandler -m pytest -vv --capture=tee-sys tests --junitxml=results.xml
       - name: Report regression coverage without silently skipped tests
         if: always()
         run: |
