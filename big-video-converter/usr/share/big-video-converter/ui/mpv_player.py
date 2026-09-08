@@ -8,6 +8,7 @@ import ctypes
 import locale
 import logging
 import os
+import math
 import subprocess
 
 import gi
@@ -619,6 +620,7 @@ class MPVPlayer:
         return False
 
     def load_video(self, file_path: str) -> bool:
+        self._crop_applied = False
         # MPV should always be initialized (only once on first realize)
         if not self.mpv_instance:
             logger.debug("MPV: Instance not found, initializing...")
@@ -738,41 +740,30 @@ class MPVPlayer:
     def get_duration(self):
         return self.duration
 
-    def set_brightness(self, value: str) -> None:
-        if self.mpv_instance:
-            # mpv brightness range is -100 to 100. Our UI is -1.0 to 1.0.
-            new_value = int(value * 100)
-            # Only update if value actually changed to avoid redundant operations
-            if new_value != self.cached_brightness:
-                self.cached_brightness = new_value
-                try:
-                    self.mpv_instance.brightness = new_value
-                except Exception:
-                    pass
+    def _set_color_property(self, name: str, value: float) -> None:
+        if not self.mpv_instance or not math.isfinite(value):
+            return
+        value = max(-100, min(100, round(value)))
+        cache_name = "cached_" + name
+        if value == getattr(self, cache_name):
+            return
+        try:
+            setattr(self.mpv_instance, name, value)
+        except Exception as error:
+            logger.debug("MPV could not apply %s: %s", name, error)
+            return
+        # A failed property write must not suppress the next retry.
+        setattr(self, cache_name, value)
 
-    def set_saturation(self, value: str) -> None:
-        if self.mpv_instance:
-            # mpv saturation range is -100 to 100 (0 is normal). Our UI is 0.0 to 2.0 (1.0 is normal).
-            new_value = int((value - 1.0) * 100)
-            # Only update if value actually changed
-            if new_value != self.cached_saturation:
-                self.cached_saturation = new_value
-                try:
-                    self.mpv_instance.saturation = new_value
-                except Exception:
-                    pass
+    def set_brightness(self, value: float) -> None:
+        self._set_color_property("brightness", value * 100)
 
-    def set_hue(self, value: str) -> None:
-        if self.mpv_instance:
-            # mpv hue range is -180 to 180. Our UI is -1.0 to 1.0.
-            new_value = int(value * 180)
-            # Only update if value actually changed
-            if new_value != self.cached_hue:
-                self.cached_hue = new_value
-                try:
-                    self.mpv_instance.hue = new_value
-                except Exception:
-                    pass
+    def set_saturation(self, value: float) -> None:
+        self._set_color_property("saturation", (value - 1.0) * 100)
+
+    def set_hue(self, value: float) -> None:
+        # MPV's hue property uses -100..100, not degrees.
+        self._set_color_property("hue", value * 100)
 
     def set_crop(self, left: int, right: int, top: int, bottom: int) -> None:
         if self.mpv_instance:
@@ -784,7 +775,8 @@ class MPVPlayer:
             
             # Only update if values actually changed to avoid unnecessary updates
             if (
-                new_left != self.crop_left
+                not getattr(self, "_crop_applied", False)
+                or new_left != self.crop_left
                 or new_right != self.crop_right
                 or new_top != self.crop_top
                 or new_bottom != self.crop_bottom
@@ -851,6 +843,7 @@ class MPVPlayer:
             # Set the video-crop property
             try:
                 self.mpv_instance["video-crop"] = crop_str
+                self._crop_applied = True
                 logger.debug("MPV: video-crop property set successfully")
                 # Queue render update
                 GLib.timeout_add(50, self._request_render_update)
@@ -983,6 +976,7 @@ class MPVPlayer:
         if self.mpv_instance:
             try:
                 self.mpv_instance["video-crop"] = ""
+                self._crop_applied = False
                 if self.video_widget:
                     self.video_widget.queue_render()
             except Exception as e:

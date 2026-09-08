@@ -4,6 +4,7 @@ FFmpeg custom flags, preview rendering, profile export/import and reset.
 """
 
 import gettext
+from utils.signal_connections import SignalConnections
 import logging
 import os
 
@@ -75,7 +76,7 @@ def _make_card(
     return card
 
 
-def _make_combo_sync(source, dropdown):
+def _make_combo_sync(source, dropdown, connections):
     def _on_dropdown(dd, _p):
         if source.get_selected() != dd.get_selected():
             source.set_selected(dd.get_selected())
@@ -85,7 +86,7 @@ def _make_combo_sync(source, dropdown):
             dropdown.set_selected(row.get_selected())
 
     dropdown.connect("notify::selected", _on_dropdown)
-    source.connect("notify::selected", _on_source)
+    connections.connect(source, "notify::selected", _on_source)
 
 
 def _clone_model(source_combo):
@@ -99,6 +100,7 @@ def _clone_model(source_combo):
 def show_extra_dialog(parent_window, app) -> None:
     """Present the extra settings dialog."""
     dialog = Adw.Dialog()
+    connections = SignalConnections(dialog)
     dialog.set_title(_("Extra"))
     dialog.set_content_width(700)
     dialog.set_content_height(500)
@@ -148,7 +150,7 @@ def show_extra_dialog(parent_window, app) -> None:
         if ffmpeg_entry.get_text() != text:
             ffmpeg_entry.set_text(text)
 
-    app.settings_page.options_entry.connect(
+    connections.connect(app.settings_page.options_entry,
         "changed", lambda w: _on_source_changed(w)
     )
 
@@ -201,7 +203,7 @@ def show_extra_dialog(parent_window, app) -> None:
     # --- Video Preview Rendering ---
     render_dd = Gtk.DropDown(model=_clone_model(app.settings_page.render_mode_combo))
     render_dd.set_selected(app.settings_page.render_mode_combo.get_selected())
-    _make_combo_sync(app.settings_page.render_mode_combo, render_dd)
+    _make_combo_sync(app.settings_page.render_mode_combo, render_dd, connections)
     content.append(
         _make_card(
             "render_mode.svg",

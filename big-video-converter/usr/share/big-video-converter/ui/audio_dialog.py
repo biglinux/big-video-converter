@@ -4,6 +4,7 @@ Shows audio handling, codec, bitrate and channels with explanations.
 """
 
 import gettext
+from utils.signal_connections import SignalConnections
 import os
 
 import gi
@@ -72,7 +73,7 @@ def _make_card(
     return card
 
 
-def _make_combo_sync(source, dropdown):
+def _make_combo_sync(source, dropdown, connections):
     """Bidirectional sync between a ComboRow (data holder) and DropDown (dialog)."""
 
     def _on_dropdown(dd, _p):
@@ -84,7 +85,7 @@ def _make_combo_sync(source, dropdown):
             dropdown.set_selected(row.get_selected())
 
     dropdown.connect("notify::selected", _on_dropdown)
-    source.connect("notify::selected", _on_source)
+    connections.connect(source, "notify::selected", _on_source)
 
 
 def _clone_model(source_combo):
@@ -99,6 +100,7 @@ def _clone_model(source_combo):
 def show_audio_dialog(parent_window, app) -> None:
     """Present the educational audio settings dialog."""
     dialog = Adw.Dialog()
+    connections = SignalConnections(dialog)
     dialog.set_title(_("Audio"))
     dialog.set_content_width(800)
     dialog.set_content_height(600)
@@ -132,7 +134,7 @@ def show_audio_dialog(parent_window, app) -> None:
     # --- Audio Handling ---
     audio_dd = Gtk.DropDown(model=_clone_model(app.audio_handling_combo))
     audio_dd.set_selected(app.audio_handling_combo.get_selected())
-    _make_combo_sync(app.audio_handling_combo, audio_dd)
+    _make_combo_sync(app.audio_handling_combo, audio_dd, connections)
     content.append(
         _make_card(
             "audio_handling.svg",
@@ -149,7 +151,7 @@ def show_audio_dialog(parent_window, app) -> None:
     # --- Audio Codec ---
     codec_dd = Gtk.DropDown(model=_clone_model(app.settings_page.audio_codec_combo))
     codec_dd.set_selected(app.settings_page.audio_codec_combo.get_selected())
-    _make_combo_sync(app.settings_page.audio_codec_combo, codec_dd)
+    _make_combo_sync(app.settings_page.audio_codec_combo, codec_dd, connections)
     content.append(
         _make_card(
             "audio_codec.svg",
@@ -166,7 +168,7 @@ def show_audio_dialog(parent_window, app) -> None:
     # --- Bitrate ---
     bitrate_dd = Gtk.DropDown(model=_clone_model(app.settings_page.audio_bitrate_combo))
     bitrate_dd.set_selected(app.settings_page.audio_bitrate_combo.get_selected())
-    _make_combo_sync(app.settings_page.audio_bitrate_combo, bitrate_dd)
+    _make_combo_sync(app.settings_page.audio_bitrate_combo, bitrate_dd, connections)
 
     bitrate_card = _make_card(
         "audio_bitrate.svg",
@@ -221,7 +223,7 @@ def show_audio_dialog(parent_window, app) -> None:
         model=_clone_model(app.settings_page.audio_channels_combo)
     )
     channels_dd.set_selected(app.settings_page.audio_channels_combo.get_selected())
-    _make_combo_sync(app.settings_page.audio_channels_combo, channels_dd)
+    _make_combo_sync(app.settings_page.audio_channels_combo, channels_dd, connections)
 
     channels_card = _make_card(
         "audio_channels.svg",

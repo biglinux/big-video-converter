@@ -197,7 +197,7 @@ class VideoEditPage:
         self._update_flip_button_state()
 
     def _save_file_metadata(self):
-        """Save metadata immediately - use _save_file_metadata_debounced for slider changes"""
+        """Persist edits in the per-file in-memory model."""
         if not self.current_video_path or not hasattr(self.app, "conversion_page"):
             return
         metadata = self.app_state.file_metadata.get(self.current_video_path, {})
@@ -218,18 +218,11 @@ class VideoEditPage:
         self.app_state.file_metadata[self.current_video_path] = metadata
 
     def _save_file_metadata_debounced(self):
-        """Debounced version of _save_file_metadata to avoid excessive file I/O during slider drag"""
-        # Cancel any pending save
+        """Keep the in-memory job state current, including during slider drags."""
         if self.metadata_save_timeout:
             GLib.source_remove(self.metadata_save_timeout)
-
-        # Schedule save with 500ms delay - will only execute after user stops dragging
-        def do_save() -> bool:
             self.metadata_save_timeout = None
-            self._save_file_metadata()
-            return False
-
-        self.metadata_save_timeout = GLib.timeout_add(500, do_save)
+        self._save_file_metadata()
 
     def set_video(self, file_path: str):
         if self.loading_video:
@@ -264,7 +257,11 @@ class VideoEditPage:
         """Clean up resources when leaving the edit page"""
         if getattr(self, "cleanup_called", False):
             return
+        self._save_file_metadata_debounced()
         self.cleanup_called = True
+        self.requested_video_path = None
+        self.loading_video = False
+        self.processor.invalidate()
         logger.debug("VideoEditPage: Starting cleanup")
 
         # Exit crop edit mode if active
@@ -306,7 +303,7 @@ class VideoEditPage:
 
     def on_brightness_changed(self, scale) -> None:
         self.brightness = scale.get_value()
-        self._save_file_metadata_debounced()  # Use debounced save to avoid file I/O during drag
+        self._save_file_metadata_debounced()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_brightness(self.brightness)
             # Don't refresh preview during drag - MPV updates automatically
@@ -547,7 +544,7 @@ class VideoEditPage:
                 tooltip_text=_("Remove segment"),
             )
             remove_button.connect(
-                "clicked", self._on_remove_segment_clicked, segment["start"]
+                "clicked", self._on_remove_segment_clicked, segment
             )
             button_box.append(remove_button)
             row.add_suffix(button_box)
@@ -718,8 +715,9 @@ class VideoEditPage:
         error_dialog.set_default_response("ok")
         error_dialog.present()
 
-    def _on_remove_segment_clicked(self, button, start_time):
-        self.trim_segments = [s for s in self.trim_segments if s["start"] != start_time]
+    def _on_remove_segment_clicked(self, button, segment):
+        # Equal start times do not make two selections the same segment.
+        self.trim_segments = [s for s in self.trim_segments if s is not segment]
         self._save_file_metadata()
         self._update_segments_listbox()
 
@@ -836,7 +834,7 @@ class VideoEditPage:
 
     def on_saturation_changed(self, scale) -> None:
         self.saturation = scale.get_value()
-        self._save_file_metadata_debounced()  # Use debounced save
+        self._save_file_metadata_debounced()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_saturation(self.saturation)
             # Don't refresh preview - MPV updates automatically
@@ -845,7 +843,7 @@ class VideoEditPage:
 
     def on_hue_changed(self, scale) -> None:
         self.hue = scale.get_value()
-        self._save_file_metadata_debounced()  # Use debounced save
+        self._save_file_metadata_debounced()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_hue(self.hue)
             # Don't refresh preview - MPV updates automatically

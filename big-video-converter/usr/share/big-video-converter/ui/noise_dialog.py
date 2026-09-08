@@ -4,6 +4,7 @@ Groups controls into illustrative cards: AI cleaning, noise gate, audio enhancem
 """
 
 import gettext
+from utils.signal_connections import SignalConnections
 import os
 
 import gi
@@ -150,6 +151,7 @@ def _slider_row(label: str, adj: Gtk.Adjustment, format_func=None) -> Gtk.Box:
 def show_noise_dialog(parent_window, app) -> bool:
     """Present the educational noise-cleaning dialog."""
     dialog = Adw.Dialog()
+    connections = SignalConnections(dialog)
     dialog.set_title(_("Audio Settings"))
     dialog.set_content_width(700)
     dialog.set_content_height(920)
@@ -219,7 +221,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             strength_adj.set_value(v)
 
     strength_adj.connect("notify::value", _sync_strength_to_sidebar)
-    app.noise_strength_adj.connect("notify::value", _sync_strength_from_sidebar)
+    connections.connect(app.noise_strength_adj, "notify::value", _sync_strength_from_sidebar)
 
     # AI Model dropdown
     model_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
@@ -253,7 +255,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             model_dd.set_selected(sel)
 
     model_dd.connect("notify::selected", _sync_model_to_sidebar)
-    app.noise_model_row.connect("notify::selected", _sync_model_from_sidebar)
+    connections.connect(app.noise_model_row, "notify::selected", _sync_model_from_sidebar)
 
     # Speech Strength slider
     speech_adj = Gtk.Adjustment(
@@ -274,7 +276,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             speech_adj.set_value(v)
 
     speech_adj.connect("notify::value", _sync_speech_to)
-    app.noise_speech_strength_adj.connect("notify::value", _sync_speech_from)
+    connections.connect(app.noise_speech_strength_adj, "notify::value", _sync_speech_from)
 
     # Lookahead slider
     look_adj = Gtk.Adjustment(
@@ -296,7 +298,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             look_adj.set_value(v)
 
     look_adj.connect("notify::value", _sync_look_to)
-    app.noise_lookahead_adj.connect("notify::value", _sync_look_from)
+    connections.connect(app.noise_lookahead_adj, "notify::value", _sync_look_from)
 
     # Voice Recovery slider
     vr_adj = Gtk.Adjustment(
@@ -317,7 +319,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             vr_adj.set_value(v)
 
     vr_adj.connect("notify::value", _sync_vr_to)
-    app.noise_voice_recovery_adj.connect("notify::value", _sync_vr_from)
+    connections.connect(app.noise_voice_recovery_adj, "notify::value", _sync_vr_from)
 
     content.append(card1)
 
@@ -333,7 +335,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             nr_switch.set_active(active)
 
     nr_switch.connect("state-set", _sync_nr_switch)
-    app.noise_reduction_switch.connect("notify::active", _sync_nr_from_sidebar)
+    connections.connect(app.noise_reduction_switch, "notify::active", _sync_nr_from_sidebar)
 
     # ===== Section 2: Noise Gate =====
     content.append(_section_header(_("Noise Gate"), margin_top=16))
@@ -372,7 +374,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             gate_adj.set_value(v)
 
     gate_adj.connect("notify::value", _sync_gate_adj)
-    app.gate_intensity_adj.connect("notify::value", _sync_gate_adj_back)
+    connections.connect(app.gate_intensity_adj, "notify::value", _sync_gate_adj_back)
 
     def _sync_gate_switch(sw, state):
         if app.gate_switch.get_active() != state:
@@ -384,7 +386,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             gate_switch.set_active(sw.get_active())
 
     gate_switch.connect("state-set", _sync_gate_switch)
-    app.gate_switch.connect("notify::active", _sync_gate_from)
+    connections.connect(app.gate_switch, "notify::active", _sync_gate_from)
 
     content.append(card2)
 
@@ -427,7 +429,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             hpf_adj.set_value(v)
 
     hpf_adj.connect("notify::value", _sync_hpf_adj)
-    app.hpf_freq_adj.connect("notify::value", _sync_hpf_adj_back)
+    connections.connect(app.hpf_freq_adj, "notify::value", _sync_hpf_adj_back)
 
     def _sync_hpf_switch(sw, state):
         if app.hpf_row.get_active() != state:
@@ -439,7 +441,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             hpf_switch.set_active(row.get_active())
 
     hpf_switch.connect("state-set", _sync_hpf_switch)
-    app.hpf_row.connect("notify::active", _sync_hpf_from)
+    connections.connect(app.hpf_row, "notify::active", _sync_hpf_from)
 
     content.append(card3)
 
@@ -471,7 +473,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             norm_switch.set_active(row.get_active())
 
     norm_switch.connect("state-set", _sync_norm_switch)
-    app.normalize_row.connect("notify::active", _sync_norm_from)
+    connections.connect(app.normalize_row, "notify::active", _sync_norm_from)
 
     # Compressor card
     comp_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
@@ -508,7 +510,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             comp_adj.set_value(v)
 
     comp_adj.connect("notify::value", _sync_comp_adj)
-    app.compressor_intensity_adj.connect("notify::value", _sync_comp_adj_back)
+    connections.connect(app.compressor_intensity_adj, "notify::value", _sync_comp_adj_back)
 
     def _sync_comp_switch(sw, state):
         if app.compressor_switch.get_active() != state:
@@ -520,7 +522,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             comp_switch.set_active(sw.get_active())
 
     comp_switch.connect("state-set", _sync_comp_switch)
-    app.compressor_switch.connect("notify::active", _sync_comp_from)
+    connections.connect(app.compressor_switch, "notify::active", _sync_comp_from)
 
     content.append(card6)
 
@@ -654,7 +656,9 @@ def show_noise_dialog(parent_window, app) -> bool:
 
     # ── Sync logic ──
     def _update_sliders_from_preset() -> None:
-        """Set sliders to match the currently selected preset."""
+        """Set sliders only when the user actually selected a preset."""
+        if _eq_slider_guard["active"]:
+            return
         idx = eq_dd.get_selected()
         if idx < len(app._eq_preset_keys):
             key = app._eq_preset_keys[idx]
@@ -678,7 +682,7 @@ def show_noise_dialog(parent_window, app) -> bool:
         _update_sliders_from_preset()
 
     eq_dd.connect("notify::selected", _sync_eq_dd)
-    app.eq_preset_row.connect("notify::selected", _sync_eq_from)
+    connections.connect(app.eq_preset_row, "notify::selected", _sync_eq_from)
 
     def _sync_eq_switch(sw, state):
         if app.eq_switch.get_active() != state:
@@ -693,7 +697,7 @@ def show_noise_dialog(parent_window, app) -> bool:
         eq_content.set_visible(active)
 
     eq_switch.connect("state-set", _sync_eq_switch)
-    app.eq_switch.connect("notify::active", _sync_eq_from_switch)
+    connections.connect(app.eq_switch, "notify::active", _sync_eq_from_switch)
 
     content.append(card7)
 

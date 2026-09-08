@@ -5,6 +5,7 @@ with SVG illustrations and explanations.
 """
 
 import gettext
+from utils.signal_connections import SignalConnections
 import os
 import sys
 
@@ -80,7 +81,7 @@ def _make_card(
     return card
 
 
-def _make_combo_sync(source, dropdown):
+def _make_combo_sync(source, dropdown, connections):
     """Bidirectional sync between a ComboRow (data holder) and DropDown (dialog)."""
 
     def _on_dropdown(dd, _p):
@@ -92,10 +93,10 @@ def _make_combo_sync(source, dropdown):
             dropdown.set_selected(row.get_selected())
 
     dropdown.connect("notify::selected", _on_dropdown)
-    source.connect("notify::selected", _on_source)
+    connections.connect(source, "notify::selected", _on_source)
 
 
-def _make_switch_sync(source, toggle):
+def _make_switch_sync(source, toggle, connections):
     """Bidirectional sync between a SwitchRow (data holder) and Switch (dialog)."""
 
     def _on_toggle(sw, _p):
@@ -107,7 +108,7 @@ def _make_switch_sync(source, toggle):
             toggle.set_active(row.get_active())
 
     toggle.connect("notify::active", _on_toggle)
-    source.connect("notify::active", _on_source)
+    connections.connect(source, "notify::active", _on_source)
 
 
 def _clone_model(source_combo):
@@ -122,6 +123,7 @@ def _clone_model(source_combo):
 def show_video_encoding_dialog(parent_window, app) -> None:
     """Present the educational video encoding dialog."""
     dialog = Adw.Dialog()
+    connections = SignalConnections(dialog)
     dialog.set_title(_("Video Encoding"))
     dialog.set_content_width(800)
     dialog.set_content_height(750)
@@ -155,7 +157,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     # --- Output Format ---
     fmt_dd = Gtk.DropDown(model=_clone_model(app.output_format_combo))
     fmt_dd.set_selected(app.output_format_combo.get_selected())
-    _make_combo_sync(app.output_format_combo, fmt_dd)
+    _make_combo_sync(app.output_format_combo, fmt_dd, connections)
     content.append(
         _make_card(
             "output_format.svg",
@@ -171,7 +173,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     # --- Video Codec ---
     codec_dd = Gtk.DropDown(model=_clone_model(app.video_codec_combo))
     codec_dd.set_selected(app.video_codec_combo.get_selected())
-    _make_combo_sync(app.video_codec_combo, codec_dd)
+    _make_combo_sync(app.video_codec_combo, codec_dd, connections)
     content.append(
         _make_card(
             "codec_h264.svg",
@@ -187,7 +189,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     # --- Image Quality ---
     quality_dd = Gtk.DropDown(model=_clone_model(app.video_quality_combo))
     quality_dd.set_selected(app.video_quality_combo.get_selected())
-    _make_combo_sync(app.video_quality_combo, quality_dd)
+    _make_combo_sync(app.video_quality_combo, quality_dd, connections)
     content.append(
         _make_card(
             "image_quality.svg",
@@ -203,7 +205,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     # --- Output Resolution ---
     res_dd = Gtk.DropDown(model=_clone_model(app.settings_page.video_resolution_combo))
     res_dd.set_selected(app.settings_page.video_resolution_combo.get_selected())
-    _make_combo_sync(app.settings_page.video_resolution_combo, res_dd)
+    _make_combo_sync(app.settings_page.video_resolution_combo, res_dd, connections)
     content.append(
         _make_card(
             "resolution.svg",
@@ -256,7 +258,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     # --- Conversion Speed (Preset) ---
     preset_dd = Gtk.DropDown(model=_clone_model(app.settings_page.preset_combo))
     preset_dd.set_selected(app.settings_page.preset_combo.get_selected())
-    _make_combo_sync(app.settings_page.preset_combo, preset_dd)
+    _make_combo_sync(app.settings_page.preset_combo, preset_dd, connections)
     content.append(
         _make_card(
             "preset_speed.svg",
@@ -272,7 +274,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     # --- GPU Acceleration ---
     gpu_dd = Gtk.DropDown(model=_clone_model(app.gpu_combo))
     gpu_dd.set_selected(app.gpu_combo.get_selected())
-    _make_combo_sync(app.gpu_combo, gpu_dd)
+    _make_combo_sync(app.gpu_combo, gpu_dd, connections)
     content.append(
         _make_card(
             "gpu_accel.svg",
@@ -289,7 +291,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     if len(app.detected_gpus) > 1:
         gpu_dev_dd = Gtk.DropDown(model=_clone_model(app.gpu_device_combo))
         gpu_dev_dd.set_selected(app.gpu_device_combo.get_selected())
-        _make_combo_sync(app.gpu_device_combo, gpu_dev_dd)
+        _make_combo_sync(app.gpu_device_combo, gpu_dev_dd, connections)
         content.append(
             _make_card(
                 "gpu_accel.svg",
@@ -305,7 +307,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     # --- Software Decode ---
     sw_decode_toggle = Gtk.Switch()
     sw_decode_toggle.set_active(app.settings_page.gpu_partial_check.get_active())
-    _make_switch_sync(app.settings_page.gpu_partial_check, sw_decode_toggle)
+    _make_switch_sync(app.settings_page.gpu_partial_check, sw_decode_toggle, connections)
     content.append(
         _make_card(
             "sw_decode.svg",

@@ -4,6 +4,7 @@ Shows preset and resolution choices with SVG illustrations.
 """
 
 import gettext
+from utils.signal_connections import SignalConnections
 import os
 import sys
 
@@ -132,6 +133,7 @@ def _get_resolution_data():
 def show_video_options_dialog(parent_window, app) -> None:
     """Present the educational video options dialog."""
     dialog = Adw.Dialog()
+    connections = SignalConnections(dialog)
     dialog.set_title(_("Video Options"))
     dialog.set_content_width(700)
     dialog.set_content_height(450)
@@ -189,7 +191,7 @@ def show_video_options_dialog(parent_window, app) -> None:
             preset_dropdown.set_selected(sel)
 
     preset_dropdown.connect("notify::selected", _sync_preset_dialog)
-    app.settings_page.preset_combo.connect("notify::selected", _sync_preset_sidebar)
+    connections.connect(app.settings_page.preset_combo, "notify::selected", _sync_preset_sidebar)
 
     card = _make_card(
         preset_data["svg"], preset_data["title"], preset_data["description"], preset_dropdown
@@ -225,7 +227,7 @@ def show_video_options_dialog(parent_window, app) -> None:
             res_dropdown.set_selected(sel)
 
     res_dropdown.connect("notify::selected", _sync_res_dialog)
-    app.settings_page.video_resolution_combo.connect(
+    connections.connect(app.settings_page.video_resolution_combo,
         "notify::selected", _sync_res_sidebar
     )
 

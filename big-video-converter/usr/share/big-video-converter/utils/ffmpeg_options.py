@@ -1,26 +1,17 @@
-"""Validation of user-supplied extra FFmpeg options.
+"""Parse additional FFmpeg options as data, never as a shell program.
 
-The "Additional options" text is exported as the ``options`` environment
-variable and expanded by ``eval`` inside the conversion script, so it has to be
-checked before it ever reaches the shell. Two layers:
-
-1. every flag must be on ALLOWED_FFMPEG_FLAGS (stream specifiers such as
-   ``:v``, ``:a:1`` are accepted on the flags that take them);
-2. the accepted tokens are re-quoted with shlex.quote, so shell metacharacters
-   in a value cannot start a new command even if one slips through.
+Every option has a known arity. Positional arguments (additional inputs or
+outputs) are rejected. The CLI and GUI share this contract. The returned quoted
+text is a transport format for shlex, not a command to execute in a shell.
 """
 
 import gettext
-import logging
 import re
 import shlex
-
-logger = logging.getLogger(__name__)
+import sys
 
 _ = gettext.gettext
 
-# Flags a user may reasonably want to add by hand. Keep the base name here;
-# stream specifiers (-c:v, -b:a:1, ...) are stripped before the lookup.
 ALLOWED_FFMPEG_FLAGS = {
     # Time / trimming
     "-ss", "-sseof", "-t", "-to", "-itsoffset", "-copyts", "-start_at_zero",
@@ -48,58 +39,74 @@ ALLOWED_FFMPEG_FLAGS = {
     "-filter_hw_device", "-frames", "-vframes", "-aframes",
 }
 
-# Characters that must never reach the shell inside a value.
-_FORBIDDEN = re.compile(r"[;&|`$><\n\r\\]|\$\(|\)|\(")
 
-# Trailing stream specifier: -c:v, -b:a:1, -disposition:s:0 ...
-_SPECIFIER = re.compile(r"^(-[A-Za-z0-9_\-]+?)(:[A-Za-z0-9_:.]+)?$")
+_NO_VALUE_FLAGS = {
+    "-copyts", "-start_at_zero", "-shortest", "-vn", "-an", "-sn", "-dn",
+    "-ignore_unknown", "-stats", "-nostats", "-hide_banner",
+}
+# Keep the existing restrictions on arbitrary filter/option expressions. These
+# are an application policy, not the defence against shell interpretation.
+_FORBIDDEN = re.compile(r"[;&|`$><\n\r\\()]|\x00")
+_SPECIFIER = re.compile(r"^(-[A-Za-z0-9_\-]+)(:[A-Za-z0-9_:.]+)?$")
+_NEGATIVE_NUMBER = re.compile(r"^-\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$")
 
 
 def _base_flag(token: str) -> str:
-    """Strip a trailing stream specifier from a flag."""
-    match = _SPECIFIER.match(token)
-    if not match:
-        return token
-    return match.group(1)
+    match = _SPECIFIER.fullmatch(token)
+    return match.group(1) if match else token
+
+
+def parse_additional_options(text: str) -> list[str]:
+    """Return argv tokens, rejecting incomplete options and extra filenames."""
+    if not isinstance(text, str) or len(text) > 65536:
+        raise ValueError(_("Additional options could not be parsed: {0}").format("invalid text"))
+    tokens = shlex.split(text)
+    i = 0
+    while i < len(tokens):
+        flag = tokens[i]
+        base = _base_flag(flag)
+        if base not in ALLOWED_FFMPEG_FLAGS:
+            raise ValueError(_(
+                "The FFmpeg option “{0}” is not allowed. Remove it from the "
+                "additional options to continue."
+            ).format(flag))
+        if _FORBIDDEN.search(flag):
+            raise ValueError(_("Additional options contain characters that are not allowed: {0}").format(flag))
+        i += 1
+        if base in _NO_VALUE_FLAGS:
+            continue
+        if i == len(tokens):
+            raise ValueError(_("Additional options could not be parsed: {0}").format(flag))
+        value = tokens[i]
+        if not value or _FORBIDDEN.search(value):
+            raise ValueError(_("Additional options contain characters that are not allowed: {0}").format(value))
+        if value.startswith("-") and not _is_negative_number(value):
+            negative_map = base == "-map" and re.fullmatch(r"-\d+(?::[A-Za-z0-9_:]+)?\??", value)
+            negative_disposition = base == "-disposition" and re.fullmatch(r"-[A-Za-z_]+", value)
+            if not negative_map and not negative_disposition:
+                raise ValueError(_("Additional options could not be parsed: {0}").format(flag))
+        i += 1
+    return tokens
 
 
 def validate_additional_options(text: str):
-    """Check user-supplied FFmpeg options.
-
-    Returns (ok, value): on success value is the sanitized, shell-quoted
-    option string ready to be exported; on failure it is an error message
-    suitable for showing to the user.
-    """
-    if not text or not text.strip():
-        return True, ""
-
+    """Return (accepted, normalized option text or localized error)."""
     try:
-        tokens = shlex.split(text)
-    except ValueError as e:
-        return False, _("Additional options could not be parsed: {0}").format(e)
-
-    for token in tokens:
-        if _FORBIDDEN.search(token):
-            return False, _(
-                "Additional options contain characters that are not allowed: {0}"
-            ).format(token)
-
-        if token.startswith("-") and len(token) > 1 and not _is_negative_number(token):
-            if _base_flag(token) not in ALLOWED_FFMPEG_FLAGS:
-                return False, _(
-                    "The FFmpeg option “{0}” is not allowed. Remove it from the "
-                    "additional options to continue."
-                ).format(token)
-
-    sanitized = " ".join(shlex.quote(token) for token in tokens)
-    logger.debug(f"Additional options accepted: {sanitized}")
-    return True, sanitized
+        return True, shlex.join(parse_additional_options(text or ""))
+    except ValueError as error:
+        return False, str(error)
 
 
 def _is_negative_number(token: str) -> bool:
-    """True for values like -1 or -0.5, which are values and not flags."""
+    return bool(_NEGATIVE_NUMBER.fullmatch(token))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3 or sys.argv[1] != "--null":
+        sys.exit("Usage: ffmpeg_options.py --null OPTIONS")
     try:
-        float(token)
-    except ValueError:
-        return False
-    return True
+        argv = parse_additional_options(sys.argv[2])
+    except ValueError as error:
+        sys.exit(str(error))
+    for token in argv:
+        sys.stdout.buffer.write(token.encode("utf-8") + b"\0")

@@ -15,7 +15,7 @@ _ENCODER_MAP: dict[str, dict[str, str]] = {
         "h264": "h264_nvenc",
         "h265": "hevc_nvenc",
         "av1": "av1_nvenc",
-        "vp9": "vp9_nvenc",
+        "vp9": "",
     },
     "amd": {
         "h264": "h264_vaapi",

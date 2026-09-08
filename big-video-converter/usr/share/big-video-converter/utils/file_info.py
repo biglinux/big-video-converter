@@ -513,22 +513,8 @@ class VideoInfoDialog:
                             self._make_copy_button(_("Copy language code"), lang_code)
                         )
 
-                        # Try to get the full language name
-                        try:
-                            import locale
-
-                            lang_code_lower = stream["tags"]["language"]
-                            lang_obj = locale.setlocale(
-                                locale.LC_ALL, f"{lang_code_lower}.UTF-8"
-                            )
-                            if lang_obj:
-                                lang_name = locale.nl_langinfo(locale.LANG_NAME)
-                                if lang_name and lang_name != lang_code_lower:
-                                    lang_label = Gtk.Label(label=lang_name)
-                                    lang_label.add_css_class("caption")
-                                    lang_row.add_suffix(lang_label)
-                        except (ImportError, locale.Error, ValueError):
-                            pass  # Ignore language name lookup errors
+                        # Unknown ISO language codes are metadata, not an
+                        # instruction to change the process-wide locale.
 
                         expander.add_row(lang_row)
 

@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 import threading
 
 import gi
@@ -11,8 +12,9 @@ import gettext
 from constants import CONVERT_SCRIPT_PATH
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 from utils.conversion import run_with_progress_dialog
+from utils.segment_batch import start_segment_batch
 from utils.ffmpeg_options import validate_additional_options
-from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+from utils.ffmpeg_path import get_ffprobe_executable
 from utils.video_settings import SettingsOverride, get_video_filter_string
 
 import logging
@@ -698,6 +700,78 @@ class ConversionPage:
             return True
         return False
 
+    def _encoding_environment(self, gpu_override=None):
+        """Hardware and encoder settings for a job that re-encodes video.
+
+        Copy mode needs none of this, but the dialog that offers to re-encode
+        instead of copying does, and it must land on the accelerator the user
+        actually chose rather than falling back to the processor.
+        """
+        settings = self.app.settings_manager
+        env = {}
+
+        if gpu_override:
+            # Use override settings for parallel processing
+            if "type" in gpu_override:
+                env["gpu"] = gpu_override["type"]
+            if "device" in gpu_override:
+                env["gpu_device"] = gpu_override["device"]
+            logger.debug(f"Using GPU override: {gpu_override}")
+        else:
+            gpu_setting = settings.load_setting("gpu", "auto")
+            env["gpu"] = gpu_setting
+
+            # GPU device selection (render device path)
+            gpu_device_index = settings.load_setting("gpu-device-index", 0)
+
+            # Auto-detect architecture from device if GPU is Auto but Device is
+            # specific. This fixes selecting an "Intel" device with "Auto" mode.
+            if gpu_device_index > 0 and hasattr(self.app, "detected_gpus"):
+                idx = gpu_device_index - 1  # 0 = Auto
+                if idx < len(self.app.detected_gpus):
+                    device_info = self.app.detected_gpus[idx]
+                    env["gpu_device"] = device_info["device"]
+
+                    if gpu_setting == "auto":
+                        device_name = device_info.get("name", "").lower()
+                        if "intel" in device_name:
+                            env["gpu"] = "intel"
+                        elif "nvidia" in device_name:
+                            env["gpu"] = "nvidia"
+                        elif ("amd" in device_name
+                              or "advanced micro devices" in device_name):
+                            env["gpu"] = "amd"
+                        logger.debug(
+                            f"Auto-detected {env['gpu']} GPU from device selection: "
+                            f"{device_name}"
+                        )
+
+            # Smart GPU selection: when auto mode + auto device + multiple GPUs,
+            # pick the best GPU for the selected codec
+            if (
+                gpu_setting == "auto"
+                and gpu_device_index == 0
+                and hasattr(self.app, "detected_gpus")
+                and len(self.app.detected_gpus) > 1
+            ):
+                from utils.gpu_selector import select_best_gpu
+
+                codec = settings.load_setting("video-codec", "h264")
+                best = select_best_gpu(self.app.detected_gpus, codec)
+                if best:
+                    env["gpu"] = best["type"]
+                    if best.get("device"):
+                        env["gpu_device"] = best["device"]
+                    logger.info(
+                        f"Smart GPU selection: {best['type']} "
+                        f"(device={best.get('device', 'default')}) for {codec}"
+                    )
+
+        env["video_quality"] = settings.load_setting("video-quality", "default")
+        env["video_encoder"] = settings.load_setting("video-codec", "h264")
+        env["preset"] = settings.load_setting("preset", "default")
+        return env
+
     def force_start_conversion(self, gpu_override=None):
         """Start conversion process with the currently selected file"""
         # Check if we have a file to convert
@@ -738,95 +812,11 @@ class ConversionPage:
                     # When copying without reencoding, hardware acceleration is not needed
                     env_vars["gpu"] = "software"
                     logger.debug(
-                        "Force copy video enabled: disabling hardware acceleration (not needed for copying)"
-                    )
-                    # Don't set video encoding parameters when in copy mode
-                    logger.debug(
-                        "Force copy video enabled: skipping video_quality, video_encoder, preset"
+                        "Force copy video enabled: disabling hardware acceleration "
+                        "and skipping video_quality, video_encoder, preset"
                     )
                 else:
-                    if gpu_override:
-                        # Use override settings for parallel processing
-                        if "type" in gpu_override:
-                            env_vars["gpu"] = gpu_override["type"]
-                        if "device" in gpu_override:
-                            env_vars["gpu_device"] = gpu_override["device"]
-                        logger.debug(f"Using GPU override: {gpu_override}")
-                    else:
-                        gpu_setting = self.app.settings_manager.load_setting(
-                            "gpu", "auto"
-                        )
-                        env_vars["gpu"] = gpu_setting
-
-                        # GPU device selection (render device path)
-                        gpu_device_index = self.app.settings_manager.load_setting(
-                            "gpu-device-index", 0
-                        )
-
-                        # Auto-detect architecture from device if GPU is Auto but Device is specific
-                        # This fixes the issue where selecting "Intel" device with "Auto" mode fails
-                        if gpu_device_index > 0 and hasattr(self.app, "detected_gpus"):
-                            idx = gpu_device_index - 1  # 0 = Auto
-                            if idx < len(self.app.detected_gpus):
-                                device_info = self.app.detected_gpus[idx]
-                                env_vars["gpu_device"] = device_info["device"]
-
-                                # If GPU is auto but we selected a specific device, set the correct architecture
-                                if gpu_setting == "auto":
-                                    device_name = device_info.get("name", "").lower()
-                                    if "intel" in device_name:
-                                        env_vars["gpu"] = "intel"
-                                        logger.debug(
-                                            f"Auto-detected Intel GPU from device selection: {device_name}"
-                                        )
-                                    elif "nvidia" in device_name:
-                                        env_vars["gpu"] = "nvidia"
-                                        logger.debug(
-                                            f"Auto-detected Nvidia GPU from device selection: {device_name}"
-                                        )
-                                    elif (
-                                        "amd" in device_name
-                                        or "advanced micro devices" in device_name
-                                    ):
-                                        env_vars["gpu"] = "amd"
-                                        logger.debug(
-                                            f"Auto-detected AMD GPU from device selection: {device_name}"
-                                        )
-
-                        # Smart GPU selection: when auto mode + auto device + multiple GPUs,
-                        # pick the best GPU for the selected codec
-                        if (
-                            gpu_setting == "auto"
-                            and gpu_device_index == 0
-                            and hasattr(self.app, "detected_gpus")
-                            and len(self.app.detected_gpus) > 1
-                        ):
-                            from utils.gpu_selector import select_best_gpu
-
-                            codec = self.app.settings_manager.load_setting(
-                                "video-codec", "h264"
-                            )
-                            best = select_best_gpu(self.app.detected_gpus, codec)
-                            if best:
-                                env_vars["gpu"] = best["type"]
-                                if best.get("device"):
-                                    env_vars["gpu_device"] = best["device"]
-                                logger.info(
-                                    f"Smart GPU selection: {best['type']} "
-                                    f"(device={best.get('device', 'default')}) for {codec}"
-                                )
-
-                    # Video quality and codec
-                    env_vars["video_quality"] = self.app.settings_manager.load_setting(
-                        "video-quality", "default"
-                    )
-                    env_vars["video_encoder"] = self.app.settings_manager.load_setting(
-                        "video-codec", "h264"
-                    )
-                    # Other encoding settings
-                    env_vars["preset"] = self.app.settings_manager.load_setting(
-                        "preset", "default"
-                    )
+                    env_vars.update(self._encoding_environment(gpu_override))
 
                 # Subtitle handling (works regardless of copy mode)
                 env_vars["subtitle_extract"] = self.app.settings_manager.load_setting(
@@ -950,7 +940,7 @@ class ConversionPage:
                 )
 
                 # Get trim segments from per-file metadata
-                trim_segments = file_metadata.get("trim_segments", [])
+                trim_segments = deepcopy(file_metadata.get("trim_segments", []))
 
                 # Get output mode from per-file metadata (not global settings)
                 output_mode = file_metadata.get("output_mode", "join")
@@ -981,8 +971,8 @@ class ConversionPage:
                 )
 
                 # Try to get video dimensions if there are crop values
-                video_width = getattr(self.app, "video_width", None)
-                video_height = getattr(self.app, "video_height", None)
+                video_width = None
+                video_height = None
 
                 # If we need to crop and don't have dimensions, try to get them
                 if (
@@ -1020,9 +1010,6 @@ class ConversionPage:
                                     f"Detected video dimensions: {video_width}x{video_height}"
                                 )
 
-                                # Store these dimensions for future use
-                                self.app.video_width = video_width
-                                self.app.video_height = video_height
                             else:
                                 logger.debug("No video streams found in file")
                         else:
@@ -1061,8 +1048,8 @@ class ConversionPage:
                         "Copy mode enabled - skipping video_filter (filters require re-encoding)"
                     )
 
-                # Handle additional options. They are expanded by the shell in
-                # the conversion script, so validate and quote them first.
+                # Validate the option grammar shared with the backend. The
+                # transport text is parsed into argv, never executed as shell.
                 raw_additional_options = self.app.settings_manager.load_setting(
                     "additional-options", ""
                 )
@@ -1119,6 +1106,7 @@ class ConversionPage:
             import traceback
 
             traceback.print_exc()
+            return False
 
         # Get the extension of the selected output format
         output_ext = self.app.get_selected_format_extension()
@@ -1195,6 +1183,11 @@ class ConversionPage:
         # Delete original setting
         delete_original = self.delete_original_check.get_active()
 
+        job_info = next((info for info in getattr(self.app, "active_conversions", [])
+                         if info.get("file_path") == input_file), {})
+        job_id = job_info.get("job_id")
+        cancel_event = job_info.get("cancel_event") or threading.Event()
+
         # Check MP4 compatibility when copying without reencoding to MP4
         force_copy_video = env_vars.get("force_copy_video") == "1"
         if force_copy_video and output_format == "mp4":
@@ -1206,6 +1199,8 @@ class ConversionPage:
                 conversion_context = {
                     "cmd": cmd,
                     "env_vars": env_vars,
+                    "job_id": job_id,
+                    "cancel_event": cancel_event,
                     "delete_original": delete_original,
                     "full_output_path": full_output_path,
                     "input_file": input_file,
@@ -1216,6 +1211,21 @@ class ConversionPage:
                     "trim_segments": trim_segments,
                     "output_mode": output_mode,
                 }
+
+                # Re-encoding uses the settings copy mode had skipped, the
+                # accelerator included: choosing "re-encode" is not a request
+                # to fall back to the processor.
+                reencode_env = dict(env_vars)
+                reencode_env.pop("force_copy_video", None)
+                reencode_env.pop("force_software", None)
+                reencode_env.update(self._encoding_environment(gpu_override))
+                video_resolution = self.app.settings_manager.load_setting(
+                    "video-resolution", "")
+                if video_resolution:
+                    reencode_env["video_resolution"] = video_resolution
+                reencode_env["video_filter"] = get_video_filter_string(
+                    filter_settings, video_width=video_width, video_height=video_height,
+                    input_file=input_file)
 
                 def show_compatibility_warning() -> None:
                     dialog = Adw.AlertDialog()
@@ -1248,26 +1258,34 @@ class ConversionPage:
                     dialog.set_close_response("cancel")
 
                     def on_response(dialog, response) -> None:
-                        if response == "proceed":
-                            # User chose to proceed, continue with conversion
-                            GLib.idle_add(self._continue_conversion, conversion_context)
-                        elif response == "reencode":
-                            # Turn copy mode off and rebuild the conversion from
-                            # scratch: quality, encoder and filters were all
-                            # skipped while copy mode was on.
-                            GLib.idle_add(self._retry_without_copy_mode)
+                        if cancel_event.is_set() or response == "cancel":
+                            cancel_event.set()
+                            self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
+                            return
+                        if response == "reencode":
+                            conversion_context["env_vars"] = reencode_env
+                        # Direct invocation: this callback is already on GTK's
+                        # main loop. Do not schedule a True-returning idle task.
+                        try:
+                            self._continue_conversion(conversion_context)
+                        except Exception as error:
+                            logger.exception("Could not resume conversion")
+                            self.app.show_error_dialog(str(error))
+                            self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
 
                     dialog.connect("response", on_response)
                     dialog.present(self.app.window)
 
                 # Show dialog in main thread
                 GLib.idle_add(show_compatibility_warning)
-                return False  # Stop here, dialog will handle continuation
+                return True  # The active job remains reserved while awaiting a decision.
 
         # Continue with conversion
         conversion_context = {
             "cmd": cmd,
             "env_vars": env_vars,
+            "job_id": job_id,
+            "cancel_event": cancel_event,
             "delete_original": delete_original,
             "full_output_path": full_output_path,
             "input_file": input_file,
@@ -1341,35 +1359,15 @@ class ConversionPage:
 
         return box
 
-    def _retry_without_copy_mode(self) -> bool:
-        """Disable copy mode and restart the conversion of the current file."""
-        self.app.settings_manager.save_setting("force-copy-video", False)
-
-        # Keep the sidebar switch in sync (it also persists the setting).
-        switch = getattr(self.app, "force_copy_video_check", None)
-        if switch is not None and switch.get_active():
-            switch.set_active(False)
-
-        logger.debug("Copy mode disabled by the user; restarting conversion")
-
-        if self.force_start_conversion() is False:
-            self.app.conversion_completed(False)
-
-        return False
-
     def _continue_conversion(self, context):
         """Continue with the actual conversion process"""
-        # Unpack context
+        # The naming and segment fields are read by start_segment_batch, which
+        # takes the whole context; only these are used here.
         cmd = context["cmd"]
         env_vars = context["env_vars"]
         delete_original = context["delete_original"]
         input_file = context["input_file"]
-        input_basename = context["input_basename"]
-        input_ext = context["input_ext"]
-        output_ext = context["output_ext"]
-        output_folder = context["output_folder"]
         trim_segments = context["trim_segments"]
-        output_mode = context["output_mode"]
 
         # Log the command and environment variables for debugging
         logger.debug("\n=== CONVERSION COMMAND ===")
@@ -1431,379 +1429,11 @@ class ConversionPage:
             logger.debug(f"{key}={value}")
         logger.debug("===========================\n")
 
-        # Handle multi-segment processing
+        if context.get("cancel_event") is not None and context["cancel_event"].is_set():
+            self.app.conversion_completed(False, file_path=input_file, job_id=context.get("job_id"))
+            return False
         if len(trim_segments) > 1:
-            logger.debug(
-                f"Multi-segment conversion detected: {len(trim_segments)} segments, mode: {output_mode}"
-            )
-
-            # Helper function to process a single segment (shared by split and join modes)
-            def process_single_segment(
-                i, segment, output_path: str, title_prefix: str = "Segment"
-            ) -> None:
-                """Process a single video segment with progress tracking.
-
-                Args:
-                    i: Segment index (0-based)
-                    segment: Dict with 'start' and 'end' keys
-                    output_path: Full path for output file
-                    title_prefix: Prefix for progress title (e.g., "Segment" or "Join - Segment")
-                """
-                # Calculate segment duration
-                segment_duration = segment["end"] - segment["start"]
-                logger.debug(
-                    f"Processing segment {i + 1}/{len(trim_segments)}: duration={segment_duration:.2f}s"
-                )
-
-                # Create segment-specific env_vars
-                segment_env_vars = env_vars.copy()
-                segment_env_vars["output_file"] = output_path
-
-                # Add trim options for this segment, keeping the user's own
-                # extra options instead of replacing them.
-                start_str = self._format_time_ffmpeg(segment["start"])
-                duration = segment["end"] - segment["start"]
-                duration_str = self._format_time_ffmpeg(duration)
-                base_options = env_vars.get("options", "").strip()
-                segment_options = f"-ss {start_str} -t {duration_str}"
-                segment_env_vars["options"] = (
-                    f"{base_options} {segment_options}" if base_options else segment_options
-                )
-
-                # Build command for this segment
-                segment_cmd = [CONVERT_SCRIPT_PATH, input_file]
-
-                # Execute conversion with progress dialog, passing segment duration for accurate progress
-                run_with_progress_dialog(
-                    self.app,
-                    segment_cmd,
-                    f"{title_prefix} {i + 1}/{len(trim_segments)}: {os.path.basename(output_path)}",
-                    None,  # Don't delete original for individual segments
-                    False,
-                    segment_env_vars,
-                    wait_for_completion=True,  # Process one segment at a time
-                    is_segment_batch=True,  # Suppress dialogs for individual segments
-                    segment_duration=segment_duration,  # Pass segment duration for progress calculation
-                )
-
-            if output_mode == "split":
-                # Split mode: create separate file for each segment
-                logger.debug(
-                    f"Split mode: creating {len(trim_segments)} separate files"
-                )
-
-                # Define the conversion logic to run in background thread
-                def process_segments_in_background() -> None:
-                    # Track the next available part number across all segments
-                    next_part_number = 1
-                    produced_paths = []
-
-                    for i, segment in enumerate(trim_segments):
-                        # Find next available filename to avoid overwriting existing segments
-                        while True:
-                            segment_output_basename = (
-                                f"{input_basename}-part{next_part_number}{output_ext}"
-                            )
-                            segment_output_path = os.path.join(
-                                output_folder, segment_output_basename
-                            )
-
-                            # Check if file already exists
-                            if not os.path.exists(segment_output_path):
-                                break  # Found available filename
-
-                            # File exists, try next number
-                            logger.debug(
-                                f"File exists: {segment_output_basename}, trying next number..."
-                            )
-                            next_part_number += 1
-
-                        # Use this part number and increment for next segment
-                        logger.debug(
-                            f"Using part number {next_part_number} for segment {i + 1}"
-                        )
-                        next_part_number += 1
-
-                        logger.debug(
-                            f"Converting segment {i + 1}/{len(trim_segments)}: {segment_output_basename}"
-                        )
-
-                        # Use helper function to process segment
-                        process_single_segment(i, segment, segment_output_path)
-                        produced_paths.append(segment_output_path)
-
-                    # Handle delete original — only when every segment really
-                    # got written, otherwise we'd destroy the only good copy.
-                    all_segments_ok = all(
-                        os.path.exists(p) and os.path.getsize(p) > 0
-                        for p in produced_paths
-                    )
-                    if delete_original and not all_segments_ok:
-                        logger.warning(
-                            "Some segments were not created; keeping the original file"
-                        )
-                    elif delete_original and os.path.exists(input_file):
-                        try:
-                            os.remove(input_file)
-                            logger.debug(f"Deleted original file: {input_file}")
-                        except OSError as e:
-                            logger.error(f"Error deleting original file: {e}")
-
-                    # Notify completion - segment items are auto-removed individually
-                    def notify_completion() -> None:
-                        # Only show notification if not in queue processing
-                        is_queue_processing = len(self.app.conversion_queue) > 0
-                        if not is_queue_processing:
-                            # Send system notification for single file conversions
-                            self.app.send_system_notification(
-                                _("Conversion Complete"),
-                                _(
-                                    "All {0} segments have been processed successfully!"
-                                ).format(len(trim_segments)),
-                            )
-                        # Notify app that the batch conversion is complete
-                        self.app.conversion_completed(True)
-
-                    # After all segments are processed, notify completion
-                    logger.debug(
-                        f"All {len(trim_segments)} segments processed successfully"
-                    )
-                    GLib.idle_add(notify_completion)
-
-                # Run the segment processing in a background thread to avoid blocking UI
-                conversion_thread = threading.Thread(
-                    target=process_segments_in_background, daemon=True
-                )
-                conversion_thread.start()
-
-                return True
-
-            elif output_mode == "join":
-                # Join mode: use same approach as split mode but with temp names, then concatenate
-                logger.debug(
-                    f"Join mode: creating {len(trim_segments)} temporary segments, then joining"
-                )
-
-                # Define the conversion logic to run in background thread
-                def process_segments_and_join() -> None:
-                    import subprocess
-
-                    # Define output basename for final joined file
-                    if input_ext == output_ext:
-                        output_basename = f"{input_basename}-converted{output_ext}"
-                    else:
-                        output_basename = f"{input_basename}{output_ext}"
-
-                    # Store temp segment paths for concatenation
-                    temp_segment_paths = []
-
-                    for i, segment in enumerate(trim_segments):
-                        # Create temp filename in destination folder (not /tmp)
-                        temp_segment_basename = (
-                            f"{input_basename}.segment{i:03d}.tmp{output_ext}"
-                        )
-                        temp_segment_path = os.path.join(
-                            output_folder, temp_segment_basename
-                        )
-                        temp_segment_paths.append(temp_segment_path)
-
-                        logger.debug(
-                            f"Extracting segment {i + 1}/{len(trim_segments)} for join: {temp_segment_basename}"
-                        )
-
-                        # Use helper function to process segment
-                        process_single_segment(
-                            i, segment, temp_segment_path, title_prefix="Join - Segment"
-                        )
-
-                    # Bail out if any segment failed: concatenating what's left
-                    # would silently produce a truncated video.
-                    missing = [
-                        p
-                        for p in temp_segment_paths
-                        if not os.path.exists(p) or os.path.getsize(p) == 0
-                    ]
-                    if missing:
-                        error_msg = _(
-                            "{0} of {1} segments could not be created, so the "
-                            "segments were not joined."
-                        ).format(len(missing), len(temp_segment_paths))
-                        logger.error(f"{error_msg} Missing: {missing}")
-
-                        for temp_path in temp_segment_paths:
-                            try:
-                                if os.path.exists(temp_path):
-                                    os.remove(temp_path)
-                            except OSError as e:
-                                logger.error(f"Error removing temp file {temp_path}: {e}")
-
-                        def notify_missing() -> None:
-                            self.app.show_error_dialog(error_msg)
-                            self.app.conversion_completed(False)
-
-                        GLib.idle_add(notify_missing)
-                        return
-
-                    # Now concatenate all segments
-                    logger.debug(f"Concatenating {len(temp_segment_paths)} segments...")
-
-                    # Create concatenation list file in destination folder
-                    concat_list_path = os.path.join(
-                        output_folder, f"{input_basename}.concat_list.txt"
-                    )
-                    try:
-                        with open(concat_list_path, "w") as f:
-                            for temp_path in temp_segment_paths:
-                                # Use relative path to avoid issues with special characters
-                                f.write(f"file '{os.path.basename(temp_path)}'\n")
-
-                        # Build final output path with collision check
-                        final_output_path = os.path.join(output_folder, output_basename)
-                        if os.path.exists(final_output_path):
-                            # Find an available filename by adding a counter
-                            base_name = os.path.splitext(output_basename)[0]
-                            extension = os.path.splitext(output_basename)[1]
-                            counter = 1
-                            while True:
-                                output_basename = f"{base_name}_{counter}{extension}"
-                                final_output_path = os.path.join(
-                                    output_folder, output_basename
-                                )
-                                if not os.path.exists(final_output_path):
-                                    logger.debug(
-                                        f"Output file exists, using alternative name: {output_basename}"
-                                    )
-                                    break
-                                counter += 1
-
-                        # Run ffmpeg concatenation
-                        concat_cmd = [
-                            get_ffmpeg_executable(),
-                            "-y",
-                            "-f",
-                            "concat",
-                            "-safe",
-                            "0",
-                            "-i",
-                            concat_list_path,
-                            "-map",
-                            "0:v",
-                            # "?" on audio too: videos without an audio track
-                            # would make the whole join fail otherwise.
-                            "-map",
-                            "0:a?",
-                            "-map",
-                            "0:s?",
-                            "-c",
-                            "copy",
-                            final_output_path,
-                        ]
-
-                        logger.debug(f"Concat command: {' '.join(concat_cmd)}")
-
-                        result = subprocess.run(
-                            concat_cmd,
-                            cwd=output_folder,
-                            capture_output=True,
-                            text=True,
-                            timeout=3600,
-                        )
-
-                        if result.returncode == 0:
-                            logger.debug(
-                                f"Successfully joined segments into: {final_output_path}"
-                            )
-
-                            # Clean up temp files
-                            for temp_path in temp_segment_paths:
-                                try:
-                                    if os.path.exists(temp_path):
-                                        os.remove(temp_path)
-                                        logger.debug(
-                                            f"Removed temp segment: {temp_path}"
-                                        )
-                                except OSError as e:
-                                    logger.error(
-                                        f"Error removing temp file {temp_path}: {e}"
-                                    )
-
-                            # Remove concat list
-                            try:
-                                if os.path.exists(concat_list_path):
-                                    os.remove(concat_list_path)
-                            except OSError as e:
-                                logger.error(f"Error removing concat list: {e}")
-
-                            # Handle delete original after successful join
-                            if delete_original and os.path.exists(input_file):
-                                try:
-                                    os.remove(input_file)
-                                    logger.debug(f"Deleted original file: {input_file}")
-                                except OSError as e:
-                                    logger.error(f"Error deleting original file: {e}")
-
-                            # Notify completion with notification
-                            logger.debug("Join operation completed successfully")
-
-                            def notify_join_completion() -> None:
-                                # Track completed file for completion screen
-                                if (
-                                    hasattr(self.app, "current_processing_file")
-                                    and self.app.current_processing_file
-                                ):
-                                    file_info = {
-                                        "input_file": self.app.current_processing_file,
-                                        "output_file": final_output_path,
-                                        "success": True,
-                                    }
-                                    if not hasattr(self.app, "completed_conversions"):
-                                        self.app.completed_conversions = []
-                                    self.app.completed_conversions.append(file_info)
-
-                                # Only show notification if not in queue processing
-                                is_queue_processing = len(self.app.conversion_queue) > 0
-                                if not is_queue_processing:
-                                    # Send system notification for single file conversions
-                                    self.app.send_system_notification(
-                                        _("Conversion Complete"),
-                                        _(
-                                            "All {0} segments have been joined successfully!"
-                                        ).format(len(trim_segments)),
-                                    )
-                                # Pass skip_tracking=True to avoid duplicate tracking
-                                self.app.conversion_completed(True, skip_tracking=True)
-
-                            GLib.idle_add(notify_join_completion)
-                        else:
-                            error_msg = f"Concatenation failed: {result.stderr}"
-                            logger.error(error_msg)
-
-                            def notify_error() -> None:
-                                self.app.show_error_dialog(error_msg)
-                                self.app.conversion_completed(False)
-
-                            GLib.idle_add(notify_error)
-
-                    except (subprocess.SubprocessError, OSError) as e:
-                        error_msg = f"Error during join process: {str(e)}"
-                        logger.error(error_msg)
-                        import traceback
-
-                        traceback.print_exc()
-
-                        def notify_error() -> None:
-                            self.app.show_error_dialog(error_msg)
-                            self.app.conversion_completed(False)
-
-                        GLib.idle_add(notify_error)
-
-                # Run the segment processing and join in a background thread
-                conversion_thread = threading.Thread(
-                    target=process_segments_and_join, daemon=True
-                )
-                conversion_thread.start()
-
-                return True
+            return start_segment_batch(self, context)
 
         # Single segment or no segments - use standard conversion
         # Calculate segment duration for single-segment trimming for accurate progress
@@ -1823,7 +1453,8 @@ class ConversionPage:
             input_file,  # Always pass full path for queue tracking
             delete_original,
             env_vars,
-            segment_duration=segment_duration,  # Pass segment duration for progress calculation
+            segment_duration=segment_duration,
+            job_id=context.get("job_id"), cancel_event=context.get("cancel_event"),
         )
 
         return True
