@@ -1,260 +1,189 @@
-"""
-Subtitle processor for joined video segments.
-Handles extraction, merging, and embedding of subtitles across multiple segments.
-"""
+"""Extract text subtitles once and clip cues to each selected interval."""
 
+from decimal import Decimal, ROUND_HALF_UP
+import logging
 import os
+from pathlib import Path
 import re
 import subprocess
+import tempfile
+import time
 
-from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
-
-import logging
+from utils.ffmpeg_path import get_ffmpeg_executable
+from utils.media_validation import probe_media, publish_output, terminate_process_group
 
 logger = logging.getLogger(__name__)
+_TIMECODE = r"\d{2,}:\d{2}:\d{2},\d{3}"
+_CUE = re.compile(
+    rf"(?:^|\n\n)\d+\n({_TIMECODE})\s+-->\s+({_TIMECODE})[^\n]*\n(.*?)(?=\n\n|\Z)",
+    re.DOTALL,
+)
+
+
+def _milliseconds(seconds) -> int:
+    value = Decimal(str(seconds))
+    if not value.is_finite() or value < 0:
+        raise ValueError("Invalid subtitle time")
+    return int((value * 1000).quantize(Decimal(1), rounding=ROUND_HALF_UP))
+
+
+def _parse_timecode(value: str) -> int:
+    time, milliseconds = value.split(",")
+    hours, minutes, seconds = map(int, time.split(":"))
+    if hours < 0 or not 0 <= minutes < 60 or not 0 <= seconds < 60 or len(milliseconds) != 3:
+        raise ValueError("Invalid SRT timecode")
+    return ((hours * 60 + minutes) * 60 + seconds) * 1000 + int(milliseconds)
+
+
+def _format_timecode(value: int) -> str:
+    seconds, milliseconds = divmod(value, 1000)
+    minutes, seconds = divmod(seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{milliseconds:03d}"
+
+
+def _serialize(cues) -> str:
+    return "\n\n".join(
+        f"{index}\n{_format_timecode(start)} --> {_format_timecode(end)}\n{text}"
+        for index, (start, end, text) in enumerate(cues, 1)
+    ) + ("\n" if cues else "")
+
+
+def _read_cues(path):
+    content = Path(path).read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
+    cues = []
+    for match in _CUE.finditer(content.strip()):
+        start, end = _parse_timecode(match[1]), _parse_timecode(match[2])
+        if end > start:
+            cues.append((start, end, match[3]))
+    return cues
+
+
+def _clip(cues, start, end, offset):
+    if end <= start:
+        raise ValueError("Subtitle interval must have a positive duration")
+    result = []
+    for cue_start, cue_end, text in cues:
+        left, right = max(cue_start, start), min(cue_end, end)
+        if right > left:
+            result.append((left - start + offset, right - start + offset, text))
+    return result
 
 
 class SubtitleProcessor:
-    """Processes subtitles for joined video segments."""
-    
-    def __init__(self, input_file, output_folder, output_basename, 
-                 trim_segments, temp_dir, subtitle_mode):
-        """
-        Initialize subtitle processor.
-        
-        Args:
-            input_file: Source video file path
-            output_folder: Output directory
-            output_basename: Base name for output files
-            trim_segments: List of segment definitions
-            temp_dir: Temporary working directory
-            subtitle_mode: "extract" or "embedded"
-        """
+    """Process subtitle intervals without using language as stream identity."""
+
+    def __init__(self, input_file, output_folder, output_basename,
+                 trim_segments, temp_dir, subtitle_mode, *, cancel_event=None):
         self.input_file = input_file
         self.output_folder = output_folder
         self.output_basename = output_basename
-        self.trim_segments = trim_segments
+        self.trim_segments = tuple(dict(s) for s in trim_segments)
         self.temp_dir = temp_dir
         self.subtitle_mode = subtitle_mode
-    
+        self.created_files = []
+        self.cancel_event = cancel_event
+
     def process(self):
-        """
-        Process subtitles for all segments.
-        
-        Returns:
-            List of tuples (subtitle_file_path, language) for embedded mode,
-            or empty list for extract mode.
-        """
-        subtitle_files_to_embed = []
-        
-        # Get subtitle streams from source
-        subtitle_streams = self._get_subtitle_streams()
-        if not subtitle_streams:
-            logger.debug("No subtitle streams found in source video")
-            return []
-        
-        # Process each subtitle stream
-        for stream_info in subtitle_streams:
-            parts = stream_info.split(",")
-            stream_index = parts[0]
-            language = parts[1] if len(parts) > 1 else "und"
-            
-            logger.debug(f"Processing subtitle stream {stream_index} (language: {language})")
-            
-            # Extract and merge subtitles for this stream
-            merged_content = self._merge_subtitle_stream(stream_index, language)
-            
-            if merged_content:
-                output_file = self._save_merged_subtitles(merged_content, language)
-                
+        embedded = []
+        for stream in self._get_subtitle_streams():
+            self._check_cancelled()
+            index = stream["index"]
+            language = stream.get("tags", {}).get("language") or "und"
+            content = self._merge_subtitle_stream(index, language)
+            if content:
+                output = self._save_merged_subtitles(content, language, index)
+                self.created_files.append(output)
                 if self.subtitle_mode == "embedded":
-                    subtitle_files_to_embed.append((output_file, language))
-        
-        return subtitle_files_to_embed
-    
+                    embedded.append((output, language))
+        return embedded
+
+    def _check_cancelled(self):
+        if self.cancel_event is not None and self.cancel_event.is_set():
+            raise InterruptedError("Subtitle processing cancelled")
+
     def _get_subtitle_streams(self):
-        """Get list of subtitle streams from source video."""
-        probe_cmd = [
-            get_ffprobe_executable(),
-            "-v", "error",
-            "-select_streams", "s",
-            "-show_entries", "stream=index:stream_tags=language",
-            "-of", "csv=p=0",
-            self.input_file
-        ]
-        
-        try:
-            result = subprocess.run(probe_cmd, capture_output=True, text=True, timeout=10)
-            if result.stdout.strip():
-                return result.stdout.strip().split("\n")
-        except (subprocess.SubprocessError, OSError) as e:
-            logger.error(f"Error probing subtitle streams: {e}")
-        
-        return []
-    
+        return [s for s in probe_media(self.input_file)["streams"]
+                if s.get("codec_type") == "subtitle"]
+
     def _merge_subtitle_stream(self, stream_index, language):
-        """
-        Extract and merge subtitles for a specific stream across all segments.
-        
-        Args:
-            stream_index: Index of the subtitle stream
-            language: Language code
-            
-        Returns:
-            Merged subtitle content as string
-        """
-        merged_subs = []
-        cumulative_time = 0.0
-        
-        for i, segment in enumerate(self.trim_segments):
-            seg_sub_file = os.path.join(
-                self.temp_dir, 
-                f"sub_{stream_index}_seg{i}.srt"
-            )
-            
-            start = segment["start"]
-            end = segment["end"]
-            
-            # Extract subtitle for this segment
-            if self._extract_segment_subtitle(seg_sub_file, stream_index):
-                # Read and filter subtitles
-                filtered = self._filter_subtitle_range(
-                    seg_sub_file, 
-                    start, 
-                    end, 
-                    cumulative_time
-                )
-                if filtered.strip():
-                    merged_subs.append(filtered)
+        # Private file; one extraction/parse per stream, not per segment.
+        fd, path = tempfile.mkstemp(prefix="source-subtitle-", suffix=".srt", dir=self.temp_dir)
+        os.close(fd)
+        try:
+            if not self._extract_segment_subtitle(path, stream_index):
+                raise RuntimeError(f"Could not extract subtitle stream {stream_index}")
+            cues = _read_cues(path)
+            merged = []
+            offset = 0
+            for segment in self.trim_segments:
+                start, end = _milliseconds(segment["start"]), _milliseconds(segment["end"])
+                merged.extend(_clip(cues, start, end, offset))
+                offset += end - start
+            return _serialize(merged)
+        finally:
+            os.unlink(path)
 
-            cumulative_time += end - start
-        
-        return "\n\n".join(merged_subs) if merged_subs else ""
-    
     def _extract_segment_subtitle(self, output_file, stream_index):
-        """
-        Extract subtitle stream to file.
-        
-        Args:
-            output_file: Path to save extracted subtitle
-            stream_index: Index of subtitle stream
-            
-        Returns:
-            True if extraction succeeded, False otherwise
-        """
-        extract_cmd = [
-            get_ffmpeg_executable(),
-            "-y",
-            "-i", self.input_file,
-            "-map", f"0:{stream_index}",
-            output_file
-        ]
-        
+        process = None
         try:
-            result = subprocess.run(extract_cmd, capture_output=True, timeout=60)
-            return result.returncode == 0 and os.path.exists(output_file)
-        except (subprocess.SubprocessError, OSError) as e:
-            logger.error(f"Error extracting subtitle: {e}")
-            return False
-    
-    def _filter_subtitle_range(self, subtitle_file, start_time, end_time, time_offset):
-        """
-        Filter and adjust subtitle timecodes for a specific time range.
-        
-        Args:
-            subtitle_file: Path to subtitle file
-            start_time: Start time in seconds
-            end_time: End time in seconds
-            time_offset: Time offset to apply (cumulative time)
-            
-        Returns:
-            Filtered subtitle content with adjusted timecodes
-        """
-        try:
-            with open(subtitle_file, "r", encoding="utf-8", errors="ignore") as f:
-                content = f.read()
-        except OSError as e:
-            logger.error(f"Error reading subtitle file: {e}")
-            return ""
-        
-        # Parse SRT format
-        # Pattern: sequence number, timecode line, text lines, blank line
-        subtitle_pattern = re.compile(
-            r'(\d+)\n(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})\n(.*?)(?=\n\n|\Z)',
-            re.DOTALL
-        )
-        
-        filtered_subs = []
-
-        for match in subtitle_pattern.finditer(content):
-            start_tc = match.group(2)
-            end_tc = match.group(3)
-            text = match.group(4)
-            
-            # Convert timecodes to seconds
-            start_sec = self._timecode_to_seconds(start_tc)
-            end_sec = self._timecode_to_seconds(end_tc)
-            
-            # Check if subtitle is within segment range
-            if start_sec >= start_time and end_sec <= end_time:
-                # Adjust timecodes relative to segment start + cumulative offset
-                new_start = start_sec - start_time + time_offset
-                new_end = end_sec - start_time + time_offset
-                
-                new_start_tc = self._seconds_to_timecode(new_start)
-                new_end_tc = self._seconds_to_timecode(new_end)
-                
-                filtered_subs.append(
-                    f"{len(filtered_subs) + 1}\n"
-                    f"{new_start_tc} --> {new_end_tc}\n"
-                    f"{text}"
+            self._check_cancelled()
+            with tempfile.TemporaryFile() as error_log:
+                process = subprocess.Popen(
+                    [get_ffmpeg_executable(), "-nostdin", "-v", "error", "-y", "-i", self.input_file,
+                     "-map", f"0:{int(stream_index)}", "-c:s", "srt", output_file],
+                    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                    stderr=error_log, start_new_session=True,
                 )
-        
-        return "\n\n".join(filtered_subs)
-    
+                deadline = time.monotonic() + 60
+                while process.poll() is None:
+                    self._check_cancelled()
+                    if time.monotonic() > deadline:
+                        raise TimeoutError("Subtitle extraction timed out")
+                    time.sleep(0.05)
+                if process.returncode:
+                    error_log.seek(max(0, error_log.tell() - 2000))
+                    logger.error("Subtitle extraction failed: %s", error_log.read().decode("utf-8", "replace"))
+                return process.returncode == 0 and os.path.isfile(output_file)
+        except InterruptedError:
+            raise
+        except (subprocess.SubprocessError, OSError, ValueError):
+            logger.exception("Subtitle extraction failed")
+            return False
+        finally:
+            if process is not None and process.poll() is None:
+                terminate_process_group(process)
+
+    def _filter_subtitle_range(self, subtitle_file, start_time, end_time, time_offset):
+        return _serialize(_clip(_read_cues(subtitle_file), _milliseconds(start_time),
+                                _milliseconds(end_time), _milliseconds(time_offset)))
+
     def _timecode_to_seconds(self, timecode):
-        """Convert SRT timecode (HH:MM:SS,mmm) to seconds."""
-        try:
-            time_part, ms_part = timecode.split(',')
-            h, m, s = map(int, time_part.split(':'))
-            ms = int(ms_part)
-            return h * 3600 + m * 60 + s + ms / 1000.0
-        except (ValueError, AttributeError):
-            return 0.0
-    
+        return _parse_timecode(timecode) / 1000
+
     def _seconds_to_timecode(self, seconds):
-        """Convert seconds to SRT timecode format (HH:MM:SS,mmm)."""
-        hours = int(seconds // 3600)
-        minutes = int((seconds % 3600) // 60)
-        secs = int(seconds % 60)
-        milliseconds = int((seconds % 1) * 1000)
-        return f"{hours:02d}:{minutes:02d}:{secs:02d},{milliseconds:03d}"
-    
-    def _save_merged_subtitles(self, content, language):
-        """
-        Save merged subtitle content to file.
-        
-        Args:
-            content: Merged subtitle content
-            language: Language code
-            
-        Returns:
-            Path to saved subtitle file
-        """
-        output_sub_basename = os.path.splitext(self.output_basename)[0]
-        
-        if self.subtitle_mode == "embedded":
-            # Keep temp file for embedding
-            output_file = os.path.join(self.temp_dir, f"merged_{language}.srt")
-        else:
-            # Extract mode: save to output folder
-            output_file = os.path.join(
-                self.output_folder,
-                f"{output_sub_basename}.{language}.srt"
-            )
-        
-        with open(output_file, "w", encoding="utf-8") as f:
-            f.write(content)
-        
-        logger.debug(f"Created merged subtitle: {output_file}")
-        return output_file
+        return _format_timecode(_milliseconds(seconds))
+
+    def _save_merged_subtitles(self, content, language, stream_index=0):
+        self._check_cancelled()
+        language = language if re.fullmatch(r"[A-Za-z]{2,3}", language) else "und"
+        folder = self.temp_dir if self.subtitle_mode == "embedded" else self.output_folder
+        basename = "merged" if self.subtitle_mode == "embedded" else os.path.splitext(self.output_basename)[0]
+        stem = f"{basename}.{language}.s{int(stream_index)}"
+        fd, staged = tempfile.mkstemp(prefix=".bvc-subtitle-", suffix=".srt", dir=folder)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as file:
+                file.write(content)
+                file.flush()
+                os.fsync(file.fileno())
+            for counter in range(10000):
+                suffix = "" if counter == 0 else f"_{counter}"
+                destination = os.path.join(folder, f"{stem}{suffix}.srt")
+                try:
+                    publish_output(staged, destination)
+                    return destination
+                except FileExistsError:
+                    continue
+            raise FileExistsError("Could not reserve a subtitle output")
+        finally:
+            os.unlink(staged)

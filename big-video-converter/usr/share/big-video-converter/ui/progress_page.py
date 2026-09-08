@@ -251,10 +251,23 @@ class ProgressPage:
         self._update_overall_progress()
         return row
 
+    def finish_pending(self, file_path, *, success=False, cancelled=False):
+        """Complete a job rejected before a process/active row was created."""
+        row = self.queue_items.get(file_path)
+        if row is None or row.status != "pending":
+            return
+        if cancelled:
+            row.mark_cancelled()
+        else:
+            row.mark_complete(success)
+        self.completed_count += 1
+        self._update_overall_progress()
+        self._check_all_complete()
+
     def mark_conversion_complete(self, conversion_id: int, success: bool=True, output_file: str=None) -> None:
         """Mark a conversion as complete"""
         if conversion_id in self.active_conversions:
-            conv_data = self.active_conversions[conversion_id]
+            conv_data = self.active_conversions.pop(conversion_id)
             row = conv_data.get("row")
 
             if row and row.status not in ("completed", "failed", "cancelled"):
@@ -354,6 +367,11 @@ class ProgressPage:
     def _do_cancel_all(self):
         """Actually cancel all conversions"""
         self.app.is_cancellation_requested = True
+        for info in list(getattr(self.app, "active_conversions", [])):
+            token = info.get("cancel_event")
+            if token is not None:
+                token.set()
+        self.app.conversion_queue.clear()
 
         for conv_data in list(self.active_conversions.values()):
             row = conv_data.get("row")
@@ -362,7 +380,7 @@ class ProgressPage:
 
         for row in self.queue_items.values():
             if row.status == "pending":
-                row.mark_cancelled()
+                row.cancel(cancel_all=True)
 
     def _on_back_clicked(self, button):
         """Go back to main view"""
@@ -659,6 +677,7 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.process = process
         self.conversion_id = conversion_id
         self.status = "active"
+        self._cancelled = False
         self.start_time = datetime.now()
 
         self._set_state("active")
@@ -728,6 +747,12 @@ class QueueItemRow(Gtk.ListBoxRow):
             text += "\n"
         end_iter = self.terminal_buffer.get_end_iter()
         self.terminal_buffer.insert(end_iter, text)
+        # Bound the live GTK buffer; high-volume diagnostics must not exhaust
+        # memory or make the main loop progressively slower.
+        excess = self.terminal_buffer.get_char_count() - 250000
+        if excess > 0:
+            self.terminal_buffer.delete(self.terminal_buffer.get_start_iter(),
+                                        self.terminal_buffer.get_iter_at_offset(excess))
 
     def mark_complete(self, success: bool=True, output_file: str=None) -> None:
         self.stop_pulse()
@@ -769,12 +794,15 @@ class QueueItemRow(Gtk.ListBoxRow):
         was_pending = self.status == "pending"
 
         self._cancelled = True
+        token = getattr(self, "cancel_event", None)
+        if token is not None:
+            token.set()
         if cancel_all:
             self.app.is_cancellation_requested = True
 
         self.cancel_button.set_sensitive(False)
 
-        if was_active and self.process:
+        if was_active and self.process and token is None:
             try:
                 if hasattr(self.app, "terminate_process_tree"):
                     self.app.terminate_process_tree(self.process)
@@ -800,13 +828,8 @@ class QueueItemRow(Gtk.ListBoxRow):
             self.progress_page._update_overall_progress()
             self.progress_page._check_all_complete()
 
-        if was_active and not cancel_all and self.progress_page:
-            GLib.timeout_add(300, self._notify_continue)
-
-    def _notify_continue(self):
-        if hasattr(self.app, "conversion_completed"):
-            self.app.conversion_completed(success=False)
-        return False
+        # The supervisor alone completes active jobs after reaping the child.
+        # A timer here used to release another job's slot after cancellation.
 
     def set_delete_original(self, delete_original: bool) -> None:
         self.delete_original = delete_original

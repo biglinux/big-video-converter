@@ -22,6 +22,11 @@ _ = gettext.gettext
 class VideoProcessor:
     def __init__(self, page):
         self.page = page
+        self._generation = 0
+
+    def invalidate(self):
+        """Invalidate outstanding workers without touching GTK from those workers."""
+        self._generation += 1
 
     def load_video(self, file_path: str) -> bool:
         """Starts the asynchronous process of loading video metadata."""
@@ -30,18 +35,21 @@ class VideoProcessor:
             self.page.loading_video = False
             return False
 
+        self._generation += 1
+        generation = self._generation
+
         # Update the UI with the file path immediately
         self.page.current_video_path = file_path
 
         # Start background thread to get info without blocking the UI
         info_thread = threading.Thread(
-            target=self._get_video_info_thread, args=(file_path,)
+            target=self._get_video_info_thread, args=(file_path, generation)
         )
         info_thread.daemon = True
         info_thread.start()
         return True
 
-    def _get_video_info_thread(self, file_path):
+    def _get_video_info_thread(self, file_path, generation):
         """Background thread to read the video metadata."""
         try:
             # Shared helper: it already falls back to parsing ffmpeg output for
@@ -50,28 +58,25 @@ class VideoProcessor:
             if not info:
                 raise ValueError(_("The video metadata could not be read"))
             # Post the successful result back to the main GTK thread
-            GLib.idle_add(self._on_video_info_loaded, info, file_path)
+            GLib.idle_add(self._on_video_info_loaded, info, file_path, generation)
         except (subprocess.SubprocessError, OSError, ValueError) as e:
             error_message = f"Error getting video info: {e}"
             logger.error(error_message)
             # Post the error back to the main GTK thread and release the lock
-            GLib.idle_add(self._on_video_info_error, error_message)
+            GLib.idle_add(self._on_video_info_error, error_message, generation)
 
-    def _on_video_info_error(self, error_message):
-        """Handle errors from the ffprobe thread."""
+    def _on_video_info_error(self, error_message, generation):
+        """Ignore errors from an editor session that is no longer current."""
+        if generation != self._generation:
+            return False
         self.page.app.show_error_dialog(error_message)
         self.page.loading_video = False
 
-    def _on_video_info_loaded(self, info, file_path):
+    def _on_video_info_loaded(self, info, file_path, generation):
         """Callback executed on the main thread after ffprobe finishes."""
-        # CRITICAL FIX: Check against the requested path, not the current path,
-        # as current_path might be cleared by cleanup before this callback runs.
-        if file_path != self.page.requested_video_path:
-            logger.debug(f"Ignoring stale video info for: {os.path.basename(file_path)}")
-            # If this was a stale request, we still need to ensure the loading lock isn't stuck.
-            # However, only the *correct* callback should release the lock.
-            # This logic is now safer because the gatekeeper in set_video is stronger.
-            return
+        if generation != self._generation or file_path != self.page.requested_video_path:
+            logger.debug("Ignoring stale video info for: %s", os.path.basename(file_path))
+            return False
 
         video_stream = next(
             (s for s in info.get("streams", []) if s.get("codec_type") == "video"), None

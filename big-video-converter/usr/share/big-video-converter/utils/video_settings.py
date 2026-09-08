@@ -5,8 +5,6 @@ Provides constants, utilities, and management for video adjustments.
 
 import math
 
-from utils.ffmpeg_path import get_ffprobe_executable
-
 import logging
 
 logger = logging.getLogger(__name__)
@@ -178,48 +176,8 @@ def generate_video_filters(
     """
     filters = []
 
-    is_hevc_10bit_to_h264 = False
-    if input_file:
-        try:
-            import subprocess
-
-            result = subprocess.run(
-                [
-                    get_ffprobe_executable(),
-                    "-v",
-                    "error",
-                    "-select_streams",
-                    "v:0",
-                    "-show_entries",
-                    "stream=pix_fmt,codec_name",
-                    "-of",
-                    "csv=p=0",
-                    input_file,
-                ],
-                capture_output=True,
-                text=True,
-                timeout=10,
-            )
-
-            output = result.stdout.strip().split(",")
-            if len(output) >= 2:
-                pix_fmt = output[0]
-                codec = output[1]
-
-                is_10bit = "p10" in pix_fmt or "10le" in pix_fmt
-                is_hevc = codec in ["hevc", "h265"]
-                is_h264_output = settings.get_value("video-codec", "h264") == "h264"
-
-                if is_10bit and is_hevc and is_h264_output:
-                    is_hevc_10bit_to_h264 = True
-        except (subprocess.SubprocessError, OSError):
-            pass
-
-    if is_hevc_10bit_to_h264:
-        logger.debug(
-            "Skipping custom video filters for optimized H.265 10-bit to H.264 GPU conversion"
-        )
-        return []
+    # Pixel-format negotiation belongs to the encoder backend. It must never
+    # suppress the user's crop, colour, rotation or flip operations for HEVC.
 
     # 1. Add crop filter
     crop_left = get_adjustment_value(settings, "crop_left")

@@ -4,6 +4,8 @@ import gettext
 import logging
 import os
 import shutil
+import threading
+import uuid
 from collections import deque
 
 from gi.repository import Adw, GLib
@@ -30,9 +32,9 @@ class QueueManagerMixin:
                     f"Added file to queue: {os.path.basename(file_path)}, Queue size: {len(self.conversion_queue)}"
                 )
 
-            # Always initialize/reset per-file metadata with default values when adding to queue
+            # Initialize new files without discarding edits when a file is added again
             if hasattr(self, "conversion_page"):
-                self.conversion_page.file_metadata[file_path] = {
+                self.conversion_page.file_metadata.setdefault(file_path, {
                     "trim_segments": [],
                     "crop_left": 0,
                     "crop_right": 0,
@@ -41,7 +43,7 @@ class QueueManagerMixin:
                     "brightness": 0.0,
                     "saturation": 1.0,
                     "hue": 0.0,
-                }
+                })
                 self.logger.debug(f"Initialized clean metadata for: {os.path.basename(file_path)}")
 
             # Update UI
@@ -343,6 +345,7 @@ class QueueManagerMixin:
         # Verify file exists
         if not os.path.exists(next_file):
             self.logger.debug(f"Skipping missing file: {next_file}")
+            self.progress_page.finish_pending(next_file, success=False)
             # Try next one immediately
             GLib.idle_add(self.process_next_in_queue)
             return False
@@ -363,6 +366,8 @@ class QueueManagerMixin:
             "file_path": next_file,
             "gpu_slot": gpu_slot,
             "start_time": GLib.get_real_time(),
+            "job_id": uuid.uuid4().hex,
+            "cancel_event": threading.Event(),
         }
 
         with self.conversions_lock:
@@ -374,20 +379,15 @@ class QueueManagerMixin:
         GLib.idle_add(self.conversion_page.update_queue_display)
 
         # Start conversion with override if slot allocated
-        result = self.conversion_page.force_start_conversion(gpu_override=gpu_slot)
+        try:
+            result = self.conversion_page.force_start_conversion(gpu_override=gpu_slot)
+        except Exception:
+            self.logger.exception("Failed to prepare conversion")
+            result = False
 
         if result is False:
-            # Failed to start
-            self.logger.error(f"Failed to start conversion for {next_file}")
-            with self.conversions_lock:
-                if conversion_info in self.active_conversions:
-                    self.active_conversions.remove(conversion_info)
-
-            if gpu_slot:
-                self.gpu_slots.append(gpu_slot)  # Return slot
-
-            # Try next one
-            GLib.idle_add(self.process_next_in_queue)
+            self.conversion_completed(False, file_path=next_file,
+                                      job_id=conversion_info["job_id"])
 
         # Try to start another if we have capacity (active < max)
         with self.conversions_lock:
@@ -416,12 +416,14 @@ class QueueManagerMixin:
         if result is False:
             self.logger.error("Conversion failed to start or was deferred, resetting state.")
             self.currently_converting = False
-            GLib.idle_add(lambda: self.conversion_completed(False))
+            failed_path = self.conversion_page.current_file_path
+            GLib.idle_add(lambda: self.conversion_completed(False, file_path=failed_path))
 
         return False
 
     def conversion_completed(
-        self, success, skip_tracking: bool = False, file_path: str = None
+        self, success, skip_tracking: bool = False, file_path: str = None,
+        job_id: str = None,
     ) -> None:
         """Called when a conversion is completed.
 
@@ -439,42 +441,32 @@ class QueueManagerMixin:
         try:
             self.logger.info(f"conversion_completed called with success={success}")
 
-            # Handle cancellation
-            if self.is_cancellation_requested:
-                self.logger.info("Cancellation requested. Stopping.")
-                self.is_cancellation_requested = False
-                with self.conversions_lock:
-                    self.active_conversions = []
-                self.currently_converting = False
-                GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
-                self.return_to_main_view()
-                return
-
-            # Release GPU slot & Tracking
+            # A completion must match an active job. A late/duplicate event
+            # never releases the oldest (or any unrelated) GPU slot.
             with self.conversions_lock:
-                if self.active_conversions:
-                    # Match the conversion that actually finished; fall back to
-                    # the oldest entry when the caller didn't tell us which.
-                    index = 0
-                    if file_path:
-                        for i, info in enumerate(self.active_conversions):
-                            if info.get("file_path") == file_path:
-                                index = i
-                                break
-                        else:
-                            self.logger.debug(
-                                f"No active conversion matched {file_path}; "
-                                "releasing the oldest entry"
-                            )
-                    finished_conversion = self.active_conversions.pop(index)
-                    if finished_conversion.get("gpu_slot"):
-                        self.logger.info(
-                            f"Releasing GPU slot: {finished_conversion['gpu_slot']['name']}"
-                        )
-                        self.gpu_slots.append(finished_conversion["gpu_slot"])
+                matches = [i for i, info in enumerate(self.active_conversions)
+                           if (info.get("job_id") == job_id if job_id
+                               else file_path is not None and info.get("file_path") == file_path)]
+                if len(matches) != 1:
+                    self.logger.debug("Ignoring stale or unidentified completion: %s", job_id or file_path)
+                    return
+                finished = self.active_conversions.pop(matches[0])
+                if finished.get("gpu_slot"):
+                    self.gpu_slots.append(finished["gpu_slot"])
+                self.currently_converting = bool(self.active_conversions)
 
+            self.progress_page.finish_pending(
+                finished["file_path"], success=success,
+                cancelled=bool(finished.get("cancel_event") and finished["cancel_event"].is_set()),
+            )
+            if self.is_cancellation_requested:
                 if not self.active_conversions:
+                    self.is_cancellation_requested = False
+                    self.header_bar.set_buttons_sensitive(True)
                     self.currently_converting = False
+                    self._was_queue_processing = False
+                    self.progress_page.show_completion_summary()
+                return
 
             # Check single file conversion mode
             if (

@@ -4,6 +4,7 @@ Shows subtitle handling options with explanations.
 """
 
 import gettext
+from utils.signal_connections import SignalConnections
 import os
 
 import gi
@@ -72,7 +73,7 @@ def _make_card(
     return card
 
 
-def _make_combo_sync(source, dropdown):
+def _make_combo_sync(source, dropdown, connections):
     def _on_dropdown(dd, _p):
         if source.get_selected() != dd.get_selected():
             source.set_selected(dd.get_selected())
@@ -82,10 +83,10 @@ def _make_combo_sync(source, dropdown):
             dropdown.set_selected(row.get_selected())
 
     dropdown.connect("notify::selected", _on_dropdown)
-    source.connect("notify::selected", _on_source)
+    connections.connect(source, "notify::selected", _on_source)
 
 
-def _make_switch_sync(source, toggle):
+def _make_switch_sync(source, toggle, connections):
     def _on_toggle(sw, _p):
         if source.get_active() != sw.get_active():
             source.set_active(sw.get_active())
@@ -95,7 +96,7 @@ def _make_switch_sync(source, toggle):
             toggle.set_active(row.get_active())
 
     toggle.connect("notify::active", _on_toggle)
-    source.connect("notify::active", _on_source)
+    connections.connect(source, "notify::active", _on_source)
 
 
 def _clone_model(source_combo):
@@ -109,6 +110,7 @@ def _clone_model(source_combo):
 def show_subtitles_dialog(parent_window, app) -> None:
     """Present the educational subtitles dialog."""
     dialog = Adw.Dialog()
+    connections = SignalConnections(dialog)
     dialog.set_title(_("Subtitles"))
     dialog.set_content_width(700)
     dialog.set_content_height(400)
@@ -141,7 +143,7 @@ def show_subtitles_dialog(parent_window, app) -> None:
     # --- Subtitle Handling ---
     sub_dd = Gtk.DropDown(model=_clone_model(app.subtitle_combo))
     sub_dd.set_selected(app.subtitle_combo.get_selected())
-    _make_combo_sync(app.subtitle_combo, sub_dd)
+    _make_combo_sync(app.subtitle_combo, sub_dd, connections)
     content.append(
         _make_card(
             "subtitle_keep.svg",
@@ -160,7 +162,7 @@ def show_subtitles_dialog(parent_window, app) -> None:
     extract_toggle.set_active(
         app.settings_page.only_extract_subtitles_check.get_active()
     )
-    _make_switch_sync(app.settings_page.only_extract_subtitles_check, extract_toggle)
+    _make_switch_sync(app.settings_page.only_extract_subtitles_check, extract_toggle, connections)
     content.append(
         _make_card(
             "subtitle_extract.svg",
