@@ -37,13 +37,26 @@ def test_same_language_tracks_have_distinct_sidecars_and_one_extraction(media, t
         return run(cmd, *args, **kwargs)
     monkeypatch.setattr(module.subprocess, 'Popen', record)
     processor.process()
-    files = list(tmp_path.glob('joined.por.s*.srt'))
-    assert len(files) == 2
+    files = sorted(tmp_path.glob('joined.por*.srt'))
+    assert [path.name for path in files] == ['joined.por.forced.srt', 'joined.por.srt']
     assert len(calls) == 2
     assert files[0].read_bytes() == files[1].read_bytes()
     cues = _read_cues(files[0])
     assert cues[0][0] == 0
     assert max(cue[1] for cue in cues) <= 1500
+
+
+@pytest.mark.parametrize('destination,expected', [
+    ('out.mkv', 2), ('out.mp4', 1), ('out.mov', 1), ('out.webm', 1), (None, 2),
+])
+def test_container_bound_subtitle_expectation(destination, expected):
+    """A bitmap track the script skips in MP4 must not be expected in the
+    output, or a good conversion is reported as failed."""
+    from utils.conversion import _expected_subtitles
+    data = {'streams': [{'codec_type': 'video'},
+                        {'codec_type': 'subtitle', 'codec_name': 'subrip'},
+                        {'codec_type': 'subtitle', 'codec_name': 'dvd_subtitle'}]}
+    assert _expected_subtitles(data, destination) == expected
 
 
 def test_output_checks_nonempty_not_sufficient(tmp_path):
@@ -77,13 +90,10 @@ def test_no_clobber_publication(tmp_path):
 def test_killed_job_leftovers_are_dropped_by_announced_path(tmp_path):
     workspace = tmp_path/'.bvc.abcd1234'
     workspace.mkdir();(workspace/'video.mkv').write_bytes(b'partial')
-    reserved = tmp_path/'reserved.mkv';reserved.touch()
-    unrelated = tmp_path/'someone-elses.mkv';unrelated.write_bytes(b'content')
     other = tmp_path/'not-ours';other.mkdir()
-    mv.discard_job_paths(str(workspace), [str(reserved), str(unrelated)])
-    assert not workspace.exists() and not reserved.exists()
-    assert unrelated.read_bytes() == b'content'
-    mv.discard_job_paths(str(other), [])
+    mv.discard_job_paths(str(workspace))
+    assert not workspace.exists()
+    mv.discard_job_paths(str(other))
     assert other.exists()
 
 
@@ -170,8 +180,9 @@ def test_embedded_subtitle_crossing_trim_start_and_end_is_clipped(media,tmp_path
 def test_extracted_subtitle_uses_same_trim_interval(media,tmp_path,run_cli):
     result=run_cli(media['multi'],tmp_path/'extract.mp4',only_extract_subtitles='1',options='-ss 0.5 -t 1')
     assert result.returncode==0,result.stderr[-2000:]
-    outputs=list(tmp_path.glob('extract.por.s*.srt'))
-    assert len(outputs)==2 and not (tmp_path/'extract.mp4').exists()
+    outputs=sorted(tmp_path.glob('extract.por*.srt'))
+    assert [p.name for p in outputs]==['extract.por.forced.srt','extract.por.srt']
+    assert not (tmp_path/'extract.mp4').exists()
     for path in outputs:
         text=path.read_text()
         assert '00:00:00,000 --> 00:00:01,000' in text and 'Segunda fala' not in text

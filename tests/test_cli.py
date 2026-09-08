@@ -1,3 +1,4 @@
+from pathlib import Path
 import shutil
 import subprocess
 
@@ -31,17 +32,32 @@ def test_default_output_in_dotted_directory(media,tmp_path,run_cli):
     assert not (tmp_path/'a.b.mp4').exists()
 
 
-@pytest.mark.parametrize('mode', ['existing','same','symlink'])
-def test_never_overwrite_unowned_destination(media,tmp_path,run_cli,mode):
+@pytest.mark.parametrize('mode', ['same','symlink'])
+def test_output_is_never_the_input(media,tmp_path,run_cli,mode):
+    """Encoding over the source would destroy it while still reading it."""
     source=tmp_path/'original.mp4';shutil.copyfile(media['video'],source)
     before=source.read_bytes()
-    dest=source if mode=='same' else tmp_path/'out.mp4'
-    if mode=='existing':dest.write_bytes(b'KEEP')
+    dest=source if mode=='same' else tmp_path/'link.mp4'
     if mode=='symlink':dest.symlink_to(source)
     result=run_cli(source,dest)
     assert result.returncode != 0
     assert source.read_bytes() == before
-    if mode=='existing':assert dest.read_bytes()==b'KEEP'
+
+
+def test_existing_destination_is_replaced_only_by_a_finished_file(media,tmp_path,run_cli):
+    """The CLI overwrites what it was told to write, but the old file stays
+    readable until the new one is complete."""
+    source=tmp_path/'original.mp4';shutil.copyfile(media['video'],source)
+    dest=tmp_path/'out.mkv';dest.write_bytes(b'KEEP')
+    result=run_cli(source,dest,options='-t 0.4 -threads 1')
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert dest.read_bytes() != b'KEEP'
+    assert stream_count(probe_media(str(dest)),'video') == 1
+    assert source.exists()
+    broken=tmp_path/'kept.mkv';broken.write_bytes(b'KEEP')
+    result=run_cli(source,broken,options='-c:v no_such_encoder')
+    assert result.returncode != 0
+    assert broken.read_bytes() == b'KEEP'
 
 
 @pytest.mark.parametrize('copy_mode', ['0','1'])
@@ -83,6 +99,18 @@ def test_embedded_subtitle_and_audio_inventory(media,tmp_path,run_cli,extension)
         assert subs[1]['disposition']['forced'] == 1
 
 
+def test_noise_reduction_never_blocks_the_conversion(media,tmp_path,run_cli):
+    """The GTCRN plugin is optional. Installed, it filters the audio; missing,
+    it warns — either way the conversion the user asked for still happens."""
+    out=tmp_path/'denoised.mkv'
+    result=run_cli(media['video'],out,noise_reduction='1',noise_strength='0.5',
+                   audio_handling='reencode',options='-t 0.5 -threads 1')
+    assert result.returncode == 0, result.stdout + result.stderr
+    if not Path('/usr/lib/ladspa/libgtcrn_ladspa.so').exists():
+        assert 'WARNING: Noise reduction requested' in result.stdout
+    assert stream_count(probe_media(str(out)),'audio') == 1
+
+
 def test_no_audio_does_not_duplicate_video(media,tmp_path,run_cli):
     out=tmp_path/'silent.mp4'
     result=run_cli(media['silent'],out,options='-t 0.5 -threads 1')
@@ -96,7 +124,8 @@ def test_only_extract_preserves_original_and_distinguishes_languages(media,tmp_p
     result=run_cli(media['multi'],out,subtitle_extract='extract',only_extract_subtitles='1')
     assert result.returncode==0,result.stdout+result.stderr
     assert not out.exists()
-    assert len(list(tmp_path.glob('extract.por.s*.srt')))==2
+    assert sorted(path.name for path in tmp_path.glob('extract.por*.srt'))==[
+        'extract.por.forced.srt','extract.por.srt']
     assert media['multi'].read_bytes()==before
 
 
@@ -125,7 +154,9 @@ def test_encoding_failure_never_publishes_partial_output(media,tmp_path,run_cli)
     assert not list(tmp_path.glob('.bvc.*'))
 
 
-def test_two_jobs_cannot_clobber_same_destination(media,tmp_path,cli_env):
+def test_two_jobs_on_one_destination_leave_a_whole_file(media,tmp_path,cli_env):
+    """Each job publishes with a single rename, so the loser is replaced
+    wholesale instead of being interleaved into a torn file."""
     out=tmp_path/'shared.mp4'
     env={**cli_env,'output_file':str(out),'options':'-t 0.5 -threads 1'}
     command=['bash',str(CLI),str(media['video'])]
@@ -133,5 +164,6 @@ def test_two_jobs_cannot_clobber_same_destination(media,tmp_path,cli_env):
         first=subprocess.Popen(command,env=env,stdout=a,stderr=a)
         second=subprocess.Popen(command,env=env,stdout=b,stderr=b)
         codes=[first.wait(timeout=30),second.wait(timeout=30)]
-    assert sorted(code==0 for code in codes)==[False,True]
+    assert codes==[0,0]
     assert stream_count(probe_media(str(out)),'video')==1
+    assert not list(tmp_path.glob('.bvc.*'))

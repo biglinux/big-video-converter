@@ -166,7 +166,24 @@ def _time_value(value: str) -> float:
     return result
 
 
-def _expected_media(source, env, duration):
+TEXT_SUBTITLE_CODECS = frozenset({"subrip", "ass", "ssa", "mov_text", "text", "webvtt"})
+TEXT_ONLY_CONTAINERS = frozenset({".mp4", ".mov", ".m4v", ".webm"})
+
+
+def _expected_subtitles(data, destination):
+    """Count the subtitle streams the container can actually carry.
+
+    The script skips a bitmap track that has no text form in MP4, MOV or WebM
+    rather than refusing the job, so expecting all of them would report a good
+    conversion as failed.
+    """
+    streams = [s for s in data["streams"] if s.get("codec_type") == "subtitle"]
+    if os.path.splitext(destination or "")[1].lower() in TEXT_ONLY_CONTAINERS:
+        streams = [s for s in streams if s.get("codec_name") in TEXT_SUBTITLE_CODECS]
+    return len(streams)
+
+
+def _expected_media(source, env, duration, destination=None):
     data = probe_media(source, executable=env.get("ffprobe_executable")) if source else None
     options = parse_additional_options(env.get("options", ""))
     if duration is None and data:
@@ -189,7 +206,8 @@ def _expected_media(source, env, duration):
     if data and "-map" not in options:
         expected = {"video": 1}
         expected["audio"] = 0 if env.get("audio_handling") == "none" or "-an" in options else stream_count(data, "audio")
-        expected["subtitle"] = stream_count(data, "subtitle") if env.get("subtitle_extract") == "embedded" and "-sn" not in options else 0
+        embedded = env.get("subtitle_extract") == "embedded" and "-sn" not in options
+        expected["subtitle"] = _expected_subtitles(data, destination) if embedded else 0
     return duration, expected
 
 
@@ -249,8 +267,6 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
             except ValueError:
                 if not os.path.isfile(source_file):
                     raise
-        if destination and os.path.lexists(destination):
-            raise FileExistsError(f"Output already exists: {destination}")
         if cancel_event.is_set():
             raise InterruptedError("Conversion cancelled before starting")
         process = subprocess.Popen(
@@ -319,18 +335,16 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
     warning_shown = False
     monitor_error = None
     encoded_frames = None
+    reported_duration = None
     workspace = None
-    reservations = []
 
     def consume(text, source):
-        nonlocal duration, stage_mode, encoded_frames, workspace
+        nonlocal duration, stage_mode, encoded_frames, workspace, reported_duration
         updates.push(text=text)
-        # The script announces the paths it owns, so a job killed before its
-        # own cleanup leaves nothing for the user to find and wonder about.
+        # The script announces the directory it owns, so a job killed before
+        # its own cleanup leaves nothing for the user to find and wonder about.
         if text.startswith("Job workspace:"):
             workspace = text.partition(":")[2].strip()
-        elif text.startswith("Job reservation:"):
-            reservations.append(text.partition(":")[2].strip())
         if source == "stderr":
             stderr_tail.append(text.strip())
         if text.startswith("Running command:"):
@@ -347,9 +361,18 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
         written = re.search(r"frame=\s*(\d+)", text)
         if written:
             encoded_frames = int(written[1])
+        # FFmpeg reports the input's own duration, which keeps the bar moving
+        # for the files FFprobe cannot read at all (Matroska with DVD
+        # subtitles, for one). Only progress uses it: the validated duration
+        # decides whether an original may be deleted.
+        if reported_duration is None:
+            reported = re.search(r"Duration:\s*(\d+:\d+:\d+(?:\.\d+)?)", text)
+            if reported:
+                reported_duration = _time_value(reported[1])
         match = re.search(r"time=\s*(\d+:\d+:\d+(?:\.\d+)?)", text)
-        if match and duration and duration > 0:
-            progress = min(0.99, max(0.0, _time_value(match[1]) / duration))
+        total = duration or reported_duration
+        if match and total and total > 0:
+            progress = min(0.99, max(0.0, _time_value(match[1]) / total))
             fps = re.search(r"fps=\s*(\d+(?:\.\d+)?)", text)
             status = f"{stage_mode} | {fps[1]} fps" if fps else stage_mode
             updates.push(progress=progress, status=status)
@@ -363,7 +386,7 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             buffers[name] = ""
         updates.push(status=_("Starting process..."))
         try:
-            duration, expected_streams = _expected_media(source_file, env, duration)
+            duration, expected_streams = _expected_media(source_file, env, duration, destination)
         except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as error:
             # Metadata failure is not proof of input corruption. It does,
             # however, prohibit automatic deletion of the source.
@@ -457,7 +480,7 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
         except (OSError, subprocess.SubprocessError):
             logger.exception("Could not reap conversion process group")
         if not result.success:
-            discard_job_paths(workspace, reservations)
+            discard_job_paths(workspace)
         selector.close()
         for pipe in (process.stdout, process.stderr):
             if pipe and not pipe.closed:

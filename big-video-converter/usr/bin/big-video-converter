@@ -158,13 +158,7 @@ fi
 # a file merely because its name resembles one of our outputs.
 work_dir=$(mktemp -d "${TMPDIR:-/tmp}/bvc.XXXXXXXX") || exit 1
 output_stage_dir=""
-reservations=()
 cleanup() {
-    local path
-    # A reservation still empty was never published, so it is ours to drop.
-    for path in "${reservations[@]}"; do
-        [[ -s $path ]] || rm -f -- "$path"
-    done
     [[ -z $output_stage_dir ]] || rm -rf -- "$output_stage_dir"
     rm -rf -- "$work_dir"
 }
@@ -172,25 +166,14 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-# Claim a destination name before spending any time on the encode. Noclobber
-# gives the same all-or-nothing guarantee as a hard link, without needing a
-# filesystem that supports links: FAT, exFAT and FUSE mounts all refuse
-# link(2), and there the whole finished encode used to be thrown away.
-reserve_name() {
-    if ! (set -C; : > "$1") 2>/dev/null; then
-        echo "ERROR: Refusing to overwrite an existing output: $1" >&2
-        return 1
-    fi
-    reservations+=("$1")
-    # Announced so the supervisor can drop it if this process is killed
-    # outright and never reaches its own cleanup.
-    printf 'Job reservation: %s\n' "$1"
-}
-
-# Renaming over our own reservation is atomic and needs no free space, so a
-# published file is never half-written and never someone else's.
+# The encode happens in a private directory and only a finished file takes the
+# destination name, so a failed or cancelled job never leaves a truncated video
+# where a playable one used to be. Renaming needs no free space, replaces the
+# name atomically, and works on filesystems with no hard links at all. -T is
+# required: without it a destination that is a symlink to a directory would
+# receive the file inside it instead of being replaced.
 publish() {
-    mv -f -- "$1" "$2"
+    mv -fT -- "$1" "$2"
 }
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
@@ -424,8 +407,14 @@ elif [[ ! ${output_file,,} =~ \.(mp4|avi|mkv|mov|wmv|flv|webm|m4v|mpeg|mpg)$ ]];
     output_file+=.mp4
 fi
 [[ $output_file == /* ]] || output_file="$PWD/$output_file"
-# Extracting subtitles writes no video, so it must not claim the video's name.
-[[ $only_extract_subtitles == 1 ]] || reserve_name "$output_file" || exit 1
+# "-ef" compares device and inode through symlinks, so this one test covers
+# every spelling of "the output is the input", including a symlinked path and a
+# hard link. Encoding over the source would destroy it while still reading it.
+if [[ $output_file -ef $input_file ]]; then
+    echo "ERROR: The output file is the same as the input file: $output_file" >&2
+    echo "Choose a different output folder or format." >&2
+    exit 1
+fi
 output_stage_dir=$(mktemp -d -- "${output_file%/*}/.bvc.XXXXXXXX") || exit 1
 printf 'Job workspace: %s\n' "$output_stage_dir"
 staged_output="$output_stage_dir/video.${output_file##*.}"
@@ -468,24 +457,45 @@ if [[ $subtitle_extract == embedded ]]; then
     esac
     while IFS=, read -r index codec_name; do
         [[ $index =~ ^[0-9]+$ ]] || continue
+        # A bitmap subtitle has no text form: keep the rest of the conversion
+        # rather than refusing the whole job over one track.
         if [[ $subtitle_encoder != copy && ! $codec_name =~ ^(subrip|ass|ssa|mov_text|text|webvtt)$ ]]; then
-            echo "ERROR: Cannot preserve subtitle $index ($codec_name) in this container; select MKV or extract subtitles." >&2
-            exit 2
+            echo "Warning: skipping subtitle stream $index ($codec_name): not supported in .${output_file##*.}; select MKV or extract subtitles."
+            continue
         fi
         subtitle_cmd+=(-map "0:$index")
     done <<< "$subtitle_codec_info"
-    [[ ${#subtitle_cmd[@]} -eq 0 ]] || subtitle_cmd+=(-c:s "$subtitle_encoder")
+    if [[ ${#subtitle_cmd[@]} -eq 0 ]]; then
+        defer_subtitles=false
+    else
+        subtitle_cmd+=(-c:s "$subtitle_encoder")
+    fi
 elif [[ $subtitle_extract == extract || $only_extract_subtitles == 1 ]]; then
+    # Names players recognise: "<video>.<lang>.srt", with ".forced" for a
+    # forced track. A repeated language gets a counter from the second track
+    # on, counted per name so two forced tracks no longer land on one file.
+    declare -A sidecar_count=()
     while IFS=, read -r index codec_name; do
         [[ $index =~ ^[0-9]+$ && $codec_name == subrip ]] || continue
-        language_code=und
+        language_code=und forced=0 title=""
         if [[ $ffprobe_usable == true ]]; then
-            language_code=$("$ffprobe_executable" -v error -select_streams "$index" -show_entries stream_tags=language -of default=nw=1:nk=1 "$input_file") || exit 2
+            stream_info=$("$ffprobe_executable" -v error -select_streams "$index" -show_entries stream_disposition=forced:stream_tags=language,title -of default=nw=1 "$input_file") || exit 2
+            while IFS="=" read -r key value; do
+                case $key in
+                TAG:language) language_code=$value ;;
+                TAG:title) title=$value ;;
+                DISPOSITION:forced) forced=$value ;;
+                esac
+            done <<< "$stream_info"
             [[ $language_code =~ ^[a-zA-Z]{2,3}$ ]] || language_code=und
         fi
+        suffix=""
+        [[ $forced == 1 || $title == *"(Forced)"* ]] && suffix=.forced
+        count=$(( ${sidecar_count[$language_code$suffix]:-0} + 1 ))
+        sidecar_count[$language_code$suffix]=$count
+        [[ $count -eq 1 ]] || language_code+="$count"
         sidecar="$output_stage_dir/subtitle-$index.srt"
-        destination="${output_file%.*}.${language_code}.s${index}.srt"
-        reserve_name "$destination" || exit 1
+        destination="${output_file%.*}.$language_code$suffix.srt"
         subtitle_cmd+=(-map "0:$index" -c:s copy "${subtitle_packet_options[@]}" "$sidecar")
         subtitle_outputs+=("$sidecar")
         subtitle_destinations+=("$destination")
@@ -579,8 +589,9 @@ if [[ $noise_reduction == "1" ]]; then
 		echo "Noise reduction enabled: strength=${noise_strength} model=${noise_model}"
 		nr_requires_mono=true
 	else
-		echo "ERROR: Noise reduction requested but GTCRN LADSPA plugin not found at /usr/lib/ladspa/libgtcrn_ladspa.so" >&2
-        exit 2
+		# The other audio filters still apply; refusing the job over a
+		# missing optional plugin would block every conversion instead.
+		echo "WARNING: Noise reduction requested but GTCRN LADSPA plugin not found at /usr/lib/ladspa/libgtcrn_ladspa.so"
 	fi
 fi
 
@@ -1019,7 +1030,7 @@ function build_encoder_commands() {
 # If gpu = auto change gpu to empty
 gpu=${gpu/auto/}
 
-# Encode to an owned staging file. Existing user files are never overwritten.
+# Encode to a staging file this job owns.
 ffmpeg_generic_options=(-y "$staged_output")
 case ${output_file##*.} in
 mp4|mov|m4v|MP4|MOV|M4V) ffmpeg_generic_options=(-movflags +faststart -y "$staged_output") ;;
@@ -1245,9 +1256,11 @@ function attempt_conversion() {
 		if run_ffmpeg -y "${subtitle_input_options[@]}" -i "$input_file" "${subtitle_cmd[@]}"; then
 			subtitles_already_extracted=true
 		else
-			echo "ERROR: Subtitle extraction failed" >&2
-            exit_code=2
-            return
+			# The video is the job; a missing sidecar is not worth discarding it.
+			echo "Warning: Subtitle extraction failed (non-critical, continuing with conversion)"
+			subtitle_outputs=()
+			subtitle_destinations=()
+			subtitles_already_extracted=true
 		fi
 	fi
 
@@ -1512,7 +1525,11 @@ fi
 # extend the A/V output. The first pass intentionally omitted subtitle streams.
 if [[ $defer_subtitles == true ]]; then
     with_subtitles="$output_stage_dir/subtitled.${output_file##*.}"
-    run_ffmpeg -i "$staged_output" "${subtitle_input_options[@]}" -i "$input_file"         -map 0:v:0 -map '0:a?' -map '1:s?' -map_metadata 0 -map_chapters 0         -c copy -c:s "$subtitle_encoder" "${subtitle_packet_options[@]}" -y "$with_subtitles" || exit $?
+    # The same selection as the first pass, re-aimed at the original as input 1.
+    # "-c copy" comes first so the per-stream subtitle encoder still wins.
+    run_ffmpeg -i "$staged_output" "${subtitle_input_options[@]}" -i "$input_file" \
+        -map 0:v:0 -map '0:a?' -map_metadata 0 -map_chapters 0 -c copy \
+        "${subtitle_cmd[@]/#0:/1:}" "${subtitle_packet_options[@]}" -y "$with_subtitles" || exit $?
     staged_output=$with_subtitles
 fi
 

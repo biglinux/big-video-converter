@@ -10,7 +10,7 @@ import tempfile
 import time
 
 from utils.ffmpeg_path import get_ffmpeg_executable
-from utils.media_validation import probe_media, publish_output, terminate_process_group
+from utils.media_validation import probe_media, terminate_process_group
 
 logger = logging.getLogger(__name__)
 _TIMECODE = r"\d{2,}:\d{2}:\d{2},\d{3}"
@@ -86,13 +86,25 @@ class SubtitleProcessor:
 
     def process(self):
         embedded = []
+        # Same naming as the conversion script: "<lang>[N][.forced]", counted
+        # per name so neither a repeated language nor two forced tracks of one
+        # language end up writing to the same sidecar.
+        seen = {}
         for stream in self._get_subtitle_streams():
             self._check_cancelled()
             index = stream["index"]
-            language = stream.get("tags", {}).get("language") or "und"
+            tags = stream.get("tags", {})
+            language = tags.get("language") or "und"
+            if not re.fullmatch(r"[A-Za-z]{2,3}", language):
+                language = "und"
+            forced = (stream.get("disposition", {}).get("forced") == 1
+                      or "(Forced)" in tags.get("title", ""))
+            key = (language, forced)
+            seen[key] = count = seen.get(key, 0) + 1
+            name = f"{language}{count if count > 1 else ''}{'.forced' if forced else ''}"
             content = self._merge_subtitle_stream(index, language)
             if content:
-                output = self._save_merged_subtitles(content, language, index)
+                output = self._save_merged_subtitles(content, name)
                 self.created_files.append(output)
                 if self.subtitle_mode == "embedded":
                     embedded.append((output, language))
@@ -164,29 +176,21 @@ class SubtitleProcessor:
     def _seconds_to_timecode(self, seconds):
         return _format_timecode(_milliseconds(seconds))
 
-    def _save_merged_subtitles(self, content, language, stream_index=0):
+    def _save_merged_subtitles(self, content, name):
         self._check_cancelled()
-        language = language if re.fullmatch(r"[A-Za-z]{2,3}", language) else "und"
         folder = self.temp_dir if self.subtitle_mode == "embedded" else self.output_folder
         basename = "merged" if self.subtitle_mode == "embedded" else os.path.splitext(self.output_basename)[0]
-        stem = f"{basename}.{language}.s{int(stream_index)}"
+        destination = os.path.join(folder, f"{basename}.{name}.srt")
         fd, staged = tempfile.mkstemp(prefix=".bvc-subtitle-", suffix=".srt", dir=folder)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as file:
                 file.write(content)
                 file.flush()
                 os.fsync(file.fileno())
-            for counter in range(10000):
-                suffix = "" if counter == 0 else f"_{counter}"
-                destination = os.path.join(folder, f"{stem}{suffix}.srt")
-                try:
-                    publish_output(staged, destination)
-                    return destination
-                except FileExistsError:
-                    continue
-            raise FileExistsError("Could not reserve a subtitle output")
+            # A finished file takes the name in one rename, so an interrupted
+            # run cannot leave a half-written sidecar where a good one was.
+            os.replace(staged, destination)
+            return destination
         finally:
-            # Publication renames the staged file into place, so on success
-            # there is nothing left here to remove.
             if os.path.lexists(staged):
                 os.unlink(staged)

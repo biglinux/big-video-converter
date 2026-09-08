@@ -292,18 +292,12 @@ def publish_output(staged: str, destination: str) -> None:
         raise
 
 
-def discard_job_paths(workspace: str | None = None, reservations=()) -> None:
-    """Drop leftovers a killed job announced as its own.
+def discard_job_paths(workspace: str | None = None) -> None:
+    """Drop the private workspace a killed job announced as its own.
 
-    Waiting longer for a child to tidy up is a guess; checking what it left
-    behind is not. Only a name the job reserved and never filled is removed,
-    so a real file that happens to share the name is safe.
+    Waiting longer for a child to tidy up is a guess; removing the directory
+    it told us about is not. The name is checked so a malformed announcement
+    cannot point this at anything else.
     """
-    for path in reservations:
-        try:
-            if os.path.getsize(path) == 0:
-                os.unlink(path)
-        except OSError:
-            pass
     if workspace and os.path.basename(workspace).startswith(".bvc."):
         shutil.rmtree(workspace, ignore_errors=True)

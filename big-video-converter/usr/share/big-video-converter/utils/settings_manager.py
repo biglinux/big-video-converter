@@ -176,14 +176,19 @@ class SettingsManager:
         logger.debug(f"Loaded settings from: {self.settings_file}")
 
     def save_to_disk(self) -> bool:
-        """Atomically replace settings; preserve only a known-good backup."""
+        """Atomically replace settings; preserve only a known-good backup.
+
+        This runs on the GTK thread for every keystroke in the output-folder
+        entry, so the backup is a rename of the file that is being replaced
+        anyway — copying and syncing it a second time doubled the cost of
+        typing. A rename leaves `.bak` as exactly the last published file, and
+        load_from_disk already falls back to it.
+        """
         try:
             data = json.dumps(self.settings, indent=2, ensure_ascii=False, allow_nan=False)
-            old = self._read_file(self.settings_file)
-            if old is not None:
+            if self._read_file(self.settings_file) is not None:
                 try:
-                    self._atomic_write(self.settings_file + ".bak", json.dumps(
-                        old, indent=2, ensure_ascii=False, allow_nan=False))
+                    os.replace(self.settings_file, self.settings_file + ".bak")
                 except OSError as error:
                     logger.warning("Could not refresh settings backup: %s", error)
             self._atomic_write(self.settings_file, data)
@@ -330,8 +335,12 @@ class SettingsManager:
             for key, value in profile.items():
                 if key in ("_app", "_profile_version"):
                     continue
+                # A setting this build does not know is never read, so skipping
+                # it lets a profile written by a newer version still import its
+                # shared keys. Values that ARE used stay strictly validated.
                 if key not in self.DEFAULT_VALUES:
-                    raise ValueError("Unknown profile setting: " + key)
+                    logger.info("Ignoring unknown profile setting: %s", key)
+                    continue
                 # Older profiles contained these fields. Ignore them without ever
                 # copying deletion flags, device IDs, file paths or preview state.
                 if key in self._PROFILE_EXCLUDE_KEYS:

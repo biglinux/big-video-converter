@@ -100,14 +100,15 @@ shellcheck -S warning big-video-converter/usr/bin/big-video-converter
 # Native widgets and the real application, with a private D-Bus session/display:
 export XDG_RUNTIME_DIR="$(mktemp -d)"
 chmod 700 "$XDG_RUNTIME_DIR"
-LIBGL_ALWAYS_SOFTWARE=1 GSK_RENDERER=ngl \
+LIBGL_ALWAYS_SOFTWARE=1 GSK_RENDERER=opengl \
   xvfb-run -a -s '-screen 0 1440x1000x24' \
   dbus-run-session -- /usr/bin/python3 -m pytest -q tests
 rm -rf "$XDG_RUNTIME_DIR"
 ```
 
-The suite creates its own small media fixtures. Native GTK tests skip when no
-DISPLAY exists. Subprocess supervision uses real GLib with lightweight UI doubles;
+The suite creates its own small media fixtures. Native GTK tests skip only
+when neither DISPLAY nor WAYLAND_DISPLAY is set, so they also run inside a
+nested Wayland session instead of being silently dropped there. Subprocess supervision uses real GLib with lightweight UI doubles;
 `test_gtk.py` separately opens the actual application/dialogs and performs a
 conversion with a real progress row. MPV property/cache regressions also use
 controlled property doubles; those are not a pixel-quality comparison.

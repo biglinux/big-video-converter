@@ -68,13 +68,21 @@ def test_legacy_profile_cannot_enable_deletion(settings, tmp_path):
     assert settings.get_string('video-codec') == 'h265'
 
 
+def test_import_ignores_a_setting_this_build_does_not_know(settings, tmp_path):
+    """A profile from a newer build still imports the keys both versions share."""
+    path = write_profile(tmp_path, **{'audio-codec': 'opus', 'future-setting': 1})
+    assert settings.import_profile(str(path))
+    assert settings.get_string('audio-codec') == 'opus'
+    assert 'future-setting' not in settings.settings
+
+
 @pytest.mark.parametrize('key,value', [
     ('video-codec', 'unknown'), ('output-format-index', 99), ('output-format-index', True),
     ('noise-reduction', 'false'), ('noise-reduction-strength', math.nan),
     ('noise-lookahead', -1), ('hpf-frequency', 0), ('audio-channels', '2;rm'),
     ('audio-channels', '0'), ('audio-bitrate', 'anything'), ('video-resolution', '123x0'),
     ('eq-bands', '0,0'), ('eq-bands', '0,0,0,0,0,0,0,0,0,nan'),
-    ('additional-options', 'extra-output.mp4'), ('future-setting', 1),
+    ('additional-options', 'extra-output.mp4'),
     ('_profile_version', 2), ('_profile_version', True), ('_app', 'other'),
 ])
 def test_import_invalid_is_transactional(settings, tmp_path, key, value):
