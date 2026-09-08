@@ -279,6 +279,7 @@ class VideoConverterApp(
         """Create the main application window and UI components"""
         # Create main window
         self.window = Adw.ApplicationWindow(application=self)
+        self.window.add_css_class("big-video-converter")
 
         # Set minimum window size to prevent controls from being cut off
         # Left sidebar (300px) + right content (620px) = 920px minimum width
