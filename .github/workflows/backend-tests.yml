@@ -25,6 +25,9 @@ jobs:
       DEBIAN_FRONTEND: noninteractive
       LIBGL_ALWAYS_SOFTWARE: '1'
       GDK_BACKEND: x11
+      # "opengl" is the name GTK 4.18 accepts without a legacy warning; "ngl"
+      # is rejected there. The accessibility bus stays enabled on purpose,
+      # rather than hiding its D-Bus warning with GTK_A11Y=none.
       GSK_RENDERER: opengl
       PYTHONUNBUFFERED: '1'
       PYTHONFAULTHANDLER: '1'
