@@ -25,7 +25,7 @@ jobs:
       DEBIAN_FRONTEND: noninteractive
       LIBGL_ALWAYS_SOFTWARE: '1'
       GDK_BACKEND: x11
-      GSK_RENDERER: gl
+      GSK_RENDERER: opengl
       PYTHONUNBUFFERED: '1'
       PYTHONFAULTHANDLER: '1'
     steps:

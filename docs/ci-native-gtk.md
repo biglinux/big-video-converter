@@ -22,6 +22,8 @@ four absent-schema prerequisites, five existing layouts, and real application
 startup in a fresh subprocess with empty schema search paths. The normal CI
 container includes desktop schemas and the AT-SPI accessibility bus; the fresh
 subprocess explicitly verifies behavior without the GNOME schema.
+Three additional [callback-exception guard tests](ci-callback-errors.md) bring
+the required minimum to 141 cases, with zero failures, errors or skips.
 
 Run [34190837897](https://github.com/biglinux/big-video-converter/actions/runs/34190837897)
 reported 138 passed and zero skipped, but its native log exposed an additional
@@ -42,11 +44,11 @@ callbacks or native stderr are clean.
 | Debian and PyGObject | Use Debian's Python with matching GI modules and explicit APT dependencies. Record installed package versions instead of assuming the moving image/APT repositories are fully locked. | [APT](https://manpages.debian.org/trixie/apt/apt-get.8.en.html), [PyGObject setup](https://pygobject.gnome.org/getting_started.html) |
 | GSettings and AT-SPI | Install the normal desktop prerequisites and check their availability. Separately test missing schemas in a fresh process. The gsettings CLI belongs to libglib2.0-bin; a Python GI installation does not imply that executable is present. | [gsettings executable package](https://packages.debian.org/trixie/amd64/libglib2.0-bin/filelist), [at-spi2-core dependencies](https://packages.debian.org/trixie/at-spi2-core) |
 | Xvfb and D-Bus | Install xauth, choose a free X display, expose Xvfb stderr and run a private D-Bus session. Retain wrapper/test failure status. | [xvfb-run](https://manpages.debian.org/trixie/xvfb/xvfb-run.1.en.html), [dbus-run-session](https://dbus.freedesktop.org/doc/dbus-run-session.1.html) |
-| GTK and Mesa | Set X11 for Xvfb, the documented gl renderer, and Mesa software rendering. Keep the accessibility bus enabled rather than setting GTK_A11Y=none. | [GTK runtime](https://docs.gtk.org/gtk4/running.html), [Mesa environment variables](https://docs.mesa3d.org/envvars.html) |
+| GTK and Mesa | Set X11 for Xvfb, GSK_RENDERER=opengl and Mesa software rendering. The opengl name is accepted without a legacy warning in the actual GTK 4.18.6 source. Keep the accessibility bus enabled rather than setting GTK_A11Y=none. | [GTK 4.18.6 renderer selection](https://github.com/GNOME/gtk/blob/4.18.6/gsk/gskrenderer.c), [GTK runtime](https://docs.gtk.org/gtk4/running.html), [Mesa environment variables](https://docs.mesa3d.org/envvars.html) |
 | Runtime files | Use a private XDG_RUNTIME_DIR with mode 0700 and remove only that directory on exit. | [XDG Base Directory specification](https://specifications.freedesktop.org/basedir/latest/) |
 | pytest and native diagnostics | Verbose test IDs plus tee-sys keep Python output and native stderr visible. Outer tee saves the log; Bash pipefail preserves a failing test's exit status. | [pytest capture](https://docs.pytest.org/en/stable/how-to/capture-stdout-stderr.html), [Bash](https://www.gnu.org/software/bash/manual/html_node/Pipelines.html) |
 | Python fault handlers | Enable faulthandler, but do not rely on it alone for SIGTRAP: that signal is not in Python 3.13's default handler set. Preserve GLib's error output. | [faulthandler](https://docs.python.org/3.13/library/faulthandler.html) |
-| JUnit and artifacts | Require pytest success plus at least 138 cases with zero errors, failures or skips. Report after test success/failure but not cancellation; retain XML, test logs and package/revision logs for 14 days. | [pytest JUnit](https://docs.pytest.org/en/8.3.x/how-to/output.html), [status expressions](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions), [artifacts](https://github.com/actions/upload-artifact/tree/v7.0.1) |
+| JUnit and artifacts | Require pytest success plus at least 141 cases with zero errors, failures or skips. Report after test success/failure but not cancellation; retain XML, test logs and package/revision logs for 14 days. | [pytest JUnit](https://docs.pytest.org/en/8.3.x/how-to/output.html), [status expressions](https://docs.github.com/en/actions/reference/workflows-and-actions/expressions), [artifacts](https://github.com/actions/upload-artifact/tree/v7.0.1) |
 | Syntax checks | bash -n, ShellCheck and compileall are preliminary checks, not substitutes for media/native runtime tests. | [ShellCheck](https://manpages.debian.org/trixie/shellcheck/shellcheck.1.en.html), [compileall](https://docs.python.org/3.13/library/compileall.html) |
 | Media and process supervision | Retain real FFmpeg/FFprobe fixtures and GLib supervision tests. Commands use argv, with explicit process/timeouts and stream validation contracts. | [FFmpeg](https://ffmpeg.org/ffmpeg.html), [FFprobe](https://ffmpeg.org/ffprobe.html), [subprocess](https://docs.python.org/3.13/library/subprocess.html), [PyGObject threading](https://pygobject.gnome.org/guide/threading.html) |
 | Delayed callbacks and test doubles | A GLib timeout runs on its main context and stops on SOURCE_REMOVE. Test doubles that bypass __init__ must supply the fields actually used; drive the context to verify completion within the owning test. | [GLib.timeout_add](https://docs.gtk.org/glib/func.timeout_add.html), [Python object construction](https://docs.python.org/3.13/reference/datamodel.html#object.__new__) |
@@ -59,6 +61,19 @@ callbacks or native stderr are clean.
 - [SettingsSchema.get_path](https://docs.gtk.org/gio/method.SettingsSchema.get_path.html): fixed versus relocatable schema.
 - [Settings.new_full](https://docs.gtk.org/gio/ctor.Settings.new_full.html): a relocatable schema requires an explicit path.
 - [GLib.error](https://docs.gtk.org/glib/func.error.html): fatal errors terminate the process, not a Python try/except path.
+
+## Match documentation to the installed version
+
+Run [34191635693](https://github.com/biglinux/big-video-converter/actions/runs/34191635693)
+passed all 141 cases but emitted a native warning about the removed old GL renderer.
+The current online GTK manual documents a newer release; its gl entry did not
+explain the compatibility warning in Debian's GTK 4.18.6. Reading
+`get_renderer_for_name()` in the exact upstream 4.18.6 source confirmed that
+opengl and ngl select GSK_TYPE_GL_RENDERER directly, while gl selects that same
+type after issuing a warning. The workflow now uses opengl, not a warning filter
+or a different renderer. This is a test-environment setting, not a system-wide
+or application-wide user preference. Library environment variables are not a
+stable public configuration API, so recheck them when upgrading the CI image.
 
 ## Scope and limitations
 
