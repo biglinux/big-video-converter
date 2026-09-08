@@ -11,11 +11,11 @@ is included.
   have known arity; positional inputs/outputs, incomplete flags and unknown
   options are rejected by the same parser in the GUI and the Bash backend.
 * Input/output paths are explicit. Each job owns private temporary directories.
-  A destination name is claimed with an exclusive create before the encode
-  starts and published by renaming over that claim, so publication cannot
-  overwrite another job's output, a symlink or the original, cannot fail for
-  lack of space after the work is done, and does not need a filesystem that
-  supports hard links.
+  The encode goes to a private staging file and only a finished file takes the
+  destination name, in a single rename: a failed or cancelled job never leaves
+  a truncated video where a playable one was, publication needs no free space
+  and no filesystem support for hard links, and the output can never be the
+  input under any spelling of the path.
 * A zero exit code and a non-empty file do not by themselves mean success.
   The supervisor checks the output's stream inventory, and its video duration
   against the requested interval. A duration that cannot be confirmed is
@@ -45,9 +45,11 @@ seeking past overlapping cues. FFmpeg's `noise` bitstream filter uses `amount=0`
 rebases packet timestamps. Finite validated numbers, not arbitrary expressions
 from an imported profile, are used to construct these filters.
 
-SRT sidecars have stream IDs in their names, are extracted once per stream for
-joined segments, include cues intersecting cut boundaries, and are renumbered
-in milliseconds after clipping. The batch has one result, not one successful
+SRT sidecars keep the `<video>.<lang>[N][.forced].srt` names players look for,
+with the repeat counter kept per name so two forced tracks of one language no
+longer overwrite each other. They are extracted once per stream for joined
+segments, include cues intersecting cut boundaries, and are renumbered in
+milliseconds after clipping. The batch has one result, not one successful
 notification per stage. Failure/cancellation prevents the next stage.
 
 FFprobe metadata uses named JSON fields for validation. Requested video filters
@@ -66,17 +68,23 @@ the dialog closes. Selecting Custom during a manual EQ edit does not reset the
 other bands.
 
 Profile JSON remains compatible with the existing format, but imports are
-validated before changing settings and reject unknown data/version/type/ranges.
+validated before changing settings and reject an unsupported version or a
+value of the wrong type or range. A key this build does not know is skipped
+with a log, so a profile from a newer version still imports the rest.
 Portable profiles do not carry deletion preferences or machine/window/preview
 state. Settings use XDG_CONFIG_HOME, unique atomic temporary files and a
 known-good backup; nested batch/suspension scopes preserve their previous state.
 
 ## Intentional behavior changes
 
-1. The CLI refuses an existing destination instead of overwriting with `-y`.
+1. The CLI still overwrites the destination it was told to write, but only with
+   a finished file, and it refuses when that destination is the input.
 2. Invalid additional-option grammar fails before starting FFmpeg.
-3. Missing GTCRN, failed channel processing or missing processed tracks fail the
-   requested operation rather than silently producing degraded success.
+3. Failed channel processing or missing processed tracks fail the requested
+   operation rather than silently producing degraded success. A missing GTCRN
+   plugin only warns: it is optional, and the other audio filters still apply.
+   A subtitle stream the container cannot carry, and a failed sidecar
+   extraction, likewise warn and leave the video conversion alone.
 4. Any check that cannot be completed keeps the original and reports the reason.
 5. Timeline overrides (`-copyts`, `-itsoffset`, `-sseof`, `-start_at_zero`) cannot
    be combined with ordinary subtitle clipping: that combination fails clearly
@@ -108,7 +116,8 @@ rm -rf "$XDG_RUNTIME_DIR"
 
 The suite creates its own small media fixtures. Native GTK tests skip only
 when neither DISPLAY nor WAYLAND_DISPLAY is set, so they also run inside a
-nested Wayland session instead of being silently dropped there. Subprocess supervision uses real GLib with lightweight UI doubles;
+nested Wayland session instead of being silently dropped there. Subprocess
+supervision uses real GLib with lightweight UI doubles;
 `test_gtk.py` separately opens the actual application/dialogs and performs a
 conversion with a real progress row. MPV property/cache regressions also use
 controlled property doubles; those are not a pixel-quality comparison.
