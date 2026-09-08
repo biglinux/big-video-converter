@@ -169,9 +169,17 @@ def test_crop_is_reapplied_after_preview_filter_clear():
     player.mpv_instance=Properties(existing=True)
     player.crop_left=10;player.crop_right=10;player.crop_top=2;player.crop_bottom=2
     player._crop_applied=False
+    # __new__ bypasses initialization: provide the fields used by the real
+    # deferred callback rather than leaking an incomplete double to GLib.
+    rendered=[]
+    player.render_context=object()
+    player.video_widget=SimpleNamespace(queue_render=lambda:rendered.append(True))
     player.set_crop(10,10,2,2)
     assert player.mpv_instance['video-crop']=='108x68+10+2'
     assert player._crop_applied
+    until(lambda:bool(rendered))
+    pump(.12)
+    assert rendered==[True]
 
 
 def test_native_progress_row_updates_and_completes(app,media,tmp_path,cli_env):
