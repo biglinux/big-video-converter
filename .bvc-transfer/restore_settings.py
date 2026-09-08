@@ -1,8 +1,8 @@
-"""Recover the settings and metadata edits omitted by the interrupted upload.
+"""Recover only settings edits omitted by the interrupted upload.
 
-This recovery helper is temporary. Its generated source must pass the manifest
-check and the full regression suite before it can be published to the PR branch.
-The newly recovered files are not claimed to match unavailable local bytes.
+Metadata, GPU and filter fixes belong to restore_ui.py and are not replayed
+here. The reconstructed settings source must be reviewed and retested; it is
+not claimed to match the unavailable earlier local implementation byte-for-byte.
 """
 from pathlib import Path
 import ast
@@ -54,7 +54,6 @@ replace_method('save_to_disk', '''
 def save_to_disk(self) -> bool:
     """Atomically replace settings; preserve only a known-good backup."""
     try:
-        # Serialize first so invalid in-memory values cannot modify either file.
         data = json.dumps(self.settings, indent=2, ensure_ascii=False, allow_nan=False)
         old = self._read_file(self.settings_file)
         if old is not None:
@@ -263,35 +262,5 @@ SettingsManager._PROFILE_EXCLUDE_KEYS.update(
     key for key in SettingsManager.DEFAULT_VALUES if key.startswith("preview-")
 )
 '''
-ast.parse(s)
-p.write_text(s, encoding='utf-8')
-
-# Metadata lookup must not mutate the global locale used by GTK and libmpv.
-p = R / 'utils/file_info.py'
-s = p.read_text(encoding='utf-8')
-a = s.index('                        # Try to get the full language name')
-b = s.index('                        expander.add_row(lang_row)', a)
-s = s[:a] + '''                        # Display the stream's language code without changing
-                        # the process-wide locale (shared with GTK and libmpv).
-
-''' + s[b:]
-ast.parse(s)
-p.write_text(s, encoding='utf-8')
-
-# NVENC has no VP9 encoder; compiled encoder listings cannot create one.
-p = R / 'utils/gpu_selector.py'
-s = p.read_text(encoding='utf-8')
-assert s.count('        "vp9": "vp9_nvenc",\n') == 1
-s = s.replace('        "vp9": "vp9_nvenc",\n', '')
-p.write_text(s, encoding='utf-8')
-
-# Never drop user crop/colour/rotation filters just because the source is
-# 10-bit HEVC. The conversion supervisor already probes named JSON fields.
-p = R / 'utils/video_settings.py'
-s = p.read_text(encoding='utf-8')
-a = s.index('    is_hevc_10bit_to_h264 = False')
-b = s.index('    # 1. Add crop filter', a)
-s = s[:a] + s[b:]
-s = s.replace('from utils.ffmpeg_path import get_ffprobe_executable\n\n', '')
 ast.parse(s)
 p.write_text(s, encoding='utf-8')

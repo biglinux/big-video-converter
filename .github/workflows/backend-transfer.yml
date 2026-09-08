@@ -26,13 +26,17 @@ jobs:
     steps:
       - name: Install isolated runner dependencies
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
+          if ! { apt-get update && apt-get install -y --no-install-recommends \
             git ca-certificates bash shellcheck ffmpeg python3 python3-pytest \
             python3-gi python3-gi-cairo python3-cairo python3-mpv \
             python3-opengl python3-numpy python3-polib \
             gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-vte-3.91 \
-            libmpv2 libgl1-mesa-dri libegl1 xauth xvfb dbus-x11
+            libmpv2 libgl1-mesa-dri libegl1 xauth xvfb dbus-x11; \
+            } > /tmp/bvc-apt.log 2>&1; then
+            tail -n 100 /tmp/bvc-apt.log
+            exit 1
+          fi
+          echo 'Dependency installation completed.'
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
