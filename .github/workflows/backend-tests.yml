@@ -31,6 +31,7 @@ jobs:
             git ca-certificates bash shellcheck ffmpeg python3 python3-pytest \
             python3-gi python3-gi-cairo python3-cairo python3-mpv \
             python3-opengl python3-numpy python3-polib \
+            gsettings-desktop-schemas at-spi2-core \
             gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-vte-3.91 \
             libmpv2 libgl1-mesa-dri libegl1 xauth xvfb dbus-x11; \
             } > /tmp/bvc-apt.log 2>&1; then
@@ -48,17 +49,25 @@ jobs:
       - name: Check Python syntax
         run: |
           python3 -m compileall -q big-video-converter/usr/share/big-video-converter tests
+      - name: Check native desktop prerequisites
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from gi.repository import Gio
+          source = Gio.SettingsSchemaSource.get_default()
+          schema = source.lookup('org.gnome.desktop.wm.preferences', True) if source else None
+          if schema is None or not schema.has_key('button-layout'):
+              raise SystemExit('Missing desktop button-layout schema: install gsettings-desktop-schemas.')
+          service = Path('/usr/share/dbus-1/services/org.a11y.Bus.service')
+          if not service.is_file():
+              raise SystemExit('Missing accessibility bus service: install at-spi2-core.')
+          print('Desktop schema and accessibility bus service are available.')
+          PY
       - name: Test real media, cancellation and native GTK
         run: |
           export XDG_RUNTIME_DIR="$(mktemp -d)"
           trap 'rm -rf "$XDG_RUNTIME_DIR"' EXIT
           chmod 700 "$XDG_RUNTIME_DIR"
-          python3 - <<'PY'
-          from gi.repository import Gio
-          source = Gio.SettingsSchemaSource.get_default()
-          schema = source.lookup('org.gnome.desktop.wm.preferences', True) if source else None
-          print('GNOME window-manager settings schema installed:', schema is not None)
-          PY
           xvfb-run -a -s '-screen 0 1440x1000x24' \
             dbus-run-session -- python3 -X faulthandler -m pytest -vv --capture=tee-sys tests --junitxml=results.xml
       - name: Report regression coverage without silently skipped tests
