@@ -18,10 +18,14 @@ jobs:
     runs-on: ubuntu-24.04
     container: debian:13-slim
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
     env:
       DEBIAN_FRONTEND: noninteractive
       LIBGL_ALWAYS_SOFTWARE: '1'
-      GSK_RENDERER: ngl
+      GDK_BACKEND: x11
+      GSK_RENDERER: gl
       PYTHONUNBUFFERED: '1'
       PYTHONFAULTHANDLER: '1'
     steps:
@@ -39,9 +43,20 @@ jobs:
             exit 1
           fi
           echo 'Dependency installation completed.'
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Record the tested revision and installed versions
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          {
+            printf 'Checked-out commit: '; git rev-parse HEAD
+            printf 'Checked-out tree: '; git rev-parse 'HEAD^{tree}'
+            python3 --version
+            python3 -m pytest --version
+            ffmpeg -version
+            dpkg-query -W
+          } 2>&1 | tee ci-versions.log
       - name: Check shell syntax and safety
         run: |
           bash -n big-video-converter/usr/bin/big-video-converter
@@ -55,7 +70,7 @@ jobs:
           from pathlib import Path
           from gi.repository import Gio
           source = Gio.SettingsSchemaSource.get_default()
-          schema = source.lookup('org.gnome.desktop.wm.preferences', True) if source else None
+          schema = source.lookup('org.gnome.desktop.wm.preferences', True) if source is not None else None
           if schema is None or not schema.has_key('button-layout'):
               raise SystemExit('Missing desktop button-layout schema: install gsettings-desktop-schemas.')
           service = Path('/usr/share/dbus-1/services/org.a11y.Bus.service')
@@ -64,14 +79,18 @@ jobs:
           print('Desktop schema and accessibility bus service are available.')
           PY
       - name: Test real media, cancellation and native GTK
+        id: tests
         run: |
           export XDG_RUNTIME_DIR="$(mktemp -d)"
-          trap 'rm -rf "$XDG_RUNTIME_DIR"' EXIT
+          trap 'rm -rf -- "$XDG_RUNTIME_DIR"' EXIT
           chmod 700 "$XDG_RUNTIME_DIR"
-          xvfb-run -a -s '-screen 0 1440x1000x24' \
-            dbus-run-session -- python3 -X faulthandler -m pytest -vv --capture=tee-sys tests --junitxml=results.xml
+          # Explicit bash uses -eo pipefail: tee cannot turn a test failure green.
+          # tee-sys leaves native stderr visible even if GLib terminates Python.
+          xvfb-run -a -e /dev/stderr -s '-screen 0 1440x1000x24' \
+            dbus-run-session -- python3 -X faulthandler -m pytest \
+              -vv --capture=tee-sys tests --junitxml=results.xml 2>&1 | tee pytest.log
       - name: Report regression coverage without silently skipped tests
-        if: always()
+        if: ${{ !cancelled() && (steps.tests.outcome == 'success' || steps.tests.outcome == 'failure') }}
         run: |
           python3 - <<'PY'
           import json
@@ -80,7 +99,7 @@ jobs:
           from pathlib import Path
           report = Path('results.xml')
           if not report.is_file():
-              raise SystemExit('No test report: prerequisite or test execution failed.')
+              raise SystemExit('Tests did not finish: inspect pytest.log and the native diagnostics.')
           root = ET.parse(report).getroot()
           suites = [root] if root.tag == 'testsuite' else list(root.iter('testsuite'))
           counts = {key: sum(int(s.get(key, 0)) for s in suites)
@@ -89,6 +108,17 @@ jobs:
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
               f.write('### Backend / GTK regression results\n\n```json\n'
                       + json.dumps(counts, indent=2) + '\n```\n')
-          if counts['tests'] < 128 or any(counts[k] for k in ('failures', 'errors', 'skipped')):
-              raise SystemExit('Expected at least 128 passing regressions with no skipped tests.')
+          if counts['tests'] < 138 or any(counts[k] for k in ('failures', 'errors', 'skipped')):
+              raise SystemExit('Expected at least 138 passing regressions with no skipped tests.')
           PY
+      - name: Preserve regression diagnostics
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-regression-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            results.xml
+            pytest.log
+            ci-versions.log
+          retention-days: 14
+          if-no-files-found: warn
