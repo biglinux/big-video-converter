@@ -67,7 +67,9 @@ def test_available_desktop_schema_preserves_button_layout(main_module, monkeypat
     settings.get_string.assert_called_once_with("button-layout")
 
 
-@pytest.mark.skipif(not os.environ.get("DISPLAY"), reason="Requires Xvfb or an X11 display")
+@pytest.mark.skipif(
+    not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")),
+    reason="Requires an X11 or Wayland display")
 def test_real_application_opens_with_no_gnome_schemas(tmp_path):
     """Use a fresh process because GLib caches the schema source globally."""
     empty = tmp_path / "empty-schemas"

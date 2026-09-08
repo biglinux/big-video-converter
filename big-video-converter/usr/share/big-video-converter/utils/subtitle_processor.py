@@ -186,4 +186,7 @@ class SubtitleProcessor:
                     continue
             raise FileExistsError("Could not reserve a subtitle output")
         finally:
-            os.unlink(staged)
+            # Publication renames the staged file into place, so on success
+            # there is nothing left here to remove.
+            if os.path.lexists(staged):
+                os.unlink(staged)

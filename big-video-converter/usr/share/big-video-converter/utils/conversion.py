@@ -7,7 +7,6 @@ import logging
 import os
 import re
 import selectors
-import shlex
 import subprocess
 import threading
 import time
@@ -17,8 +16,9 @@ from gi.repository import GLib
 from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
 from utils.ffmpeg_options import parse_additional_options
 from utils.media_validation import (
-    ConversionResult, FileIdentity, media_duration, probe_media, stream_count,
-    terminate_process_group, trash_original, validate_output,
+    ConversionResult, FileIdentity, OutputDurationMismatch, discard_job_paths,
+    media_duration, probe_media, remove_original, stream_count,
+    terminate_process_group, validate_output,
 )
 
 logger = logging.getLogger(__name__)
@@ -318,10 +318,19 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
     stage_mode = _("Software encoding")
     warning_shown = False
     monitor_error = None
+    encoded_frames = None
+    workspace = None
+    reservations = []
 
     def consume(text, source):
-        nonlocal duration, stage_mode
+        nonlocal duration, stage_mode, encoded_frames, workspace
         updates.push(text=text)
+        # The script announces the paths it owns, so a job killed before its
+        # own cleanup leaves nothing for the user to find and wonder about.
+        if text.startswith("Job workspace:"):
+            workspace = text.partition(":")[2].strip()
+        elif text.startswith("Job reservation:"):
+            reservations.append(text.partition(":")[2].strip())
         if source == "stderr":
             stderr_tail.append(text.strip())
         if text.startswith("Running command:"):
@@ -333,6 +342,11 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                 "Decode Software, Encode GPU": _("Software Decoding and GPU encoding"),
             }.get(technical, _("Software encoding"))
             updates.push(status=stage_mode)
+        # FFmpeg's own frame tally, used later to prove the muxed file is not
+        # short of what the encoder said it wrote.
+        written = re.search(r"frame=\s*(\d+)", text)
+        if written:
+            encoded_frames = int(written[1])
         match = re.search(r"time=\s*(\d+:\d+:\d+(?:\.\d+)?)", text)
         if match and duration and duration > 0:
             progress = min(0.99, max(0.0, _time_value(match[1]) / duration))
@@ -397,25 +411,37 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             result = ConversionResult(False, returncode, destination, error=error)
         else:
             extraction_only = env.get("only_extract_subtitles") == "1"
+            duration_verified = duration is not None
             if not extraction_only:
                 if not destination:
                     raise ValueError("No explicit output path was supplied")
-                tolerance = 2.0 if env.get("force_copy_video") == "1" else 0.5
-                validate_output(destination, source=source_file,
-                                expected_duration=duration, expected_streams=expected_streams,
-                                duration_tolerance=tolerance, ffprobe=env.get("ffprobe_executable"))
+                copy_mode = env.get("force_copy_video") == "1"
+                try:
+                    validate_output(destination, source=source_file,
+                                    expected_duration=duration, expected_streams=expected_streams,
+                                    duration_tolerance=3.0 if copy_mode else None,
+                                    allow_longer=copy_mode,
+                                    ffprobe=env.get("ffprobe_executable"))
+                except OutputDurationMismatch as mismatch:
+                    # An unexpected length is not proof of a bad file: a stream
+                    # copy cuts on keyframes and a variable frame rate source
+                    # gets re-timed. Report it and keep the original.
+                    duration_verified = False
+                    updates.push(text=f"Output duration not verified: {mismatch}")
             result = ConversionResult(True, 0, None if extraction_only else destination)
             if progress_item.delete_original and source_file and not extraction_only:
                 try:
-                    if identity is None or duration is None:
-                        raise ValueError("Input duration, metadata or identity could not be verified")
+                    if identity is None or not duration_verified:
+                        raise ValueError("The output could not be verified against the input")
                     updates.push(status=_("Checking output file..."))
-                    trash_original(source_file, identity, [destination], cancelled,
-                                   ffmpeg=env.get("ffmpeg_executable"))
-                    updates.push(text="Original moved to Trash after output validation")
+                    remove_original(source_file, identity, [destination], cancelled,
+                                    expected_frames=encoded_frames,
+                                    ffmpeg=env.get("ffmpeg_executable"),
+                                    ffprobe=env.get("ffprobe_executable"))
+                    updates.push(text="Original deleted after output validation")
                 except InterruptedError:
                     raise
-                except (OSError, ValueError, TimeoutError, subprocess.SubprocessError, GLib.Error) as error:
+                except (OSError, ValueError, TimeoutError, subprocess.SubprocessError) as error:
                     updates.push(text=f"Original preserved: {error}")
     except InterruptedError as error:
         cancelled.set()
@@ -430,6 +456,8 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                 terminate_process_group(process)
         except (OSError, subprocess.SubprocessError):
             logger.exception("Could not reap conversion process group")
+        if not result.success:
+            discard_job_paths(workspace, reservations)
         selector.close()
         for pipe in (process.stdout, process.stderr):
             if pipe and not pipe.closed:
@@ -454,6 +482,8 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                 progress_item.mark_failure()
                 progress_item.update_status(result.error or _("Failed"))
             progress_item.cancel_button.set_sensitive(False)
+            if not result.cancelled:
+                notify_completion(app, result)
             if not hasattr(app, "completed_conversions"):
                 app.completed_conversions = []
             app.completed_conversions.append({"input_file": source_file,
@@ -463,9 +493,20 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
         call_on_main(finish)
 
 
-def show_info_dialog_and_close_progress(app, message: str, progress_item) -> None:
-    app.send_system_notification(_("Information"), message)
+def notify_completion(app, result, *, body=None) -> None:
+    """Announce the end of a job the way the application always has.
 
-
-def show_error_dialog_and_close_progress(app, message: str, progress_item) -> None:
-    app.show_error_dialog(message)
+    A system notification is the point of an hour-long conversion the user
+    minimized. The dialog is only for a job with nothing behind it in the
+    queue, which keeps its own summary instead.
+    """
+    if result.success:
+        app.send_system_notification(
+            _("Conversion Complete"), body or _("Conversion completed successfully!"))
+        return
+    detail = result.error or _("Failed")
+    app.send_system_notification(_("Error"), detail)
+    if not getattr(app, "conversion_queue", None):
+        app.show_error_dialog(
+            _("The conversion failed with error code {0}.").format(result.returncode)
+            + f"\n\n{detail}")

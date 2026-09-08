@@ -11,14 +11,25 @@ is included.
   have known arity; positional inputs/outputs, incomplete flags and unknown
   options are rejected by the same parser in the GUI and the Bash backend.
 * Input/output paths are explicit. Each job owns private temporary directories.
-  Publication uses same-filesystem hard links and fails on a pre-existing name;
-  it never overwrites another job's output, a symlink or the original.
+  A destination name is claimed with an exclusive create before the encode
+  starts and published by renaming over that claim, so publication cannot
+  overwrite another job's output, a symlink or the original, cannot fail for
+  lack of space after the work is done, and does not need a filesystem that
+  supports hard links.
 * A zero exit code and a non-empty file do not by themselves mean success.
-  The supervisor checks the output's stream inventory and requested duration.
-* An explicitly false delete preference stays false. Automatic removal requires
-  unchanged source/output identities, successful media checks and a full
-  video/audio decode. The original is moved to Trash; failure to use Trash
-  preserves it. There is no permanent-unlink fallback. Subtitle-only extraction
+  The supervisor checks the output's stream inventory, and its video duration
+  against the requested interval. A duration that cannot be confirmed is
+  reported and still counts as a successful conversion, because a stream copy
+  cuts on keyframes and a variable frame rate source gets re-timed; it only
+  withholds permission to remove the original.
+* An explicitly false delete preference stays false. The original is deleted
+  permanently, as the interface says, and only after: unchanged source and
+  output identities, a confirmed duration, every mapped stream carrying
+  packets, a packet count that reaches the frame count FFmpeg reported
+  writing, and a decode of the output. Media under thirty seconds is decoded
+  whole; longer media is decoded at both edges and three interior points,
+  which keeps the check's cost independent of the file's length. Anything
+  unconfirmed preserves the original and says why. Subtitle-only extraction
   never authorizes removing the video.
 * Completion is identified by job ID and is idempotent. A callback without an
   unambiguous identity does not finish another active job. Cancellation applies
@@ -66,7 +77,7 @@ known-good backup; nested batch/suspension scopes preserve their previous state.
 2. Invalid additional-option grammar fails before starting FFmpeg.
 3. Missing GTCRN, failed channel processing or missing processed tracks fail the
    requested operation rather than silently producing degraded success.
-4. An unavailable Trash facility keeps the original and reports the reason.
+4. Any check that cannot be completed keeps the original and reports the reason.
 5. Timeline overrides (`-copyts`, `-itsoffset`, `-sseof`, `-start_at_zero`) cannot
    be combined with ordinary subtitle clipping: that combination fails clearly
    instead of using an ambiguous time origin.
@@ -117,10 +128,13 @@ internal timing instructions. SRT extraction does not preserve ASS styling.
 Stream-copy cuts remain constrained by packet/keyframe boundaries.
 
 Slow FFprobe calls are bounded (15 seconds) but are not instantaneously
-cancellable. Full decoding before Trash can be expensive and has its own
-bounded timeout; a timeout preserves the original. Same-filesystem hard-link
-publication may not be supported on every remote filesystem; it fails safely
-rather than falling back to an unsafe overwrite. These checks are not a
+cancellable. Sampled decoding cannot see damage between the windows it reads;
+it is paired with a packet count over the whole file, which catches a
+truncated or empty stream but not a frame that decodes to the wrong picture.
+Each decode is bounded by its own timeout, and a timeout preserves the
+original. A killed job's leftovers are removed by the paths it announced
+rather than by waiting longer for its own cleanup, which cannot be guaranteed
+after SIGKILL. These checks are not a
 sandbox against an attacker who can simultaneously replace files in the user's
 own destination directories.
 

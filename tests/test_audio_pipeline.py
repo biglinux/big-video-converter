@@ -4,7 +4,6 @@ The Bash function is taken directly from the application. The expensive native
 plugin is replaced by a pass-through filter; stream extraction/channel merge and
 error propagation still use real FFmpeg processes. No plugin quality is asserted.
 """
-from pathlib import Path
 import subprocess
 
 import pytest

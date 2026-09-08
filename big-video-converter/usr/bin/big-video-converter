@@ -158,13 +158,40 @@ fi
 # a file merely because its name resembles one of our outputs.
 work_dir=$(mktemp -d "${TMPDIR:-/tmp}/bvc.XXXXXXXX") || exit 1
 output_stage_dir=""
+reservations=()
 cleanup() {
+    local path
+    # A reservation still empty was never published, so it is ours to drop.
+    for path in "${reservations[@]}"; do
+        [[ -s $path ]] || rm -f -- "$path"
+    done
     [[ -z $output_stage_dir ]] || rm -rf -- "$output_stage_dir"
     rm -rf -- "$work_dir"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+
+# Claim a destination name before spending any time on the encode. Noclobber
+# gives the same all-or-nothing guarantee as a hard link, without needing a
+# filesystem that supports links: FAT, exFAT and FUSE mounts all refuse
+# link(2), and there the whole finished encode used to be thrown away.
+reserve_name() {
+    if ! (set -C; : > "$1") 2>/dev/null; then
+        echo "ERROR: Refusing to overwrite an existing output: $1" >&2
+        return 1
+    fi
+    reservations+=("$1")
+    # Announced so the supervisor can drop it if this process is killed
+    # outright and never reaches its own cleanup.
+    printf 'Job reservation: %s\n' "$1"
+}
+
+# Renaming over our own reservation is atomic and needs no free space, so a
+# published file is never half-written and never someone else's.
+publish() {
+    mv -f -- "$1" "$2"
+}
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 option_parser="$script_dir/../share/big-video-converter/utils/ffmpeg_options.py"
@@ -175,9 +202,12 @@ fi
 mapfile -d '' -t option_args < "$work_dir/options"
 input_options=()
 output_options=()
+# Trim options belong before -i. After it, FFmpeg decodes and throws away
+# everything up to the cut, which costs the whole offset on every attempt and,
+# in copy mode, leaves the requested opening seconds missing from the output.
 for ((opt=0; opt<${#option_args[@]}; opt++)); do
     case ${option_args[$opt]} in
-    -sseof|-itsoffset|-hwaccel|-hwaccel_output_format|-probesize|-analyzeduration|-thread_queue_size)
+    -ss|-t|-to|-sseof|-itsoffset|-hwaccel|-hwaccel_output_format|-probesize|-analyzeduration|-thread_queue_size)
         input_options+=("${option_args[$opt]}" "${option_args[$((opt+1))]}")
         ((opt += 1)) ;;
     *) output_options+=("${option_args[$opt]}") ;;
@@ -394,11 +424,10 @@ elif [[ ! ${output_file,,} =~ \.(mp4|avi|mkv|mov|wmv|flv|webm|m4v|mpeg|mpg)$ ]];
     output_file+=.mp4
 fi
 [[ $output_file == /* ]] || output_file="$PWD/$output_file"
-if [[ -e $output_file || -L $output_file ]]; then
-    echo "ERROR: Refusing to overwrite an existing output: $output_file" >&2
-    exit 1
-fi
+# Extracting subtitles writes no video, so it must not claim the video's name.
+[[ $only_extract_subtitles == 1 ]] || reserve_name "$output_file" || exit 1
 output_stage_dir=$(mktemp -d -- "${output_file%/*}/.bvc.XXXXXXXX") || exit 1
+printf 'Job workspace: %s\n' "$output_stage_dir"
 staged_output="$output_stage_dir/video.${output_file##*.}"
 
 ##############
@@ -456,22 +485,17 @@ elif [[ $subtitle_extract == extract || $only_extract_subtitles == 1 ]]; then
         fi
         sidecar="$output_stage_dir/subtitle-$index.srt"
         destination="${output_file%.*}.${language_code}.s${index}.srt"
-        if [[ -e $destination || -L $destination ]]; then
-            echo "ERROR: Refusing to overwrite an existing subtitle: $destination" >&2
-            exit 1
-        fi
+        reserve_name "$destination" || exit 1
         subtitle_cmd+=(-map "0:$index" -c:s copy "${subtitle_packet_options[@]}" "$sidecar")
         subtitle_outputs+=("$sidecar")
         subtitle_destinations+=("$destination")
     done <<< "$subtitle_codec_info"
 fi
 
-# Publish without a check-then-overwrite race. Staging is on the destination
-# filesystem, so creating a hard link is atomic and fails if the name exists.
 publish_subtitles() {
     local i
     for i in "${!subtitle_outputs[@]}"; do
-        ln -- "${subtitle_outputs[$i]}" "${subtitle_destinations[$i]}" || return 1
+        publish "${subtitle_outputs[$i]}" "${subtitle_destinations[$i]}" || return 1
     done
 }
 
@@ -655,6 +679,10 @@ function build_audio_cmd() {
             [[ $channels =~ ^[1-9][0-9]*$ ]] || channels=2
             brate=${audio_bitrate:-$((channels * 32))k}
             nr_layout=$(probe_audio_layout "$i" "$index_audio")
+            # FFprobe prints the literal "unknown" for an unspecified layout,
+            # which is not a layout FFmpeg's pan filter accepts. Fall back to
+            # the plain channel count instead of failing the whole job.
+            [[ $nr_layout != unknown ]] || nr_layout=""
             [[ -z $audio_channels ]] || nr_layout="${channels}c"
             if [[ -n $noise_audio_filter && $nr_requires_mono == true ]]; then
                 nr_deferred_preprocess=true
@@ -693,15 +721,11 @@ append_audio_codec() {
 function preprocess_audio_nr() {
 	local num_streams=${#nr_stream_indices[@]}
     local -a trim_args=()
-    local -a trim_output_args=()
     local opt
     for ((opt=0; opt<${#option_args[@]}; opt++)); do
         case ${option_args[$opt]} in
-        -sseof|-itsoffset)
+        -ss|-t|-to|-sseof|-itsoffset)
             trim_args+=("${option_args[$opt]}" "${option_args[$((opt+1))]}")
-            ((opt += 1)) ;;
-        -ss|-t|-to)
-            trim_output_args+=("${option_args[$opt]}" "${option_args[$((opt+1))]}")
             ((opt += 1)) ;;
         esac
     done
@@ -719,14 +743,14 @@ function preprocess_audio_nr() {
 
 		if [[ $channels -le 1 ]]; then
 			# Mono: apply NR directly (no split/merge needed)
-			"$ffmpeg_executable" -nostdin "${trim_args[@]}" -i "$input_file" -map "0:$index_audio" "${trim_output_args[@]}" \
+			"$ffmpeg_executable" -nostdin "${trim_args[@]}" -i "$input_file" -map "0:$index_audio" \
 				-filter:a "$noise_audio_filter" \
 				-c:a flac -y "$temp_audio" </dev/null 2>/dev/null &
 			extract_pids+=("$!:direct")
 		else
 			# Multi-channel: extract stream as FLAC first
 			local stream_raw="$nr_temp_dir/raw_stream_${i}.flac"
-			"$ffmpeg_executable" -nostdin "${trim_args[@]}" -i "$input_file" -vn -map "0:$index_audio" "${trim_output_args[@]}" -ac "$channels" \
+			"$ffmpeg_executable" -nostdin "${trim_args[@]}" -i "$input_file" -vn -map "0:$index_audio" -ac "$channels" \
 				-c:a flac -y "$stream_raw" </dev/null 2>/dev/null &
 			extract_pids+=("$!:extract:$i")
 		fi
@@ -1492,11 +1516,11 @@ if [[ $defer_subtitles == true ]]; then
     staged_output=$with_subtitles
 fi
 
-# Final publication fails rather than overwriting a name created concurrently.
 if [[ ! -s $staged_output ]]; then
     echo "ERROR: Conversion produced no output" >&2
     exit 1
 fi
+# The video first: sidecars belong to a file that exists.
+publish "$staged_output" "$output_file" || exit 1
 publish_subtitles || exit 1
-ln -- "$staged_output" "$output_file" || exit 1
 printf 'Output file: %s\n' "$output_file"

@@ -1,4 +1,3 @@
-from pathlib import Path
 import shutil
 import subprocess
 import threading
@@ -75,22 +74,74 @@ def test_no_clobber_publication(tmp_path):
     assert dest.read_bytes() == b'new'
 
 
-def test_changed_original_and_cancelled_job_never_reach_trash(media, tmp_path, monkeypatch):
+def test_killed_job_leftovers_are_dropped_by_announced_path(tmp_path):
+    workspace = tmp_path/'.bvc.abcd1234'
+    workspace.mkdir();(workspace/'video.mkv').write_bytes(b'partial')
+    reserved = tmp_path/'reserved.mkv';reserved.touch()
+    unrelated = tmp_path/'someone-elses.mkv';unrelated.write_bytes(b'content')
+    other = tmp_path/'not-ours';other.mkdir()
+    mv.discard_job_paths(str(workspace), [str(reserved), str(unrelated)])
+    assert not workspace.exists() and not reserved.exists()
+    assert unrelated.read_bytes() == b'content'
+    mv.discard_job_paths(str(other), [])
+    assert other.exists()
+
+
+def test_changed_original_and_cancelled_job_never_reach_deletion(media, tmp_path, monkeypatch):
     src,out = tmp_path/'src.mp4', tmp_path/'out.mp4'
     shutil.copyfile(media['video'], src);shutil.copyfile(src,out)
     identity = mv.FileIdentity.capture(str(src))
-    monkeypatch.setattr(mv,'verify_decoding',lambda *a,**kw:None)
+    monkeypatch.setattr(mv,'verify_integrity',lambda *a,**kw:None)
     with src.open('ab') as handle:handle.write(b'changed')
     with pytest.raises(ValueError, match='original changed'):
-        mv.trash_original(str(src), identity, [str(out)], threading.Event())
+        mv.remove_original(str(src), identity, [str(out)], threading.Event())
     event=threading.Event();event.set()
     with pytest.raises(InterruptedError):
-        mv.trash_original(str(src), mv.FileIdentity.capture(str(src)), [str(out)], event)
+        mv.remove_original(str(src), mv.FileIdentity.capture(str(src)), [str(out)], event)
     assert src.exists()
 
 
-def test_full_decode_validation(media):
-    mv.verify_decoding(str(media['video']), threading.Event(), timeout=10)
+def test_removal_requires_a_validated_output(media, tmp_path):
+    src,out = tmp_path/'src.mp4', tmp_path/'out.mp4'
+    shutil.copyfile(media['video'], src);shutil.copyfile(src,out)
+    identity = mv.FileIdentity.capture(str(src))
+    with pytest.raises(ValueError, match='No validated output'):
+        mv.remove_original(str(src), identity, [], threading.Event())
+    assert src.exists()
+    mv.remove_original(str(src), identity, [str(out)], threading.Event())
+    assert not src.exists() and out.exists()
+
+
+def test_integrity_check_accepts_a_complete_file(media):
+    mv.verify_integrity(str(media['video']), threading.Event())
+
+
+@pytest.mark.parametrize('container,fraction', [('mp4',0.75), ('mkv',0.60)])
+def test_integrity_check_rejects_a_truncated_output(media, tmp_path, container, fraction):
+    """A short Matroska file still probes successfully and exits 0."""
+    whole = tmp_path/f'whole.{container}'
+    subprocess.run(['ffmpeg','-nostdin','-v','error','-i',str(media['video']),
+                    '-c','copy','-y',str(whole)], check=True, timeout=30)
+    frames = int(subprocess.run(['ffprobe','-v','error','-select_streams','v:0',
+        '-count_packets','-show_entries','stream=nb_read_packets','-of','csv=p=0',
+        str(whole)], check=True, capture_output=True, text=True, timeout=30).stdout)
+    cut = tmp_path/f'cut.{container}'
+    cut.write_bytes(whole.read_bytes()[:int(whole.stat().st_size * fraction)])
+    with pytest.raises(ValueError):
+        mv.verify_integrity(str(cut), threading.Event(), expected_frames=frames)
+
+
+def test_short_or_unmeasured_media_is_decoded_in_full():
+    for duration in (None, 0.0, float('inf'), 3.0, mv.FULL_DECODE_SECONDS):
+        assert mv.sample_windows(duration) == ((0.0, float('inf')),)
+
+
+def test_sampled_windows_stay_bounded_for_long_media():
+    for duration in (60.0, 3600.0, 36000.0):
+        windows = mv.sample_windows(duration)
+        assert len(windows) == 5 and sum(length for _, length in windows) == 7.0
+        assert windows[0][0] == 0.0 and windows[1][0] == duration - 2.0
+        assert all(0.0 <= start <= duration - length for start, length in windows)
 
 @pytest.mark.parametrize('options,limit', [
     (['-ss','00:00:00.500','-t','1'],'1.500'),

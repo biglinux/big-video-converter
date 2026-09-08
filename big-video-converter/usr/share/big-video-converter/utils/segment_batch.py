@@ -7,10 +7,10 @@ from pathlib import Path
 import tempfile
 import threading
 
-from utils.conversion import call_on_main, run_with_progress_dialog
+from utils.conversion import call_on_main, notify_completion, run_with_progress_dialog
 from utils.ffmpeg_path import get_ffmpeg_executable
 from utils.media_validation import (
-    ConversionResult, FileIdentity, publish_output, trash_original,
+    ConversionResult, FileIdentity, publish_output, remove_original,
 )
 
 _ = gettext.gettext
@@ -152,7 +152,7 @@ def start_segment_batch(page, context):
                     try:
                         if identity is None:
                             raise ValueError("Source identity cannot authorize removal")
-                        trash_original(source, identity, outputs, cancel_event)
+                        remove_original(source, identity, outputs, cancel_event)
                     except InterruptedError:
                         raise
                     except Exception as error:
@@ -188,6 +188,11 @@ def start_segment_batch(page, context):
             "output_file": result.output_file, "output_files": outputs,
             "success": result.success, "cancelled": result.cancelled,
             "job_id": job_id})
+        if not result.cancelled:
+            joined = _("All {0} segments have been joined successfully!")
+            split = _("All {0} segments have been processed successfully!")
+            notify_completion(app, result,
+                              body=(joined if mode == "join" else split).format(len(segments)))
         app.conversion_completed(result.success, file_path=source, job_id=job_id)
 
     threading.Thread(target=work, daemon=True).start()

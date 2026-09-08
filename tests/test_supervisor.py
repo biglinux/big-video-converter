@@ -1,10 +1,8 @@
 """Real subprocess supervision with lightweight UI test doubles and real GLib."""
 from collections import deque
 import logging
-import os
 from pathlib import Path
 import shutil
-import subprocess
 import threading
 import time
 from types import SimpleNamespace
@@ -78,11 +76,15 @@ class App:
     def __init__(self):
         self.progress_page=Page();self.conversions_running=0
         self.notifications=[];self.errors=[];self.completed_conversions=[]
-        self.delete_original_after_conversion=False
+        self.delete_original_after_conversion=False;self.system_notifications=[]
+        self.conversion_queue=deque()
     def conversion_completed(self,success,**kwargs):
         assert threading.current_thread() is threading.main_thread()
         self.notifications.append((success,kwargs))
     def show_error_dialog(self,*message):self.errors.append(message)
+    def send_system_notification(self,title,body):
+        assert threading.current_thread() is threading.main_thread()
+        self.system_notifications.append((title,body))
 
 
 def test_real_cli_supervisor_validates_and_finishes_once(media,tmp_path,cli_env):
@@ -97,10 +99,55 @@ def test_real_cli_supervisor_validates_and_finishes_once(media,tmp_path,cli_env)
     assert out.exists()
 
 
+def test_finished_job_notifies_the_user(media,tmp_path,cli_env):
+    app=App();out=tmp_path/'notified.mkv'
+    conversion.run_with_progress_dialog(app,[str(CLI),str(media['video'])],'test',
+        str(media['video']),False,{**cli_env,'output_file':str(out)},job_id='n')
+    pump_until(lambda:bool(app.notifications))
+    assert len(app.system_notifications)==1
+    assert app.system_notifications[0][0]=='Conversion Complete'
+    assert not app.errors
+
+
+def test_failed_job_notifies_and_reports_only_outside_a_queue(media,tmp_path,cli_env):
+    for queued, dialogs in ((False,1), (True,0)):
+        app=App();out=tmp_path/f'fail{queued}.mkv'
+        if queued:app.conversion_queue.append('pending.mkv')
+        conversion.run_with_progress_dialog(app,['/usr/bin/false'],'test',
+            str(media['video']),False,{**cli_env,'output_file':str(out)},job_id='f')
+        pump_until(lambda:bool(app.notifications))
+        assert app.notifications[0][0] is False
+        assert len(app.system_notifications)==1 and len(app.errors)==dialogs
+
+
+def test_real_conversion_deletes_the_original_after_validation(media,tmp_path,cli_env):
+    source=tmp_path/'source.mp4';shutil.copyfile(media['video'],source)
+    app=App();out=tmp_path/'converted.mkv'
+    conversion.run_with_progress_dialog(app,[str(CLI),str(source)],'test',str(source),
+        True,{**cli_env,'output_file':str(out)},job_id='del')
+    pump_until(lambda:bool(app.notifications))
+    assert app.notifications[0][0] is True
+    assert out.exists() and not source.exists()
+    assert any('Original deleted' in line for line in app.progress_page.rows[0].lines)
+
+
+def test_output_shorter_than_requested_keeps_the_original(media,tmp_path,cli_env):
+    """A file that plays but misses part of the requested interval is still a
+    success for the user; it just never authorizes deleting the source."""
+    source=tmp_path/'source.mp4';shutil.copyfile(media['video'],source)
+    app=App();out=tmp_path/'short.mp4'
+    conversion.run_with_progress_dialog(app,[str(CLI),str(source)],'test',str(source),
+        True,{**cli_env,'output_file':str(out)},segment_duration=30,job_id='short')
+    pump_until(lambda:bool(app.notifications))
+    assert app.notifications[0][0] is True
+    assert out.exists() and source.exists()
+    assert any('duration not verified' in line for line in app.progress_page.rows[0].lines)
+
+
 @pytest.mark.parametrize('exitcode', [0,1])
 def test_partial_output_never_success_or_deletion(media,tmp_path,cli_env,exitcode,monkeypatch):
     app=App();out=tmp_path/'partial.mp4';calls=[]
-    monkeypatch.setattr(conversion,'trash_original',lambda *a,**k:calls.append(a))
+    monkeypatch.setattr(conversion,'remove_original',lambda *a,**k:calls.append(a))
     script='import pathlib,sys;pathlib.Path(sys.argv[1]).write_bytes(b"partial");sys.exit(int(sys.argv[2]))'
     conversion.run_with_progress_dialog(app,['/usr/bin/python3','-c',script,str(out),str(exitcode)],
         'test',str(media['video']),True,{**cli_env,'output_file':str(out)},job_id='p')
@@ -112,7 +159,7 @@ def test_partial_output_never_success_or_deletion(media,tmp_path,cli_env,exitcod
 
 def test_explicit_false_never_inherits_delete_preference(media,tmp_path,cli_env,monkeypatch):
     app=App();app.delete_original_after_conversion=True;calls=[]
-    monkeypatch.setattr(conversion,'trash_original',lambda *a,**k:calls.append(a))
+    monkeypatch.setattr(conversion,'remove_original',lambda *a,**k:calls.append(a))
     out=tmp_path/'kept.mp4'
     conversion.run_with_progress_dialog(app,[str(CLI),str(media['video'])],'test',
         str(media['video']),False,{**cli_env,'output_file':str(out)},job_id='keep')
@@ -270,7 +317,7 @@ def test_cancel_between_segments_stops_the_batch(media,tmp_path,cli_env,monkeypa
 def test_subtitle_only_batch_never_converts_or_removes_video(media,tmp_path,cli_env,mode,monkeypatch):
     import utils.segment_batch as module
     def forbidden(*a,**k):raise AssertionError('Subtitle extraction must not encode/remove video')
-    monkeypatch.setattr(module,'trash_original',forbidden)
+    monkeypatch.setattr(module,'remove_original',forbidden)
     monkeypatch.setattr(module,'run_with_progress_dialog',forbidden)
     app=App();page=SimpleNamespace(app=app,_format_time_ffmpeg=str)
     context=batch_context(media,tmp_path,cli_env,mode)

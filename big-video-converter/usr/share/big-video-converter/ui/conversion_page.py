@@ -14,7 +14,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 from utils.conversion import run_with_progress_dialog
 from utils.segment_batch import start_segment_batch
 from utils.ffmpeg_options import validate_additional_options
-from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+from utils.ffmpeg_path import get_ffprobe_executable
 from utils.video_settings import SettingsOverride, get_video_filter_string
 
 import logging
@@ -700,6 +700,78 @@ class ConversionPage:
             return True
         return False
 
+    def _encoding_environment(self, gpu_override=None):
+        """Hardware and encoder settings for a job that re-encodes video.
+
+        Copy mode needs none of this, but the dialog that offers to re-encode
+        instead of copying does, and it must land on the accelerator the user
+        actually chose rather than falling back to the processor.
+        """
+        settings = self.app.settings_manager
+        env = {}
+
+        if gpu_override:
+            # Use override settings for parallel processing
+            if "type" in gpu_override:
+                env["gpu"] = gpu_override["type"]
+            if "device" in gpu_override:
+                env["gpu_device"] = gpu_override["device"]
+            logger.debug(f"Using GPU override: {gpu_override}")
+        else:
+            gpu_setting = settings.load_setting("gpu", "auto")
+            env["gpu"] = gpu_setting
+
+            # GPU device selection (render device path)
+            gpu_device_index = settings.load_setting("gpu-device-index", 0)
+
+            # Auto-detect architecture from device if GPU is Auto but Device is
+            # specific. This fixes selecting an "Intel" device with "Auto" mode.
+            if gpu_device_index > 0 and hasattr(self.app, "detected_gpus"):
+                idx = gpu_device_index - 1  # 0 = Auto
+                if idx < len(self.app.detected_gpus):
+                    device_info = self.app.detected_gpus[idx]
+                    env["gpu_device"] = device_info["device"]
+
+                    if gpu_setting == "auto":
+                        device_name = device_info.get("name", "").lower()
+                        if "intel" in device_name:
+                            env["gpu"] = "intel"
+                        elif "nvidia" in device_name:
+                            env["gpu"] = "nvidia"
+                        elif ("amd" in device_name
+                              or "advanced micro devices" in device_name):
+                            env["gpu"] = "amd"
+                        logger.debug(
+                            f"Auto-detected {env['gpu']} GPU from device selection: "
+                            f"{device_name}"
+                        )
+
+            # Smart GPU selection: when auto mode + auto device + multiple GPUs,
+            # pick the best GPU for the selected codec
+            if (
+                gpu_setting == "auto"
+                and gpu_device_index == 0
+                and hasattr(self.app, "detected_gpus")
+                and len(self.app.detected_gpus) > 1
+            ):
+                from utils.gpu_selector import select_best_gpu
+
+                codec = settings.load_setting("video-codec", "h264")
+                best = select_best_gpu(self.app.detected_gpus, codec)
+                if best:
+                    env["gpu"] = best["type"]
+                    if best.get("device"):
+                        env["gpu_device"] = best["device"]
+                    logger.info(
+                        f"Smart GPU selection: {best['type']} "
+                        f"(device={best.get('device', 'default')}) for {codec}"
+                    )
+
+        env["video_quality"] = settings.load_setting("video-quality", "default")
+        env["video_encoder"] = settings.load_setting("video-codec", "h264")
+        env["preset"] = settings.load_setting("preset", "default")
+        return env
+
     def force_start_conversion(self, gpu_override=None):
         """Start conversion process with the currently selected file"""
         # Check if we have a file to convert
@@ -740,95 +812,11 @@ class ConversionPage:
                     # When copying without reencoding, hardware acceleration is not needed
                     env_vars["gpu"] = "software"
                     logger.debug(
-                        "Force copy video enabled: disabling hardware acceleration (not needed for copying)"
-                    )
-                    # Don't set video encoding parameters when in copy mode
-                    logger.debug(
-                        "Force copy video enabled: skipping video_quality, video_encoder, preset"
+                        "Force copy video enabled: disabling hardware acceleration "
+                        "and skipping video_quality, video_encoder, preset"
                     )
                 else:
-                    if gpu_override:
-                        # Use override settings for parallel processing
-                        if "type" in gpu_override:
-                            env_vars["gpu"] = gpu_override["type"]
-                        if "device" in gpu_override:
-                            env_vars["gpu_device"] = gpu_override["device"]
-                        logger.debug(f"Using GPU override: {gpu_override}")
-                    else:
-                        gpu_setting = self.app.settings_manager.load_setting(
-                            "gpu", "auto"
-                        )
-                        env_vars["gpu"] = gpu_setting
-
-                        # GPU device selection (render device path)
-                        gpu_device_index = self.app.settings_manager.load_setting(
-                            "gpu-device-index", 0
-                        )
-
-                        # Auto-detect architecture from device if GPU is Auto but Device is specific
-                        # This fixes the issue where selecting "Intel" device with "Auto" mode fails
-                        if gpu_device_index > 0 and hasattr(self.app, "detected_gpus"):
-                            idx = gpu_device_index - 1  # 0 = Auto
-                            if idx < len(self.app.detected_gpus):
-                                device_info = self.app.detected_gpus[idx]
-                                env_vars["gpu_device"] = device_info["device"]
-
-                                # If GPU is auto but we selected a specific device, set the correct architecture
-                                if gpu_setting == "auto":
-                                    device_name = device_info.get("name", "").lower()
-                                    if "intel" in device_name:
-                                        env_vars["gpu"] = "intel"
-                                        logger.debug(
-                                            f"Auto-detected Intel GPU from device selection: {device_name}"
-                                        )
-                                    elif "nvidia" in device_name:
-                                        env_vars["gpu"] = "nvidia"
-                                        logger.debug(
-                                            f"Auto-detected Nvidia GPU from device selection: {device_name}"
-                                        )
-                                    elif (
-                                        "amd" in device_name
-                                        or "advanced micro devices" in device_name
-                                    ):
-                                        env_vars["gpu"] = "amd"
-                                        logger.debug(
-                                            f"Auto-detected AMD GPU from device selection: {device_name}"
-                                        )
-
-                        # Smart GPU selection: when auto mode + auto device + multiple GPUs,
-                        # pick the best GPU for the selected codec
-                        if (
-                            gpu_setting == "auto"
-                            and gpu_device_index == 0
-                            and hasattr(self.app, "detected_gpus")
-                            and len(self.app.detected_gpus) > 1
-                        ):
-                            from utils.gpu_selector import select_best_gpu
-
-                            codec = self.app.settings_manager.load_setting(
-                                "video-codec", "h264"
-                            )
-                            best = select_best_gpu(self.app.detected_gpus, codec)
-                            if best:
-                                env_vars["gpu"] = best["type"]
-                                if best.get("device"):
-                                    env_vars["gpu_device"] = best["device"]
-                                logger.info(
-                                    f"Smart GPU selection: {best['type']} "
-                                    f"(device={best.get('device', 'default')}) for {codec}"
-                                )
-
-                    # Video quality and codec
-                    env_vars["video_quality"] = self.app.settings_manager.load_setting(
-                        "video-quality", "default"
-                    )
-                    env_vars["video_encoder"] = self.app.settings_manager.load_setting(
-                        "video-codec", "h264"
-                    )
-                    # Other encoding settings
-                    env_vars["preset"] = self.app.settings_manager.load_setting(
-                        "preset", "default"
-                    )
+                    env_vars.update(self._encoding_environment(gpu_override))
 
                 # Subtitle handling (works regardless of copy mode)
                 env_vars["subtitle_extract"] = self.app.settings_manager.load_setting(
@@ -1224,11 +1212,17 @@ class ConversionPage:
                     "output_mode": output_mode,
                 }
 
+                # Re-encoding uses the settings copy mode had skipped, the
+                # accelerator included: choosing "re-encode" is not a request
+                # to fall back to the processor.
                 reencode_env = dict(env_vars)
-                reencode_env.update(force_copy_video="0", gpu="software", force_software="1")
-                for env_key, setting, default in (("video_quality", "video-quality", "default"),
-                        ("video_encoder", "video-codec", "h264"), ("preset", "preset", "default")):
-                    reencode_env[env_key] = self.app.settings_manager.load_setting(setting, default)
+                reencode_env.pop("force_copy_video", None)
+                reencode_env.pop("force_software", None)
+                reencode_env.update(self._encoding_environment(gpu_override))
+                video_resolution = self.app.settings_manager.load_setting(
+                    "video-resolution", "")
+                if video_resolution:
+                    reencode_env["video_resolution"] = video_resolution
                 reencode_env["video_filter"] = get_video_filter_string(
                     filter_settings, video_width=video_width, video_height=video_height,
                     input_file=input_file)
@@ -1367,17 +1361,13 @@ class ConversionPage:
 
     def _continue_conversion(self, context):
         """Continue with the actual conversion process"""
-        # Unpack context
+        # The naming and segment fields are read by start_segment_batch, which
+        # takes the whole context; only these are used here.
         cmd = context["cmd"]
         env_vars = context["env_vars"]
         delete_original = context["delete_original"]
         input_file = context["input_file"]
-        input_basename = context["input_basename"]
-        input_ext = context["input_ext"]
-        output_ext = context["output_ext"]
-        output_folder = context["output_folder"]
         trim_segments = context["trim_segments"]
-        output_mode = context["output_mode"]
 
         # Log the command and environment variables for debugging
         logger.debug("\n=== CONVERSION COMMAND ===")

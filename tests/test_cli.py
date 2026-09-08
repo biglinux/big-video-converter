@@ -1,4 +1,3 @@
-from pathlib import Path
 import shutil
 import subprocess
 
@@ -43,6 +42,29 @@ def test_never_overwrite_unowned_destination(media,tmp_path,run_cli,mode):
     assert result.returncode != 0
     assert source.read_bytes() == before
     if mode=='existing':assert dest.read_bytes()==b'KEEP'
+
+
+@pytest.mark.parametrize('copy_mode', ['0','1'])
+def test_trim_is_requested_before_the_input(media,tmp_path,run_cli,copy_mode):
+    """Trimming after -i makes FFmpeg decode and discard the whole offset, and
+    in copy mode drops the opening the user asked to keep."""
+    out=tmp_path/f'trimmed{copy_mode}.mkv'
+    result=run_cli(media['video'],out,options='-ss 1 -t 1 -threads 1',
+                   force_copy_video=copy_mode)
+    assert result.returncode == 0, result.stdout + result.stderr
+    commands=[line for line in result.stdout.splitlines() if line.startswith('Running command:')]
+    assert commands, result.stdout
+    for command in commands:
+        assert command.index(' -ss ') < command.index(' -i '), command
+    assert media_duration(probe_media(str(out))) >= 1.0
+
+
+def test_successful_run_leaves_no_workspace_behind(media,tmp_path,run_cli):
+    out=tmp_path/'clean.mkv'
+    result=run_cli(media['video'],out,options='-t 0.4 -threads 1')
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert out.stat().st_size > 0
+    assert [path.name for path in tmp_path.iterdir() if path.name.startswith('.bvc')] == []
 
 
 @pytest.mark.parametrize('extension', ['mp4','mkv','mov'])

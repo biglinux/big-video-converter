@@ -5,13 +5,14 @@ claim physical-GPU, screen-reader usability or GTCRN audio-quality coverage.
 """
 import importlib
 import os
-from pathlib import Path
 import time
 from types import SimpleNamespace
 
 import pytest
 
-pytestmark = pytest.mark.skipif(not os.environ.get('DISPLAY'), reason='Requires Xvfb or an X11 display')
+pytestmark = pytest.mark.skipif(
+    not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')),
+    reason='Requires an X11 or Wayland display')
 gi = pytest.importorskip('gi')
 gi.require_version('Gtk','4.0')
 gi.require_version('Adw','1')
