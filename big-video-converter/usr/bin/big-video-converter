@@ -361,6 +361,74 @@ else
 fi
 echo "Source video codec detected: $source_video_codec"
 
+# Source geometry, frame rate and dynamic range. Three decisions below depend
+# on them: the H.264 level, whether 4K output may stay in H.264 at all, and
+# whether an HDR source needs tone mapping to become a valid SDR file.
+source_width=""; source_height=""; source_fps_num=""; source_fps_den=""; source_transfer=""
+if [[ $ffprobe_usable == true ]]; then
+	# key=value lines: ffprobe's CSV writer orders fields its own way, not
+	# the way they were requested, so positional parsing mislabels them.
+	while IFS='=' read -r key value; do
+		case $key in
+		width) source_width=$value ;;
+		height) source_height=$value ;;
+		r_frame_rate) source_fps_num=${value%%/*}; source_fps_den=${value##*/} ;;
+		color_transfer) source_transfer=$value ;;
+		esac
+	done < <("$ffprobe_executable" -v error -select_streams v:0 \
+		-show_entries stream=width,height,r_frame_rate,color_transfer -of default=noprint_wrappers=1 "$input_file" 2>/dev/null)
+else
+	dims_re='([0-9]{3,5})x([0-9]{3,5})'
+	fps_re='([0-9.]+) fps'
+	[[ $probe_video_line =~ $dims_re ]] && source_width=${BASH_REMATCH[1]} && source_height=${BASH_REMATCH[2]}
+	[[ $probe_video_line =~ $fps_re ]] && source_fps_num=${BASH_REMATCH[1]%%.*} && source_fps_den=1
+	[[ $probe_video_line == *smpte2084* ]] && source_transfer=smpte2084
+	[[ $probe_video_line == *arib-std-b67* ]] && source_transfer=arib-std-b67
+fi
+[[ $source_fps_num =~ ^[0-9]+$ ]] || source_fps_num=30
+[[ $source_fps_den =~ ^[0-9]+$ && $source_fps_den -gt 0 ]] || source_fps_den=1
+
+is_hdr=false
+if [[ $source_transfer == smpte2084 || $source_transfer == arib-std-b67 ]]; then
+	is_hdr=true
+	echo "Detected HDR video input (transfer: $source_transfer)"
+fi
+
+# Output geometry: the requested resolution when there is one, else the source.
+output_width=$source_width; output_height=$source_height
+if [[ $video_resolution =~ ^([0-9]+)x([0-9]+)$ ]]; then
+	output_width=${BASH_REMATCH[1]}; output_height=${BASH_REMATCH[2]}
+fi
+
+# Above 1080p, H.264 is a PC-only format: televisions decode UHD in HEVC (or
+# VP9/AV1), never in H.264. H.264 is this tool's default, so a 4K source
+# converted with defaults used to produce a file no TV would open. Switch to
+# H.265 unless the caller insists (video_encoder_strict=1).
+if [[ ($video_encoder == "h264" || -z "$video_encoder") && $output_width =~ ^[0-9]+$ && $output_width -gt 1920 && $video_encoder_strict != 1 ]]; then
+	video_encoder=h265
+	echo "Output is wider than 1920 px: switching from H.264 to H.265 (televisions do not decode H.264 above 1080p; set video_encoder_strict=1 to keep H.264)"
+fi
+
+# The smallest H.264 level whose macroblock budget fits the picture and frame
+# rate. The H.264 encoders (libx264, VAAPI, QSV) used to be given a fixed 4.1:
+# a 1080p limit written into the header of every stream, 4K included -- and TV
+# decoders trust the header, so those files failed to open on a television.
+h264_level_for() {
+	local w=$1 h=$2 num=${3:-30} den=${4:-1}
+	[[ $w =~ ^[0-9]+$ && $h =~ ^[0-9]+$ ]] || { echo 4.1; return; }
+	local mbs=$(( ((w + 15) / 16) * ((h + 15) / 16) ))
+	local mbps=$(( mbs * num / den ))
+	local entry level max_mbs max_mbps
+	for entry in "3.1:3600:108000" "3.2:5120:216000" "4.1:8192:245760" "4.2:8704:522240" \
+	             "5.0:22080:589824" "5.1:36864:983040" "5.2:36864:2073600" "6.0:139264:4177920" \
+	             "6.1:139264:8355840" "6.2:139264:16711680"; do
+		IFS=: read -r level max_mbs max_mbps <<<"$entry"
+		if (( mbs <= max_mbs && mbps <= max_mbps )); then echo "$level"; return; fi
+	done
+	echo 6.2
+}
+h264_level=$(h264_level_for "$output_width" "$output_height" "$source_fps_num" "$source_fps_den")
+
 # Determine if we need to convert 10-bit video to 8-bit for H.264 compatibility
 needs_10bit_to_8bit_conversion=false
 if [[ $is_10bit == true && ($video_encoder == "h264" || -z "$video_encoder") ]]; then
@@ -368,6 +436,22 @@ if [[ $is_10bit == true && ($video_encoder == "h264" || -z "$video_encoder") ]];
 	echo "Detected 10-bit input. Forcing 8-bit pixel format (nv12) for H.264 compatibility."
 elif [[ ($video_encoder == "h264" || -z "$video_encoder") && "$source_video_codec" != "h264" && $is_10bit == false ]]; then
 	echo "Converting from $source_video_codec to h264 (8-bit input, no bit depth conversion needed)."
+fi
+
+# An HDR source (PQ or HLG) going to an 8-bit encoder must be tone mapped, not
+# just truncated: dropping bits keeps the PQ curve, so the picture comes out
+# washed out, and ffmpeg copies the bt2020/PQ tags onto the 8-bit stream --
+# an "HDR10 in 8 bits" file that television decoders refuse to open. The
+# software chain below converts to linear light, maps highlights (hable),
+# and lands in bt709 8-bit with matching tags. Hardware decode is skipped
+# for these files (Stage 2 onwards) so the filter sees full-depth frames.
+needs_tonemap=false
+tonemap_filters="zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
+sdr_color_tags=()
+if [[ $is_hdr == true && ($video_encoder == "h264" || -z "$video_encoder" || $video_encoder == "vp9") ]]; then
+	needs_tonemap=true
+	sdr_color_tags=(-color_primaries bt709 -color_trc bt709 -colorspace bt709)
+	echo "HDR source with an 8-bit target: applying tone mapping to SDR (bt709)."
 fi
 
 # Derive the destination without treating dots in parent directories as an
@@ -972,7 +1056,13 @@ esac
 #######################
 # Function to build the main encoder command strings
 function build_encoder_commands() {
-	general_params=(-i "$input_file" "${audio_inputs[@]}" -map 0:v:0 "${audio_cmd[@]}")
+	general_params=(-i "$input_file" "${audio_inputs[@]}" -map 0:v:0 "${audio_cmd[@]}" "${sdr_color_tags[@]}")
+	# HEVC in MP4/MOV gets the 'hev1' tag by default, which Apple players and
+	# some TVs reject; 'hvc1' is the widely supported one.
+	local -a hevc_tag=()
+	case ${output_file##*.} in
+	mp4|mov|m4v|MP4|MOV|M4V) hevc_tag=(-tag:v hvc1) ;;
+	esac
 	if [[ $subtitle_extract == embedded && $defer_subtitles == false ]]; then
         general_params+=("${subtitle_cmd[@]}")
     fi
@@ -981,11 +1071,11 @@ function build_encoder_commands() {
 	# Select appropriate encoder command based on the specified video encoder
 	case $video_encoder in
 	h265)
-		encoder_nvenc=("${general_params[@]}" -c:v hevc_nvenc -rc:v vbr -cq "$cq_value_nvidia" -tune:v hq -preset:v "p$nvidia_preset" -temporal-aq 1 -spatial-aq 1 -b_ref_mode middle -rc-lookahead 100)
-		encoder_vulkan=("${general_params[@]}" -c:v hevc_vulkan -qp "$qp_hevc" -tune hq)
-		encoder_vaapi=("${general_params[@]}" -c:v hevc_vaapi -global_quality "$qp_hevc" -rc_mode ICQ)
-		encoder_qsv=("${general_params[@]}" -c:v hevc_qsv -preset "$preset" -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality "$qp_hevc_qsv" -mbbrc 1 -adaptive_i 1 -adaptive_b 1)
-		encoder_software=("${general_params[@]}" -c:v libx265 -preset "$software_preset" -crf "$qp_hevc" -x265-params log-level=warning)
+		encoder_nvenc=("${general_params[@]}" -c:v hevc_nvenc -rc:v vbr -cq "$cq_value_nvidia" -tune:v hq -preset:v "p$nvidia_preset" -temporal-aq 1 -spatial-aq 1 -b_ref_mode middle -rc-lookahead 100 "${hevc_tag[@]}")
+		encoder_vulkan=("${general_params[@]}" -c:v hevc_vulkan -qp "$qp_hevc" -tune hq "${hevc_tag[@]}")
+		encoder_vaapi=("${general_params[@]}" -c:v hevc_vaapi -global_quality "$qp_hevc" -rc_mode ICQ "${hevc_tag[@]}")
+		encoder_qsv=("${general_params[@]}" -c:v hevc_qsv -preset "$preset" -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality "$qp_hevc_qsv" -mbbrc 1 -adaptive_i 1 -adaptive_b 1 "${hevc_tag[@]}")
+		encoder_software=("${general_params[@]}" -c:v libx265 -preset "$software_preset" -crf "$qp_hevc" -x265-params log-level=warning "${hevc_tag[@]}")
 		;;
 	av1)
 		encoder_nvenc=("${general_params[@]}" -c:v av1_nvenc -rc:v vbr -cq "$cq_value_nvidia" -tune:v hq -preset:v "p$nvidia_preset" -temporal-aq 1 -spatial-aq 1 -b_ref_mode middle -rc-lookahead 100)
@@ -1022,12 +1112,12 @@ function build_encoder_commands() {
 		# Default is h264
 		encoder_nvenc=("${general_params[@]}" -c:v h264_nvenc -rc:v vbr -cq "$cq_value_nvidia" -tune:v hq -preset:v "p$nvidia_preset" -temporal-aq 1 -rc-lookahead 100)
 		encoder_vulkan=("${general_params[@]}" -c:v h264_vulkan -qp "$global_quality")
-		encoder_vaapi=("${general_params[@]}" -c:v h264_vaapi -profile:v high -level:v 4.1 -rc_mode CQP -global_quality "$global_quality")
-		encoder_qsv=("${general_params[@]}" -c:v h264_qsv -preset "$preset" -profile:v high -level:v 4.1 -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality "$global_quality" -mbbrc 1 -adaptive_i 1 -adaptive_b 1)
+		encoder_vaapi=("${general_params[@]}" -c:v h264_vaapi -profile:v high -level:v "$h264_level" -rc_mode CQP -global_quality "$global_quality")
+		encoder_qsv=("${general_params[@]}" -c:v h264_qsv -preset "$preset" -profile:v high -level:v "$h264_level" -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality "$global_quality" -mbbrc 1 -adaptive_i 1 -adaptive_b 1)
 		# -pix_fmt yuv420p is required: H.264 "high" profile has no 4:4:4/4:2:2
 		# support, so 444/422 sources (ProRes, screen captures) fail to encode
 		# without an explicit downsample.
-		encoder_software=("${general_params[@]}" -c:v libx264 -preset "$software_preset" -profile:v high -level:v 4.1 -crf "$qp_value" -pix_fmt yuv420p)
+		encoder_software=("${general_params[@]}" -c:v libx264 -preset "$software_preset" -profile:v high -level:v "$h264_level" -crf "$qp_value" -pix_fmt yuv420p)
 		;;
 	esac
 }
@@ -1251,6 +1341,12 @@ function attempt_conversion() {
 		gpu_partial=1
 		echo "vflip detected on NVIDIA: forcing software decode (Stage 2)"
 	fi
+	# Tone mapping runs in software on full-depth frames; a hardware decoder
+	# would hand over 8-bit nv12 surfaces with the PQ curve already baked in.
+	if [[ $needs_tonemap == true && "$detected_encoder_var" != "encoder_software" ]]; then
+		gpu_partial=1
+		echo "HDR to SDR tone mapping: forcing software decode (Stage 2)"
+	fi
 
 	# --- Execute Conversion Attempts ---
 
@@ -1342,6 +1438,10 @@ function attempt_conversion() {
 		local partial_video_filter_chain=""
 		local partial_filter_parts=()
 
+		if [[ $needs_tonemap == true ]]; then
+			partial_filter_parts+=("$tonemap_filters")
+		fi
+
 		if [[ $needs_gbr_matrix_fix == true ]]; then
 			partial_filter_parts+=("zscale=min=709:m=709:tin=709:t=709:pin=709:p=709:r=tv")
 		fi
@@ -1390,6 +1490,10 @@ function attempt_conversion() {
 		echo "Encode mode: Decode Software, Encode Software"
 		local software_filter_chain=""
 		local sw_filter_parts=()
+
+		if [[ $needs_tonemap == true ]]; then
+			sw_filter_parts+=("$tonemap_filters")
+		fi
 
 		if [[ $needs_gbr_matrix_fix == true ]]; then
 			sw_filter_parts+=("zscale=min=709:m=709:tin=709:t=709:pin=709:p=709:r=tv")
