@@ -431,6 +431,7 @@ class SidebarBuilderMixin:
         self._radio_smaller = Gtk.CheckButton(group=self._radio_copy)
         self._radio_quality = Gtk.CheckButton(group=self._radio_copy)
         self._radio_custom = Gtk.CheckButton(group=self._radio_copy)
+        self._radio_preset = Gtk.CheckButton(group=self._radio_copy)
 
         self._profile_guard = False  # Prevent recursive signal loops
 
@@ -478,10 +479,21 @@ class SidebarBuilderMixin:
         self._customize_row.connect("activated", self._on_video_encoding_activated)
         video_group.add(self._customize_row)
 
+        # One row for every preset: the list itself lives in a dialog with a
+        # grid and a search box, so dozens of presets never crowd the sidebar.
+        self._presets_row = Adw.ActionRow(title=_("Presets"))
+        self._presets_row.add_prefix(self._radio_preset)
+        self._presets_row.set_activatable_widget(self._radio_preset)
+        self._presets_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        self._presets_row.set_activatable(True)
+        self._presets_row.connect("activated", self._on_presets_activated)
+        video_group.add(self._presets_row)
+
         self._radio_copy.connect("toggled", self._on_profile_toggled)
         self._radio_universal.connect("toggled", self._on_profile_toggled)
         self._radio_smaller.connect("toggled", self._on_profile_toggled)
         self._radio_quality.connect("toggled", self._on_profile_toggled)
+        self._radio_preset.connect("toggled", self._on_profile_toggled)
 
         settings_box.append(video_group)
 
@@ -836,6 +848,7 @@ class SidebarBuilderMixin:
         # Update all sidebar subtitles
         self._select_profile_radio(self._detect_current_profile())
         self._update_customize_subtitle()
+        self._update_presets_subtitle()
         self._update_audio_subtitle()
         self._update_audio_cleaning_subtitle()
         self._update_subtitles_subtitle()
@@ -905,6 +918,22 @@ class SidebarBuilderMixin:
         from ui.subtitles_dialog import show_subtitles_dialog
 
         show_subtitles_dialog(self.window, self)
+
+    def _on_presets_activated(self, _row):
+        """Open the presets grid."""
+        from ui.presets_dialog import show_presets_dialog
+
+        show_presets_dialog(self.window, self)
+
+    def _update_presets_subtitle(self):
+        """Name of the preset in use, or an invitation to browse them."""
+        preset = self.active_preset()
+        if preset is None:
+            self._presets_row.set_subtitle(_("Ready-made recipes: YouTube, Instagram, editing…"))
+        else:
+            summary = preset.summary
+            name = preset.display_name
+            self._presets_row.set_subtitle(f"{name} · {summary}" if summary else name)
 
     def _on_extra_activated(self, _row):
         """Open the extra settings dialog."""

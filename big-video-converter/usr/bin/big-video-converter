@@ -133,6 +133,9 @@ if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
 	echo ""
 	echo -e "${COLOR_BLUE}20. Force ffmpeg decoder. Options: cuda, vaapi, qsv, amf, software ${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}force_decoder=decoder_name${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}21. Preset file (TOML). Fills in every variable left unset above and adds its encoder arguments.${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}preset_file=~/.config/big-video-converter/presets/youtube.toml${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
 	exit 0
 fi
 
@@ -198,6 +201,41 @@ if [[ -z ${ffprobe_executable:-} ]]; then
         ffprobe_executable=ffprobe
     fi
 fi
+
+# A preset file (TOML, read by utils/presets.py) fills in whatever the caller
+# left unset and prepends its own FFmpeg options; an explicit variable always
+# wins, so the GUI's widgets stay the truth when both are present. The helper
+# validates the file and answers NUL-separated, never as shell text.
+preset_helper="$script_dir/../share/big-video-converter/utils/presets.py"
+if [[ -n ${preset_file:-} ]]; then
+    python3 "$preset_helper" --validate "$preset_file" >/dev/null || exit 2
+    while IFS= read -r -d '' pair; do
+        name=${pair%%=*}
+        value=${pair#*=}
+        [[ $name =~ ^[a-z_]+$ ]] || continue
+        if [[ $name == preset_options ]]; then
+            options="$value ${options:-}"
+        elif [[ -z ${!name:-} ]]; then
+            printf -v "$name" '%s' "$value"
+        fi
+    done < <(python3 "$preset_helper" --env "$preset_file")
+    echo "Preset: $preset_file"
+fi
+
+# Arguments a preset pins for one encoder go after the script's own, so
+# FFmpeg's last-one-wins rule lets them override a single knob.
+append_preset_encoder_args() { # <encoder array name>
+    [[ -n ${preset_file:-} ]] || return 0
+    local -n encoder_argv=$1
+    local i name=""
+    for ((i = 0; i < ${#encoder_argv[@]} - 1; i++)); do
+        [[ ${encoder_argv[$i]} == -c:v ]] && name=${encoder_argv[$((i + 1))]}
+    done
+    [[ -n $name && $name != copy ]] || return 0
+    local -a extra=()
+    mapfile -d '' -t extra < <(python3 "$preset_helper" --encoder-args "$preset_file" "$name")
+    [[ ${#extra[@]} -eq 0 ]] || encoder_argv+=("${extra[@]}")
+}
 
 # Scalar values used in arithmetic must not become awk/bc expressions.
 for name in hpf_frequency compressor_intensity gate_intensity noise_strength     noise_speech_strength noise_model noise_lookahead noise_model_blend noise_voice_recovery; do
@@ -1159,6 +1197,10 @@ function build_encoder_commands() {
 		encoder_software=("${general_params[@]}" -c:v libx264 -preset "$software_preset" -profile:v high -level:v "$h264_level" -crf "$qp_value" -pix_fmt yuv420p)
 		;;
 	esac
+	local encoder_var
+	for encoder_var in encoder_nvenc encoder_vulkan encoder_vaapi encoder_qsv encoder_software; do
+		append_preset_encoder_args "$encoder_var"
+	done
 }
 
 # If gpu = auto change gpu to empty
@@ -1349,6 +1391,7 @@ function attempt_conversion() {
 		# AMD VAAPI doesn't support ICQ mode - use CQP for HEVC
 		if [[ "$video_encoder" == "h265" ]]; then
 			encoder_vaapi=("${general_params[@]}" -c:v hevc_vaapi -global_quality "$qp_hevc" -rc_mode CQP)
+			append_preset_encoder_args encoder_vaapi
 		fi
 		decoder_format=("${decoder_vaapi[@]}")
 		encoder_format=("${encoder_vaapi[@]}")

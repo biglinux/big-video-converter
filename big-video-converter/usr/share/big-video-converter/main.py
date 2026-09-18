@@ -335,6 +335,11 @@ class VideoConverterApp(
             background-color: alpha(@warning_color, 0.25);
             color: @warning_color;
         }
+        .chip {
+            background-color: alpha(@accent_bg_color, 0.12);
+            border-radius: 999px;
+            padding: 1px 8px;
+        }
         """,
             -1,
         )

@@ -822,6 +822,15 @@ class ConversionPage:
                     "subtitle-extract", "embedded"
                 )
 
+                # The widgets already carry a preset's structured choices; the
+                # file adds what has no widget: per-encoder arguments and the
+                # preset's own FFmpeg options.
+                active_preset = self.app.active_preset() if hasattr(self.app, "active_preset") else None
+                if active_preset is not None:
+                    env_vars["preset_file"] = active_preset.path
+                else:
+                    env_vars.pop("preset_file", None)
+
                 # Audio handling - Check if video has audio streams
                 audio_handling = self.app.settings_manager.load_setting(
                     "audio-handling", "copy"
