@@ -129,8 +129,15 @@ def terminate_process_group(process: subprocess.Popen, grace: float = 20.0) -> N
     partial file that can be gigabytes. Two seconds cut that short and left
     the debris behind; the caller still verifies and removes what survived.
     """
-    if process.pid == os.getpgrp():
-        raise ValueError("Refusing to terminate the application's process group")
+    # Children start with start_new_session=True, so their group id equals
+    # their pid; a child that shares our group was started some other way and
+    # killing its group would kill the GUI. A child already reaped has no
+    # group to look up and nothing left to protect.
+    try:
+        if os.getpgid(process.pid) == os.getpgrp():
+            raise ValueError("Refusing to terminate the application's process group")
+    except ProcessLookupError:
+        pass
     try:
         os.killpg(process.pid, signal.SIGTERM)
     except ProcessLookupError:

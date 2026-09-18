@@ -157,7 +157,20 @@ fi
 # Everything this job writes goes next to the file it will publish. Never
 # remove a file merely because its name resembles one of our outputs.
 output_stage_dir=""
+# The ffmpeg run by run_ffmpeg is a background job, so a signal that ends this
+# script (Ctrl+C, the GUI's cancel) must not leave it encoding on its own.
+ffmpeg_pid=""
 cleanup() {
+    if [[ -n $ffmpeg_pid ]] && kill -0 "$ffmpeg_pid" 2>/dev/null; then
+        kill -TERM "$ffmpeg_pid" 2>/dev/null
+        local i
+        for ((i = 0; i < 50; i++)); do
+            kill -0 "$ffmpeg_pid" 2>/dev/null || break
+            sleep 0.1
+        done
+        kill -KILL "$ffmpeg_pid" 2>/dev/null
+        wait "$ffmpeg_pid" 2>/dev/null
+    fi
     [[ -z $output_stage_dir ]] || rm -rf -- "$output_stage_dir"
 }
 trap cleanup EXIT
@@ -217,6 +230,24 @@ fi
 # is corrupted": fall back to parsing `ffmpeg -i` output instead.
 #############################################################################
 ffmpeg_probe_output=""
+
+# ffprobe 9 answers "-show_entries stream=..." with the stream_groups section
+# as well (MOV files carry a Track Reference group for their timecode track).
+# The CSV writer then prints an empty row for the group and repeats the streams
+# it references, without their tags. Read raw, a stereo track came back as
+# "\n2": the old string-built command ended a line at "-ac:a:0" and ran the
+# stray "2" as a shell command (issue #27, exit 127). Keep one row per leading
+# field; the last one wins because the real stream entries, tags included, are
+# printed after the group's copies.
+probe_rows() { # <stream specifier> <show_entries> → clean CSV rows
+	"$ffprobe_executable" -v error -select_streams "$1" -show_entries "$2" -of csv=p=0 "$input_file" 2>/dev/null |
+		awk -F, 'NF && $1 != "" { if (!($1 in row)) order[++n] = $1; row[$1] = $0 }
+		         END { for (i = 1; i <= n; i++) print row[order[i]] }' | sed 's/,$//'
+}
+
+probe_value() { # <stream specifier> <entry> → a single scalar
+	probe_rows "$1" "$2" | head -n1
+}
 
 # Raw `ffmpeg -i` report for the input file (cached).
 ffmpeg_probe() {
@@ -289,6 +320,8 @@ fb_audio_channels() {
 	5.1 | 6.0) echo 6 ;;
 	6.1 | 7.0) echo 7 ;;
 	7.1) echo 8 ;;
+	# "3 channels": ffmpeg's form for a layout without a name.
+	[0-9]*\ channels) echo "${layout%% *}" ;;
 	*) echo "" ;;
 	esac
 }
@@ -313,8 +346,8 @@ fi
 echo "Iniciando o processo FFmpeg..."
 echo "Analyzing input video..."
 if [[ $ffprobe_usable == true ]]; then
-	pix_fmt=$("$ffprobe_executable" -v error -select_streams v:0 -show_entries stream=pix_fmt -of csv=p=0 "$input_file" 2>/dev/null | sed 's/,$//')
-	video_profile=$("$ffprobe_executable" -v error -select_streams v:0 -show_entries stream=profile -of csv=p=0 "$input_file" 2>/dev/null | sed 's/,$//')
+	pix_fmt=$(probe_value v:0 stream=pix_fmt)
+	video_profile=$(probe_value v:0 stream=profile)
 else
 	# "Video: h264 (Main), yuv420p(tv, bt709), 1920x820" → profile / pixel format
 	probe_video_line=$(ffmpeg_probe_input_block | grep -m1 -E 'Stream #0:[0-9]+.*: Video:')
@@ -516,7 +549,7 @@ subtitle_outputs=()
 subtitle_destinations=()
 : "${subtitle_extract:=extract}"
 if [[ $ffprobe_usable == true ]]; then
-    subtitle_codec_info=$("$ffprobe_executable" -v error -select_streams s -show_entries stream=index,codec_name -of csv=p=0 "$input_file") || exit 2
+    subtitle_codec_info=$(probe_rows s stream=index,codec_name)
 else
     subtitle_codec_info=$(fb_subtitle_codecs)
 fi
@@ -732,7 +765,7 @@ fi
 # relative audio stream number and its absolute index in the container.
 function probe_audio_info() {
 	if [[ $ffprobe_usable == true ]]; then
-		"$ffprobe_executable" -v error -select_streams a -show_entries stream=index:stream_tags=language -of csv=p=0 "$input_file" | sed 's/,$//'
+		probe_rows a stream=index:stream_tags=language
 	else
 		fb_audio_info
 	fi
@@ -741,7 +774,7 @@ function probe_audio_info() {
 function probe_audio_channels() {
 	local rel="$1" abs="$2"
 	if [[ $ffprobe_usable == true ]]; then
-		"$ffprobe_executable" -v error -select_streams "a:$rel" -show_entries stream=channels -of csv=p=0 "$input_file" | sed 's/,$//'
+		probe_value "a:$rel" stream=channels
 	else
 		fb_audio_channels "$abs"
 	fi
@@ -750,7 +783,7 @@ function probe_audio_channels() {
 function probe_audio_layout() {
 	local rel="$1" abs="$2"
 	if [[ $ffprobe_usable == true ]]; then
-		"$ffprobe_executable" -v error -select_streams "a:$rel" -show_entries stream=channel_layout -of csv=p=0 "$input_file" | sed 's/,$//'
+		probe_value "a:$rel" stream=channel_layout
 	else
 		fb_audio_layout "$abs"
 	fi
@@ -1063,6 +1096,12 @@ function build_encoder_commands() {
 	case ${output_file##*.} in
 	mp4|mov|m4v|MP4|MOV|M4V) hevc_tag=(-tag:v hvc1) ;;
 	esac
+	# A source with a timecode tag (camera MOV files) makes the MP4 muxer add
+	# a tmcd data track, which players list as an unknown stream. MP4 has no
+	# use for it; MOV keeps it for editing workflows. keep_timecode=1 opts out.
+	case ${output_file##*.} in
+	mp4|m4v|MP4|M4V) [[ ${keep_timecode:-0} == 1 ]] || general_params+=(-metadata:s:v:0 timecode=) ;;
+	esac
 	if [[ $subtitle_extract == embedded && $defer_subtitles == false ]]; then
         general_params+=("${subtitle_cmd[@]}")
     fi
@@ -1140,12 +1179,95 @@ if [[ $only_extract_subtitles == 1 ]]; then
     exit $?
 fi
 
+# A GPU driver that hangs (a Mesa regression, a VCN ring timeout) leaves
+# ffmpeg alive and silent forever: no fallback stage ever runs and the user
+# only sees a conversion that "stopped". ffmpeg therefore writes its progress
+# report to a file, and when the frame counter, output time and size in that
+# report stop changing for stall_timeout seconds the process is killed and the
+# attempt fails with 124, which sends the job down the usual GPU → partial →
+# software chain. The default is long on purpose: the MP4 faststart pass
+# rewrites the whole file without reporting progress. stall_timeout=0 disables.
+: "${stall_timeout:=600}"
+[[ $stall_timeout =~ ^[0-9]+$ ]] || stall_timeout=600
+
+progress_fingerprint() { # last frame/out_time/size values of a -progress file
+	tail -c 4096 -- "$1" 2>/dev/null | awk -F= '
+		/^(frame|out_time_us|total_size|progress)=/ { v[$1] = $2 }
+		END { print v["frame"], v["out_time_us"], v["total_size"], v["progress"] }'
+}
+
 # Keep human-readable diagnostics; only argv is executed.
 run_ffmpeg() {
+    local -a progress_opt=()
+    local progress_file="$output_stage_dir/progress"
+    if [[ $stall_timeout -gt 0 && -d $output_stage_dir ]]; then
+        : > "$progress_file"
+        progress_opt=(-progress "$progress_file")
+    fi
     printf 'Running command:'
-    printf ' %q' "$ffmpeg_executable" -nostdin "$@"
+    printf ' %q' "$ffmpeg_executable" -nostdin "${progress_opt[@]}" "$@"
     printf '\n'
-    "$ffmpeg_executable" -nostdin "$@"
+    "$ffmpeg_executable" -nostdin "${progress_opt[@]}" "$@" &
+    ffmpeg_pid=$!
+    local stalled=false status
+    if [[ ${#progress_opt[@]} -gt 0 ]]; then
+        # Poll for exit every quarter second (a short job must not wait on
+        # the watchdog) and compare the progress report once a second.
+        local ticks=0 idle=0 seen="" now i
+        while kill -0 "$ffmpeg_pid" 2>/dev/null; do
+            sleep 0.25
+            (( ++ticks % 4 == 0 )) || continue
+            now=$(progress_fingerprint "$progress_file")
+            if [[ $now != "$seen" ]]; then
+                seen=$now
+                idle=0
+                continue
+            fi
+            ((idle += 1))
+            if [[ $idle -ge $stall_timeout ]]; then
+                echo "Stall watchdog: no progress for ${idle}s, terminating ffmpeg" >&2
+                kill -TERM "$ffmpeg_pid" 2>/dev/null
+                for ((i = 0; i < 50; i++)); do
+                    kill -0 "$ffmpeg_pid" 2>/dev/null || break
+                    sleep 0.1
+                done
+                kill -KILL "$ffmpeg_pid" 2>/dev/null
+                stalled=true
+                break
+            fi
+        done
+    fi
+    wait "$ffmpeg_pid"
+    status=$?
+    ffmpeg_pid=""
+    [[ $stalled == false ]] || status=124
+    return "$status"
+}
+
+# A hardware encoder whose driver is installed but broken (a Mesa regression,
+# missing firmware, a device the user cannot open) used to be discovered only
+# by pushing the real file through two failing GPU stages, and one that hangs
+# was never discovered at all. Encode two synthetic frames first, with the same
+# device setup and upload filters the real stages use; failure or a hang means
+# software encoding, announced in the log. gpu_smoke_test=0 skips the check.
+hw_encoder_name=""
+hw_encoder_smoke_test() {
+	local i encoder=""
+	local -a upload=()
+	for ((i = 0; i < ${#encoder_format[@]} - 1; i++)); do
+		[[ ${encoder_format[$i]} == -c:v ]] && encoder=${encoder_format[$((i + 1))]}
+	done
+	[[ -n $encoder && $encoder != copy ]] || return 0
+	hw_encoder_name=$encoder
+	case $detected_encoder_var in
+	encoder_vaapi) upload=(-vf "format=nv12,hwupload=derive_device=vaapi") ;;
+	encoder_vulkan) upload=(-vf "format=nv12,hwupload=derive_device=vulkan") ;;
+	encoder_qsv) upload=(-vf "format=nv12,hwupload=extra_hw_frames=64,format=qsv") ;;
+	esac
+	echo "Checking GPU encoder $encoder..."
+	timeout -k 5 "${gpu_probe_timeout:-30}" "$ffmpeg_executable" -nostdin -v error "${init_hardware[@]}" \
+		-f lavfi -i "color=c=gray:size=256x256:rate=25:duration=0.2" "${upload[@]}" \
+		-c:v "$encoder" -frames:v 2 -f null - </dev/null
 }
 
 # Function to attempt the conversion using the 3-stage fallback (GPU -> Partial -> CPU)
@@ -1348,6 +1470,18 @@ function attempt_conversion() {
 		echo "HDR to SDR tone mapping: forcing software decode (Stage 2)"
 	fi
 
+	if [[ $force_copy_video != 1 && $detected_encoder_var != encoder_software && ${gpu_smoke_test:-1} == 1 ]]; then
+		if ! hw_encoder_smoke_test; then
+			echo "GPU encoder check failed: $hw_encoder_name did not encode a test frame (driver problem?). Using software encoding."
+			detected_encoder_var=encoder_software
+			encoder_format=("${encoder_software[@]}")
+			init_hardware=()
+			decoder_format=()
+			# Later passes (audio fallbacks) must not probe the GPU again.
+			force_software=1
+		fi
+	fi
+
 	# --- Execute Conversion Attempts ---
 
 	# Extract subtitles first if needed (separate command to avoid output conflicts)
@@ -1432,7 +1566,7 @@ function attempt_conversion() {
     fi
 
 	# Stage 2: Partial GPU (decode CPU, encode GPU)
-	if [[ ( ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1" ) && "$detected_encoder_var" != "encoder_software" && "$force_copy_video" != "1" ]]; then
+	if [[ ( ($exit_code != 0 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1" ) && "$detected_encoder_var" != "encoder_software" && "$force_copy_video" != "1" ]]; then
 		echo "Encode mode: Decode Software, Encode GPU"
 
 		local partial_video_filter_chain=""
@@ -1486,7 +1620,7 @@ function attempt_conversion() {
 	fi
 
 	# Stage 3: Full software (decode + encode on CPU)
-	if [[ ($exit_code != 0 && $exit_code != 255 && $force_software != 1 && $force_copy_video != 1) || $force_software == 1 || ("$detected_encoder_var" == "encoder_software") ]]; then
+	if [[ ($exit_code != 0 && $force_software != 1 && $force_copy_video != 1) || $force_software == 1 || ("$detected_encoder_var" == "encoder_software") ]]; then
 		echo "Encode mode: Decode Software, Encode Software"
 		local software_filter_chain=""
 		local sw_filter_parts=()
@@ -1594,7 +1728,7 @@ attempt_conversion
 # --- Audio Fallback Pass ---
 # If the first pass failed and we were trying to copy audio, it's likely due to an
 # incompatible audio codec for the container. Let's try again by re-encoding the audio.
-if [[ $exit_code != 0 && $exit_code != 255 && $exit_code != 2 && "$original_audio_handling" == "copy" ]]; then
+if [[ $exit_code != 0 && $exit_code != 2 && $exit_code != 124 && "$original_audio_handling" == "copy" ]]; then
 	echo -e "${COLOR_YELLOW}Audio stream copy may have failed. Retrying with audio re-encoding...${COLOR_RESET}"
 
 	# Force re-encode and rebuild all commands
@@ -1608,7 +1742,7 @@ fi
 
 # --- Audio Codec Fallback Pass ---
 # If re-encoding with a specific codec failed (e.g. Opus in MP4), try with AAC
-if [[ $exit_code != 0 && $exit_code != 255 && $exit_code != 2 && "$audio_handling" == "reencode" && "$audio_codec" != "aac" ]]; then
+if [[ $exit_code != 0 && $exit_code != 2 && $exit_code != 124 && "$audio_handling" == "reencode" && "$audio_codec" != "aac" ]]; then
 	echo -e "${COLOR_YELLOW}Audio re-encoding with $audio_codec may have failed. Retrying with AAC codec...${COLOR_RESET}"
 
 	# Switch to AAC (most compatible codec) and rebuild all commands
@@ -1621,12 +1755,12 @@ if [[ $exit_code != 0 && $exit_code != 255 && $exit_code != 2 && "$audio_handlin
 fi
 
 # --- Final Exit Code Check ---
+# A cancel never gets here: the INT/TERM traps end the script themselves. An
+# ffmpeg exit of 255 is therefore a real error (AVERROR(EPERM) truncated to a
+# byte) and must go through the fallbacks above like any other, not be
+# reported as "interrupted by user" as it once was.
 if [[ $exit_code != 0 ]]; then
-	if [[ $exit_code == 255 ]]; then
-		echo -e "${COLOR_YELLOW}Conversion interrupted by user.${COLOR_RESET}"
-	else
-		echo -e "${COLOR_YELLOW}Conversion failed with an unexpected error. Exit code: $exit_code.${COLOR_RESET}"
-	fi
+	echo -e "${COLOR_YELLOW}Conversion failed with an unexpected error. Exit code: $exit_code.${COLOR_RESET}"
 	exit $exit_code
 fi
 

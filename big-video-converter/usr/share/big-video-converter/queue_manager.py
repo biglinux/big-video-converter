@@ -160,13 +160,23 @@ class QueueManagerMixin:
                 response = _dialog.choose_finish(result)
             except GLib.Error:
                 response = "cancel"
-            if response == "continue":
-                self._disk_space_ok = True
-                self._do_start_queue_processing()
+            self._on_disk_space_response(response)
 
         window = self.get_active_window()
         dialog.choose(window, None, on_response)
         return False  # Caller should NOT proceed — async dialog handles it
+
+    def _on_disk_space_response(self, response: str) -> None:
+        """Continue the queue, or hand the buttons back after a cancel.
+
+        The header disabled Convert before asking; a cancel here used to
+        leave it disabled until the application was restarted.
+        """
+        if response == "continue":
+            self._disk_space_ok = True
+            self._do_start_queue_processing()
+            return
+        self.header_bar.set_buttons_sensitive(True)
 
     def start_queue_processing(self) -> None:
         """Start processing the conversion queue"""
@@ -350,9 +360,6 @@ class QueueManagerMixin:
             GLib.idle_add(self.process_next_in_queue)
             return False
 
-        # Prepare for conversion
-        self.conversion_page.current_file_path = next_file
-
         # Allocate a GPU slot if using parallel processing
         gpu_slot = None
         if max_concurrent > 1 and self.gpu_slots:
@@ -378,16 +385,37 @@ class QueueManagerMixin:
         # Update UI queue display
         GLib.idle_add(self.conversion_page.update_queue_display)
 
-        # Start conversion with override if slot allocated
-        try:
-            result = self.conversion_page.force_start_conversion(gpu_override=gpu_slot)
-        except Exception:
-            self.logger.exception("Failed to prepare conversion")
-            result = False
+        # Preparing a job asks ffprobe about the file (audio tracks, size,
+        # MP4 compatibility), each call up to ten seconds on slow storage.
+        # Those answers are collected on a worker thread first, so the
+        # main loop never blocks; the launch itself stays on the main loop.
+        def launch() -> bool:
+            if self.is_cancellation_requested:
+                self.conversion_completed(False, file_path=next_file,
+                                          job_id=conversion_info["job_id"])
+                return False
+            # Set right before use: another slot's launch may have run in between.
+            self.conversion_page.current_file_path = next_file
+            try:
+                result = self.conversion_page.force_start_conversion(gpu_override=gpu_slot)
+            except Exception:
+                self.logger.exception("Failed to prepare conversion")
+                result = False
+            if result is False:
+                self.conversion_completed(False, file_path=next_file,
+                                          job_id=conversion_info["job_id"])
+            return False
 
-        if result is False:
-            self.conversion_completed(False, file_path=next_file,
-                                      job_id=conversion_info["job_id"])
+        def warm_then_launch() -> None:
+            try:
+                from utils.file_info import warm_probe_cache
+
+                warm_probe_cache(next_file)
+            except Exception:
+                self.logger.exception("Pre-flight probe failed; launching anyway")
+            GLib.idle_add(launch)
+
+        threading.Thread(target=warm_then_launch, name="bvc-preflight", daemon=True).start()
 
         # Try to start another if we have capacity (active < max)
         with self.conversions_lock:

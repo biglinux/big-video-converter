@@ -74,8 +74,6 @@ class VideoEditPage:
         # Simple fullscreen support - just hide UI elements
         self.is_video_fullscreen = False
 
-        # Debounce timer for saving metadata to avoid file I/O on every slider change
-        self.metadata_save_timeout = None
 
         # Keyboard shortcuts
         self._setup_keyboard_shortcuts()
@@ -217,11 +215,12 @@ class VideoEditPage:
         })
         self.app_state.file_metadata[self.current_video_path] = metadata
 
-    def _save_file_metadata_debounced(self):
-        """Keep the in-memory job state current, including during slider drags."""
-        if self.metadata_save_timeout:
-            GLib.source_remove(self.metadata_save_timeout)
-            self.metadata_save_timeout = None
+    def _sync_file_metadata(self):
+        """Keep the in-memory job state current, including during slider drags.
+
+        There is no timer here on purpose: the state is a dict, so writing it
+        on every change is cheap and nothing can be lost to a pending timeout.
+        """
         self._save_file_metadata()
 
     def set_video(self, file_path: str):
@@ -257,7 +256,7 @@ class VideoEditPage:
         """Clean up resources when leaving the edit page"""
         if getattr(self, "cleanup_called", False):
             return
-        self._save_file_metadata_debounced()
+        self._sync_file_metadata()
         self.cleanup_called = True
         self.requested_video_path = None
         self.loading_video = False
@@ -303,7 +302,7 @@ class VideoEditPage:
 
     def on_brightness_changed(self, scale) -> None:
         self.brightness = scale.get_value()
-        self._save_file_metadata_debounced()
+        self._sync_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_brightness(self.brightness)
             # Don't refresh preview during drag - MPV updates automatically
@@ -834,7 +833,7 @@ class VideoEditPage:
 
     def on_saturation_changed(self, scale) -> None:
         self.saturation = scale.get_value()
-        self._save_file_metadata_debounced()
+        self._sync_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_saturation(self.saturation)
             # Don't refresh preview - MPV updates automatically
@@ -843,7 +842,7 @@ class VideoEditPage:
 
     def on_hue_changed(self, scale) -> None:
         self.hue = scale.get_value()
-        self._save_file_metadata_debounced()
+        self._sync_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_hue(self.hue)
             # Don't refresh preview - MPV updates automatically

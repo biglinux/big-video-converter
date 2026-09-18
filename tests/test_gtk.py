@@ -125,7 +125,7 @@ def test_editor_saves_adjustment_before_next_main_loop_tick(app,media):
     page.ui.hue_scale.set_value(.75)
     # Do not pump: persistence cannot depend on a pending timer.
     assert page.app_state.file_metadata[str(media['video'])]['hue']==.75
-    assert page.metadata_save_timeout is None
+    assert not hasattr(page,'metadata_save_timeout')
 
 
 def test_remove_only_selected_segment_with_duplicate_start(app):
@@ -196,3 +196,23 @@ def test_native_progress_row_updates_and_completes(app,media,tmp_path,cli_env):
         assert completed==[(True,{'file_path':str(media['video']),'job_id':'native'})]
         assert out.exists() and app.conversions_running==0
     finally:app.conversion_completed=original
+
+
+def test_queue_probes_off_the_main_thread_and_converts(app,media,tmp_path,monkeypatch):
+    """The real queue: ffprobe pre-flight on a worker, launch and completion on the main loop."""
+    import shutil,threading
+    from utils import file_info
+    probe_threads=[]
+    original=file_info.warm_probe_cache
+    def record(path):probe_threads.append(threading.current_thread().name);original(path)
+    monkeypatch.setattr(file_info,'warm_probe_cache',record)
+    source=tmp_path/'queued.mkv';shutil.copyfile(media['silent'],source)
+    app.settings_manager.save_setting('gpu','software')
+    app.settings_manager.save_setting('use-custom-output-folder',False)
+    assert app.add_file_to_queue(str(source))
+    app.start_queue_processing()
+    until(lambda:probe_threads,timeout=10)
+    assert probe_threads and 'MainThread' not in probe_threads
+    until(lambda:not app.active_conversions and not app.conversion_queue and not app.currently_converting,timeout=90)
+    assert (tmp_path/'queued.mp4').exists()
+    assert app.header_bar.convert_button.get_sensitive()
