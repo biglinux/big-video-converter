@@ -4582,12 +4582,20 @@ msgstr "Muuntaus epäonnistui koodilla {0}"
 msgid "Error starting conversion: {0}"
 msgstr "Virhe muunnoksen aloittamisessa: {0}"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 213
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 216
-msgid "Software encoding"
-msgstr "Ohjelmistokoodaus"
+msgid "Preparing…"
+msgstr "Valmistellaan…"
+
+msgid "Extracting subtitles…"
+msgstr "Puretaan tekstityksiä…"
+
+msgid "Checking the GPU encoder…"
+msgstr "Tarkistetaan GPU-enkooderia…"
+
+msgid "GPU unavailable, using the processor"
+msgstr "GPU ei ole käytettävissä, käytetään suoritinta"
+
+msgid "Copying without re-encoding"
+msgstr "Kopioidaan uudelleenkoodaamatta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 214
@@ -4600,6 +4608,13 @@ msgstr "Täysi GPU-kiihdytys"
 # converter/utils/conversion.py, line: 215
 msgid "Software Decoding and GPU encoding"
 msgstr "Ohjelmistodekoodaus ja GPU-koodaus"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 213
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 216
+msgid "Software encoding"
+msgstr "Ohjelmistokoodaus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 579

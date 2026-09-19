@@ -336,3 +336,30 @@ def test_subtitle_only_batch_never_converts_or_removes_video(media,tmp_path,cli_
     outputs=app.completed_conversions[-1]['output_files']
     assert len(outputs)==(4 if mode=='split' else 2)
     assert all(Path(path).suffix=='.srt' for path in outputs)
+
+
+def test_subtitle_pass_never_drives_the_bar_or_claims_software_encoding(tmp_path,cli_env):
+    """A user with a working GPU read "Software encoding" plus a racing bar
+    during the subtitle extraction and concluded the GPU was unused."""
+    app=App();history=[]
+    original_add=app.progress_page.add_conversion
+    def add_conversion(title,source,process):
+        row=original_add(title,source,process)
+        row.update_progress=lambda p:history.append(('progress',p))
+        row.update_status=lambda s:history.append(('status',s))
+        return row
+    app.progress_page.add_conversion=add_conversion
+    script=('echo "Checking GPU encoder h264_vaapi..."; echo "Extracting subtitles..."; '
+            'echo "  Duration: 00:01:00.00, start: 0.000000" >&2; '
+            'echo "size=0KiB time=00:00:48.00 bitrate=0.0kbits/s speed=200x" >&2; sleep 0.2; '
+            'echo "Encode mode: Decode GPU, encode GPU"; '
+            'echo "frame=  100 fps=50 time=00:00:06.00 bitrate=1kbits/s speed=2x" >&2; sleep 0.2; exit 3')
+    conversion.run_with_progress_dialog(app,['bash','-c',script],'test',
+        env_vars={**cli_env,'output_file':str(tmp_path/'out.mp4')},job_id='phases')
+    pump_until(lambda:bool(app.notifications),timeout=10)
+    statuses=[s for kind,s in history if kind=='status']
+    progress=[p for kind,p in history if kind=='progress']
+    first_encode=statuses.index(next(s for s in statuses if 'GPU acceleration' in s))
+    assert any('Extracting subtitles' in s for s in statuses[:first_encode])
+    assert not any('Software encoding' in s for s in statuses)
+    assert progress and all(p<0.5 for p in progress), progress  # only the encode's 6 s of 60 s

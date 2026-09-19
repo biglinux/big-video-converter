@@ -3455,12 +3455,20 @@ msgstr "המרה נכשלה עם קוד {0}"
 msgid "Error starting conversion: {0}"
 msgstr "שגיאה בהתחלת ההמרה: {0}"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 213
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 216
-msgid "Software encoding"
-msgstr "קידוד תוכנה"
+msgid "Preparing…"
+msgstr "מכין…"
+
+msgid "Extracting subtitles…"
+msgstr "מחלץ כתוביות…"
+
+msgid "Checking the GPU encoder…"
+msgstr "בודק את מקודד ה-GPU…"
+
+msgid "GPU unavailable, using the processor"
+msgstr "ה-GPU אינו זמין, משתמש במעבד"
+
+msgid "Copying without re-encoding"
+msgstr "מעתיק ללא קידוד מחדש"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 214
@@ -3473,6 +3481,13 @@ msgstr "האצה מלאה של GPU"
 # converter/utils/conversion.py, line: 215
 msgid "Software Decoding and GPU encoding"
 msgstr "פיענוח תוכנה וקידוד GPU"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 213
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 216
+msgid "Software encoding"
+msgstr "קידוד תוכנה"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 579

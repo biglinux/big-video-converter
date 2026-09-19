@@ -376,7 +376,12 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
     duration = progress_item.expected_duration
     expected_streams = None
     result = ConversionResult(False, -1, destination)
-    stage_mode = _("Software encoding")
+    # Until the script announces an encode mode the job is preparing: probing,
+    # checking the GPU, extracting subtitles. Showing "Software encoding" and
+    # a racing progress bar in that phase made a user with a working GPU
+    # conclude the GPU was not used (the subtitle pass runs at 200x).
+    stage_mode = _("Preparing…")
+    encoding = False
     warning_shown = False
     monitor_error = None
     encoded_frames = None
@@ -384,7 +389,7 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
     workspace = None
 
     def consume(text, source):
-        nonlocal duration, stage_mode, encoded_frames, workspace, reported_duration
+        nonlocal duration, stage_mode, encoding, encoded_frames, workspace, reported_duration
         updates.push(text=text)
         # The script announces the directory it owns, so a job killed before
         # its own cleanup leaves nothing for the user to find and wonder about.
@@ -396,12 +401,24 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             error_hints.append(text.strip())
         if text.startswith("Running command:"):
             updates.push(command=text.partition(":")[2].strip())
+        if text.startswith("Extracting subtitles"):
+            stage_mode = _("Extracting subtitles…")
+            updates.push(status=stage_mode)
+        if text.startswith("Checking GPU encoder"):
+            updates.push(status=_("Checking the GPU encoder…"))
+        if text.startswith("GPU encoder check failed"):
+            updates.push(status=_("GPU unavailable, using the processor"))
+        if text.startswith("Generating file without re-encoding"):
+            stage_mode = _("Copying without re-encoding")
+            encoding = True
+            updates.push(status=stage_mode)
         if text.startswith("Encode mode:"):
             technical = text.partition(":")[2].strip()
             stage_mode = {
                 "Decode GPU, encode GPU": _("Full GPU acceleration"),
                 "Decode Software, Encode GPU": _("Software Decoding and GPU encoding"),
             }.get(technical, _("Software encoding"))
+            encoding = True
             updates.push(status=stage_mode)
         # FFmpeg's own frame tally, used later to prove the muxed file is not
         # short of what the encoder said it wrote.
@@ -418,7 +435,10 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                 reported_duration = _time_value(reported[1])
         match = re.search(r"time=\s*(\d+:\d+:\d+(?:\.\d+)?)", text)
         total = duration or reported_duration
-        if match and total and total > 0:
+        # The bar belongs to the encode: the subtitle pass also prints
+        # time= lines, and letting them drive it made the bar jump to 80 %
+        # and drop back to zero when the real work started.
+        if match and total and total > 0 and encoding:
             progress = min(0.99, max(0.0, _time_value(match[1]) / total))
             fps = re.search(r"fps=\s*(\d+(?:\.\d+)?)", text)
             status = f"{stage_mode} | {fps[1]} fps" if fps else stage_mode

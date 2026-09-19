@@ -3250,12 +3250,20 @@ msgstr "변환이 코드 {0}로 실패했습니다."
 msgid "Error starting conversion: {0}"
 msgstr "변환 시작 오류: {0}"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 213
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 216
-msgid "Software encoding"
-msgstr "소프트웨어 인코딩"
+msgid "Preparing…"
+msgstr "준비 중…"
+
+msgid "Extracting subtitles…"
+msgstr "자막 추출 중…"
+
+msgid "Checking the GPU encoder…"
+msgstr "GPU 인코더 확인 중…"
+
+msgid "GPU unavailable, using the processor"
+msgstr "GPU를 사용할 수 없어 프로세서를 사용합니다"
+
+msgid "Copying without re-encoding"
+msgstr "다시 인코딩하지 않고 복사"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 214
@@ -3268,6 +3276,13 @@ msgstr "전체 GPU 가속"
 # converter/utils/conversion.py, line: 215
 msgid "Software Decoding and GPU encoding"
 msgstr "소프트웨어 디코딩 및 GPU 인코딩"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 213
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 216
+msgid "Software encoding"
+msgstr "소프트웨어 인코딩"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 579

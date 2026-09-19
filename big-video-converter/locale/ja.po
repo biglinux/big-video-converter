@@ -4291,12 +4291,20 @@ msgstr "変換に失敗しました。コード {0}"
 msgid "Error starting conversion: {0}"
 msgstr "変換の開始中にエラーが発生しました: {0}"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 213
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 216
-msgid "Software encoding"
-msgstr "ソフトウェアエンコーディング"
+msgid "Preparing…"
+msgstr "準備中…"
+
+msgid "Extracting subtitles…"
+msgstr "字幕を抽出中…"
+
+msgid "Checking the GPU encoder…"
+msgstr "GPUエンコーダーを確認中…"
+
+msgid "GPU unavailable, using the processor"
+msgstr "GPUが利用できないため、プロセッサーを使用します"
+
+msgid "Copying without re-encoding"
+msgstr "再エンコードせずにコピー"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 214
@@ -4309,6 +4317,13 @@ msgstr "フルGPUアクセラレーション"
 # converter/utils/conversion.py, line: 215
 msgid "Software Decoding and GPU encoding"
 msgstr "ソフトウェアデコーディングとGPUエンコーディング"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 213
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 216
+msgid "Software encoding"
+msgstr "ソフトウェアエンコーディング"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 579
