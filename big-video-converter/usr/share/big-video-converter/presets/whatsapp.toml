@@ -1,0 +1,32 @@
+# WhatsApp: small files that still look fine on a phone. 720p H.264 Baseline
+# friendly settings, low audio bitrate, MP4 with the index up front.
+format = 1
+
+[preset]
+name = "WhatsApp"
+description = "720p H.264 with light AAC audio in MP4: small enough to send in chat, plays on any phone."
+tags = ["whatsapp", "telegram", "chat", "small", "720p"]
+
+[video]
+codec = "h264"
+quality = "low"
+speed = "faster"
+resolution = "1280x720"
+pixel_format = "yuv420p"
+gpu = "software"
+
+[audio]
+mode = "reencode"
+codec = "aac"
+bitrate = "96k"
+channels = 2
+sample_rate = 44100
+
+[subtitles]
+mode = "none"
+
+[container]
+format = "mp4"
+
+[encoder.libx264]
+args = ["-profile:v", "main", "-level:v", "3.1"]

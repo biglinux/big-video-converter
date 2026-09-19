@@ -85,6 +85,7 @@ class SettingsManager:
         "use-custom-output-folder": False,
         # Sidebar state
         "video-profile": "universal",
+        "active-preset": "",
         "gpu-device-index": 0,
         "show-welcome-dialog": True,
         "preview-rotation": 0,
@@ -455,6 +456,7 @@ class SettingsManager:
 
 # Local preferences and per-file edits are not portable conversion recipes.
 SettingsManager._PROFILE_EXCLUDE_KEYS.update({
+    "active-preset",
     "delete-original", "delete-batch-originals", "gpu-device-index", "gpu",
     "gpu-partial", "max-processes", "min-mp4-size", "use-custom-output-folder",
     "show-tooltips", "show-welcome-dialog", "video-preview-render-mode",

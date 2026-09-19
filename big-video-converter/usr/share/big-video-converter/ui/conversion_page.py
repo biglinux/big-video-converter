@@ -14,7 +14,6 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 from utils.conversion import run_with_progress_dialog
 from utils.segment_batch import start_segment_batch
 from utils.ffmpeg_options import validate_additional_options
-from utils.ffmpeg_path import get_ffprobe_executable
 from utils.video_settings import SettingsOverride, get_video_filter_string
 
 import logging
@@ -823,6 +822,15 @@ class ConversionPage:
                     "subtitle-extract", "embedded"
                 )
 
+                # The widgets already carry a preset's structured choices; the
+                # file adds what has no widget: per-encoder arguments and the
+                # preset's own FFmpeg options.
+                active_preset = self.app.active_preset() if hasattr(self.app, "active_preset") else None
+                if active_preset is not None:
+                    env_vars["preset_file"] = active_preset.path
+                else:
+                    env_vars.pop("preset_file", None)
+
                 # Audio handling - Check if video has audio streams
                 audio_handling = self.app.settings_manager.load_setting(
                     "audio-handling", "copy"
@@ -978,47 +986,11 @@ class ConversionPage:
                 if (
                     crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0
                 ) and (video_width is None or video_height is None):
-                    try:
-                        import json
-                        import subprocess
+                    # Answered from the probe cache the queue warmed off the
+                    # main thread; a cache miss still probes synchronously.
+                    from utils.file_info import get_video_dimensions
 
-                        logger.debug(
-                            f"Getting video dimensions for {input_file} using ffprobe"
-                        )
-                        cmd = [
-                            get_ffprobe_executable(),
-                            "-v",
-                            "error",
-                            "-select_streams",
-                            "v:0",
-                            "-show_entries",
-                            "stream=width,height",
-                            "-of",
-                            "json",
-                            input_file,
-                        ]
-
-                        result = subprocess.run(
-                            cmd, capture_output=True, text=True, timeout=10
-                        )
-                        if result.returncode == 0:
-                            data = json.loads(result.stdout)
-                            if "streams" in data and len(data["streams"]) > 0:
-                                video_width = int(data["streams"][0].get("width", 0))
-                                video_height = int(data["streams"][0].get("height", 0))
-                                logger.debug(
-                                    f"Detected video dimensions: {video_width}x{video_height}"
-                                )
-
-                            else:
-                                logger.debug("No video streams found in file")
-                        else:
-                            logger.error(f"ffprobe error: {result.stderr}")
-                    except (subprocess.SubprocessError, OSError) as e:
-                        logger.error(f"Error getting video dimensions: {e}")
-                        import traceback
-
-                        traceback.print_exc()
+                    video_width, video_height = get_video_dimensions(input_file)
 
                 if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:
                     logger.debug(

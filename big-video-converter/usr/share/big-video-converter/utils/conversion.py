@@ -39,6 +39,8 @@ def _ffmpeg_error_map() -> list[tuple[str, str]]:
         ("permission denied", _("Permission denied — check file/folder permissions.")),
         ("no such file or directory", _("File or folder not found.")),
         ("invalid data found when processing input", _("The file appears to be corrupted or in an unsupported format.")),
+        # Before the generic "codec not currently supported": the muxer says both.
+        ("could not find tag for codec", _("A track of this file cannot be stored in the chosen container. Try MKV.")),
         ("codec not currently supported", _("This codec is not supported on your system.")),
         ("unknown decoder", _("A required decoder is not installed.")),
         ("unknown encoder", _("A required encoder is not installed.")),
@@ -48,6 +50,14 @@ def _ffmpeg_error_map() -> list[tuple[str, str]]:
         ("does not contain any stream", _("The file does not contain a valid media stream.")),
         ("moov atom not found", _("The video file is incomplete or damaged (missing metadata).")),
         ("decoding for stream", _("Could not decode the file — it may be corrupted.")),
+        ("missing argument for option", _("The conversion command was built incorrectly. Please report this problem.")),
+        ("error splitting the argument list", _("FFmpeg rejected the conversion command. Check the additional options.")),
+        ("unrecognized option", _("FFmpeg rejected the conversion command. Check the additional options.")),
+        ("option not found", _("FFmpeg rejected the conversion command. Check the additional options.")),
+        ("device creation failed", _("The GPU could not be opened. Try disabling GPU encoding.")),
+        ("failed to initialise vaapi", _("The GPU could not be opened. Try disabling GPU encoding.")),
+        ("stall watchdog", _("The encoder stopped making progress and was terminated.")),
+        ("conversion produced no output", _("The conversion finished without producing a file.")),
     ]
 
 
@@ -60,6 +70,37 @@ def _friendly_ffmpeg_error(stderr_lines: list[str]) -> str:
             if pattern in lower:
                 return message
     return ""
+
+
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+# FFmpeg's periodic statistics and its build banner: noise, never the cause.
+_NOISE_RE = re.compile(r"^(frame=|size=|\s*(configuration|built with|lib[a-z0-9]+\s+\d))|^\s*$", re.I)
+_HINT_RE = re.compile(
+    r"error|invalid|fail|missing|could not|cannot|can't|unrecogni|not supported|"
+    r"no such|denied|unable|stall watchdog|gpu encoder check", re.I)
+
+
+def _failure_message(returncode: int, stderr_tail, error_hints=()) -> str:
+    """The message a user sees for a failed job: the cause, then the evidence.
+
+    "Conversion failed with code 127" on its own sent a user to ChatGPT with
+    the full log (issue #27). The friendly text is derived from every hint
+    collected across the script's retries, and the last lines FFmpeg printed
+    are appended so the actual error is never hidden behind a number.
+    """
+    hints = [_ANSI_RE.sub("", line).strip() for line in error_hints]
+    tail = [_ANSI_RE.sub("", line).strip() for line in stderr_tail]
+    message = _friendly_ffmpeg_error(hints + tail) or _("Conversion failed with code {0}").format(returncode)
+    # The hints are ordered by arrival across every attempt, so the first and
+    # the last three are the cause and the final symptoms. stdout and stderr
+    # are separate pipes, so nothing here depends on their relative order.
+    evidence: list[str] = []
+    for line in hints[:1] + hints[-3:] or [line for line in tail if not _NOISE_RE.match(line)][-3:]:
+        if line and line not in evidence:
+            evidence.append(line)
+    if evidence:
+        message += "\n" + "\n".join(evidence)
+    return message
 
 
 
@@ -323,7 +364,11 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
     cancelled = progress_item.cancel_event
     destination = progress_item.expected_output
     updates = _Updates(progress_item)
+    # The script runs ffmpeg up to five times per job (GPU stages, audio
+    # retries) and each run prints a banner, so a short tail can lose the
+    # cause; error-looking lines from every attempt are kept separately.
     stderr_tail = deque(maxlen=40)
+    error_hints = deque(maxlen=20)
     selector = selectors.DefaultSelector()
     decoders = {}
     buffers = {}
@@ -331,7 +376,12 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
     duration = progress_item.expected_duration
     expected_streams = None
     result = ConversionResult(False, -1, destination)
-    stage_mode = _("Software encoding")
+    # Until the script announces an encode mode the job is preparing: probing,
+    # checking the GPU, extracting subtitles. Showing "Software encoding" and
+    # a racing progress bar in that phase made a user with a working GPU
+    # conclude the GPU was not used (the subtitle pass runs at 200x).
+    stage_mode = _("Preparing…")
+    encoding = False
     warning_shown = False
     monitor_error = None
     encoded_frames = None
@@ -339,7 +389,7 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
     workspace = None
 
     def consume(text, source):
-        nonlocal duration, stage_mode, encoded_frames, workspace, reported_duration
+        nonlocal duration, stage_mode, encoding, encoded_frames, workspace, reported_duration
         updates.push(text=text)
         # The script announces the directory it owns, so a job killed before
         # its own cleanup leaves nothing for the user to find and wonder about.
@@ -347,14 +397,28 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             workspace = text.partition(":")[2].strip()
         if source == "stderr":
             stderr_tail.append(text.strip())
+        if _HINT_RE.search(text) and not _NOISE_RE.match(text):
+            error_hints.append(text.strip())
         if text.startswith("Running command:"):
             updates.push(command=text.partition(":")[2].strip())
+        if text.startswith("Extracting subtitles"):
+            stage_mode = _("Extracting subtitles…")
+            updates.push(status=stage_mode)
+        if text.startswith("Checking GPU encoder"):
+            updates.push(status=_("Checking the GPU encoder…"))
+        if text.startswith("GPU encoder check failed"):
+            updates.push(status=_("GPU unavailable, using the processor"))
+        if text.startswith("Generating file without re-encoding"):
+            stage_mode = _("Copying without re-encoding")
+            encoding = True
+            updates.push(status=stage_mode)
         if text.startswith("Encode mode:"):
             technical = text.partition(":")[2].strip()
             stage_mode = {
                 "Decode GPU, encode GPU": _("Full GPU acceleration"),
                 "Decode Software, Encode GPU": _("Software Decoding and GPU encoding"),
             }.get(technical, _("Software encoding"))
+            encoding = True
             updates.push(status=stage_mode)
         # FFmpeg's own frame tally, used later to prove the muxed file is not
         # short of what the encoder said it wrote.
@@ -371,7 +435,10 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                 reported_duration = _time_value(reported[1])
         match = re.search(r"time=\s*(\d+:\d+:\d+(?:\.\d+)?)", text)
         total = duration or reported_duration
-        if match and total and total > 0:
+        # The bar belongs to the encode: the subtitle pass also prints
+        # time= lines, and letting them drive it made the bar jump to 80 %
+        # and drop back to zero when the real work started.
+        if match and total and total > 0 and encoding:
             progress = min(0.99, max(0.0, _time_value(match[1]) / total))
             fps = re.search(r"fps=\s*(\d+(?:\.\d+)?)", text)
             status = f"{stage_mode} | {fps[1]} fps" if fps else stage_mode
@@ -435,7 +502,7 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
         if cancelled.is_set():
             raise InterruptedError("Conversion cancelled")
         if returncode:
-            error = _friendly_ffmpeg_error(list(stderr_tail)) or _("Conversion failed with code {0}").format(returncode)
+            error = _failure_message(returncode, stderr_tail, error_hints)
             result = ConversionResult(False, returncode, destination, error=error)
         else:
             extraction_only = env.get("only_extract_subtitles") == "1"

@@ -22,6 +22,85 @@ logger = logging.getLogger(__name__)
 _ = gettext.gettext
 
 
+# Probe answers the queue needs before launching a job, keyed by the file's
+# identity (path, size, mtime) so an edited file is never answered from stale
+# data. The queue warms these entries on a worker thread; the launch, which
+# has to run on the GTK main loop, then finds them ready instead of blocking
+# the interface on ffprobe for up to ten seconds per call.
+_PROBE_CACHE: dict = {}
+_PROBE_CACHE_LOCK = threading.Lock()
+_PROBE_CACHE_LIMIT = 64
+
+
+def _file_identity(file_path: str):
+    try:
+        st = os.stat(file_path)
+    except OSError:
+        return None
+    return (os.path.abspath(file_path), st.st_size, st.st_mtime_ns)
+
+
+def _cached_probe(func):
+    """Memoize a probe by file identity; failures are not cached."""
+
+    def wrapper(file_path: str, *args, **kwargs):
+        identity = _file_identity(file_path)
+        key = (func.__name__, identity)
+        if identity is not None:
+            with _PROBE_CACHE_LOCK:
+                if key in _PROBE_CACHE:
+                    return _PROBE_CACHE[key]
+        value = func(file_path, *args, **kwargs)
+        if identity is not None:
+            with _PROBE_CACHE_LOCK:
+                if len(_PROBE_CACHE) >= _PROBE_CACHE_LIMIT:
+                    _PROBE_CACHE.pop(next(iter(_PROBE_CACHE)))
+                _PROBE_CACHE[key] = value
+        return value
+
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+    wrapper.__wrapped__ = func
+    return wrapper
+
+
+def clear_probe_cache() -> None:
+    with _PROBE_CACHE_LOCK:
+        _PROBE_CACHE.clear()
+
+
+def warm_probe_cache(file_path: str) -> None:
+    """Run every launch-time probe once, off the main thread."""
+    has_audio_streams(file_path)
+    get_video_dimensions(file_path)
+    check_mp4_compatibility(file_path)
+
+
+@_cached_probe
+def get_video_dimensions(file_path: str):
+    """(width, height) of the first video stream, or (None, None)."""
+    command = [
+        get_ffprobe_executable(), "-v", "error", "-select_streams", "v:0",
+        "-show_entries", "stream=width,height", "-of", "json", file_path,
+    ]
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+    except (subprocess.SubprocessError, OSError) as error:
+        logger.error(f"Error getting video dimensions: {error}")
+        return None, None
+    if result.returncode != 0:
+        logger.error(f"ffprobe error: {result.stderr}")
+        return None, None
+    try:
+        streams = json.loads(result.stdout).get("streams") or []
+        if streams:
+            return int(streams[0].get("width", 0)), int(streams[0].get("height", 0))
+    except (ValueError, TypeError) as error:
+        logger.error(f"Unreadable ffprobe output: {error}")
+    logger.debug("No video streams found in file")
+    return None, None
+
+
 class VideoInfoDialog:
     """Dialog to display detailed video file information"""
 
@@ -718,15 +797,27 @@ def _probe_with_ffmpeg(file_path: str):
                 rate = re.match(r"^(\d+) Hz$", field)
                 if rate:
                     stream["sample_rate"] = rate.group(1)
+                layout = field.split("(")[0].strip()
                 channels = {
                     "mono": 1,
                     "stereo": 2,
+                    "2.1": 3,
+                    "3.0": 3,
                     "quad": 4,
+                    "4.0": 4,
+                    "3.1": 4,
                     "5.0": 5,
                     "5.1": 6,
+                    "6.0": 6,
                     "6.1": 7,
+                    "7.0": 7,
                     "7.1": 8,
-                }.get(field.split("(")[0].strip())
+                }.get(layout)
+                if not channels:
+                    # "3 channels": ffmpeg's form for a layout without a name.
+                    generic = re.match(r"^(\d+) channels?$", layout)
+                    if generic:
+                        channels = int(generic.group(1))
                 if channels:
                     stream["channels"] = channels
 
@@ -837,6 +928,7 @@ def format_file_size(size_bytes):
         return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
+@_cached_probe
 def has_audio_streams(file_path: str):
     """
     Check if a video file has audio streams.
@@ -889,6 +981,7 @@ def has_audio_streams(file_path: str):
         return True
 
 
+@_cached_probe
 def check_mp4_compatibility(file_path: str):
     """
     Check if video/audio codecs are compatible with MP4 container when copying without reencoding.

@@ -1,0 +1,23 @@
+# DaVinci Resolve on Linux does not decode AAC or H.264/H.265 in the free
+# edition. ProRes 422 in MOV with PCM audio imports everywhere and edits
+# smoothly; the files are large by design.
+format = 1
+
+[preset]
+name = "DaVinci Resolve (ProRes)"
+description = "ProRes 422 Standard in MOV with the audio copied. Imports into DaVinci Resolve on Linux without transcoding; large files."
+tags = ["davinci", "resolve", "editing", "prores", "intermediate"]
+
+[video]
+codec = "prores"
+quality = "medium"
+gpu = "software"
+
+[audio]
+mode = "copy"
+
+[subtitles]
+mode = "extract"
+
+[container]
+format = "mov"
