@@ -1,0 +1,61 @@
+name: Temporary review static audit
+
+on:
+  push:
+    branches:
+      - review/dev-talesam-20260919
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    container: debian:13-slim
+    timeout-minutes: 15
+    steps:
+      - name: Install audit tools
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            git ca-certificates python3 python3-pyflakes ruff shellcheck gettext \
+            desktop-file-utils yamllint libxml2-utils
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run non-destructive audit
+        shell: bash
+        run: |
+          mkdir -p audit
+          set +e
+          python3 -m compileall -q big-video-converter/usr/share/big-video-converter tests >audit/compileall.log 2>&1
+          printf '%s\n' "$?" > audit/compileall.status
+          pyflakes big-video-converter/usr/share/big-video-converter tools tests >audit/pyflakes.log 2>&1
+          printf '%s\n' "$?" > audit/pyflakes.status
+          ruff check --output-format=concise \
+            --select E9,F,B,C4,SIM,PERF,RUF,PIE,RET \
+            big-video-converter/usr/share/big-video-converter tools tests >audit/ruff.log 2>&1
+          printf '%s\n' "$?" > audit/ruff.status
+          find big-video-converter/usr/bin tools -type f -exec sh -c \
+            'for file do head -n1 "$file" | grep -qE "^#!.*(ba)?sh" && printf "%s\0" "$file"; done' sh {} + \
+            | xargs -0 -r shellcheck -S style >audit/shellcheck.log 2>&1
+          printf '%s\n' "$?" > audit/shellcheck.status
+          failed=0
+          while IFS= read -r -d '' file; do
+            msgfmt --check --check-header -o /dev/null "$file" || failed=1
+          done < <(find big-video-converter/locale -name '*.po' -print0)
+          printf '%s\n' "$failed" > audit/gettext.status
+          while IFS= read -r -d '' file; do
+            desktop-file-validate "$file" || true
+          done < <(find big-video-converter/usr/share -name '*.desktop' -print0) >audit/desktop-files.log 2>&1
+          yamllint -f parsable .github/workflows >audit/yamllint.log 2>&1
+          printf '%s\n' "$?" > audit/yamllint.status
+          find audit -type f -maxdepth 1 -print -exec sed -n '1,400p' {} \;
+      - name: Upload audit report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: temporary-static-audit-${{ github.sha }}
+          path: audit/
+          retention-days: 1
+          if-no-files-found: error
