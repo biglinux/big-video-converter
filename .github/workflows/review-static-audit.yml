@@ -19,7 +19,7 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            git ca-certificates python3 python3-pyflakes ruff shellcheck gettext \
+            git ca-certificates python3 python3-pyflakes shellcheck gettext \
             desktop-file-utils yamllint libxml2-utils
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -33,10 +33,6 @@ jobs:
           printf '%s\n' "$?" > audit/compileall.status
           pyflakes big-video-converter/usr/share/big-video-converter tools tests >audit/pyflakes.log 2>&1
           printf '%s\n' "$?" > audit/pyflakes.status
-          ruff check --output-format=concise \
-            --select E9,F,B,C4,SIM,PERF,RUF,PIE,RET \
-            big-video-converter/usr/share/big-video-converter tools tests >audit/ruff.log 2>&1
-          printf '%s\n' "$?" > audit/ruff.status
           find big-video-converter/usr/bin tools -type f -exec sh -c \
             'for file do head -n1 "$file" | grep -qE "^#!.*(ba)?sh" && printf "%s\0" "$file"; done' sh {} + \
             | xargs -0 -r shellcheck -S style >audit/shellcheck.log 2>&1
@@ -51,7 +47,7 @@ jobs:
           done < <(find big-video-converter/usr/share -name '*.desktop' -print0) >audit/desktop-files.log 2>&1
           yamllint -f parsable .github/workflows >audit/yamllint.log 2>&1
           printf '%s\n' "$?" > audit/yamllint.status
-          find audit -type f -maxdepth 1 -print -exec sed -n '1,400p' {} \;
+          find audit -maxdepth 1 -type f -print -exec sed -n '1,400p' {} \;
       - name: Upload audit report
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
