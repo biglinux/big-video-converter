@@ -31,7 +31,7 @@ jobs:
           set +e
           python3 -m compileall -q big-video-converter/usr/share/big-video-converter tests >audit/compileall.log 2>&1
           printf '%s\n' "$?" > audit/compileall.status
-          pyflakes big-video-converter/usr/share/big-video-converter tools tests >audit/pyflakes.log 2>&1
+          python3 -m pyflakes big-video-converter/usr/share/big-video-converter tools tests >audit/pyflakes.log 2>&1
           printf '%s\n' "$?" > audit/pyflakes.status
           find big-video-converter/usr/bin tools -type f -exec sh -c \
             'for file do head -n1 "$file" | grep -qE "^#!.*(ba)?sh" && printf "%s\0" "$file"; done' sh {} + \
