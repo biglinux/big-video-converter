@@ -1,0 +1,64 @@
+name: Contextual design component review
+on:
+  push:
+    branches: [review/contextual-design-r1-20260921]
+permissions:
+  contents: read
+jobs:
+  component-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare native component test runtime (not visual baseline)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 xvfb xauth dbus-x11
+      - name: Materialize reviewed noise changes
+        run: /usr/bin/python3 tools/apply_contextual_noise_review.py
+      - name: Run native interaction and lifecycle tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p review-result
+          /usr/bin/python3 - <<'PY' | tee review-result/runtime.txt
+          import gi
+          gi.require_version('Gtk','4.0')
+          gi.require_version('Adw','1')
+          from gi.repository import Gtk,Adw
+          print('Component-test runtime only, NOT a visual audit')
+          print('GTK',Gtk.get_major_version(),Gtk.get_minor_version(),Gtk.get_micro_version())
+          print('Adw',Adw.get_major_version(),Adw.get_minor_version(),Adw.get_micro_version())
+          PY
+          timeout --signal=TERM --kill-after=5s 60s dbus-run-session -- xvfb-run -a /usr/bin/python3 tests/test_contextual_audio_review.py 2>&1 | tee review-result/tests.txt
+          /usr/bin/python3 -m compileall -q big-video-converter/usr/share/big-video-converter tests/test_contextual_audio_review.py
+          git diff --check 58ec88d645cd468c218e1289d605152cca6d192b
+      - name: Preserve tested sources and ordinary patch
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --binary 58ec88d645cd468c218e1289d605152cca6d192b -- big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py big-video-converter/usr/share/big-video-converter/utils/contextual_controls.py tests/test_contextual_audio_review.py > review-result/contextual-audio.patch
+          cp docs/reviews/contextual-design-r1.md review-result/README.md
+          git diff --check 58ec88d645cd468c218e1289d605152cca6d192b
+          git add big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py
+          tree=$(git write-tree)
+          printf '%s\n' "$tree" > review-result/source-tree.txt
+          git archive --format=tar.gz --prefix=source/ --output=review-result/source.tar.gz "$tree"
+          mkdir -p "$RUNNER_TEMP/reapplied"
+          git archive 58ec88d645cd468c218e1289d605152cca6d192b | tar -xf - -C "$RUNNER_TEMP/reapplied"
+          git -C "$RUNNER_TEMP/reapplied" apply --check "$GITHUB_WORKSPACE/review-result/contextual-audio.patch"
+          git -C "$RUNNER_TEMP/reapplied" apply "$GITHUB_WORKSPACE/review-result/contextual-audio.patch"
+          timeout --signal=TERM --kill-after=5s 60s dbus-run-session -- xvfb-run -a /usr/bin/python3 "$RUNNER_TEMP/reapplied/tests/test_contextual_audio_review.py" 2>&1 | tee review-result/reapplied-tests.txt
+          cd review-result
+          sha256sum contextual-audio.patch source.tar.gz README.md tests.txt runtime.txt reapplied-tests.txt source-tree.txt > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bvc-contextual-audio-review-r1
+          path: review-result/
+          if-no-files-found: error
+          retention-days: 14
