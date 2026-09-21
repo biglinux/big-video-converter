@@ -1,0 +1,54 @@
+name: UIUX Baseline Capture
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install graphical dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python3-gi python3-cairo gir1.2-gtk-4.0 gir1.2-adw-1 \
+            gir1.2-gdkpixbuf-2.0 python3-opengl python3-mpv \
+            libmpv2 mpv ffmpeg xvfb dbus-x11 scrot xdotool \
+            imagemagick openbox
+      - name: Create sample videos
+        run: |
+          mkdir -p /tmp/bvc-demo /tmp/bvc-screenshots /tmp/bvc-config
+          ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=1920x1080:rate=30 \
+            -f lavfi -i sine=frequency=440:sample_rate=48000 -t 18 \
+            -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac /tmp/bvc-demo/city-walk.mp4
+          ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=1080x1920:rate=30 \
+            -f lavfi -i sine=frequency=660:sample_rate=48000 -t 12 \
+            -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac /tmp/bvc-demo/vertical-story.mp4
+          ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=1280x720:rate=24 \
+            -f lavfi -i sine=frequency=220:sample_rate=48000 -t 25 \
+            -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac /tmp/bvc-demo/interview.mp4
+      - name: Capture every state
+        env:
+          XDG_CONFIG_HOME: /tmp/bvc-config
+          GDK_BACKEND: x11
+          GSK_RENDERER: cairo
+          BVC_SCREENSHOT_DIR: /tmp/bvc-screenshots
+          BVC_DEMO_VIDEO_1: /tmp/bvc-demo/city-walk.mp4
+          BVC_DEMO_VIDEO_2: /tmp/bvc-demo/vertical-story.mp4
+          BVC_DEMO_VIDEO_3: /tmp/bvc-demo/interview.mp4
+        run: |
+          timeout --signal=TERM --kill-after=10s 45s \
+            dbus-run-session -- xvfb-run -a -s '-screen 0 1600x1000x24' \
+            bash -c 'openbox >/tmp/openbox.log 2>&1 & exec python3 review/demo_capture.py'
+          ls -lh /tmp/bvc-screenshots
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uiux-baseline-screenshots
+          path: /tmp/bvc-screenshots/*.png
+          if-no-files-found: error
+          retention-days: 7
