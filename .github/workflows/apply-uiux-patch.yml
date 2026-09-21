@@ -24,7 +24,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo '6bbdb45c976eeb7d0cf3704db93a19af154b2a4d7c62ce47a0dd51b9684000e8  review/uiux-cumulative.patch.gz' | sha256sum -c -
           gzip -dc review/uiux-cumulative.patch.gz > /tmp/uiux-cumulative.patch
           echo '5ca61c167d871cf5a8e30f3b8197d4727d3cd4926c6cb4302cd20d7a004c32cb  /tmp/uiux-cumulative.patch' | sha256sum -c -
           git apply --check /tmp/uiux-cumulative.patch
