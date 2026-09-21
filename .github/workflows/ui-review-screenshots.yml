@@ -42,6 +42,11 @@ jobs:
           git apply --check /tmp/uiux-delta2.patch
           git apply /tmp/uiux-delta2.patch
 
+          base64 --decode .ui-review/delta3.patch.xz.b64 \
+            | xz --decompress > /tmp/uiux-delta3.patch
+          git apply --check /tmp/uiux-delta3.patch
+          git apply /tmp/uiux-delta3.patch
+
           git diff --check
 
       - name: Install GTK review dependencies
@@ -122,5 +127,6 @@ jobs:
             /tmp/uiux.patch
             /tmp/uiux-delta.patch
             /tmp/uiux-delta2.patch
+            /tmp/uiux-delta3.patch
           if-no-files-found: error
           retention-days: 7
