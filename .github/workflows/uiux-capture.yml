@@ -2,6 +2,9 @@ name: UIUX Baseline Capture
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - ai-uiux-review-20260921
 
 permissions:
   contents: read
