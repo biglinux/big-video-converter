@@ -1,0 +1,40 @@
+name: Apply UIUX Review Patch
+
+on:
+  push:
+    branches:
+      - ai-uiux-review-20260921
+    paths:
+      - review/uiux-cumulative.patch.gz
+      - .github/workflows/apply-uiux-patch.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify and apply the reviewed patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '6bbdb45c976eeb7d0cf3704db93a19af154b2a4d7c62ce47a0dd51b9684000e8  review/uiux-cumulative.patch.gz' | sha256sum -c -
+          gzip -dc review/uiux-cumulative.patch.gz > /tmp/uiux-cumulative.patch
+          echo '5ca61c167d871cf5a8e30f3b8197d4727d3cd4926c6cb4302cd20d7a004c32cb  /tmp/uiux-cumulative.patch' | sha256sum -c -
+          git apply --check /tmp/uiux-cumulative.patch
+          git apply --index /tmp/uiux-cumulative.patch
+          git diff --cached --check
+      - name: Commit reviewed UIUX implementation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'feat(ui): implement premium task-oriented experience'
+          git push origin HEAD:ai-uiux-review-20260921
