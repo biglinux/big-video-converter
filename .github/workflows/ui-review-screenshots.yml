@@ -1,0 +1,120 @@
+name: UI review screenshots
+
+on:
+  push:
+    branches:
+      - ai-uiux-aaa-review-20260921
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Check out review branch
+        uses: actions/checkout@v4
+
+      - name: Reconstruct and apply the local UI review
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .ui-review/patch.0{0,1,2,3,4} \
+            | base64 --decode \
+            | xz --decompress > /tmp/uiux.patch
+          git apply --check /tmp/uiux.patch
+          git apply /tmp/uiux.patch
+
+          base64 --decode .ui-review/delta.patch.xz.b64 \
+            | xz --decompress > /tmp/uiux-delta.patch
+          git apply --check /tmp/uiux-delta.patch
+          git apply /tmp/uiux-delta.patch
+
+          git diff --check
+
+      - name: Install GTK review dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            python3-gi python3-cairo python3-pip \
+            gir1.2-gtk-4.0 gir1.2-adw-1 \
+            libgtk-4-1 libadwaita-1-0 libmpv2 \
+            xvfb dbus-x11 gnome-screenshot xdotool \
+            ffmpeg fonts-dejavu-core gettext imagemagick
+          python3 -m pip install --break-system-packages \
+            --disable-pip-version-check --no-input \
+            python-mpv PyOpenGL
+
+      - name: Validate source and pure contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q \
+            big-video-converter/usr/share/big-video-converter \
+            tools tests
+          python3 -m pytest -q \
+            tests/test_job_options.py \
+            tests/test_crop_geometry.py \
+            tests/test_thumbnail_cache.py \
+            tests/test_queue_preview_contract.py
+
+      - name: Render every major application state
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p screenshots media logs
+          screens=(
+            queue-empty queue progress complete editor welcome
+            presets video-options audio noise subtitles advanced
+          )
+
+          render() {
+            local screen=$1 theme=$2 width=$3 height=$4 output=$5
+            timeout --signal=TERM --kill-after=10s 75s \
+              dbus-run-session -- \
+              xvfb-run -a -s "-screen 0 1440x900x24" \
+              env GDK_BACKEND=x11 GSETTINGS_BACKEND=memory \
+                  LIBGL_ALWAYS_SOFTWARE=1 NO_AT_BRIDGE=1 \
+                  BVC_DEMO_MEDIA_DIR="$PWD/media" \
+              sh tools/capture_ui.sh \
+                "$screen" "$output" "$theme" "$width" "$height"
+            identify "$output" >> logs/image-dimensions.txt
+          }
+
+          for screen in "${screens[@]}"; do
+            render "$screen" light 1280 760 \
+              "screenshots/${screen}-light.png"
+            render "$screen" dark 1280 760 \
+              "screenshots/${screen}-dark.png"
+          done
+
+          for screen in queue progress editor; do
+            render "$screen" light 980 620 \
+              "screenshots/${screen}-compact-light.png"
+            render "$screen" dark 980 620 \
+              "screenshots/${screen}-compact-dark.png"
+          done
+
+          sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
+          find screenshots -maxdepth 1 -type f -printf '%f\n' | sort
+
+      - name: Upload screenshots and logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: big-video-converter-ui-review-${{ github.sha }}
+          path: |
+            screenshots/
+            logs/
+            /tmp/uiux.patch
+            /tmp/uiux-delta.patch
+          if-no-files-found: error
+          retention-days: 7
