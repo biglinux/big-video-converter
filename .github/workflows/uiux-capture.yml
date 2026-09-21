@@ -20,9 +20,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             python3-gi python3-cairo gir1.2-gtk-4.0 gir1.2-adw-1 \
-            gir1.2-gdkpixbuf-2.0 python3-opengl python3-mpv \
-            libmpv2 mpv ffmpeg xvfb dbus-x11 scrot xdotool \
-            imagemagick openbox
+            gir1.2-gdkpixbuf-2.0 gir1.2-vte-3.91 \
+            python3-opengl python3-mpv libmpv2 mpv ffmpeg \
+            xvfb dbus-x11 scrot xdotool imagemagick openbox
       - name: Create sample videos
         run: |
           mkdir -p /tmp/bvc-demo /tmp/bvc-screenshots /tmp/bvc-config
