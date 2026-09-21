@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Image frame -->
+  <rect x="15" y="8" width="40" height="30" rx="2" fill="none" stroke="#999" stroke-width="1.5"/>
+  <!-- Mountain + sun scene (low quality) -->
+  <circle cx="28" cy="17" r="4" fill="#e5a50a" fill-opacity="0.3"/>
+  <polygon points="20,35 30,20 40,35" fill="#999" fill-opacity="0.3"/>
+  <polygon points="32,35 42,22 52,35" fill="#999" fill-opacity="0.2"/>
+  <!-- Pixelation blocks -->
+  <rect x="18" y="14" width="4" height="4" fill="#999" fill-opacity="0.15"/>
+  <rect x="26" y="22" width="4" height="4" fill="#999" fill-opacity="0.15"/>
+  <!-- Arrow -->
+  <line x1="60" y1="24" x2="72" y2="24" stroke="#3584e4" stroke-width="1.5"/>
+  <polygon points="72,20 79,24 72,28" fill="#3584e4"/>
+  <!-- Image frame (high quality) -->
+  <rect x="82" y="8" width="30" height="30" rx="2" fill="none" stroke="#26a269" stroke-width="1.5"/>
+  <!-- Mountain + sun scene (clear) -->
+  <circle cx="92" cy="17" r="4" fill="#e5a50a"/>
+  <polygon points="86,35 94,18 102,35" fill="#26a269" fill-opacity="0.4"/>
+  <polygon points="96,35 104,22 110,35" fill="#26a269" fill-opacity="0.3"/>
+  <!-- Stars -->
+  <text x="85" y="50" font-family="sans-serif" font-size="7" fill="#999">★</text>
+  <text x="91" y="50" font-family="sans-serif" font-size="7" fill="#999">★</text>
+  <text x="97" y="50" font-family="sans-serif" font-size="7" fill="#26a269">★★★</text>
+  <!-- Labels -->
+  <text x="35" y="50" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">Low</text>
+  <text x="97" y="60" font-family="sans-serif" font-size="5" fill="#26a269" text-anchor="middle">High</text>
+</svg>

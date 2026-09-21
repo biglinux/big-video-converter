@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- GPU chip outline -->
+  <rect x="35" y="15" width="50" height="35" rx="3" fill="none" stroke="#999" stroke-width="1.5"/>
+  <!-- CPU/GPU text -->
+  <text x="48" y="30" font-family="sans-serif" font-size="6" fill="#999">GPU</text>
+  <!-- Software gears -->
+  <circle cx="60" cy="38" r="6" fill="none" stroke="#3584e4" stroke-width="1.2"/>
+  <circle cx="60" cy="38" r="2" fill="#3584e4"/>
+  <!-- CPU arrow -->
+  <text x="48" y="42" font-family="sans-serif" font-size="5" fill="#3584e4">CPU</text>
+  <!-- Arrow from GPU to CPU -->
+  <path d="M60,53 L60,60" stroke="#3584e4" stroke-width="1.2"/>
+  <polygon points="57,60 60,65 63,60" fill="#3584e4"/>
+  <!-- Decode label -->
+  <text x="60" y="75" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">Software decode</text>
+  <!-- Pin connections on sides -->
+  <line x1="30" y1="22" x2="35" y2="22" stroke="#999" stroke-width="1"/>
+  <line x1="30" y1="28" x2="35" y2="28" stroke="#999" stroke-width="1"/>
+  <line x1="30" y1="34" x2="35" y2="34" stroke="#999" stroke-width="1"/>
+  <line x1="30" y1="40" x2="35" y2="40" stroke="#999" stroke-width="1"/>
+  <line x1="85" y1="22" x2="90" y2="22" stroke="#999" stroke-width="1"/>
+  <line x1="85" y1="28" x2="90" y2="28" stroke="#999" stroke-width="1"/>
+  <line x1="85" y1="34" x2="90" y2="34" stroke="#999" stroke-width="1"/>
+  <line x1="85" y1="40" x2="90" y2="40" stroke="#999" stroke-width="1"/>
+</svg>

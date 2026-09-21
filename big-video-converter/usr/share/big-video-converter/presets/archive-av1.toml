@@ -1,0 +1,24 @@
+# Long-term archive: AV1 at high quality, Opus audio, MKV so any track type
+# fits. Slow to encode, small to keep.
+format = 1
+
+[preset]
+name = "Archive (AV1 + Opus)"
+description = "High-quality AV1 with Opus audio in MKV. The slowest option here and the smallest files; meant for keeping, not for sharing."
+tags = ["archive", "av1", "opus", "mkv", "small"]
+
+[video]
+codec = "av1"
+quality = "veryhigh"
+speed = "slow"
+
+[audio]
+mode = "reencode"
+codec = "opus"
+bitrate = "160k"
+
+[subtitles]
+mode = "embedded"
+
+[container]
+format = "mkv"

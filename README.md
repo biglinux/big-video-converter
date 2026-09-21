@@ -1,4 +1,4 @@
-# Comm Video Converter
+# Big Video Converter
 A modern graphical frontend for converting MKV videos to MP4 format, built with Python and GTK3.
 
 ## Description
@@ -27,6 +27,8 @@ Comm Big Converter provides an intuitive graphical interface to easily convert v
 * GTK 4.0+
 * FFmpeg
 * Python GObject Introspection (PyGI)
+* Libva Utils
+* Libva Mesa Driver
 
 ## Installation
 From Package (Arch Linux / BigCommunity)
@@ -51,6 +53,52 @@ sudo pacman -S comm-big-converter
 4. Specify minimum MP4 size and log file options
 5. Choose whether to delete original files
 6. Click "Convert All MKVs"
+
+## Presets
+Presets are TOML files that describe a complete recipe: codec, quality, speed,
+resolution, audio, subtitles, container and, when needed, extra FFmpeg
+arguments for a specific encoder. The program keeps deciding everything it
+already does well (GPU detection, CPU fallback, 10-bit to 8-bit, HDR tone
+mapping); a preset only states the result you want.
+
+* Bundled presets (YouTube, Instagram Reels, X/Twitter, WhatsApp, DaVinci
+  Resolve, AV1 archive) live in `/usr/share/big-video-converter/presets/`.
+* Your own presets live in `~/.config/big-video-converter/presets/*.toml`.
+  Open **Presets** in the sidebar to browse, search, import, duplicate or
+  delete them.
+* **Create with AI**: describe what you need, click *Copy prompt*, paste the
+  prompt into any online assistant, then paste its answer back. The prompt
+  carries the exact file format, the encoders available on your machine and
+  asks the assistant to answer in your system language.
+* From the command line: `preset_file=~/.config/big-video-converter/presets/youtube.toml big-video-converter video.mkv`.
+  Variables set explicitly in the environment win over the preset.
+
+A minimal preset:
+
+```toml
+format = 1
+
+[preset]
+name = "Instagram Reels"
+tags = ["instagram", "vertical"]
+
+[video]
+codec = "h264"
+quality = "high"
+resolution = "1080x1920"
+fps = 30
+
+[audio]
+mode = "reencode"
+codec = "aac"
+bitrate = "128k"
+
+[container]
+format = "mp4"
+
+[encoder.libx264]
+args = ["-tune", "film"]
+```
 
 ## Configuration Options
 The application offers extensive configuration options for video conversion:

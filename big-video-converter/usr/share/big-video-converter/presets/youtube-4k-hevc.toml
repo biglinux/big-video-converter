@@ -1,0 +1,27 @@
+# YouTube upload in 4K. H.265 keeps the upload small; YouTube re-encodes
+# anyway, so the source detail is what matters, not the container codec.
+format = 1
+
+[preset]
+name = "YouTube 4K (H.265)"
+description = "H.265 10-bit friendly upload for 2160p footage. Smaller files than H.264 at the same quality; YouTube re-encodes on its side."
+tags = ["youtube", "upload", "4k", "2160p", "hevc"]
+
+[video]
+codec = "h265"
+quality = "veryhigh"
+speed = "slow"
+resolution = "3840x2160"
+
+[audio]
+mode = "reencode"
+codec = "aac"
+bitrate = "384k"
+channels = 2
+sample_rate = 48000
+
+[container]
+format = "mp4"
+
+[ffmpeg]
+output_options = "-g 30 -bf 2"

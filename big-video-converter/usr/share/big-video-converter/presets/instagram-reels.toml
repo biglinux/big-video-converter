@@ -1,0 +1,32 @@
+# Instagram Reels and Stories: vertical 1080x1920, 30 fps, H.264, AAC.
+# Instagram re-encodes uploads, so a clean, not too heavy source is best.
+format = 1
+
+[preset]
+name = "Instagram Reels"
+description = "Vertical 1080x1920 at 30 fps, H.264 with AAC stereo 128 kbps in MP4. Also right for Stories and TikTok."
+tags = ["instagram", "reels", "stories", "tiktok", "vertical", "social"]
+
+[video]
+codec = "h264"
+quality = "high"
+speed = "medium"
+resolution = "1080x1920"
+fps = 30
+pixel_format = "yuv420p"
+
+[audio]
+mode = "reencode"
+codec = "aac"
+bitrate = "128k"
+channels = 2
+sample_rate = 44100
+
+[subtitles]
+mode = "none"
+
+[container]
+format = "mp4"
+
+[ffmpeg]
+output_options = "-g 60 -bf 2"

@@ -1,18 +1,251 @@
 import os
+from copy import deepcopy
+import threading
+
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio, Pango, GLib, Gdk, GObject
-
-from constants import CONVERT_SCRIPT_PATH
-from utils.conversion import run_with_progress_dialog
-from utils.video_settings import get_video_filter_string
-
 # Setup translation
 import gettext
 
+from constants import CONVERT_SCRIPT_PATH
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
+from utils.conversion import run_with_progress_dialog
+from utils.segment_batch import start_segment_batch
+from utils.ffmpeg_options import validate_additional_options
+from utils.video_settings import SettingsOverride, get_video_filter_string
+
+import logging
+
+logger = logging.getLogger(__name__)
+
 _ = gettext.gettext
+
+
+class FileQueueRow(Adw.ActionRow):
+    """Row representing a video file in the queue using Adwaita ActionRow."""
+
+    def __init__(
+        self,
+        file_path,
+        index,
+        on_remove_callback,
+        on_play_callback,
+        on_edit_callback,
+        on_info_callback,
+        app=None,
+    ):
+        super().__init__()
+
+        self.file_path = file_path
+        self.index = index
+        self.on_remove_callback = on_remove_callback
+        self.on_play_callback = on_play_callback
+        self.on_edit_callback = on_edit_callback
+        self.on_info_callback = on_info_callback
+        self.app = app
+
+        # Set title to filename (escape special characters for Pango markup)
+        filename = os.path.basename(file_path)
+        self.set_title(GLib.markup_escape_text(filename))
+
+        # Set subtitle with directory and file size
+        try:
+            directory = os.path.dirname(file_path)
+            file_size = os.path.getsize(file_path) / (1024 * 1024)
+            subtitle = f"{directory}  •  {file_size:.1f} MB"
+            self.set_subtitle(subtitle)
+        except OSError:
+            self.set_subtitle(os.path.dirname(file_path))
+
+        # Disable row activation - clicking on the name should not trigger navigation
+        self.set_activatable(False)
+
+        # Edit button (added third, appears last)
+        edit_button = Gtk.Button.new_from_icon_name("document-edit-symbolic")
+        self.app.tooltip_helper.add_tooltip(edit_button, "file_list_edit_button")
+        edit_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Edit file")],
+        )
+        edit_button.add_css_class("flat")
+        edit_button.set_valign(Gtk.Align.CENTER)
+        edit_button.connect(
+            "clicked", lambda btn: self.on_edit_callback(self.file_path)
+        )
+        self.add_prefix(edit_button)
+
+        # Play button (added second, appears middle)
+        play_button = Gtk.Button.new_from_icon_name("media-playback-start-symbolic")
+        self.app.tooltip_helper.add_tooltip(play_button, "file_list_play_button")
+        play_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Play file")],
+        )
+        play_button.add_css_class("flat")
+        play_button.set_valign(Gtk.Align.CENTER)
+        play_button.connect(
+            "clicked", lambda btn: self.on_play_callback(self.file_path)
+        )
+        self.add_prefix(play_button)
+
+        # Remove button (added first, appears first)
+        remove_button = Gtk.Button.new_from_icon_name("trash-symbolic")
+        self.app.tooltip_helper.add_tooltip(remove_button, "file_list_remove_button")
+        remove_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Remove from queue")],
+        )
+        remove_button.add_css_class("flat")
+        remove_button.set_valign(Gtk.Align.CENTER)
+        remove_button.connect(
+            "clicked", lambda btn: self.on_remove_callback(self.file_path)
+        )
+        self.add_prefix(remove_button)
+
+        # Add right-click context menu
+        self._setup_context_menu()
+
+        # Connect to realize signal to add tooltip to title widget after it's created
+        self.connect("realize", self._on_row_realized)
+
+    def _setup_context_menu(self):
+        """Setup right-click context menu for the file row."""
+        # Create popup menu
+        menu = Gtk.PopoverMenu()
+        menu_model = Gio.Menu()
+
+        # Open containing folder action
+        menu_model.append(_("Open Containing Folder"), "row.open_folder")
+
+        # More information action
+        menu_model.append(_("More Information..."), "row.info")
+
+        # Delete from disk action (destructive)
+        menu_model.append(_("Delete from Disk..."), "row.delete_disk")
+
+        menu.set_menu_model(menu_model)
+        menu.set_parent(self)
+
+        # Create action group
+        action_group = Gio.SimpleActionGroup()
+
+        # Open folder action
+        open_folder_action = Gio.SimpleAction.new("open_folder", None)
+        open_folder_action.connect("activate", self._on_open_folder)
+        action_group.add_action(open_folder_action)
+
+        # Info action
+        info_action = Gio.SimpleAction.new("info", None)
+        info_action.connect(
+            "activate", lambda a, p: self.on_info_callback(self.file_path)
+        )
+        action_group.add_action(info_action)
+
+        # Delete from disk action
+        delete_disk_action = Gio.SimpleAction.new("delete_disk", None)
+        delete_disk_action.connect("activate", self._on_delete_from_disk)
+        action_group.add_action(delete_disk_action)
+
+        self.insert_action_group("row", action_group)
+
+        # Add right-click gesture
+        right_click = Gtk.GestureClick.new()
+        right_click.set_button(3)  # Right mouse button
+        right_click.connect("pressed", lambda g, n, x, y: menu.popup())
+        self.add_controller(right_click)
+
+    def _on_row_realized(self, widget):
+        """Add tooltip to the title label after the row is realized."""
+
+        # The ActionRow creates internal widgets, we need to find the title label
+        # In Adwaita, the title is typically in a Box containing labels
+        def find_title_label(widget):
+            """Recursively find the title label widget."""
+            if isinstance(widget, Gtk.Label):
+                # Check if this label's text matches our title
+                if widget.get_label() == self.get_title():
+                    return widget
+
+            # If widget is a container, check its children
+            if hasattr(widget, "get_first_child"):
+                child = widget.get_first_child()
+                while child:
+                    result = find_title_label(child)
+                    if result:
+                        return result
+                    child = child.get_next_sibling()
+            return None
+
+        # Find and add tooltip to the title label
+        title_label = find_title_label(self)
+        if title_label and hasattr(self.app, "tooltip_helper"):
+            self.app.tooltip_helper.add_tooltip(title_label, "file_list_item")
+
+    def _on_open_folder(self, action, param):
+        """Open the folder containing the file."""
+        import subprocess
+
+        if os.path.isfile(self.file_path):
+            folder_path = os.path.dirname(self.file_path)
+            try:
+                # Open file manager at folder location
+                subprocess.Popen(["xdg-open", folder_path])
+            except (subprocess.SubprocessError, OSError) as e:
+                logger.error(f"Failed to open folder: {e}")
+
+    def _on_delete_from_disk(self, action, param):
+        """Show confirmation dialog and delete file from disk."""
+        if not os.path.isfile(self.file_path):
+            return
+
+        filename = os.path.basename(self.file_path)
+
+        # Create confirmation dialog
+        dialog = Adw.AlertDialog()
+        dialog.set_heading(_("Delete File from Disk?"))
+        dialog.set_body(
+            _(
+                "Are you sure you want to permanently delete '{}'?\n\nThis action cannot be undone."
+            ).format(filename)
+        )
+
+        # Add responses
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("delete", _("Delete"))
+
+        # Set delete button as destructive
+        dialog.set_response_appearance("delete", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.set_default_response("cancel")
+        dialog.set_close_response("cancel")
+
+        # Connect response handler
+        dialog.connect("response", self._on_delete_dialog_response)
+
+        # Get window from app
+        if self.app and hasattr(self.app, "window"):
+            dialog.present(self.app.window)
+
+    def _on_delete_dialog_response(self, dialog, response):
+        """Handle delete confirmation dialog response."""
+        if response == "delete":
+            try:
+                # Delete the file from disk
+                os.remove(self.file_path)
+                logger.debug(f"Deleted file from disk: {self.file_path}")
+
+                # Remove from queue
+                self.on_remove_callback(self.file_path)
+            except OSError as e:
+                logger.error(f"Error deleting file: {e}")
+                # Show error dialog if app window is available
+                if self.app and hasattr(self.app, "window"):
+                    error_dialog = Adw.AlertDialog()
+                    error_dialog.set_heading(_("Error Deleting File"))
+                    error_dialog.set_body(_("Could not delete file: {}").format(str(e)))
+                    error_dialog.add_response("ok", _("OK"))
+                    error_dialog.present(self.app.window)
 
 
 class ConversionPage:
@@ -23,34 +256,15 @@ class ConversionPage:
 
     def __init__(self, app):
         self.app = app
+
+        # Storage for per-file editing metadata
+        # Key: file_path, Value: dict with trim, crop, adjustments
+        self.file_metadata = {}
+
         self.page = self._create_page()
 
         # Connect settings after UI is created
         self._connect_settings()
-
-        # Show help on startup if enabled (default: True)
-        try:
-            # Try to load the setting
-            show_help_on_startup = self.app.settings_manager.load_setting(
-                "show-conversion-help-on-startup", True
-            )
-            print(
-                f"Loaded setting show-conversion-help-on-startup: {show_help_on_startup}"
-            )
-
-            # Check if it's explicitly False (not just None or some other falsy value)
-            if show_help_on_startup is False:
-                print("Help dialog disabled by user setting")
-            else:
-                # Default behavior is to show dialog
-                print("Help dialog will be shown (default or user setting)")
-                # Use GLib.idle_add to show the dialog after the UI is fully loaded
-                GLib.idle_add(self.on_help_clicked, None)
-        except Exception as e:
-            # If there's an error loading the setting, log it and default to showing help
-            print(f"Error loading dialog setting: {e}")
-            print("Defaulting to show help dialog")
-            GLib.idle_add(self.on_help_clicked, None)
 
     def get_page(self):
         """Return the page widget"""
@@ -59,205 +273,47 @@ class ConversionPage:
     def _create_page(self):
         # Create page for conversion
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-
-        # Add ScrolledWindow to enable scrolling when window is small
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scrolled_window.set_hexpand(True)
-        scrolled_window.set_vexpand(True)
-        page.append(scrolled_window)
-
-        # Container for scrollable content - use FILL alignment for full height
-        scrollable_content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        scrollable_content.set_valign(Gtk.Align.FILL)
-        scrollable_content.set_vexpand(True)
-        scrolled_window.set_child(scrollable_content)
-
-        # Use Adw.Clamp to constrain content width nicely
-        clamp = Adw.Clamp()
-        clamp.set_maximum_size(800)
-        clamp.set_tightening_threshold(600)
-        clamp.set_vexpand(True)  # Make clamp expand vertically
-        scrollable_content.append(clamp)
-
-        # Main content box inside the clamp
-        main_content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        main_content.set_spacing(16)
-        main_content.set_margin_start(12)
-        main_content.set_margin_end(12)
-        main_content.set_margin_top(24)
-        main_content.set_margin_bottom(24)
-        main_content.set_vexpand(True)
-        clamp.set_child(main_content)
+        page.set_spacing(16)
+        page.set_margin_start(6)
+        page.set_margin_end(6)
+        page.set_margin_top(12)
+        page.set_margin_bottom(12)
+        page.set_vexpand(True)
 
         # ===== QUEUE SECTION FIRST =====
-        # Create a wrapper box that will expand to fill available space
-        queue_wrapper = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        queue_wrapper.set_vexpand(True)
-        queue_wrapper.set_valign(Gtk.Align.FILL)
-        queue_wrapper.set_hexpand(True)
-
-        # Create help button to be placed in the PreferencesGroup header
-        help_button = Gtk.Button()
-        help_button.set_icon_name("help-about-symbolic")
-        help_button.add_css_class("accent")
-        help_button.add_css_class("flat")
-        help_button.add_css_class("circular")
-        help_button.set_tooltip_text(_("Show help"))
-        help_button.connect("clicked", self.on_help_clicked)
-        help_button.set_valign(Gtk.Align.CENTER)
-
-        # Create the PreferencesGroup with title and help button as header suffix
-        queue_group = Adw.PreferencesGroup(title=_("Conversion Queue"))
-
-        # Set the help button as the header_suffix to position it on the right
-        # This is the proper way to add buttons to PreferencesGroup headers in Adwaita
-        queue_group.set_header_suffix(help_button)
-
-        queue_group.set_hexpand(True)
-        queue_group.set_vexpand(True)
-        queue_group.set_valign(Gtk.Align.FILL)
-
         # Create a queue listbox with a scrolled window
         queue_scroll = Gtk.ScrolledWindow()
         queue_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         queue_scroll.set_vexpand(True)
-        queue_scroll.set_hexpand(True)
-        queue_scroll.add_css_class("card")
-
-        # Remove fixed size constraints to allow dynamic resizing
-        queue_scroll.set_propagate_natural_height(False)
-        queue_scroll.set_propagate_natural_width(False)
+        queue_scroll.set_min_content_height(300)  # Minimum height for better UX
 
         # Create a listbox for the queue items
         self.queue_listbox = Gtk.ListBox()
-        self.queue_listbox.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.queue_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self.queue_listbox.connect("row-activated", self.on_queue_item_activated)
-        self.queue_listbox.set_hexpand(True)
-        self.queue_listbox.set_vexpand(True)
-        self.queue_listbox.set_valign(Gtk.Align.FILL)
+        self.queue_listbox.add_css_class(
+            "boxed-list"
+        )  # Adwaita style for subtle border
 
-        # Add CSS styling for drag and drop
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(b"""
-            .dragging {
-                opacity: 0.7;
-                background-color: alpha(@accent_color, 0.2);
-            }
-            .drag-hover {
-                border-bottom: 2px solid @accent_color;
-                background-color: alpha(@accent_color, 0.1);
-            }
-            .transparent-background {
-                background-color: transparent;
-            }
-        """)
-        Gtk.StyleContext.add_provider_for_display(
-            self.queue_listbox.get_display(),
-            css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        # Create placeholder for empty queue
+        self.placeholder = Adw.StatusPage()
+        self.placeholder.set_icon_name("folder-videos-symbolic")
+        self.placeholder.set_title(_("No Video Files"))
+        self.placeholder.set_description(
+            _("Drag files here or use the Add Files button")
         )
-        self.queue_listbox.add_css_class("transparent-background")
-
-        # Single instance of dragged row tracker
-        self.dragged_row = None
-
-        # Remove old conflicting controllers if they exist
-        self.queue_dragging_enabled = False
+        self.placeholder.set_vexpand(True)
+        self.placeholder.set_hexpand(True)
+        self.queue_listbox.set_placeholder(self.placeholder)
 
         queue_scroll.set_child(self.queue_listbox)
 
-        # Create a content box for the queue to allow flexible layout
-        queue_content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        queue_content_box.set_vexpand(True)
-        queue_content_box.set_hexpand(True)
+        # Single instance of dragged row tracker
+        self.dragged_row = None
+        self.queue_dragging_enabled = False
 
-        # Add the queue scroll window directly to the content box
-        queue_content_box.append(queue_scroll)
-
-        # Add the content box to the queue group
-        queue_group.add(queue_content_box)
-
-        # Create button box for queue management
-        queue_buttons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        queue_buttons_box.set_halign(Gtk.Align.CENTER)
-        queue_buttons_box.set_spacing(12)
-        queue_buttons_box.set_margin_top(12)
-        queue_buttons_box.set_margin_bottom(12)
-        queue_buttons_box.set_vexpand(False)  # Explicitly don't expand
-
-        # Queue management buttons
-        clear_queue_button = Gtk.Button(label=_("Clear Queue"))
-        clear_queue_button.connect("clicked", self.on_clear_queue_clicked)
-        clear_queue_button.add_css_class("pill")
-        queue_buttons_box.append(clear_queue_button)
-
-        # Create a proper AdwSplitButton which has integrated button and menu
-        self.add_button = Adw.SplitButton(label=_("Add Files"))
-        self.add_button.set_tooltip_text(_("Add video files to queue"))
-        self.add_button.add_css_class("suggested-action")
-        # Don't add pill class here as it won't work properly
-        self.add_button.connect("clicked", self.on_add_files_clicked)
-
-        # Add custom CSS to style the SplitButton with rounded corners
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(b"""
-            splitbutton.suggested-action {
-                border-radius: 99px;
-            }
-            
-            /* Style for the dropdown button part */
-            splitbutton > button:last-child {
-                border-top-right-radius: 99px;
-                border-bottom-right-radius: 99px;
-            }
-            
-            /* Style for the main button part */
-            splitbutton > button:first-child {
-                border-top-left-radius: 99px;
-                border-bottom-left-radius: 99px;
-            }
-        """)
-
-        Gtk.StyleContext.add_provider_for_display(
-            self.add_button.get_display(),
-            css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-        )
-
-        # Create menu model for the dropdown
-        menu = Gio.Menu()
-        menu_item = Gio.MenuItem.new(_("Add Folder"), "app.add_folder")
-        icon = Gio.ThemedIcon.new("folder-symbolic")
-        menu_item.set_icon(icon)
-        menu.append_item(menu_item)
-
-        # Set the menu model for the dropdown part
-        self.add_button.set_menu_model(menu)
-
-        # Add the split button to the button box
-        queue_buttons_box.append(self.add_button)
-
-        # Single convert button that processes the queue
-        convert_button = Gtk.Button(label=_("Convert All"))
-        convert_button.add_css_class("pill")
-        convert_button.add_css_class("suggested-action")
-        convert_button.connect("clicked", self.on_convert_clicked)
-        self.convert_button = convert_button  # Store reference for enabling/disabling
-        queue_buttons_box.append(convert_button)
-
-        # Add the button box directly to the queue group
-        queue_button_container = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        queue_button_container.set_vexpand(False)  # Explicitly don't expand
-        queue_button_container.set_halign(Gtk.Align.CENTER)
-        queue_button_container.append(queue_buttons_box)
-        queue_group.add(queue_button_container)
-
-        # Add the queue group to the wrapper
-        queue_wrapper.append(queue_group)
-
-        # Add the wrapper to main content
-        main_content.append(queue_wrapper)
+        # Add queue to main content
+        page.append(queue_scroll)
 
         # Create a single-row layout for output folder and delete original
         options_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -291,6 +347,10 @@ class ConversionPage:
         # Folder button
         folder_button = Gtk.Button()
         folder_button.set_icon_name("folder-symbolic")
+        folder_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Choose output folder")],
+        )
         folder_button.connect("clicked", self.on_folder_button_clicked)
         folder_button.add_css_class("flat")
         folder_button.add_css_class("circular")
@@ -323,7 +383,7 @@ class ConversionPage:
 
         options_box.append(delete_box)
 
-        main_content.append(options_box)
+        page.append(options_box)
 
         # Update the queue display initially
         self.update_queue_display()
@@ -337,7 +397,19 @@ class ConversionPage:
         # Load settings and update UI
         output_folder = settings.load_setting("output-folder", "")
         delete_original = settings.load_setting("delete-original", False)
-        use_custom_folder = settings.load_setting("use-custom-output-folder", False)
+        # Check the stored dict directly: a missing key must be told apart from
+        # a stored False, which load_setting() cannot do.
+        if "use-custom-output-folder" in getattr(settings, "settings", {}):
+            use_custom_folder = settings.load_setting("use-custom-output-folder", False)
+        else:
+            # Settings written by an older version: infer the mode from the
+            # folder itself, otherwise a configured destination silently falls
+            # back to "same folder as the original file".
+            use_custom_folder = bool(output_folder and os.path.isdir(output_folder))
+            settings.save_setting("use-custom-output-folder", use_custom_folder)
+            logger.debug(
+                f"Inferred output folder mode from the saved path: custom={use_custom_folder}"
+            )
 
         # Set folder combo selection and visibility
         self.folder_combo.set_selected(1 if use_custom_folder else 0)
@@ -346,216 +418,21 @@ class ConversionPage:
         # Set output folder path if using custom folder
         self.output_folder_entry.set_text(output_folder)
 
+        # Connect signals
+        # Only persist what the user typed: set_file() also writes into this
+        # entry to display the input folder, and that must not overwrite the
+        # destination the user configured.
+        self.output_folder_entry.connect("changed", self._on_output_folder_entry_changed)
+
         # Set delete original switch
         self.delete_original_check.set_active(delete_original)
-
-        # Connect signals
-        self.output_folder_entry.connect(
-            "changed", lambda w: settings.save_setting("output-folder", w.get_text())
-        )
 
         self.delete_original_check.connect(
             "notify::active",
             lambda w, p: settings.save_setting("delete-original", w.get_active()),
         )
 
-    def on_help_clicked(self, button):
-        """Show help information for conversion mode with a switch to control startup behavior"""
-        # Create a dialog window properly using Adw.Window
-        dialog = Adw.Window()
-        dialog.set_default_size(700, 550)
-        dialog.set_modal(True)
-        dialog.set_transient_for(self.app.window)
-        dialog.set_hide_on_close(True)
-
-        # Create content box
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-
-        # Add header bar
-        header_bar = Adw.HeaderBar()
-        header_bar.set_title_widget(Gtk.Label(label="Big Video Converter"))
-        content_box.append(header_bar)
-
-        # Create main box to hold everything with proper layout
-        outer_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        outer_box.set_vexpand(True)
-
-        # Create scrolled window for content
-        scrolled = Gtk.ScrolledWindow()
-        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        scrolled.set_vexpand(True)
-
-        # Main content
-        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        main_box.set_margin_start(24)
-        main_box.set_margin_end(24)
-        main_box.set_margin_top(12)
-        main_box.set_spacing(12)
-
-        # Help introduction
-        intro_label = Gtk.Label()
-        intro_label.set_wrap(True)
-        intro_label.set_xalign(0)
-        intro_label.set_margin_bottom(16)
-        intro_label.set_markup(
-            _("A powerful tool for converting video files to MP4 format.")
-        )
-        main_box.append(intro_label)
-
-        # Features list using bullet points
-        features_list = [
-            _("• GPU-accelerated conversion for NVIDIA, AMD, and Intel GPUs"),
-            _("• High-quality video processing with customizable settings"),
-            _("• Support for various video codecs (H.264, H.265/HEVC, AV1, VP9)"),
-            _("• Subtitle extraction and embedding"),
-            _("• Video preview with trimming and effects"),
-        ]
-
-        for feature in features_list:
-            feature_label = Gtk.Label()
-            feature_label.set_wrap(True)
-            feature_label.set_xalign(0)
-            feature_label.set_markup(feature)
-            feature_label.set_margin_start(12)
-            feature_label.set_margin_bottom(4)
-            main_box.append(feature_label)
-
-        # Additional information
-        info_label = Gtk.Label()
-        info_label.set_wrap(True)
-        info_label.set_xalign(0)
-        info_label.set_margin_top(16)
-        info_label.set_markup(
-            _(
-                "This application uses <b>FFmpeg</b> for reliable, high-performance video conversion. "
-                "The GPU acceleration significantly reduces conversion time compared to software-only processing."
-            )
-        )
-        main_box.append(info_label)
-
-        # Add main box to scrolled window
-        scrolled.set_child(main_box)
-        outer_box.append(scrolled)
-
-        # Create bottom area with fixed height
-        bottom_area = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        bottom_area.set_margin_start(24)
-        bottom_area.set_margin_end(24)
-        bottom_area.set_margin_top(12)
-        bottom_area.set_margin_bottom(12)
-
-        # Add separator above bottom area
-        separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
-        bottom_area.append(separator)
-
-        # Create a box for controls with spacing
-        controls_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        controls_box.set_margin_top(12)
-        controls_box.set_margin_bottom(12)
-
-        # Get current setting value
-        current_value = self.app.settings_manager.load_setting(
-            "show-conversion-help-on-startup", True
-        )
-
-        # Create switch with label
-        switch_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        switch_box.set_hexpand(True)
-
-        switch_label = Gtk.Label(label=_("Show dialog on startup"))
-        switch_label.set_halign(Gtk.Align.START)
-
-        show_on_startup_switch = Gtk.Switch()
-        show_on_startup_switch.set_active(current_value)
-        show_on_startup_switch.set_valign(Gtk.Align.CENTER)
-
-        switch_box.append(switch_label)
-        switch_box.append(show_on_startup_switch)
-        controls_box.append(switch_box)
-
-        # Add close button
-        close_button = Gtk.Button(label=_("Close"))
-        close_button.add_css_class("pill")
-        close_button.add_css_class("suggested-action")
-        close_button.connect("clicked", lambda btn: dialog.close())
-        close_button.set_halign(Gtk.Align.END)
-        controls_box.append(close_button)
-
-        bottom_area.append(controls_box)
-        outer_box.append(bottom_area)
-
-        content_box.append(outer_box)
-
-        # Set content and present dialog
-        dialog.set_content(content_box)
-
-        # Connect the switch signal
-        show_on_startup_switch.connect("notify::active", self._on_dialog_switch_toggled)
-
-        dialog.present()
-
-    def _on_dialog_switch_toggled(self, switch, param):
-        """Handle toggling the switch in the help dialog"""
-        try:
-            value = switch.get_active()
-
-            # Print debug information
-            print(
-                f"Attempting to save setting: show-conversion-help-on-startup = {value}"
-            )
-
-            # Update setting
-            success = self.app.settings_manager.save_setting(
-                "show-conversion-help-on-startup", value
-            )
-
-            if success:
-                print(
-                    f"Successfully saved setting: show-conversion-help-on-startup = {value}"
-                )
-            else:
-                print("Warning: Setting may not have been saved properly.")
-
-        except Exception as e:
-            # Log the error
-            print(f"Error toggling dialog setting: {str(e)}")
-
-            # Fallback approach - try direct save
-            try:
-                settings_file = os.path.expanduser(
-                    "~/.config/big-video-converter/settings.json"
-                )
-                os.makedirs(os.path.dirname(settings_file), exist_ok=True)
-
-                # Load existing settings if available
-                settings = {}
-                if os.path.exists(settings_file):
-                    with open(settings_file, "r") as f:
-                        import json
-
-                        try:
-                            settings = json.load(f)
-                        except:
-                            settings = {}
-
-                # Update the setting
-                settings["show-conversion-help-on-startup"] = switch.get_active()
-
-                # Write back to file
-                with open(settings_file, "w") as f:
-                    import json
-
-                    json.dump(settings, f, indent=2)
-
-                print(f"Saved setting using fallback method to: {settings_file}")
-            except Exception as backup_error:
-                print(f"Even fallback saving method failed: {str(backup_error)}")
-
-    def on_add_files_clicked(self, button):
-        """Open file chooser to add files to the queue"""
-        self.app.select_files_for_queue()
-
-    def on_folder_button_clicked(self, button):
+    def on_folder_button_clicked(self, button) -> None:
         """Open folder chooser dialog to select output folder"""
         dialog = Gtk.FileDialog()
         dialog.set_title(_("Select the output folder"))
@@ -573,43 +450,19 @@ class ConversionPage:
                 self.output_folder_entry.set_text(folder_path)
                 # Save output folder to settings
                 self.app.settings_manager.save_setting("output-folder", folder_path)
-        except Exception as e:
-            print(f"Error selecting folder: {e}")
+        except (ValueError, KeyError, OSError) as e:
+            logger.error(f"Error selecting folder: {e}")
 
-    def on_convert_clicked(self, button):
-        """Start processing the queue"""
-        # If queue is empty, show error
-        if not self.app.conversion_queue:
-            self.app.show_error_dialog(_("Please add files to the queue first."))
-            return
+    def on_queue_item_activated(self, listbox, row) -> None:
+        """Handle selection of a queue item - disabled since rows are not activatable."""
+        pass
 
-        # Set the global delete original setting based on checkbox
-        self.app.delete_original_after_conversion = (
-            self.delete_original_check.get_active()
+    def update_queue_display(self) -> None:
+        """Update the queue display with current items"""
+        logger.debug(
+            f"DEBUG: update_queue_display called, queue length: {len(self.app.conversion_queue)}"
         )
 
-        # Set the global output folder setting
-        output_folder = self.output_folder_entry.get_text().strip()
-        if output_folder:
-            self.app.settings_manager.save_setting("output-folder", output_folder)
-
-        # Start queue processing
-        self.app.start_queue_processing()
-
-    def on_clear_queue_clicked(self, button):
-        """Clear all files from the queue"""
-        self.app.clear_queue()
-
-    def on_queue_item_activated(self, listbox, row):
-        """Handle selection of a queue item - preview or view details"""
-        if row and hasattr(row, "file_path") and row.file_path:
-            # Show file details dialog or preview
-            file_path = row.file_path
-            if os.path.exists(file_path):
-                self.app.show_file_details(file_path)
-
-    def update_queue_display(self):
-        """Update the queue display with current items"""
         # Clear existing items
         while True:
             row = self.queue_listbox.get_first_child()
@@ -618,164 +471,32 @@ class ConversionPage:
             else:
                 break
 
-        # Make sure the queue listbox itself has no margins
-        self.queue_listbox.set_margin_start(0)
-        self.queue_listbox.set_margin_end(0)
-        self.queue_listbox.set_margin_top(0)
-        self.queue_listbox.set_margin_bottom(0)
+        # Re-set placeholder after clearing (GTK may remove it during clear)
+        if hasattr(self, "placeholder"):
+            self.queue_listbox.set_placeholder(self.placeholder)
 
-        # Add current queue items
+        # Add current queue items using FileQueueRow
         for index, file_path in enumerate(self.app.conversion_queue):
             if not os.path.exists(file_path):
                 continue
 
-            # Create list row with full width
-            row = Gtk.ListBoxRow()
-            row.set_activatable(True)
-            row.file_path = file_path
-            row.index = index  # Store the index for drag and drop
-            row.set_hexpand(True)
-
-            # Simplified drag and drop handling - apply to the listbox instead of individual rows
-            # Individual row-level DnD in GTK4 is causing assertion errors
-
-            # 1. NUMBER COLUMN - fixed width
-            main_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            main_box.set_spacing(12)
-            main_box.set_hexpand(True)
-
-            # No vertical margins within items, but keep spacing between items
-            main_box.set_margin_top(4)
-            main_box.set_margin_bottom(4)
-            main_box.set_margin_start(0)
-            main_box.set_margin_end(0)
-
-            number_label = Gtk.Label(label=str(index + 1))
-            number_label.set_width_chars(2)
-            number_label.set_xalign(0.5)
-            number_label.set_margin_start(4)  # Small margin for spacing only
-            main_box.append(number_label)
-
-            # 2. FILE INFO COLUMN - takes up most space
-            info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-            info_box.set_spacing(4)
-            info_box.set_hexpand(True)  # This column should expand
-
-            # Filename row with icon
-            name_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            name_box.set_spacing(4)
-            name_box.set_hexpand(True)
-
-            # File type icon
-            file_icon = Gtk.Image.new_from_icon_name("video-x-generic")
-            file_icon.set_pixel_size(16)
-            name_box.append(file_icon)
-
-            # Filename (bold)
-            filename = os.path.basename(file_path)
-            name_label = Gtk.Label(label=filename)
-            name_label.set_hexpand(True)
-            name_label.set_halign(Gtk.Align.START)
-            name_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
-            name_label.set_xalign(0)  # Left align
-            name_box.append(name_label)
-
-            info_box.append(name_box)
-
-            # Directory path row
-            path_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            path_box.set_spacing(4)
-            path_box.set_hexpand(True)
-
-            # Path prefix icon
-            folder_icon = Gtk.Image.new_from_icon_name("folder-symbolic")
-            folder_icon.set_pixel_size(12)
-            path_box.append(folder_icon)
-
-            # Path label
-            directory = os.path.dirname(file_path)
-            path_label = Gtk.Label(label=directory)
-            path_label.set_hexpand(True)
-            path_label.set_halign(Gtk.Align.START)
-            path_label.set_ellipsize(Pango.EllipsizeMode.START)
-            path_label.set_xalign(0)  # Left align
-            path_box.append(path_label)
-
-            info_box.append(path_box)
-            main_box.append(info_box)
-
-            # 3. SIZE COLUMN - fixed width
-            try:
-                file_size = os.path.getsize(file_path) / (1024 * 1024)
-                size_label = Gtk.Label(label=f"{file_size:.1f} MB")
-                size_label.set_width_chars(8)
-                size_label.set_xalign(1)  # Right align
-                size_label.set_valign(Gtk.Align.CENTER)
-                main_box.append(size_label)
-            except:
-                # Add a spacer if we can't get the file size
-                spacer = Gtk.Box()
-                spacer.set_size_request(70, 1)
-                main_box.append(spacer)
-
-            # 4. BUTTONS COLUMN - create a proper linked button group
-            buttons_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            buttons_box.set_valign(Gtk.Align.CENTER)
-            buttons_box.set_margin_end(4)  # Minimal margin
-
-            # Create a linked button box for a cohesive UI
-            action_buttons = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-            action_buttons.add_css_class(
-                "linked"
-            )  # This makes buttons appear connected
-            action_buttons.set_valign(Gtk.Align.CENTER)
-
-            # Info button to show file information
-            info_button = Gtk.Button.new_from_icon_name("help-about-symbolic")
-            info_button.add_css_class("flat")
-            info_button.set_tooltip_text(_("Show file information"))
-            info_button.connect(
-                "clicked", lambda b, fp=file_path: self.on_show_file_info(b, fp)
+            # Create modern ActionRow for the file
+            row = FileQueueRow(
+                file_path=file_path,
+                index=index,
+                on_remove_callback=self.on_remove_from_queue_by_path,
+                on_play_callback=self.on_play_file_by_path,
+                on_edit_callback=self.on_edit_file_by_path,
+                on_info_callback=self.on_show_file_info_by_path,
+                app=self.app,
             )
-            action_buttons.append(info_button)
+            row.file_path = file_path  # Store for drag and drop
+            row.index = index
 
-            # Play button to open in system video player
-            play_button = Gtk.Button.new_from_icon_name("media-playback-start-symbolic")
-            play_button.add_css_class("flat")
-            play_button.set_tooltip_text(_("Play in default video player"))
-            play_button.connect(
-                "clicked", lambda b, fp=file_path: self.on_play_file(b, fp)
-            )
-            action_buttons.append(play_button)
-
-            # # Edit/Preview button
-            # edit_button = Gtk.Button.new_from_icon_name("document-edit-symbolic")
-            # edit_button.add_css_class("flat")
-            # edit_button.set_tooltip_text(_("Preview in editor"))
-            # # Use lambda to properly capture the specific file_path in the closure
-            # edit_button.connect(
-            #     "clicked", lambda b, fp=file_path: self.on_preview_file(b, fp)
-            # )
-            # action_buttons.append(edit_button)
-
-            # Remove button - with destructive styling
-            remove_button = Gtk.Button.new_from_icon_name("user-trash-symbolic")
-            remove_button.add_css_class("flat")
-            remove_button.set_tooltip_text(_("Remove from queue"))
-            remove_button.connect("clicked", self.on_remove_from_queue, file_path)
-            action_buttons.append(remove_button)
-
-            # Add the linked button box to the main buttons container
-            buttons_box.append(action_buttons)
-            main_box.append(buttons_box)
-
-            # Set the main box as the row's child
-            row.set_child(main_box)
-
-            # Add row to listbox with alternating background
-            if index % 2 == 1:
-                row.add_css_class("alternate-row")
             self.queue_listbox.append(row)
+
+        # Update header button visibility based on queue content
+        self._update_header_buttons_visibility()
 
         # Setup drag and drop on the listbox if we have items to reorder
         if len(self.app.conversion_queue) > 1 and not self.queue_dragging_enabled:
@@ -813,34 +534,13 @@ class ConversionPage:
                 self.drop_target = None
             self.queue_dragging_enabled = False
 
-        # Show a message if the queue is empty
-        if len(self.app.conversion_queue) == 0:
-            empty_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-            empty_box.set_margin_top(24)
-            empty_box.set_margin_bottom(24)
-            empty_box.set_spacing(12)
-            empty_box.set_valign(Gtk.Align.CENTER)
-            empty_box.set_hexpand(True)  # Make sure this expands horizontally
-
-            empty_icon = Gtk.Image.new_from_icon_name("folder-open-symbolic")
-            empty_icon.set_pixel_size(48)
-            empty_icon.add_css_class("dim-label")
-            empty_box.append(empty_icon)
-
-            empty_label = Gtk.Label(label=_("Queue is empty. Add files to convert."))
-            empty_label.add_css_class("dim-label")
-            empty_box.append(empty_label)
-
-            # Add the empty state in a row to ensure consistent layout
-            empty_row = Gtk.ListBoxRow()
-            empty_row.set_selectable(False)
-            empty_row.set_child(empty_box)
-            empty_row.set_hexpand(True)
-
-            self.queue_listbox.append(empty_row)
-
         # Enable or disable convert button based on queue state
-        self.convert_button.set_sensitive(len(self.app.conversion_queue) > 0)
+        if hasattr(self.app, "header_bar") and hasattr(
+            self.app.header_bar, "convert_button"
+        ):
+            self.app.header_bar.convert_button.set_sensitive(
+                len(self.app.conversion_queue) > 0
+            )
 
     # Unified drag and drop handlers for listbox
     def on_drag_prepare_listbox(self, drag_source, x, y):
@@ -854,13 +554,13 @@ class ConversionPage:
             return Gdk.ContentProvider.new_for_value(str(row.index))
         return None
 
-    def on_drag_begin_listbox(self, drag_source, drag):
+    def on_drag_begin_listbox(self, drag_source, drag) -> None:
         """Handle start of drag operation"""
         if self.dragged_row:
             # Add visual styling
             self.dragged_row.add_css_class("dragging")
 
-    def on_drag_end_listbox(self, drag_source, drag, delete_data):
+    def on_drag_end_listbox(self, drag_source, drag, delete_data) -> None:
         """Clean up after drag operation"""
         # Clear dragging state from all rows
         for i in range(len(self.app.conversion_queue)):
@@ -887,7 +587,7 @@ class ConversionPage:
 
         return Gdk.DragAction.MOVE
 
-    def on_drop_listbox(self, drop_target, value, x, y):
+    def on_drop_listbox(self, drop_target, value: str, x, y) -> bool:
         """Handle dropping to reorder queue items"""
         try:
             # Get source index from drag data
@@ -932,33 +632,30 @@ class ConversionPage:
             self.update_queue_display()
 
             return True
-        except Exception as e:
-            print(f"Error during drag and drop: {e}")
+        except (ValueError, TypeError) as e:
+            logger.error(f"Error during drag and drop: {e}")
             import traceback
 
             traceback.print_exc()
             return False
 
-    def on_preview_file(self, button, file_path):
-        """Preview a file in the video editor"""
-        # Make sure we're using the specific file path that was clicked
+    def on_edit_file(self, button, file_path: str) -> None:
+        """Open file in the video editor"""
         if file_path and os.path.exists(file_path):
-            print(f"Previewing file from button click: {file_path}")
-            # Call preview directly without delay
-            self.app.show_file_details(file_path)
+            self.app.show_editor_for_file(file_path)
         else:
-            print(f"Error: Invalid file path for preview: {file_path}")
-            self.app.show_error_dialog(_("Could not preview this video file"))
+            logger.error(f"Error: Invalid file path for edit: {file_path}")
+            self.app.show_error_dialog(_("Could not open this video file"))
 
-    def on_remove_from_queue(self, button, file_path):
+    def on_remove_from_queue(self, button, file_path: str) -> None:
         """Remove a specific file from the queue"""
         self.app.remove_from_queue(file_path)
         self.update_queue_display()
 
-    def on_play_file(self, button, file_path):
+    def on_play_file(self, button, file_path: str) -> None:
         """Play file in the default system video player"""
         if file_path and os.path.exists(file_path):
-            print(f"Opening file in default video player: {file_path}")
+            logger.debug(f"Opening file in default video player: {file_path}")
             try:
                 # Create a GFile for the file path
                 gfile = Gio.File.new_for_path(file_path)
@@ -973,31 +670,25 @@ class ConversionPage:
                 else:
                     # Fallback using gtk_show
                     Gtk.show_uri(self.app.window, gfile.get_uri(), Gdk.CURRENT_TIME)
-            except Exception as e:
-                print(f"Error opening file: {e}")
+            except (GLib.Error, OSError) as e:
+                logger.error(f"Error opening file: {e}")
                 self.app.show_error_dialog(
                     _("Could not open the video file with the default player")
                 )
         else:
-            print(f"Error: Invalid file path: {file_path}")
+            logger.error(f"Error: Invalid file path: {file_path}")
             self.app.show_error_dialog(_("Could not find this video file"))
 
-    def get_selected_file_path(self):
-        """Get currently selected file in queue or None"""
-        for i in range(len(self.app.conversion_queue)):
-            file_path = self.app.conversion_queue[i]
-            if os.path.exists(file_path):
-                return file_path
-        return None
-
-    def set_file(self, file_path):
+    def set_file(self, file_path: str) -> bool:
         """Set the current file path for conversion (required for queue processing)"""
         if file_path and os.path.exists(file_path):
             # Store the current file to be processed
             self.current_file_path = file_path
 
             # Update output folder ONLY if using "Same as input" option
-            if self.folder_combo.get_selected() == 0:  # 0 = "Same folder as original file"
+            if (
+                self.folder_combo.get_selected() == 0
+            ):  # 0 = "Same folder as original file"
                 input_dir = os.path.dirname(file_path)
                 self.output_folder_entry.set_text(input_dir)
 
@@ -1008,18 +699,90 @@ class ConversionPage:
             return True
         return False
 
-    def force_start_conversion(self):
+    def _encoding_environment(self, gpu_override=None):
+        """Hardware and encoder settings for a job that re-encodes video.
+
+        Copy mode needs none of this, but the dialog that offers to re-encode
+        instead of copying does, and it must land on the accelerator the user
+        actually chose rather than falling back to the processor.
+        """
+        settings = self.app.settings_manager
+        env = {}
+
+        if gpu_override:
+            # Use override settings for parallel processing
+            if "type" in gpu_override:
+                env["gpu"] = gpu_override["type"]
+            if "device" in gpu_override:
+                env["gpu_device"] = gpu_override["device"]
+            logger.debug(f"Using GPU override: {gpu_override}")
+        else:
+            gpu_setting = settings.load_setting("gpu", "auto")
+            env["gpu"] = gpu_setting
+
+            # GPU device selection (render device path)
+            gpu_device_index = settings.load_setting("gpu-device-index", 0)
+
+            # Auto-detect architecture from device if GPU is Auto but Device is
+            # specific. This fixes selecting an "Intel" device with "Auto" mode.
+            if gpu_device_index > 0 and hasattr(self.app, "detected_gpus"):
+                idx = gpu_device_index - 1  # 0 = Auto
+                if idx < len(self.app.detected_gpus):
+                    device_info = self.app.detected_gpus[idx]
+                    env["gpu_device"] = device_info["device"]
+
+                    if gpu_setting == "auto":
+                        device_name = device_info.get("name", "").lower()
+                        if "intel" in device_name:
+                            env["gpu"] = "intel"
+                        elif "nvidia" in device_name:
+                            env["gpu"] = "nvidia"
+                        elif ("amd" in device_name
+                              or "advanced micro devices" in device_name):
+                            env["gpu"] = "amd"
+                        logger.debug(
+                            f"Auto-detected {env['gpu']} GPU from device selection: "
+                            f"{device_name}"
+                        )
+
+            # Smart GPU selection: when auto mode + auto device + multiple GPUs,
+            # pick the best GPU for the selected codec
+            if (
+                gpu_setting == "auto"
+                and gpu_device_index == 0
+                and hasattr(self.app, "detected_gpus")
+                and len(self.app.detected_gpus) > 1
+            ):
+                from utils.gpu_selector import select_best_gpu
+
+                codec = settings.load_setting("video-codec", "h264")
+                best = select_best_gpu(self.app.detected_gpus, codec)
+                if best:
+                    env["gpu"] = best["type"]
+                    if best.get("device"):
+                        env["gpu_device"] = best["device"]
+                    logger.info(
+                        f"Smart GPU selection: {best['type']} "
+                        f"(device={best.get('device', 'default')}) for {codec}"
+                    )
+
+        env["video_quality"] = settings.load_setting("video-quality", "default")
+        env["video_encoder"] = settings.load_setting("video-codec", "h264")
+        env["preset"] = settings.load_setting("preset", "default")
+        return env
+
+    def force_start_conversion(self, gpu_override=None):
         """Start conversion process with the currently selected file"""
         # Check if we have a file to convert
         if not hasattr(self, "current_file_path") or not os.path.exists(
             self.current_file_path
         ):
-            print("Cannot start conversion: No valid file selected")
+            logger.error("Cannot start conversion: No valid file selected")
             return False
 
         # Get the file to convert
         input_file = self.current_file_path
-        print(f"Starting conversion for: {input_file}")
+        logger.debug(f"Starting conversion for: {input_file}")
 
         # Get absolute path to input directory
         input_dir = os.path.dirname(os.path.abspath(input_file))
@@ -1035,42 +798,131 @@ class ConversionPage:
         # Load app settings for conversion
         try:
             if hasattr(self.app, "settings_manager"):
-                # Get settings directly using string values instead of indices
-                env_vars = {}
+                # Start with a copy of the current environment to preserve PATH, etc.
+                env_vars = os.environ.copy()
 
-                # GPU - Use direct string value
-                env_vars["gpu"] = self.app.settings_manager.load_setting("gpu", "auto")
-
-                # Video quality and codec
-                env_vars["video_quality"] = self.app.settings_manager.load_setting(
-                    "video-quality", "medium"
-                )
-                env_vars["video_encoder"] = self.app.settings_manager.load_setting(
-                    "video-codec", "h264"
+                # Check if force copy video is enabled
+                force_copy_video_enabled = self.app.settings_manager.get_boolean(
+                    "force-copy-video", False
                 )
 
-                # Other encoding settings
-                env_vars["preset"] = self.app.settings_manager.load_setting(
-                    "preset", "medium"
-                )
+                # GPU - Use direct string value, but disable if copying without reencoding
+                if force_copy_video_enabled:
+                    # When copying without reencoding, hardware acceleration is not needed
+                    env_vars["gpu"] = "software"
+                    logger.debug(
+                        "Force copy video enabled: disabling hardware acceleration "
+                        "and skipping video_quality, video_encoder, preset"
+                    )
+                else:
+                    env_vars.update(self._encoding_environment(gpu_override))
+
+                # Subtitle handling (works regardless of copy mode)
                 env_vars["subtitle_extract"] = self.app.settings_manager.load_setting(
-                    "subtitle-extract", "extract"
+                    "subtitle-extract", "embedded"
                 )
-                env_vars["audio_handling"] = self.app.settings_manager.load_setting(
+
+                # The widgets already carry a preset's structured choices; the
+                # file adds what has no widget: per-encoder arguments and the
+                # preset's own FFmpeg options.
+                active_preset = self.app.active_preset() if hasattr(self.app, "active_preset") else None
+                if active_preset is not None:
+                    env_vars["preset_file"] = active_preset.path
+                else:
+                    env_vars.pop("preset_file", None)
+
+                # Audio handling - Check if video has audio streams
+                audio_handling = self.app.settings_manager.load_setting(
                     "audio-handling", "copy"
                 )
-                env_vars["video_resolution"] = self.app.settings_manager.load_setting(
-                    "video-resolution", ""
-                )
+
+                # Import audio detection function
+                from utils.file_info import has_audio_streams
+
+                if not has_audio_streams(input_file):
+                    # Video has no audio streams, force audio_handling to "none"
+                    audio_handling = "none"
+                    logger.debug(
+                        f"No audio streams detected in {os.path.basename(input_file)}, setting audio_handling to 'none'"
+                    )
+
+                env_vars["audio_handling"] = audio_handling
+
+                # Only set video resolution if NOT in copy mode
+                if not force_copy_video_enabled:
+                    video_resolution = self.app.settings_manager.load_setting(
+                        "video-resolution", ""
+                    )
+                    if video_resolution:
+                        env_vars["video_resolution"] = video_resolution
+                else:
+                    logger.debug("Copy mode enabled - skipping video_resolution")
+
                 # Set flags
                 if self.app.settings_manager.get_boolean("gpu-partial", False):
                     env_vars["gpu_partial"] = "1"
-                if self.app.settings_manager.get_boolean("force-copy-video", False):
+                if force_copy_video_enabled:
                     env_vars["force_copy_video"] = "1"
                 if self.app.settings_manager.get_boolean(
                     "only-extract-subtitles", False
                 ):
                     env_vars["only_extract_subtitles"] = "1"
+
+                # Noise reduction
+                sm = self.app.settings_manager
+                if sm.get_boolean("noise-reduction", False):
+                    env_vars["noise_reduction"] = "1"
+
+                    # Core NR parameters
+                    env_vars["noise_strength"] = str(
+                        sm.load_setting("noise-reduction-strength", 1.0)
+                    )
+                    env_vars["noise_model"] = str(sm.load_setting("noise-model", 0))
+                    env_vars["noise_speech_strength"] = str(
+                        sm.load_setting("noise-speech-strength", 1.0)
+                    )
+                    env_vars["noise_lookahead"] = str(
+                        sm.load_setting("noise-lookahead", 50)
+                    )
+                    env_vars["noise_model_blend"] = (
+                        "1" if sm.get_boolean("noise-model-blend", False) else "0"
+                    )
+                    env_vars["noise_voice_recovery"] = str(
+                        sm.load_setting("noise-voice-recovery", 0.75)
+                    )
+
+                # Audio filters (work independently of NR)
+                # Noise gate
+                if sm.get_boolean("noise-gate-enabled", False):
+                    env_vars["noise_gate"] = "1"
+                    env_vars["gate_intensity"] = str(
+                        sm.load_setting("noise-gate-intensity", 0.5)
+                    )
+
+                # High-pass filter
+                if sm.get_boolean("hpf-enabled", False):
+                    env_vars["hpf_enabled"] = "1"
+                    env_vars["hpf_frequency"] = str(
+                        sm.load_setting("hpf-frequency", 80)
+                    )
+
+                # Compressor
+                if sm.get_boolean("compressor-enabled", False):
+                    env_vars["compressor_enabled"] = "1"
+                    env_vars["compressor_intensity"] = str(
+                        sm.load_setting("compressor-intensity", 1.0)
+                    )
+
+                # Equalizer
+                if sm.get_boolean("eq-enabled", False):
+                    env_vars["eq_enabled"] = "1"
+                    env_vars["eq_bands"] = str(
+                        sm.load_setting("eq-bands", "0,0,0,0,0,0,0,0,0,0")
+                    )
+
+                # Loudness normalization
+                if sm.get_boolean("normalize-enabled", False):
+                    env_vars["normalize_enabled"] = "1"
 
                 # Handle audio settings
                 audio_bitrate = self.app.settings_manager.load_setting(
@@ -1083,130 +935,137 @@ class ConversionPage:
                 )
                 if audio_channels:
                     env_vars["audio_channels"] = audio_channels
+                audio_codec = self.app.settings_manager.load_setting(
+                    "audio-codec", "aac"
+                )
+                if audio_codec:
+                    env_vars["audio_codec"] = audio_codec
 
-                # Get crop values first to check if we need to retrieve video dimensions
-                crop_left = self.app.settings_manager.load_setting(
-                    "preview-crop-left", 0
+                # Get per-file metadata for this file
+                file_metadata = self.file_metadata.get(input_file, {})
+                logger.debug(
+                    f"Using per-file metadata for {os.path.basename(input_file)}"
                 )
-                crop_right = self.app.settings_manager.load_setting(
-                    "preview-crop-right", 0
-                )
-                crop_top = self.app.settings_manager.load_setting("preview-crop-top", 0)
-                crop_bottom = self.app.settings_manager.load_setting(
-                    "preview-crop-bottom", 0
+
+                # Get trim segments from per-file metadata
+                trim_segments = deepcopy(file_metadata.get("trim_segments", []))
+
+                # Get output mode from per-file metadata (not global settings)
+                output_mode = file_metadata.get("output_mode", "join")
+
+                # Get crop values from per-file metadata (not global settings)
+                crop_left = file_metadata.get("crop_left", 0)
+                crop_right = file_metadata.get("crop_right", 0)
+                crop_top = file_metadata.get("crop_top", 0)
+                crop_bottom = file_metadata.get("crop_bottom", 0)
+
+                # Per-file editing values are applied through a local override
+                # instead of being written to the global settings: two parallel
+                # conversions would otherwise overwrite each other's filters.
+                filter_settings = SettingsOverride(
+                    self.app.settings_manager,
+                    {
+                        "preview-crop-left": crop_left,
+                        "preview-crop-right": crop_right,
+                        "preview-crop-top": crop_top,
+                        "preview-crop-bottom": crop_bottom,
+                        "preview-brightness": file_metadata.get("brightness", 0.0),
+                        "preview-saturation": file_metadata.get("saturation", 1.0),
+                        "preview-hue": file_metadata.get("hue", 0.0),
+                        "preview-rotation": file_metadata.get("rotation", 0),
+                        "preview-flip-h": file_metadata.get("flip_h", False),
+                        "preview-flip-v": file_metadata.get("flip_v", False),
+                    },
                 )
 
                 # Try to get video dimensions if there are crop values
-                video_width = getattr(self.app, "video_width", None)
-                video_height = getattr(self.app, "video_height", None)
+                video_width = None
+                video_height = None
 
                 # If we need to crop and don't have dimensions, try to get them
                 if (
                     crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0
                 ) and (video_width is None or video_height is None):
-                    try:
-                        import subprocess
-                        import json
+                    # Answered from the probe cache the queue warmed off the
+                    # main thread; a cache miss still probes synchronously.
+                    from utils.file_info import get_video_dimensions
 
-                        print(
-                            f"Getting video dimensions for {input_file} using ffprobe"
-                        )
-                        cmd = [
-                            "ffprobe",
-                            "-v",
-                            "error",
-                            "-select_streams",
-                            "v:0",
-                            "-show_entries",
-                            "stream=width,height",
-                            "-of",
-                            "json",
-                            input_file,
-                        ]
+                    video_width, video_height = get_video_dimensions(input_file)
 
-                        result = subprocess.run(cmd, capture_output=True, text=True)
-                        if result.returncode == 0:
-                            data = json.loads(result.stdout)
-                            if "streams" in data and len(data["streams"]) > 0:
-                                video_width = int(data["streams"][0].get("width", 0))
-                                video_height = int(data["streams"][0].get("height", 0))
-                                print(
-                                    f"Detected video dimensions: {video_width}x{video_height}"
-                                )
-
-                                # Store these dimensions for future use
-                                self.app.video_width = video_width
-                                self.app.video_height = video_height
-                            else:
-                                print("No video streams found in file")
-                        else:
-                            print(f"ffprobe error: {result.stderr}")
-                    except Exception as e:
-                        print(f"Error getting video dimensions: {e}")
-                        import traceback
-
-                        traceback.print_exc()
-
-                # Important: Apply crop values to settings manager so they'll be included in video_filter
                 if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:
-                    print(
-                        f"Setting crop values in settings: left={crop_left}, right={crop_right}, top={crop_top}, bottom={crop_bottom}"
+                    logger.debug(
+                        f"Using crop values: left={crop_left}, right={crop_right}, top={crop_top}, bottom={crop_bottom}"
                     )
 
-                    # Save crop values to settings
-                    self.app.settings_manager.set_int("preview-crop-left", crop_left)
-                    self.app.settings_manager.set_int("preview-crop-right", crop_right)
-                    self.app.settings_manager.set_int("preview-crop-top", crop_top)
-                    self.app.settings_manager.set_int(
-                        "preview-crop-bottom", crop_bottom
+                # Get the unified video filter string from the per-file values.
+                # Skip video filters when in copy mode since filters require re-encoding
+                if not force_copy_video_enabled:
+                    # Pass input file for H.265 10-bit detection
+                    video_filter = get_video_filter_string(
+                        filter_settings,
+                        video_width=video_width,
+                        video_height=video_height,
+                        input_file=input_file,
                     )
 
-                # Get the unified video filter string AFTER setting crop values
-                # Pass input file for H.265 10-bit detection
-                video_filter = get_video_filter_string(
-                    self.app.settings_manager,
-                    video_width=video_width,
-                    video_height=video_height,
-                    input_file=input_file,
-                )
-
-                if video_filter:
-                    env_vars["video_filter"] = video_filter
-                    print(f"Using video_filter: {env_vars['video_filter']}")
+                    if video_filter:
+                        env_vars["video_filter"] = video_filter
+                        logger.debug(f"Using video_filter: {env_vars['video_filter']}")
+                    else:
+                        logger.debug(
+                            "No video filters applied (may be handled by optimized GPU conversion)"
+                        )
                 else:
-                    print("No video filters applied (may be handled by optimized GPU conversion)")
+                    logger.debug(
+                        "Copy mode enabled - skipping video_filter (filters require re-encoding)"
+                    )
 
-                # Handle additional options
-                additional_options = self.app.settings_manager.load_setting(
+                # Validate the option grammar shared with the backend. The
+                # transport text is parsed into argv, never executed as shell.
+                raw_additional_options = self.app.settings_manager.load_setting(
                     "additional-options", ""
                 )
+                options_ok, additional_options = validate_additional_options(
+                    raw_additional_options
+                )
+                if not options_ok:
+                    error_message = additional_options
+                    logger.error(f"Rejected additional options: {error_message}")
+                    GLib.idle_add(
+                        lambda msg=error_message: self.app.show_error_dialog(msg)
+                    )
+                    return False
 
-                # Now use the updated trim values from our generate_trim_options method
-                if trim_start > 0:
-                    # Format time as HH:MM:SS.mmm for FFmpeg
-                    start_str = self._format_time_ffmpeg(trim_start)
+                # Handle trimming based on number of segments
+                if len(trim_segments) == 0:
+                    # No trimming, process full video
+                    logger.debug("No segments defined, processing full video")
+                    pass
+                elif len(trim_segments) == 1:
+                    # Single segment trimming - use the segment's start/end times
+                    trim_start = trim_segments[0]["start"]
+                    trim_end = trim_segments[0]["end"]
 
-                    # Add the -ss option to the additional options
-                    if additional_options:
-                        additional_options += f" -ss {start_str}"
-                    else:
-                        additional_options = f"-ss {start_str}"
+                    if trim_start > 0:
+                        start_str = self._format_time_ffmpeg(trim_start)
+                        if additional_options:
+                            additional_options += f" -ss {start_str}"
+                        else:
+                            additional_options = f"-ss {start_str}"
+                        logger.debug(f"Adding trim start to options: -ss {start_str}")
 
-                    print(f"Adding trim start to options: -ss {start_str}")
-
-                if trim_end is not None:
-                    # Calculate duration between start and end
-                    duration_secs = trim_end - trim_start
-                    duration_str = self._format_time_ffmpeg(duration_secs)
-
-                    # Add the -t option to the additional options
-                    additional_options += f" -t {duration_str}"
-                    print(f"Adding trim duration to options: -t {duration_str}")
+                    if trim_end is not None:
+                        duration_secs = trim_end - trim_start
+                        duration_str = self._format_time_ffmpeg(duration_secs)
+                        additional_options += f" -t {duration_str}"
+                        logger.debug(
+                            f"Adding trim duration to options: -t {duration_str}"
+                        )
 
                 # Set the final options environment variable
                 if additional_options:
                     env_vars["options"] = additional_options
-                    print(f"Setting options={additional_options}")
+                    logger.debug(f"Setting options={additional_options}")
 
                 # REMOVED: Separate crop handling - this is now done through the video_filter mechanism
                 # We still pass the dimensions to the environment for other potential uses
@@ -1214,11 +1073,12 @@ class ConversionPage:
                     env_vars["video_width"] = str(video_width)
                     env_vars["video_height"] = str(video_height)
 
-        except Exception as e:
-            print(f"Error setting up conversion environment: {e}")
+        except (subprocess.SubprocessError, OSError) as e:
+            logger.error(f"Error setting up conversion environment: {e}")
             import traceback
 
             traceback.print_exc()
+            return False
 
         # Get the extension of the selected output format
         output_ext = self.app.get_selected_format_extension()
@@ -1237,7 +1097,9 @@ class ConversionPage:
             output_basename = f"{input_basename}{output_ext}"
 
         # Set output folder based on selection
-        use_same_folder = self.folder_combo.get_selected() == 0  # 0 = "Same folder as original file"
+        use_same_folder = (
+            self.folder_combo.get_selected() == 0
+        )  # 0 = "Same folder as original file"
 
         if use_same_folder:
             # Use same folder as input
@@ -1253,8 +1115,22 @@ class ConversionPage:
         if not os.path.isabs(output_folder):
             output_folder = os.path.abspath(output_folder)
 
-        # IMPORTANT: Create the full output file path
+        # Check if file exists and find an available filename
         full_output_path = os.path.join(output_folder, output_basename)
+        if os.path.exists(full_output_path):
+            # Find an available filename by adding a counter
+            base_name = os.path.splitext(output_basename)[0]
+            extension = os.path.splitext(output_basename)[1]
+            counter = 1
+            while True:
+                output_basename = f"{base_name}_{counter}{extension}"
+                full_output_path = os.path.join(output_folder, output_basename)
+                if not os.path.exists(full_output_path):
+                    logger.debug(
+                        f"Output file exists, using alternative name: {output_basename}"
+                    )
+                    break
+                counter += 1
 
         # Set the full path as output_file
         env_vars["output_file"] = full_output_path
@@ -1263,7 +1139,7 @@ class ConversionPage:
         if "output_folder" in env_vars:
             del env_vars["output_folder"]
 
-        print(f"Full output path: {full_output_path}")
+        logger.debug(f"Full output path: {full_output_path}")
 
         # Set the output format
         env_vars["output_format"] = output_format
@@ -1276,16 +1152,199 @@ class ConversionPage:
         if trim_options:
             cmd.extend(trim_options)
 
-        # Reset trim times after conversion
-        # self.app.set_trim_times(0, None, 0)
-
         # Delete original setting
         delete_original = self.delete_original_check.get_active()
 
+        job_info = next((info for info in getattr(self.app, "active_conversions", [])
+                         if info.get("file_path") == input_file), {})
+        job_id = job_info.get("job_id")
+        cancel_event = job_info.get("cancel_event") or threading.Event()
+
+        # Check MP4 compatibility when copying without reencoding to MP4
+        force_copy_video = env_vars.get("force_copy_video") == "1"
+        if force_copy_video and output_format == "mp4":
+            from utils.file_info import check_mp4_compatibility
+
+            is_compatible, incompatible_streams = check_mp4_compatibility(input_file)
+            if not is_compatible:
+                # Package all needed variables
+                conversion_context = {
+                    "cmd": cmd,
+                    "env_vars": env_vars,
+                    "job_id": job_id,
+                    "cancel_event": cancel_event,
+                    "delete_original": delete_original,
+                    "full_output_path": full_output_path,
+                    "input_file": input_file,
+                    "input_basename": input_basename,
+                    "input_ext": input_ext,
+                    "output_ext": output_ext,
+                    "output_folder": output_folder,
+                    "trim_segments": trim_segments,
+                    "output_mode": output_mode,
+                }
+
+                # Re-encoding uses the settings copy mode had skipped, the
+                # accelerator included: choosing "re-encode" is not a request
+                # to fall back to the processor.
+                reencode_env = dict(env_vars)
+                reencode_env.pop("force_copy_video", None)
+                reencode_env.pop("force_software", None)
+                reencode_env.update(self._encoding_environment(gpu_override))
+                video_resolution = self.app.settings_manager.load_setting(
+                    "video-resolution", "")
+                if video_resolution:
+                    reencode_env["video_resolution"] = video_resolution
+                reencode_env["video_filter"] = get_video_filter_string(
+                    filter_settings, video_width=video_width, video_height=video_height,
+                    input_file=input_file)
+
+                def show_compatibility_warning() -> None:
+                    dialog = Adw.AlertDialog()
+                    dialog.set_heading(_("These tracks can't be copied into MP4"))
+                    dialog.set_body(
+                        _(
+                            "“Copy video without reencoding” keeps the original "
+                            "streams as they are, and the MP4 container does not "
+                            "accept the ones listed below."
+                        )
+                    )
+                    dialog.set_extra_child(
+                        self._build_incompatible_streams_child(incompatible_streams)
+                    )
+
+                    # Wider layout when libadwaita supports it (1.5+).
+                    if hasattr(dialog, "set_prefer_wide_layout"):
+                        dialog.set_prefer_wide_layout(True)
+
+                    dialog.add_response("cancel", _("Cancel"))
+                    dialog.add_response("reencode", _("Reencode (recommended)"))
+                    dialog.add_response("proceed", _("Copy anyway"))
+                    dialog.set_response_appearance(
+                        "reencode", Adw.ResponseAppearance.SUGGESTED
+                    )
+                    dialog.set_response_appearance(
+                        "proceed", Adw.ResponseAppearance.DESTRUCTIVE
+                    )
+                    dialog.set_default_response("reencode")
+                    dialog.set_close_response("cancel")
+
+                    def on_response(dialog, response) -> None:
+                        if cancel_event.is_set() or response == "cancel":
+                            cancel_event.set()
+                            self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
+                            return
+                        if response == "reencode":
+                            conversion_context["env_vars"] = reencode_env
+                        # Direct invocation: this callback is already on GTK's
+                        # main loop. Do not schedule a True-returning idle task.
+                        try:
+                            self._continue_conversion(conversion_context)
+                        except Exception as error:
+                            logger.exception("Could not resume conversion")
+                            self.app.show_error_dialog(str(error))
+                            self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
+
+                    dialog.connect("response", on_response)
+                    dialog.present(self.app.window)
+
+                # Show dialog in main thread
+                GLib.idle_add(show_compatibility_warning)
+                return True  # The active job remains reserved while awaiting a decision.
+
+        # Continue with conversion
+        conversion_context = {
+            "cmd": cmd,
+            "env_vars": env_vars,
+            "job_id": job_id,
+            "cancel_event": cancel_event,
+            "delete_original": delete_original,
+            "full_output_path": full_output_path,
+            "input_file": input_file,
+            "input_basename": input_basename,
+            "input_ext": input_ext,
+            "output_ext": output_ext,
+            "output_folder": output_folder,
+            "trim_segments": trim_segments,
+            "output_mode": output_mode,
+        }
+        return self._continue_conversion(conversion_context)
+
+    def _build_incompatible_streams_child(self, streams):
+        """Build the list of MP4-incompatible tracks shown in the warning dialog."""
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        # Give the dialog room to breathe: AlertDialog sizes itself around the
+        # extra child, and the default width squeezes these labels into 3 lines.
+        box.set_size_request(480, -1)
+
+        group = Adw.PreferencesGroup()
+        group.set_title(_("Incompatible tracks"))
+
+        for stream in streams:
+            codec = (stream.get("codec_name") or "").upper()
+            row = Adw.ActionRow(title=codec or _("Unknown codec"))
+
+            if stream.get("codec_type") == "video":
+                kind = _("Video track {0}").format(stream.get("index", 1))
+                icon_name = "video-x-generic-symbolic"
+            else:
+                kind = _("Audio track {0}").format(stream.get("index", 1))
+                icon_name = "audio-volume-high-symbolic"
+
+            details = [kind]
+            language = stream.get("language")
+            if language:
+                details.append(language.upper())
+            title = stream.get("title")
+            if title:
+                details.append(title)
+            row.set_subtitle(" · ".join(details))
+
+            icon = Gtk.Image.new_from_icon_name(icon_name)
+            icon.add_css_class("dim-label")
+            row.add_prefix(icon)
+
+            badge = Gtk.Label(label=_("not supported by MP4"))
+            badge.add_css_class("caption")
+            badge.add_css_class("warning")
+            badge.set_valign(Gtk.Align.CENTER)
+            row.add_suffix(badge)
+
+            group.add(row)
+
+        box.append(group)
+
+        hint = Gtk.Label()
+        hint.set_wrap(True)
+        hint.set_xalign(0)
+        hint.add_css_class("caption")
+        hint.add_css_class("dim-label")
+        hint.set_label(
+            _(
+                "Reencode converts these tracks so the MP4 plays anywhere. "
+                "Copying anyway is faster, but the result may have no sound or "
+                "may not play at all — choose MKV as the output format to keep "
+                "the original tracks untouched."
+            )
+        )
+        box.append(hint)
+
+        return box
+
+    def _continue_conversion(self, context):
+        """Continue with the actual conversion process"""
+        # The naming and segment fields are read by start_segment_batch, which
+        # takes the whole context; only these are used here.
+        cmd = context["cmd"]
+        env_vars = context["env_vars"]
+        delete_original = context["delete_original"]
+        input_file = context["input_file"]
+        trim_segments = context["trim_segments"]
+
         # Log the command and environment variables for debugging
-        print("\n=== CONVERSION COMMAND ===")
-        print(f"Command: {' '.join(cmd)}")
-        print("\n=== ENVIRONMENT VARIABLES ===")
+        logger.debug("\n=== CONVERSION COMMAND ===")
+        logger.debug(f"Command: {' '.join(cmd)}")
+        logger.debug("\n=== ENVIRONMENT VARIABLES ===")
         conversion_vars = {
             k: v
             for k, v in env_vars.items()
@@ -1329,27 +1388,45 @@ class ConversionPage:
             settings_dict = self.app.settings_manager.settings
 
         if "video-quality" in settings_dict:
-            print(f"Raw video-quality setting: {settings_dict['video-quality']}")
+            logger.debug(f"Raw video-quality setting: {settings_dict['video-quality']}")
         else:
-            print("video-quality setting not found in config")
+            logger.debug("video-quality setting not found in config")
 
         if "video-codec" in settings_dict:
-            print(f"Raw video-codec setting: {settings_dict['video-codec']}")
+            logger.debug(f"Raw video-codec setting: {settings_dict['video-codec']}")
         else:
-            print("video-codec setting not found in config")
+            logger.debug("video-codec setting not found in config")
 
         for key, value in conversion_vars.items():
-            print(f"{key}={value}")
-        print("===========================\n")
+            logger.debug(f"{key}={value}")
+        logger.debug("===========================\n")
+
+        if context.get("cancel_event") is not None and context["cancel_event"].is_set():
+            self.app.conversion_completed(False, file_path=input_file, job_id=context.get("job_id"))
+            return False
+        if len(trim_segments) > 1:
+            return start_segment_batch(self, context)
+
+        # Single segment or no segments - use standard conversion
+        # Calculate segment duration for single-segment trimming for accurate progress
+        segment_duration = None
+        if len(trim_segments) == 1:
+            segment_duration = trim_segments[0]["end"] - trim_segments[0]["start"]
+            logger.debug(
+                f"Single segment mode: segment_duration={segment_duration:.2f}s"
+            )
 
         # Create and display progress dialog
+        # Always pass input_file for proper queue tracking
         run_with_progress_dialog(
             self.app,
             cmd,
             f"{os.path.basename(input_file)}",
-            input_file if delete_original else None,
+            input_file,  # Always pass full path for queue tracking
             delete_original,
             env_vars,
+            segment_duration=segment_duration,
+            job_id=context.get("job_id"), cancel_event=context.get("cancel_event"),
         )
 
         return True
@@ -1367,7 +1444,7 @@ class ConversionPage:
                 "video-trim-end", -1.0
             )
             end_time = None if end_time_setting < 0 else end_time_setting
-            print(
+            logger.debug(
                 f"Using trim settings from settings: start={start_time}, end={end_time}"
             )
 
@@ -1387,6 +1464,17 @@ class ConversionPage:
         milliseconds = int((seconds - int(seconds)) * 1000)
         return f"{hours:02d}:{minutes:02d}:{seconds_remainder:02d}.{milliseconds:03d}"
 
+    def _on_output_folder_entry_changed(self, entry) -> None:
+        """Persist the destination folder, but only while it is in use.
+
+        set_file() writes the input folder into this entry when the "same
+        folder as the original file" mode is active; saving that would replace
+        the destination the user configured.
+        """
+        if self.folder_combo.get_selected() != 1:
+            return
+        self.app.settings_manager.save_setting("output-folder", entry.get_text())
+
     def _on_folder_type_changed(self, combo, param):
         """Handle folder type combo change"""
         selected = combo.get_selected()
@@ -1400,66 +1488,86 @@ class ConversionPage:
             "use-custom-output-folder", use_custom_folder
         )
 
-        # If not using custom folder, clear the path
-        if not use_custom_folder:
-            self.app.settings_manager.save_setting("output-folder", "")
+        # Keep the configured path: switching back to "same folder as the
+        # original" should not throw away the folder the user chose, so it is
+        # still there when they switch the option on again. The path is simply
+        # ignored while this mode is active.
 
-    # Row-specific drag and drop handlers
-    def on_drag_prepare_row(self, drag_source, x, y, row):
-        """Prepare data for dragging a specific row"""
-        # Create content with the row index
-        content = Gdk.ContentProvider.new_for_value(row.index)
-        return content
+    def _filter_subtitle_range(self, srt_content, start_time, end_time, offset_seconds):
+        """Filter subtitles within time range and adjust timecodes by offset."""
+        import re
 
-    def on_drag_begin_row(self, drag_source, drag, row):
-        """Handle start of drag operation for a specific row"""
-        # Add visual styling to indicate the row is being dragged
-        row.add_css_class("dragging")
+        # Helper to convert timecode to seconds
+        def time_to_seconds(time_str):
+            h, m, s = time_str.split(":")
+            s, ms = s.split(",")
+            return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
 
-    def on_drag_end_row(self, drag_source, drag, delete_data, row):
-        """Clean up after drag operation completes"""
-        # Remove visual styling
-        row.remove_css_class("dragging")
+        # Helper to convert seconds to timecode
+        def seconds_to_time(seconds):
+            h = int(seconds // 3600)
+            seconds %= 3600
+            m = int(seconds // 60)
+            seconds %= 60
+            s = int(seconds)
+            ms = int((seconds - s) * 1000)
+            return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
-    def on_drop_enter(self, drop_target, x, y, row):
-        """Handle drag entering a potential drop target"""
-        # Add visual styling to indicate possible drop target
-        row.add_css_class("drag-hover")
-        return Gdk.DragAction.MOVE
+        # Split into subtitle blocks
+        blocks = srt_content.strip().split("\n\n")
+        filtered_blocks = []
+        counter = 1
 
-    def on_drop_leave(self, drop_target, row):
-        """Handle drag leaving a potential drop target"""
-        # Remove visual styling
-        row.remove_css_class("drag-hover")
+        for block in blocks:
+            if not block.strip():
+                continue
 
-    def on_drop_motion_row(self, drop_target, x, y):
-        """Handle drag motion over a drop target"""
-        return Gdk.DragAction.MOVE
+            lines = block.strip().split("\n")
+            if len(lines) < 2:
+                continue
 
-    def on_drop_item(self, drop_target, value, x, y, target_row):
-        """Handle dropping item to reorder queue"""
-        try:
-            # Get the source index from the drag data
-            source_index = value
-            # Get the target index from the row
-            target_index = target_row.index
+            # Find timecode line (usually line 1, but skip subtitle number)
+            timecode_line = None
+            for line in lines[1:]:
+                if "-->" in line:
+                    timecode_line = line
+                    break
 
-            # Don't reorder if dropping at the same position
-            if source_index == target_index:
-                return False
+            if not timecode_line:
+                continue
 
-            # Reorder the queue
-            item = self.app.conversion_queue.pop(source_index)
-            self.app.conversion_queue.insert(target_index, item)
+            # Parse timecodes
+            match = re.match(
+                r"(\d{2}:\d{2}:\d{2},\d{3})\s+-->\s+(\d{2}:\d{2}:\d{2},\d{3})",
+                timecode_line,
+            )
+            if not match:
+                continue
 
-            # Update the UI
-            self.update_queue_display()
-            return True
-        except Exception as e:
-            print(f"Error during drop operation: {e}")
-            return False
+            sub_start = time_to_seconds(match.group(1))
+            sub_end = time_to_seconds(match.group(2))
 
-    def on_show_file_info(self, button, file_path):
+            # Check if subtitle is within segment range
+            if sub_start >= start_time and sub_end <= end_time:
+                # Adjust timecodes: subtract segment start, add cumulative offset
+                adjusted_start = sub_start - start_time + offset_seconds
+                adjusted_end = sub_end - start_time + offset_seconds
+
+                # Build new block with sequential numbering
+                text_lines = [
+                    line
+                    for line in lines
+                    if line.strip() and not line.strip().isdigit() and "-->" not in line
+                ]
+                new_block = f"{counter}\n{seconds_to_time(adjusted_start)} --> {seconds_to_time(adjusted_end)}\n"
+                new_block += "\n".join(text_lines)
+
+                filtered_blocks.append(new_block)
+                counter += 1
+
+        return "\n\n".join(filtered_blocks)
+
+    def on_show_file_info(self, button, file_path: str) -> None:
         """Show detailed information about the video file"""
         if file_path and os.path.exists(file_path):
             from utils.file_info import VideoInfoDialog
@@ -1467,8 +1575,39 @@ class ConversionPage:
             info_dialog = VideoInfoDialog(self.app.window, file_path)
             info_dialog.show()
         else:
-            print(f"Error: Invalid file path: {file_path}")
+            logger.error(f"Error: Invalid file path: {file_path}")
             self.app.show_error_dialog(_("Could not find this video file"))
+
+    def _update_header_buttons_visibility(self):
+        """Update visibility of Clear Queue and Convert All buttons based on queue content"""
+        queue_count = len(self.app.conversion_queue)
+        has_files = queue_count > 0
+
+        if hasattr(self.app, "header_bar"):
+            # Update queue size label and clear button visibility
+            if hasattr(self.app.header_bar, "update_queue_size"):
+                self.app.header_bar.update_queue_size(queue_count)
+
+            # Update convert button visibility
+            if hasattr(self.app.header_bar, "convert_button"):
+                self.app.header_bar.convert_button.set_visible(has_files)
+
+    # Wrapper methods for FileQueueRow callbacks (without button parameter)
+    def on_remove_from_queue_by_path(self, file_path: str) -> None:
+        """Remove file from queue (callback for FileQueueRow)"""
+        self.on_remove_from_queue(None, file_path)
+
+    def on_play_file_by_path(self, file_path: str) -> None:
+        """Play file (callback for FileQueueRow)"""
+        self.on_play_file(None, file_path)
+
+    def on_edit_file_by_path(self, file_path: str) -> None:
+        """Edit file (callback for FileQueueRow)"""
+        self.on_edit_file(None, file_path)
+
+    def on_show_file_info_by_path(self, file_path: str) -> None:
+        """Show file info (callback for FileQueueRow)"""
+        self.on_show_file_info(None, file_path)
 
     def generate_trim_options(self):
         """
@@ -1479,9 +1618,6 @@ class ConversionPage:
         # Always get the latest trim values directly from the app
         start_time, end_time, duration = self.app.get_trim_times()
 
-        # Get video total duration if available
-        video_duration = getattr(self.app, "video_duration", None)
-
         # If we don't have values from the app, check settings
         if start_time == 0 and end_time is None:
             start_time = self.app.settings_manager.load_setting("video-trim-start", 0.0)
@@ -1489,17 +1625,19 @@ class ConversionPage:
                 "video-trim-end", -1.0
             )
             end_time = None if end_time_setting < 0 else end_time_setting
-            print(
+            logger.debug(
                 f"Using trim settings from settings: start={start_time}, end={end_time}"
             )
         else:
-            print(
+            logger.debug(
                 f"Using trim settings from app state: start={start_time}, end={end_time}"
             )
 
         # Validate that end_time is not less than or equal to start_time
         if end_time is not None and end_time <= start_time:
-            print("WARNING: Invalid trim values detected (end_time <= start_time)")
+            logger.warning(
+                "WARNING: Invalid trim values detected (end_time <= start_time)"
+            )
             end_time = None
             self.app.settings_manager.save_setting("video-trim-end", -1.0)
 

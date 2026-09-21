@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Waveform with click spikes -->
+  <path d="M10,40 L20,35 L25,40 L28,40 L30,10 L32,40 L40,38 L45,40 L50,40 L52,12 L54,40 L60,36 L65,40" fill="none" stroke="#999" stroke-width="1.2"/>
+  <!-- Click spike markers -->
+  <circle cx="30" cy="10" r="3" fill="none" stroke="#e01b24" stroke-width="1"/>
+  <circle cx="52" cy="12" r="3" fill="none" stroke="#e01b24" stroke-width="1"/>
+  <!-- Arrow -->
+  <line x1="68" y1="35" x2="78" y2="35" stroke="#3584e4" stroke-width="1.5"/>
+  <polygon points="78,31 85,35 78,39" fill="#3584e4"/>
+  <!-- Clean waveform -->
+  <path d="M88,40 L95,35 L100,40 L105,38 L110,40" fill="none" stroke="#26a269" stroke-width="1.2"/>
+  <!-- Labels -->
+  <text x="40" y="60" font-family="sans-serif" font-size="4.5" fill="#e01b24" text-anchor="middle">Clicks</text>
+  <text x="100" y="60" font-family="sans-serif" font-size="4.5" fill="#26a269" text-anchor="middle">Clean</text>
+</svg>

@@ -5,15 +5,12 @@ gi.require_version("Adw", "1")
 # Setup translation
 import gettext
 
-from constants import (
-    AUDIO_OPTIONS,
-    GPU_OPTIONS,
-    PRESET_OPTIONS,
-    SUBTITLE_OPTIONS,
-    VIDEO_CODEC_OPTIONS,
-    VIDEO_QUALITY_OPTIONS,
-)
+import constants
 from gi.repository import Adw, Gtk
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
 
@@ -40,6 +37,28 @@ class SettingsPage:
     def get_page(self):
         """Return the settings page widget"""
         return self.page
+
+    def update_for_force_copy_state(self, force_copy_enabled) -> None:
+        """Update controls sensitivity based on force copy state"""
+        # When force copy is enabled, most encoding options don't apply
+        # Only Output Format remains functional (can choose container)
+        enable_encoding_options = not force_copy_enabled
+
+        # Encoding settings - disable all except Output Format
+        self.gpu_partial_check.set_sensitive(enable_encoding_options)
+        self.preset_combo.set_sensitive(enable_encoding_options)
+        self.video_resolution_combo.set_sensitive(enable_encoding_options)
+        self.custom_resolution_row.set_sensitive(enable_encoding_options)
+
+        # Output format stays enabled - user can still choose container
+        # self.output_format_combo.set_sensitive(True)  # Always enabled
+
+        # Note: Audio settings remain enabled even in copy mode
+        # Users may want to configure audio handling/extraction separately
+
+        # General options stay enabled (additional ffmpeg options, extract subtitles)
+        # self.options_entry.set_sensitive(True)  # Always enabled
+        # self.only_extract_subtitles_check.set_sensitive(True)  # Always enabled
 
     def _create_page(self):
         # Create page for settings
@@ -103,72 +122,48 @@ class SettingsPage:
     def _create_encoding_settings(self, main_content):
         encoding_group = Adw.PreferencesGroup(title=_("Encoding Settings"))
 
-        # GPU selection
-        gpu_model = Gtk.StringList()
-        for option in GPU_OPTIONS:
-            gpu_model.append(option)
-        self.gpu_combo = Adw.ComboRow(title=_("GPU"))
-        self.gpu_combo.set_subtitle(_("Select hardware acceleration"))
-        self.gpu_combo.set_model(gpu_model)
-        self.gpu_combo.set_selected(0)
-        encoding_group.add(self.gpu_combo)
-
         # Conversion mode switches
         self.gpu_partial_check = Adw.SwitchRow(title=_("GPU partial mode"))
         self.gpu_partial_check.set_subtitle(_("Decode using CPU, encode using GPU"))
         encoding_group.add(self.gpu_partial_check)
+        self.app.tooltip_helper.add_tooltip(self.gpu_partial_check, "gpu_partial")
 
-        # Video quality
-        quality_model = Gtk.StringList()
-        for option in VIDEO_QUALITY_OPTIONS:
-            quality_model.append(option)
-        self.video_quality_combo = Adw.ComboRow(title=_("Video quality"))
-        self.video_quality_combo.set_subtitle(
-            _("Higher quality needs more processing power")
+        # Preset
+        preset_row = Adw.ComboRow(
+            title=_("Compression preset"), subtitle=_("Speed vs compression ratio")
         )
-        self.video_quality_combo.set_model(quality_model)
-        self.video_quality_combo.set_selected(0)
-        encoding_group.add(self.video_quality_combo)
+        preset_model = Gtk.StringList.new(constants.PRESET_OPTIONS)
+        preset_row.set_model(preset_model)
+        self.preset_combo = preset_row
+        encoding_group.add(preset_row)
+        self.app.tooltip_helper.add_tooltip(preset_row, "preset")
 
-        # Video codec
-        codec_model = Gtk.StringList()
-        for option in VIDEO_CODEC_OPTIONS:
-            codec_model.append(option)
-        self.video_encoder_combo = Adw.ComboRow(title=_("Video codec"))
-        self.video_encoder_combo.set_subtitle(_("Select encoding format"))
-        self.video_encoder_combo.set_model(codec_model)
-        self.video_encoder_combo.set_selected(0)
-        encoding_group.add(self.video_encoder_combo)
-
-        # Output format selection
+        # Output Format
+        output_format_row = Adw.ComboRow(
+            title=_("Output Format"), subtitle=_("Container format for output file")
+        )
         format_model = Gtk.StringList()
-        format_model.append("MP4")  # Default
+        format_model.append("MP4")
         format_model.append("MKV")
-
-        self.output_format_combo = Adw.ComboRow(title=_("Output"))
-        self.output_format_combo.set_subtitle(_("Select output file format"))
-        self.output_format_combo.set_model(format_model)
-        self.output_format_combo.set_selected(0)  # Default to MP4
-        encoding_group.add(self.output_format_combo)
+        format_model.append("MOV")
+        format_model.append("WebM")
+        output_format_row.set_model(format_model)
+        self.output_format_combo = output_format_row
+        encoding_group.add(output_format_row)
+        self.app.tooltip_helper.add_tooltip(output_format_row, "output_format")
 
         # Video resolution combo with common values
         resolution_model = Gtk.StringList()
-        self.resolution_values = [
-            _("Default"),
-            "3840x2160",  # 4K UHD
-            "2560x1440",  # 2K QHD
-            "1920x1080",  # 1080p Full HD
-            "1280x720",  # 720p HD
-            "854x480",  # 480p SD
-            _("Custom"),
-        ]
-        for option in self.resolution_values:
+        for option in constants.VIDEO_RESOLUTION_OPTIONS:
             resolution_model.append(option)
 
         self.video_resolution_combo = Adw.ComboRow(title=_("Video resolution"))
         self.video_resolution_combo.set_subtitle(_("Select output resolution"))
         self.video_resolution_combo.set_model(resolution_model)
         self.video_resolution_combo.set_selected(0)  # Default
+        # Request wider size to accommodate long option names
+        self.video_resolution_combo.set_size_request(400, -1)
+        self.app.tooltip_helper.add_tooltip(self.video_resolution_combo, "resolution")
 
         # Add custom entry for resolution that shows when "Custom" is selected
         self.custom_resolution_row = Adw.EntryRow(title=_("Custom resolution"))
@@ -182,25 +177,6 @@ class SettingsPage:
 
         encoding_group.add(self.video_resolution_combo)
         encoding_group.add(self.custom_resolution_row)
-
-        # Preset
-        preset_model = Gtk.StringList()
-        for option in PRESET_OPTIONS:
-            preset_model.append(option)
-        self.preset_combo = Adw.ComboRow(title=_("Compression preset"))
-        self.preset_combo.set_subtitle(_("Slower presets provide better compression"))
-        self.preset_combo.set_model(preset_model)
-        self.preset_combo.set_selected(0)
-        encoding_group.add(self.preset_combo)
-
-        # Subtitles
-        subtitle_model = Gtk.StringList()
-        for option in SUBTITLE_OPTIONS:
-            subtitle_model.append(option)
-        self.subtitle_extract_combo = Adw.ComboRow(title=_("Subtitle handling"))
-        self.subtitle_extract_combo.set_model(subtitle_model)
-        self.subtitle_extract_combo.set_selected(0)
-        encoding_group.add(self.subtitle_extract_combo)
 
         main_content.append(encoding_group)
 
@@ -240,6 +216,7 @@ class SettingsPage:
 
         audio_group.add(self.audio_bitrate_combo)
         audio_group.add(self.custom_bitrate_row)
+        self.app.tooltip_helper.add_tooltip(self.audio_bitrate_combo, "audio_bitrate")
 
         # Audio channels combo with common values
         channels_model = Gtk.StringList()
@@ -270,15 +247,19 @@ class SettingsPage:
 
         audio_group.add(self.audio_channels_combo)
         audio_group.add(self.custom_channels_row)
+        self.app.tooltip_helper.add_tooltip(self.audio_channels_combo, "audio_channels")
 
-        # Audio handling
-        audio_model = Gtk.StringList()
-        for option in AUDIO_OPTIONS:
-            audio_model.append(option)
-        self.audio_handling_combo = Adw.ComboRow(title=_("Audio handling"))
-        self.audio_handling_combo.set_model(audio_model)
-        self.audio_handling_combo.set_selected(0)
-        audio_group.add(self.audio_handling_combo)
+        # Audio codec combo for re-encoding
+        codec_model = Gtk.StringList()
+        for option in constants.AUDIO_CODEC_OPTIONS:
+            codec_model.append(option)
+
+        self.audio_codec_combo = Adw.ComboRow(title=_("Audio codec"))
+        self.audio_codec_combo.set_subtitle(_("Codec to use when re-encoding audio"))
+        self.audio_codec_combo.set_model(codec_model)
+        self.audio_codec_combo.set_selected(0)  # Default to AAC
+        audio_group.add(self.audio_codec_combo)
+        self.app.tooltip_helper.add_tooltip(self.audio_codec_combo, "audio_codec")
 
         main_content.append(audio_group)
 
@@ -289,12 +270,7 @@ class SettingsPage:
         self.options_entry = Adw.EntryRow(title=_("Additional FFmpeg options"))
         self.options_entry.set_tooltip_text(_("Ex: -ss 60 -t 30"))
         options_group.add(self.options_entry)
-
-        self.force_copy_video_check = Adw.SwitchRow(
-            title=_("Copy video without reencoding")
-        )
-        self.force_copy_video_check.set_subtitle(_("Faster but less compatible"))
-        options_group.add(self.force_copy_video_check)
+        self.app.tooltip_helper.add_tooltip(self.options_entry, "additional_options")
 
         self.only_extract_subtitles_check = Adw.SwitchRow(
             title=_("Only extract subtitles")
@@ -303,6 +279,28 @@ class SettingsPage:
             _("Extract subtitles to .srt files")
         )
         options_group.add(self.only_extract_subtitles_check)
+        self.app.tooltip_helper.add_tooltip(
+            self.only_extract_subtitles_check, "extract_subtitles"
+        )
+
+        # Video preview render mode
+        render_mode_model = Gtk.StringList()
+        self.render_mode_values = ["auto", "opengl", "software"]
+        self.render_mode_labels = [
+            _("Automatic"),
+            _("OpenGL (hardware accelerated)"),
+            _("Software (compatible mode)"),
+        ]
+        for label in self.render_mode_labels:
+            render_mode_model.append(label)
+
+        self.render_mode_combo = Adw.ComboRow(title=_("Video preview rendering"))
+        self.render_mode_combo.set_subtitle(
+            _("Rendering mode for video editor preview. Restart required to apply.")
+        )
+        self.render_mode_combo.set_model(render_mode_model)
+        self.render_mode_combo.set_selected(0)  # Default to Auto
+        options_group.add(self.render_mode_combo)
 
         main_content.append(options_group)
 
@@ -340,8 +338,8 @@ class SettingsPage:
         """Handle resolution combo selection change"""
         selected = combo.get_selected()
 
-        # Show/hide custom entry based on selection
-        if selected == len(self.resolution_values) - 1:  # Custom option
+        # Check if Custom is selected (last option in VIDEO_RESOLUTION_OPTIONS)
+        if selected == len(constants.VIDEO_RESOLUTION_OPTIONS) - 1:  # Custom option
             self.custom_resolution_row.set_visible(True)
 
             # Use the custom value if it's not empty
@@ -352,11 +350,9 @@ class SettingsPage:
         else:
             self.custom_resolution_row.set_visible(False)
 
-            if selected == 0:  # Default (no resolution change)
-                self.settings_manager.save_setting("video-resolution", "")
-            else:
-                # Save the selected standard resolution
-                resolution = self.resolution_values[selected]
+            # Use the mapping to get the internal value
+            if selected < len(constants.VIDEO_RESOLUTION_VALUES):
+                resolution = constants.VIDEO_RESOLUTION_VALUES[selected]
                 self.settings_manager.save_setting("video-resolution", resolution)
 
     def _on_custom_resolution_changed(self, entry):
@@ -365,7 +361,7 @@ class SettingsPage:
         if (
             value
             and self.video_resolution_combo.get_selected()
-            == len(self.resolution_values) - 1
+            == len(constants.VIDEO_RESOLUTION_OPTIONS) - 1
         ):
             self.settings_manager.save_setting("video-resolution", value)
 
@@ -373,56 +369,7 @@ class SettingsPage:
         """Connect signals for saving settings"""
         # Use direct value saving instead of indexes
 
-        # GPU selection
-        self.gpu_combo.connect(
-            "notify::selected", lambda w, p: self._save_gpu_setting(w.get_selected())
-        )
-
-        # Video quality
-        self.video_quality_combo.connect(
-            "notify::selected",
-            lambda w, p: self._save_quality_setting(w.get_selected()),
-        )
-
-        # Video codec
-        self.video_encoder_combo.connect(
-            "notify::selected", lambda w, p: self._save_codec_setting(w.get_selected())
-        )
-
-        # Output format selection
-        self.output_format_combo.connect(
-            "notify::selected",
-            lambda w, p: self.settings_manager.save_setting(
-                "output-format-index", w.get_selected()
-            ),
-        )
-
-        # Preset
-        self.preset_combo.connect(
-            "notify::selected", lambda w, p: self._save_preset_setting(w.get_selected())
-        )
-
-        # Subtitle extract
-        self.subtitle_extract_combo.connect(
-            "notify::selected",
-            lambda w, p: self._save_subtitle_setting(w.get_selected()),
-        )
-
-        # Audio handling - directly saves string value
-        self.audio_handling_combo.connect(
-            "notify::selected",
-            lambda w, p: self.settings_manager.save_setting(
-                "audio-handling", AUDIO_OPTIONS[w.get_selected()]
-            ),
-        )
-
         # Additional settings
-        self.custom_resolution_row.connect(
-            "changed",
-            lambda w: self.settings_manager.save_setting(
-                "video-resolution", w.get_text()
-            ),
-        )
         self.custom_bitrate_row.connect(
             "changed",
             lambda w: self.settings_manager.save_setting("audio-bitrate", w.get_text()),
@@ -433,29 +380,28 @@ class SettingsPage:
                 "audio-channels", w.get_text()
             ),
         )
-        self.options_entry.connect(
-            "changed",
-            lambda w: self.settings_manager.save_setting(
-                "additional-options", w.get_text()
-            ),
-        )
+        self.options_entry.connect("changed", self._on_additional_options_changed)
         self.gpu_partial_check.connect(
             "notify::active",
             lambda w, p: self.settings_manager.save_setting(
                 "gpu-partial", w.get_active()
             ),
         )
-        self.force_copy_video_check.connect(
-            "notify::active",
+
+        # Connect preset combo change
+        self.preset_combo.connect("notify::selected", self._save_preset_setting)
+
+        # Connect output format combo change
+        self.output_format_combo.connect(
+            "notify::selected",
             lambda w, p: self.settings_manager.save_setting(
-                "force-copy-video", w.get_active()
+                "output-format-index", w.get_selected()
             ),
         )
+
         self.only_extract_subtitles_check.connect(
             "notify::active",
-            lambda w, p: self.settings_manager.save_setting(
-                "only-extract-subtitles", w.get_active()
-            ),
+            self._on_extract_subtitles_toggled,
         )
 
         # Connect resolution combo change
@@ -463,128 +409,105 @@ class SettingsPage:
             "notify::selected", self._on_resolution_combo_changed
         )
 
-    def _save_gpu_setting(self, index):
-        """Save GPU setting as direct value"""
-        # Map index to GPU value and save directly
-        if index == 0:  # Default/Auto
-            self.settings_manager.save_setting("gpu", "auto")
-        elif index == 1:  # nvidia
-            self.settings_manager.save_setting("gpu", "nvidia")
-        elif index == 2:  # amd
-            self.settings_manager.save_setting(
-                "gpu", "amd"
-            )
-        elif index == 3:  # intel
-            self.settings_manager.save_setting("gpu", "intel")
-        elif index == 4:  # vulkan
-            self.settings_manager.save_setting(
-                "gpu", "vulkan"
-            )
-        elif index == 5:  # software
-            self.settings_manager.save_setting("gpu", "software")
+        # Connect audio codec combo change
+        self.audio_codec_combo.connect(
+            "notify::selected", self._save_audio_codec_setting
+        )
 
-    def _save_quality_setting(self, index):
-        """Save video quality setting as direct value"""
-        # Map index to quality value and save directly
-        if index == 0:  # Default
-            self.settings_manager.save_setting("video-quality", "default")
-        elif index == 1:  # veryhigh
-            self.settings_manager.save_setting("video-quality", "veryhigh")
-        elif index == 2:  # high
-            self.settings_manager.save_setting("video-quality", "high")
-        elif index == 3:  # medium
-            self.settings_manager.save_setting("video-quality", "medium")
-        elif index == 4:  # low
-            self.settings_manager.save_setting("video-quality", "low")
-        elif index == 5:  # verylow
-            self.settings_manager.save_setting("video-quality", "verylow")
-        elif index == 6:  # superlow
-            self.settings_manager.save_setting("video-quality", "superlow")
+        # Connect render mode combo change
+        self.render_mode_combo.connect(
+            "notify::selected", self._save_render_mode_setting
+        )
 
-    def _save_codec_setting(self, index):
-        """Save video codec setting as direct value"""
-        # Map index to codec value and save directly
-        if index == 0:  # Default (h264)
-            self.settings_manager.save_setting("video-codec", "h264")
-        elif index == 1:  # h265 (HEVC)
-            self.settings_manager.save_setting("video-codec", "h265")
-        elif index == 2:  # av1 (AV1)
-            self.settings_manager.save_setting("video-codec", "av1")
-        elif index == 3:  # vp9 (VP9)
-            self.settings_manager.save_setting("video-codec", "vp9")
+    def _on_additional_options_changed(self, entry):
+        """Save the extra FFmpeg options and flag invalid input right away."""
+        from utils.ffmpeg_options import validate_additional_options
 
-    def _save_preset_setting(self, index):
-        """Save preset setting as direct value"""
-        # Map index to preset value and save directly
-        if index == 0:  # Default
-            self.settings_manager.save_setting("preset", "default")
-        elif index == 1:  # ultrafast
-            self.settings_manager.save_setting("preset", "ultrafast")
-        elif index == 2:  # veryfast
-            self.settings_manager.save_setting("preset", "veryfast")
-        elif index == 3:  # faster
-            self.settings_manager.save_setting("preset", "faster")
-        elif index == 4:  # medium
-            self.settings_manager.save_setting("preset", "medium")
-        elif index == 5:  # slow
-            self.settings_manager.save_setting("preset", "slow")
-        elif index == 6:  # veryslow
-            self.settings_manager.save_setting("preset", "veryslow")
+        text = entry.get_text()
+        self.settings_manager.save_setting("additional-options", text)
 
-    def _save_subtitle_setting(self, index):
-        """Save subtitle setting as direct value"""
-        # Map index to subtitle handling value and save directly
-        if index == 0:  # Default (extract)
-            self.settings_manager.save_setting("subtitle-extract", "extract")
-        elif index == 1:  # embedded
-            self.settings_manager.save_setting("subtitle-extract", "embedded")
-        elif index == 2:  # none
-            self.settings_manager.save_setting("subtitle-extract", "none")
+        is_valid, message = validate_additional_options(text)
+        if is_valid:
+            entry.remove_css_class("error")
+            entry.set_tooltip_text(None)
+        else:
+            # Only a hint here — the conversion refuses these options anyway.
+            entry.add_css_class("error")
+            entry.set_tooltip_text(message)
+
+    def _save_preset_setting(self, combo_box, _param=None):
+        """Save preset setting"""
+        selected = combo_box.get_selected()
+        if selected < len(constants.PRESET_VALUES):
+            # Get the internal value from the mapping
+            internal_value = constants.PRESET_VALUES[selected]
+            self.app.settings_manager.save_setting("preset", internal_value)
+            logger.debug(f"Saved preset: {internal_value}")
+
+    def _on_extract_subtitles_toggled(self, widget, _param):
+        """Handle extract subtitles toggle, update banner and sidebar state."""
+        active = widget.get_active()
+        self.settings_manager.save_setting("only-extract-subtitles", active)
+        if hasattr(self.app, "subtitle_banner"):
+            self.app.subtitle_banner.set_revealed(active)
+        if hasattr(self.app, "_update_sidebar_for_extract_mode"):
+            self.app._update_sidebar_for_extract_mode()
+
+    def _save_audio_codec_setting(self, combo_box, _param=None):
+        """Save audio codec setting"""
+        selected = combo_box.get_selected()
+        if selected < len(constants.AUDIO_CODEC_VALUES):
+            # Get the internal value from the mapping
+            internal_value = constants.AUDIO_CODEC_VALUES[selected]
+            self.app.settings_manager.save_setting("audio-codec", internal_value)
+            logger.debug(f"Saved audio codec: {internal_value}")
+
+    def _save_render_mode_setting(self, combo_box, _param=None):
+        """Save video preview render mode setting"""
+        selected = combo_box.get_selected()
+        if selected < len(self.render_mode_values):
+            internal_value = self.render_mode_values[selected]
+            
+            # Check if value actually changed
+            current_value = self.app.settings_manager.load_setting("video-preview-render-mode", "auto")
+            if internal_value != current_value:
+                # Save the new value
+                self.app.settings_manager.save_setting("video-preview-render-mode", internal_value)
+                logger.debug(f"Saved render mode: {internal_value} (restart required to apply)")
+                
+                # Show dialog informing user that restart is required
+                dialog = Gtk.AlertDialog()
+                dialog.set_message(_("Restart Required"))
+                dialog.set_detail(
+                    _("The video preview rendering mode has been changed.\n\n"
+                      "Please close and reopen the application for the change to take effect.")
+                )
+                dialog.set_buttons([_("OK")])
+                dialog.set_default_button(0)
+                dialog.show(self.app.window)
 
     def _load_settings(self):
-        """Load settings and update UI components"""
-        # GPU selection
-        gpu_value = self.settings_manager.load_setting("gpu", "auto")
-        gpu_index = self._find_gpu_index(gpu_value)
-        self.gpu_combo.set_selected(gpu_index)
+        """Load settings and update UI components.
 
-        # Video quality
-        quality_value = self.settings_manager.load_setting("video-quality", "medium")
-        quality_index = self._find_quality_index(quality_value)
-        self.video_quality_combo.set_selected(quality_index)
+        Writes are suspended: restoring a widget triggers its handler, and a
+        failure in the middle of the restore would otherwise persist default
+        values over the user's configuration.
+        """
+        with self.settings_manager.suspend_writes():
+            self._load_settings_inner()
 
-        # Video codec
-        codec_value = self.settings_manager.load_setting("video-codec", "h264")
-        codec_index = self._find_codec_index(codec_value)
-        self.video_encoder_combo.set_selected(codec_index)
-
-        # Load output format setting
-        output_format_idx = self.settings_manager.load_setting(
-            "output-format-index", 0
-        )  # 0 = MP4 (default)
-        self.output_format_combo.set_selected(output_format_idx)
-
-        # Preset
-        preset_value = self.settings_manager.load_setting("preset", "medium")
-        preset_index = self._find_preset_index(preset_value)
-        self.preset_combo.set_selected(preset_index)
-
-        # Subtitle extraction
-        subtitle_value = self.settings_manager.load_setting(
-            "subtitle-extract", "extract"
-        )
-        subtitle_index = self._find_subtitle_index(subtitle_value)
-        self.subtitle_extract_combo.set_selected(subtitle_index)
+    def _load_settings_inner(self):
+        """Actual widget restore; never writes settings (see caller)."""
 
         # Load video resolution setting
         saved_resolution = self.settings_manager.load_setting("video-resolution", "")
 
         if saved_resolution:
-            # Check if it's one of the standard resolutions
+            # Check if it's one of the standard resolutions using reverse mapping
             standard_index = -1
-            for i, res in enumerate(self.resolution_values):
-                if res == saved_resolution:
-                    standard_index = i
+            for index, internal_value in constants.VIDEO_RESOLUTION_VALUES.items():
+                if internal_value == saved_resolution:
+                    standard_index = index
                     break
 
             if standard_index >= 0:
@@ -594,7 +517,7 @@ class SettingsPage:
             else:
                 # Must be a custom resolution
                 self.video_resolution_combo.set_selected(
-                    len(self.resolution_values) - 1
+                    len(constants.VIDEO_RESOLUTION_OPTIONS) - 1
                 )  # Custom
                 self.custom_resolution_row.set_text(saved_resolution)
                 self.custom_resolution_row.set_visible(True)
@@ -602,15 +525,6 @@ class SettingsPage:
             # No saved resolution, use default
             self.video_resolution_combo.set_selected(0)
             self.custom_resolution_row.set_visible(False)
-
-        # Audio handling
-        audio_value = self.settings_manager.load_setting("audio-handling", "copy")
-        audio_index = 0  # Default to "copy"
-        for i, option in enumerate(AUDIO_OPTIONS):
-            if option.lower() == audio_value.lower():
-                audio_index = i
-                break
-        self.audio_handling_combo.set_selected(audio_index)
 
         # Audio bitrate
         bitrate_value = self.settings_manager.load_setting("audio-bitrate", "")
@@ -668,131 +582,124 @@ class SettingsPage:
         gpu_partial_active = self.settings_manager.load_setting("gpu-partial", False)
         self.gpu_partial_check.set_active(gpu_partial_active)
 
-        force_copy_video_active = self.settings_manager.load_setting(
-            "force-copy-video", False
-        )
-        self.force_copy_video_check.set_active(force_copy_video_active)
+        # Load preset
+        preset_value = self.settings_manager.load_setting("preset", "default")
+        preset_index = self._find_preset_index(preset_value)
+        self.preset_combo.set_selected(preset_index)
+
+        # Load output format
+        format_index = self.settings_manager.load_setting("output-format-index", 0)
+        self.output_format_combo.set_selected(format_index)
+
+        # Load audio codec
+        audio_codec_value = self.settings_manager.load_setting("audio-codec", "aac")
+        audio_codec_index = self._find_audio_codec_index(audio_codec_value)
+        self.audio_codec_combo.set_selected(audio_codec_index)
 
         only_extract_subtitles_active = self.settings_manager.load_setting(
             "only-extract-subtitles", False
         )
         self.only_extract_subtitles_check.set_active(only_extract_subtitles_active)
 
-    def _find_gpu_index(self, value):
-        """Find index of GPU value in GPU_OPTIONS"""
-        value = value.lower()
-
-        # Check for key words in the value
-        if "nvenc" in value or "nvidia" in value:
-            return 1
-        elif "vaapi" in value or "amd" in value:
-            return 2
-        elif "qsv" in value or "intel" in value:
-            return 3
-        elif "vulkan" in value:
-            return 4
-        elif "software" in value:
-            return 5
-        elif value == "auto" or "auto-detect" in value:
-            return 0
-
-        # If no match, try the standard search
-        for i, option in enumerate(GPU_OPTIONS):
-            if option.lower() == value:
-                return i
-
-        # Default to Auto-detect
-        return 0
-
-    def _find_quality_index(self, value):
-        """Find index of quality value in VIDEO_QUALITY_OPTIONS"""
-        value = value.lower()
-        for i, option in enumerate(VIDEO_QUALITY_OPTIONS):
-            if option.lower() == value or (i == 0 and value == "default"):
-                return i
-        return 0  # Default to Default
-
-    def _find_codec_index(self, value):
-        """Find index of codec value in VIDEO_CODEC_OPTIONS"""
-        value = value.lower()
-        # Handle special cases
-        if value == "h264":
-            return 0  # h264 (MP4)
-        elif value == "h265":
-            return 1  # h265 (HEVC)
-        elif value == "av1":
-            return 2  # av1 (AV1)
-        elif value == "vp9":
-            return 3  # vp9 (VP9)
-        return 0  # Default to Default (h264)
+        # Load render mode
+        render_mode_value = self.settings_manager.load_setting("video-preview-render-mode", "auto")
+        render_mode_index = 0  # Default to auto
+        try:
+            render_mode_index = self.render_mode_values.index(render_mode_value)
+        except ValueError:
+            pass  # Use default if not found
+        self.render_mode_combo.set_selected(render_mode_index)
 
     def _find_preset_index(self, value):
-        """Find index of preset value in PRESET_OPTIONS"""
+        """Find index of preset value using reverse mapping"""
         value = value.lower()
-        for i, option in enumerate(PRESET_OPTIONS):
-            if option.lower() == value or (i == 0 and value == "default"):
-                return i
-        return 0  # Default to Default
 
-    def _find_subtitle_index(self, value):
-        """Find index of subtitle value in SUBTITLE_OPTIONS"""
+        # Reverse lookup in constants.PRESET_VALUES
+        for index, internal_value in constants.PRESET_VALUES.items():
+            if internal_value == value:
+                return index
+
+        # Default to Medium (index 3)
+        return 3
+
+    def _find_audio_codec_index(self, value):
+        """Find index of audio codec value using reverse mapping"""
         value = value.lower()
-        if value == "extract":
-            return 0  # Default (extract)
-        elif value == "embedded":
-            return 1  # embedded
-        elif value == "none":
-            return 2  # none
-        return 0  # Default to Default (extract)
+
+        # Reverse lookup in constants.AUDIO_CODEC_VALUES
+        for index, internal_value in constants.AUDIO_CODEC_VALUES.items():
+            if internal_value == value:
+                return index
+
+        # Default to AAC (index 0)
+        return 0
 
     def _on_reset_button_clicked(self, button):
         """Handle reset settings button click"""
         # Show a confirmation dialog before resetting
-        dialog = Gtk.AlertDialog.new(_("Reset All Settings?"))
+        dialog = Gtk.AlertDialog()
+        dialog.set_message(_("Reset All Settings?"))
         dialog.set_detail(
             _(
                 "This will reset all settings to their default values. This action cannot be undone."
             )
         )
-        dialog.set_buttons(["Cancel", "Reset"])
-        dialog.set_cancel_button(0)  # First button (Cancel) is the cancel button
-        dialog.set_default_button(0)  # Cancel is the default button
+        dialog.set_buttons([_("Cancel"), _("Reset")])
+        dialog.set_cancel_button(0)
+        dialog.set_default_button(0)
 
         dialog.choose(self.app.window, None, self._on_reset_confirmation_response)
 
-    def _on_reset_confirmation_response(self, dialog, response):
+    def _on_reset_confirmation_response(self, dialog, result):
         """Handle response from reset confirmation dialog"""
-        if response == 1:  # User clicked Reset
-            # Reset all settings to defaults
-            self._reset_all_settings()
+        try:
+            response = dialog.choose_finish(result)
+            if response == 1:  # User clicked Reset
+                # Reset all settings to defaults
+                self._reset_all_settings()
 
-            # Show a confirmation message
-            success_dialog = Gtk.AlertDialog.new(_("Settings Reset"))
-            success_dialog.set_detail(
-                _("All settings have been reset to their default values.")
-            )
-            success_dialog.show(self.app.window)
+                # Show a confirmation message
+                success_dialog = Gtk.AlertDialog()
+                success_dialog.set_message(_("Settings Reset"))
+                success_dialog.set_detail(
+                    _("All settings have been reset to their default values.")
+                )
+                success_dialog.show(self.app.window)
+            else:
+                pass
+        except Exception:
+            pass
 
     def _reset_all_settings(self):
         """Reset all settings to their default values"""
         # Get all default values from settings manager
         default_values = self.settings_manager.DEFAULT_VALUES
 
-        # Reset each setting to its default value
-        for key, value in default_values.items():
-            print(f"Resetting {key} to {value}")
+        # Batch all resets into a single disk write
+        with self.settings_manager.batch_update():
+            for key, value in default_values.items():
+                logger.debug(f"Resetting {key} to {value}")
 
-            # Use the appropriate setter method based on the value type
-            if isinstance(value, bool):
-                self.settings_manager.set_boolean(key, value)
-            elif isinstance(value, int):
-                self.settings_manager.set_int(key, value)
-            elif isinstance(value, float):
-                self.settings_manager.set_double(key, value)
-            else:
-                self.settings_manager.set_string(
-                    key, str(value) if value is not None else ""
-                )
+                if isinstance(value, bool):
+                    self.settings_manager.set_boolean(key, value)
+                elif isinstance(value, int):
+                    self.settings_manager.set_int(key, value)
+                elif isinstance(value, float):
+                    self.settings_manager.set_double(key, value)
+                else:
+                    self.settings_manager.set_string(
+                        key, str(value) if value is not None else ""
+                    )
 
-        # Reload settings to update UI
+        # Reload settings to update Advanced Settings UI
         self._load_settings()
+
+        # Also reload sidebar settings in main window
+        if hasattr(self.app, "_load_left_pane_settings"):
+            self.app._load_left_pane_settings()
+
+        # Update encoding options state based on reset force copy value
+        force_copy = self.settings_manager.load_setting("force-copy-video", False)
+        self.update_for_force_copy_state(force_copy)
+        if hasattr(self.app, "_update_encoding_options_state"):
+            self.app._update_encoding_options_state(force_copy)

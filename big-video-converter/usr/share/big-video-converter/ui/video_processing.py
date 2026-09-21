@@ -1,14 +1,20 @@
 import os
 import subprocess
-import json
+import threading
+
 import gi
 
 gi.require_version("Gtk", "4.0")
-gi.require_version("GdkPixbuf", "2.0")
-from gi.repository import GLib, Gio, Gdk, GdkPixbuf
-
 # Setup translation
 import gettext
+
+from gi.repository import GLib
+
+from utils.file_info import get_video_file_info
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
 
@@ -16,274 +22,142 @@ _ = gettext.gettext
 class VideoProcessor:
     def __init__(self, page):
         self.page = page
+        self._generation = 0
 
-    def load_video(self, file_path):
-        """Load video metadata and extract the first frame"""
+    def invalidate(self):
+        """Invalidate outstanding workers without touching GTK from those workers."""
+        self._generation += 1
+
+    def load_video(self, file_path: str) -> bool:
+        """Starts the asynchronous process of loading video metadata."""
         if not file_path or not os.path.exists(file_path):
-            print(f"Cannot load video - invalid path: {file_path}")
+            logger.error(f"Cannot load video - invalid path: {file_path}")
+            self.page.loading_video = False
             return False
 
-        # Update the UI with the file path - set this early to prevent race conditions
+        self._generation += 1
+        generation = self._generation
+
+        # Update the UI with the file path immediately
         self.page.current_video_path = file_path
 
-        # Get video duration and dimensions using FFmpeg
+        # Start background thread to get info without blocking the UI
+        info_thread = threading.Thread(
+            target=self._get_video_info_thread, args=(file_path, generation)
+        )
+        info_thread.daemon = True
+        info_thread.start()
+        return True
+
+    def _get_video_info_thread(self, file_path, generation):
+        """Background thread to read the video metadata."""
         try:
-            # Run FFprobe to get video metadata
-            cmd = [
-                "ffprobe",
-                "-v",
-                "quiet",
-                "-print_format",
-                "json",
-                "-show_format",
-                "-show_streams",
-                file_path,
-            ]
+            # Shared helper: it already falls back to parsing ffmpeg output for
+            # files ffprobe refuses to analyze.
+            info = get_video_file_info(file_path)
+            if not info:
+                raise ValueError(_("The video metadata could not be read"))
+            # Post the successful result back to the main GTK thread
+            GLib.idle_add(self._on_video_info_loaded, info, file_path, generation)
+        except (subprocess.SubprocessError, OSError, ValueError) as e:
+            error_message = f"Error getting video info: {e}"
+            logger.error(error_message)
+            # Post the error back to the main GTK thread and release the lock
+            GLib.idle_add(self._on_video_info_error, error_message, generation)
 
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-            info = json.loads(result.stdout)
+    def _on_video_info_error(self, error_message, generation):
+        """Ignore errors from an editor session that is no longer current."""
+        if generation != self._generation:
+            return False
+        self.page.app.show_error_dialog(error_message)
+        self.page.loading_video = False
 
-            # Find the video stream
-            video_stream = None
-            for stream in info.get("streams", []):
-                if stream.get("codec_type") == "video":
-                    video_stream = stream
-                    break
-
-            if not video_stream:
-                print("Error: No video stream found")
-                return False
-
-            # Get video dimensions
-            self.page.video_width = int(video_stream.get("width", 0))
-            self.page.video_height = int(video_stream.get("height", 0))
-
-            # Get video duration (in seconds)
-            duration_str = video_stream.get("duration") or info.get("format", {}).get(
-                "duration"
-            )
-            if duration_str:
-                self.page.video_duration = float(duration_str)
-            else:
-                # If duration not available, estimate it from bitrate and filesize
-                format_info = info.get("format", {})
-                if "size" in format_info and "bit_rate" in format_info:
-                    size_bytes = float(format_info["size"])
-                    bit_rate = float(format_info["bit_rate"])
-                    self.page.video_duration = (size_bytes * 8) / bit_rate
-
-            # Update position slider range
-            self.page.ui.position_scale.set_range(0, self.page.video_duration)
-
-            # Get FPS info
-            fps = video_stream.get("avg_frame_rate", "unknown").split("/")
-            if len(fps) == 2 and int(fps[1]) != 0:
-                fps_value = round(int(fps[0]) / int(fps[1]), 2)
-                # Store fps for frame calculations
-                self.page.video_fps = fps_value
-            else:
-                fps_value = "unknown"
-                self.page.video_fps = 30  # Default to 30fps if unknown
-
-            # Get file size and format it
-            file_size_bytes = 0
-            try:
-                file_size_bytes = int(info.get("format", {}).get("size", 0))
-            except (ValueError, TypeError):
-                file_size_bytes = os.path.getsize(file_path)
-
-            # Format file size
-            if file_size_bytes < 1024:
-                file_size_str = f"{file_size_bytes} B"
-            elif file_size_bytes < 1024 * 1024:
-                file_size_str = f"{file_size_bytes / 1024:.2f} KB"
-            elif file_size_bytes < 1024 * 1024 * 1024:
-                file_size_str = f"{file_size_bytes / (1024 * 1024):.2f} MB"
-            else:
-                file_size_str = f"{file_size_bytes / (1024 * 1024 * 1024):.2f} GB"
-
-            # Format duration in a more readable way
-            hours = int(self.page.video_duration // 3600)
-            minutes = int((self.page.video_duration % 3600) // 60)
-            seconds = int(self.page.video_duration % 60)
-
-            if hours > 0:
-                duration_str = f"{hours}h {minutes}m {seconds}s"
-            else:
-                duration_str = f"{minutes}m {seconds}s"
-
-            # Update all info labels
-            filename = os.path.basename(file_path)
-            self.page.ui.info_filename_label.set_text(filename)
-            self.page.ui.info_dimensions_label.set_text(
-                f"{self.page.video_width}×{self.page.video_height}"
-            )
-            self.page.ui.info_codec_label.set_text(
-                video_stream.get("codec_name", "unknown")
-            )
-
-            # Get and display format_long_name
-            format_info = info.get("format", {})
-            format_long_name = format_info.get("format_long_name", "Unknown format")
-            self.page.ui.info_format_label.set_text(format_long_name)
-
-            self.page.ui.info_filesize_label.set_text(file_size_str)
-            self.page.ui.info_duration_label.set_text(duration_str)
-            self.page.ui.info_fps_label.set_text(f"{fps_value} fps")
-
-            # Set current position to middle of video for better initial preview
-            # (first frame is often black or blank)
-            self.page.current_position = self.page.video_duration / 2
-
-            # Update slider to middle position
-            self.page.ui.position_scale.set_value(self.page.current_position)
-
-            # Extract a frame from the middle of the video
-            self.extract_frame(self.page.current_position)
-
-            return True
-
-        except Exception as e:
-            print(f"Error getting video info: {e}")
-            import traceback
-
-            traceback.print_exc()
-            # Clear current_video_path on failure
-            self.page.current_video_path = None
-            self.page.loading_video = False  # Ensure loading flag is reset on error
+    def _on_video_info_loaded(self, info, file_path, generation):
+        """Callback executed on the main thread after ffprobe finishes."""
+        if generation != self._generation or file_path != self.page.requested_video_path:
+            logger.debug("Ignoring stale video info for: %s", os.path.basename(file_path))
             return False
 
-    def extract_frame(self, position):
-        """Extract a frame at the specified position using FFmpeg directly to memory"""
-        try:
-            # Validate position is within valid range
-            safe_end = max(0, self.page.video_duration - 0.1)
-            if position >= safe_end:
-                position = safe_end
-                # Update current_position and slider without triggering events
-                self.page.current_position = position
-                if hasattr(self.page.ui, "position_scale") and hasattr(
-                    self.page, "position_changed_handler_id"
-                ):
-                    self.page.ui.position_scale.handler_block(
-                        self.page.position_changed_handler_id
-                    )
-                    self.page.ui.position_scale.set_value(position)
-                    self.page.ui.position_scale.handler_unblock(
-                        self.page.position_changed_handler_id
-                    )
+        video_stream = next(
+            (s for s in info.get("streams", []) if s.get("codec_type") == "video"), None
+        )
+        if not video_stream:
+            self.page.app.show_error_dialog("Error: No video stream found")
+            self.page.loading_video = False
+            return
 
-            # Build filter string for FFmpeg
-            filters = []
+        # --- Update all video properties ---
+        self.page.video_width = int(video_stream.get("width", 0))
+        self.page.video_height = int(video_stream.get("height", 0))
 
-            # Add crop filter if needed
-            if (
-                self.page.crop_left > 0
-                or self.page.crop_right > 0
-                or self.page.crop_top > 0
-                or self.page.crop_bottom > 0
-            ):
-                crop_width = (
-                    self.page.video_width - self.page.crop_left - self.page.crop_right
+        duration_str = video_stream.get("duration") or info.get("format", {}).get(
+            "duration"
+        )
+        if duration_str:
+            self.page.video_duration = float(duration_str)
+        else:
+            self.page.video_duration = 0
+
+        self.page.ui.position_scale.set_range(0, self.page.video_duration)
+
+        fps_str = video_stream.get("avg_frame_rate", "0/1").split("/")
+        self.page.video_fps = (
+            int(fps_str[0]) / int(fps_str[1])
+            if len(fps_str) == 2 and int(fps_str[1]) != 0
+            else 30
+        )
+
+        # --- Update UI Labels ---
+        file_size_bytes = int(info.get("format", {}).get("size", 0))
+        file_size_str = f"{file_size_bytes / (1024 * 1024):.2f} MB"
+
+        hours, rem = divmod(self.page.video_duration, 3600)
+        minutes, seconds = divmod(rem, 60)
+        duration_formatted = f"{int(hours):02d}:{int(minutes):02d}:{seconds:06.3f}"
+
+        # CORRECTION: Update only the labels that exist in the new UI
+        self.page.ui.info_dimensions_label.set_text(
+            f"{self.page.video_width}×{self.page.video_height}"
+        )
+        self.page.ui.info_codec_label.set_text(video_stream.get("codec_name", "N/A"))
+        self.page.ui.info_filesize_label.set_text(file_size_str)
+        self.page.ui.info_duration_label.set_text(duration_formatted)
+
+        # --- Load into video player and finalize ---
+        if hasattr(self.page, "mpv_player") and self.page.mpv_player:
+            if not self.page.mpv_player.load_video(file_path):
+                self.page.app.show_error_dialog(
+                    "Error: Failed to load video file. Please check the file format and try again."
                 )
-                crop_height = (
-                    self.page.video_height - self.page.crop_top - self.page.crop_bottom
-                )
-                filters.append(
-                    f"crop={crop_width}:{crop_height}:{self.page.crop_left}:{self.page.crop_top}"
-                )
+                self.page.loading_video = False
+                return
 
-            # Add hue adjustment
-            if self.page.hue != 0.0:
-                hue_degrees = self.page.hue * 180 / 3.14159
-                filters.append(f"hue=h={hue_degrees}")
+        # Load per-file editing metadata now that we have the context
+        self.page._load_file_metadata(file_path)
 
-            # Add color adjustments
-            eq_parts = []
-            if self.page.brightness != 0:
-                eq_parts.append(f"brightness={self.page.brightness}")
-            if self.page.contrast != 1.0:
-                contrast_delta = self.page.contrast - 1.0
-                ff_contrast = 1.0 + (contrast_delta * 2.0)
-                eq_parts.append(f"contrast={ff_contrast}")
-            if self.page.saturation != 1.0:
-                eq_parts.append(f"saturation={self.page.saturation}")
-            if self.page.gamma != 1.0:
-                eq_parts.append(f"gamma={self.page.gamma}")
-            if self.page.gamma_r != 1.0:
-                eq_parts.append(f"gamma_r={self.page.gamma_r}")
-            if self.page.gamma_g != 1.0:
-                eq_parts.append(f"gamma_g={self.page.gamma_g}")
-            if self.page.gamma_b != 1.0:
-                eq_parts.append(f"gamma_b={self.page.gamma_b}")
-            if self.page.gamma_weight != 1.0:
-                eq_parts.append(f"gamma_weight={self.page.gamma_weight}")
+        # Update crop displays
+        self.page.update_crop_spinbuttons()
 
-            if eq_parts:
-                filters.append("eq=" + ":".join(eq_parts))
+        # Set initial position and update displays
+        self.page.current_position = 0
+        self.page.ui.position_scale.set_value(0)
+        self.page.update_position_display(0)
+        self.page.update_frame_counter(0)
 
-            filter_arg = ",".join(filters) if filters else "null"
+        # Update audio and subtitle track controls
+        self.page.update_audio_subtitle_controls()
 
-            # Optimized FFmpeg command - using MJPEG which is faster to encode/decode than PNG
-            cmd = [
-                "ffmpeg",
-                "-loglevel",
-                "error",  # Reduce log output for performance
-                "-ss",
-                str(position),
-                "-i",
-                self.page.current_video_path,
-                "-vf",
-                filter_arg,
-                "-vframes",
-                "1",
-                "-c:v",
-                "mjpeg",  # Use MJPEG instead of PNG - much faster
-                "-q:v",
-                "3",  # Quality setting (1-31, lower is better)
-                "-f",
-                "image2pipe",
-                "-",
-            ]
-
-            # Execute FFmpeg directly and capture output
-            process = subprocess.run(cmd, capture_output=True, check=False)
-
-            if process.returncode != 0:
-                print(
-                    f"FFmpeg error: {process.stderr.decode('utf-8', errors='replace')}"
-                )
-                return False
-
-            # Create a memory input stream directly from the stdout bytes
-            if process.stdout:
-                # Convert the byte data directly to a memory stream
-                input_stream = Gio.MemoryInputStream.new_from_bytes(
-                    GLib.Bytes.new(process.stdout)
+        # Start playback automatically and update UI state
+        if hasattr(self.page, "mpv_player") and self.page.mpv_player:
+            self.page.mpv_player.play()
+            self.page.is_playing = True
+            self.page.ui.play_pause_button.set_icon_name('media-playback-pause-symbolic')
+            # Start position update timer
+            if not self.page.position_update_id:
+                self.page.position_update_id = GLib.timeout_add(
+                    100, self.page._update_position_callback
                 )
 
-                # Create a pixbuf from the stream first
-                pixbuf = GdkPixbuf.Pixbuf.new_from_stream(input_stream, None)
-
-                # Then create a texture from the pixbuf
-                texture = Gdk.Texture.new_for_pixbuf(pixbuf)
-
-                # Set the image in the UI
-                self.page.ui.preview_image.set_paintable(texture)
-
-                # Update position tracking
-                self.page.current_position = position
-                self.page.update_position_display(position)
-                self.page.update_frame_counter(position)
-
-                return True
-            else:
-                print("Error: No image data received from ffmpeg")
-                return False
-
-        except Exception as e:
-            print(f"Error extracting frame: {e}")
-            import traceback
-
-            traceback.print_exc()
-            return False
+        # Finally, release the loading lock
+        self.page.loading_video = False
+        logger.debug(f"Successfully loaded video: {os.path.basename(file_path)}")

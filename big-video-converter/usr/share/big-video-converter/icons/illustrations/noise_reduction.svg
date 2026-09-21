@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Noisy wave (left) -->
+  <path d="M5,40 L10,32 L13,45 L16,28 L19,48 L22,25 L25,42 L28,35 L31,47 L34,30 L37,43 L40,38" 
+        stroke="#999" stroke-width="1.5" fill="none"/>
+  <!-- Noise overlay (jagged) -->
+  <path d="M5,40 L8,37 L10,42 L12,36 L14,44 L17,33 L19,46 L21,35 L24,43 L26,31 L29,45 L32,34 L35,41 L38,36 L40,38" 
+        stroke="#e8e8e8" stroke-width="2.5" fill="none" opacity="0.6"/>
+  <!-- Arrow -->
+  <line x1="46" y1="38" x2="60" y2="38" stroke="#3584e4" stroke-width="1.5"/>
+  <polygon points="60,34 67,38 60,42" fill="#3584e4"/>
+  <!-- Clean wave (right) -->
+  <path d="M72,40 Q78,22 84,40 Q90,58 96,40 Q102,22 108,40" 
+        stroke="#3584e4" stroke-width="2" fill="none"/>
+  <!-- Labels -->
+  <text x="22" y="60" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">Noisy</text>
+  <text x="90" y="60" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">Clean</text>
+  <text x="60" y="74" font-family="sans-serif" font-size="5.5" fill="#999" text-anchor="middle">Removes background noise</text>
+</svg>

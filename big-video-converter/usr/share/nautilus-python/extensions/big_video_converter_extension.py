@@ -16,7 +16,6 @@ from urllib.parse import unquote
 # This is mandatory in modern PyGObject to prevent warnings and ensure API compatibility.
 import gi
 gi.require_version('Gtk', '4.0')
-gi.require_version('Nautilus', '4.0')
 
 from gi.repository import GObject, Nautilus
 
@@ -24,14 +23,14 @@ from gi.repository import GObject, Nautilus
 APP_NAME = "big-video-converter"
 
 try:
-    # Set the default domain for this script. gettext will automatically find
-    # the message catalogs in the system's standard locale directories.
-    gettext.textdomain(APP_NAME)
+    gettext.bindtextdomain(APP_NAME, "/usr/share/locale")
 except Exception as e:
     print(f"Big Video Converter Extension: Could not set up localization: {e}")
 
-# Define the global translation function.
-_ = gettext.gettext
+
+def _(message):
+    """Domain-specific translation to avoid conflict with Nautilus' own textdomain."""
+    return gettext.dgettext(APP_NAME, message)
 
 
 class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
@@ -45,17 +44,33 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         self.app_executable = 'big-video-converter-gui'
 
         # Using a set provides O(1) lookup time, which is more efficient than a list.
+        # Both spellings of the Matroska type are listed: shared-mime-info 2.4
+        # renamed it from "video/x-matroska" to "video/matroska", and Nautilus
+        # reports the canonical name of the installed database — matching only
+        # the old one made the menu disappear for every .mkv file.
         self.supported_mimetypes = {
-            'video/mp4', 'video/x-matroska', 'video/webm', 'video/quicktime',
-            'video/x-msvideo', 'video/x-ms-wmv', 'video/mpeg', 'video/x-m4v',
-            'video/mp2t', 'video/x-flv', 'video/3gpp', 'video/ogg'
+            'video/mp4', 'video/matroska', 'video/x-matroska', 'video/webm',
+            'video/quicktime', 'video/x-msvideo', 'video/x-ms-wmv', 'video/mpeg',
+            'video/x-m4v', 'video/mp2t', 'video/x-flv', 'video/3gpp', 'video/ogg',
+            'video/x-ogm+ogg', 'video/vnd.avi', 'video/avi',
         }
 
-    def get_file_items(self, files: list[Nautilus.FileInfo]) -> list[Nautilus.MenuItem]:
+        # Fallback for mimetype names that keep changing between
+        # shared-mime-info releases.
+        self.supported_extensions = {
+            '.mp4', '.mkv', '.webm', '.mov', '.avi', '.wmv', '.mpeg', '.mpg',
+            '.m4v', '.ts', '.flv', '.3gp', '.ogv',
+        }
+
+    def get_file_items(self, *args):
         """
         Returns menu items for the selected files.
         The menu is only shown if one or more supported video files are selected.
+        
+        Note: Using *args for compatibility across Nautilus versions.
+        The last argument is always the list of selected files.
         """
+        files = args[-1]
         video_files = [f for f in files if self._is_video_file(f)]
         if not video_files:
             return []
@@ -76,12 +91,18 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
 
     def _is_video_file(self, file_info: Nautilus.FileInfo) -> bool:
         """
-        Checks if a file is a supported video by its mimetype.
+        Checks if a file is a supported video by its mimetype, falling back to
+        the file extension when the mimetype is not one we know.
         """
         if not file_info or file_info.is_directory():
             return False
 
-        return file_info.get_mime_type() in self.supported_mimetypes
+        mime_type = file_info.get_mime_type() or ''
+        if mime_type in self.supported_mimetypes:
+            return True
+
+        uri = file_info.get_uri() or ''
+        return Path(unquote(uri)).suffix.lower() in self.supported_extensions
 
     def _get_file_path(self, file_info: Nautilus.FileInfo) -> str | None:
         """
@@ -136,7 +157,7 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
                 f'--app-name={APP_NAME}',
                 title,
                 message
-            ], check=False)
+            ], check=False, timeout=5)
         except FileNotFoundError:
             # Fallback if 'notify-send' is not installed.
             print(f"ERROR: [{title}] {message}")
