@@ -45,7 +45,7 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            python3-gi python3-cairo python3-pip \
+            python3-gi python3-cairo python3-pip python3-pytest \
             gir1.2-gtk-4.0 gir1.2-adw-1 \
             libgtk-4-1 libadwaita-1-0 libmpv2 \
             xvfb dbus-x11 gnome-screenshot xdotool \
