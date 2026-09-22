@@ -5,6 +5,7 @@ Groups controls into illustrative cards: AI cleaning, noise gate, audio enhancem
 
 import gettext
 from utils.signal_connections import SignalConnections
+from utils.contextual_controls import bind_details_to_switch
 import os
 
 import gi
@@ -78,6 +79,7 @@ def _card_header(svg_file: str, title: str, desc: str, control: Gtk.Widget) -> G
     row.append(text)
 
     control.set_valign(Gtk.Align.CENTER)
+    control.update_property([Gtk.AccessibleProperty.LABEL], [title])
     row.append(control)
 
     return row
@@ -102,6 +104,9 @@ def _slider_row(label: str, adj: Gtk.Adjustment, format_func=None) -> Gtk.Box:
     scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=adj)
     scale.set_hexpand(True)
     scale.set_valign(Gtk.Align.CENTER)
+    scale.set_size_request(-1, 44)
+    scale.update_property([Gtk.AccessibleProperty.LABEL], [label])
+    lbl.set_mnemonic_widget(scale)
 
     # Value label on the right side
     val_label = Gtk.Label()
@@ -154,8 +159,8 @@ def show_noise_dialog(parent_window, app) -> bool:
     connections = SignalConnections(dialog)
     dialog.set_title(_("Audio Settings"))
     dialog.set_content_width(700)
-    dialog.set_content_height(920)
-    dialog.set_presentation_mode(Adw.DialogPresentationMode.FLOATING)
+    dialog.set_content_height(680)
+    dialog.set_presentation_mode(Adw.DialogPresentationMode.AUTO)
 
     toolbar = Adw.ToolbarView()
     toolbar.add_top_bar(Adw.HeaderBar())
@@ -700,6 +705,17 @@ def show_noise_dialog(parent_window, app) -> bool:
     connections.connect(app.eq_switch, "notify::active", _sync_eq_from_switch)
 
     content.append(card7)
+
+    # Contextual controls: inactive operations retain values, not active knobs.
+    for card, switch in ((card1, nr_switch), (card2, gate_switch),
+                         (card3, hpf_switch), (card6, comp_switch)):
+        header = card.get_first_child()
+        child = header.get_next_sibling()
+        details = []
+        while child is not None:
+            details.append(child)
+            child = child.get_next_sibling()
+        bind_details_to_switch(switch, details, connections)
 
     scroll.set_child(content)
     toolbar.set_content(scroll)

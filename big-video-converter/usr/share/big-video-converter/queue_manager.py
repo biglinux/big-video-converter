@@ -199,14 +199,41 @@ class QueueManagerMixin:
         self.completed_conversions = []
         self.header_bar.set_buttons_sensitive(False)
 
-        # Initialize the progress page with the queue items
+        # Initialize one progress model for this queue generation.
+        self._queue_completion_presented = False
         if hasattr(self, "progress_page"):
-            self.progress_page.reset()
             self.progress_page.initialize_queue(list(self.conversion_queue))
 
         self.currently_converting = False
         self.main_stack.set_visible_child_name("progress_view")
         GLib.timeout_add(300, self.process_next_in_queue)
+
+    def _present_queue_completion(self) -> bool:
+        """Present and notify one settled queue generation exactly once."""
+        if getattr(self, "_queue_completion_presented", False):
+            return False
+
+        notification = None
+        progress_page = getattr(self, "progress_page", None)
+        if progress_page is not None:
+            shown = progress_page.show_completion_summary()
+            if shown is False:
+                return False
+            notification_getter = getattr(
+                progress_page, "completion_notification", None
+            )
+            if notification_getter is not None:
+                notification = notification_getter()
+
+        self._queue_completion_presented = True
+        if getattr(self, "is_minimized", False):
+            if notification is None:
+                notification = (
+                    _("Batch Conversion Complete"),
+                    _("All queued files have been processed."),
+                )
+            self.send_system_notification(*notification)
+        return True
 
     def convert_current_file(self) -> None:
         """Convert the currently opened file in the editor"""
@@ -338,15 +365,7 @@ class QueueManagerMixin:
                 self.is_cancellation_requested = False
                 self.currently_converting = False
 
-                # Show completion summary on progress page
-                if hasattr(self, "progress_page"):
-                    self.progress_page.show_completion_summary()
-
-                if hasattr(self, "is_minimized") and self.is_minimized:
-                    self.send_system_notification(
-                        _("Batch Conversion Complete"),
-                        _("All queued files have been processed."),
-                    )
+                self._present_queue_completion()
             return False
 
         # Get next file
@@ -493,7 +512,7 @@ class QueueManagerMixin:
                     self.header_bar.set_buttons_sensitive(True)
                     self.currently_converting = False
                     self._was_queue_processing = False
-                    self.progress_page.show_completion_summary()
+                    self._present_queue_completion()
                 return
 
             # Check single file conversion mode

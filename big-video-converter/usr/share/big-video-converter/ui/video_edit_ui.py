@@ -18,6 +18,7 @@ class VideoEditUI:
     def __init__(self, page):
         self.page = page
         self._handler_ids: list[tuple] = []  # [(widget, handler_id), ...]
+        self.hide_timer_id = None
 
     def create_page(self):
         """Create the main page layout and all UI elements"""
@@ -103,6 +104,12 @@ class VideoEditUI:
         )
         self.position_scale.set_draw_value(False)
         self.position_scale.set_hexpand(True)
+        self.position_scale.set_focusable(True)
+        self.position_scale.set_tooltip_text(_("Video position"))
+        self.position_scale.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Video position")],
+        )
         self.page.position_changed_handler_id = self.position_scale.connect(
             "value-changed", self.page.on_position_changed
         )
@@ -117,6 +124,12 @@ class VideoEditUI:
         self.segment_markers_canvas = Gtk.DrawingArea()
         self.segment_markers_canvas.set_draw_func(self._draw_segment_markers)
         self.segment_markers_canvas.set_can_target(True)
+        marker_hint = _("Drag to seek or adjust segment edges")
+        self.segment_markers_canvas.set_tooltip_text(marker_hint)
+        self.segment_markers_canvas.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [marker_hint],
+        )
 
         slider_overlay.add_overlay(self.segment_markers_canvas)
         self._setup_drag_controllers()
@@ -241,10 +254,17 @@ class VideoEditUI:
         speed_popover = Gtk.Popover(child=speed_box)
         speed_popover.set_autohide(True)
 
+        speed_summary = _("Playback speed: {speed}x").format(
+            speed=self._current_speed
+        )
         self.speed_button = Gtk.MenuButton(
             label="1x",
             popover=speed_popover,
-            tooltip_text=_("Playback Speed"),
+            tooltip_text=speed_summary,
+        )
+        self.speed_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [speed_summary],
         )
         button_row.append(self.speed_button)
 
@@ -338,13 +358,22 @@ class VideoEditUI:
         self.crop_grid = crop_grid  # Store reference for enable/disable
         crop_grid.set_valign(Gtk.Align.CENTER)
 
-        crop_labels = [_("Left"), _("Right"), _("Top"), _("Bottom")]
-        crop_keys = ["left", "right", "top", "bottom"]
+        crop_controls = (
+            (_("Left"), "left", _("Crop from left")),
+            (_("Right"), "right", _("Crop from right")),
+            (_("Top"), "top", _("Crop from top")),
+            (_("Bottom"), "bottom", _("Crop from bottom")),
+        )
         self.crop_spins = {}
-        for i, (label_text, key) in enumerate(zip(crop_labels, crop_keys)):
+        for i, (label_text, key, accessible_label) in enumerate(crop_controls):
             label = Gtk.Label(label=label_text, xalign=0)
             adjustment = Gtk.Adjustment(value=0, lower=0, upper=9999, step_increment=1)
             spin = Gtk.SpinButton(adjustment=adjustment, numeric=True, width_chars=5)
+            spin.set_tooltip_text(accessible_label)
+            spin.update_property(
+                [Gtk.AccessibleProperty.LABEL],
+                [accessible_label],
+            )
             self.crop_spins[key] = spin
             spin.connect("value-changed", self.page.on_crop_value_changed)
 
@@ -411,6 +440,12 @@ class VideoEditUI:
         """Handle playback speed selection from popover button."""
         self._current_speed = speed_value
         self.speed_button.set_label(f"{speed_value}x")
+        speed_summary = _("Playback speed: {speed}x").format(speed=speed_value)
+        self.speed_button.set_tooltip_text(speed_summary)
+        self.speed_button.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [speed_summary],
+        )
         self.speed_button.get_popover().popdown()
         self.page.on_speed_changed(speed_value)
 
@@ -447,6 +482,11 @@ class VideoEditUI:
         self.volume_scale.set_size_request(-1, 150)
         self.volume_scale.set_draw_value(True)
         self.volume_scale.set_value_pos(Gtk.PositionType.BOTTOM)
+        self.volume_scale.set_tooltip_text(_("Volume"))
+        self.volume_scale.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Volume")],
+        )
         self.volume_scale.connect("value-changed", self.page.on_volume_changed)
         volume_box.append(self.volume_scale)
 
@@ -707,23 +747,19 @@ class VideoEditUI:
         if hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(trim_group, "segments")
 
-        # Output Mode dropdown (no title, just dropdown)
-        output_mode_model = Gtk.StringList()
-        output_mode_model.append(_("Join segments into a single file"))
-        output_mode_model.append(_("Save each segment as a separate file"))
-
-        # Create a simple row to contain the dropdown
-        output_row = Adw.ActionRow()
-        self.output_mode_combo = Gtk.DropDown()
+        output_mode_model = Gtk.StringList.new([
+            _("Join segments into a single file"),
+            _("Save each segment as a separate file"),
+        ])
+        self.output_mode_combo = Adw.ComboRow(
+            title=_("Segment output"), use_subtitle=True
+        )
         self.output_mode_combo.set_model(output_mode_model)
-        self.output_mode_combo.set_hexpand(True)
-        self.output_mode_combo.set_valign(Gtk.Align.CENTER)
+        self.output_mode_combo.set_tooltip_text(_("Choose how marked segments are saved"))
         self.output_mode_combo.connect(
             "notify::selected", self.page._on_output_mode_changed
         )
-        output_row.add_suffix(self.output_mode_combo)
-        output_row.set_activatable_widget(self.output_mode_combo)
-        trim_group.add(output_row)
+        trim_group.add(self.output_mode_combo)
 
         sidebar_box.append(trim_group)
 
@@ -770,14 +806,20 @@ class VideoEditUI:
                 value=default_val, lower=min_val, upper=max_val, step_increment=0.05
             )
         )
+        scale.set_tooltip_text(title)
+        scale.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [title],
+        )
         scale.connect("value-changed", on_change)
 
+        reset_label = _("Reset {setting} to default").format(setting=title)
         reset_button = Gtk.Button(
-            icon_name="edit-undo-symbolic", tooltip_text=_("Reset to default")
+            icon_name="edit-undo-symbolic", tooltip_text=reset_label
         )
         reset_button.update_property(
             [Gtk.AccessibleProperty.LABEL],
-            [_("Reset to default")],
+            [reset_label],
         )
         reset_button.connect("clicked", lambda b: on_reset())
 
@@ -859,6 +901,8 @@ class VideoEditUI:
         self.segment_markers_canvas.add_controller(motion_controller)
 
     def _find_segment_edge_at_position(self, x, width):
+        if width <= 0:
+            return None
         if not self.page.trim_segments or not hasattr(self.page, "mpv_player"):
             return None
         duration = self.page.mpv_player.get_duration()
@@ -877,6 +921,10 @@ class VideoEditUI:
         self.page.user_is_dragging_slider = True
         self._drag_start_pos = (start_x, start_y)
         width = self.segment_markers_canvas.get_allocated_width()
+        if width <= 0:
+            self.page.user_is_dragging_slider = False
+            self._drag_start_pos = None
+            return
         edge_info = self._find_segment_edge_at_position(start_x, width)
         if edge_info:
             self._dragging_segment = edge_info
@@ -891,6 +939,8 @@ class VideoEditUI:
         start_x, _ = self._drag_start_pos
         current_x = start_x + offset_x
         width = self.segment_markers_canvas.get_allocated_width()
+        if width <= 0:
+            return
         current_x = max(0, min(width, current_x))
         if self._segment_drag_active:
             self._update_segment_drag(current_x, width)
@@ -906,7 +956,7 @@ class VideoEditUI:
         self._drag_start_pos = None
 
     def _update_slider_drag(self, x, width):
-        if not hasattr(self.page, "mpv_player"):
+        if width <= 0 or not hasattr(self.page, "mpv_player"):
             return
         duration = self.page.mpv_player.get_duration()
         if duration <= 0:
@@ -927,6 +977,8 @@ class VideoEditUI:
         self.segment_markers_canvas.set_cursor(None)
 
     def _update_segment_drag(self, x, width):
+        if width <= 0:
+            return
         if not self._dragging_segment or not hasattr(self.page, "mpv_player"):
             return
         duration = self.page.mpv_player.get_duration()
@@ -981,14 +1033,14 @@ class VideoEditUI:
         if hasattr(self, "overlay_controls"):
             self.overlay_controls.set_visible(True)
             self.controls_visible = True
-            if self.hide_timer_id:
+            if self.hide_timer_id is not None:
                 GLib.source_remove(self.hide_timer_id)
                 self.hide_timer_id = None
 
     def _schedule_hide_controls(self, delay=2000):
         if self._any_popover_visible():
             return
-        if self.hide_timer_id:
+        if self.hide_timer_id is not None:
             GLib.source_remove(self.hide_timer_id)
         self.hide_timer_id = GLib.timeout_add(delay, self._hide_controls)
 
@@ -1000,6 +1052,15 @@ class VideoEditUI:
         self.controls_visible = False
         self.hide_timer_id = None
         return False
+
+    def cancel_scheduled_sources(self) -> None:
+        """Remove UI-owned callbacks before the editor is hidden or destroyed."""
+        if self.hide_timer_id is not None:
+            GLib.source_remove(self.hide_timer_id)
+            self.hide_timer_id = None
+        if hasattr(self, "overlay_controls"):
+            self.overlay_controls.set_visible(True)
+        self.controls_visible = True
 
     def apply_tooltips(self) -> None:
         """Apply tooltips to all video edit UI elements"""
@@ -1021,7 +1082,8 @@ class VideoEditUI:
             tooltip_helper.add_tooltip(self.trim_group, "segments")
 
     def disconnect_all_handlers(self) -> None:
-        """Disconnect all tracked signal handlers."""
+        """Disconnect handlers and remove callbacks owned by the editor UI."""
+        self.cancel_scheduled_sources()
         for widget, hid in self._handler_ids:
             try:
                 widget.disconnect(hid)

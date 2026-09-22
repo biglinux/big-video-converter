@@ -1106,15 +1106,13 @@ class SidebarBuilderMixin:
         self._update_encoding_options_state(is_active)
 
     def _on_audio_handling_changed(self, combo, _pspec):
-        """Handle audio handling combo change — disable NR when audio is copy/none."""
+        """Change audio applicability without erasing cleaning preferences."""
         selected = combo.get_selected()
         self.settings_manager.save_setting(
             "audio-handling", AUDIO_VALUES.get(selected, "copy")
         )
         audio_will_reencode = selected == 1  # index 1 = "reencode"
         self._audio_cleaning_row.set_sensitive(audio_will_reencode)
-        if not audio_will_reencode:
-            self.noise_reduction_switch.set_active(False)
         self._update_audio_subtitle()
         self._update_audio_cleaning_subtitle()
         # Update NR preview button visibility in edit page

@@ -679,7 +679,7 @@ class VideoConverterApp(
             application_icon="big-video-converter",
             version=APP_VERSION,
             developers=APP_DEVELOPERS,
-            license_type=Gtk.License.GPL_3_0,
+            license_type=Gtk.License.MIT_X11,
             website="https://www.biglinux.com.br",
         )
         about.present()

@@ -279,6 +279,17 @@ class VideoEditPage:
             GLib.source_remove(self.position_update_id)
             self.position_update_id = None
 
+        if self._seek_cooldown_timer_id is not None:
+            GLib.source_remove(self._seek_cooldown_timer_id)
+            self._seek_cooldown_timer_id = None
+        self._seek_cooldown = False
+
+        # A half-finished mark is transient interaction state, not a saved edit.
+        self.first_segment_point = None
+        if hasattr(self, "ui") and self.ui:
+            self.ui.mark_time_label.set_visible(False)
+            self.ui.mark_cancel_button.set_visible(False)
+
         # Update UI immediately before stopping playback
         self.is_playing = False
         if hasattr(self, "ui") and self.ui:
@@ -407,11 +418,13 @@ class VideoEditPage:
 
         # Update spinbuttons without triggering their changed signal back
         self._updating_crop_spins = True
-        self.ui.crop_left_spin.set_value(left)
-        self.ui.crop_right_spin.set_value(right)
-        self.ui.crop_top_spin.set_value(top)
-        self.ui.crop_bottom_spin.set_value(bottom)
-        self._updating_crop_spins = False
+        try:
+            self.ui.crop_left_spin.set_value(left)
+            self.ui.crop_right_spin.set_value(right)
+            self.ui.crop_top_spin.set_value(top)
+            self.ui.crop_bottom_spin.set_value(bottom)
+        finally:
+            self._updating_crop_spins = False
 
     def on_rotate(self, degrees: int) -> None:
         """Rotate video preview by given degrees (cumulative)."""
@@ -526,6 +539,10 @@ class VideoEditPage:
                 css_classes=["flat"],
                 tooltip_text=_("Go to segment start"),
             )
+            goto_button.update_property(
+                [Gtk.AccessibleProperty.LABEL],
+                [_("Go to segment start")],
+            )
             goto_button.connect(
                 "clicked", self._on_goto_segment_clicked, segment["start"]
             )
@@ -535,12 +552,20 @@ class VideoEditPage:
                 css_classes=["flat"],
                 tooltip_text=_("Edit segment times"),
             )
+            edit_button.update_property(
+                [Gtk.AccessibleProperty.LABEL],
+                [_("Edit segment times")],
+            )
             edit_button.connect("clicked", self._on_edit_segment_clicked, i)
             button_box.append(edit_button)
             remove_button = Gtk.Button(
                 icon_name="edit-delete-symbolic",
                 css_classes=["flat"],
                 tooltip_text=_("Remove segment"),
+            )
+            remove_button.update_property(
+                [Gtk.AccessibleProperty.LABEL],
+                [_("Remove segment")],
             )
             remove_button.connect(
                 "clicked", self._on_remove_segment_clicked, segment
@@ -578,6 +603,10 @@ class VideoEditPage:
         h_spin.set_increments(1, 1)
         h_spin.set_value(hours)
         h_spin.set_width_chars(3)
+        h_spin.set_tooltip_text(_("Hours"))
+        h_spin.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Hours")]
+        )
         fields_box.append(h_spin)
 
         # Minutes
@@ -587,6 +616,10 @@ class VideoEditPage:
         m_spin.set_increments(1, 1)
         m_spin.set_value(minutes)
         m_spin.set_width_chars(3)
+        m_spin.set_tooltip_text(_("Minutes"))
+        m_spin.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Minutes")]
+        )
         fields_box.append(m_spin)
 
         # Seconds
@@ -596,6 +629,10 @@ class VideoEditPage:
         s_spin.set_increments(1, 1)
         s_spin.set_value(seconds)
         s_spin.set_width_chars(3)
+        s_spin.set_tooltip_text(_("Seconds"))
+        s_spin.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Seconds")]
+        )
         fields_box.append(s_spin)
 
         # Centiseconds (hundredths)
@@ -605,6 +642,10 @@ class VideoEditPage:
         cs_spin.set_increments(1, 10)
         cs_spin.set_value(centiseconds)
         cs_spin.set_width_chars(3)
+        cs_spin.set_tooltip_text(_("Centiseconds"))
+        cs_spin.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Centiseconds")]
+        )
         fields_box.append(cs_spin)
 
         return fields_box, (h_spin, m_spin, s_spin, cs_spin)
@@ -924,7 +965,7 @@ class VideoEditPage:
             self.mpv_player.seek(position)
             # Prevent position polling from overriding this seek
             self._seek_cooldown = True
-            if self._seek_cooldown_timer_id:
+            if self._seek_cooldown_timer_id is not None:
                 GLib.source_remove(self._seek_cooldown_timer_id)
             self._seek_cooldown_timer_id = GLib.timeout_add(
                 500, self._end_seek_cooldown

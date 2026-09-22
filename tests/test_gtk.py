@@ -247,3 +247,19 @@ def test_presets_dialog_applies_searches_and_releases(app,tmp_path,monkeypatch):
     assert ai.save('[preset]\nname="x"\n[video]\ncodec="zzz"') is None and 'codec' in ai.status.get_text()
     ai.dialog.force_close();dialog.dialog.force_close();pump(.05)
     app.settings_manager.save_setting('active-preset','');app._apply_profile('universal')
+
+
+def test_audio_mode_changes_preserve_noise_cleaning_preference(app):
+    original_mode = app.audio_handling_combo.get_selected()
+    original_noise = app.noise_reduction_switch.get_active()
+    try:
+        app.audio_handling_combo.set_selected(1)
+        app.noise_reduction_switch.set_active(True)
+        for mode in (0, 2, 1):
+            app.audio_handling_combo.set_selected(mode)
+            assert app.noise_reduction_switch.get_active()
+            assert app.settings_manager.get_boolean('noise-reduction', False)
+            assert app._audio_cleaning_row.get_sensitive() == (mode == 1)
+    finally:
+        app.audio_handling_combo.set_selected(original_mode)
+        app.noise_reduction_switch.set_active(original_noise)

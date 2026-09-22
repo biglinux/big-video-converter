@@ -379,6 +379,9 @@ class ConversionPage:
 
         self.delete_original_check = Gtk.Switch()
         self.delete_original_check.set_valign(Gtk.Align.CENTER)
+        self.delete_original_check.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Delete original files")]
+        )
         delete_box.append(self.delete_original_check)
 
         options_box.append(delete_box)

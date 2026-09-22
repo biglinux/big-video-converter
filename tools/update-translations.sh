@@ -12,7 +12,7 @@ locale="$app/locale"
 pot="$locale/big-video-converter.pot"
 
 mapfile -t sources < <(find "$app/usr/share" -name '*.py' | sort)
-xgettext --from-code=UTF-8 --language=Python --keyword=_ --no-location --no-wrap \
+xgettext --from-code=UTF-8 --language=Python --keyword=_ --keyword=ngettext:1,2 --no-location --no-wrap \
     --package-name=big-video-converter --msgid-bugs-address='' \
     --copyright-holder='BigLinux' -o "$pot" "${sources[@]}"
 # Bash gettext strings ($"..."), if the script ever carries any.
