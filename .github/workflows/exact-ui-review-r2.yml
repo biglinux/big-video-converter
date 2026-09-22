@@ -61,7 +61,8 @@ jobs:
           PY
           python3 -m compileall -q \
             big-video-converter/usr/share/big-video-converter \
-            tests/test_contextual_audio_review.py
+            tests/test_contextual_audio_review.py \
+            tools/ui_demo.py
           timeout --signal=TERM --kill-after=5s 60s \
             dbus-run-session -- xvfb-run -a \
             python3 tests/test_contextual_audio_review.py \
@@ -95,12 +96,17 @@ jobs:
             identify "$output" | tee -a logs/image-dimensions.txt
           }
 
-          for screen in audio noise; do
+          states="audio-copy audio-convert audio-remove noise-off noise-ai"
+          for screen in $states; do
             render "$screen" light 1280 760 "screenshots/${screen}-light.png"
             render "$screen" dark 1280 760 "screenshots/${screen}-dark.png"
             render "$screen" light 980 620 "screenshots/${screen}-compact-light.png"
             render "$screen" dark 980 620 "screenshots/${screen}-compact-dark.png"
           done
+          expected=20
+          actual=$(find screenshots -maxdepth 1 -type f -name '*.png' | wc -l)
+          test "$actual" -eq "$expected"
+          printf 'screenshots=%s\n' "$actual" | tee logs/screenshot-count.txt
           sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
 
       - name: Create zoom crops

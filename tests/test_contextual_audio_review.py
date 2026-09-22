@@ -27,7 +27,11 @@ def combo(values, selected=0):
 
 def model():
     return SimpleNamespace(
-        audio_handling_combo=combo(['Copy', 'Re-encode', 'Remove']),
+        audio_handling_combo=combo([
+            'Copy without changes (fastest)',
+            'Re-encode audio',
+            'Remove audio',
+        ]),
         settings_page=SimpleNamespace(
             audio_codec_combo=combo(['AAC', 'Opus', 'AC3'], 1),
             audio_bitrate_combo=combo(['Default', '128k', 'Custom'], 2),
@@ -104,7 +108,27 @@ class AudioDialogTests(unittest.TestCase):
         self.assertEqual(self.dialog.custom_channels_row.get_text(), '6')
 
     def test_native_adaptive_presentation(self):
-        self.assertEqual(self.dialog.get_presentation_mode(), Adw.DialogPresentationMode.AUTO)
+        self.assertEqual(
+            self.dialog.get_presentation_mode(),
+            Adw.DialogPresentationMode.AUTO,
+        )
+        self.assertTrue(self.dialog.get_follows_content_size())
+        self.assertTrue(self.dialog.scroll.get_propagate_natural_height())
+        self.assertEqual(self.dialog.scroll.get_max_content_height(), 620)
+
+    def test_compact_operation_labels_do_not_change_saved_model(self):
+        local_model = self.dialog.operation_row.get_model()
+        self.assertEqual(
+            [local_model.get_string(i) for i in range(local_model.get_n_items())],
+            ['Keep original audio', 'Convert audio', 'Remove audio'],
+        )
+        source_model = self.app.audio_handling_combo.get_model()
+        self.assertEqual(
+            source_model.get_string(0),
+            'Copy without changes (fastest)',
+        )
+        self.dialog.operation_row.set_selected(1)
+        self.assertEqual(self.app.audio_handling_combo.get_selected(), 1)
 
 
 class NoiseDetailsTests(unittest.TestCase):
@@ -136,6 +160,24 @@ class NoiseDetailsTests(unittest.TestCase):
         self.assertIn('bind_details_to_switch(switch, details, connections)', source)
         self.assertIn('scale.update_property([Gtk.AccessibleProperty.LABEL], [label])', source)
         self.assertIn('Adw.DialogPresentationMode.AUTO', source)
+
+
+class EvidenceMatrixTests(unittest.TestCase):
+    def test_named_states_are_wired_into_demo_and_workflow(self):
+        demo = (ROOT / 'tools/ui_demo.py').read_text()
+        workflow = (ROOT / '.github/workflows/exact-ui-review-r2.yml').read_text()
+        states = (
+            'audio-copy',
+            'audio-convert',
+            'audio-remove',
+            'noise-off',
+            'noise-ai',
+        )
+        for state in states:
+            with self.subTest(state=state):
+                self.assertIn(f'"{state}"', demo)
+                self.assertIn(state, workflow)
+        self.assertIn('test "$actual" -eq "$expected"', workflow)
 
 
 if __name__ == '__main__':

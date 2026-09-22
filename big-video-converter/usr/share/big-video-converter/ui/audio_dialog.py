@@ -25,6 +25,15 @@ def _clone_model(source_combo):
     ])
 
 
+def _operation_model():
+    """Use concise choices here; the result label explains each consequence."""
+    return Gtk.StringList.new([
+        _("Keep original audio"),
+        _("Convert audio"),
+        _("Remove audio"),
+    ])
+
+
 def _make_combo_sync(source, dropdown, connections):
     """Keep both directions scoped to the dialog, including local widgets."""
     def to_source(widget, _pspec):
@@ -65,13 +74,17 @@ class AudioDialog(Adw.Dialog):
         self.connections = SignalConnections(self)
         self.set_title(_("Audio"))
         self.set_content_width(600)
-        self.set_content_height(480)
+        self.set_follows_content_size(True)
         self.set_presentation_mode(Adw.DialogPresentationMode.AUTO)
 
         toolbar = Adw.ToolbarView()
         toolbar.add_top_bar(Adw.HeaderBar())
-        scroll = Gtk.ScrolledWindow()
-        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.scroll = Gtk.ScrolledWindow()
+        self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.scroll.set_min_content_width(568)
+        self.scroll.set_max_content_height(620)
+        self.scroll.set_propagate_natural_height(True)
+
         content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)
         for edge in ("start", "end", "top", "bottom"):
             getattr(content, "set_margin_" + edge)(16)
@@ -81,13 +94,16 @@ class AudioDialog(Adw.Dialog):
             _("Choose what the converted video should contain.")
         )
         self.operation_row = self._combo(
-            _("Audio Handling"), app.audio_handling_combo
+            _("Audio operation"),
+            app.audio_handling_combo,
+            model=_operation_model(),
         )
         self.operation_group.add(self.operation_row)
         content.append(self.operation_group)
 
         self.result_label = Gtk.Label(wrap=True, xalign=0)
         self.result_label.set_selectable(True)
+        self.result_label.add_css_class("dim-label")
         content.append(self.result_label)
 
         self.details_group = Adw.PreferencesGroup(title=_("Audio conversion"))
@@ -117,16 +133,19 @@ class AudioDialog(Adw.Dialog):
             label=_("Changes are saved automatically for future conversions."),
             wrap=True, xalign=0,
         )
+        note.add_css_class("caption")
+        note.add_css_class("dim-label")
         content.append(note)
         for row in (self.operation_row, self.bitrate_row, self.channels_row):
             self.connections.connect(row, "notify::selected", self._update_state)
         self._update_state()
-        scroll.set_child(content)
-        toolbar.set_content(scroll)
+        self.scroll.set_child(content)
+        toolbar.set_content(self.scroll)
         self.set_child(toolbar)
 
-    def _combo(self, title, source):
-        row = Adw.ComboRow(title=title, model=_clone_model(source))
+    def _combo(self, title, source, model=None):
+        row_model = model if model is not None else _clone_model(source)
+        row = Adw.ComboRow(title=title, model=row_model)
         row.set_selected(source.get_selected())
         row.set_title_lines(0)
         _make_combo_sync(source, row, self.connections)
@@ -151,11 +170,16 @@ class AudioDialog(Adw.Dialog):
             == len(self.app.settings_page.channels_values) - 1
         )
         messages = {
-            "copy": _("Original audio is kept. Codec, bitrate and channel settings do not apply."),
+            "copy": _(
+                "Original audio is kept. Codec, bitrate and channel settings "
+                "do not apply."
+            ),
             "reencode": _("Audio will be converted using the settings below."),
             "none": _("The converted video will have no audio."),
         }
-        self.result_label.set_label(messages.get(mode, _("Select an audio operation.")))
+        self.result_label.set_label(
+            messages.get(mode, _("Select an audio operation."))
+        )
 
 
 def show_audio_dialog(parent_window, app) -> None:

@@ -125,6 +125,42 @@ class DemoApp(VideoConverterApp):
             self.progress_page._update_overall_progress()
         self.show_progress_page()
 
+    def _show_audio_state(self, screen: str) -> None:
+        self._populate_queue()
+        operation = {
+            "audio": 0,
+            "audio-copy": 0,
+            "audio-convert": 1,
+            "audio-remove": 2,
+        }[screen]
+        self.audio_handling_combo.set_selected(operation)
+        if operation == 1:
+            bitrate_model = self.settings_page.audio_bitrate_combo.get_model()
+            self.settings_page.audio_bitrate_combo.set_selected(
+                bitrate_model.get_n_items() - 1
+            )
+            channels_model = self.settings_page.audio_channels_combo.get_model()
+            self.settings_page.audio_channels_combo.set_selected(
+                min(1, channels_model.get_n_items() - 1)
+            )
+        from ui.audio_dialog import show_audio_dialog
+        show_audio_dialog(self.window, self)
+
+    def _show_noise_state(self, screen: str) -> None:
+        self._populate_queue()
+        for name in (
+            "noise_reduction_switch",
+            "gate_switch",
+            "hpf_row",
+            "compressor_switch",
+            "eq_switch",
+        ):
+            getattr(self, name).set_active(False)
+        if screen == "noise-ai":
+            self.noise_reduction_switch.set_active(True)
+        from ui.noise_dialog import show_noise_dialog
+        show_noise_dialog(self.window, self)
+
     def _populate_demo(self) -> bool:
         screen = self.demo_args.screen
         if screen == "queue-empty":
@@ -150,14 +186,12 @@ class DemoApp(VideoConverterApp):
         elif screen == "video-options":
             self._populate_queue()
             self.conversion_page.on_file_options_by_path(os.fspath(self.demo_media[0]))
-        elif screen == "audio":
-            self._populate_queue()
-            from ui.audio_dialog import show_audio_dialog
-            show_audio_dialog(self.window, self)
-        elif screen == "noise":
-            self._populate_queue()
-            from ui.noise_dialog import show_noise_dialog
-            show_noise_dialog(self.window, self)
+        elif screen in {
+            "audio", "audio-copy", "audio-convert", "audio-remove",
+        }:
+            self._show_audio_state(screen)
+        elif screen in {"noise", "noise-off", "noise-ai"}:
+            self._show_noise_state(screen)
         elif screen == "subtitles":
             self._populate_queue()
             from ui.subtitles_dialog import show_subtitles_dialog
@@ -169,7 +203,11 @@ class DemoApp(VideoConverterApp):
         else:
             raise ValueError(f"Unknown demo screen: {screen}")
 
-        GLib.timeout_add(2400 if screen == "editor" else 900, self._mark_ready)
+        dialog_state = screen.startswith(("audio", "noise"))
+        GLib.timeout_add(
+            2400 if screen == "editor" else (1200 if dialog_state else 900),
+            self._mark_ready,
+        )
         return GLib.SOURCE_REMOVE
 
     def _mark_ready(self) -> bool:
@@ -190,7 +228,9 @@ def parse_args() -> argparse.Namespace:
         "--screen",
         choices=(
             "queue-empty", "queue", "progress", "complete", "editor",
-            "welcome", "presets", "video-options", "audio", "noise",
+            "welcome", "presets", "video-options",
+            "audio", "audio-copy", "audio-convert", "audio-remove",
+            "noise", "noise-off", "noise-ai",
             "subtitles", "advanced",
         ),
         default="queue",
