@@ -177,7 +177,7 @@ class ProgressPageTests(unittest.TestCase):
             with self.subTest(state=state):
                 self.assertIn(f'"{state}"', demo)
                 self.assertIn(state, workflow)
-        self.assertIn("expected=28", workflow)
+        self.assertIn("expected=40", workflow)
 
 
 if __name__ == "__main__":

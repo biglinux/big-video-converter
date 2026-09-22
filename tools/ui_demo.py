@@ -161,6 +161,24 @@ class DemoApp(VideoConverterApp):
         from ui.noise_dialog import show_noise_dialog
         show_noise_dialog(self.window, self)
 
+    def _configure_editor_state(self, screen: str, attempt: int = 0) -> bool:
+        page = self.video_edit_page
+        if page.loading_video or not page.current_video_path:
+            if attempt < 40:
+                GLib.timeout_add(100, self._configure_editor_state, screen, attempt + 1)
+            return GLib.SOURCE_REMOVE
+        if screen == "editor-crop":
+            page.ui.crop_edit_btn.set_active(True)
+        elif screen == "editor-segments":
+            page.trim_segments = [
+                {"start": 0.6, "end": 2.1},
+                {"start": 3.0, "end": 5.2},
+            ]
+            page._save_file_metadata()
+            page._update_segments_listbox()
+            page.ui.position_scale.set_value(4.2)
+        return GLib.SOURCE_REMOVE
+
     def _populate_demo(self) -> bool:
         screen = self.demo_args.screen
         if screen == "queue-empty":
@@ -173,9 +191,11 @@ class DemoApp(VideoConverterApp):
             self._populate_progress(False)
         elif screen == "complete":
             self._populate_progress(True)
-        elif screen == "editor":
+        elif screen in {"editor", "editor-crop", "editor-segments"}:
             self._populate_queue()
             self.show_editor_for_file(os.fspath(self.demo_media[0]))
+            if screen != "editor":
+                GLib.timeout_add(350, self._configure_editor_state, screen)
         elif screen == "welcome":
             from ui.welcome_dialog import WelcomeDialog
             WelcomeDialog(self.window, self.settings_manager).present()
@@ -205,7 +225,7 @@ class DemoApp(VideoConverterApp):
 
         dialog_state = screen.startswith(("audio", "noise"))
         GLib.timeout_add(
-            2400 if screen == "editor" else (1200 if dialog_state else 900),
+            3200 if screen.startswith("editor") else (1200 if dialog_state else 900),
             self._mark_ready,
         )
         return GLib.SOURCE_REMOVE
@@ -227,7 +247,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--screen",
         choices=(
-            "queue-empty", "queue", "progress", "complete", "editor",
+            "queue-empty", "queue", "progress", "complete",
+            "editor", "editor-crop", "editor-segments",
             "welcome", "presets", "video-options",
             "audio", "audio-copy", "audio-convert", "audio-remove",
             "noise", "noise-off", "noise-ai",
