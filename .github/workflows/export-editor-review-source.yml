@@ -1,0 +1,35 @@
+name: Export editor review source
+
+on:
+  push:
+    branches:
+      - review/uiux-materialized-r2-20260922
+    paths:
+      - .github/workflows/export-editor-review-source.yml
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Package exact editor review inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -czf editor-review-source.tar.gz \
+            big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py \
+            big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py \
+            tools/ui_demo.py \
+            tests/test_progress_page.py \
+            .github/workflows/exact-ui-review-r2.yml \
+            .github/workflows/contextual-tests-diagnostic.yml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: editor-review-source-${{ github.sha }}
+          path: editor-review-source.tar.gz
+          if-no-files-found: error
+          retention-days: 2
