@@ -73,8 +73,12 @@ class AudioDialog(Adw.Dialog):
         self.app = app
         self.connections = SignalConnections(self)
         self.set_title(_("Audio"))
+        # The content box uses 16 px margins around a 568 px scroller. Keep the
+        # width explicit: follows-content-size would ignore content-width and
+        # collapse this dialog to the natural width of its shortest state.
         self.set_content_width(600)
-        self.set_follows_content_size(True)
+        self.set_content_height(-1)
+        self.set_follows_content_size(False)
         self.set_presentation_mode(Adw.DialogPresentationMode.AUTO)
 
         toolbar = Adw.ToolbarView()
@@ -83,7 +87,6 @@ class AudioDialog(Adw.Dialog):
         self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         self.scroll.set_min_content_width(568)
         self.scroll.set_max_content_height(620)
-        self.scroll.set_propagate_natural_width(True)
         self.scroll.set_propagate_natural_height(True)
 
         content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)

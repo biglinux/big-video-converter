@@ -112,15 +112,14 @@ class AudioDialogTests(unittest.TestCase):
             self.dialog.get_presentation_mode(),
             Adw.DialogPresentationMode.AUTO,
         )
-        self.assertTrue(self.dialog.get_follows_content_size())
-        self.assertTrue(self.dialog.scroll.get_propagate_natural_width())
+        # follows-content-size would ignore content-width. The dialog instead
+        # keeps an explicit 600 px width while its height follows the content.
+        self.assertFalse(self.dialog.get_follows_content_size())
+        self.assertEqual(self.dialog.get_content_width(), 600)
+        self.assertEqual(self.dialog.get_content_height(), -1)
         self.assertTrue(self.dialog.scroll.get_propagate_natural_height())
         self.assertEqual(self.dialog.scroll.get_min_content_width(), 568)
         self.assertEqual(self.dialog.scroll.get_max_content_height(), 620)
-        _minimum, natural, _min_baseline, _natural_baseline = (
-            self.dialog.scroll.measure(Gtk.Orientation.HORIZONTAL, -1)
-        )
-        self.assertGreaterEqual(natural, 568)
 
     def test_compact_operation_labels_do_not_change_saved_model(self):
         local_model = self.dialog.operation_row.get_model()

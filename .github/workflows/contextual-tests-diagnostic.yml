@@ -45,6 +45,9 @@ jobs:
       - name: Run focused paths and retain full diagnostics
         shell: bash
         run: |
+          # GitHub invokes bash with -e. Disable it explicitly so every status
+          # is captured and the dedicated enforcement step decides the result.
+          set +e
           set -uo pipefail
           mkdir -p .ui-review
           python3 - <<'PY' > .ui-review/contextual-runtime.txt 2>&1
@@ -99,6 +102,7 @@ jobs:
         with:
           name: contextual-audio-noise-diagnostics-${{ github.sha }}
           path: .ui-review/
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
 
