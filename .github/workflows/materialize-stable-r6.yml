@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - review/stable-readiness-r6-20260922
+    paths:
+      - .review/RUN-R6
   workflow_dispatch:
 
 permissions:
@@ -23,18 +25,27 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Verify and apply the reviewed patch
+      - name: Reconstruct, verify and apply the reviewed patch
         shell: bash
         run: |
           set -euo pipefail
-          staged=.review/BVC-STABLE-READINESS-R6.diff.gz
-          test -f "$staged"
-          echo '77d9be0f831fe86c1bc39527f784ae53d7bcfad8e15f1f82d0fa170991010b2c  .review/BVC-STABLE-READINESS-R6.diff.gz' | sha256sum -c -
-          gzip -dc "$staged" > /tmp/BVC-STABLE-READINESS-R6.diff
+          test -f .review/RUN-R6
+          sha256sum -c <<'SUMS'
+          515f128702862da461aaf98a1fa28e344e72655fda458651c5ea519d89425d72  .review/r6.part.00
+          5e374d7ea4da39b81a895e22e445052bd13568c0951ed87738071b36f92ea04d  .review/r6.part.01
+          131c95a704c80c09fd32a481b666692fe0c6e407b7235680914a4d44bed34882  .review/r6.part.02
+          c89656799d190bcc3ef91141e33a8d81924f51271f8d5d6c62dcffdf81b240bb  .review/r6.part.03
+          2bb757d3ae9dd9bac2340143dddeeb52a68d50028001e0d5717a31d76856311d  .review/r6.part.04
+          732581bb68d8d2af1424149ecf3cef8cc09184f4cc0d72a999785e739e5c4d56  .review/r6.part.05
+          SUMS
+          cat .review/r6.part.* | tr -d '\r\n' | base64 --decode > /tmp/BVC-STABLE-READINESS-R6.diff.gz
+          echo '77d9be0f831fe86c1bc39527f784ae53d7bcfad8e15f1f82d0fa170991010b2c  /tmp/BVC-STABLE-READINESS-R6.diff.gz' | sha256sum -c -
+          gzip -dc /tmp/BVC-STABLE-READINESS-R6.diff.gz > /tmp/BVC-STABLE-READINESS-R6.diff
           echo '5db51e1de29df9153c7e40f3e1bb71d8918f14bb1a794fe93c7646c856344ca2  /tmp/BVC-STABLE-READINESS-R6.diff' | sha256sum -c -
           git apply --check /tmp/BVC-STABLE-READINESS-R6.diff
           git apply /tmp/BVC-STABLE-READINESS-R6.diff
-          rm -f "$staged" .github/workflows/materialize-stable-r6.yml
+          rm -f .review/r6.part.* .review/RUN-R6 \
+            .github/workflows/materialize-stable-r6.yml
           rmdir .review
           git diff --check
 
