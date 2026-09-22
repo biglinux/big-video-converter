@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Gauge/meter -->
+  <path d="M20,55 A30,30 0 0,1 80,55" fill="none" stroke="#999" stroke-width="2"/>
+  <!-- Gauge ticks -->
+  <line x1="22" y1="50" x2="28" y2="46" stroke="#999" stroke-width="1"/>
+  <line x1="30" y1="32" x2="35" y2="36" stroke="#999" stroke-width="1"/>
+  <line x1="50" y1="25" x2="50" y2="31" stroke="#999" stroke-width="1"/>
+  <line x1="70" y1="32" x2="65" y2="36" stroke="#999" stroke-width="1"/>
+  <line x1="78" y1="50" x2="72" y2="46" stroke="#999" stroke-width="1"/>
+  <!-- Needle pointing to mid-high -->
+  <line x1="50" y1="55" x2="65" y2="34" stroke="#3584e4" stroke-width="2"/>
+  <circle cx="50" cy="55" r="3" fill="#3584e4"/>
+  <!-- Labels -->
+  <text x="20" y="66" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">64</text>
+  <text x="50" y="18" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">192</text>
+  <text x="80" y="66" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">320</text>
+  <text x="50" y="76" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">kbps</text>
+</svg>

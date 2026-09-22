@@ -1,0 +1,2441 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR BigLinux
+# This file is distributed under the same license as the big-video-converter package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: big-video-converter\n"
+"Report-Msgid-Bugs-To: \n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Auto-detect"
+msgstr "Auto-detect"
+
+msgid "NVENC (Nvidia)"
+msgstr "NVENC (Nvidia)"
+
+msgid "VAAPI (Intel/AMD)"
+msgstr "VAAPI (Intel/AMD)"
+
+msgid "QSV (Intel)"
+msgstr "QSV (Intel)"
+
+msgid "Vulkan"
+msgstr "Vulkan"
+
+msgid "Software (CPU)"
+msgstr "Software (CPU)"
+
+msgid "Good (recommended)"
+msgstr "Good (recommended)"
+
+msgid "Very High"
+msgstr "Very High"
+
+msgid "High"
+msgstr "High"
+
+msgid "Medium"
+msgstr "Medium"
+
+msgid "Low"
+msgstr "Low"
+
+msgid "Very Low"
+msgstr "Very Low"
+
+msgid "Super Low"
+msgstr "Super Low"
+
+msgid "Copy — No re-encoding"
+msgstr "Copy — No re-encoding"
+
+msgid "H.264 — Universal (recommended)"
+msgstr "H.264 — Universal (recommended)"
+
+msgid "H.265 — More efficient"
+msgstr "H.265 — More efficient"
+
+msgid "AV1 — Best compression"
+msgstr "AV1 — Best compression"
+
+msgid "VP9 — Used by YouTube"
+msgstr "VP9 — Used by YouTube"
+
+msgid "ProRes — Professional editing"
+msgstr "ProRes — Professional editing"
+
+msgid "Balanced (recommended)"
+msgstr "Balanced (recommended)"
+
+msgid "Very fast (larger file)"
+msgstr "Very fast (larger file)"
+
+msgid "Fast (larger file)"
+msgstr "Fast (larger file)"
+
+msgid "Slightly fast"
+msgstr "Slightly fast"
+
+msgid "Slow (smaller file)"
+msgstr "Slow (smaller file)"
+
+msgid "Very slow (smallest file)"
+msgstr "Very slow (smallest file)"
+
+msgid "Extract as separate file"
+msgstr "Extract as separate file"
+
+msgid "Keep inside the video"
+msgstr "Keep inside the video"
+
+msgid "Remove"
+msgstr "Remove"
+
+msgid "Copy without changes (fastest)"
+msgstr "Copy without changes (fastest)"
+
+msgid "Re-encode audio"
+msgstr "Re-encode audio"
+
+msgid "Remove audio"
+msgstr "Remove audio"
+
+msgid "AAC (recommended)"
+msgstr "AAC (recommended)"
+
+msgid "Opus (best quality)"
+msgstr "Opus (best quality)"
+
+msgid "AC3 (Dolby Digital)"
+msgstr "AC3 (Dolby Digital)"
+
+msgid "Original (no change)"
+msgstr "Original (no change)"
+
+msgid "4K UHD (3840×2160)"
+msgstr "4K UHD (3840×2160)"
+
+msgid "2K QHD (2560×1440)"
+msgstr "2K QHD (2560×1440)"
+
+msgid "Full HD (1920×1080)"
+msgstr "Full HD (1920×1080)"
+
+msgid "HD (1280×720)"
+msgstr "HD (1280×720)"
+
+msgid "SD (854×480)"
+msgstr "SD (854×480)"
+
+msgid "4K UHD Vertical (2160×3840)"
+msgstr "4K UHD Vertical (2160×3840)"
+
+msgid "2K QHD Vertical (1440×2560)"
+msgstr "2K QHD Vertical (1440×2560)"
+
+msgid "Full HD Vertical (1080×1920)"
+msgstr "Full HD Vertical (1080×1920)"
+
+msgid "HD Vertical (720×1280)"
+msgstr "HD Vertical (720×1280)"
+
+msgid "SD Vertical (480×854)"
+msgstr "SD Vertical (480×854)"
+
+msgid "Custom"
+msgstr "Custom"
+
+msgid ""
+"If your GPU supports video encoding, conversion will be much faster.\n"
+"\n"
+"Automatic detection is usually the best choice, but you can also select it manually.\n"
+"\n"
+"Software mode is slower but compatible with more formats.\n"
+"\n"
+"If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back to Software mode if needed."
+msgstr ""
+"If your GPU supports video encoding, conversion will be much faster.\n"
+"\n"
+"Automatic detection is usually the best choice, but you can also select it manually.\n"
+"\n"
+"Software mode is slower but compatible with more formats.\n"
+"\n"
+"If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back to Software mode if needed."
+
+msgid ""
+"Higher quality means a larger file.\n"
+"\n"
+"The default option is a good balance between image quality and file size."
+msgstr ""
+"Higher quality means a larger file.\n"
+"\n"
+"The default option is a good balance between image quality and file size."
+
+msgid ""
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the fastest to convert.\n"
+"\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more efficiently.\n"
+"\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the conversion can be very slow.\n"
+"\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the conversion can also be slow if the graphics card isn't compatible.\n"
+"\n"
+"ProRes: Professional editing codec (Apple). Preserves maximum quality for video editing workflows. CPU-only, outputs .mov format."
+msgstr ""
+"H.264: An older format that works on almost all devices. It takes up more storage space but is the fastest to convert.\n"
+"\n"
+"H.265: A newer version of H.264. It doesn't work on older devices and compresses files more efficiently.\n"
+"\n"
+"VP9: Widely used by YouTube. If your computer doesn't have a compatible graphics card, the conversion can be very slow.\n"
+"\n"
+"AV1: The most modern format. It offers the best compression (creating smaller files), but the conversion can also be slow if the graphics card isn't compatible.\n"
+"\n"
+"ProRes: Professional editing codec (Apple). Preserves maximum quality for video editing workflows. CPU-only, outputs .mov format."
+
+msgid ""
+"Copy is usually best, fast and preserves full quality.\n"
+"\n"
+"Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
+msgstr ""
+"Copy is usually best, fast and preserves full quality.\n"
+"\n"
+"Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
+
+msgid ""
+"If subtitles are embedded, keeping them is usually best.\n"
+"\n"
+"Some players need an external subtitle file."
+msgstr ""
+"If subtitles are embedded, keeping them is usually best.\n"
+"\n"
+"Some players need an external subtitle file."
+
+msgid ""
+"Copying video is extremely fast and keeps full image quality.\n"
+"\n"
+"Perfect for cutting or trimming videos for social media."
+msgstr ""
+"Copying video is extremely fast and keeps full image quality.\n"
+"\n"
+"Perfect for cutting or trimming videos for social media."
+
+msgid ""
+"Slower conversion produces smaller files.\n"
+"\n"
+"Faster presets create larger files but convert in less time."
+msgstr ""
+"Slower conversion produces smaller files.\n"
+"\n"
+"Faster presets create larger files but convert in less time."
+
+msgid ""
+"Audio format (when converting):\n"
+"\n"
+"• AAC: Most compatible, good quality\n"
+"• Opus: Excellent quality at small sizes\n"
+"• AC3 (Dolby Digital): Good for home theater"
+msgstr ""
+"Audio format (when converting):\n"
+"\n"
+"• AAC: Most compatible, good quality\n"
+"• Opus: Excellent quality at small sizes\n"
+"• AC3 (Dolby Digital): Good for home theater"
+
+msgid ""
+"Output size:\n"
+"\n"
+"• Original: Keep the same resolution\n"
+"• Standard: 4K, Full HD, HD (TVs and monitors)\n"
+"• Vertical: For phones and social media\n"
+"• Custom: Set your own dimensions"
+msgstr ""
+"Output size:\n"
+"\n"
+"• Original: Keep the same resolution\n"
+"• Standard: 4K, Full HD, HD (TVs and monitors)\n"
+"• Vertical: For phones and social media\n"
+"• Custom: Set your own dimensions"
+
+msgid ""
+"• MP4: Most compatible\n"
+"• MKV: More features\n"
+"• MOV: Apple/ProRes workflows\n"
+"• WebM: Web optimized (VP9/AV1)"
+msgstr ""
+"• MP4: Most compatible\n"
+"• MKV: More features\n"
+"• MOV: Apple/ProRes workflows\n"
+"• WebM: Web optimized (VP9/AV1)"
+
+msgid ""
+"• Move right: Brighter\n"
+"• Move left: Darker\n"
+"• Default: 0 (no change)"
+msgstr ""
+"• Move right: Brighter\n"
+"• Move left: Darker\n"
+"• Default: 0 (no change)"
+
+msgid ""
+"• Move right: More vivid\n"
+"• Move left: More muted\n"
+"• Default: 1.0 (no change)"
+msgstr ""
+"• Move right: More vivid\n"
+"• Move left: More muted\n"
+"• Default: 1.0 (no change)"
+
+msgid ""
+"• Positive: More red/yellow\n"
+"• Negative: More blue/green\n"
+"• Default: 0 (no change)"
+msgstr ""
+"• Positive: More red/yellow\n"
+"• Negative: More blue/green\n"
+"• Default: 0 (no change)"
+
+msgid "Crop the video's edges to keep only the part you need."
+msgstr "Crop the video's edges to keep only the part you need."
+
+msgid ""
+"Select parts of the video to keep.\n"
+"\n"
+"Add sections with the + button or directly in the video using the markers button above the video.\n"
+"\n"
+"You can export selected parts as one file or as multiple clips\n"
+" ideal for creating short videos for social media."
+msgstr ""
+"Select parts of the video to keep.\n"
+"\n"
+"Add sections with the + button or directly in the video using the markers button above the video.\n"
+"\n"
+"You can export selected parts as one file or as multiple clips\n"
+" ideal for creating short videos for social media."
+
+msgid ""
+"Run decode on the CPU and encode on the GPU.\n"
+"\n"
+"Usually best left disabled, but can help with certain compatibility issues."
+msgstr ""
+"Run decode on the CPU and encode on the GPU.\n"
+"\n"
+"Usually best left disabled, but can help with certain compatibility issues."
+
+msgid ""
+"Audio quality:\n"
+"\n"
+"• Higher = better quality, larger file\n"
+"• 128k: Good for most content\n"
+"• 192k: High quality\n"
+"• 256k+: Professional use\n"
+"• Default: Auto (encoder decides)"
+msgstr ""
+"Audio quality:\n"
+"\n"
+"• Higher = better quality, larger file\n"
+"• 128k: Good for most content\n"
+"• 192k: High quality\n"
+"• 256k+: Professional use\n"
+"• Default: Auto (encoder decides)"
+
+msgid ""
+"Number of audio channels:\n"
+"\n"
+"• 1: Mono (single speaker)\n"
+"• 2: Stereo (left/right)\n"
+"• 6: 5.1 Surround\n"
+"• 8: 7.1 Surround\n"
+"• Default: Keep original"
+msgstr ""
+"Number of audio channels:\n"
+"\n"
+"• 1: Mono (single speaker)\n"
+"• 2: Stereo (left/right)\n"
+"• 6: 5.1 Surround\n"
+"• 8: 7.1 Surround\n"
+"• Default: Keep original"
+
+msgid ""
+"Advanced: Custom FFmpeg options.\n"
+"\n"
+"• For experienced users only\n"
+"• Invalid options may cause errors\n"
+"• Example: -ss 60 -t 30 (skip 60s, take 30s)"
+msgstr ""
+"Advanced: Custom FFmpeg options.\n"
+"\n"
+"• For experienced users only\n"
+"• Invalid options may cause errors\n"
+"• Example: -ss 60 -t 30 (skip 60s, take 30s)"
+
+msgid "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
+msgstr "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
+
+msgid "You’re seeing an example of help shown when hovering over an item."
+msgstr "You’re seeing an example of help shown when hovering over an item."
+
+msgid ""
+"Reduces background noise from audio using the GTCRN neural network.\n"
+"\n"
+"• Requires audio re-encoding\n"
+"• Works best for constant background noise\n"
+"• Automatically re-encodes audio if set to copy"
+msgstr ""
+"Reduces background noise from audio using the GTCRN neural network.\n"
+"\n"
+"• Requires audio re-encoding\n"
+"• Works best for constant background noise\n"
+"• Automatically re-encodes audio if set to copy"
+
+msgid ""
+"Adjust the intensity of noise reduction\n"
+"\n"
+"• 1.0: Maximum reduction (default)\n"
+"• 0.5: Moderate reduction\n"
+"• Lower values preserve more original audio"
+msgstr ""
+"Adjust the intensity of noise reduction\n"
+"\n"
+"• 1.0: Maximum reduction (default)\n"
+"• 0.5: Moderate reduction\n"
+"• Lower values preserve more original audio"
+
+msgid ""
+"Noise gate silences audio below a volume threshold\n"
+"\n"
+"Useful combined with noise reduction to eliminate\n"
+"residual noise during pauses between speech.\n"
+"\n"
+"Adjust intensity from low to maximum."
+msgstr ""
+"Noise gate silences audio below a volume threshold\n"
+"\n"
+"Useful combined with noise reduction to eliminate\n"
+"residual noise during pauses between speech.\n"
+"\n"
+"Adjust intensity from low to maximum."
+
+msgid ""
+"Voice Recovery — high-frequency reconstruction\n"
+"\n"
+"Recovers frequencies above 8 kHz that the AI\n"
+"noise reduction model removes.\n"
+"\n"
+"• 0%: Cuts all HF (maximum NR)\n"
+"• 75%: Natural default\n"
+"• 100%: Full original HF preserved"
+msgstr ""
+"Voice Recovery — high-frequency reconstruction\n"
+"\n"
+"Recovers frequencies above 8 kHz that the AI\n"
+"noise reduction model removes.\n"
+"\n"
+"• 0%: Cuts all HF (maximum NR)\n"
+"• 75%: Natural default\n"
+"• 100%: Full original HF preserved"
+
+msgid "Remove all files from the queue"
+msgstr "Remove all files from the queue"
+
+msgid "Open application menu"
+msgstr "Open application menu"
+
+msgid "Right-click for more options"
+msgstr "Right-click for more options"
+
+msgid "Preview this video file"
+msgstr "Preview this video file"
+
+msgid "Open video editor for this file"
+msgstr "Open video editor for this file"
+
+msgid "Show detailed file information"
+msgstr "Show detailed file information"
+
+msgid "Remove this file from the queue"
+msgstr "Remove this file from the queue"
+
+msgid "Go back to the main screen"
+msgstr "Go back to the main screen"
+
+msgid "Show conversion log output"
+msgstr "Show conversion log output"
+
+msgid "Cancel conversion of this file"
+msgstr "Cancel conversion of this file"
+
+msgid "Skip this file and do not convert it"
+msgstr "Skip this file and do not convert it"
+
+msgid ""
+"Copies the video stream without re-encoding — instant and lossless.\n"
+"\n"
+"Audio can still be re-encoded, cleaned or adjusted independently.\n"
+"\n"
+"Does not allow changing video codec, resolution or applying video filters."
+msgstr ""
+"Copies the video stream without re-encoding — instant and lossless.\n"
+"\n"
+"Audio can still be re-encoded, cleaned or adjusted independently.\n"
+"\n"
+"Does not allow changing video codec, resolution or applying video filters."
+
+msgid "Uses H.264, the most widely supported codec. Works on virtually every device, browser and player. A great default choice when compatibility matters most."
+msgstr "Uses H.264, the most widely supported codec. Works on virtually every device, browser and player. A great default choice when compatibility matters most."
+
+msgid "Uses H.265 (HEVC), which provides better compression than H.264 — about 30% smaller files at the same quality. Supported by most modern devices and players."
+msgstr "Uses H.265 (HEVC), which provides better compression than H.264 — about 30% smaller files at the same quality. Supported by most modern devices and players."
+
+msgid "Uses AV1, the latest generation codec with the best compression available. Produces the smallest files but encoding is slower. Ideal for archiving or uploading where size matters most."
+msgstr "Uses AV1, the latest generation codec with the best compression available. Produces the smallest files but encoding is slower. Ideal for archiving or uploading where size matters most."
+
+msgid "Select Video Files"
+msgstr "Select Video Files"
+
+msgid "Video Files"
+msgstr "Video Files"
+
+msgid "Select Folder with Video Files"
+msgstr "Select Folder with Video Files"
+
+#, python-brace-format
+msgid "{} video files have been added to the queue."
+msgstr "{} video files have been added to the queue."
+
+msgid "Files Added"
+msgstr "Files Added"
+
+msgid "No Files Found"
+msgstr "No Files Found"
+
+msgid "No valid video files were found in the selected folder."
+msgstr "No valid video files were found in the selected folder."
+
+msgid "Please select a folder, not a file."
+msgstr "Please select a folder, not a file."
+
+#, python-brace-format
+msgid "Error selecting folder: {}"
+msgstr "Error selecting folder: {}"
+
+msgid "No Files Added"
+msgstr "No Files Added"
+
+msgid "No valid video files were found in your selection."
+msgstr "No valid video files were found in your selection."
+
+msgid "Add Network File"
+msgstr "Add Network File"
+
+msgid ""
+"Connect to a remote server to browse and add video files.\n"
+"Files are accessed directly from the network without downloading."
+msgstr ""
+"Connect to a remote server to browse and add video files.\n"
+"Files are accessed directly from the network without downloading."
+
+msgid "Connection"
+msgstr "Connection"
+
+msgid "Protocol"
+msgstr "Protocol"
+
+msgid "Server"
+msgstr "Server"
+
+msgid "Port"
+msgstr "Port"
+
+msgid "Username"
+msgstr "Username"
+
+msgid "Remote Path"
+msgstr "Remote Path"
+
+msgid "Connect and Browse"
+msgstr "Connect and Browse"
+
+msgid "Please enter a server address."
+msgstr "Please enter a server address."
+
+msgid "Connecting..."
+msgstr "Connecting..."
+
+#, python-brace-format
+msgid "Connection failed: {}"
+msgstr "Connection failed: {}"
+
+msgid "Error"
+msgstr "Error"
+
+msgid "Connected but could not resolve local path. Try browsing via file manager."
+msgstr "Connected but could not resolve local path. Try browsing via file manager."
+
+msgid "Select Network Video Files"
+msgstr "Select Network Video Files"
+
+msgid "Main"
+msgstr "Main"
+
+msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+msgstr "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+
+msgid "Queue"
+msgstr "Queue"
+
+msgid "Editor"
+msgstr "Editor"
+
+msgid "Progress"
+msgstr "Progress"
+
+msgid "File not found"
+msgstr "File not found"
+
+msgid "Could not load video file"
+msgstr "Could not load video file"
+
+msgid "All Conversions Complete"
+msgstr "All Conversions Complete"
+
+msgid "1 video has been converted successfully!"
+msgstr "1 video has been converted successfully!"
+
+#, python-brace-format
+msgid "{0} videos have been converted successfully!"
+msgstr "{0} videos have been converted successfully!"
+
+msgid "Dependencies Not Found"
+msgstr "Dependencies Not Found"
+
+msgid ""
+"FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
+"Please install them manually using your distribution's package manager."
+msgstr ""
+"FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
+"Please install them manually using your distribution's package manager."
+
+msgid "Installation Successful"
+msgstr "Installation Successful"
+
+msgid "Dependencies have been installed. The application will now restart."
+msgstr "Dependencies have been installed. The application will now restart."
+
+msgid "Installation Failed"
+msgstr "Installation Failed"
+
+msgid "Dependencies were not found after installation. Please restart the application manually."
+msgstr "Dependencies were not found after installation. Please restart the application manually."
+
+msgid "Archive (AV1 + Opus)"
+msgstr "Archive (AV1 + Opus)"
+
+msgid "High-quality AV1 with Opus audio in MKV. The slowest option here and the smallest files; meant for keeping, not for sharing."
+msgstr "High-quality AV1 with Opus audio in MKV. The slowest option here and the smallest files; meant for keeping, not for sharing."
+
+msgid "archive"
+msgstr "archive"
+
+msgid "av1"
+msgstr "av1"
+
+msgid "opus"
+msgstr "opus"
+
+msgid "mkv"
+msgstr "mkv"
+
+msgid "small"
+msgstr "small"
+
+msgid "DaVinci Resolve (ProRes)"
+msgstr "DaVinci Resolve (ProRes)"
+
+msgid "ProRes 422 Standard in MOV with the audio copied. Imports into DaVinci Resolve on Linux without transcoding; large files."
+msgstr "ProRes 422 Standard in MOV with the audio copied. Imports into DaVinci Resolve on Linux without transcoding; large files."
+
+msgid "davinci"
+msgstr "davinci"
+
+msgid "resolve"
+msgstr "resolve"
+
+msgid "editing"
+msgstr "editing"
+
+msgid "prores"
+msgstr "prores"
+
+msgid "intermediate"
+msgstr "intermediate"
+
+msgid "Instagram Reels"
+msgstr "Instagram Reels"
+
+msgid "Vertical 1080x1920 at 30 fps, H.264 with AAC stereo 128 kbps in MP4. Also right for Stories and TikTok."
+msgstr "Vertical 1080x1920 at 30 fps, H.264 with AAC stereo 128 kbps in MP4. Also right for Stories and TikTok."
+
+msgid "instagram"
+msgstr "instagram"
+
+msgid "reels"
+msgstr "reels"
+
+msgid "stories"
+msgstr "stories"
+
+msgid "tiktok"
+msgstr "tiktok"
+
+msgid "vertical"
+msgstr "vertical"
+
+msgid "social"
+msgstr "social"
+
+msgid "WhatsApp"
+msgstr "WhatsApp"
+
+msgid "720p H.264 with light AAC audio in MP4: small enough to send in chat, plays on any phone."
+msgstr "720p H.264 with light AAC audio in MP4: small enough to send in chat, plays on any phone."
+
+msgid "whatsapp"
+msgstr "whatsapp"
+
+msgid "telegram"
+msgstr "telegram"
+
+msgid "chat"
+msgstr "chat"
+
+msgid "720p"
+msgstr "720p"
+
+msgid "X / Twitter"
+msgstr "X / Twitter"
+
+msgid "720p at 30 fps in H.264 with AAC stereo, MP4. Sized for X's upload limits."
+msgstr "720p at 30 fps in H.264 with AAC stereo, MP4. Sized for X's upload limits."
+
+msgid "x"
+msgstr "x"
+
+msgid "twitter"
+msgstr "twitter"
+
+msgid "YouTube 1080p"
+msgstr "YouTube 1080p"
+
+msgid "H.264 High profile with YouTube's recommended GOP and B-frame settings, AAC stereo 48 kHz, MP4 ready for upload."
+msgstr "H.264 High profile with YouTube's recommended GOP and B-frame settings, AAC stereo 48 kHz, MP4 ready for upload."
+
+msgid "youtube"
+msgstr "youtube"
+
+msgid "upload"
+msgstr "upload"
+
+msgid "1080p"
+msgstr "1080p"
+
+msgid "YouTube 4K (H.265)"
+msgstr "YouTube 4K (H.265)"
+
+msgid "H.265 10-bit friendly upload for 2160p footage. Smaller files than H.264 at the same quality; YouTube re-encodes on its side."
+msgstr "H.265 10-bit friendly upload for 2160p footage. Smaller files than H.264 at the same quality; YouTube re-encodes on its side."
+
+msgid "4k"
+msgstr "4k"
+
+msgid "2160p"
+msgstr "2160p"
+
+msgid "hevc"
+msgstr "hevc"
+
+msgid "Low disk space"
+msgstr "Low disk space"
+
+#, python-brace-format
+msgid ""
+"The destination has {free:.1f} GB free but approximately {needed:.1f} GB may be needed.\n"
+"\n"
+"Do you want to continue anyway?"
+msgstr ""
+"The destination has {free:.1f} GB free but approximately {needed:.1f} GB may be needed.\n"
+"\n"
+"Do you want to continue anyway?"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "Continue"
+msgstr "Continue"
+
+msgid "Batch Conversion Complete"
+msgstr "Batch Conversion Complete"
+
+msgid "All queued files have been processed."
+msgstr "All queued files have been processed."
+
+msgid "Conversion"
+msgstr "Conversion"
+
+msgid "Editing"
+msgstr "Editing"
+
+msgid "Video Codec"
+msgstr "Video Codec"
+
+msgid "Image Quality"
+msgstr "Image Quality"
+
+msgid "GPU"
+msgstr "GPU"
+
+msgid "Speeds up conversion if supported"
+msgstr "Speeds up conversion if supported"
+
+msgid "GPU Device"
+msgstr "GPU Device"
+
+msgid "Select which GPU to use"
+msgstr "Select which GPU to use"
+
+msgid "Auto"
+msgstr "Auto"
+
+msgid "Output Format"
+msgstr "Output Format"
+
+msgid "Container format for output file"
+msgstr "Container format for output file"
+
+msgid "Copy without re-encoding"
+msgstr "Copy without re-encoding"
+
+msgid "Audio"
+msgstr "Audio"
+
+msgid "Subtitles"
+msgstr "Subtitles"
+
+msgid "Noise Cleaning (AI)"
+msgstr "Noise Cleaning (AI)"
+
+msgid "Remove background noise"
+msgstr "Remove background noise"
+
+msgid "Enable noise reduction"
+msgstr "Enable noise reduction"
+
+msgid "Strength"
+msgstr "Strength"
+
+msgid "0%"
+msgstr "0%"
+
+msgid "50%"
+msgstr "50%"
+
+msgid "100%"
+msgstr "100%"
+
+msgid "Maximum Cleaning"
+msgstr "Maximum Cleaning"
+
+msgid "Natural Voice"
+msgstr "Natural Voice"
+
+msgid "Smart (both combined)"
+msgstr "Smart (both combined)"
+
+msgid "AI Model"
+msgstr "AI Model"
+
+msgid "Speech Strength"
+msgstr "Speech Strength"
+
+msgid "Lookahead"
+msgstr "Lookahead"
+
+msgid "Voice Recovery"
+msgstr "Voice Recovery"
+
+msgid "75%"
+msgstr "75%"
+
+msgid "Noise Gate"
+msgstr "Noise Gate"
+
+msgid "Intensity"
+msgstr "Intensity"
+
+msgid "Compressor"
+msgstr "Compressor"
+
+msgid "Enable compressor"
+msgstr "Enable compressor"
+
+msgid "Remove Low Rumble"
+msgstr "Remove Low Rumble"
+
+msgid "Cuts low-frequency noise like wind or AC hum"
+msgstr "Cuts low-frequency noise like wind or AC hum"
+
+msgid "Frequency"
+msgstr "Frequency"
+
+msgid "Equalizer"
+msgstr "Equalizer"
+
+msgid "Enable equalizer"
+msgstr "Enable equalizer"
+
+msgid "Default Voice"
+msgstr "Default Voice"
+
+msgid "Natural (No Effects)"
+msgstr "Natural (No Effects)"
+
+msgid "Crystal Voice"
+msgstr "Crystal Voice"
+
+msgid "Radio Host"
+msgstr "Radio Host"
+
+msgid "Velvet Voice"
+msgstr "Velvet Voice"
+
+msgid "Extra Brightness"
+msgstr "Extra Brightness"
+
+msgid "Soften 'S' (De-esser)"
+msgstr "Soften 'S' (De-esser)"
+
+msgid "Remove Rumble"
+msgstr "Remove Rumble"
+
+msgid "Present Voice"
+msgstr "Present Voice"
+
+msgid "Preset"
+msgstr "Preset"
+
+msgid "Uniform Volume"
+msgstr "Uniform Volume"
+
+msgid "Normalizes volume to TV/streaming standard"
+msgstr "Normalizes volume to TV/streaming standard"
+
+msgid "Fast Copy"
+msgstr "Fast Copy"
+
+msgid "No re-encoding, fastest"
+msgstr "No re-encoding, fastest"
+
+msgid "Universal"
+msgstr "Universal"
+
+msgid "H.264, compatible with all devices"
+msgstr "H.264, compatible with all devices"
+
+msgid "Recommended"
+msgstr "Recommended"
+
+msgid "More Efficient"
+msgstr "More Efficient"
+
+msgid "H.265, better compression"
+msgstr "H.265, better compression"
+
+msgid "Smaller File"
+msgstr "Smaller File"
+
+msgid "AV1, best compression"
+msgstr "AV1, best compression"
+
+msgid "Customize encoding..."
+msgstr "Customize encoding..."
+
+msgid "Presets"
+msgstr "Presets"
+
+msgid "Audio Encoding"
+msgstr "Audio Encoding"
+
+msgid "Audio Settings"
+msgstr "Audio Settings"
+
+msgid "Extra"
+msgstr "Extra"
+
+msgid "SW Decode"
+msgstr "SW Decode"
+
+msgid "Ready-made recipes: YouTube, Instagram, editing…"
+msgstr "Ready-made recipes: YouTube, Instagram, editing…"
+
+msgid "Requires audio set to re-encode"
+msgstr "Requires audio set to re-encode"
+
+msgid "AI noise removal"
+msgstr "AI noise removal"
+
+msgid "gate"
+msgstr "gate"
+
+msgid "compressor"
+msgstr "compressor"
+
+msgid "low cut"
+msgstr "low cut"
+
+msgid "equalizer"
+msgstr "equalizer"
+
+msgid "normalize"
+msgstr "normalize"
+
+msgid "Disabled"
+msgstr "Disabled"
+
+msgid "Custom FFmpeg flags"
+msgstr "Custom FFmpeg flags"
+
+msgid "No customizations"
+msgstr "No customizations"
+
+msgid "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
+msgstr "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
+
+msgid "Audio Handling"
+msgstr "Audio Handling"
+
+msgid "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
+msgstr "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
+
+msgid "Audio Codec"
+msgstr "Audio Codec"
+
+msgid "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
+msgstr "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
+
+msgid "Audio Bitrate"
+msgstr "Audio Bitrate"
+
+msgid "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
+msgstr "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
+
+msgid "Custom bitrate"
+msgstr "Custom bitrate"
+
+msgid "Audio Channels"
+msgstr "Audio Channels"
+
+msgid "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
+msgstr "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
+
+msgid "Custom channels"
+msgstr "Custom channels"
+
+msgid "Edit file"
+msgstr "Edit file"
+
+msgid "Play file"
+msgstr "Play file"
+
+msgid "Remove from queue"
+msgstr "Remove from queue"
+
+msgid "Open Containing Folder"
+msgstr "Open Containing Folder"
+
+msgid "More Information..."
+msgstr "More Information..."
+
+msgid "Delete from Disk..."
+msgstr "Delete from Disk..."
+
+msgid "Delete File from Disk?"
+msgstr "Delete File from Disk?"
+
+#, python-brace-format
+msgid ""
+"Are you sure you want to permanently delete '{}'?\n"
+"\n"
+"This action cannot be undone."
+msgstr ""
+"Are you sure you want to permanently delete '{}'?\n"
+"\n"
+"This action cannot be undone."
+
+msgid "Delete"
+msgstr "Delete"
+
+msgid "Error Deleting File"
+msgstr "Error Deleting File"
+
+#, python-brace-format
+msgid "Could not delete file: {}"
+msgstr "Could not delete file: {}"
+
+msgid "OK"
+msgstr "OK"
+
+msgid "No Video Files"
+msgstr "No Video Files"
+
+msgid "Drag files here or use the Add Files button"
+msgstr "Drag files here or use the Add Files button"
+
+msgid "Save in the same folder as the original file"
+msgstr "Save in the same folder as the original file"
+
+msgid "Folder to save"
+msgstr "Folder to save"
+
+msgid "Select folder"
+msgstr "Select folder"
+
+msgid "Choose output folder"
+msgstr "Choose output folder"
+
+msgid "Delete original files"
+msgstr "Delete original files"
+
+msgid "Select the output folder"
+msgstr "Select the output folder"
+
+msgid "Could not open this video file"
+msgstr "Could not open this video file"
+
+msgid "Could not open the video file with the default player"
+msgstr "Could not open the video file with the default player"
+
+msgid "Could not find this video file"
+msgstr "Could not find this video file"
+
+msgid "These tracks can't be copied into MP4"
+msgstr "These tracks can't be copied into MP4"
+
+msgid "“Copy video without reencoding” keeps the original streams as they are, and the MP4 container does not accept the ones listed below."
+msgstr "“Copy video without reencoding” keeps the original streams as they are, and the MP4 container does not accept the ones listed below."
+
+msgid "Reencode (recommended)"
+msgstr "Reencode (recommended)"
+
+msgid "Copy anyway"
+msgstr "Copy anyway"
+
+msgid "Incompatible tracks"
+msgstr "Incompatible tracks"
+
+msgid "Unknown codec"
+msgstr "Unknown codec"
+
+#, python-brace-format
+msgid "Video track {0}"
+msgstr "Video track {0}"
+
+#, python-brace-format
+msgid "Audio track {0}"
+msgstr "Audio track {0}"
+
+msgid "not supported by MP4"
+msgstr "not supported by MP4"
+
+msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
+msgstr "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
+
+msgid "Required Dependencies"
+msgstr "Required Dependencies"
+
+msgid "Installation Required"
+msgstr "Installation Required"
+
+msgid "FFmpeg and MPV are required for this application to function."
+msgstr "FFmpeg and MPV are required for this application to function."
+
+msgid "FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, they are not bundled."
+msgstr "FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, they are not bundled."
+
+msgid "Command to be executed"
+msgstr "Command to be executed"
+
+msgid ""
+"<b>Administrator privileges required</b>\n"
+"You will be asked for your password to install system packages."
+msgstr ""
+"<b>Administrator privileges required</b>\n"
+"You will be asked for your password to install system packages."
+
+msgid "Installation Output"
+msgstr "Installation Output"
+
+msgid "Install Dependencies"
+msgstr "Install Dependencies"
+
+msgid "Close"
+msgstr "Close"
+
+msgid ""
+"Starting installation...\n"
+"\n"
+msgstr ""
+"Starting installation...\n"
+"\n"
+
+msgid "Error running command"
+msgstr "Error running command"
+
+msgid "Pre-command completed successfully."
+msgstr "Pre-command completed successfully."
+
+msgid "Installation completed successfully!"
+msgstr "Installation completed successfully!"
+
+msgid "Command failed with exit code"
+msgstr "Command failed with exit code"
+
+msgid "Please restart the application."
+msgstr "Please restart the application."
+
+msgid "Installation failed."
+msgstr "Installation failed."
+
+msgid "Please check the errors above and try again."
+msgstr "Please check the errors above and try again."
+
+msgid "Additional options for advanced users. The defaults work well for most cases."
+msgstr "Additional options for advanced users. The defaults work well for most cases."
+
+msgid "e.g.: -ss 60 -t 30"
+msgstr "e.g.: -ss 60 -t 30"
+
+msgid "Additional FFmpeg Options"
+msgstr "Additional FFmpeg Options"
+
+msgid "Custom flags passed directly to FFmpeg. Example: '-ss 60 -t 30' to convert only 30 seconds starting at 1 minute."
+msgstr "Custom flags passed directly to FFmpeg. Example: '-ss 60 -t 30' to convert only 30 seconds starting at 1 minute."
+
+msgid "Video Preview Rendering"
+msgstr "Video Preview Rendering"
+
+msgid "How the video editor preview is rendered. 'Automatic' works best for most systems. Try 'Software' if you see display issues. Requires restart."
+msgstr "How the video editor preview is rendered. 'Automatic' works best for most systems. Try 'Software' if you see display issues. Requires restart."
+
+msgid "Export Profile"
+msgstr "Export Profile"
+
+msgid "Import Profile"
+msgstr "Import Profile"
+
+msgid "Export / Import Profile"
+msgstr "Export / Import Profile"
+
+msgid "Save your current conversion settings to a file or load settings from a previously exported profile."
+msgstr "Save your current conversion settings to a file or load settings from a previously exported profile."
+
+msgid "Reset All Settings"
+msgstr "Reset All Settings"
+
+msgid "Restore all options to their default values. This cannot be undone."
+msgstr "Restore all options to their default values. This cannot be undone."
+
+msgid "Profile files (*.json)"
+msgstr "Profile files (*.json)"
+
+msgid "Profile Exported"
+msgstr "Profile Exported"
+
+#, python-brace-format
+msgid ""
+"Settings saved to:\n"
+"{}"
+msgstr ""
+"Settings saved to:\n"
+"{}"
+
+msgid "Export Failed"
+msgstr "Export Failed"
+
+msgid "Could not save the profile file."
+msgstr "Could not save the profile file."
+
+msgid "Profile Imported"
+msgstr "Profile Imported"
+
+#, python-brace-format
+msgid ""
+"Settings loaded from:\n"
+"{}"
+msgstr ""
+"Settings loaded from:\n"
+"{}"
+
+msgid "Import Failed"
+msgstr "Import Failed"
+
+msgid "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
+msgstr "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
+
+msgid "Back"
+msgstr "Back"
+
+msgid "Clear queue"
+msgstr "Clear queue"
+
+msgid "0 files"
+msgstr "0 files"
+
+msgid "Add Files"
+msgstr "Add Files"
+
+msgid "Add Folder"
+msgstr "Add Folder"
+
+msgid "Convert All"
+msgstr "Convert All"
+
+msgid "Convert This File"
+msgstr "Convert This File"
+
+msgid "Main menu"
+msgstr "Main menu"
+
+msgid "Welcome Screen"
+msgstr "Welcome Screen"
+
+msgid "Restore Settings"
+msgstr "Restore Settings"
+
+msgid "About"
+msgstr "About"
+
+msgid "Quit"
+msgstr "Quit"
+
+msgid "1 file"
+msgstr "1 file"
+
+#, python-brace-format
+msgid "{} files"
+msgstr "{} files"
+
+msgid "Improve your audio by removing noise, controlling volume and enhancing voice clarity."
+msgstr "Improve your audio by removing noise, controlling volume and enhancing voice clarity."
+
+msgid "AI Noise Cleaning"
+msgstr "AI Noise Cleaning"
+
+msgid "Remove Background Noise"
+msgstr "Remove Background Noise"
+
+msgid "Uses a neural network to separate voice from noise. Strength controls how aggressively noise is removed."
+msgstr "Uses a neural network to separate voice from noise. Strength controls how aggressively noise is removed."
+
+msgid "Lookahead (ms)"
+msgstr "Lookahead (ms)"
+
+msgid "Silence Low Sounds"
+msgstr "Silence Low Sounds"
+
+msgid "Mutes audio below a threshold — great for removing faint hum or room noise between speech."
+msgstr "Mutes audio below a threshold — great for removing faint hum or room noise between speech."
+
+msgid "Audio Enhancement"
+msgstr "Audio Enhancement"
+
+msgid "Cuts low-frequency noise like wind, air conditioning or handling vibrations."
+msgstr "Cuts low-frequency noise like wind, air conditioning or handling vibrations."
+
+msgid "Frequency (Hz)"
+msgstr "Frequency (Hz)"
+
+msgid "Adjusts the volume so the entire video sounds consistent, following TV and streaming standards."
+msgstr "Adjusts the volume so the entire video sounds consistent, following TV and streaming standards."
+
+msgid "Reduces loud peaks and raises quiet parts, making the overall volume more consistent."
+msgstr "Reduces loud peaks and raises quiet parts, making the overall volume more consistent."
+
+msgid "Shape the sound spectrum: boost clarity, cut rumble or apply ready-made presets like Podcast or De-esser."
+msgstr "Shape the sound spectrum: boost clarity, cut rumble or apply ready-made presets like Podcast or De-esser."
+
+msgid "Copy"
+msgstr "Copy"
+
+msgid "In use"
+msgstr "In use"
+
+msgid "Bundled"
+msgstr "Bundled"
+
+msgid "Yours"
+msgstr "Yours"
+
+msgid "Click to use this preset"
+msgstr "Click to use this preset"
+
+msgid "Create with AI…"
+msgstr "Create with AI…"
+
+msgid "Import file…"
+msgstr "Import file…"
+
+msgid "Paste from clipboard"
+msgstr "Paste from clipboard"
+
+msgid "Open presets folder"
+msgstr "Open presets folder"
+
+msgid "Add a preset"
+msgstr "Add a preset"
+
+msgid "Search by name, tag or codec…"
+msgstr "Search by name, tag or codec…"
+
+msgid "No presets"
+msgstr "No presets"
+
+msgid "Import a file, paste one from the clipboard or create one with AI."
+msgstr "Import a file, paste one from the clipboard or create one with AI."
+
+#, python-brace-format
+msgid "Ignored invalid preset file(s): {0}"
+msgstr "Ignored invalid preset file(s): {0}"
+
+msgid "Details"
+msgstr "Details"
+
+#, python-brace-format
+msgid "Could not apply the preset: {0}"
+msgstr "Could not apply the preset: {0}"
+
+#, python-brace-format
+msgid "Preset “{0}” is now in use."
+msgstr "Preset “{0}” is now in use."
+
+msgid "Duplicate for editing"
+msgstr "Duplicate for editing"
+
+msgid "Export…"
+msgstr "Export…"
+
+msgid "Open in text editor"
+msgstr "Open in text editor"
+
+#, python-brace-format
+msgid "Saved as “{0}”. Edit it in {1}"
+msgstr "Saved as “{0}”. Edit it in {1}"
+
+#, python-brace-format
+msgid "Preset “{0}” deleted."
+msgstr "Preset “{0}” deleted."
+
+msgid "Export Preset"
+msgstr "Export Preset"
+
+#, python-brace-format
+msgid "Preset exported to {0}"
+msgstr "Preset exported to {0}"
+
+msgid "Import Preset"
+msgstr "Import Preset"
+
+msgid "Preset files (*.toml)"
+msgstr "Preset files (*.toml)"
+
+#, python-brace-format
+msgid "The preset was not imported: {0}"
+msgstr "The preset was not imported: {0}"
+
+#, python-brace-format
+msgid "Preset “{0}” imported."
+msgstr "Preset “{0}” imported."
+
+msgid "Invalid preset files"
+msgstr "Invalid preset files"
+
+msgid "Create a preset with AI"
+msgstr "Create a preset with AI"
+
+msgid "Describe what you need in your own words. The program turns it into a prompt that any online AI assistant understands, with the exact preset format and the encoders available on this computer. Paste the assistant's answer back here."
+msgstr "Describe what you need in your own words. The program turns it into a prompt that any online AI assistant understands, with the exact preset format and the encoders available on this computer. Paste the assistant's answer back here."
+
+msgid "1. What should the preset do?"
+msgstr "1. What should the preset do?"
+
+msgid "Example: “Vertical videos for TikTok, under 50 MB per minute, loud clear voice.”"
+msgstr "Example: “Vertical videos for TikTok, under 50 MB per minute, loud clear voice.”"
+
+msgid "Copy prompt"
+msgstr "Copy prompt"
+
+msgid "Then paste it into ChatGPT, Gemini, Claude, Copilot or any other assistant."
+msgstr "Then paste it into ChatGPT, Gemini, Claude, Copilot or any other assistant."
+
+msgid "2. Paste the assistant's answer"
+msgstr "2. Paste the assistant's answer"
+
+msgid "Save preset"
+msgstr "Save preset"
+
+msgid "Prompt copied. Paste it into your AI assistant."
+msgstr "Prompt copied. Paste it into your AI assistant."
+
+#, python-brace-format
+msgid "The preset was not saved: {0}"
+msgstr "The preset was not saved: {0}"
+
+#, python-brace-format
+msgid "Saved as “{0}” in {1}"
+msgstr "Saved as “{0}” in {1}"
+
+msgid "Converting Videos"
+msgstr "Converting Videos"
+
+msgid "Cancel All"
+msgstr "Cancel All"
+
+msgid "Completed"
+msgstr "Completed"
+
+msgid "Completed!"
+msgstr "Completed!"
+
+#, python-brace-format
+msgid "All {} videos converted successfully!"
+msgstr "All {} videos converted successfully!"
+
+#, python-brace-format
+msgid "{} completed, {} failed, {} cancelled"
+msgstr "{} completed, {} failed, {} cancelled"
+
+msgid "All conversions failed or were cancelled"
+msgstr "All conversions failed or were cancelled"
+
+msgid "Cancel All Conversions?"
+msgstr "Cancel All Conversions?"
+
+msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
+msgstr "This will stop all active conversions and skip all pending items. This action cannot be undone."
+
+msgid "Unknown file"
+msgstr "Unknown file"
+
+msgid "Waiting in queue"
+msgstr "Waiting in queue"
+
+msgid "FFmpeg Command"
+msgstr "FFmpeg Command"
+
+msgid "Process Output"
+msgstr "Process Output"
+
+msgid "Converting..."
+msgstr "Converting..."
+
+msgid "Converting"
+msgstr "Converting"
+
+#, python-brace-format
+msgid "{mins}m {secs}s"
+msgstr "{mins}m {secs}s"
+
+#, python-brace-format
+msgid "{secs}s"
+msgstr "{secs}s"
+
+msgid "Failed"
+msgstr "Failed"
+
+msgid "Cancelled"
+msgstr "Cancelled"
+
+msgid "Encoding Settings"
+msgstr "Encoding Settings"
+
+msgid "GPU partial mode"
+msgstr "GPU partial mode"
+
+msgid "Decode using CPU, encode using GPU"
+msgstr "Decode using CPU, encode using GPU"
+
+msgid "Compression preset"
+msgstr "Compression preset"
+
+msgid "Speed vs compression ratio"
+msgstr "Speed vs compression ratio"
+
+msgid "Video resolution"
+msgstr "Video resolution"
+
+msgid "Select output resolution"
+msgstr "Select output resolution"
+
+msgid "Custom resolution"
+msgstr "Custom resolution"
+
+msgid "Ex: 1280x720, 1920x1080"
+msgstr "Ex: 1280x720, 1920x1080"
+
+msgid "Default"
+msgstr "Default"
+
+msgid "Audio bitrate"
+msgstr "Audio bitrate"
+
+msgid "Select common bitrate or enter custom value"
+msgstr "Select common bitrate or enter custom value"
+
+msgid "Ex: 128k, 192k, 256k"
+msgstr "Ex: 128k, 192k, 256k"
+
+msgid "Audio channels"
+msgstr "Audio channels"
+
+msgid "Select common channel configuration"
+msgstr "Select common channel configuration"
+
+msgid "Ex: 2 (stereo), 6 (5.1)"
+msgstr "Ex: 2 (stereo), 6 (5.1)"
+
+msgid "Audio codec"
+msgstr "Audio codec"
+
+msgid "Codec to use when re-encoding audio"
+msgstr "Codec to use when re-encoding audio"
+
+msgid "General Options"
+msgstr "General Options"
+
+msgid "Additional FFmpeg options"
+msgstr "Additional FFmpeg options"
+
+msgid "Ex: -ss 60 -t 30"
+msgstr "Ex: -ss 60 -t 30"
+
+msgid "Only extract subtitles"
+msgstr "Only extract subtitles"
+
+msgid "Extract subtitles to .srt files"
+msgstr "Extract subtitles to .srt files"
+
+msgid "Automatic"
+msgstr "Automatic"
+
+msgid "OpenGL (hardware accelerated)"
+msgstr "OpenGL (hardware accelerated)"
+
+msgid "Software (compatible mode)"
+msgstr "Software (compatible mode)"
+
+msgid "Video preview rendering"
+msgstr "Video preview rendering"
+
+msgid "Rendering mode for video editor preview. Restart required to apply."
+msgstr "Rendering mode for video editor preview. Restart required to apply."
+
+msgid "Restart Required"
+msgstr "Restart Required"
+
+msgid ""
+"The video preview rendering mode has been changed.\n"
+"\n"
+"Please close and reopen the application for the change to take effect."
+msgstr ""
+"The video preview rendering mode has been changed.\n"
+"\n"
+"Please close and reopen the application for the change to take effect."
+
+msgid "Reset All Settings?"
+msgstr "Reset All Settings?"
+
+msgid "This will reset all settings to their default values. This action cannot be undone."
+msgstr "This will reset all settings to their default values. This action cannot be undone."
+
+msgid "Reset"
+msgstr "Reset"
+
+msgid "Settings Reset"
+msgstr "Settings Reset"
+
+msgid "All settings have been reset to their default values."
+msgstr "All settings have been reset to their default values."
+
+msgid "Configure how subtitles are handled during conversion."
+msgstr "Configure how subtitles are handled during conversion."
+
+msgid "Subtitle Handling"
+msgstr "Subtitle Handling"
+
+msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
+msgstr "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
+
+msgid "Only Extract Subtitles"
+msgstr "Only Extract Subtitles"
+
+msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
+msgstr "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
+
+#, python-brace-format
+msgid "Segment {num}: {start} → {end}"
+msgstr "Segment {num}: {start} → {end}"
+
+#, python-brace-format
+msgid "Duration: {duration}"
+msgstr "Duration: {duration}"
+
+msgid "Go to segment start"
+msgstr "Go to segment start"
+
+msgid "Edit segment times"
+msgstr "Edit segment times"
+
+msgid "Remove segment"
+msgstr "Remove segment"
+
+msgid "Edit Segment"
+msgstr "Edit Segment"
+
+msgid "Edit start and end times for this segment"
+msgstr "Edit start and end times for this segment"
+
+msgid "Start Time:"
+msgstr "Start Time:"
+
+msgid "End Time:"
+msgstr "End Time:"
+
+msgid "Save"
+msgstr "Save"
+
+msgid "Invalid Time"
+msgstr "Invalid Time"
+
+msgid "Time values cannot be negative"
+msgstr "Time values cannot be negative"
+
+msgid "Invalid Time Range"
+msgstr "Invalid Time Range"
+
+msgid "Start time must be before end time"
+msgstr "Start time must be before end time"
+
+msgid "Clear All Segments?"
+msgstr "Clear All Segments?"
+
+msgid "This will remove all trim segments. This action cannot be undone."
+msgstr "This will remove all trim segments. This action cannot be undone."
+
+msgid "Clear All"
+msgstr "Clear All"
+
+msgid "Add Segment Manually"
+msgstr "Add Segment Manually"
+
+msgid "Enter start and end times for the new segment"
+msgstr "Enter start and end times for the new segment"
+
+msgid "Add Segment"
+msgstr "Add Segment"
+
+#, python-brace-format
+msgid "Frame: {current}/{total}"
+msgstr "Frame: {current}/{total}"
+
+msgid "Mark segment point"
+msgstr "Mark segment point"
+
+msgid "Cancel current mark"
+msgstr "Cancel current mark"
+
+msgid "Back 1 second (Left)"
+msgstr "Back 1 second (Left)"
+
+msgid "Back 1 second"
+msgstr "Back 1 second"
+
+msgid "Previous frame (,)"
+msgstr "Previous frame (,)"
+
+msgid "Previous frame"
+msgstr "Previous frame"
+
+msgid "Play/Pause (Space)"
+msgstr "Play/Pause (Space)"
+
+msgid "Play/Pause"
+msgstr "Play/Pause"
+
+msgid "Next frame (.)"
+msgstr "Next frame (.)"
+
+msgid "Next frame"
+msgstr "Next frame"
+
+msgid "Forward 1 second (Right)"
+msgstr "Forward 1 second (Right)"
+
+msgid "Forward 1 second"
+msgstr "Forward 1 second"
+
+msgid "Playback Speed"
+msgstr "Playback Speed"
+
+msgid "Audio Track"
+msgstr "Audio Track"
+
+msgid "Toggle Fullscreen"
+msgstr "Toggle Fullscreen"
+
+#, python-brace-format
+msgid "Frame: {current} / {total}"
+msgstr "Frame: {current} / {total}"
+
+msgid "Left"
+msgstr "Left"
+
+msgid "Right"
+msgstr "Right"
+
+msgid "Top"
+msgstr "Top"
+
+msgid "Bottom"
+msgstr "Bottom"
+
+msgid "Visual crop editor"
+msgstr "Visual crop editor"
+
+msgid "Resolution:"
+msgstr "Resolution:"
+
+msgid "Codec:"
+msgstr "Codec:"
+
+msgid "Size:"
+msgstr "Size:"
+
+msgid "Duration:"
+msgstr "Duration:"
+
+msgid "Volume"
+msgstr "Volume"
+
+msgid "Brightness"
+msgstr "Brightness"
+
+msgid "Saturation"
+msgstr "Saturation"
+
+msgid "Hue"
+msgstr "Hue"
+
+msgid "Transform"
+msgstr "Transform"
+
+msgid "Rotate 90° Left"
+msgstr "Rotate 90° Left"
+
+msgid "Rotate 90° Right"
+msgstr "Rotate 90° Right"
+
+msgid "Flip Horizontal"
+msgstr "Flip Horizontal"
+
+msgid "Flip Vertical"
+msgstr "Flip Vertical"
+
+msgid "Reset Transform"
+msgstr "Reset Transform"
+
+msgid "Trim Segments"
+msgstr "Trim Segments"
+
+msgid "Segments List"
+msgstr "Segments List"
+
+msgid "Press M or use the mark button to add segments"
+msgstr "Press M or use the mark button to add segments"
+
+msgid "Add segment manually"
+msgstr "Add segment manually"
+
+msgid "Clear all segments"
+msgstr "Clear all segments"
+
+msgid "Join segments into a single file"
+msgstr "Join segments into a single file"
+
+msgid "Save each segment as a separate file"
+msgstr "Save each segment as a separate file"
+
+msgid "Reset to default"
+msgstr "Reset to default"
+
+msgid "Video Encoding"
+msgstr "Video Encoding"
+
+msgid "Configure how your video will be encoded. The defaults work well for most cases."
+msgstr "Configure how your video will be encoded. The defaults work well for most cases."
+
+msgid "The container that holds audio and video. MP4 is the most compatible. MKV supports all codecs."
+msgstr "The container that holds audio and video. MP4 is the most compatible. MKV supports all codecs."
+
+msgid "Choose the compression format. H.264 is the most compatible. H.265 and AV1 produce smaller files but need more processing power."
+msgstr "Choose the compression format. H.264 is the most compatible. H.265 and AV1 produce smaller files but need more processing power."
+
+msgid "Higher quality keeps more detail but creates larger files. 'Good' is a balanced choice for most videos."
+msgstr "Higher quality keeps more detail but creates larger files. 'Good' is a balanced choice for most videos."
+
+msgid "Output Resolution"
+msgstr "Output Resolution"
+
+msgid "Increasing beyond the original resolution does not improve quality. Reducing the resolution creates smaller files."
+msgstr "Increasing beyond the original resolution does not improve quality. Reducing the resolution creates smaller files."
+
+msgid "Conversion Speed"
+msgstr "Conversion Speed"
+
+msgid "Slower conversion produces smaller files. Faster presets create larger files but finish sooner."
+msgstr "Slower conversion produces smaller files. Faster presets create larger files but finish sooner."
+
+msgid "GPU Acceleration"
+msgstr "GPU Acceleration"
+
+msgid "Use your graphics card to speed up encoding. 'Auto' detects the best option. Disable if you experience issues."
+msgstr "Use your graphics card to speed up encoding. 'Auto' detects the best option. Disable if you experience issues."
+
+msgid "Select which graphics card to use for encoding when multiple GPUs are available."
+msgstr "Select which graphics card to use for encoding when multiple GPUs are available."
+
+msgid "Decode Using Software"
+msgstr "Decode Using Software"
+
+msgid "Decode on CPU and only encode on GPU. Enable this if GPU decoding causes errors or artifacts."
+msgstr "Decode on CPU and only encode on GPU. Enable this if GPU decoding causes errors or artifacts."
+
+msgid "Change the video size. 'Original' keeps it as-is. Lower resolutions create smaller files."
+msgstr "Change the video size. 'Original' keeps it as-is. Lower resolutions create smaller files."
+
+msgid "Video Options"
+msgstr "Video Options"
+
+msgid "Choose how your video will be encoded. The defaults work well for most cases."
+msgstr "Choose how your video will be encoded. The defaults work well for most cases."
+
+msgid "The video metadata could not be read"
+msgstr "The video metadata could not be read"
+
+msgid "Welcome to Big Video Converter"
+msgstr "Welcome to Big Video Converter"
+
+msgid "Convert Video Formats"
+msgstr "Convert Video Formats"
+
+msgid ""
+"MP4, MKV, AVI, WebM and many more\n"
+"with hardware acceleration support"
+msgstr ""
+"MP4, MKV, AVI, WebM and many more\n"
+"with hardware acceleration support"
+
+msgid "Trim and Cut Videos"
+msgstr "Trim and Cut Videos"
+
+msgid ""
+"Select specific segments to keep\n"
+"and create new videos with only those parts"
+msgstr ""
+"Select specific segments to keep\n"
+"and create new videos with only those parts"
+
+msgid "Video Color Adjustments"
+msgstr "Video Color Adjustments"
+
+msgid ""
+"Control brightness, saturation, and hue\n"
+"to enhance your videos"
+msgstr ""
+"Control brightness, saturation, and hue\n"
+"to enhance your videos"
+
+msgid "Fast Copy Mode"
+msgstr "Fast Copy Mode"
+
+msgid ""
+"Change container format without re-encoding\n"
+"for ultra-fast processing with no quality loss"
+msgstr ""
+"Change container format without re-encoding\n"
+"for ultra-fast processing with no quality loss"
+
+msgid "Crop Videos"
+msgstr "Crop Videos"
+
+msgid ""
+"Remove unwanted areas from edges\n"
+"to focus on what matters"
+msgstr ""
+"Remove unwanted areas from edges\n"
+"to focus on what matters"
+
+msgid "Audio Control"
+msgstr "Audio Control"
+
+msgid ""
+"Extract, copy, or re-encode audio\n"
+"with multiple codec options"
+msgstr ""
+"Extract, copy, or re-encode audio\n"
+"with multiple codec options"
+
+msgid "Subtitle Management"
+msgstr "Subtitle Management"
+
+msgid ""
+"Extract subtitles to SRT files\n"
+"or keep them embedded in video"
+msgstr ""
+"Extract subtitles to SRT files\n"
+"or keep them embedded in video"
+
+msgid "Batch Processing"
+msgstr "Batch Processing"
+
+msgid ""
+"Convert multiple videos at once\n"
+"with queue management"
+msgstr ""
+"Convert multiple videos at once\n"
+"with queue management"
+
+msgid "Show dialog on startup"
+msgstr "Show dialog on startup"
+
+msgid "Let's Start"
+msgstr "Let's Start"
+
+msgid "There is no space left on the disk."
+msgstr "There is no space left on the disk."
+
+msgid "Permission denied — check file/folder permissions."
+msgstr "Permission denied — check file/folder permissions."
+
+msgid "File or folder not found."
+msgstr "File or folder not found."
+
+msgid "The file appears to be corrupted or in an unsupported format."
+msgstr "The file appears to be corrupted or in an unsupported format."
+
+msgid "A track of this file cannot be stored in the chosen container. Try MKV."
+msgstr "A track of this file cannot be stored in the chosen container. Try MKV."
+
+msgid "This codec is not supported on your system."
+msgstr "This codec is not supported on your system."
+
+msgid "A required decoder is not installed."
+msgstr "A required decoder is not installed."
+
+msgid "A required encoder is not installed."
+msgstr "A required encoder is not installed."
+
+msgid "Failed to initialize the encoder — the selected settings may be incompatible."
+msgstr "Failed to initialize the encoder — the selected settings may be incompatible."
+
+msgid "Hardware acceleration failed. Try disabling GPU encoding."
+msgstr "Hardware acceleration failed. Try disabling GPU encoding."
+
+msgid "Not enough memory to complete the conversion."
+msgstr "Not enough memory to complete the conversion."
+
+msgid "The file does not contain a valid media stream."
+msgstr "The file does not contain a valid media stream."
+
+msgid "The video file is incomplete or damaged (missing metadata)."
+msgstr "The video file is incomplete or damaged (missing metadata)."
+
+msgid "Could not decode the file — it may be corrupted."
+msgstr "Could not decode the file — it may be corrupted."
+
+msgid "The conversion command was built incorrectly. Please report this problem."
+msgstr "The conversion command was built incorrectly. Please report this problem."
+
+msgid "FFmpeg rejected the conversion command. Check the additional options."
+msgstr "FFmpeg rejected the conversion command. Check the additional options."
+
+msgid "The GPU could not be opened. Try disabling GPU encoding."
+msgstr "The GPU could not be opened. Try disabling GPU encoding."
+
+msgid "The encoder stopped making progress and was terminated."
+msgstr "The encoder stopped making progress and was terminated."
+
+msgid "The conversion finished without producing a file."
+msgstr "The conversion finished without producing a file."
+
+#, python-brace-format
+msgid "Conversion failed with code {0}"
+msgstr "Conversion failed with code {0}"
+
+#, python-brace-format
+msgid "Error starting conversion: {0}"
+msgstr "Error starting conversion: {0}"
+
+msgid "Preparing…"
+msgstr "Preparing…"
+
+msgid "Extracting subtitles…"
+msgstr "Extracting subtitles…"
+
+msgid "Checking the GPU encoder…"
+msgstr "Checking the GPU encoder…"
+
+msgid "GPU unavailable, using the processor"
+msgstr "GPU unavailable, using the processor"
+
+msgid "Copying without re-encoding"
+msgstr "Copying without re-encoding"
+
+msgid "Full GPU acceleration"
+msgstr "Full GPU acceleration"
+
+msgid "Software Decoding and GPU encoding"
+msgstr "Software Decoding and GPU encoding"
+
+msgid "Software encoding"
+msgstr "Software encoding"
+
+msgid "Improving audio quality"
+msgstr "Improving audio quality"
+
+msgid "Starting process..."
+msgstr "Starting process..."
+
+msgid "No progress detected. Process may be stuck."
+msgstr "No progress detected. Process may be stuck."
+
+msgid "Checking output file..."
+msgstr "Checking output file..."
+
+msgid "Conversion Complete"
+msgstr "Conversion Complete"
+
+msgid "Conversion completed successfully!"
+msgstr "Conversion completed successfully!"
+
+#, python-brace-format
+msgid "The conversion failed with error code {0}."
+msgstr "The conversion failed with error code {0}."
+
+#, python-brace-format
+msgid "Additional options could not be parsed: {0}"
+msgstr "Additional options could not be parsed: {0}"
+
+#, python-brace-format
+msgid "The FFmpeg option “{0}” is not allowed. Remove it from the additional options to continue."
+msgstr "The FFmpeg option “{0}” is not allowed. Remove it from the additional options to continue."
+
+#, python-brace-format
+msgid "Additional options contain characters that are not allowed: {0}"
+msgstr "Additional options contain characters that are not allowed: {0}"
+
+msgid "File Information"
+msgstr "File Information"
+
+msgid "Analyzing video file..."
+msgstr "Analyzing video file..."
+
+msgid "Could not retrieve file information."
+msgstr "Could not retrieve file information."
+
+msgid "Video Streams"
+msgstr "Video Streams"
+
+msgid "Audio Streams"
+msgstr "Audio Streams"
+
+msgid "General Information"
+msgstr "General Information"
+
+msgid "File Name"
+msgstr "File Name"
+
+msgid "Copy file name"
+msgstr "Copy file name"
+
+msgid "Location"
+msgstr "Location"
+
+msgid "Open containing folder"
+msgstr "Open containing folder"
+
+msgid "File Size"
+msgstr "File Size"
+
+msgid "Copy file size"
+msgstr "Copy file size"
+
+msgid "Duration"
+msgstr "Duration"
+
+msgid "Copy duration"
+msgstr "Copy duration"
+
+msgid "Format"
+msgstr "Format"
+
+msgid "Copy format"
+msgstr "Copy format"
+
+msgid "Bitrate"
+msgstr "Bitrate"
+
+msgid "Copy bitrate"
+msgstr "Copy bitrate"
+
+msgid "Codec"
+msgstr "Codec"
+
+msgid "Copy codec"
+msgstr "Copy codec"
+
+msgid "Resolution"
+msgstr "Resolution"
+
+msgid "Copy resolution"
+msgstr "Copy resolution"
+
+msgid "Frame Rate"
+msgstr "Frame Rate"
+
+msgid "Copy frame rate"
+msgstr "Copy frame rate"
+
+msgid "Pixel Format"
+msgstr "Pixel Format"
+
+msgid "Copy pixel format"
+msgstr "Copy pixel format"
+
+msgid "Language"
+msgstr "Language"
+
+msgid "Copy language code"
+msgstr "Copy language code"
+
+msgid "Sample Rate"
+msgstr "Sample Rate"
+
+msgid "Copy sample rate"
+msgstr "Copy sample rate"
+
+msgid "CD Quality"
+msgstr "CD Quality"
+
+msgid "Hi-Res Audio"
+msgstr "Hi-Res Audio"
+
+msgid "(Mono)"
+msgstr "(Mono)"
+
+msgid "(Stereo)"
+msgstr "(Stereo)"
+
+msgid "(5.1 Surround)"
+msgstr "(5.1 Surround)"
+
+msgid "(7.1 Surround)"
+msgstr "(7.1 Surround)"
+
+msgid "Channels"
+msgstr "Channels"
+
+msgid "Copy channels"
+msgstr "Copy channels"
+
+msgid "Copy value"
+msgstr "Copy value"
+
+msgid "Format Details"
+msgstr "Format Details"
+
+msgid "Bitrate (bps)"
+msgstr "Bitrate (bps)"
+
+msgid "Detection Score"
+msgstr "Detection Score"
+
+msgid "Metadata"
+msgstr "Metadata"
+
+msgid "Error retrieving file information"
+msgstr "Error retrieving file information"
+
+msgid "Retry"
+msgstr "Retry"
+
+msgid "Copy video"
+msgstr "Copy video"
+
+msgid "The preset text is empty or too large."
+msgstr "The preset text is empty or too large."
+
+#, python-brace-format
+msgid "The preset is not valid TOML: {0}"
+msgstr "The preset is not valid TOML: {0}"
+
+msgid "The preset must be a TOML table."
+msgstr "The preset must be a TOML table."
+
+#, python-brace-format
+msgid "[{0}] must be a table."
+msgstr "[{0}] must be a table."
+
+#, python-brace-format
+msgid "[{0}] {1} is required."
+msgstr "[{0}] {1} is required."
+
+#, python-brace-format
+msgid "[{0}] {1} must be one of: {2}"
+msgstr "[{0}] {1} must be one of: {2}"
+
+#, python-brace-format
+msgid "[{0}] {1} must be a short text."
+msgstr "[{0}] {1} must be a short text."
+
+#, python-brace-format
+msgid "[{0}] {1} must be a whole number between {2} and {3}."
+msgstr "[{0}] {1} must be a whole number between {2} and {3}."
+
+#, python-brace-format
+msgid "[{0}] {1} must be true or false."
+msgstr "[{0}] {1} must be true or false."
+
+#, python-brace-format
+msgid "[{0}] {1}: {2}"
+msgstr "[{0}] {1}: {2}"
+
+#, python-brace-format
+msgid "[encoder.{0}] must be a table with an args list."
+msgstr "[encoder.{0}] must be a table with an args list."
+
+#, python-brace-format
+msgid "[encoder.{0}] args must be a list of strings."
+msgstr "[encoder.{0}] args must be a list of strings."
+
+#, python-brace-format
+msgid "[encoder.{0}] has too many arguments."
+msgstr "[encoder.{0}] has too many arguments."
+
+#, python-brace-format
+msgid "[encoder.{0}]: {1}"
+msgstr "[encoder.{0}]: {1}"
+
+#, python-brace-format
+msgid "Unsupported preset format {0}; this version reads format {1}."
+msgstr "Unsupported preset format {0}; this version reads format {1}."
+
+#, python-brace-format
+msgid "Unknown section(s): {0}"
+msgstr "Unknown section(s): {0}"
+
+msgid "[preset] name is required."
+msgstr "[preset] name is required."
+
+msgid "[preset] tags must be a list of short words."
+msgstr "[preset] tags must be a list of short words."
+
+msgid "[video] resolution must look like 1920x1080."
+msgstr "[video] resolution must look like 1920x1080."
+
+msgid "[video] fps must be a number between 1 and 300."
+msgstr "[video] fps must be a number between 1 and 300."
+
+msgid "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
+msgstr "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
+
+#, python-brace-format
+msgid "[video] has unknown key(s): {0}"
+msgstr "[video] has unknown key(s): {0}"
+
+msgid "[audio] bitrate must look like 192k."
+msgstr "[audio] bitrate must look like 192k."
+
+#, python-brace-format
+msgid "[audio] has unknown key(s): {0}"
+msgstr "[audio] has unknown key(s): {0}"
+
+#, python-brace-format
+msgid "[subtitles] has unknown key(s): {0}"
+msgstr "[subtitles] has unknown key(s): {0}"
+
+#, python-brace-format
+msgid "[container] has unknown key(s): {0}"
+msgstr "[container] has unknown key(s): {0}"
+
+#, python-brace-format
+msgid "[ffmpeg] has unknown key(s): {0}"
+msgstr "[ffmpeg] has unknown key(s): {0}"
+
+#, python-brace-format
+msgid "[encoder.{0}] is not an encoder name."
+msgstr "[encoder.{0}] is not an encoder name."
+
+msgid "A preset that copies the video cannot carry encoder arguments."
+msgstr "A preset that copies the video cannot carry encoder arguments."
+
+#, python-brace-format
+msgid "Invalid preset identifier: {0}"
+msgstr "Invalid preset identifier: {0}"
+
+#, python-brace-format
+msgid "Could not read the preset: {0}"
+msgstr "Could not read the preset: {0}"
+
+msgid "The preset is not UTF-8 text."
+msgstr "The preset is not UTF-8 text."
+
+msgid "Bundled presets cannot be deleted; duplicate one to edit it."
+msgstr "Bundled presets cannot be deleted; duplicate one to edit it."
+
+#, python-brace-format
+msgid "{0} (copy)"
+msgstr "{0} (copy)"
+
+#, python-brace-format
+msgid "All {0} segments have been joined successfully!"
+msgstr "All {0} segments have been joined successfully!"
+
+#, python-brace-format
+msgid "All {0} segments have been processed successfully!"
+msgstr "All {0} segments have been processed successfully!"
+
+msgid "Convert Video"
+msgstr "Convert Video"
+
+#, python-brace-format
+msgid "Convert {0} Videos"
+msgstr "Convert {0} Videos"
+
+msgid "No valid local files selected"
+msgstr "No valid local files selected"
+
+msgid "Could not get the path for the selected video files."
+msgstr "Could not get the path for the selected video files."
+
+msgid "Application Launch Error"
+msgstr "Application Launch Error"
+
+#, python-brace-format
+msgid "Failed to start Big Video Converter: {0}"
+msgstr "Failed to start Big Video Converter: {0}"

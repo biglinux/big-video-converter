@@ -1,0 +1,36 @@
+# YouTube upload, 1080p. Follows YouTube's recommended upload encoding
+# settings: H.264 High profile, closed GOP of half the frame rate, two
+# consecutive B-frames, AAC-LC stereo at 48 kHz, MP4 with the index up front.
+format = 1
+
+[preset]
+name = "YouTube 1080p"
+description = "H.264 High profile with YouTube's recommended GOP and B-frame settings, AAC stereo 48 kHz, MP4 ready for upload."
+tags = ["youtube", "upload", "1080p", "social"]
+
+[video]
+codec = "h264"
+quality = "high"
+speed = "slow"
+resolution = "1920x1080"
+pixel_format = "yuv420p"
+
+[audio]
+mode = "reencode"
+codec = "aac"
+bitrate = "384k"
+channels = 2
+sample_rate = 48000
+
+[subtitles]
+mode = "extract"
+
+[container]
+format = "mp4"
+
+[ffmpeg]
+# Half the frame rate as GOP (YouTube asks for 15 at 30 fps), two B-frames.
+output_options = "-g 15 -bf 2 -coder 1"
+
+[encoder.libx264]
+args = ["-tune", "film"]

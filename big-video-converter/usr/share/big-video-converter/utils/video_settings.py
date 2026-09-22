@@ -1,0 +1,313 @@
+"""
+Unified video settings management module.
+Provides constants, utilities, and management for video adjustments.
+"""
+
+import math
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Video Adjustment Default Values
+VIDEO_ADJUSTMENT_DEFAULTS = {
+    "brightness": 0.0,  # Preview player: -1.0 to 1.0, FFmpeg: -1.0 to 1.0 (direct map)
+    "contrast": 0.0,  # Preview: -1.0 to 1.0; FFmpeg eq neutral is 1.0
+    "saturation": 1.0,  # Preview player: 0.0 to 2.0, FFmpeg: 0.0 to 16.0 (needs conversion)
+    "hue": 0.0,  # Preview player: -1.0 to 1.0, FFmpeg: -3.14 to 3.14 radians (needs conversion)
+    "crop_left": 0,
+    "crop_right": 0,
+    "crop_top": 0,
+    "crop_bottom": 0,
+    "trim_start": 0.0,  # Start time for trimming (seconds)
+    "trim_end": -1.0,  # End time for trimming (seconds, -1 means no trim)
+}
+
+# Settings key mapping
+SETTING_KEYS = {
+    "brightness": "preview-brightness",
+    "contrast": "preview-contrast",
+    "saturation": "preview-saturation",
+    "hue": "preview-hue",
+    "crop_left": "preview-crop-left",
+    "crop_right": "preview-crop-right",
+    "crop_top": "preview-crop-top",
+    "crop_bottom": "preview-crop-bottom",
+    "trim_start": "video-trim-start",
+    "trim_end": "video-trim-end",
+}
+
+# Threshold for determining if a value needs to be included
+FLOAT_THRESHOLD = 0.01
+
+# Alias for backward compatibility
+DEFAULT_VALUES = VIDEO_ADJUSTMENT_DEFAULTS
+
+
+class SettingsOverride:
+    """Read-only settings view with per-file overrides.
+
+    A conversion must not write its per-file crop/colour values into the global
+    settings: with parallel conversions the second file overwrites the first
+    one's values before its FFmpeg command is built, so both end up with the
+    wrong filters. Wrapping the manager keeps the per-file values local to the
+    conversion that owns them.
+
+    Only reads are overridden; anything else is delegated to the real manager.
+    """
+
+    def __init__(self, settings, overrides: dict):
+        self._settings = settings
+        self._overrides = overrides or {}
+
+    def get_value(self, key: str, default=None):
+        if key in self._overrides:
+            return self._overrides[key]
+        return self._settings.get_value(key, default)
+
+    def load_setting(self, key: str, default=None):
+        return self.get_value(key, default)
+
+    def get_string(self, key: str, default=None):
+        value = self.get_value(key, default)
+        return value if value is None else str(value)
+
+    def get_boolean(self, key: str, default=None):
+        if key in self._overrides:
+            return bool(self._overrides[key])
+        return self._settings.get_boolean(key, default)
+
+    def __getattr__(self, name):
+        # Delegate everything else (set_*, save_setting, ...) to the manager.
+        return getattr(self._settings, name)
+
+
+#
+# Value Access Functions
+#
+def get_adjustment_value(settings, name: str):
+    """Get adjustment value from settings"""
+    setting_key = SETTING_KEYS.get(name)
+    if not setting_key:
+        return DEFAULT_VALUES.get(name, 0)
+
+    if name in ["crop_left", "crop_right", "crop_top", "crop_bottom"]:
+        return settings.get_value(setting_key, DEFAULT_VALUES.get(name, 0))
+    elif name == "trim_end":
+        # Special handling for trim_end to ensure we get None when it's -1
+        value = settings.get_value(setting_key, DEFAULT_VALUES.get(name, -1.0))
+        return None if value < 0 else value
+    else:
+        return settings.get_value(setting_key, DEFAULT_VALUES.get(name, 0.0))
+
+
+def save_adjustment_value(settings, name: str, value: str):
+    """Save an adjustment value to settings"""
+    setting_key = SETTING_KEYS.get(name)
+    if not setting_key:
+        return False
+
+    if name in ["crop_left", "crop_right", "crop_top", "crop_bottom"]:
+        return settings.set_int(setting_key, value)
+    else:
+        return settings.set_double(setting_key, value)
+
+
+#
+# Value Conversion Functions (Preview Player to FFmpeg)
+#
+def preview_brightness_to_ffmpeg(brightness):
+    """
+    Preview player brightness: -1.0 to 1.0 (0.0 is neutral)
+    FFmpeg eq brightness: -1.0 to 1.0 (0.0 is neutral)
+    Direct 1:1 mapping.
+    """
+    return brightness
+
+
+def preview_saturation_to_ffmpeg(saturation):
+    """
+    Preview player saturation: 0.0 to 2.0 (1.0 is neutral)
+    FFmpeg eq saturation: 0.0 to 16.0 (1.0 is neutral)
+
+    Mapping strategy:
+    - Below neutral: Preview [0.0, 1.0] → FFmpeg [0.0, 1.0] (direct map)
+    - Above neutral: Preview [1.0, 2.0] → FFmpeg [1.0, 3.0] (scaled map)
+    """
+    if saturation >= 1.0:
+        # Map Preview's [1.0, 2.0] to FFmpeg's [1.0, 3.0]
+        return 1.0 + (saturation - 1.0) * 1.5
+    else:
+        # Direct 1:1 map for values below neutral
+        return saturation
+
+
+def preview_hue_to_ffmpeg(hue):
+    """
+    Preview player hue: -1.0 to 1.0 (0.0 is neutral)
+    FFmpeg hue filter: -3.14 to 3.14 radians / -π to π (0.0 is neutral)
+
+    The preview player supports hue in the range [-1.0, 1.0].
+    We need to convert this normalized range to FFmpeg's radian range.
+
+    Mapping: Preview [-1.0, 1.0] → FFmpeg [-π, π] radians
+    Formula: ffmpeg_hue = preview_hue * π
+
+    This ensures:
+    - Preview hue = -1.0 → FFmpeg hue = -π (-180°)
+    - Preview hue =  0.0 → FFmpeg hue =  0  (0°)
+    - Preview hue = +1.0 → FFmpeg hue = +π (+180°)
+    """
+    return hue * math.pi
+
+
+# Backward compatibility aliases (for existing code that references GStreamer names)
+gstreamer_brightness_to_ffmpeg = preview_brightness_to_ffmpeg
+gstreamer_saturation_to_ffmpeg = preview_saturation_to_ffmpeg
+gstreamer_hue_to_ffmpeg = preview_hue_to_ffmpeg
+
+
+#
+# FFmpeg Filter Generation
+#
+def generate_video_filters(
+    settings, video_width: int = None, video_height: int = None, input_file: str = None
+):
+    """
+    Generate all needed FFmpeg filters in one go.
+    """
+    filters = []
+
+    # Pixel-format negotiation belongs to the encoder backend. It must never
+    # suppress the user's crop, colour, rotation or flip operations for HEVC.
+
+    # 1. Add crop filter
+    crop_left = get_adjustment_value(settings, "crop_left")
+    crop_right = get_adjustment_value(settings, "crop_right")
+    crop_top = get_adjustment_value(settings, "crop_top")
+    crop_bottom = get_adjustment_value(settings, "crop_bottom")
+
+    logger.debug(
+        f"DEBUG generate_video_filters: crop_left={crop_left}, crop_right={crop_right}, crop_top={crop_top}, crop_bottom={crop_bottom}"
+    )
+    logger.debug(
+        f"DEBUG generate_video_filters: video_width={video_width}, video_height={video_height}"
+    )
+
+    if (
+        (crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0)
+        and video_width is not None
+        and video_height is not None
+    ):
+        crop_width = video_width - crop_left - crop_right
+        crop_height = video_height - crop_top - crop_bottom
+
+        if crop_width > 0 and crop_height > 0:
+            filters.append(f"crop={crop_width}:{crop_height}:{crop_left}:{crop_top}")
+
+    # 2. Add eq filter with calibrated values (brightness, saturation)
+    eq_parts = []
+
+    brightness = get_adjustment_value(settings, "brightness")
+    if abs(brightness) > FLOAT_THRESHOLD:
+        ffmpeg_brightness = gstreamer_brightness_to_ffmpeg(brightness)
+        eq_parts.append(f"brightness={ffmpeg_brightness:.3f}")
+
+    contrast = get_adjustment_value(settings, "contrast")
+    if abs(contrast) > FLOAT_THRESHOLD:
+        eq_parts.append(f"contrast={max(0.0, 1.0 + contrast):.3f}")
+
+    saturation = get_adjustment_value(settings, "saturation")
+    if abs(saturation - 1.0) > FLOAT_THRESHOLD:
+        ffmpeg_saturation = gstreamer_saturation_to_ffmpeg(saturation)
+        eq_parts.append(f"saturation={ffmpeg_saturation:.3f}")
+
+    if eq_parts:
+        filters.append(f"eq={':'.join(eq_parts)}")
+
+    # 3. Add hue filter separately (FFmpeg requires separate hue filter, not in eq)
+    hue = get_adjustment_value(settings, "hue")
+    if abs(hue) > FLOAT_THRESHOLD:
+        ffmpeg_hue = gstreamer_hue_to_ffmpeg(hue) * 180 / math.pi
+        filters.append(f"hue=h={ffmpeg_hue:.3f}")
+
+    # 4. Rotation (transpose for 90/270, hflip+vflip for 180)
+    rotation = int(settings.load_setting("preview-rotation", 0))
+    rotation = rotation % 360
+    if rotation == 90:
+        filters.append("transpose=1")
+    elif rotation == 180:
+        filters.append("hflip")
+        filters.append("vflip")
+    elif rotation == 270:
+        filters.append("transpose=2")
+
+    # 5. Flip (applied after rotation to match mpv behavior)
+    flip_h = settings.get_boolean("preview-flip-h", False)
+    flip_v = settings.get_boolean("preview-flip-v", False)
+    if flip_h:
+        filters.append("hflip")
+    if flip_v:
+        filters.append("vflip")
+
+    return filters
+
+
+def get_ffmpeg_filter_string(
+    settings, video_width: int = None, video_height: int = None, input_file: str = None
+):
+    """Get the complete FFmpeg filter string for command-line use"""
+    filters = generate_video_filters(settings, video_width, video_height, input_file)
+    if not filters:
+        return ""
+    return ",".join(filters)
+
+
+# Legacy functions kept for compatibility
+generate_all_filters = generate_video_filters
+get_video_filter_string = get_ffmpeg_filter_string
+
+
+#
+# Video Adjustment Manager
+#
+class VideoAdjustmentManager:
+    """
+    Manages video adjustment settings with UI updates.
+    """
+
+    def __init__(self, settings_manager, page=None):
+        self.settings = settings_manager
+        self.page = page
+        self.values = {name: self.get_value(name) for name in DEFAULT_VALUES}
+
+    def get_value(self, name: str):
+        return get_adjustment_value(self.settings, name)
+
+    def set_value(self, name: str, value: str, update_ui: bool = True):
+        setting_key = SETTING_KEYS.get(name)
+        if not setting_key:
+            return False
+        self.values[name] = value
+        success = save_adjustment_value(self.settings, name, value)
+        if update_ui and success and self.page:
+            self._update_ui_for_setting(name, value)
+        return success
+
+    def _update_ui_for_setting(self, name, value):
+        if not self.page or not hasattr(self.page, "ui"):
+            return
+        ui = self.page.ui
+        ui_controls = {
+            "brightness": getattr(ui, "brightness_scale", None),
+            "contrast": getattr(ui, "contrast_scale", None),
+            "saturation": getattr(ui, "saturation_scale", None),
+            "hue": getattr(ui, "hue_scale", None),
+            "crop_left": getattr(ui, "crop_left_spin", None),
+            "crop_right": getattr(ui, "crop_right_spin", None),
+            "crop_top": getattr(ui, "crop_top_spin", None),
+            "crop_bottom": getattr(ui, "crop_bottom_spin", None),
+        }
+        control = ui_controls.get(name)
+        if control:
+            control.set_value(value)

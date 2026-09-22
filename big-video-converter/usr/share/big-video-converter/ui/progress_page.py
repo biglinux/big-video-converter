@@ -1,0 +1,783 @@
+import os
+from datetime import datetime
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Adw", "1")
+# Setup translation
+import gettext
+
+from gi.repository import Adw, GLib, Gtk, Pango
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+_ = gettext.gettext
+
+
+class ProgressPage:
+    """
+    Professional progress page with integrated queue visualization.
+    Clean, modern design with consistent spacing and stable layout.
+    """
+
+    def __init__(self, app):
+        self.app = app
+        self.toolbar_view = Adw.ToolbarView()
+        self.toolbar_view.add_css_class("bvc-shell")
+
+        self.header_bar = Adw.HeaderBar()
+        self.window_buttons_left = self.app._window_buttons_on_left()
+        self.header_bar.set_decoration_layout(
+            "minimize,maximize:" if self.window_buttons_left
+            else ":minimize,maximize"
+        )
+
+        self.back_button = Gtk.Button.new_from_icon_name("go-previous-symbolic")
+        self.back_button.add_css_class("bvc-icon-button")
+        self.back_button.add_css_class("bvc-quiet")
+        self.back_button.set_tooltip_text(_("Back to the queue"))
+        self.back_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Back to the queue")]
+        )
+        self.back_button.connect("clicked", self._on_back_clicked)
+        self.back_button.set_visible(False)
+        self.header_bar.pack_start(self.back_button)
+
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        self.title_label = Gtk.Label(label=_("Conversion progress"))
+        self.title_label.add_css_class("heading")
+        self.progress_context_label = Gtk.Label(
+            label=_("Preparing the queue safely")
+        )
+        self.progress_context_label.add_css_class("caption")
+        self.progress_context_label.add_css_class("dim-label")
+        title_box.append(self.title_label)
+        title_box.append(self.progress_context_label)
+        self.header_bar.set_title_widget(title_box)
+
+        self.cancel_all_button = Gtk.Button(label=_("Cancel all"))
+        self.cancel_all_button.add_css_class("bvc-secondary")
+        self.cancel_all_button.add_css_class("bvc-danger")
+        self.cancel_all_button.connect("clicked", self._on_cancel_all_clicked)
+        self.header_bar.pack_end(self.cancel_all_button)
+        self.toolbar_view.add_top_bar(self.header_bar)
+
+        self.page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.page.set_vexpand(True)
+
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_vexpand(True)
+        clamp = Adw.Clamp(maximum_size=1040, tightening_threshold=680)
+        clamp.set_margin_start(22)
+        clamp.set_margin_end(22)
+        clamp.set_margin_top(20)
+        clamp.set_margin_bottom(28)
+        self.content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
+        clamp.set_child(self.content_box)
+        scroll.set_child(clamp)
+        self.page.append(scroll)
+
+        summary_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        summary_card.add_css_class("bvc-card")
+        summary_card.add_css_class("bvc-raised")
+        summary_top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        summary_text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        summary_text.set_hexpand(True)
+        label = Gtk.Label(label=_("Overall progress"))
+        label.set_xalign(0)
+        label.add_css_class("bvc-section-title")
+        summary_text.append(label)
+        self.overall_detail_label = Gtk.Label(
+            label=_("Waiting for the first video")
+        )
+        self.overall_detail_label.set_xalign(0)
+        self.overall_detail_label.add_css_class("bvc-subtle")
+        summary_text.append(self.overall_detail_label)
+        summary_top.append(summary_text)
+        self.overall_fraction_label = Gtk.Label(label="0%")
+        self.overall_fraction_label.add_css_class("bvc-metric")
+        self.overall_fraction_label.add_css_class("title-2")
+        summary_top.append(self.overall_fraction_label)
+        summary_card.append(summary_top)
+        self.overall_progress_bar = Gtk.ProgressBar()
+        self.overall_progress_bar.add_css_class("bvc-overall-progress")
+        summary_card.append(self.overall_progress_bar)
+        metric_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=18)
+        self.completed_metric = Gtk.Label(label=_("0 completed"))
+        self.completed_metric.add_css_class("caption")
+        self.remaining_metric = Gtk.Label(label=_("0 remaining"))
+        self.remaining_metric.add_css_class("caption")
+        self.remaining_metric.add_css_class("dim-label")
+        metric_row.append(self.completed_metric)
+        metric_row.append(self.remaining_metric)
+        summary_card.append(metric_row)
+        self.content_box.append(summary_card)
+
+        queue_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        queue_title = Gtk.Label(label=_("Videos"))
+        queue_title.set_xalign(0)
+        queue_title.add_css_class("bvc-section-title")
+        queue_header.append(queue_title)
+        self.queue_count_chip = Gtk.Label(label=_("0 videos"))
+        self.queue_count_chip.add_css_class("bvc-count-chip")
+        queue_header.append(self.queue_count_chip)
+        self.content_box.append(queue_header)
+
+        self.queue_listbox = Gtk.ListBox()
+        self.queue_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.queue_listbox.set_show_separators(False)
+        self.queue_listbox.add_css_class("bvc-progress-list")
+        self.content_box.append(self.queue_listbox)
+
+        self.completion_banner = Adw.Banner()
+        self.completion_banner.set_revealed(False)
+        self.completion_banner.set_button_label(_("Back to queue"))
+        self.completion_banner.connect("button-clicked", self._on_back_clicked)
+        self.page.append(self.completion_banner)
+        self.toolbar_view.set_content(self.page)
+
+        self.queue_items = {}
+        self.active_conversions = {}
+        self.count = 0
+        self.total_queue_items = 0
+        self.completed_count = 0
+
+    def _setup_css(self):
+        """Compatibility no-op; application CSS is installed centrally."""
+
+    def get_page(self):
+        return self.toolbar_view
+
+    def initialize_queue(self, queue_items) -> None:
+        """Initialize the queue display with all items as pending"""
+        self.reset()
+        self.total_queue_items = len(queue_items)
+
+        for file_path in queue_items:
+            if file_path not in self.queue_items:
+                row = QueueItemRow(self.app, file_path, self)
+                self.queue_items[file_path] = row
+                self.queue_listbox.append(row)
+
+        self._update_overall_progress()
+
+    def _update_overall_progress(self):
+        """Update title, metrics and the aggregate progress indicator."""
+        total = self.total_queue_items
+        completed = self.completed_count
+        if total:
+            active_fraction = sum(
+                row.current_progress
+                for row in self.queue_items.values()
+                if row.status == "active"
+            )
+            fraction = min(1.0, (completed + active_fraction) / total)
+        else:
+            fraction = 0.0
+        percent = int(round(fraction * 100))
+        self.overall_progress_bar.set_fraction(fraction)
+        self.overall_fraction_label.set_text(f"{percent}%")
+        self.completed_metric.set_text(
+            _("{} completed").format(completed)
+        )
+        remaining = max(0, total - completed)
+        self.remaining_metric.set_text(
+            _("{} remaining").format(remaining)
+        )
+        self.queue_count_chip.set_text(
+            _("1 video") if total == 1 else _("{} videos").format(total)
+        )
+        if total and completed == total:
+            self.title_label.set_text(_("Conversion complete"))
+            self.progress_context_label.set_text(
+                _("Every video has reached a final state")
+            )
+            self.overall_detail_label.set_text(
+                _("Review the results below or return to the queue")
+            )
+        elif total:
+            self.title_label.set_text(_("Converting videos"))
+            self.progress_context_label.set_text(
+                _("{} of {} finished").format(completed, total)
+            )
+            self.overall_detail_label.set_text(
+                _("The active job is shown first; pending videos remain unchanged")
+            )
+        else:
+            self.title_label.set_text(_("Conversion progress"))
+            self.progress_context_label.set_text(_("Preparing the queue safely"))
+            self.overall_detail_label.set_text(_("Waiting for the first video"))
+
+    def add_conversion(self, command_title, input_file: str, process):
+        """Start tracking a conversion for a file"""
+        conversion_id = f"conversion_{self.count}"
+        self.count += 1
+
+        if not input_file:
+            input_file = command_title or "unknown"
+
+        if len(self.active_conversions) == 0:
+            self.app.show_progress_page()
+
+        if input_file in self.queue_items:
+            row = self.queue_items[input_file]
+        else:
+            row = QueueItemRow(self.app, input_file, self)
+            self.queue_items[input_file] = row
+            self.queue_listbox.prepend(row)
+            self.total_queue_items += 1
+
+        row.start_conversion(process, conversion_id)
+
+        self.active_conversions[conversion_id] = {
+            "row": row,
+            "input_file": input_file,
+        }
+
+        self._update_overall_progress()
+        return row
+
+    def finish_pending(self, file_path, *, success=False, cancelled=False):
+        """Complete a job rejected before a process/active row was created."""
+        row = self.queue_items.get(file_path)
+        if row is None or row.status != "pending":
+            return
+        if cancelled:
+            row.mark_cancelled()
+        else:
+            row.mark_complete(success)
+        self.completed_count += 1
+        self._update_overall_progress()
+        self._check_all_complete()
+
+    def mark_conversion_complete(self, conversion_id: int, success: bool=True, output_file: str=None) -> None:
+        """Mark a conversion as complete"""
+        if conversion_id in self.active_conversions:
+            conv_data = self.active_conversions.pop(conversion_id)
+            row = conv_data.get("row")
+
+            if row and row.status not in ("completed", "failed", "cancelled"):
+                row.mark_complete(success, output_file)
+
+            self.completed_count += 1
+            self._update_overall_progress()
+            self._check_all_complete()
+
+    def _check_all_complete(self):
+        """Check if all queue items are processed"""
+        all_done = all(
+            row.status in ("completed", "failed", "cancelled")
+            for row in self.queue_items.values()
+        )
+
+        if all_done and len(self.queue_items) > 0:
+            GLib.timeout_add(300, self._show_completion_summary)
+
+    def _show_completion_summary(self):
+        """Show completion summary banner"""
+        successful = sum(
+            1 for r in self.queue_items.values() if r.status == "completed"
+        )
+        failed = sum(1 for r in self.queue_items.values() if r.status == "failed")
+        cancelled = sum(1 for r in self.queue_items.values() if r.status == "cancelled")
+
+        if failed == 0 and cancelled == 0:
+            self.completion_banner.set_title(
+                _("All {} videos converted successfully!").format(successful)
+            )
+            self.completion_banner.remove_css_class("error")
+            self.completion_banner.add_css_class("success")
+        elif successful > 0:
+            self.completion_banner.set_title(
+                _("{} completed, {} failed, {} cancelled").format(
+                    successful, failed, cancelled
+                )
+            )
+            self.completion_banner.remove_css_class("success")
+            self.completion_banner.remove_css_class("error")
+        else:
+            self.completion_banner.set_title(
+                _("All conversions failed or were cancelled")
+            )
+            self.completion_banner.remove_css_class("success")
+            self.completion_banner.add_css_class("error")
+
+        self.completion_banner.set_revealed(True)
+        self.cancel_all_button.set_visible(False)
+        self.back_button.set_visible(True)  # Show back button when complete
+
+        # Update title to "Completed!" and re-enable close button
+        self.title_label.set_label(_("Completed!"))
+        if self.window_buttons_left:
+            self.header_bar.set_decoration_layout("close,minimize,maximize:")
+        else:
+            self.header_bar.set_decoration_layout(":minimize,maximize,close")
+
+        return False
+
+    def remove_conversion(self, conversion_id: int) -> None:
+        if conversion_id in self.active_conversions:
+            del self.active_conversions[conversion_id]
+
+    def has_active_conversions(self):
+        return len(self.active_conversions) > 0
+
+    def _on_cancel_all_clicked(self, button):
+        """Show confirmation dialog before cancelling all"""
+        dialog = Adw.AlertDialog()
+        dialog.set_heading(_("Cancel All Conversions?"))
+        dialog.set_body(
+            _(
+                "This will stop all active conversions and skip all pending items. This action cannot be undone."
+            )
+        )
+        dialog.add_response("cancel", _("Continue"))
+        dialog.add_response("confirm", _("Cancel All"))
+        dialog.set_response_appearance("confirm", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.set_default_response("cancel")
+        dialog.set_close_response("cancel")
+        dialog.connect("response", self._on_cancel_all_response)
+        # Use the app's window as parent, not the app itself
+        window = (
+            self.app.get_active_window()
+            if hasattr(self.app, "get_active_window")
+            else self.app
+        )
+        dialog.present(window)
+
+    def _on_cancel_all_response(self, dialog, response):
+        """Handle cancel all confirmation response"""
+        if response == "confirm":
+            self._do_cancel_all()
+
+    def _do_cancel_all(self):
+        """Actually cancel all conversions"""
+        self.app.is_cancellation_requested = True
+        for info in list(getattr(self.app, "active_conversions", [])):
+            token = info.get("cancel_event")
+            if token is not None:
+                token.set()
+        self.app.conversion_queue.clear()
+
+        for conv_data in list(self.active_conversions.values()):
+            row = conv_data.get("row")
+            if row:
+                row.cancel(cancel_all=True)
+
+        for row in self.queue_items.values():
+            if row.status == "pending":
+                row.cancel(cancel_all=True)
+
+    def _on_back_clicked(self, button):
+        """Go back to main view"""
+        self.app.return_to_main_view()
+
+    def reset(self) -> None:
+        self.active_conversions.clear()
+        self.queue_items.clear()
+        self.total_queue_items = 0
+        self.completed_count = 0
+        self.count = 0
+
+        while True:
+            row = self.queue_listbox.get_first_child()
+            if row:
+                self.queue_listbox.remove(row)
+            else:
+                break
+
+        self.completion_banner.set_revealed(False)
+        self.cancel_all_button.set_visible(True)
+        self.back_button.set_visible(False)  # Hide back button on reset
+        # Disable close button during conversion (keep minimize and maximize)
+        if self.window_buttons_left:
+            self.header_bar.set_decoration_layout("minimize,maximize:")
+        else:
+            self.header_bar.set_decoration_layout(":minimize,maximize")
+        self._update_overall_progress()
+
+    def show_completion_summary(self) -> None:
+        """Public method called from main.py"""
+        self._show_completion_summary()
+
+
+class QueueItemRow(Gtk.ListBoxRow):
+    """A clean, stable row representing one video file in the queue."""
+
+    def __init__(self, app, file_path, progress_page):
+        super().__init__()
+
+        self.app = app
+        self.file_path = file_path if file_path else ""
+        self.progress_page = progress_page
+        self.process = None
+        self.conversion_id = None
+        self.status = "pending"
+        self.current_progress = 0.0
+        self._cancelled = False
+        self._pulse_source_id = None
+
+        # Compatibility attributes for conversion.py
+        self.input_file = self.file_path
+        self.input_file_path = self.file_path
+        self.original_input_file = self.file_path
+        self.delete_original = False
+        self.expected_duration = None
+        self.is_queue_processing = False
+        self.is_segment_batch = False
+
+        # Timing
+        self.start_time = None
+        self.end_time = None
+
+        # Build UI
+        self._build_ui()
+        self._set_state("pending")
+
+    def _build_ui(self):
+        self.add_css_class("bvc-progress-card")
+        self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.set_child(self.main_box)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        self.status_icon = Gtk.Image()
+        self.status_icon.set_pixel_size(28)
+        self.status_icon.set_valign(Gtk.Align.CENTER)
+        content.append(self.status_icon)
+
+        center = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        center.set_hexpand(True)
+        center.set_valign(Gtk.Align.CENTER)
+        filename = os.path.basename(self.file_path) if self.file_path else _("Unknown video")
+        self.filename_label = Gtk.Label(label=filename)
+        self.filename_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
+        self.filename_label.set_xalign(0)
+        self.filename_label.add_css_class("title-3")
+        center.append(self.filename_label)
+
+        status_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        self.status_label = Gtk.Label(label=_("Waiting in queue"))
+        self.status_label.set_xalign(0)
+        self.status_label.set_hexpand(True)
+        self.status_label.add_css_class("bvc-subtle")
+        status_row.append(self.status_label)
+        self.fps_label = Gtk.Label(label="")
+        self.fps_label.add_css_class("bvc-status-chip")
+        self.fps_label.set_visible(False)
+        status_row.append(self.fps_label)
+        center.append(status_row)
+
+        self.progress_bar = Gtk.ProgressBar()
+        self.progress_bar.add_css_class("bvc-job-progress")
+        self.progress_bar.set_visible(False)
+        center.append(self.progress_bar)
+        content.append(center)
+
+        metrics = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        metrics.set_valign(Gtk.Align.CENTER)
+        metrics.set_size_request(105, -1)
+        self.time_label_1 = Gtk.Label(label="")
+        self.time_label_1.add_css_class("caption")
+        self.time_label_1.add_css_class("bvc-metric")
+        self.time_label_1.set_halign(Gtk.Align.END)
+        metrics.append(self.time_label_1)
+        self.time_label_2 = Gtk.Label(label="")
+        self.time_label_2.add_css_class("caption")
+        self.time_label_2.add_css_class("dim-label")
+        self.time_label_2.set_halign(Gtk.Align.END)
+        metrics.append(self.time_label_2)
+        content.append(metrics)
+
+        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        actions.set_valign(Gtk.Align.CENTER)
+        self.details_button = Gtk.ToggleButton(icon_name="view-more-symbolic")
+        self.details_button.add_css_class("bvc-icon-button")
+        self.details_button.add_css_class("bvc-quiet")
+        self.details_button.set_tooltip_text(_("Show technical details"))
+        self.details_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Show technical details")]
+        )
+        self.details_button.connect("toggled", self._on_details_toggled)
+        self.details_button.set_sensitive(False)
+        actions.append(self.details_button)
+        self.cancel_button = Gtk.Button(icon_name="process-stop-symbolic")
+        self.cancel_button.add_css_class("bvc-icon-button")
+        self.cancel_button.add_css_class("bvc-quiet")
+        self.cancel_button.add_css_class("bvc-danger")
+        self.cancel_button.set_tooltip_text(_("Cancel this video"))
+        self.cancel_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Cancel this video")]
+        )
+        self.cancel_button.connect("clicked", lambda _button: self.cancel())
+        self.cancel_button.set_visible(False)
+        actions.append(self.cancel_button)
+        content.append(actions)
+        self.main_box.append(content)
+
+        self.details_revealer = Gtk.Revealer()
+        self.details_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
+        self.details_revealer.set_transition_duration(180)
+        details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        details.add_css_class("bvc-well")
+        details.set_margin_top(2)
+        details.set_margin_start(42)
+        details.set_margin_end(2)
+        details.set_margin_bottom(2)
+        details.set_margin_top(4)
+        command_title = Gtk.Label(label=_("Command"))
+        command_title.set_xalign(0)
+        command_title.add_css_class("bvc-body-strong")
+        details.append(command_title)
+        self.cmd_text = Gtk.Label(label="")
+        self.cmd_text.set_selectable(True)
+        self.cmd_text.set_wrap(True)
+        self.cmd_text.set_wrap_mode(Pango.WrapMode.CHAR)
+        self.cmd_text.set_xalign(0)
+        self.cmd_text.add_css_class("bvc-log")
+        details.append(self.cmd_text)
+        output_title = Gtk.Label(label=_("Process output"))
+        output_title.set_xalign(0)
+        output_title.add_css_class("bvc-body-strong")
+        details.append(output_title)
+        log_scroll = Gtk.ScrolledWindow()
+        log_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        log_scroll.set_min_content_height(120)
+        log_scroll.set_max_content_height(240)
+        self.terminal_view = Gtk.TextView()
+        self.terminal_view.set_editable(False)
+        self.terminal_view.set_cursor_visible(False)
+        self.terminal_view.set_monospace(True)
+        self.terminal_view.add_css_class("bvc-log")
+        self.terminal_view.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        self.terminal_buffer = self.terminal_view.get_buffer()
+        log_scroll.set_child(self.terminal_view)
+        details.append(log_scroll)
+        self.details_revealer.set_child(details)
+        self.main_box.append(self.details_revealer)
+
+    def _set_state(self, state):
+        for css_class in (
+            "bvc-progress-active", "bvc-progress-success", "bvc-progress-error"
+        ):
+            self.remove_css_class(css_class)
+        for css_class in (
+            "status-active", "status-success", "status-error", "status-warning"
+        ):
+            self.status_label.remove_css_class(css_class)
+        if state != "active":
+            self.fps_label.set_visible(False)
+        if state == "pending":
+            self.status_icon.set_from_icon_name("content-loading-symbolic")
+            self.status_label.set_text(_("Waiting in queue"))
+            self.status_label.add_css_class("dim-label")
+            self.cancel_button.set_visible(True)
+            self.cancel_button.tooltip_key = "progress_skip_file"
+        elif state == "active":
+            self.add_css_class("bvc-progress-active")
+            self.status_icon.set_from_icon_name("media-playback-start-symbolic")
+            self.status_label.add_css_class("status-active")
+            self.cancel_button.set_visible(True)
+            self.cancel_button.tooltip_key = "progress_cancel_file"
+        elif state == "completed":
+            self.add_css_class("bvc-progress-success")
+            self.status_icon.set_from_icon_name("emblem-ok-symbolic")
+            self.status_label.add_css_class("status-success")
+            self.cancel_button.set_visible(False)
+        elif state == "failed":
+            self.add_css_class("bvc-progress-error")
+            self.status_icon.set_from_icon_name("dialog-error-symbolic")
+            self.status_label.add_css_class("status-error")
+            self.cancel_button.set_visible(False)
+        elif state == "cancelled":
+            self.status_icon.set_from_icon_name("action-unavailable-symbolic")
+            self.status_label.add_css_class("status-warning")
+            self.cancel_button.set_visible(False)
+
+    def _on_details_toggled(self, button):
+        is_active = button.get_active()
+        self.details_revealer.set_reveal_child(is_active)
+        button.set_icon_name(
+            "view-more-horizontal-symbolic" if is_active else "view-more-symbolic"
+        )
+
+    def start_conversion(self, process, conversion_id: int) -> None:
+        self.process = process
+        self.conversion_id = conversion_id
+        self.status = "active"
+        self._cancelled = False
+        self.start_time = datetime.now()
+
+        self._set_state("active")
+        self.status_label.set_text(_("Converting..."))
+        self.progress_bar.set_visible(True)
+        self.progress_bar.set_fraction(0)
+
+        self.time_label_1.set_text(self.start_time.strftime("%H:%M:%S"))
+        self.time_label_2.set_text("")
+
+        self.details_button.set_sensitive(True)
+        self.cancel_button.set_visible(True)
+
+    def start_pulse(self) -> None:
+        """Start indeterminate pulsing progress bar."""
+        if self._pulse_source_id is not None:
+            return
+        self.progress_bar.set_visible(True)
+
+        def _do_pulse():
+            self.progress_bar.pulse()
+            return True  # keep repeating
+
+        self._pulse_source_id = GLib.timeout_add(150, _do_pulse)
+
+    def stop_pulse(self) -> None:
+        """Stop pulsing and reset progress bar to 0."""
+        if self._pulse_source_id is not None:
+            GLib.source_remove(self._pulse_source_id)
+            self._pulse_source_id = None
+        self.progress_bar.set_fraction(0)
+
+    def update_progress(self, fraction, text: str=None) -> None:
+        self.stop_pulse()
+        self.current_progress = fraction
+        self.progress_bar.set_fraction(min(1.0, fraction))
+
+        if text:
+            # Check if text contains FPS information (format: "status | 25 fps")
+            if " | " in text and "fps" in text.lower():
+                parts = text.rsplit(" | ", 1)
+                self.status_label.set_text(parts[0])
+                self.fps_label.set_text(parts[1])
+                self.fps_label.set_visible(True)
+            else:
+                self.status_label.set_text(text)
+        else:
+            self.status_label.set_text(f"{_('Converting')}... {int(fraction * 100)}%")
+
+    def update_status(self, status) -> None:
+        # Check if status contains FPS info with " | " separator
+        if " | " in status:
+            parts = status.split(" | ", 1)
+            self.status_label.set_text(parts[0])  # GPU acceleration info
+            self.fps_label.set_text(parts[1])  # FPS info
+            self.fps_label.set_visible(True)
+        else:
+            self.status_label.set_text(status)
+            # Don't hide FPS label here as it may have been set separately
+
+    def add_output_text(self, text: str) -> None:
+        if not text:
+            return
+        # Most callers pass plain messages without a trailing newline; append one
+        # so consecutive entries don't end up glued together in the log view.
+        if not text.endswith("\n"):
+            text += "\n"
+        end_iter = self.terminal_buffer.get_end_iter()
+        self.terminal_buffer.insert(end_iter, text)
+        # Bound the live GTK buffer; high-volume diagnostics must not exhaust
+        # memory or make the main loop progressively slower.
+        excess = self.terminal_buffer.get_char_count() - 250000
+        if excess > 0:
+            self.terminal_buffer.delete(self.terminal_buffer.get_start_iter(),
+                                        self.terminal_buffer.get_iter_at_offset(excess))
+
+    def mark_complete(self, success: bool=True, output_file: str=None) -> None:
+        self.stop_pulse()
+        self.end_time = datetime.now()
+        self.process = None
+
+        if self.start_time:
+            duration = self.end_time - self.start_time
+            total_seconds = int(duration.total_seconds())
+            mins, secs = divmod(total_seconds, 60)
+            self.time_label_2.set_text(_("{mins}m {secs}s").format(mins=mins, secs=secs) if mins else _("{secs}s").format(secs=secs))
+
+        self.progress_bar.set_visible(False)
+        self.cancel_button.set_visible(False)
+
+        if success:
+            self.status = "completed"
+            self._set_state("completed")
+            self.status_label.set_text(_("Completed"))
+        else:
+            self.status = "failed"
+            self._set_state("failed")
+            self.status_label.set_text(_("Failed"))
+
+    def mark_cancelled(self) -> None:
+        self.stop_pulse()
+        self.status = "cancelled"
+        self.end_time = datetime.now()
+        self._set_state("cancelled")
+        self.status_label.set_text(_("Cancelled"))
+        self.progress_bar.set_visible(False)
+        self.cancel_button.set_visible(False)
+
+    def cancel(self, cancel_all: bool=False) -> None:
+        if self.status not in ("active", "pending"):
+            return
+
+        was_active = self.status == "active"
+        was_pending = self.status == "pending"
+
+        self._cancelled = True
+        token = getattr(self, "cancel_event", None)
+        if token is not None:
+            token.set()
+        if cancel_all:
+            self.app.is_cancellation_requested = True
+
+        self.cancel_button.set_sensitive(False)
+
+        if was_active and self.process and token is None:
+            try:
+                if hasattr(self.app, "terminate_process_tree"):
+                    self.app.terminate_process_tree(self.process)
+                else:
+                    self.process.terminate()
+            except Exception as e:
+                logger.error(f"Error cancelling: {e}")
+
+        # For pending items, also remove from the conversion queue
+        if was_pending and self.file_path:
+            if (
+                hasattr(self.app, "conversion_queue")
+                and self.file_path in self.app.conversion_queue
+            ):
+                self.app.conversion_queue.remove(self.file_path)
+                logger.debug(f"Removed {os.path.basename(self.file_path)} from queue")
+
+        self.mark_cancelled()
+
+        # Update completed count for skipped pending items
+        if was_pending and self.progress_page:
+            self.progress_page.completed_count += 1
+            self.progress_page._update_overall_progress()
+            self.progress_page._check_all_complete()
+
+        # The supervisor alone completes active jobs after reaping the child.
+        # A timer here used to release another job's slot after cancellation.
+
+    def set_delete_original(self, delete_original: bool) -> None:
+        self.delete_original = delete_original
+
+    def mark_success(self) -> None:
+        self.mark_complete(success=True)
+        if self.progress_page:
+            self.progress_page.mark_conversion_complete(
+                self.conversion_id, success=True
+            )
+
+    def mark_failure(self) -> None:
+        self.mark_complete(success=False)
+        if self.progress_page:
+            self.progress_page.mark_conversion_complete(
+                self.conversion_id, success=False
+            )
+
+    def was_cancelled(self):
+        return self._cancelled or self.status == "cancelled"

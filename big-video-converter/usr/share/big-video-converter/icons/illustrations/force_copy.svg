@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- MKV box (left) -->
+  <rect x="5" y="12" width="34" height="40" rx="3" fill="none" stroke="#999" stroke-width="1.5"/>
+  <text x="22" y="22" font-family="sans-serif" font-size="7" fill="#999" text-anchor="middle" font-weight="bold">MKV</text>
+  <!-- Content lines inside -->
+  <line x1="11" y1="30" x2="33" y2="30" stroke="#e8e8e8" stroke-width="2"/>
+  <line x1="11" y1="36" x2="33" y2="36" stroke="#e8e8e8" stroke-width="2"/>
+  <line x1="11" y1="42" x2="33" y2="42" stroke="#e8e8e8" stroke-width="2"/>
+  <!-- Arrow -->
+  <line x1="44" y1="32" x2="58" y2="32" stroke="#3584e4" stroke-width="1.5"/>
+  <polygon points="58,28 65,32 58,36" fill="#3584e4"/>
+  <!-- Lightning bolt -->
+  <polygon points="53,18 49,28 53,28 50,38 57,25 53,25" fill="#3584e4"/>
+  <!-- MP4 box (right) -->
+  <rect x="68" y="12" width="34" height="40" rx="3" fill="none" stroke="#3584e4" stroke-width="1.5"/>
+  <text x="85" y="22" font-family="sans-serif" font-size="7" fill="#3584e4" text-anchor="middle" font-weight="bold">MP4</text>
+  <!-- Same content lines -->
+  <line x1="74" y1="30" x2="96" y2="30" stroke="#e8e8e8" stroke-width="2"/>
+  <line x1="74" y1="36" x2="96" y2="36" stroke="#e8e8e8" stroke-width="2"/>
+  <line x1="74" y1="42" x2="96" y2="42" stroke="#e8e8e8" stroke-width="2"/>
+  <!-- Speed label -->
+  <text x="60" y="62" font-family="sans-serif" font-size="5" fill="#26a269" text-anchor="middle">⚡ Ultra-fast</text>
+  <text x="60" y="74" font-family="sans-serif" font-size="5.5" fill="#999" text-anchor="middle">Just changes container, no re-encoding</text>
+</svg>

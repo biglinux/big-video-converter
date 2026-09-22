@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Center listener head -->
+  <circle cx="60" cy="40" r="6" fill="none" stroke="#999" stroke-width="1.5"/>
+  <!-- Ears -->
+  <path d="M54,38 Q50,38 50,42" fill="none" stroke="#999" stroke-width="1"/>
+  <path d="M66,38 Q70,38 70,42" fill="none" stroke="#999" stroke-width="1"/>
+  <!-- Left speaker -->
+  <rect x="12" y="28" width="10" height="24" rx="2" fill="none" stroke="#3584e4" stroke-width="1.2"/>
+  <circle cx="17" cy="36" r="3" fill="none" stroke="#3584e4" stroke-width="0.8"/>
+  <circle cx="17" cy="45" r="2" fill="none" stroke="#3584e4" stroke-width="0.8"/>
+  <!-- Right speaker -->
+  <rect x="98" y="28" width="10" height="24" rx="2" fill="none" stroke="#3584e4" stroke-width="1.2"/>
+  <circle cx="103" cy="36" r="3" fill="none" stroke="#3584e4" stroke-width="0.8"/>
+  <circle cx="103" cy="45" r="2" fill="none" stroke="#3584e4" stroke-width="0.8"/>
+  <!-- Sound waves from left -->
+  <path d="M26,36 Q32,40 26,44" fill="none" stroke="#3584e4" stroke-width="0.8"/>
+  <path d="M30,32 Q38,40 30,48" fill="none" stroke="#3584e4" stroke-width="0.8" stroke-opacity="0.5"/>
+  <!-- Sound waves from right -->
+  <path d="M94,36 Q88,40 94,44" fill="none" stroke="#3584e4" stroke-width="0.8"/>
+  <path d="M90,32 Q82,40 90,48" fill="none" stroke="#3584e4" stroke-width="0.8" stroke-opacity="0.5"/>
+  <!-- Labels -->
+  <text x="17" y="66" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">L</text>
+  <text x="103" y="66" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">R</text>
+  <text x="60" y="72" font-family="sans-serif" font-size="5" fill="#999" text-anchor="middle">Stereo · Surround</text>
+</svg>

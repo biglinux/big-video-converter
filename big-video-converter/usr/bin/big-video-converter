@@ -1,0 +1,1829 @@
+#!/usr/bin/env bash
+
+# Version: 3.0.0
+# Public CLI settings below are supplied through the environment.
+# shellcheck disable=SC2154
+
+# If ffmpeg_executable is not set, use ffmpeg
+if [[ -z "$ffmpeg_executable" ]]; then
+	# If have jellyfin-ffmpeg installed, use it
+	if [[ -e /usr/lib/jellyfin-ffmpeg/ffmpeg ]]; then
+		ffmpeg_executable="/usr/lib/jellyfin-ffmpeg/ffmpeg"
+	else
+		ffmpeg_executable="ffmpeg"
+	fi
+fi
+
+# If show_executable is set, show the ffmpeg executable path
+if [[ $show_executable == 1 ]]; then
+	echo "$ffmpeg_executable"
+	exit 0
+fi
+
+# GPU detection helpers.
+#
+# Neither vainfo nor lspci is required: vainfo is not used anywhere in this
+# script, and lspci is missing on minimal installs (Ubuntu inside an AppImage,
+# containers), where refusing to run would break every GPU conversion. When
+# lspci is unavailable the PCI vendor IDs exported by the kernel are used
+# instead, formatted so the vendor matching below keeps working.
+detect_gpu_devices() {
+	if command -v lspci >/dev/null; then
+		lspci
+		return
+	fi
+
+	local vendor_file vendor
+	for vendor_file in /sys/class/drm/card[0-9]*/device/vendor; do
+		[[ -r $vendor_file ]] || continue
+		vendor=$(<"$vendor_file")
+		case $vendor in
+		0x10de) echo "VGA compatible controller: NVIDIA Corporation device" ;;
+		0x1002 | 0x1022) echo "VGA compatible controller: AMD/ATI device" ;;
+		0x8086) echo "VGA compatible controller: Intel Corporation device" ;;
+		esac
+	done | sort -u
+}
+
+# Define color variables
+COLOR_RESET="\e[0m"
+COLOR_GREEN="\e[32m"
+COLOR_YELLOW="\e[33m"
+COLOR_CYAN="\e[36m"
+COLOR_BLUE="\e[34m"
+
+# Show help if no arguments are passed or the first argument is -h or --help
+if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
+	echo -e "${COLOR_CYAN}Usage:${COLOR_RESET} ${COLOR_YELLOW}variables=value${COLOR_RESET} $0 ${COLOR_YELLOW}input_file${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_CYAN}You can specify various variables before the command. Below are the available options and examples:${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}1. Specifying the GPU:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify which GPU to use for the operation. Options include:${COLOR_GREEN} auto, nvidia, amd, intel, software${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}gpu=nvidia${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}2. Specifying the Output File:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the name of the output file. If this variable is not specified, a default name will be used.${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}output_file=video_converted.mp4${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}3. Specifying the Output Folder:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the folder where the output file will be saved. This will save the file with the same name as the input file in the specified folder.${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}If ${COLOR_YELLOW}output_file${COLOR_CYAN} is specified, this variable is ignored.${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}output_folder=/home/user/Videos${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}4. Specifying Video Quality:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the quality of the video. Options include:${COLOR_GREEN} veryhigh, high, medium, low, verylow${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}video_quality=high${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}5. Specifying Audio Bitrate:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the bitrate of the audio. Example:${COLOR_GREEN} 128k, 192k, 256k${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Default is 32k per channel, stereo audio will have 64k bitrate, and 5.1 audio will have 192k bitrate${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}audio_bitrate=192k${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}6. Specifying Audio Channels:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the number of audio channels. If not specified, the default will be used.${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}audio_channels=2${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}7. Video Filter:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the video filter for ffmpeg. Example:${COLOR_GREEN} -vf scale=1280x720${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}8. Specifying Compression Preset:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the preset for compression.:${COLOR_GREEN} ultrafast, veryfast, faster, medium, slow, veryslow${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Default is medium for GPU encode and faster for software encode${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Example:${COLOR_RESET} ${COLOR_YELLOW}preset=veryslow${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}9. Passing Additional Options to FFmpeg:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can pass additional options directly to FFmpeg using the ${COLOR_YELLOW}options${COLOR_CYAN} variable.${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}Example to cut a video from 1 minute to 30 seconds:${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}options=\"-ss 60 -t 30\"${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}10. Specifying Subtitle Handling:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify how to handle subtitles. Options include:${COLOR_GREEN} extract, embedded, none${COLOR_RESET} Default is extract"
+	echo -e "   ${COLOR_CYAN}Example to extract subtitles:${COLOR_RESET} ${COLOR_YELLOW}subtitle_extract=extract${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}11. Specifying Audio Handling:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify how to handle audio. Options include:${COLOR_GREEN} copy, reencode, none${COLOR_RESET} Default is copy"
+	echo -e "   ${COLOR_CYAN}Example to copy audio without reencoding:${COLOR_RESET} ${COLOR_YELLOW}audio_handling=copy${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}12. Specifying Audio Codec for Re-encoding:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the audio codec when re-encoding. Options include:${COLOR_GREEN} aac, opus, ac3${COLOR_RESET} Default is aac"
+	echo -e "   ${COLOR_CYAN}Example to use opus codec:${COLOR_RESET} ${COLOR_YELLOW}audio_codec=opus${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}13. Specifying Video Encoder:${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}You can specify the video encoder. Options include:${COLOR_GREEN} h264, h265, av1, vp9${COLOR_RESET} Default is h264"
+	echo -e "   ${COLOR_CYAN}Example to use h265 encoder:${COLOR_RESET} ${COLOR_YELLOW}video_encoder=h265${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}14. Force Gpu partial mode, decode using CPU and encode using GPU:${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}gpu_partial=1${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}15. Force CPU decode and encode:${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}force_software=1${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}16. Copy video without reencode:${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}force_copy_video=1${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}17. Only extract subtitles to .srt files:${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}only_extract_subtitles=1${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}18. Show ffmpeg executable path:${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}show_executable=1${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}19. Force ffmpeg encoder. Options: nvenc, vulkan, vaapi, qsv, amf, software ${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}force_encoder=encoder_name${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}20. Force ffmpeg decoder. Options: cuda, vaapi, qsv, amf, software ${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}force_decoder=decoder_name${COLOR_RESET}"
+	echo ""
+	echo -e "${COLOR_BLUE}21. Preset file (TOML). Fills in every variable left unset above and adds its encoder arguments.${COLOR_RESET}"
+	echo -e "   ${COLOR_YELLOW}preset_file=~/.config/big-video-converter/presets/youtube.toml${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	exit 0
+fi
+
+# Use the first argument as the input file
+input_file="$1"
+# Absolute paths also keep leading '-' and ':' in filenames away from option
+# parsing and FFmpeg's protocol selector. Do not normalize via command output:
+# that would strip a trailing newline from an otherwise valid filename.
+[[ $input_file == /* ]] || input_file="$PWD/$input_file"
+
+# Validate that input file exists and is readable
+if [[ ! -f "$input_file" ]]; then
+	echo "ERROR: Input file not found: $input_file"
+	exit 1
+fi
+
+if [[ ! -r "$input_file" ]]; then
+	echo "ERROR: Input file is not readable: $input_file"
+	exit 1
+fi
+
+# Everything this job writes goes next to the file it will publish. Never
+# remove a file merely because its name resembles one of our outputs.
+output_stage_dir=""
+# The ffmpeg run by run_ffmpeg is a background job, so a signal that ends this
+# script (Ctrl+C, the GUI's cancel) must not leave it encoding on its own.
+ffmpeg_pid=""
+cleanup() {
+    if [[ -n $ffmpeg_pid ]] && kill -0 "$ffmpeg_pid" 2>/dev/null; then
+        kill -TERM "$ffmpeg_pid" 2>/dev/null
+        local i
+        for ((i = 0; i < 50; i++)); do
+            kill -0 "$ffmpeg_pid" 2>/dev/null || break
+            sleep 0.1
+        done
+        kill -KILL "$ffmpeg_pid" 2>/dev/null
+        wait "$ffmpeg_pid" 2>/dev/null
+    fi
+    [[ -z $output_stage_dir ]] || rm -rf -- "$output_stage_dir"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+# The encode happens in a private directory and only a finished file takes the
+# destination name, so a failed or cancelled job never leaves a truncated video
+# where a playable one used to be. Renaming needs no free space, replaces the
+# name atomically, and works on filesystems with no hard links at all. -T is
+# required: without it a destination that is a symlink to a directory would
+# receive the file inside it instead of being replaced.
+publish() {
+    mv -fT -- "$1" "$2"
+}
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+
+# Use the same FFprobe distribution as the selected FFmpeg whenever possible.
+if [[ -z ${ffprobe_executable:-} ]]; then
+    ffmpeg_path=$(command -v -- "$ffmpeg_executable") || exit 1
+    if [[ -x ${ffmpeg_path%/*}/ffprobe ]]; then
+        ffprobe_executable="${ffmpeg_path%/*}/ffprobe"
+    else
+        ffprobe_executable=ffprobe
+    fi
+fi
+
+# A preset file (TOML, read by utils/presets.py) fills in whatever the caller
+# left unset and prepends its own FFmpeg options; an explicit variable always
+# wins, so the GUI's widgets stay the truth when both are present. The helper
+# validates the file and answers NUL-separated, never as shell text.
+preset_helper="$script_dir/../share/big-video-converter/utils/presets.py"
+if [[ -n ${preset_file:-} ]]; then
+    python3 "$preset_helper" --validate "$preset_file" >/dev/null || exit 2
+    while IFS= read -r -d '' pair; do
+        name=${pair%%=*}
+        value=${pair#*=}
+        [[ $name =~ ^[a-z_]+$ ]] || continue
+        if [[ $name == preset_options ]]; then
+            options="$value ${options:-}"
+        elif [[ -z ${!name:-} ]]; then
+            printf -v "$name" '%s' "$value"
+        fi
+    done < <(python3 "$preset_helper" --env "$preset_file")
+    echo "Preset: $preset_file"
+fi
+
+# Arguments a preset pins for one encoder go after the script's own, so
+# FFmpeg's last-one-wins rule lets them override a single knob.
+append_preset_encoder_args() { # <encoder array name>
+    [[ -n ${preset_file:-} ]] || return 0
+    local -n encoder_argv=$1
+    local i name=""
+    for ((i = 0; i < ${#encoder_argv[@]} - 1; i++)); do
+        [[ ${encoder_argv[$i]} == -c:v ]] && name=${encoder_argv[$((i + 1))]}
+    done
+    [[ -n $name && $name != copy ]] || return 0
+    local -a extra=()
+    mapfile -d '' -t extra < <(python3 "$preset_helper" --encoder-args "$preset_file" "$name")
+    [[ ${#extra[@]} -eq 0 ]] || encoder_argv+=("${extra[@]}")
+}
+
+# Scalar values used in arithmetic must not become awk/bc expressions.
+for name in hpf_frequency compressor_intensity gate_intensity noise_strength     noise_speech_strength noise_model noise_lookahead noise_model_blend noise_voice_recovery; do
+    value=${!name}
+    if [[ -n $value && ! $value =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+        echo "ERROR: Invalid numeric setting: $name" >&2
+        exit 2
+    fi
+done
+if [[ -n $audio_channels && ! $audio_channels =~ ^([1-9]|[1-5][0-9]|6[0-4])$ ]]; then
+    echo "ERROR: Invalid audio channel count" >&2
+    exit 2
+fi
+if [[ -n $eq_bands ]]; then
+    IFS=, read -ra eq_values <<< "$eq_bands"
+    [[ ${#eq_values[@]} -eq 10 ]] || { echo "ERROR: Expected ten equalizer bands" >&2; exit 2; }
+    for value in "${eq_values[@]}"; do
+        [[ $value =~ ^-?[0-9]+([.][0-9]+)?$ ]] || { echo "ERROR: Invalid equalizer gain" >&2; exit 2; }
+    done
+fi
+
+#############################################################################
+# Probing helpers
+#
+# ffprobe exits non-zero and prints nothing when it cannot open a decoder for
+# ANY stream of the file. Some MKVs with dvd_subtitle tracks trigger this on
+# FFmpeg 9 ("Could not open codec for input stream N") even though the
+# container and the video stream are perfectly readable and ffmpeg converts
+# the file without any trouble. So never treat an ffprobe failure as "the file
+# is corrupted": fall back to parsing `ffmpeg -i` output instead.
+#############################################################################
+ffmpeg_probe_output=""
+
+# ffprobe 9 answers "-show_entries stream=..." with the stream_groups section
+# as well (MOV files carry a Track Reference group for their timecode track).
+# The CSV writer then prints an empty row for the group and repeats the streams
+# it references, without their tags. Read raw, a stereo track came back as
+# "\n2": the old string-built command ended a line at "-ac:a:0" and ran the
+# stray "2" as a shell command (issue #27, exit 127). Keep one row per leading
+# field; the last one wins because the real stream entries, tags included, are
+# printed after the group's copies.
+probe_rows() { # <stream specifier> <show_entries> → clean CSV rows
+	"$ffprobe_executable" -v error -select_streams "$1" -show_entries "$2" -of csv=p=0 "$input_file" 2>/dev/null |
+		awk -F, 'NF && $1 != "" { if (!($1 in row)) order[++n] = $1; row[$1] = $0 }
+		         END { for (i = 1; i <= n; i++) print row[order[i]] }' | sed 's/,$//'
+}
+
+probe_value() { # <stream specifier> <entry> → a single scalar
+	probe_rows "$1" "$2" | head -n1
+}
+
+# Raw `ffmpeg -i` report for the input file (cached).
+ffmpeg_probe() {
+	if [[ -z $ffmpeg_probe_output ]]; then
+		ffmpeg_probe_output=$("$ffmpeg_executable" -hide_banner -i "$input_file" -t 0 -f null - 2>&1)
+	fi
+	printf '%s\n' "$ffmpeg_probe_output"
+}
+
+# Only the input stream declarations, so the Output/mapping lines don't leak in.
+ffmpeg_probe_input_block() {
+	ffmpeg_probe | sed -n '/^Input #0/,/^Output #/p'
+}
+
+# Emits "index|language|codec" for every input stream of the given kind
+# (Video, Audio or Subtitle), parsed from ffmpeg's own report.
+ffmpeg_probe_streams() {
+	local kind="$1" line
+	local stream_re='Stream #0:([0-9]+)(\(([a-zA-Z]{2,3})\))?[^:]*: ([A-Za-z]+): ([A-Za-z0-9_]+)'
+	while IFS= read -r line; do
+		if [[ $line =~ $stream_re ]]; then
+			[[ ${BASH_REMATCH[4]} == "$kind" ]] || continue
+			printf '%s|%s|%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[3]}" "${BASH_REMATCH[5]}"
+		fi
+	done < <(ffmpeg_probe_input_block)
+}
+
+# Fallbacks mirroring the CSV layout of the ffprobe calls they replace.
+fb_audio_info() { # index,language
+	local idx lang codec
+	while IFS='|' read -r idx lang codec; do
+		printf '%s,%s\n' "$idx" "$lang"
+	done < <(ffmpeg_probe_streams Audio)
+}
+
+fb_subtitle_codecs() { # index,codec_name
+	local idx lang codec
+	while IFS='|' read -r idx lang codec; do
+		printf '%s,%s\n' "$idx" "$codec"
+	done < <(ffmpeg_probe_streams Subtitle)
+}
+
+fb_subtitle_info() { # index,forced,language,title
+	local idx lang codec
+	while IFS='|' read -r idx lang codec; do
+		printf '%s,0,%s,\n' "$idx" "$lang"
+	done < <(ffmpeg_probe_streams Subtitle)
+}
+
+# Channel count / layout of an audio stream, by absolute stream index.
+fb_audio_layout() {
+	local want="$1" line
+	local layout_re="Stream #0:${want}[^:]*: Audio: [^,]+, [0-9]+ Hz, ([^,]+)"
+	while IFS= read -r line; do
+		[[ $line =~ $layout_re ]] || continue
+		printf '%s\n' "${BASH_REMATCH[1]}"
+		return
+	done < <(ffmpeg_probe_input_block)
+}
+
+fb_audio_channels() {
+	local layout
+	layout=$(fb_audio_layout "$1")
+	case ${layout%%(*} in
+	mono) echo 1 ;;
+	stereo) echo 2 ;;
+	2.1 | 3.0) echo 3 ;;
+	quad | 4.0 | 3.1) echo 4 ;;
+	5.0) echo 5 ;;
+	5.1 | 6.0) echo 6 ;;
+	6.1 | 7.0) echo 7 ;;
+	7.1) echo 8 ;;
+	# "3 channels": ffmpeg's form for a layout without a name.
+	[0-9]*\ channels) echo "${layout%% *}" ;;
+	*) echo "" ;;
+	esac
+}
+
+# Is ffprobe usable for this particular file?
+ffprobe_usable=true
+if [[ -z $("$ffprobe_executable" -v error -show_entries format=format_name -of csv=p=0 "$input_file" 2>/dev/null) ]]; then
+	ffprobe_usable=false
+fi
+
+# Validate the input: only reject the file when ffmpeg itself sees no video.
+if [[ $ffprobe_usable == false ]]; then
+	if ! grep -qE 'Stream #0:[0-9]+.*: Video:' <<<"$(ffmpeg_probe_input_block)"; then
+		echo "ERROR: Input file is corrupted or not a valid video file: $input_file"
+		echo "The file container could not be read. It may be a corrupted download or an unsupported format."
+		exit 2
+	fi
+	echo "⚠️  ffprobe could not analyze this file; using ffmpeg metadata instead."
+fi
+
+# Detect bit depth and codec of input video
+echo "Iniciando o processo FFmpeg..."
+echo "Analyzing input video..."
+if [[ $ffprobe_usable == true ]]; then
+	pix_fmt=$(probe_value v:0 stream=pix_fmt)
+	video_profile=$(probe_value v:0 stream=profile)
+else
+	# "Video: h264 (Main), yuv420p(tv, bt709), 1920x820" → profile / pixel format
+	probe_video_line=$(ffmpeg_probe_input_block | grep -m1 -E 'Stream #0:[0-9]+.*: Video:')
+	pix_fmt=""
+	video_profile=""
+	profile_re='Video: [A-Za-z0-9_]+ \(([^)]*)\)'
+	pix_fmt_re='Video: [^,]+, ([a-z0-9]+)'
+	if [[ $probe_video_line =~ $profile_re ]]; then
+		video_profile="${BASH_REMATCH[1]}"
+	fi
+	if [[ $probe_video_line =~ $pix_fmt_re ]]; then
+		pix_fmt="${BASH_REMATCH[1]}"
+	fi
+fi
+
+# Determine if video is 10-bit based on pixel format and profile
+is_10bit=false
+if [[ $pix_fmt =~ yuv.*p10 || $pix_fmt =~ yuv.*10le || $pix_fmt =~ .*10bit.* || $pix_fmt =~ yuv.*p12 || $pix_fmt =~ yuv.*12le ]]; then
+	is_10bit=true
+	echo "Detected high bit depth video input (pixel format: $pix_fmt)"
+elif [[ $video_profile =~ .*10.* || $video_profile =~ .*High\ 10.* || $video_profile =~ .*Main\ 10.* ]]; then
+	is_10bit=true
+	echo "Detected 10-bit video input (profile: $video_profile)"
+else
+	if [[ -z "$pix_fmt" ]]; then
+		echo "⚠️  Warning: Could not detect pixel format - file may be corrupted or use an unusual format"
+	fi
+	echo "ℹ️  Detected 8-bit video ($pix_fmt) - using standard profile"
+fi
+
+# Detect pixel formats with implicit GBR color matrix (e.g. ProRes 4444/XQ yuv444p12le)
+# These formats cause swscaler conversion failures and need zscale to override color matrix
+needs_gbr_matrix_fix=false
+if [[ $pix_fmt =~ 444p12 || $pix_fmt =~ ^gbrp ]]; then
+	needs_gbr_matrix_fix=true
+	echo "Detected video with GBR-incompatible pixel format ($pix_fmt) - zscale color fix will be applied"
+fi
+
+echo "Detecting source video codec..."
+if [[ $ffprobe_usable == true ]]; then
+	source_video_codec=$("$ffprobe_executable" -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$input_file" 2>/dev/null | head -n1)
+else
+	source_video_codec=$(ffmpeg_probe_streams Video | head -n1 | cut -d'|' -f3)
+fi
+echo "Source video codec detected: $source_video_codec"
+
+# Source geometry, frame rate and dynamic range. Three decisions below depend
+# on them: the H.264 level, whether 4K output may stay in H.264 at all, and
+# whether an HDR source needs tone mapping to become a valid SDR file.
+source_width=""; source_height=""; source_fps_num=""; source_fps_den=""; source_transfer=""
+if [[ $ffprobe_usable == true ]]; then
+	# key=value lines: ffprobe's CSV writer orders fields its own way, not
+	# the way they were requested, so positional parsing mislabels them.
+	while IFS='=' read -r key value; do
+		case $key in
+		width) source_width=$value ;;
+		height) source_height=$value ;;
+		r_frame_rate) source_fps_num=${value%%/*}; source_fps_den=${value##*/} ;;
+		color_transfer) source_transfer=$value ;;
+		esac
+	done < <("$ffprobe_executable" -v error -select_streams v:0 \
+		-show_entries stream=width,height,r_frame_rate,color_transfer -of default=noprint_wrappers=1 "$input_file" 2>/dev/null)
+else
+	dims_re='([0-9]{3,5})x([0-9]{3,5})'
+	fps_re='([0-9.]+) fps'
+	[[ $probe_video_line =~ $dims_re ]] && source_width=${BASH_REMATCH[1]} && source_height=${BASH_REMATCH[2]}
+	[[ $probe_video_line =~ $fps_re ]] && source_fps_num=${BASH_REMATCH[1]%%.*} && source_fps_den=1
+	[[ $probe_video_line == *smpte2084* ]] && source_transfer=smpte2084
+	[[ $probe_video_line == *arib-std-b67* ]] && source_transfer=arib-std-b67
+fi
+[[ $source_fps_num =~ ^[0-9]+$ ]] || source_fps_num=30
+[[ $source_fps_den =~ ^[0-9]+$ && $source_fps_den -gt 0 ]] || source_fps_den=1
+
+is_hdr=false
+if [[ $source_transfer == smpte2084 || $source_transfer == arib-std-b67 ]]; then
+	is_hdr=true
+	echo "Detected HDR video input (transfer: $source_transfer)"
+fi
+
+# Output geometry: the requested resolution when there is one, else the source.
+output_width=$source_width; output_height=$source_height
+if [[ $video_resolution =~ ^([0-9]+)x([0-9]+)$ ]]; then
+	output_width=${BASH_REMATCH[1]}; output_height=${BASH_REMATCH[2]}
+fi
+
+# Above 1080p, H.264 is a PC-only format: televisions decode UHD in HEVC (or
+# VP9/AV1), never in H.264. H.264 is this tool's default, so a 4K source
+# converted with defaults used to produce a file no TV would open. Switch to
+# H.265 unless the caller insists (video_encoder_strict=1).
+if [[ ($video_encoder == "h264" || -z "$video_encoder") && $output_width =~ ^[0-9]+$ && $output_width -gt 1920 && $video_encoder_strict != 1 ]]; then
+	video_encoder=h265
+	echo "Output is wider than 1920 px: switching from H.264 to H.265 (televisions do not decode H.264 above 1080p; set video_encoder_strict=1 to keep H.264)"
+fi
+
+# The smallest H.264 level whose macroblock budget fits the picture and frame
+# rate. The H.264 encoders (libx264, VAAPI, QSV) used to be given a fixed 4.1:
+# a 1080p limit written into the header of every stream, 4K included -- and TV
+# decoders trust the header, so those files failed to open on a television.
+h264_level_for() {
+	local w=$1 h=$2 num=${3:-30} den=${4:-1}
+	[[ $w =~ ^[0-9]+$ && $h =~ ^[0-9]+$ ]] || { echo 4.1; return; }
+	local mbs=$(( ((w + 15) / 16) * ((h + 15) / 16) ))
+	local mbps=$(( mbs * num / den ))
+	local entry level max_mbs max_mbps
+	for entry in "3.1:3600:108000" "3.2:5120:216000" "4.1:8192:245760" "4.2:8704:522240" \
+	             "5.0:22080:589824" "5.1:36864:983040" "5.2:36864:2073600" "6.0:139264:4177920" \
+	             "6.1:139264:8355840" "6.2:139264:16711680"; do
+		IFS=: read -r level max_mbs max_mbps <<<"$entry"
+		if (( mbs <= max_mbs && mbps <= max_mbps )); then echo "$level"; return; fi
+	done
+	echo 6.2
+}
+h264_level=$(h264_level_for "$output_width" "$output_height" "$source_fps_num" "$source_fps_den")
+
+# Determine if we need to convert 10-bit video to 8-bit for H.264 compatibility
+needs_10bit_to_8bit_conversion=false
+if [[ $is_10bit == true && ($video_encoder == "h264" || -z "$video_encoder") ]]; then
+	needs_10bit_to_8bit_conversion=true
+	echo "Detected 10-bit input. Forcing 8-bit pixel format (nv12) for H.264 compatibility."
+elif [[ ($video_encoder == "h264" || -z "$video_encoder") && "$source_video_codec" != "h264" && $is_10bit == false ]]; then
+	echo "Converting from $source_video_codec to h264 (8-bit input, no bit depth conversion needed)."
+fi
+
+# An HDR source (PQ or HLG) going to an 8-bit encoder must be tone mapped, not
+# just truncated: dropping bits keeps the PQ curve, so the picture comes out
+# washed out, and ffmpeg copies the bt2020/PQ tags onto the 8-bit stream --
+# an "HDR10 in 8 bits" file that television decoders refuse to open. The
+# software chain below converts to linear light, maps highlights (hable),
+# and lands in bt709 8-bit with matching tags. Hardware decode is skipped
+# for these files (Stage 2 onwards) so the filter sees full-depth frames.
+needs_tonemap=false
+tonemap_filters="zscale=t=linear:npl=100,format=gbrpf32le,zscale=p=bt709,tonemap=tonemap=hable:desat=0,zscale=t=bt709:m=bt709:r=tv,format=yuv420p"
+sdr_color_tags=()
+if [[ $is_hdr == true && ($video_encoder == "h264" || -z "$video_encoder" || $video_encoder == "vp9") ]]; then
+	needs_tonemap=true
+	sdr_color_tags=(-color_primaries bt709 -color_trc bt709 -colorspace bt709)
+	echo "HDR source with an 8-bit target: applying tone mapping to SDR (bt709)."
+fi
+
+# Derive the destination without treating dots in parent directories as an
+# extension. User-specified paths are literal data, never shell fragments.
+input_file_without_extension=${input_file##*/}
+input_file_without_extension=${input_file_without_extension%.*}
+if [[ -z $output_file ]]; then
+    input_dir=${input_file%/*}
+    output_file="${output_folder:-$input_dir}/$input_file_without_extension.${output_format:-mp4}"
+elif [[ -n $output_format ]]; then
+    output_dir=${output_file%/*}
+    output_name=${output_file##*/}
+    [[ $output_dir != "$output_file" ]] || output_dir=.
+    output_file="$output_dir/${output_name%.*}.$output_format"
+elif [[ ! ${output_file,,} =~ \.(mp4|avi|mkv|mov|wmv|flv|webm|m4v|mpeg|mpg)$ ]]; then
+    output_file+=.mp4
+fi
+[[ $output_file == /* ]] || output_file="$PWD/$output_file"
+# "-ef" compares device and inode through symlinks, so this one test covers
+# every spelling of "the output is the input", including a symlinked path and a
+# hard link. Encoding over the source would destroy it while still reading it.
+if [[ $output_file -ef $input_file ]]; then
+    echo "ERROR: The output file is the same as the input file: $output_file" >&2
+    echo "Choose a different output folder or format." >&2
+    exit 1
+fi
+# The job's scratch directory sits beside its own output, so publishing is a
+# rename within one filesystem and nothing large is ever written to /tmp,
+# which is RAM on most systems. The name carries our process id: no live job
+# can share it, and one left behind by a killed run says whose it was.
+output_stage_dir="${output_file%/*}/.bvc-$$"
+rm -rf -- "$output_stage_dir"
+mkdir -- "$output_stage_dir" || exit 1
+printf 'Job workspace: %s\n' "$output_stage_dir"
+staged_output="$output_stage_dir/video.${output_file##*.}"
+
+option_parser="$script_dir/../share/big-video-converter/utils/ffmpeg_options.py"
+if ! python3 "$option_parser" --null "${options:-}" > "$output_stage_dir/options"; then
+    echo "ERROR: Invalid additional FFmpeg options" >&2
+    exit 2
+fi
+mapfile -d '' -t option_args < "$output_stage_dir/options"
+input_options=()
+output_options=()
+# Trim options belong before -i. After it, FFmpeg decodes and throws away
+# everything up to the cut, which costs the whole offset on every attempt and,
+# in copy mode, leaves the requested opening seconds missing from the output.
+for ((opt=0; opt<${#option_args[@]}; opt++)); do
+    case ${option_args[$opt]} in
+    -ss|-t|-to|-sseof|-itsoffset|-hwaccel|-hwaccel_output_format|-probesize|-analyzeduration|-thread_queue_size)
+        input_options+=("${option_args[$opt]}" "${option_args[$((opt+1))]}")
+        ((opt += 1)) ;;
+    *) output_options+=("${option_args[$opt]}") ;;
+    esac
+done
+
+##############
+# Subtitles
+##############
+subtitle_cmd=()
+subtitle_outputs=()
+subtitle_destinations=()
+: "${subtitle_extract:=extract}"
+if [[ $ffprobe_usable == true ]]; then
+    subtitle_codec_info=$(probe_rows s stream=index,codec_name)
+else
+    subtitle_codec_info=$(fb_subtitle_codecs)
+fi
+subtitle_input_options=()
+subtitle_packet_options=()
+defer_subtitles=false
+if [[ -n $subtitle_codec_info && ( $subtitle_extract != none || $only_extract_subtitles == 1 ) ]]; then
+    if ! python3 "$script_dir/../share/big-video-converter/utils/subtitle_timing.py" "${options:-}" > "$output_stage_dir/subtitle-timing"; then
+        echo "ERROR: Invalid subtitle trim interval" >&2
+        exit 2
+    fi
+    mapfile -d '' -t subtitle_timing < "$output_stage_dir/subtitle-timing"
+    [[ -z ${subtitle_timing[0]} ]] || subtitle_input_options=(-t "${subtitle_timing[0]}")
+    if [[ -n ${subtitle_timing[1]} ]]; then
+        subtitle_packet_options=(-bsf:s "${subtitle_timing[1]}")
+        [[ $subtitle_extract != embedded ]] || defer_subtitles=true
+    fi
+fi
+if [[ $only_extract_subtitles == 1 ]]; then
+    subtitle_extract=extract
+fi
+if [[ $subtitle_extract == embedded ]]; then
+    case ${output_file##*.} in
+    mp4|mov|m4v|MP4|MOV|M4V) subtitle_encoder=mov_text ;;
+    webm|WEBM) subtitle_encoder=webvtt ;;
+    *) subtitle_encoder=copy ;;
+    esac
+    while IFS=, read -r index codec_name; do
+        [[ $index =~ ^[0-9]+$ ]] || continue
+        # A bitmap subtitle has no text form: keep the rest of the conversion
+        # rather than refusing the whole job over one track.
+        if [[ $subtitle_encoder != copy && ! $codec_name =~ ^(subrip|ass|ssa|mov_text|text|webvtt)$ ]]; then
+            echo "Warning: skipping subtitle stream $index ($codec_name): not supported in .${output_file##*.}; select MKV or extract subtitles."
+            continue
+        fi
+        subtitle_cmd+=(-map "0:$index")
+    done <<< "$subtitle_codec_info"
+    if [[ ${#subtitle_cmd[@]} -eq 0 ]]; then
+        defer_subtitles=false
+    else
+        subtitle_cmd+=(-c:s "$subtitle_encoder")
+    fi
+elif [[ $subtitle_extract == extract || $only_extract_subtitles == 1 ]]; then
+    # Names players recognise: "<video>.<lang>.srt", with ".forced" for a
+    # forced track. A repeated language gets a counter from the second track
+    # on, counted per name so two forced tracks no longer land on one file.
+    declare -A sidecar_count=()
+    while IFS=, read -r index codec_name; do
+        [[ $index =~ ^[0-9]+$ && $codec_name == subrip ]] || continue
+        language_code=und forced=0 title=""
+        if [[ $ffprobe_usable == true ]]; then
+            stream_info=$("$ffprobe_executable" -v error -select_streams "$index" -show_entries stream_disposition=forced:stream_tags=language,title -of default=nw=1 "$input_file") || exit 2
+            while IFS="=" read -r key value; do
+                case $key in
+                TAG:language) language_code=$value ;;
+                TAG:title) title=$value ;;
+                DISPOSITION:forced) forced=$value ;;
+                esac
+            done <<< "$stream_info"
+            [[ $language_code =~ ^[a-zA-Z]{2,3}$ ]] || language_code=und
+        fi
+        suffix=""
+        [[ $forced == 1 || $title == *"(Forced)"* ]] && suffix=.forced
+        count=$(( ${sidecar_count[$language_code$suffix]:-0} + 1 ))
+        sidecar_count[$language_code$suffix]=$count
+        [[ $count -eq 1 ]] || language_code+="$count"
+        sidecar="$output_stage_dir/subtitle-$index.srt"
+        destination="${output_file%.*}.$language_code$suffix.srt"
+        subtitle_cmd+=(-map "0:$index" -c:s copy "${subtitle_packet_options[@]}" "$sidecar")
+        subtitle_outputs+=("$sidecar")
+        subtitle_destinations+=("$destination")
+    done <<< "$subtitle_codec_info"
+fi
+
+publish_subtitles() {
+    local i
+    for i in "${!subtitle_outputs[@]}"; do
+        publish "${subtitle_outputs[$i]}" "${subtitle_destinations[$i]}" || return 1
+    done
+}
+
+##############
+# Audio
+##############
+# If not specified, use copy.
+: ${audio_handling:=copy}
+original_audio_handling=$audio_handling
+
+# If audio codec not specified, use aac
+: ${audio_codec:=aac}
+
+# Floating point maths. bc is not installed by default on Debian/Ubuntu
+# (and therefore inside minimal AppImage hosts), so fall back to awk, which is
+# part of every base system. Expressions are written in awk syntax
+# (exp/log/sqrt) and translated for bc when bc is used.
+calc() {
+	local expr="$1"
+	if command -v bc >/dev/null; then
+		expr=${expr//exp(/e(}
+		expr=${expr//log(/l(}
+		echo "scale=6; $expr" | bc -l
+	else
+		awk "BEGIN { printf \"%.6f\", $expr }"
+	fi
+}
+
+# Evaluates a comparison, echoing 1 or 0.
+calc_bool() {
+	awk "BEGIN { print (($1) ? 1 : 0) }"
+}
+
+##############
+##############
+# Audio Processing Filter Chain
+# Build filter chain: HPF → Compressor → Normalize → [NR] → Gate → EQ
+# Each filter works independently — NR is just one optional filter
+noise_audio_filter=""
+nr_requires_mono=false
+local_filters=()
+
+# 1. High-Pass Filter
+if [[ $hpf_enabled == "1" ]]; then
+	: ${hpf_frequency:=80}
+	local_filters+=("highpass=f=${hpf_frequency}:poles=2")
+	echo "HPF enabled: frequency=${hpf_frequency}Hz"
+fi
+
+# 2. Compressor (before NR to even out dynamics)
+if [[ $compressor_enabled == "1" ]]; then
+	: ${compressor_intensity:=1.0}
+	comp_threshold_db=$(calc "-20 - ${compressor_intensity} * 20")
+	comp_ratio=$(calc "3 + ${compressor_intensity} * 7")
+	comp_makeup_db=$(calc "6 + ${compressor_intensity} * 12")
+	comp_knee_db=$(calc "12 + ${compressor_intensity} * 4")
+	comp_threshold_linear=$(calc "exp(${comp_threshold_db}/20 * log(10))")
+	comp_makeup_linear=$(calc "exp(${comp_makeup_db}/20 * log(10))")
+	comp_knee_linear=$(calc "exp(${comp_knee_db}/20 * log(10))")
+	local_filters+=("acompressor=threshold=${comp_threshold_linear}:ratio=${comp_ratio}:attack=150:release=800:makeup=${comp_makeup_linear}:knee=${comp_knee_linear}:detection=rms")
+	echo "Compressor enabled: intensity=${compressor_intensity} threshold=${comp_threshold_db}dB ratio=${comp_ratio}"
+fi
+
+# 3. Volume Normalization (before NR for consistent input level)
+# speechnorm: fast, no internal resampling, no pumping artifacts
+if [[ $normalize_enabled == "1" ]]; then
+	local_filters+=("speechnorm=e=12.5:r=0.0001:l=1")
+	echo "Volume normalization enabled (speechnorm)"
+fi
+
+# 4. GTCRN Noise Reduction (requires mono processing via LADSPA)
+if [[ $noise_reduction == "1" ]]; then
+	if [[ -e /usr/lib/ladspa/libgtcrn_ladspa.so ]]; then
+		: ${noise_strength:=1.0}
+		: ${noise_model:=0}
+		: ${noise_speech_strength:=1.0}
+		: ${noise_lookahead:=0}
+		: ${noise_model_blend:=0}
+		: ${noise_voice_recovery:=0.75}
+		local_filters+=("ladspa=file=libgtcrn_ladspa:plugin=gtcrn_mono:controls=c0=1|c1=${noise_strength}|c2=${noise_model}|c3=${noise_speech_strength}|c4=${noise_lookahead}|c5=${noise_model_blend}|c6=${noise_voice_recovery}")
+		echo "Noise reduction enabled: strength=${noise_strength} model=${noise_model}"
+		nr_requires_mono=true
+	else
+		# The other audio filters still apply; refusing the job over a
+		# missing optional plugin would block every conversion instead.
+		echo "WARNING: Noise reduction requested but GTCRN LADSPA plugin not found at /usr/lib/ladspa/libgtcrn_ladspa.so"
+	fi
+fi
+
+# 5. Noise Gate (after NR — post-NR audio is mostly speech, so full-band detection is effective)
+if [[ $noise_gate == "1" ]]; then
+	: ${gate_intensity:=0.5}
+	gate_threshold_db=$(calc "-50 + sqrt(${gate_intensity}) * 35")
+	gate_range_db=$(calc "-40 - sqrt(${gate_intensity}) * 50")
+	gate_threshold_linear=$(calc "exp(${gate_threshold_db}/20 * log(10))")
+	gate_range_linear=$(calc "exp(${gate_range_db}/20 * log(10))")
+	local_filters+=("agate=threshold=${gate_threshold_linear}:range=${gate_range_linear}:attack=10:release=250:ratio=4:detection=rms")
+	echo "Noise gate enabled: intensity=${gate_intensity} threshold=${gate_threshold_db}dB range=${gate_range_db}dB"
+fi
+
+# 6. Equalizer (10-band parametric)
+if [[ $eq_enabled == "1" ]]; then
+	: ${eq_bands:="0,0,0,0,0,0,0,0,0,0"}
+	IFS=',' read -ra bands_arr <<< "$eq_bands"
+	eq_freqs=(31 63 125 250 500 1000 2000 4000 8000 16000)
+	eq_widths=(1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5)
+	eq_parts=()
+	for idx in "${!eq_freqs[@]}"; do
+		gain="${bands_arr[$idx]:-0}"
+		if [[ $(calc_bool "${gain} != 0") -eq 1 ]]; then
+			eq_parts+=("equalizer=f=${eq_freqs[$idx]}:width_type=o:w=${eq_widths[$idx]}:g=${gain}")
+		fi
+	done
+	if [[ ${#eq_parts[@]} -gt 0 ]]; then
+		eq_filter=$(IFS=','; echo "${eq_parts[*]}")
+		local_filters+=("${eq_filter}")
+		echo "Equalizer enabled: ${#eq_parts[@]} active bands"
+	fi
+fi
+
+# Join all filters with comma
+if [[ ${#local_filters[@]} -gt 0 ]]; then
+	noise_audio_filter=$(IFS=','; echo "${local_filters[*]}")
+	echo "Audio filter chain: ${noise_audio_filter}"
+
+	# Force re-encode if audio is set to copy (audio processing requires it)
+	if [[ $audio_handling == "copy" ]]; then
+		echo "Audio processing requires audio re-encoding, switching from copy to reencode"
+		audio_handling="reencode"
+	fi
+fi
+
+# Audio stream queries, honouring the ffprobe fallback.
+# probe_audio_info emits "index,language"; the channel/layout helpers take the
+# relative audio stream number and its absolute index in the container.
+function probe_audio_info() {
+	if [[ $ffprobe_usable == true ]]; then
+		probe_rows a stream=index:stream_tags=language
+	else
+		fb_audio_info
+	fi
+}
+
+function probe_audio_channels() {
+	local rel="$1" abs="$2"
+	if [[ $ffprobe_usable == true ]]; then
+		probe_value "a:$rel" stream=channels
+	else
+		fb_audio_channels "$abs"
+	fi
+}
+
+function probe_audio_layout() {
+	local rel="$1" abs="$2"
+	if [[ $ffprobe_usable == true ]]; then
+		probe_value "a:$rel" stream=channel_layout
+	else
+		fb_audio_layout "$abs"
+	fi
+}
+
+# Build argv arrays; empty audio metadata must produce no audio maps.
+function build_audio_cmd() {
+    audio_cmd=()
+    audio_inputs=()
+    nr_deferred_preprocess=false
+    nr_stream_channels=()
+    nr_stream_layouts=()
+    nr_stream_indices=()
+    nr_stream_bitrates=()
+    nr_stream_languages=()
+    [[ $audio_handling != none ]] || { audio_cmd=(-an); return; }
+    local i=0 index_audio language_audio channels nr_layout brate
+    local audio_info
+    audio_info=$(probe_audio_info)
+    while IFS=, read -r index_audio language_audio; do
+        [[ $index_audio =~ ^[0-9]+$ ]] || continue
+        if [[ $audio_handling == copy ]]; then
+            audio_cmd+=(-map "0:$index_audio" "-c:a:$i" copy)
+        else
+            channels=${audio_channels:-$(probe_audio_channels "$i" "$index_audio")}
+            [[ $channels =~ ^[1-9][0-9]*$ ]] || channels=2
+            brate=${audio_bitrate:-$((channels * 32))k}
+            nr_layout=$(probe_audio_layout "$i" "$index_audio")
+            # FFprobe prints the literal "unknown" for an unspecified layout,
+            # which is not a layout FFmpeg's pan filter accepts. Fall back to
+            # the plain channel count instead of failing the whole job.
+            [[ $nr_layout != unknown ]] || nr_layout=""
+            [[ -z $audio_channels ]] || nr_layout="${channels}c"
+            if [[ -n $noise_audio_filter && $nr_requires_mono == true ]]; then
+                nr_deferred_preprocess=true
+                nr_temp_dir="$output_stage_dir/nr"
+                mkdir -p -- "$nr_temp_dir"
+                nr_stream_channels+=("$channels")
+                nr_stream_layouts+=("${nr_layout:-${channels}c}")
+                nr_stream_indices+=("$index_audio")
+                nr_stream_bitrates+=("$brate")
+                nr_stream_languages+=("${language_audio:-und}")
+            fi
+            audio_cmd+=(-map "0:$index_audio")
+            append_audio_codec audio_cmd "$i" "$brate" "$channels"
+            if [[ -n $noise_audio_filter ]]; then
+                audio_cmd+=("-filter:a:$i" "$noise_audio_filter")
+            fi
+        fi
+        ((i += 1))
+    done <<< "$audio_info"
+}
+
+append_audio_codec() {
+    local -n target=$1
+    local i=$2 brate=$3 channels=$4
+    case $audio_codec in
+    opus) target+=("-c:a:$i" libopus "-b:a:$i" "$brate" "-ac:a:$i" "$channels") ;;
+    ac3) target+=("-c:a:$i" ac3 "-b:a:$i" "$brate" "-ac:a:$i" "$channels") ;;
+    *) target+=("-c:a:$i" aac -aac_coder fast -profile:a aac_low "-b:a:$i" "$brate" "-ac:a:$i" "$channels") ;;
+    esac
+}
+
+# Pre-process all audio streams with noise reduction.
+# Called from attempt_conversion() as a background process to run in parallel
+# with video encoding. Creates $nr_temp_dir/audio_N.flac for each stream.
+# Uses 3-stage pipeline: extract → NR per-channel (parallel) → merge.
+function preprocess_audio_nr() {
+	local num_streams=${#nr_stream_indices[@]}
+    local -a trim_args=()
+    local opt
+    for ((opt=0; opt<${#option_args[@]}; opt++)); do
+        case ${option_args[$opt]} in
+        -ss|-t|-to|-sseof|-itsoffset)
+            trim_args+=("${option_args[$opt]}" "${option_args[$((opt+1))]}")
+            ((opt += 1)) ;;
+        esac
+    done
+	echo "NR: Processing $num_streams audio streams in parallel..."
+
+	# Stage A: Extract each audio stream / apply NR directly for mono
+	local -a extract_pids=()
+	for i in $(seq 0 $((num_streams - 1))); do
+		local index_audio="${nr_stream_indices[$i]}"
+		local channels="${nr_stream_channels[$i]}"
+		local nr_layout="${nr_stream_layouts[$i]}"
+		local temp_audio="$nr_temp_dir/audio_${i}.flac"
+
+		echo "  NR stream $i: index=$index_audio, ${channels}ch, layout=$nr_layout"
+
+		if [[ $channels -le 1 ]]; then
+			# Mono: apply NR directly (no split/merge needed)
+			"$ffmpeg_executable" -nostdin "${trim_args[@]}" -i "$input_file" -map "0:$index_audio" \
+				-filter:a "$noise_audio_filter" \
+				-c:a flac -y "$temp_audio" </dev/null 2>/dev/null &
+			extract_pids+=("$!:direct")
+		else
+			# Multi-channel: extract stream as FLAC first
+			local stream_raw="$nr_temp_dir/raw_stream_${i}.flac"
+			"$ffmpeg_executable" -nostdin "${trim_args[@]}" -i "$input_file" -vn -map "0:$index_audio" -ac "$channels" \
+				-c:a flac -y "$stream_raw" </dev/null 2>/dev/null &
+			extract_pids+=("$!:extract:$i")
+		fi
+	done
+
+	# Wait for Stage A
+	local -a extract_failed=()
+	for entry in "${extract_pids[@]}"; do
+		local pid="${entry%%:*}"
+		if ! wait "$pid"; then
+			extract_failed+=("$entry")
+		fi
+	done
+	if [[ ${#extract_failed[@]} -gt 0 ]]; then
+		echo "ERROR: Audio extraction failed for: ${extract_failed[*]}" >&2
+        return 1
+	fi
+
+	# Stage B: Split into mono channels + apply NR in parallel
+	local -a nr_pids=()
+	local -a nr_pid_stream=()
+	for i in $(seq 0 $((num_streams - 1))); do
+		local channels="${nr_stream_channels[$i]}"
+		[[ $channels -le 1 ]] && continue
+
+		local stream_raw="$nr_temp_dir/raw_stream_${i}.flac"
+		local ch_dir="$nr_temp_dir/stream_${i}"
+		mkdir -p "$ch_dir"
+
+		for ((ch=0; ch<channels; ch++)); do
+			"$ffmpeg_executable" -i "$stream_raw" \
+				-filter:a "pan=mono|c0=c${ch},${noise_audio_filter}" \
+				-c:a flac -y "$ch_dir/ch${ch}.flac" </dev/null 2>/dev/null &
+			nr_pids+=($!)
+			nr_pid_stream+=("$i:$ch")
+		done
+	done
+
+	if [[ ${#nr_pids[@]} -gt 0 ]]; then
+		echo "  NR: Waiting for ${#nr_pids[@]} per-channel processes..."
+		local -a nr_failed=()
+		for pidx in "${!nr_pids[@]}"; do
+			if ! wait "${nr_pids[$pidx]}"; then
+				nr_failed+=("${nr_pid_stream[$pidx]}")
+			fi
+		done
+		if [[ ${#nr_failed[@]} -gt 0 ]]; then
+			echo "ERROR: NR per-channel failed for: ${nr_failed[*]}" >&2
+            return 1
+		fi
+	fi
+
+	# Stage C: Merge channels back to original layout (parallel per stream)
+	local -a merge_pids=()
+	for i in $(seq 0 $((num_streams - 1))); do
+		local channels="${nr_stream_channels[$i]}"
+		[[ $channels -le 1 ]] && continue
+
+		local nr_layout="${nr_stream_layouts[$i]}"
+		local temp_audio="$nr_temp_dir/audio_${i}.flac"
+		local ch_dir="$nr_temp_dir/stream_${i}"
+
+        # Restore exactly the requested layout, including side/back variants.
+        local pan_expr="$nr_layout"
+        for ((ch=0; ch<channels; ch++)); do
+            pan_expr+="|c${ch}=c${ch}"
+        done
+
+		local -a merge_inputs=()
+		for ((ch=0; ch<channels; ch++)); do
+			merge_inputs+=(-i "$ch_dir/ch${ch}.flac")
+		done
+		local merge_filter="amerge=inputs=${channels}"
+		if [[ -n "$pan_expr" ]]; then
+			merge_filter+=",pan=${pan_expr}"
+		fi
+
+		"$ffmpeg_executable" -nostdin "${merge_inputs[@]}" \
+            -filter_complex "$merge_filter" \
+            -c:a flac -y "$temp_audio" </dev/null 2>/dev/null &
+		merge_pids+=($!)
+	done
+
+	# Wait for merges
+	local merge_failed=0
+    for pid in "${merge_pids[@]}"; do
+        wait "$pid" || merge_failed=1
+    done
+    [[ $merge_failed == 0 ]] || return 1
+
+	# Clean up intermediate files
+	rm -f "$nr_temp_dir"/raw_stream_*.flac
+	rm -rf "$nr_temp_dir"/stream_*
+
+	echo "  NR: All audio streams processed."
+}
+
+##############
+# Video
+##############
+# if video_quality is default, remove this part
+video_quality=${video_quality/default/}
+
+# If quality is not specified, use medium
+: ${video_quality:=medium}
+
+case $video_quality in
+veryhigh)
+	cq_value=19
+	qp_value=18
+	global_quality=18
+	cq_value_nvidia=19
+	qp_hevc=22
+	;;
+high)
+	cq_value=24
+	qp_value=21
+	global_quality=21
+	cq_value_nvidia=24
+	qp_hevc=25
+	;;
+medium)
+	cq_value=28
+	qp_value=24
+	global_quality=24
+	cq_value_nvidia=28
+	qp_hevc=28
+	;;
+low)
+	cq_value=31
+	qp_value=27
+	global_quality=27
+	cq_value_nvidia=31
+	qp_hevc=31
+	;;
+verylow)
+	cq_value=34
+	qp_value=30
+	global_quality=30
+	cq_value_nvidia=34
+	qp_hevc=34
+	;;
+superlow)
+	cq_value=38
+	qp_value=33
+	global_quality=33
+	cq_value_nvidia=38
+	qp_hevc=37
+	;;
+*) echo "ERROR: Unknown video quality: $video_quality" >&2; exit 2 ;;
+esac
+
+# QSV HEVC needs lower global_quality values than NVENC qp for same visual quality
+qp_hevc_qsv=$((qp_hevc - 4))
+
+if [[ $preset == "default" ]]; then
+	unset preset
+fi
+
+# If preset is not specified, use medium for GPU and faster for software encoding
+if [[ -z $preset ]]; then
+	preset=medium
+	software_preset=faster
+else
+	software_preset=$preset
+fi
+
+# Convert preset for NVIDIA
+case $preset in
+ultrafast) nvidia_preset=1 ;;
+veryfast) nvidia_preset=2 ;;
+faster) nvidia_preset=3 ;;
+slow) nvidia_preset=5 ;;
+veryslow) nvidia_preset=6 ;;
+*) nvidia_preset=4 ;; # Default to medium
+esac
+
+# Convert preset for SVT-AV1 (6=best quality, 12=fastest)
+# Presets below 6 add minimal quality gain with extreme slowdown
+case $software_preset in
+ultrafast) svtav1_preset=12 ;;
+veryfast) svtav1_preset=11 ;;
+faster) svtav1_preset=10 ;;
+medium) svtav1_preset=9 ;;
+slow) svtav1_preset=7 ;;
+veryslow) svtav1_preset=6 ;;
+*) svtav1_preset=10 ;; # Default to faster
+esac
+
+# Convert preset for VP9 cpu-used (0=slowest/best, 8=fastest/worst)
+case $software_preset in
+ultrafast) vpx_cpu_used=6 ;;
+veryfast) vpx_cpu_used=5 ;;
+faster) vpx_cpu_used=4 ;;
+medium) vpx_cpu_used=3 ;;
+slow) vpx_cpu_used=2 ;;
+veryslow) vpx_cpu_used=1 ;;
+*) vpx_cpu_used=3 ;; # Default to medium
+esac
+
+#######################
+# Create ffmpeg command
+#######################
+# Function to build the main encoder command strings
+function build_encoder_commands() {
+	general_params=(-i "$input_file" "${audio_inputs[@]}" -map 0:v:0 "${audio_cmd[@]}" "${sdr_color_tags[@]}")
+	# HEVC in MP4/MOV gets the 'hev1' tag by default, which Apple players and
+	# some TVs reject; 'hvc1' is the widely supported one.
+	local -a hevc_tag=()
+	case ${output_file##*.} in
+	mp4|mov|m4v|MP4|MOV|M4V) hevc_tag=(-tag:v hvc1) ;;
+	esac
+	# A source with a timecode tag (camera MOV files) makes the MP4 muxer add
+	# a tmcd data track, which players list as an unknown stream. MP4 has no
+	# use for it; MOV keeps it for editing workflows. keep_timecode=1 opts out.
+	case ${output_file##*.} in
+	mp4|m4v|MP4|M4V) [[ ${keep_timecode:-0} == 1 ]] || general_params+=(-metadata:s:v:0 timecode=) ;;
+	esac
+	if [[ $subtitle_extract == embedded && $defer_subtitles == false ]]; then
+        general_params+=("${subtitle_cmd[@]}")
+    fi
+    copy_video=("${general_params[@]}" -c:v copy)
+
+	# Select appropriate encoder command based on the specified video encoder
+	case $video_encoder in
+	h265)
+		encoder_nvenc=("${general_params[@]}" -c:v hevc_nvenc -rc:v vbr -cq "$cq_value_nvidia" -tune:v hq -preset:v "p$nvidia_preset" -temporal-aq 1 -spatial-aq 1 -b_ref_mode middle -rc-lookahead 100 "${hevc_tag[@]}")
+		encoder_vulkan=("${general_params[@]}" -c:v hevc_vulkan -qp "$qp_hevc" -tune hq "${hevc_tag[@]}")
+		encoder_vaapi=("${general_params[@]}" -c:v hevc_vaapi -global_quality "$qp_hevc" -rc_mode ICQ "${hevc_tag[@]}")
+		encoder_qsv=("${general_params[@]}" -c:v hevc_qsv -preset "$preset" -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality "$qp_hevc_qsv" -mbbrc 1 -adaptive_i 1 -adaptive_b 1 "${hevc_tag[@]}")
+		encoder_software=("${general_params[@]}" -c:v libx265 -preset "$software_preset" -crf "$qp_hevc" -x265-params log-level=warning "${hevc_tag[@]}")
+		;;
+	av1)
+		encoder_nvenc=("${general_params[@]}" -c:v av1_nvenc -rc:v vbr -cq "$cq_value_nvidia" -tune:v hq -preset:v "p$nvidia_preset" -temporal-aq 1 -spatial-aq 1 -b_ref_mode middle -rc-lookahead 100)
+		encoder_vulkan=("${general_params[@]}" -c:v av1_vulkan -qp "$qp_value" -tune hq)
+		encoder_vaapi=("${general_params[@]}" -c:v av1_vaapi -global_quality "$global_quality" -rc_mode CQP)
+		encoder_qsv=("${general_params[@]}" -c:v av1_qsv -preset "$preset" -look_ahead_depth 100 -global_quality "$global_quality")
+		encoder_software=("${general_params[@]}" -c:v libsvtav1 -preset "$svtav1_preset" -crf "$cq_value" -pix_fmt yuv420p10le -svtav1-params tune=0)
+		;;
+	vp9)
+		encoder_nvenc=()
+		encoder_vaapi=("${general_params[@]}" -c:v vp9_vaapi -global_quality "$global_quality" -rc_mode CQP)
+		encoder_qsv=("${general_params[@]}" -c:v vp9_qsv -preset "$preset" -look_ahead_depth 100 -global_quality "$global_quality")
+		encoder_software=("${general_params[@]}" -c:v libvpx-vp9 -crf "$cq_value" -b:v 0 -quality good -cpu-used "$vpx_cpu_used" -row-mt 1)
+		;;
+	prores)
+		# ProRes is a software-only codec, map quality to profile
+		# profile 0=Proxy, 1=LT, 2=Standard, 3=HQ, 4=4444, 5=4444XQ
+		local prores_profile
+		case $video_quality in
+			superlow|verylow) prores_profile=0 ;; # Proxy
+			low) prores_profile=1 ;;               # LT
+			medium|default) prores_profile=2 ;;    # Standard
+			high) prores_profile=3 ;;              # HQ
+			veryhigh) prores_profile=4 ;;          # 4444
+			*) prores_profile=2 ;;                 # Standard
+		esac
+		encoder_nvenc=()
+		encoder_vulkan=()
+		encoder_vaapi=()
+		encoder_qsv=()
+		encoder_software=("${general_params[@]}" -c:v prores_ks -profile:v "$prores_profile" -vendor apl0 -pix_fmt yuva444p10le)
+		;;
+	*)
+		# Default is h264
+		encoder_nvenc=("${general_params[@]}" -c:v h264_nvenc -rc:v vbr -cq "$cq_value_nvidia" -tune:v hq -preset:v "p$nvidia_preset" -temporal-aq 1 -rc-lookahead 100)
+		encoder_vulkan=("${general_params[@]}" -c:v h264_vulkan -qp "$global_quality")
+		encoder_vaapi=("${general_params[@]}" -c:v h264_vaapi -profile:v high -level:v "$h264_level" -rc_mode CQP -global_quality "$global_quality")
+		encoder_qsv=("${general_params[@]}" -c:v h264_qsv -preset "$preset" -profile:v high -level:v "$h264_level" -look_ahead_depth 100 -low_delay_brc 1 -extbrc 1 -global_quality "$global_quality" -mbbrc 1 -adaptive_i 1 -adaptive_b 1)
+		# -pix_fmt yuv420p is required: H.264 "high" profile has no 4:4:4/4:2:2
+		# support, so 444/422 sources (ProRes, screen captures) fail to encode
+		# without an explicit downsample.
+		encoder_software=("${general_params[@]}" -c:v libx264 -preset "$software_preset" -profile:v high -level:v "$h264_level" -crf "$qp_value" -pix_fmt yuv420p)
+		;;
+	esac
+	local encoder_var
+	for encoder_var in encoder_nvenc encoder_vulkan encoder_vaapi encoder_qsv encoder_software; do
+		append_preset_encoder_args "$encoder_var"
+	done
+}
+
+# If gpu = auto change gpu to empty
+gpu=${gpu/auto/}
+
+# Encode to a staging file this job owns.
+ffmpeg_generic_options=(-y "$staged_output")
+case ${output_file##*.} in
+mp4|mov|m4v|MP4|MOV|M4V) ffmpeg_generic_options=(-movflags +faststart -y "$staged_output") ;;
+esac
+if [[ $only_extract_subtitles == 1 ]]; then
+    if [[ ${#subtitle_cmd[@]} -eq 0 ]]; then
+        echo "ERROR: No extractable subtitles found" >&2
+        exit 2
+    fi
+    "$ffmpeg_executable" -nostdin "${subtitle_input_options[@]}" -i "$input_file" "${subtitle_cmd[@]}" || exit $?
+    publish_subtitles
+    exit $?
+fi
+
+# A GPU driver that hangs (a Mesa regression, a VCN ring timeout) leaves
+# ffmpeg alive and silent forever: no fallback stage ever runs and the user
+# only sees a conversion that "stopped". ffmpeg therefore writes its progress
+# report to a file, and when the frame counter, output time and size in that
+# report stop changing for stall_timeout seconds the process is killed and the
+# attempt fails with 124, which sends the job down the usual GPU → partial →
+# software chain. The default is long on purpose: the MP4 faststart pass
+# rewrites the whole file without reporting progress. stall_timeout=0 disables.
+: "${stall_timeout:=600}"
+[[ $stall_timeout =~ ^[0-9]+$ ]] || stall_timeout=600
+
+progress_fingerprint() { # last frame/out_time/size values of a -progress file
+	tail -c 4096 -- "$1" 2>/dev/null | awk -F= '
+		/^(frame|out_time_us|total_size|progress)=/ { v[$1] = $2 }
+		END { print v["frame"], v["out_time_us"], v["total_size"], v["progress"] }'
+}
+
+# Keep human-readable diagnostics; only argv is executed.
+run_ffmpeg() {
+    local -a progress_opt=()
+    local progress_file="$output_stage_dir/progress"
+    if [[ $stall_timeout -gt 0 && -d $output_stage_dir ]]; then
+        : > "$progress_file"
+        progress_opt=(-progress "$progress_file")
+    fi
+    printf 'Running command:'
+    printf ' %q' "$ffmpeg_executable" -nostdin "${progress_opt[@]}" "$@"
+    printf '\n'
+    "$ffmpeg_executable" -nostdin "${progress_opt[@]}" "$@" &
+    ffmpeg_pid=$!
+    local stalled=false status
+    if [[ ${#progress_opt[@]} -gt 0 ]]; then
+        # Poll for exit every quarter second (a short job must not wait on
+        # the watchdog) and compare the progress report once a second.
+        local ticks=0 idle=0 seen="" now i
+        while kill -0 "$ffmpeg_pid" 2>/dev/null; do
+            sleep 0.25
+            (( ++ticks % 4 == 0 )) || continue
+            now=$(progress_fingerprint "$progress_file")
+            if [[ $now != "$seen" ]]; then
+                seen=$now
+                idle=0
+                continue
+            fi
+            ((idle += 1))
+            if [[ $idle -ge $stall_timeout ]]; then
+                echo "Stall watchdog: no progress for ${idle}s, terminating ffmpeg" >&2
+                kill -TERM "$ffmpeg_pid" 2>/dev/null
+                for ((i = 0; i < 50; i++)); do
+                    kill -0 "$ffmpeg_pid" 2>/dev/null || break
+                    sleep 0.1
+                done
+                kill -KILL "$ffmpeg_pid" 2>/dev/null
+                stalled=true
+                break
+            fi
+        done
+    fi
+    wait "$ffmpeg_pid"
+    status=$?
+    ffmpeg_pid=""
+    [[ $stalled == false ]] || status=124
+    return "$status"
+}
+
+# A hardware encoder whose driver is installed but broken (a Mesa regression,
+# missing firmware, a device the user cannot open) used to be discovered only
+# by pushing the real file through two failing GPU stages, and one that hangs
+# was never discovered at all. Encode two synthetic frames first, with the same
+# device setup and upload filters the real stages use; failure or a hang means
+# software encoding, announced in the log. gpu_smoke_test=0 skips the check.
+hw_encoder_name=""
+hw_encoder_smoke_test() {
+	local i encoder=""
+	local -a upload=()
+	for ((i = 0; i < ${#encoder_format[@]} - 1; i++)); do
+		[[ ${encoder_format[$i]} == -c:v ]] && encoder=${encoder_format[$((i + 1))]}
+	done
+	[[ -n $encoder && $encoder != copy ]] || return 0
+	hw_encoder_name=$encoder
+	case $detected_encoder_var in
+	encoder_vaapi) upload=(-vf "format=nv12,hwupload=derive_device=vaapi") ;;
+	encoder_vulkan) upload=(-vf "format=nv12,hwupload=derive_device=vulkan") ;;
+	encoder_qsv) upload=(-vf "format=nv12,hwupload=extra_hw_frames=64,format=qsv") ;;
+	esac
+	echo "Checking GPU encoder $encoder..."
+	timeout -k 5 "${gpu_probe_timeout:-30}" "$ffmpeg_executable" -nostdin -v error "${init_hardware[@]}" \
+		-f lavfi -i "color=c=gray:size=256x256:rate=25:duration=0.2" "${upload[@]}" \
+		-c:v "$encoder" -frames:v 2 -f null - </dev/null
+}
+
+# Function to attempt the conversion using the 3-stage fallback (GPU -> Partial -> CPU)
+function attempt_conversion() {
+	# Reset all hardware state before a retry.
+    encoder_format=()
+    decoder_format=()
+    init_hardware=()
+    force_8bit_color=""
+
+	# If gpu empty auto detect
+	if [[ -z $gpu ]]; then
+		devices=$(detect_gpu_devices)
+		if [[ -z $devices ]]; then
+			echo "No GPU detected (lspci and sysfs gave no result) - using software encoding"
+		fi
+	else
+		devices="VGA $gpu"
+	fi
+
+	# Never hardcode kernel_driver=i915: Arrow Lake and newer Intel GPUs are
+	# driven by "xe", and asking for i915 there fails with "Device creation
+	# failed", which silently pushes every Intel conversion down to software
+	# encoding. Use the driver the kernel actually reports for the Intel GPU,
+	# and omit the filter when it cannot be determined.
+	intel_kernel_driver=""
+	for _vendor_file in /sys/class/drm/card[0-9]*/device/vendor; do
+		[[ -r $_vendor_file ]] || continue
+		[[ $(<"$_vendor_file") == "0x8086" ]] || continue
+		intel_kernel_driver=$(basename "$(readlink -f "${_vendor_file%/vendor}/driver" 2>/dev/null)")
+		[[ -n $intel_kernel_driver ]] && break
+	done
+	if [[ -n $intel_kernel_driver ]]; then
+		init_qsv=(-init_hw_device "vaapi=va:,driver=iHD,kernel_driver=$intel_kernel_driver" -init_hw_device qsv=qs@va)
+	else
+		init_qsv=(-init_hw_device "vaapi=va:,driver=iHD" -init_hw_device qsv=qs@va)
+	fi
+	init_vaapi=(-init_hw_device vaapi)
+	init_vulkan=(-init_hw_device vulkan)
+	init_nvidia=(-init_hw_device cuda)
+
+	# Use specific GPU device if provided
+	if [[ -n "$gpu_device" ]]; then
+		init_vaapi=(-init_hw_device "vaapi=va:$gpu_device")
+		init_vulkan=(-init_hw_device "vulkan=vk:$gpu_device")
+		init_nvidia=(-init_hw_device "cuda=cu:$gpu_device")
+	fi
+	decoder_qsv=(-filter_hw_device qs -hwaccel qsv -hwaccel_output_format qsv)
+	decoder_vaapi=(-hwaccel vaapi -hwaccel_output_format vaapi)
+	decoder_vulkan=(-hwaccel vulkan -hwaccel_output_format vulkan)
+	decoder_cuda=(-hwaccel cuda -hwaccel_output_format cuda)
+
+	local scale_filter_name="scale"
+	local detected_encoder_var=""  # Track which encoder var was selected
+
+	# Handle explicit software encoding request
+	if [[ "$gpu" == "software" ]]; then
+		encoder_format=("${encoder_software[@]}")
+		detected_encoder_var="encoder_software"
+		force_software=1
+	# ProRes is always software-only
+	elif [[ "$video_encoder" == "prores" ]]; then
+		encoder_format=("${encoder_software[@]}")
+		detected_encoder_var="encoder_software"
+		force_software=1
+	elif [[ "$force_encoder" == "vulkan" || "$gpu" == "vulkan" ]]; then
+		decoder_format=("${decoder_vulkan[@]}")
+		encoder_format=("${encoder_vulkan[@]}")
+		detected_encoder_var="encoder_vulkan"
+		init_hardware=("${init_vulkan[@]}")
+		scale_filter_name="scale_vulkan"
+	elif grep -qiE '(VGA|Display controller|3d).*nvidia' <<<"$devices"; then
+		decoder_format=("${decoder_cuda[@]}")
+		encoder_format=("${encoder_nvenc[@]}")
+		detected_encoder_var="encoder_nvenc"
+		init_hardware=("${init_nvidia[@]}")
+		scale_filter_name="scale_cuda"
+	elif grep -qiE '(VGA|Display controller).*(\bAMD\b|\bATI\b)' <<<"$devices"; then
+		# AMD VAAPI doesn't support ICQ mode - use CQP for HEVC
+		if [[ "$video_encoder" == "h265" ]]; then
+			encoder_vaapi=("${general_params[@]}" -c:v hevc_vaapi -global_quality "$qp_hevc" -rc_mode CQP)
+			append_preset_encoder_args encoder_vaapi
+		fi
+		decoder_format=("${decoder_vaapi[@]}")
+		encoder_format=("${encoder_vaapi[@]}")
+		detected_encoder_var="encoder_vaapi"
+		init_hardware=("${init_vaapi[@]}")
+		scale_filter_name="scale_vaapi"
+	elif grep -qiE '(VGA|Display controller).*intel' <<<"$devices"; then
+		decoder_format=("${decoder_qsv[@]}")
+		encoder_format=("${encoder_qsv[@]}")
+		detected_encoder_var="encoder_qsv"
+		init_hardware=("${init_qsv[@]}")
+		scale_filter_name="scale_qsv"
+	else
+		encoder_format=("${encoder_software[@]}")
+		detected_encoder_var="encoder_software"
+	fi
+
+	if [[ $force_software = 1 ]]; then
+		encoder_format=("${encoder_software[@]}")
+		detected_encoder_var="encoder_software"
+	fi
+
+	if [[ $force_copy_video = 1 ]]; then
+		encoder_format=("${copy_video[@]}")
+		detected_encoder_var="copy_video"
+	fi
+    if [[ -n $force_encoder ]]; then
+        case $force_encoder in
+        nvenc) detected_encoder_var=encoder_nvenc; init_hardware=("${init_nvidia[@]}"); scale_filter_name=scale_cuda ;;
+        vaapi) detected_encoder_var=encoder_vaapi; init_hardware=("${init_vaapi[@]}"); scale_filter_name=scale_vaapi ;;
+        qsv) detected_encoder_var=encoder_qsv; init_hardware=("${init_qsv[@]}"); scale_filter_name=scale_qsv ;;
+        vulkan) detected_encoder_var=encoder_vulkan; init_hardware=("${init_vulkan[@]}"); scale_filter_name=scale_vulkan ;;
+        software) detected_encoder_var=encoder_software ;;
+        *) echo "ERROR: Unsupported encoder backend: $force_encoder" >&2; exit_code=2; return ;;
+        esac
+        local -n requested_encoder=$detected_encoder_var
+        encoder_format=("${requested_encoder[@]}")
+    fi
+    if [[ -n $force_decoder ]]; then
+        case $force_decoder in
+        cuda) decoder_format=("${decoder_cuda[@]}"); init_hardware=("${init_nvidia[@]}") ;;
+        vaapi) decoder_format=("${decoder_vaapi[@]}"); init_hardware=("${init_vaapi[@]}") ;;
+        qsv) decoder_format=("${decoder_qsv[@]}"); init_hardware=("${init_qsv[@]}") ;;
+        vulkan) decoder_format=("${decoder_vulkan[@]}"); init_hardware=("${init_vulkan[@]}") ;;
+        software) decoder_format=(); gpu_partial=1 ;;
+        *) echo "ERROR: Unsupported decoder backend: $force_decoder" >&2; exit_code=2; return ;;
+        esac
+    fi
+    if [[ $force_software == 1 || ${#encoder_format[@]} -eq 0 ]]; then
+        encoder_format=("${encoder_software[@]}")
+        detected_encoder_var=encoder_software
+        init_hardware=()
+        decoder_format=()
+    fi
+    if [[ $force_copy_video == 1 ]]; then
+        encoder_format=("${copy_video[@]}")
+        detected_encoder_var=copy_video
+        init_hardware=()
+        decoder_format=()
+    fi
+
+	#####################################################
+	# --- Encode and Decode video in GPU filter chain ---
+	#####################################################
+	local video_filter_chain=""
+	local filter_parts=()
+
+	# # 1. Add 10-bit to 8-bit conversion filter if needed (only for GPU encode with hardware decode)
+	# Note: For 8-bit video, this conversion is NOT needed
+	if [[ $needs_10bit_to_8bit_conversion == true && -z "$video_filter" ]]; then
+		force_8bit_color="${scale_filter_name}=format=nv12,"
+	fi
+
+	# if [[ -n "$video_filter" ]]; then
+	# 	filter_parts+=("hwdownload,format=nv12")
+	# fi
+
+	# 2. Add user-provided filters (like scaling)
+	if [[ -n "$video_filter" ]]; then
+		local user_filters=$video_filter
+		filter_parts+=("$user_filters")
+	fi
+
+	if [[ "$video_resolution" && ${#filter_parts[@]} -gt 0 ]]; then
+		video_filter_chain="-vf ${force_8bit_color}hwdownload,format=nv12,"
+		video_filter_chain+="$(
+			IFS=,
+			echo "${filter_parts[*]}"
+		)"
+		video_filter_chain+=",hwupload,$scale_filter_name=${video_resolution/x/:}"
+
+	elif [[ ${#filter_parts[@]} -gt 0 ]]; then
+		video_filter_chain="-vf ${force_8bit_color}hwdownload,format=nv12,"
+		video_filter_chain+="$(
+			IFS=,
+			echo "${filter_parts[*]}"
+		)"
+
+	elif [[ -n "$video_resolution" ]]; then
+		video_filter_chain="-vf ${force_8bit_color}$scale_filter_name=${video_resolution/x/:}"
+
+	elif [[ $needs_10bit_to_8bit_conversion == true ]]; then
+		video_filter_chain="-vf ${force_8bit_color%,}"
+
+	fi
+
+	# Force software decode on NVIDIA when vflip is present.
+	# CUDA hwdownload→vflip→hwupload pipeline produces green screen for HEVC/AV1 decoders.
+	# H264 already fails Stage 1 and falls back, but HEVC/AV1 silently corrupt frames.
+	# Skipping directly to Stage 2 (software decode + GPU encode) avoids the issue.
+	if [[ "$video_filter" == *"vflip"* && "$detected_encoder_var" == "encoder_nvenc" ]]; then
+		gpu_partial=1
+		echo "vflip detected on NVIDIA: forcing software decode (Stage 2)"
+	fi
+	# Tone mapping runs in software on full-depth frames; a hardware decoder
+	# would hand over 8-bit nv12 surfaces with the PQ curve already baked in.
+	if [[ $needs_tonemap == true && "$detected_encoder_var" != "encoder_software" ]]; then
+		gpu_partial=1
+		echo "HDR to SDR tone mapping: forcing software decode (Stage 2)"
+	fi
+
+	if [[ $force_copy_video != 1 && $detected_encoder_var != encoder_software && ${gpu_smoke_test:-1} == 1 ]]; then
+		if ! hw_encoder_smoke_test; then
+			echo "GPU encoder check failed: $hw_encoder_name did not encode a test frame (driver problem?). Using software encoding."
+			detected_encoder_var=encoder_software
+			encoder_format=("${encoder_software[@]}")
+			init_hardware=()
+			decoder_format=()
+			# Later passes (audio fallbacks) must not probe the GPU again.
+			force_software=1
+		fi
+	fi
+
+	# --- Execute Conversion Attempts ---
+
+	# Extract subtitles first if needed (separate command to avoid output conflicts)
+	# Only extract once - skip if already extracted in a previous attempt_conversion call
+	if [[ ${#subtitle_cmd[@]} -gt 0 && "$subtitle_extract" == "extract" && "$subtitles_already_extracted" != "true" ]]; then
+		echo "Extracting subtitles..."
+		if run_ffmpeg -y "${subtitle_input_options[@]}" -i "$input_file" "${subtitle_cmd[@]}"; then
+			subtitles_already_extracted=true
+		else
+			# The video is the job; a missing sidecar is not worth discarding it.
+			echo "Warning: Subtitle extraction failed (non-critical, continuing with conversion)"
+			subtitle_outputs=()
+			subtitle_destinations=()
+			subtitles_already_extracted=true
+		fi
+	fi
+
+	# === Parallel NR Pipeline ===
+	# When NR is active, audio and video are processed in parallel:
+	#   1. Audio NR runs in background (per-channel parallel)
+	#   2. Video encodes through 3-stage fallback (GPU → partial → software)
+	#   3. Wait for audio NR, then mux video + audio
+	# Total time ≈ max(video, audio) instead of audio + video sequentially.
+	# Works with ALL encoders (CUDA, VAAPI, QSV, software).
+	local nr_parallel_mode=false
+	local nr_bg_pid=""
+	local nr_video_file=""
+	local -a saved_audio_cmd=()
+	local -a saved_audio_inputs=()
+	local -a saved_ffmpeg_generic=()
+
+	if [[ $nr_deferred_preprocess == true ]]; then
+		nr_parallel_mode=true
+		nr_video_file="$output_stage_dir/nr-video.${output_file##*.}"
+
+		# Start audio NR in background
+		preprocess_audio_nr &
+		nr_bg_pid=$!
+		echo "Parallel pipeline: audio NR (PID $nr_bg_pid) + video encoding"
+
+		# Switch to video-only encoding
+		saved_audio_cmd=("${audio_cmd[@]}")
+		saved_audio_inputs=("${audio_inputs[@]}")
+		saved_ffmpeg_generic=("${ffmpeg_generic_options[@]}")
+		audio_cmd=(-an)
+		audio_inputs=()
+		build_encoder_commands
+		# Re-derive encoder_format after rebuild (it was a value copy from detection)
+		if [[ -n "$detected_encoder_var" ]]; then
+			local -n selected_encoder=$detected_encoder_var
+            encoder_format=("${selected_encoder[@]}")
+		fi
+		ffmpeg_generic_options=(-y "$nr_video_file")
+	fi
+
+	if [[ "$force_copy_video" = "1" ]]; then
+		echo "Generating file without re-encoding"
+		run_ffmpeg "${input_options[@]}" "${decoder_format[@]}" "${encoder_format[@]}" "${output_options[@]}" "${ffmpeg_generic_options[@]}"
+		exit_code=$?
+		if [[ $nr_parallel_mode != true ]]; then
+			# Return to common publication/error handling after a successful copy.
+            return
+		fi
+	fi
+
+	# --- 3-stage encoder fallback ---
+	# Stage 1: Full GPU (decode + encode on GPU)
+	# Skip if force_copy_video already handled the video
+	if [[ "$force_copy_video" != "1" && "$detected_encoder_var" != "encoder_software" && "$gpu_partial" != "1" ]]; then
+		# The GUI parses "Encode mode:" and "Running command:"; keep one line
+		# each and let the interface handle wording and translation.
+		echo "Encode mode: Decode GPU, encode GPU"
+		local -a filters=()
+        [[ -z $video_filter_chain ]] || filters=(-vf "${video_filter_chain#-vf }")
+        run_ffmpeg "${init_hardware[@]}" "${input_options[@]}" "${decoder_format[@]}" "${encoder_format[@]}" "${output_options[@]}" "${filters[@]}" "${ffmpeg_generic_options[@]}"
+		exit_code=$?
+		if [[ $exit_code != 0 ]]; then
+			echo "Conversion failed!"
+		fi
+	elif [[ "$force_copy_video" != "1" ]]; then
+        exit_code=1
+    fi
+
+	# Stage 2: Partial GPU (decode CPU, encode GPU)
+	if [[ ( ($exit_code != 0 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1" ) && "$detected_encoder_var" != "encoder_software" && "$force_copy_video" != "1" ]]; then
+		echo "Encode mode: Decode Software, Encode GPU"
+
+		local partial_video_filter_chain=""
+		local partial_filter_parts=()
+
+		if [[ $needs_tonemap == true ]]; then
+			partial_filter_parts+=("$tonemap_filters")
+		fi
+
+		if [[ $needs_gbr_matrix_fix == true ]]; then
+			partial_filter_parts+=("zscale=min=709:m=709:tin=709:t=709:pin=709:p=709:r=tv")
+		fi
+
+		# User video filters (crop, rotation, flip, etc) — must run in software space
+		if [[ -n "$video_filter" ]]; then
+			partial_filter_parts+=("$video_filter")
+		fi
+
+		local hw_pix_fmt="nv12"
+		if [[ $video_encoder == "av1" ]]; then
+			hw_pix_fmt="p010le"
+		elif [[ $is_10bit == true && $needs_10bit_to_8bit_conversion == false ]]; then
+			hw_pix_fmt="p010le"
+		fi
+
+		if [[ $detected_encoder_var == encoder_nvenc ]]; then
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload_cuda")
+		elif [[ $detected_encoder_var == encoder_vulkan ]]; then
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload=derive_device=vulkan")
+		elif [[ $detected_encoder_var == encoder_vaapi ]]; then
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload=derive_device=vaapi")
+		elif [[ $detected_encoder_var == encoder_qsv ]]; then
+			partial_filter_parts+=("format=$hw_pix_fmt" "hwupload=extra_hw_frames=64,format=qsv")
+		fi
+
+		if [[ -n "$video_resolution" ]]; then
+			partial_filter_parts+=("$scale_filter_name=${video_resolution/x/:}")
+		fi
+
+		if [[ ${#partial_filter_parts[@]} -gt 0 ]]; then
+			partial_video_filter_chain="-vf $(IFS=,; echo "${partial_filter_parts[*]}")"
+		fi
+
+		local -a filters=()
+        [[ -z $partial_video_filter_chain ]] || filters=(-vf "${partial_video_filter_chain#-vf }")
+        run_ffmpeg "${init_hardware[@]}" "${input_options[@]}" "${encoder_format[@]}" "${output_options[@]}" "${filters[@]}" "${ffmpeg_generic_options[@]}"
+		exit_code=$?
+		if [[ $exit_code != 0 ]]; then
+			echo "Conversion failed!"
+		fi
+	fi
+
+	# Stage 3: Full software (decode + encode on CPU)
+	if [[ ($exit_code != 0 && $force_software != 1 && $force_copy_video != 1) || $force_software == 1 || ("$detected_encoder_var" == "encoder_software") ]]; then
+		echo "Encode mode: Decode Software, Encode Software"
+		local software_filter_chain=""
+		local sw_filter_parts=()
+
+		if [[ $needs_tonemap == true ]]; then
+			sw_filter_parts+=("$tonemap_filters")
+		fi
+
+		if [[ $needs_gbr_matrix_fix == true ]]; then
+			sw_filter_parts+=("zscale=min=709:m=709:tin=709:t=709:pin=709:p=709:r=tv")
+			if [[ $video_encoder == "av1" ]]; then
+				sw_filter_parts+=("format=yuv420p10le")
+			elif [[ $is_10bit == true && $needs_10bit_to_8bit_conversion == false ]]; then
+				sw_filter_parts+=("format=yuv420p10le")
+			else
+				sw_filter_parts+=("format=yuv420p")
+			fi
+		fi
+
+		if [[ -n "$video_filter" ]]; then
+			sw_filter_parts+=("$video_filter")
+		fi
+
+		if [[ -n "$video_resolution" ]]; then
+			sw_filter_parts+=("scale=${video_resolution/x/:}")
+		fi
+
+		if [[ ${#sw_filter_parts[@]} -gt 0 ]]; then
+			software_filter_chain="-vf $(IFS=,; echo "${sw_filter_parts[*]}")"
+		fi
+
+		local -a filters=()
+        [[ -z $software_filter_chain ]] || filters=(-vf "${software_filter_chain#-vf }")
+        run_ffmpeg "${input_options[@]}" "${encoder_software[@]}" "${output_options[@]}" "${filters[@]}" "${ffmpeg_generic_options[@]}"
+		exit_code=$?
+	fi
+
+	# === NR Parallel Teardown: wait for audio NR and mux ===
+	if [[ $nr_parallel_mode == true ]]; then
+		# Restore audio state for potential fallback passes
+		audio_cmd=("${saved_audio_cmd[@]}")
+		audio_inputs=("${saved_audio_inputs[@]}")
+		ffmpeg_generic_options=("${saved_ffmpeg_generic[@]}")
+		build_encoder_commands
+
+		if [[ $exit_code -eq 0 && -s "$nr_video_file" ]]; then
+			echo "Video encoding done. Waiting for audio NR to finish..."
+			wait "$nr_bg_pid"
+			local nr_exit=$?
+
+			if [[ $nr_exit -eq 0 ]]; then
+				echo "Audio NR complete. Muxing video + processed audio..."
+                local -a mux_inputs=(-i "$nr_video_file" -i "$input_file")
+                local -a mux_maps=(-map 0:v:0 -map '0:s?' -c:s copy -map_metadata 1 -map_chapters 0)
+                local i input_idx temp_audio
+                local missing_audio=false
+                for i in "${!nr_stream_indices[@]}"; do
+                    temp_audio="$nr_temp_dir/audio_${i}.flac"
+                    if [[ ! -s $temp_audio ]]; then
+                        echo "ERROR: NR output missing for stream $i" >&2
+                        missing_audio=true
+                        break
+                    fi
+                    input_idx=$((i + 2))
+                    mux_inputs+=(-i "$temp_audio")
+                    mux_maps+=(-map "$input_idx:a:0" "-map_metadata:s:a:$i" "1:s:${nr_stream_indices[$i]}" "-metadata:s:a:$i" "language=${nr_stream_languages[$i]}")
+                    append_audio_codec mux_maps "$i" "${nr_stream_bitrates[$i]}" "${nr_stream_channels[$i]}"
+                done
+                if [[ $missing_audio == true ]]; then
+                    exit_code=1
+                else
+                    run_ffmpeg "${mux_inputs[@]}" "${mux_maps[@]}" -c:v copy "${ffmpeg_generic_options[@]}"
+                    exit_code=$?
+                fi
+
+				if [[ $exit_code -eq 0 ]]; then
+					echo "Muxing complete: $output_file"
+				else
+					echo "WARNING: Muxing failed (exit $exit_code)"
+				fi
+			else
+				echo "WARNING: Audio NR failed (exit $nr_exit)"
+				exit_code=1
+			fi
+		else
+			echo "Video encoding failed. Reaping audio NR before retry..."
+            # Reap all per-channel children before any retry reuses the private
+            # workspace. Cancellation terminates the entire supervised group.
+            wait "$nr_bg_pid" 2>/dev/null
+		fi
+
+		rm -f "$nr_video_file"
+	fi
+}
+
+# --- First Pass ---
+# Track if subtitles were already extracted to avoid re-extracting in fallback
+subtitles_already_extracted=false
+
+# Build commands with initial user settings and attempt conversion.
+build_audio_cmd
+build_encoder_commands
+attempt_conversion
+
+# --- Audio Fallback Pass ---
+# If the first pass failed and we were trying to copy audio, it's likely due to an
+# incompatible audio codec for the container. Let's try again by re-encoding the audio.
+if [[ $exit_code != 0 && $exit_code != 2 && $exit_code != 124 && "$original_audio_handling" == "copy" ]]; then
+	echo -e "${COLOR_YELLOW}Audio stream copy may have failed. Retrying with audio re-encoding...${COLOR_RESET}"
+
+	# Force re-encode and rebuild all commands
+	audio_handling="reencode"
+	build_audio_cmd
+	build_encoder_commands
+
+	# Attempt the conversion again with the new settings
+	attempt_conversion
+fi
+
+# --- Audio Codec Fallback Pass ---
+# If re-encoding with a specific codec failed (e.g. Opus in MP4), try with AAC
+if [[ $exit_code != 0 && $exit_code != 2 && $exit_code != 124 && "$audio_handling" == "reencode" && "$audio_codec" != "aac" ]]; then
+	echo -e "${COLOR_YELLOW}Audio re-encoding with $audio_codec may have failed. Retrying with AAC codec...${COLOR_RESET}"
+
+	# Switch to AAC (most compatible codec) and rebuild all commands
+	audio_codec="aac"
+	build_audio_cmd
+	build_encoder_commands
+
+	# Attempt the conversion again with AAC
+	attempt_conversion
+fi
+
+# --- Final Exit Code Check ---
+# A cancel never gets here: the INT/TERM traps end the script themselves. An
+# ffmpeg exit of 255 is therefore a real error (AVERROR(EPERM) truncated to a
+# byte) and must go through the fallbacks above like any other, not be
+# reported as "interrupted by user" as it once was.
+if [[ $exit_code != 0 ]]; then
+	echo -e "${COLOR_YELLOW}Conversion failed with an unexpected error. Exit code: $exit_code.${COLOR_RESET}"
+	exit $exit_code
+fi
+
+# Subtitle packets spanning a cut must be clipped, not omitted or allowed to
+# extend the A/V output. The first pass intentionally omitted subtitle streams.
+if [[ $defer_subtitles == true ]]; then
+    with_subtitles="$output_stage_dir/subtitled.${output_file##*.}"
+    # The same selection as the first pass, re-aimed at the original as input 1.
+    # "-c copy" comes first so the per-stream subtitle encoder still wins.
+    run_ffmpeg -i "$staged_output" "${subtitle_input_options[@]}" -i "$input_file" \
+        -map 0:v:0 -map '0:a?' -map_metadata 0 -map_chapters 0 -c copy \
+        "${subtitle_cmd[@]/#0:/1:}" "${subtitle_packet_options[@]}" -y "$with_subtitles" || exit $?
+    staged_output=$with_subtitles
+fi
+
+if [[ ! -s $staged_output ]]; then
+    echo "ERROR: Conversion produced no output" >&2
+    exit 1
+fi
+# The video first: sidecars belong to a file that exists.
+publish "$staged_output" "$output_file" || exit 1
+publish_subtitles || exit 1
+printf 'Output file: %s\n' "$output_file"

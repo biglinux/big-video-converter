@@ -1,0 +1,306 @@
+/* Big Video Converter — semantic visual system.
+ * Keep colors theme-aware.  The app uses shape, hierarchy and spacing before
+ * color, so light/dark/high-contrast modes remain coherent.
+ */
+
+/* Surfaces */
+.bvc-shell {
+  background: @window_bg_color;
+}
+
+.bvc-sidebar {
+  background: mix(@window_bg_color, @view_bg_color, 0.65);
+  border-right: 1px solid alpha(@window_fg_color, 0.09);
+}
+
+.bvc-surface,
+.bvc-card,
+.bvc-queue-card,
+.bvc-progress-card,
+.bvc-dialog-card {
+  background: @card_bg_color;
+  color: @card_fg_color;
+  border: 1px solid alpha(@window_fg_color, 0.10);
+  border-radius: 18px;
+}
+
+.bvc-card,
+.bvc-dialog-card {
+  padding: 18px;
+}
+
+.bvc-queue-card,
+.bvc-progress-card {
+  padding: 14px;
+}
+
+.bvc-card:hover,
+.bvc-queue-card:hover {
+  background: mix(@card_bg_color, @accent_bg_color, 0.96);
+  border-color: alpha(@accent_color, 0.25);
+}
+
+.bvc-raised {
+  box-shadow: 0 2px 8px alpha(black, 0.08), 0 14px 36px alpha(black, 0.06);
+}
+
+.bvc-well {
+  background: alpha(@window_fg_color, 0.035);
+  border: 1px solid alpha(@window_fg_color, 0.07);
+  border-radius: 16px;
+}
+
+/* Typography */
+.bvc-eyebrow {
+  font-size: 0.78em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: @accent_color;
+}
+
+.bvc-page-title {
+  font-size: 1.75em;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.bvc-section-title {
+  font-size: 1.08em;
+  font-weight: 750;
+}
+
+.bvc-body-strong {
+  font-weight: 650;
+}
+
+.bvc-subtle {
+  color: @dim_label_color;
+}
+
+.bvc-metric {
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+/* Buttons: 40–44 px hit targets, visible focus, restrained decoration. */
+.bvc-primary,
+.bvc-secondary,
+.bvc-quiet,
+.bvc-danger,
+.bvc-icon-button {
+  min-height: 40px;
+  border-radius: 12px;
+  padding: 0 14px;
+}
+
+.bvc-primary {
+  min-height: 44px;
+  padding: 0 20px;
+  font-weight: 700;
+}
+
+.bvc-icon-button {
+  min-width: 40px;
+  padding: 0;
+}
+
+.bvc-quiet {
+  background: transparent;
+  box-shadow: none;
+}
+
+.bvc-danger {
+  color: @error_color;
+}
+
+button:focus-visible,
+dropdown:focus-visible,
+entry:focus-visible,
+switch:focus-visible,
+row:focus-visible {
+  outline: 2px solid @accent_color;
+  outline-offset: 2px;
+}
+
+/* Main queue */
+.bvc-hero {
+  padding: 4px 2px 18px 2px;
+}
+
+.bvc-empty-state {
+  padding: 46px 28px;
+  border-radius: 24px;
+  background: alpha(@accent_bg_color, 0.055);
+  border: 1px dashed alpha(@accent_color, 0.32);
+}
+
+.bvc-empty-icon {
+  min-width: 76px;
+  min-height: 76px;
+  border-radius: 22px;
+  background: alpha(@accent_bg_color, 0.13);
+  color: @accent_color;
+}
+
+.bvc-thumbnail-frame {
+  min-width: 144px;
+  min-height: 82px;
+  border-radius: 14px;
+  background: alpha(@window_fg_color, 0.055);
+  border: 1px solid alpha(@window_fg_color, 0.09);
+  padding: 2px;
+}
+
+.bvc-thumbnail-frame picture,
+.bvc-thumbnail-frame image {
+  border-radius: 11px;
+}
+
+.bvc-status-chip,
+.bvc-profile-chip,
+.bvc-count-chip {
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.83em;
+  font-weight: 650;
+}
+
+.bvc-profile-chip {
+  background: alpha(@accent_bg_color, 0.12);
+  color: @accent_color;
+}
+
+.bvc-count-chip {
+  background: alpha(@window_fg_color, 0.07);
+}
+
+.bvc-action-tray {
+  background: alpha(@window_bg_color, 0.96);
+  border-top: 1px solid alpha(@window_fg_color, 0.10);
+  padding: 12px 18px;
+  box-shadow: 0 -8px 28px alpha(black, 0.07);
+}
+
+/* Sidebar recipe */
+.bvc-recipe-header {
+  padding: 18px 16px 12px 16px;
+}
+
+.bvc-recipe-step {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: alpha(@window_fg_color, 0.025);
+}
+
+.bvc-recipe-step:hover {
+  background: alpha(@accent_bg_color, 0.07);
+}
+
+.bvc-step-number {
+  min-width: 30px;
+  min-height: 30px;
+  border-radius: 999px;
+  background: alpha(@accent_bg_color, 0.13);
+  color: @accent_color;
+  font-weight: 800;
+}
+
+/* Progress */
+.bvc-overall-progress trough,
+.bvc-job-progress trough {
+  min-height: 8px;
+  border-radius: 999px;
+  background: alpha(@window_fg_color, 0.08);
+}
+
+.bvc-overall-progress progress,
+.bvc-job-progress progress {
+  min-height: 8px;
+  border-radius: 999px;
+}
+
+.bvc-progress-active {
+  border-color: alpha(@accent_color, 0.36);
+  background: alpha(@accent_bg_color, 0.055);
+}
+
+.bvc-progress-success {
+  border-color: alpha(@success_color, 0.28);
+  background: alpha(@success_bg_color, 0.045);
+}
+
+.bvc-progress-error {
+  border-color: alpha(@error_color, 0.30);
+  background: alpha(@error_bg_color, 0.045);
+}
+
+.bvc-log {
+  background: @view_bg_color;
+  border: 1px solid alpha(@window_fg_color, 0.10);
+  border-radius: 12px;
+  padding: 12px;
+  font-family: monospace;
+}
+
+/* Editor */
+.bvc-editor-page {
+  background: @window_bg_color;
+}
+
+.bvc-editor-inspector {
+  min-height: 74px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: @card_bg_color;
+  border: 1px solid alpha(@window_fg_color, 0.10);
+}
+
+.bvc-editor-stage {
+  background: black;
+  border-radius: 20px;
+  box-shadow: 0 12px 42px alpha(black, 0.25);
+}
+
+.bvc-editor-toolbar {
+  padding: 8px 10px;
+  border-radius: 16px;
+  background: alpha(@window_bg_color, 0.94);
+  border: 1px solid alpha(@window_fg_color, 0.10);
+}
+
+/* Dialogs */
+.bvc-dialog-intro {
+  padding: 4px 0 18px 0;
+}
+
+.bvc-dialog-card:hover {
+  border-color: alpha(@accent_color, 0.22);
+}
+
+
+.bvc-queue-list row {
+  margin-bottom: 12px;
+}
+.bvc-queue-list row:last-child {
+  margin-bottom: 0;
+}
+
+.bvc-progress-list row {
+  margin-bottom: 12px;
+}
+.bvc-progress-list row:last-child {
+  margin-bottom: 0;
+}
+
+.bvc-editor-inspector dropdown,
+.bvc-editor-inspector spinbutton {
+  min-height: 40px;
+}
+
+.bvc-editor-toolbar button,
+.bvc-editor-toolbar menubutton {
+  min-width: 40px;
+  min-height: 40px;
+}

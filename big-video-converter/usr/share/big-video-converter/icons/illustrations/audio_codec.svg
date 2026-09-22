@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Waveform input -->
+  <path d="M8,40 L14,30 L18,45 L22,25 L26,50 L30,20 L34,48 L38,28 L42,42 L46,35 L50,40" fill="none" stroke="#999" stroke-width="1.2"/>
+  <!-- Arrow -->
+  <line x1="54" y1="40" x2="66" y2="40" stroke="#3584e4" stroke-width="1.5"/>
+  <polygon points="66,36 73,40 66,44" fill="#3584e4"/>
+  <!-- Codec box -->
+  <rect x="76" y="22" width="36" height="36" rx="3" fill="none" stroke="#3584e4" stroke-width="1.5"/>
+  <text x="94" y="37" font-family="sans-serif" font-size="6" fill="#3584e4" text-anchor="middle">AAC</text>
+  <text x="94" y="46" font-family="sans-serif" font-size="4" fill="#999" text-anchor="middle">OPUS</text>
+  <text x="94" y="53" font-family="sans-serif" font-size="4" fill="#999" text-anchor="middle">MP3</text>
+  <!-- Compressed output -->
+  <text x="60" y="72" font-family="sans-serif" font-size="5" fill="#3584e4" text-anchor="middle">Audio compression</text>
+</svg>
