@@ -1,0 +1,174 @@
+name: Exact libadwaita UI review R1
+
+on:
+  push:
+    branches:
+      - review/uiux-materialized-r1-20260922
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-24.04
+    container:
+      image: fedora:44
+    timeout-minutes: 50
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      PYTHONUNBUFFERED: "1"
+      GSETTINGS_BACKEND: memory
+      GDK_BACKEND: x11
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      NO_AT_BRIDGE: "1"
+    steps:
+      - name: Install GTK 4.22.5 and libadwaita 1.9.4 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          dnf -y upgrade --refresh
+          dnf -y install \
+            git tar findutils coreutils procps-ng which \
+            python3 python3-gobject python3-cairo python3-pip python3-pytest \
+            python3-pillow python3-pyopengl \
+            gtk4 libadwaita adwaita-icon-theme abattis-cantarell-fonts \
+            vte291-gtk4 mpv mpv-libs ffmpeg-free \
+            xorg-x11-server-Xvfb xorg-x11-xauth xdpyinfo \
+            xdotool openbox ImageMagick gettext \
+            mesa-dri-drivers mesa-libGL mesa-libEGL dejavu-sans-fonts \
+            dbus-daemon
+          python3 -m pip install --disable-pip-version-check --no-input python-mpv
+
+      - uses: actions/checkout@v4
+
+      - name: Prove runtime and validate source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs
+          rpm -q gtk4 libadwaita python3-gobject vte291-gtk4 mpv-libs \
+            | tee logs/runtime-rpms.txt
+          python3 - <<'PY' | tee logs/runtime-python.txt
+          import gi
+          gi.require_version('Gtk', '4.0')
+          gi.require_version('Adw', '1')
+          from gi.repository import Adw, Gtk
+          gtk = (Gtk.get_major_version(), Gtk.get_minor_version(), Gtk.get_micro_version())
+          adw = (Adw.get_major_version(), Adw.get_minor_version(), Adw.get_micro_version())
+          print('GTK', '.'.join(map(str, gtk)))
+          print('libadwaita', '.'.join(map(str, adw)))
+          assert gtk == (4, 22, 5), gtk
+          assert adw == (1, 9, 4), adw
+          PY
+          python3 -m compileall -q \
+            big-video-converter/usr/share/big-video-converter tools tests
+          python3 -m pytest -q \
+            tests/test_job_options.py \
+            tests/test_crop_geometry.py \
+            tests/test_thumbnail_cache.py \
+            tests/test_queue_preview_contract.py
+
+      - name: Capture full and compact states
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p screenshots crops contact-sheets media logs
+          Xvfb :99 -screen 0 1600x1000x24 -nolisten tcp -noreset \
+            > logs/xvfb.log 2>&1 &
+          export DISPLAY=:99
+          for attempt in $(seq 1 50); do
+            xdpyinfo >/dev/null 2>&1 && break
+            sleep 0.1
+          done
+          openbox > logs/openbox.log 2>&1 &
+          sleep 1
+
+          render() {
+            local screen=$1 theme=$2 width=$3 height=$4 output=$5
+            timeout --signal=TERM --kill-after=10s 80s \
+              dbus-run-session -- \
+              env DISPLAY=:99 GDK_BACKEND=x11 GSETTINGS_BACKEND=memory \
+                  LIBGL_ALWAYS_SOFTWARE=1 NO_AT_BRIDGE=1 \
+                  BVC_DEMO_MEDIA_DIR="$PWD/media" \
+              sh tools/capture_ui.sh \
+                "$screen" "$output" "$theme" "$width" "$height" \
+                >> logs/capture.log 2>&1
+            identify "$output" | tee -a logs/image-dimensions.txt
+          }
+
+          for screen in queue-empty queue progress complete editor welcome \
+                        presets video-options audio noise subtitles advanced; do
+            render "$screen" light 1280 760 "screenshots/${screen}-light.png"
+            render "$screen" dark 1280 760 "screenshots/${screen}-dark.png"
+          done
+          for screen in queue progress editor; do
+            render "$screen" light 980 620 "screenshots/${screen}-compact-light.png"
+            render "$screen" dark 980 620 "screenshots/${screen}-compact-dark.png"
+          done
+          sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
+
+      - name: Create 3x3 zoom crops
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFont
+          import json
+
+          try:
+              font = ImageFont.truetype('/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf', 18)
+          except OSError:
+              font = ImageFont.load_default()
+          manifest = []
+          for path in sorted(Path('screenshots').glob('*.png')):
+              image = Image.open(path).convert('RGB')
+              width, height = image.size
+              tile_w = (width + 2) // 3
+              tile_h = (height + 2) // 3
+              directory = Path('crops') / path.stem
+              directory.mkdir(parents=True, exist_ok=True)
+              tiles = []
+              for row in range(3):
+                  for col in range(3):
+                      box = (col * tile_w, row * tile_h,
+                             min(width, (col + 1) * tile_w),
+                             min(height, (row + 1) * tile_h))
+                      crop = image.crop(box)
+                      zoom = crop.resize((crop.width * 2, crop.height * 2), Image.Resampling.LANCZOS)
+                      name = f'r{row + 1}-c{col + 1}.png'
+                      zoom.save(directory / name)
+                      tiles.append((name, zoom))
+              cell_w = max(tile.width for _, tile in tiles)
+              cell_h = max(tile.height for _, tile in tiles) + 34
+              sheet = Image.new('RGB', (cell_w * 3, cell_h * 3), 'white')
+              draw = ImageDraw.Draw(sheet)
+              for index, (name, tile) in enumerate(tiles):
+                  x = (index % 3) * cell_w
+                  y = (index // 3) * cell_h
+                  sheet.paste(tile, (x, y + 34))
+                  draw.text((x + 8, y + 7), name, fill='black', font=font)
+              sheet_path = Path('contact-sheets') / f'{path.stem}-3x3-zoom.png'
+              sheet_path.parent.mkdir(exist_ok=True)
+              sheet.save(sheet_path)
+              manifest.append({'screen': path.name, 'size': [width, height],
+                               'crops': str(directory), 'contact_sheet': str(sheet_path)})
+          Path('logs/crop-manifest.json').write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8')
+          PY
+
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bvc-uiux-r1-libadwaita-1.9.4-${{ github.sha }}
+          path: |
+            screenshots/
+            crops/
+            contact-sheets/
+            logs/
+          if-no-files-found: warn
+          retention-days: 14
