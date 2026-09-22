@@ -60,13 +60,31 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p logs
-          archive=$(find _reconstructed -type f \( -name '*.tar.gz' -o -name '*.tgz' \) -print -quit)
-          test -n "$archive"
-          tar -xzf "$archive" -C .
+          cp .ui-review/uiux-r3.patch.xz.b64 /tmp/uiux-r3.patch.xz.b64
+          echo 'Downloaded artifact layout:' | tee logs/source-layout.txt
+          find _reconstructed -maxdepth 6 -printf '%y %p\n' | sort | head -n 300 | tee -a logs/source-layout.txt
+
+          marker=$(find _reconstructed -type f \
+            -path '*/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py' \
+            -print -quit)
+          if test -n "$marker"; then
+            source_root=${marker%/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py}
+            test -d "$source_root"
+            cp -a "$source_root"/. .
+          else
+            archive=$(find _reconstructed -type f \
+              \( -name '*.tar.gz' -o -name '*.tgz' \) -print -quit)
+            test -n "$archive"
+            tar -xzf "$archive" -C .
+          fi
+
           test -f big-video-converter/usr/share/big-video-converter/ui/conversion_page.py
-          base64 -d .ui-review/uiux-r3.patch.xz.b64 | xz -d > /tmp/uiux-r3.patch
+          mkdir -p .ui-review
+          cp /tmp/uiux-r3.patch.xz.b64 .ui-review/uiux-r3.patch.xz.b64
+          base64 -d /tmp/uiux-r3.patch.xz.b64 | xz -d > /tmp/uiux-r3.patch
           sha256sum /tmp/uiux-r3.patch | tee logs/uiux-r3-patch.sha256
-          test "$(sha256sum /tmp/uiux-r3.patch | awk '{print $1}')" = "fe1f9d6fafcb61b1f86f9c2cb4302a8e8851130a5e7379170e358c8f814d06e4"
+          test "$(sha256sum /tmp/uiux-r3.patch | awk '{print $1}')" = \
+            "fe1f9d6fafcb61b1f86f9c2cb4302a8e8851130a5e7379170e358c8f814d06e4"
           git apply --check /tmp/uiux-r3.patch
           git apply /tmp/uiux-r3.patch
           git diff --check
@@ -109,18 +127,32 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          rpm -q gtk4 libadwaita python3-gobject vte291-gtk4 mpv-libs | tee logs/runtime-rpms.txt
+          rpm -q gtk4 libadwaita python3-gobject vte291-gtk4 mpv-libs \
+            | tee logs/runtime-rpms.txt
           python3 - <<'PY' | tee logs/runtime-python.txt
           import gi
           gi.require_version('Gtk', '4.0')
           gi.require_version('Adw', '1')
           gi.require_version('Vte', '3.91')
           from gi.repository import Adw, Gtk, Vte
-          gtk = (Gtk.get_major_version(), Gtk.get_minor_version(), Gtk.get_micro_version())
-          adw = (Adw.get_major_version(), Adw.get_minor_version(), Adw.get_micro_version())
+          gtk = (
+              Gtk.get_major_version(),
+              Gtk.get_minor_version(),
+              Gtk.get_micro_version(),
+          )
+          adw = (
+              Adw.get_major_version(),
+              Adw.get_minor_version(),
+              Adw.get_micro_version(),
+          )
           print('GTK', '.'.join(map(str, gtk)))
           print('libadwaita', '.'.join(map(str, adw)))
-          print('VTE', Vte.get_major_version(), Vte.get_minor_version(), Vte.get_micro_version())
+          print(
+              'VTE',
+              Vte.get_major_version(),
+              Vte.get_minor_version(),
+              Vte.get_micro_version(),
+          )
           assert gtk == (4, 22, 5), gtk
           assert adw == (1, 9, 4), adw
           PY
@@ -129,7 +161,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m compileall -q big-video-converter/usr/share/big-video-converter tools tests
+          python3 -m compileall -q \
+            big-video-converter/usr/share/big-video-converter tools tests
           python3 -m pytest -q \
             tests/test_uiux_contracts.py \
             tests/test_job_options.py \
@@ -143,12 +176,18 @@ jobs:
           set -euo pipefail
           mkdir -p screenshots crops contact-sheets media logs
           : > logs/render-failures.txt
-          cleanup() { kill "${openbox_pid:-}" "${xvfb_pid:-}" 2>/dev/null || true; }
+          cleanup() {
+            kill "${openbox_pid:-}" "${xvfb_pid:-}" 2>/dev/null || true
+          }
           trap cleanup EXIT HUP INT TERM
-          Xvfb :99 -screen 0 1600x1000x24 -nolisten tcp -noreset > logs/xvfb.log 2>&1 &
+          Xvfb :99 -screen 0 1600x1000x24 -nolisten tcp -noreset \
+            > logs/xvfb.log 2>&1 &
           xvfb_pid=$!
           export DISPLAY=:99
-          for attempt in $(seq 1 80); do xdpyinfo >/dev/null 2>&1 && break; sleep 0.1; done
+          for attempt in $(seq 1 80); do
+            xdpyinfo >/dev/null 2>&1 && break
+            sleep 0.1
+          done
           xdpyinfo >/dev/null 2>&1
           openbox > logs/openbox.log 2>&1 &
           openbox_pid=$!
@@ -158,10 +197,15 @@ jobs:
             local screen=$1 theme=$2 width=$3 height=$4 output=$5
             local tag="${screen}-${theme}-${width}x${height}"
             if ! timeout --signal=TERM --kill-after=10s 80s \
-              dbus-run-session -- env DISPLAY=:99 GDK_BACKEND=x11 GSETTINGS_BACKEND=memory \
-                LIBGL_ALWAYS_SOFTWARE=1 NO_AT_BRIDGE=1 \
+              dbus-run-session -- env \
+                DISPLAY=:99 \
+                GDK_BACKEND=x11 \
+                GSETTINGS_BACKEND=memory \
+                LIBGL_ALWAYS_SOFTWARE=1 \
+                NO_AT_BRIDGE=1 \
                 BVC_DEMO_MEDIA_DIR="$PWD/media" \
-              sh -x tools/capture_ui.sh "$screen" "$output" "$theme" "$width" "$height" \
+              sh -x tools/capture_ui.sh \
+                "$screen" "$output" "$theme" "$width" "$height" \
                 > "logs/capture-${tag}.log" 2>&1; then
               echo "FAIL ${tag}" | tee -a logs/render-failures.txt
               return 1
@@ -175,16 +219,24 @@ jobs:
             video-options video-encoding audio noise subtitles advanced
           )
           for screen in "${full_screens[@]}"; do
-            render "$screen" light 1280 760 "screenshots/${screen}-light.png"
-            render "$screen" dark 1280 760 "screenshots/${screen}-dark.png"
+            render "$screen" light 1280 760 \
+              "screenshots/${screen}-light.png"
+            render "$screen" dark 1280 760 \
+              "screenshots/${screen}-dark.png"
           done
-          compact_screens=(queue progress editor audio noise subtitles advanced video-encoding)
+
+          compact_screens=(
+            queue progress editor audio noise subtitles advanced video-encoding
+          )
           for screen in "${compact_screens[@]}"; do
-            render "$screen" light 980 620 "screenshots/${screen}-compact-light.png"
+            render "$screen" light 980 620 \
+              "screenshots/${screen}-compact-light.png"
           done
           for screen in queue progress editor; do
-            render "$screen" dark 980 620 "screenshots/${screen}-compact-dark.png"
+            render "$screen" dark 980 620 \
+              "screenshots/${screen}-compact-dark.png"
           done
+
           test ! -s logs/render-failures.txt
           sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
 
@@ -194,15 +246,20 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          from PIL import Image, ImageDraw, ImageFont, ImageStat
+          from PIL import Image, ImageDraw, ImageFont
           import json
 
-          crops_root = Path('crops'); crops_root.mkdir(exist_ok=True)
-          sheets = Path('contact-sheets'); sheets.mkdir(exist_ok=True)
+          crops_root = Path('crops')
+          crops_root.mkdir(exist_ok=True)
+          sheets = Path('contact-sheets')
+          sheets.mkdir(exist_ok=True)
           try:
-              font = ImageFont.truetype('/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf', 18)
+              font = ImageFont.truetype(
+                  '/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf', 18
+              )
           except OSError:
               font = ImageFont.load_default()
+
           manifest = []
           for path in sorted(Path('screenshots').glob('*.png')):
               image = Image.open(path).convert('RGB')
@@ -210,48 +267,85 @@ jobs:
               extrema = image.getextrema()
               dynamic_range = max(high - low for low, high in extrema)
               if dynamic_range < 18:
-                  raise SystemExit(f'uniform/blank screenshot: {path} range={dynamic_range}')
-              tile_w = (width + 2) // 3; tile_h = (height + 2) // 3
-              directory = crops_root / path.stem; directory.mkdir(exist_ok=True)
+                  raise SystemExit(
+                      f'uniform/blank screenshot: {path} range={dynamic_range}'
+                  )
+              tile_w = (width + 2) // 3
+              tile_h = (height + 2) // 3
+              directory = crops_root / path.stem
+              directory.mkdir(exist_ok=True)
               tiles = []
               for row in range(3):
                   for col in range(3):
-                      box = (col*tile_w, row*tile_h, min(width,(col+1)*tile_w), min(height,(row+1)*tile_h))
+                      box = (
+                          col * tile_w,
+                          row * tile_h,
+                          min(width, (col + 1) * tile_w),
+                          min(height, (row + 1) * tile_h),
+                      )
                       crop = image.crop(box)
-                      zoom = crop.resize((crop.width*2, crop.height*2), Image.Resampling.LANCZOS)
-                      name = f'r{row+1}-c{col+1}.png'; zoom.save(directory/name); tiles.append((name,zoom))
-              cell_w = max(tile.width for _,tile in tiles); cell_h = max(tile.height for _,tile in tiles)+34
-              sheet = Image.new('RGB',(cell_w*3,cell_h*3),'white'); draw=ImageDraw.Draw(sheet)
-              for index,(name,tile) in enumerate(tiles):
-                  x=(index%3)*cell_w; y=(index//3)*cell_h
-                  sheet.paste(tile,(x,y+34)); draw.text((x+8,y+7),name,fill='black',font=font)
-              sheet_path=sheets/f'{path.stem}-3x3-zoom.png'; sheet.save(sheet_path)
-              manifest.append({'screen':path.name,'size':[width,height],'dynamic_range':dynamic_range,'contact_sheet':str(sheet_path)})
-          Path('logs/crop-manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+                      zoom = crop.resize(
+                          (crop.width * 2, crop.height * 2),
+                          Image.Resampling.LANCZOS,
+                      )
+                      name = f'r{row + 1}-c{col + 1}.png'
+                      zoom.save(directory / name)
+                      tiles.append((name, zoom))
+              cell_w = max(tile.width for _, tile in tiles)
+              cell_h = max(tile.height for _, tile in tiles) + 34
+              sheet = Image.new('RGB', (cell_w * 3, cell_h * 3), 'white')
+              draw = ImageDraw.Draw(sheet)
+              for index, (name, tile) in enumerate(tiles):
+                  x = (index % 3) * cell_w
+                  y = (index // 3) * cell_h
+                  sheet.paste(tile, (x, y + 34))
+                  draw.text((x + 8, y + 7), name, fill='black', font=font)
+              sheet_path = sheets / f'{path.stem}-3x3-zoom.png'
+              sheet.save(sheet_path)
+              manifest.append(
+                  {
+                      'screen': path.name,
+                      'size': [width, height],
+                      'dynamic_range': dynamic_range,
+                      'contact_sheet': str(sheet_path),
+                  }
+              )
+          Path('logs/crop-manifest.json').write_text(
+              json.dumps(manifest, indent=2) + '\n'
+          )
           print(f'validated and tiled {len(manifest)} screenshots')
           PY
-          sha256sum crops/*/*.png contact-sheets/*.png > logs/crops-SHA256SUMS.txt
+          sha256sum crops/*/*.png contact-sheets/*.png \
+            > logs/crops-SHA256SUMS.txt
 
       - name: Publish R3 visual evidence branch
         shell: bash
         run: |
           set -euo pipefail
           evidence=/tmp/bvc-ui-evidence-r3
-          rm -rf "$evidence"; mkdir -p "$evidence"
+          rm -rf "$evidence"
+          mkdir -p "$evidence"
           cp -a screenshots crops contact-sheets logs "$evidence"/
-          printf '%s\n' '# Big Video Converter R3 visual evidence' '' \
-            "Source workflow commit: $GITHUB_SHA" '' \
-            'GTK 4.22.5 / libadwaita 1.9.4 runtime proof is under logs/.' > "$evidence/README.md"
+          printf '%s\n' \
+            '# Big Video Converter R3 visual evidence' \
+            '' \
+            "Source workflow commit: $GITHUB_SHA" \
+            '' \
+            'GTK 4.22.5 / libadwaita 1.9.4 runtime proof is under logs/.' \
+            > "$evidence/README.md"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.email \
+            '41898282+github-actions[bot]@users.noreply.github.com'
           git checkout --orphan evidence-r3
           git rm -rf . >/dev/null 2>&1 || true
           git clean -fdx >/dev/null 2>&1 || true
           cp -a "$evidence"/. .
           git add -A
-          git commit -m "evidence: R3 libadwaita 1.9.4 UI review $GITHUB_SHA"
-          git push --force origin HEAD:refs/heads/review/uiux-evidence-r3-libadwaita194-20260922
+          git commit -m \
+            "evidence: R3 libadwaita 1.9.4 UI review $GITHUB_SHA"
+          git push --force origin \
+            HEAD:refs/heads/review/uiux-evidence-r3-libadwaita194-20260922
 
       - name: Upload R3 screenshots and diagnostics
         uses: actions/upload-artifact@v4
