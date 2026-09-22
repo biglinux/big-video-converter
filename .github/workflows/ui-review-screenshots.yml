@@ -51,6 +51,14 @@ jobs:
           tar --exclude=.git --exclude=screenshots --exclude=media --exclude=logs \
             -czf /tmp/bvc-uiux-source.tar.gz .
 
+      - name: Upload reconstructed source immediately
+        uses: actions/upload-artifact@v4
+        with:
+          name: big-video-converter-uiux-source-${{ github.sha }}
+          path: /tmp/bvc-uiux-source.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
       - name: Install GTK review dependencies
         shell: bash
         run: |
@@ -119,7 +127,7 @@ jobs:
           sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
           find screenshots -maxdepth 1 -type f -printf '%f\n' | sort
 
-      - name: Upload screenshots, logs and reconstructed source
+      - name: Upload screenshots and logs
         uses: actions/upload-artifact@v4
         with:
           name: big-video-converter-ui-review-${{ github.sha }}
@@ -130,6 +138,5 @@ jobs:
             /tmp/uiux-delta.patch
             /tmp/uiux-delta2.patch
             /tmp/uiux-delta3.patch
-            /tmp/bvc-uiux-source.tar.gz
           if-no-files-found: error
           retention-days: 7
