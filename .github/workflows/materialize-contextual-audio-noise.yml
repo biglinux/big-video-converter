@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - review/uiux-materialized-r2-20260922
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -23,10 +24,11 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin review/contextual-design-r1-20260921
+          mkdir -p tools tests
           git show \
             origin/review/contextual-design-r1-20260921:tools/apply_contextual_noise_review.py \
-            > /tmp/apply_contextual_noise_review.py
-          python3 /tmp/apply_contextual_noise_review.py
+            > tools/apply_contextual_noise_review.py
+          python3 tools/apply_contextual_noise_review.py
           git show \
             origin/review/contextual-design-r1-20260921:tests/test_contextual_audio_review.py \
             > tests/test_contextual_audio_review.py
