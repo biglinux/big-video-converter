@@ -1,5 +1,6 @@
 from pathlib import Path
 import importlib.util
+import sys
 
 
 MODULE = (
@@ -8,6 +9,7 @@ MODULE = (
 )
 spec = importlib.util.spec_from_file_location("audio_ui_state", MODULE)
 audio_ui_state = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = audio_ui_state
 spec.loader.exec_module(audio_ui_state)
 
 
@@ -36,3 +38,15 @@ def test_invalid_selection_uses_non_destructive_fallback():
     state = audio_ui_state.audio_mode_presentation(999)
     assert state.key == "copy"
     assert state.details_sensitive is False
+
+
+def test_sidebar_does_not_erase_saved_noise_reduction_when_mode_changes():
+    sidebar = (
+        Path(__file__).resolve().parents[1]
+        / "big-video-converter/usr/share/big-video-converter/sidebar_builder.py"
+    ).read_text(encoding="utf-8")
+    start = sidebar.index("    def _on_audio_handling_changed")
+    end = sidebar.index("    def _update_encoding_options_state", start)
+    handler = sidebar[start:end]
+    assert "noise_reduction_switch.set_active(False)" not in handler
+    assert "_audio_cleaning_row.set_sensitive(audio_will_reencode)" in handler
