@@ -1,4 +1,4 @@
-name: Contextual audio and noise diagnostics
+name: Contextual UI diagnostics
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: contextual-audio-noise-${{ github.ref }}
+  group: contextual-ui-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -64,18 +64,32 @@ jobs:
             dbus-run-session -- xvfb-run -a \
             python3 -m pytest -vv -s --tb=long \
               tests/test_contextual_audio_review.py \
+              tests/test_progress_page.py \
               > .ui-review/contextual-pytest.txt 2>&1
           pytest_status=$?
 
-          timeout --signal=TERM --kill-after=5s 90s \
-            dbus-run-session -- xvfb-run -a \
-            python3 -u tests/test_contextual_audio_review.py \
-              > .ui-review/contextual-direct.txt 2>&1
-          direct_status=$?
+          direct_status=0
+          : > .ui-review/contextual-direct.txt
+          for test_file in \
+            tests/test_contextual_audio_review.py \
+            tests/test_progress_page.py
+          do
+            printf '\n=== %s ===\n' "$test_file" \
+              >> .ui-review/contextual-direct.txt
+            timeout --signal=TERM --kill-after=5s 90s \
+              dbus-run-session -- xvfb-run -a \
+              python3 -u "$test_file" \
+                >> .ui-review/contextual-direct.txt 2>&1
+            status=$?
+            if [ "$status" -ne 0 ]; then
+              direct_status=$status
+            fi
+          done
 
           python3 -m compileall -q \
             big-video-converter/usr/share/big-video-converter \
             tests/test_contextual_audio_review.py \
+            tests/test_progress_page.py \
             > .ui-review/contextual-compileall.txt 2>&1
           compile_status=$?
 
@@ -100,7 +114,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: contextual-audio-noise-diagnostics-${{ github.sha }}
+          name: contextual-ui-diagnostics-${{ github.sha }}
           path: .ui-review/
           include-hidden-files: true
           if-no-files-found: error

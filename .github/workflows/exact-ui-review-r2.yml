@@ -62,13 +62,16 @@ jobs:
           python3 -m compileall -q \
             big-video-converter/usr/share/big-video-converter \
             tests/test_contextual_audio_review.py \
+            tests/test_progress_page.py \
             tools/ui_demo.py
           timeout --signal=TERM --kill-after=5s 60s \
             dbus-run-session -- xvfb-run -a \
-            python3 tests/test_contextual_audio_review.py \
+            python3 -m pytest -q \
+              tests/test_contextual_audio_review.py \
+              tests/test_progress_page.py \
             2>&1 | tee logs/contextual-tests.txt
 
-      - name: Capture audio and noise states
+      - name: Capture contextual states
         shell: bash
         run: |
           set -euo pipefail
@@ -96,14 +99,14 @@ jobs:
             identify "$output" | tee -a logs/image-dimensions.txt
           }
 
-          states="audio-copy audio-convert audio-remove noise-off noise-ai"
+          states="audio-copy audio-convert audio-remove noise-off noise-ai progress complete"
           for screen in $states; do
             render "$screen" light 1280 760 "screenshots/${screen}-light.png"
             render "$screen" dark 1280 760 "screenshots/${screen}-dark.png"
             render "$screen" light 980 620 "screenshots/${screen}-compact-light.png"
             render "$screen" dark 980 620 "screenshots/${screen}-compact-dark.png"
           done
-          expected=20
+          expected=28
           actual=$(find screenshots -maxdepth 1 -type f -name '*.png' | wc -l)
           test "$actual" -eq "$expected"
           printf 'screenshots=%s\n' "$actual" | tee logs/screenshot-count.txt
