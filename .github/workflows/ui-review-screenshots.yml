@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   render:
@@ -50,33 +51,55 @@ jobs:
 
       - name: Check out review branch
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Reconstruct and apply the UI review
+      - name: Download the previously tested reconstructed source
+        uses: actions/download-artifact@v4
+        with:
+          name: big-video-converter-uiux-source-9ff242b6d14a7f7029f9ca91fb2b98c1e5758264
+          path: _reconstructed
+          github-token: ${{ github.token }}
+          repository: biglinux/big-video-converter
+          run-id: 35685375122
+
+      - name: Restore the reconstructed application tree
         shell: bash
         run: |
           set -euo pipefail
-          cat .ui-review/patch.0{0,1,2,3,4} \
-            | base64 --decode \
-            | xz --decompress > /tmp/uiux.patch
-          git apply --check /tmp/uiux.patch
-          git apply /tmp/uiux.patch
+          search_root=_reconstructed
+          conversion=$(find "$search_root" -type f \
+            -path '*/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py' \
+            -print -quit)
+          if [ -z "$conversion" ]; then
+            mkdir -p _reconstructed-unpacked
+            archive=$(find "$search_root" -type f \
+              \( -name '*.tar.gz' -o -name '*.tgz' \) -print -quit)
+            test -n "$archive"
+            tar -xzf "$archive" -C _reconstructed-unpacked
+            conversion=$(find _reconstructed-unpacked -type f \
+              -path '*/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py' \
+              -print -quit)
+          fi
+          test -n "$conversion"
+          suffix=/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py
+          source_root=${conversion%$suffix}
+          printf 'Restoring reviewed source from %s\n' "$source_root"
 
-          base64 --decode .ui-review/delta.patch.xz.b64 \
-            | xz --decompress > /tmp/uiux-delta.patch
-          git apply --check /tmp/uiux-delta.patch
-          git apply /tmp/uiux-delta.patch
-
-          base64 --decode .ui-review/delta2.patch.xz.b64 \
-            | xz --decompress > /tmp/uiux-delta2.patch
-          git apply --check /tmp/uiux-delta2.patch
-          git apply /tmp/uiux-delta2.patch
-
-          base64 --decode .ui-review/delta3.patch.xz.b64 \
-            | xz --decompress > /tmp/uiux-delta3.patch
-          git apply --check /tmp/uiux-delta3.patch
-          git apply /tmp/uiux-delta3.patch
+          for entry in big-video-converter tools tests docs README.md AGENTS.md \
+                       CONTRIBUTING.md SECURITY.md SUPPORT.md CHANGELOG.md; do
+            if [ -e "$source_root/$entry" ]; then
+              rm -rf "$entry"
+              cp -a "$source_root/$entry" "$entry"
+            fi
+          done
 
           git diff --check
+          git diff --binary 58ec88d645cd468c218e1289d605152cca6d192b \
+            -- big-video-converter tools tests docs README.md AGENTS.md \
+               CONTRIBUTING.md SECURITY.md SUPPORT.md CHANGELOG.md \
+            > /tmp/uiux-materialized.patch
+          test -s /tmp/uiux-materialized.patch
 
       - name: Prove the loaded runtime
         shell: bash
@@ -246,7 +269,7 @@ jobs:
           sha256sum crops/*/*.png contact-sheets/*.png \
             > logs/crops-SHA256SUMS.txt
 
-      - name: Preserve screenshots, crops, logs and tested patches
+      - name: Preserve screenshots, crops, logs and tested source
         uses: actions/upload-artifact@v4
         with:
           name: big-video-converter-libadwaita-1.9.4-review-${{ github.sha }}
@@ -255,9 +278,6 @@ jobs:
             crops/
             contact-sheets/
             logs/
-            /tmp/uiux.patch
-            /tmp/uiux-delta.patch
-            /tmp/uiux-delta2.patch
-            /tmp/uiux-delta3.patch
+            /tmp/uiux-materialized.patch
           if-no-files-found: error
           retention-days: 14
