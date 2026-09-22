@@ -1,0 +1,105 @@
+name: Materialize verified R6 release hardening
+
+on:
+  push:
+    branches:
+      - review/stable-readiness-r6-20260922
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: materialize-stable-r6
+  cancel-in-progress: false
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Verify and apply the reviewed patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          staged=.review/BVC-STABLE-READINESS-R6.diff.gz
+          test -f "$staged"
+          echo '77d9be0f831fe86c1bc39527f784ae53d7bcfad8e15f1f82d0fa170991010b2c  .review/BVC-STABLE-READINESS-R6.diff.gz' | sha256sum -c -
+          gzip -dc "$staged" > /tmp/BVC-STABLE-READINESS-R6.diff
+          echo '5db51e1de29df9153c7e40f3e1bb71d8918f14bb1a794fe93c7646c856344ca2  /tmp/BVC-STABLE-READINESS-R6.diff' | sha256sum -c -
+          git apply --check /tmp/BVC-STABLE-READINESS-R6.diff
+          git apply /tmp/BVC-STABLE-READINESS-R6.diff
+          rm -f "$staged" .github/workflows/materialize-stable-r6.yml
+          rmdir .review
+          git diff --check
+
+      - name: Run transport-independent checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m compileall -q \
+            big-video-converter/usr/share/big-video-converter \
+            tests
+          bash -n big-video-converter/usr/bin/big-video-converter
+          bash -n big-video-converter/usr/bin/big-video-converter-gui
+          bash -n tools/update-translations.sh
+          bash -n tools/compile-translations.sh
+          bash -n pkgbuild/PKGBUILD
+          python3 - <<'PY'
+          import importlib.util
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          test_path = Path('tests/test_release_metadata.py')
+          spec = importlib.util.spec_from_file_location('release_metadata', test_path)
+          module = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(module)
+          tests = sorted(
+              (name, value) for name, value in vars(module).items()
+              if name.startswith('test_') and callable(value)
+          )
+          for name, test in tests:
+              test()
+              print(f'PASS {name}')
+          if len(tests) != 8:
+              raise SystemExit(f'Expected 8 release tests, ran {len(tests)}')
+
+          metadata = Path(
+              'big-video-converter/usr/share/metainfo/'
+              'br.com.biglinux.converter.metainfo.xml'
+          )
+          component = ET.parse(metadata).getroot()
+          assert component.findtext('id') == 'br.com.biglinux.converter'
+          assert component.findtext('project_license') == 'MIT'
+          PY
+
+      - name: Commit the final reviewed tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'BigLinux Review Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -A
+          git diff --cached --check
+          git commit -m 'fix(release): harden packaging metadata and launch path'
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git rev-parse HEAD | tee R6-FINAL-COMMIT.txt
+          git rev-parse 'HEAD^{tree}' | tee R6-FINAL-TREE.txt
+
+      - name: Dispatch exact-commit validation
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for workflow in backend-tests.yml build-package.yml; do
+            gh api --method POST \
+              -H 'Accept: application/vnd.github+json' \
+              "/repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow}/dispatches" \
+              -f ref="${GITHUB_REF_NAME}"
+          done
