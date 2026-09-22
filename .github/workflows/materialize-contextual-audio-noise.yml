@@ -1,0 +1,54 @@
+name: Materialize contextual audio and noise review
+
+on:
+  push:
+    branches:
+      - review/uiux-materialized-r2-20260922
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Apply tested contextual noise transformation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin review/contextual-design-r1-20260921
+          git show \
+            origin/review/contextual-design-r1-20260921:tools/apply_contextual_noise_review.py \
+            > /tmp/apply_contextual_noise_review.py
+          python3 /tmp/apply_contextual_noise_review.py
+          git show \
+            origin/review/contextual-design-r1-20260921:tests/test_contextual_audio_review.py \
+            > tests/test_contextual_audio_review.py
+          python3 -m compileall -q \
+            big-video-converter/usr/share/big-video-converter \
+            tests/test_contextual_audio_review.py
+          git diff --check
+
+      - name: Commit ordinary reviewed sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Big Video Converter review'
+          git config user.email 'review@example.invalid'
+          git add \
+            big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py \
+            big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py \
+            big-video-converter/usr/share/big-video-converter/utils/contextual_controls.py \
+            tests/test_contextual_audio_review.py
+          if git diff --cached --quiet; then
+            echo 'Contextual audio/noise review is already materialized.'
+            exit 0
+          fi
+          git commit -m 'fix(ui): make audio and noise controls contextual'
+          git push origin HEAD:review/uiux-materialized-r2-20260922
