@@ -15,6 +15,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 msgid "Auto-detect"
 msgstr ""
@@ -395,30 +396,17 @@ msgstr ""
 msgid "Select Folder with Video Files"
 msgstr ""
 
-#, python-brace-format
-msgid "{} video files have been added to the queue."
+msgid "Files Added"
 msgstr ""
 
-msgid "Files Added"
+#, python-brace-format
+msgid "{} video files have been added to the queue."
 msgstr ""
 
 msgid "No Files Found"
 msgstr ""
 
 msgid "No valid video files were found in the selected folder."
-msgstr ""
-
-msgid "Please select a folder, not a file."
-msgstr ""
-
-#, python-brace-format
-msgid "Error selecting folder: {}"
-msgstr ""
-
-msgid "No Files Added"
-msgstr ""
-
-msgid "No valid video files were found in your selection."
 msgstr ""
 
 msgid "Add Network File"
@@ -896,37 +884,49 @@ msgstr ""
 msgid "No customizations"
 msgstr ""
 
-msgid "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
+msgid "Keep original audio"
 msgstr ""
 
-msgid "Audio Handling"
+msgid "Convert audio"
 msgstr ""
 
-msgid "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
+msgid "Choose what the converted video should contain."
+msgstr ""
+
+msgid "Audio operation"
+msgstr ""
+
+msgid "Audio conversion"
 msgstr ""
 
 msgid "Audio Codec"
 msgstr ""
 
-msgid "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
-msgstr ""
-
 msgid "Audio Bitrate"
-msgstr ""
-
-msgid "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
-msgstr ""
-
-msgid "Custom bitrate"
 msgstr ""
 
 msgid "Audio Channels"
 msgstr ""
 
-msgid "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
+msgid "Custom bitrate"
 msgstr ""
 
 msgid "Custom channels"
+msgstr ""
+
+msgid "Changes are saved automatically for future conversions."
+msgstr ""
+
+msgid "Original audio is kept. Codec, bitrate and channel settings do not apply."
+msgstr ""
+
+msgid "Audio will be converted using the settings below."
+msgstr ""
+
+msgid "The converted video will have no audio."
+msgstr ""
+
+msgid "Select an audio operation."
 msgstr ""
 
 msgid "Edit file"
@@ -1371,45 +1371,168 @@ msgstr ""
 msgid "Saved as “{0}” in {1}"
 msgstr ""
 
-msgid "Converting Videos"
+msgid "Back to the queue"
 msgstr ""
 
-msgid "Cancel All"
+msgid "Conversion progress"
 msgstr ""
 
-msgid "Completed"
+msgid "Preparing the queue safely"
 msgstr ""
 
-msgid "Completed!"
+msgid "Cancel all"
+msgstr ""
+
+msgid "Overall progress"
+msgstr ""
+
+msgid "Waiting for the first video"
+msgstr ""
+
+msgid "Overall conversion progress"
+msgstr ""
+
+msgid "0 finished"
+msgstr ""
+
+msgid "0 remaining"
+msgstr ""
+
+msgid "Videos"
+msgstr ""
+
+msgid "0 videos"
+msgstr ""
+
+msgid "Back to queue"
 msgstr ""
 
 #, python-brace-format
-msgid "All {} videos converted successfully!"
+msgid "{count} video converted"
+msgid_plural "{count} videos converted"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} conversion failed"
+msgid_plural "{count} conversions failed"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} conversion cancelled"
+msgid_plural "{count} conversions cancelled"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Conversion complete"
+msgid_plural "Conversions complete"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} video converted successfully"
+msgid_plural "{count} videos converted successfully"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Conversion failed"
+msgid_plural "Conversions failed"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Conversion cancelled"
+msgid_plural "Conversions cancelled"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Queue finished with issues"
+msgstr ""
+
+msgid "No conversion results are available"
 msgstr ""
 
 #, python-brace-format
-msgid "{} completed, {} failed, {} cancelled"
+msgid "{count} video finished"
+msgid_plural "{count} videos finished"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} video remaining"
+msgid_plural "{count} videos remaining"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} video"
+msgid_plural "{count} videos"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Review the results below or return to the queue"
 msgstr ""
 
-msgid "All conversions failed or were cancelled"
+msgid "Converting videos"
 msgstr ""
 
-msgid "Cancel All Conversions?"
+#, python-brace-format
+msgid "{} of {} finished"
+msgstr ""
+
+msgid "Pending videos remain unchanged until their conversion starts"
+msgstr ""
+
+#, python-brace-format
+msgid "Queue finished: {results}"
+msgstr ""
+
+msgid "Cancel all conversions?"
 msgstr ""
 
 msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
 msgstr ""
 
-msgid "Unknown file"
+msgid "Keep converting"
+msgstr ""
+
+msgid "Unknown video"
 msgstr ""
 
 msgid "Waiting in queue"
 msgstr ""
 
-msgid "FFmpeg Command"
+#, python-brace-format
+msgid "Conversion progress for “{}”"
 msgstr ""
 
-msgid "Process Output"
+msgid "Command"
+msgstr ""
+
+msgid "Process output"
+msgstr ""
+
+msgid "Skip this video"
+msgstr ""
+
+#, python-brace-format
+msgid "Skip “{}”"
+msgstr ""
+
+msgid "Skip"
+msgstr ""
+
+msgid "Cancel this conversion"
+msgstr ""
+
+#, python-brace-format
+msgid "Cancel “{}”"
+msgstr ""
+
+msgid "Hide technical details"
+msgstr ""
+
+msgid "Show technical details"
 msgstr ""
 
 msgid "Converting..."
@@ -1424,6 +1547,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "{secs}s"
+msgstr ""
+
+msgid "Completed"
 msgstr ""
 
 msgid "Failed"
@@ -1572,6 +1698,18 @@ msgstr ""
 msgid "Remove segment"
 msgstr ""
 
+msgid "Hours"
+msgstr ""
+
+msgid "Minutes"
+msgstr ""
+
+msgid "Seconds"
+msgstr ""
+
+msgid "Centiseconds"
+msgstr ""
+
 msgid "Edit Segment"
 msgstr ""
 
@@ -1621,6 +1759,12 @@ msgstr ""
 msgid "Frame: {current}/{total}"
 msgstr ""
 
+msgid "Video position"
+msgstr ""
+
+msgid "Drag to seek or adjust segment edges"
+msgstr ""
+
 msgid "Mark segment point"
 msgstr ""
 
@@ -1657,7 +1801,8 @@ msgstr ""
 msgid "Forward 1 second"
 msgstr ""
 
-msgid "Playback Speed"
+#, python-brace-format
+msgid "Playback speed: {speed}x"
 msgstr ""
 
 msgid "Audio Track"
@@ -1673,13 +1818,25 @@ msgstr ""
 msgid "Left"
 msgstr ""
 
+msgid "Crop from left"
+msgstr ""
+
 msgid "Right"
+msgstr ""
+
+msgid "Crop from right"
 msgstr ""
 
 msgid "Top"
 msgstr ""
 
+msgid "Crop from top"
+msgstr ""
+
 msgid "Bottom"
+msgstr ""
+
+msgid "Crop from bottom"
 msgstr ""
 
 msgid "Visual crop editor"
@@ -1748,7 +1905,14 @@ msgstr ""
 msgid "Save each segment as a separate file"
 msgstr ""
 
-msgid "Reset to default"
+msgid "Segment output"
+msgstr ""
+
+msgid "Choose how marked segments are saved"
+msgstr ""
+
+#, python-brace-format
+msgid "Reset {setting} to default"
 msgstr ""
 
 msgid "Video Encoding"

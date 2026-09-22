@@ -186,3 +186,69 @@ def test_extracted_subtitle_uses_same_trim_interval(media,tmp_path,run_cli):
     for path in outputs:
         text=path.read_text()
         assert '00:00:00,000 --> 00:00:01,000' in text and 'Segunda fala' not in text
+
+
+def test_segment_extraction_preserves_existing_subtitles(media, tmp_path):
+    existing = tmp_path / 'joined.por.srt'
+    existing.write_text('Manually corrected subtitles', encoding='utf-8')
+    processor = SubtitleProcessor(str(media['multi']), str(tmp_path), 'joined.mkv',
+        [{'start': 0, 'end': 2}], str(tmp_path), 'extract')
+    with pytest.raises(FileExistsError):
+        processor.process()
+    assert existing.read_text() == 'Manually corrected subtitles'
+    assert not list(tmp_path.glob('.bvc-subtitle-*'))
+
+
+@pytest.mark.parametrize('failed_kind', ['file', 'directory'])
+def test_sync_failure_preserves_original(media, tmp_path, monkeypatch, failed_kind):
+    import os
+    import stat
+
+    source, output = tmp_path / 'source.mp4', tmp_path / 'output.mp4'
+    shutil.copyfile(media['video'], source)
+    shutil.copyfile(source, output)
+    sync = os.fsync
+    synced = []
+
+    def fail_sync(fd):
+        kind = 'directory' if stat.S_ISDIR(os.fstat(fd).st_mode) else 'file'
+        synced.append(kind)
+        if kind == failed_kind:
+            raise OSError('simulated sync failure')
+        sync(fd)
+
+    monkeypatch.setattr(mv.os, 'fsync', fail_sync)
+    with pytest.raises(OSError, match='simulated sync failure'):
+        mv.remove_original(str(source), mv.FileIdentity.capture(str(source)),
+                           [str(output)], threading.Event())
+    assert source.read_bytes() == media['video'].read_bytes()
+    assert failed_kind in synced
+
+
+def test_cancel_during_packet_count_reaps_probe(tmp_path, monkeypatch):
+    import sys
+    import time
+
+    cancel = threading.Event()
+    real_popen = subprocess.Popen
+    children = []
+
+    def slow_probe(*args, **kwargs):
+        process = real_popen([sys.executable, '-c', 'import time; time.sleep(30)'],
+                             **kwargs)
+        children.append(process)
+        cancel.set()
+        return process
+
+    monkeypatch.setattr(mv.subprocess, 'Popen', slow_probe)
+    started = time.monotonic()
+    try:
+        with pytest.raises(InterruptedError):
+            mv.verify_integrity(str(tmp_path / 'output.mp4'), cancel, timeout=2)
+        assert time.monotonic() - started < 5
+        assert children and all(child.poll() is not None for child in children)
+    finally:
+        for child in children:
+            if child.poll() is None:
+                child.kill()
+            child.wait()

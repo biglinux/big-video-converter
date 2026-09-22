@@ -4,12 +4,13 @@ pkgname=big-video-converter
 pkgdesc="Optimized MKV to MP4 video converter"
 # Uncomment and edit the following lines as needed
 depends=('python' 'python-gobject' 'gtk4' 'ffmpeg' 'python-cairo' 'python-mpv' 'libadwaita' 'libva-utils' 'python-opengl' 'vte4')
-#makedepends=('')
-#optdepends=('')
+makedepends=('git')
+optdepends=('nautilus-python: Load the Nautilus context menu extension'
+            'libnautilus-extension: Nautilus API used by the context menu extension')
 conflicts=('comm-video-converter')
 replaces=('comm-video-converter')
-pkgver=$(date +%y.%m.%d)
-pkgrel=$(date +%H%M)
+pkgver=26.09.22
+pkgrel=1
 arch=('any')
 license=('MIT')
 url="https://github.com/biglinux/$pkgname"

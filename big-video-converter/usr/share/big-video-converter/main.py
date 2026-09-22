@@ -5,7 +5,6 @@ Main entry point for Big Video Converter application.
 
 import logging
 import os
-import signal
 import subprocess
 import sys
 import threading
@@ -383,34 +382,30 @@ class VideoConverterApp(
         self._create_pages()
 
     def _on_window_close_request(self, window):
-        """Handle window close event to clean up running processes"""
-        # Save window state before closing
-        self._save_window_state()
+        self.quit()
+        return True
 
-        # Check if we have active conversions
-        if (
-            hasattr(self, "progress_page")
-            and self.progress_page
-            and self.progress_page.has_active_conversions()
-        ):
-            # Terminate all running processes
-            for (
-                conversion_id,
-                conversion,
-            ) in self.progress_page.active_conversions.items():
-                # Get the row (can be stored as "item" or "row" depending on implementation)
-                conversion_item = conversion.get("row") or conversion.get("item")
-                if conversion_item and conversion_item.process:
-                    try:
-                        self.logger.info(
-                            f"Terminating process {conversion_item.process.pid} on application exit"
-                        )
-                        self.terminate_process_tree(conversion_item.process)
-                    except Exception as e:
-                        self.logger.error(f"Errorinating process on exit: {e}")
+    def quit(self):
+        """Keep the main loop alive until every conversion has acknowledged cancellation."""
+        if getattr(self, "_quitting", False):
+            return
+        self._quitting = True
+        self.is_cancellation_requested = True
+        self.conversion_queue.clear()
+        if getattr(self, "progress_page", None) is not None:
+            self.progress_page._do_cancel_all()
+        if getattr(self, "window", None) is not None and self.window.get_realized():
+            self._save_window_state()
+        if self._finish_quit():
+            GLib.timeout_add(100, self._finish_quit)
 
-        # Continue with normal window close
-        return False  # False means continue with close, True would prevent close
+    def _finish_quit(self):
+        if self.active_conversions or self.conversions_running:
+            return GLib.SOURCE_CONTINUE
+        if getattr(self, "video_edit_page", None) is not None:
+            self.video_edit_page.cleanup()
+        super().quit()
+        return GLib.SOURCE_REMOVE
 
     def _save_window_state(self):
         """Save current window size, position and maximized state"""
@@ -430,62 +425,16 @@ class VideoConverterApp(
         self.settings_manager.save_setting("sidebar-position", sidebar_position)
 
     def terminate_process_tree(self, process) -> bool:
-        """Properly terminate a process and all its children using process groups"""
-        if not process:
+        from utils.media_validation import terminate_process_group
+
+        if process is None:
             return False
-
-        pid = process.pid
-        self.logger.info(f"Terminating process tree for PID {pid}")
-
         try:
-            # First try: Kill the entire process group
-            # This requires the process to have been started with start_new_session=True
-            pgid = os.getpgid(pid)
-            os.killpg(pgid, signal.SIGTERM)
-
-            # Wait briefly
-            try:
-                process.wait(timeout=0.5)
-                self.logger.info(
-                    f"Process {pid} terminated gracefully via process group"
-                )
-                return True
-            except subprocess.TimeoutExpired:
-                # Force kill if still running
-                os.killpg(pgid, signal.SIGKILL)
-                process.kill()
-                self.logger.info(f"Process {pid} killed forcefully via process group")
-                return True
-
-        except ProcessLookupError:
-            self.logger.info(f"Process {pid} already gone")
+            terminate_process_group(process)
             return True
-        except (subprocess.SubprocessError, OSError) as e:
-            self.logger.warning(f"Error using process group termination: {e}")
-
-            # Fallback to manual child cleanup
-            try:
-                # Kill any FFmpeg processes that might have been started by our process
-                subprocess.run(
-                    ["pkill", "-TERM", "-P", str(pid)],
-                    stderr=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL,
-                    check=False,
-                    timeout=5,
-                )
-
-                process.terminate()
-                try:
-                    process.wait(timeout=0.5)
-                    self.logger.info(f"Process {pid} terminated via fallback")
-                    return True
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    self.logger.info(f"Process {pid} killed via fallback")
-                    return True
-            except (subprocess.SubprocessError, OSError) as e2:
-                self.logger.error(f"Failed to terminate process {pid}: {e2}")
-                return False
+        except (OSError, ValueError, subprocess.SubprocessError):
+            self.logger.exception("Could not terminate conversion process group")
+            return False
 
     def _create_right_pane(self):
         """Create right pane with stack for queue and editor views using ToolbarView"""

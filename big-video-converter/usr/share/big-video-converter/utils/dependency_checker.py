@@ -2,6 +2,7 @@
 import gettext
 import os
 import shutil
+import shlex
 import subprocess
 
 import logging
@@ -74,7 +75,7 @@ class DependencyChecker:
                if 'ffmpeg-free' in package_name:
                    logger.debug("Found 'ffmpeg-free' package. Triggering installation of the full version.")
                    return False
-           except (subprocess.CalledProcessError, FileNotFoundError) as e:
+           except (subprocess.SubprocessError, OSError) as e:
                # If the check fails for any reason, it's safer to assume the dependency is not met.
                logger.error(f"Warning: Could not verify the ffmpeg package provider: {e}")
                return False
@@ -83,51 +84,17 @@ class DependencyChecker:
        return True
 
     def get_install_command(self):
-        """Get the installation command for ffmpeg based on the distribution."""
-        distro_base = self.distro.get('base')
-
-        if distro_base == 'arch':
+        """Let the native package manager present and confirm its transaction."""
+        base = self.distro.get('base')
+        if base == 'arch':
             packages = ['ffmpeg', 'mpv']
-            # The full command that will be executed
-            full_command_str = f"pacman -Sy --noconfirm {' '.join(packages)}"
-            # A simple, user-friendly string for the GUI
-            display_str = f"pacman -Sy {' '.join(packages)}"
-            return {
-                'command': ['pkexec', 'sh', '-c', full_command_str],
-                'display': display_str,
-                'packages': packages
-            }
-        
-        elif distro_base == 'debian':
+            command = ['pkexec', 'pacman', '-S', *packages]
+        elif base == 'debian':
             packages = ['ffmpeg', 'mpv', 'libmpv2']
-            # The full command to be executed, including the update
-            full_command_str = f"apt update && apt install -y {' '.join(packages)}"
-            # A simple, user-friendly string for the GUI, avoiding '&&'
-            display_str = f"apt install -y {' '.join(packages)}"
-            return {
-                'command': ['pkexec', 'sh', '-c', full_command_str],
-                'display': display_str,
-                'packages': packages
-            }
-        
-        elif distro_base == 'rpm':
+            command = ['pkexec', 'apt', 'install', *packages]
+        elif base == 'rpm':
             packages = ['ffmpeg', 'mpv']
-            # Command to install RPM Fusion repos
-            rpm_fusion_install = "dnf install -y https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
-            
-            # Command to install the packages, automatically replacing 'ffmpeg-free'
-            package_install = f"dnf install -y {' '.join(packages)} --allowerasing"
-
-            # The full, robust command that will be executed
-            full_command_str = f"{rpm_fusion_install} && {package_install}"
-            
-            # A simple, user-friendly string for the GUI
-            display_str = f"dnf install -y {' '.join(packages)}"
-            
-            return {
-                'command': ['pkexec', 'sh', '-c', full_command_str],
-                'display': display_str,
-                'packages': packages
-            }
-        
-        return None
+            command = ['pkexec', 'dnf', 'install', *packages]
+        else:
+            return None
+        return {'command': command, 'display': shlex.join(command), 'packages': packages}

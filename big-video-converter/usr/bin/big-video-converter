@@ -551,11 +551,9 @@ if [[ $output_file -ef $input_file ]]; then
 fi
 # The job's scratch directory sits beside its own output, so publishing is a
 # rename within one filesystem and nothing large is ever written to /tmp,
-# which is RAM on most systems. The name carries our process id: no live job
-# can share it, and one left behind by a killed run says whose it was.
-output_stage_dir="${output_file%/*}/.bvc-$$"
-rm -rf -- "$output_stage_dir"
-mkdir -- "$output_stage_dir" || exit 1
+# which is RAM on most systems. mktemp creates a directory owned only by this
+# invocation; a stale workspace must never be deleted to claim its name.
+output_stage_dir=$(mktemp -d -- "${output_file%/*}/.bvc-XXXXXXXXXX") || exit 1
 printf 'Job workspace: %s\n' "$output_stage_dir"
 staged_output="$output_stage_dir/video.${output_file##*.}"
 
@@ -665,7 +663,16 @@ fi
 publish_subtitles() {
     local i
     for i in "${!subtitle_outputs[@]}"; do
-        publish "${subtitle_outputs[$i]}" "${subtitle_destinations[$i]}" || return 1
+        # Claim the sidecar exclusively: an existing subtitle may contain
+        # manual corrections even when the video destination is unused.
+        if ! (set -o noclobber; : > "${subtitle_destinations[$i]}"); then
+            echo "ERROR: Refusing to replace subtitle: ${subtitle_destinations[$i]}" >&2
+            return 1
+        fi
+        if ! publish "${subtitle_outputs[$i]}" "${subtitle_destinations[$i]}"; then
+            rm -f -- "${subtitle_destinations[$i]}"
+            return 1
+        fi
     done
 }
 

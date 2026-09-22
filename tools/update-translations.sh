@@ -12,7 +12,7 @@ locale="$app/locale"
 pot="$locale/big-video-converter.pot"
 
 mapfile -t sources < <(find "$app/usr/share" -name '*.py' | sort)
-xgettext --from-code=UTF-8 --language=Python --keyword=_ --keyword=ngettext:1,2 --no-location --no-wrap \
+xgettext --from-code=UTF-8 --language=Python --keyword=_ --keyword=ngettext:1,2 --keyword=_count_text:1,2 --no-location --no-wrap \
     --package-name=big-video-converter --msgid-bugs-address='' \
     --copyright-holder='BigLinux' -o "$pot" "${sources[@]}"
 # Bash gettext strings ($"..."), if the script ever carries any.
@@ -28,6 +28,10 @@ for po in "$locale"/*.po; do
     lang=$(basename "$po" .po)
     if [[ $lang == en ]]; then
         msgen --no-wrap -o "$po" "$pot"
+        sed -i -e 's/nplurals=INTEGER; plural=EXPRESSION;/nplurals=2; plural=(n != 1);/' \
+            -e 's/Language: \\n/Language: en\\n/' \
+            -e 's/FULL NAME <EMAIL@ADDRESS>/BigLinux/' \
+            -e 's/LANGUAGE <LL@li.org>/English/' -e '/^#, fuzzy$/d' "$po"
     else
         msgmerge --update --no-wrap --backup=none --no-fuzzy-matching "$po" "$pot"
     fi

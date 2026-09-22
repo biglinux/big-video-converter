@@ -3,17 +3,17 @@
 # This file is distributed under the same license as the big-video-converter package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: big-video-converter\n"
 "Report-Msgid-Bugs-To: \n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Last-Translator: BigLinux\n"
+"Language-Team: English\n"
+"Language: en\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 msgid "Auto-detect"
 msgstr "Auto-detect"
@@ -506,31 +506,18 @@ msgstr "Video Files"
 msgid "Select Folder with Video Files"
 msgstr "Select Folder with Video Files"
 
+msgid "Files Added"
+msgstr "Files Added"
+
 #, python-brace-format
 msgid "{} video files have been added to the queue."
 msgstr "{} video files have been added to the queue."
-
-msgid "Files Added"
-msgstr "Files Added"
 
 msgid "No Files Found"
 msgstr "No Files Found"
 
 msgid "No valid video files were found in the selected folder."
 msgstr "No valid video files were found in the selected folder."
-
-msgid "Please select a folder, not a file."
-msgstr "Please select a folder, not a file."
-
-#, python-brace-format
-msgid "Error selecting folder: {}"
-msgstr "Error selecting folder: {}"
-
-msgid "No Files Added"
-msgstr "No Files Added"
-
-msgid "No valid video files were found in your selection."
-msgstr "No valid video files were found in your selection."
 
 msgid "Add Network File"
 msgstr "Add Network File"
@@ -1014,38 +1001,50 @@ msgstr "Custom FFmpeg flags"
 msgid "No customizations"
 msgstr "No customizations"
 
-msgid "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
-msgstr "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
+msgid "Keep original audio"
+msgstr "Keep original audio"
 
-msgid "Audio Handling"
-msgstr "Audio Handling"
+msgid "Convert audio"
+msgstr "Convert audio"
 
-msgid "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
-msgstr "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
+msgid "Choose what the converted video should contain."
+msgstr "Choose what the converted video should contain."
+
+msgid "Audio operation"
+msgstr "Audio operation"
+
+msgid "Audio conversion"
+msgstr "Audio conversion"
 
 msgid "Audio Codec"
 msgstr "Audio Codec"
 
-msgid "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
-msgstr "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
-
 msgid "Audio Bitrate"
 msgstr "Audio Bitrate"
-
-msgid "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
-msgstr "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
-
-msgid "Custom bitrate"
-msgstr "Custom bitrate"
 
 msgid "Audio Channels"
 msgstr "Audio Channels"
 
-msgid "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
-msgstr "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
+msgid "Custom bitrate"
+msgstr "Custom bitrate"
 
 msgid "Custom channels"
 msgstr "Custom channels"
+
+msgid "Changes are saved automatically for future conversions."
+msgstr "Changes are saved automatically for future conversions."
+
+msgid "Original audio is kept. Codec, bitrate and channel settings do not apply."
+msgstr "Original audio is kept. Codec, bitrate and channel settings do not apply."
+
+msgid "Audio will be converted using the settings below."
+msgstr "Audio will be converted using the settings below."
+
+msgid "The converted video will have no audio."
+msgstr "The converted video will have no audio."
+
+msgid "Select an audio operation."
+msgstr "Select an audio operation."
 
 msgid "Edit file"
 msgstr "Edit file"
@@ -1500,46 +1499,169 @@ msgstr "The preset was not saved: {0}"
 msgid "Saved as “{0}” in {1}"
 msgstr "Saved as “{0}” in {1}"
 
-msgid "Converting Videos"
-msgstr "Converting Videos"
+msgid "Back to the queue"
+msgstr "Back to the queue"
 
-msgid "Cancel All"
-msgstr "Cancel All"
+msgid "Conversion progress"
+msgstr "Conversion progress"
 
-msgid "Completed"
-msgstr "Completed"
+msgid "Preparing the queue safely"
+msgstr "Preparing the queue safely"
 
-msgid "Completed!"
-msgstr "Completed!"
+msgid "Cancel all"
+msgstr "Cancel all"
+
+msgid "Overall progress"
+msgstr "Overall progress"
+
+msgid "Waiting for the first video"
+msgstr "Waiting for the first video"
+
+msgid "Overall conversion progress"
+msgstr "Overall conversion progress"
+
+msgid "0 finished"
+msgstr "0 finished"
+
+msgid "0 remaining"
+msgstr "0 remaining"
+
+msgid "Videos"
+msgstr "Videos"
+
+msgid "0 videos"
+msgstr "0 videos"
+
+msgid "Back to queue"
+msgstr "Back to queue"
 
 #, python-brace-format
-msgid "All {} videos converted successfully!"
-msgstr "All {} videos converted successfully!"
+msgid "{count} video converted"
+msgid_plural "{count} videos converted"
+msgstr[0] "{count} video converted"
+msgstr[1] "{count} videos converted"
 
 #, python-brace-format
-msgid "{} completed, {} failed, {} cancelled"
-msgstr "{} completed, {} failed, {} cancelled"
+msgid "{count} conversion failed"
+msgid_plural "{count} conversions failed"
+msgstr[0] "{count} conversion failed"
+msgstr[1] "{count} conversions failed"
 
-msgid "All conversions failed or were cancelled"
-msgstr "All conversions failed or were cancelled"
+#, python-brace-format
+msgid "{count} conversion cancelled"
+msgid_plural "{count} conversions cancelled"
+msgstr[0] "{count} conversion cancelled"
+msgstr[1] "{count} conversions cancelled"
 
-msgid "Cancel All Conversions?"
-msgstr "Cancel All Conversions?"
+msgid "Conversion complete"
+msgid_plural "Conversions complete"
+msgstr[0] "Conversion complete"
+msgstr[1] "Conversions complete"
+
+#, python-brace-format
+msgid "{count} video converted successfully"
+msgid_plural "{count} videos converted successfully"
+msgstr[0] "{count} video converted successfully"
+msgstr[1] "{count} videos converted successfully"
+
+msgid "Conversion failed"
+msgid_plural "Conversions failed"
+msgstr[0] "Conversion failed"
+msgstr[1] "Conversions failed"
+
+msgid "Conversion cancelled"
+msgid_plural "Conversions cancelled"
+msgstr[0] "Conversion cancelled"
+msgstr[1] "Conversions cancelled"
+
+msgid "Queue finished with issues"
+msgstr "Queue finished with issues"
+
+msgid "No conversion results are available"
+msgstr "No conversion results are available"
+
+#, python-brace-format
+msgid "{count} video finished"
+msgid_plural "{count} videos finished"
+msgstr[0] "{count} video finished"
+msgstr[1] "{count} videos finished"
+
+#, python-brace-format
+msgid "{count} video remaining"
+msgid_plural "{count} videos remaining"
+msgstr[0] "{count} video remaining"
+msgstr[1] "{count} videos remaining"
+
+#, python-brace-format
+msgid "{count} video"
+msgid_plural "{count} videos"
+msgstr[0] "{count} video"
+msgstr[1] "{count} videos"
+
+msgid "Review the results below or return to the queue"
+msgstr "Review the results below or return to the queue"
+
+msgid "Converting videos"
+msgstr "Converting videos"
+
+#, python-brace-format
+msgid "{} of {} finished"
+msgstr "{} of {} finished"
+
+msgid "Pending videos remain unchanged until their conversion starts"
+msgstr "Pending videos remain unchanged until their conversion starts"
+
+#, python-brace-format
+msgid "Queue finished: {results}"
+msgstr "Queue finished: {results}"
+
+msgid "Cancel all conversions?"
+msgstr "Cancel all conversions?"
 
 msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
 msgstr "This will stop all active conversions and skip all pending items. This action cannot be undone."
 
-msgid "Unknown file"
-msgstr "Unknown file"
+msgid "Keep converting"
+msgstr "Keep converting"
+
+msgid "Unknown video"
+msgstr "Unknown video"
 
 msgid "Waiting in queue"
 msgstr "Waiting in queue"
 
-msgid "FFmpeg Command"
-msgstr "FFmpeg Command"
+#, python-brace-format
+msgid "Conversion progress for “{}”"
+msgstr "Conversion progress for “{}”"
 
-msgid "Process Output"
-msgstr "Process Output"
+msgid "Command"
+msgstr "Command"
+
+msgid "Process output"
+msgstr "Process output"
+
+msgid "Skip this video"
+msgstr "Skip this video"
+
+#, python-brace-format
+msgid "Skip “{}”"
+msgstr "Skip “{}”"
+
+msgid "Skip"
+msgstr "Skip"
+
+msgid "Cancel this conversion"
+msgstr "Cancel this conversion"
+
+#, python-brace-format
+msgid "Cancel “{}”"
+msgstr "Cancel “{}”"
+
+msgid "Hide technical details"
+msgstr "Hide technical details"
+
+msgid "Show technical details"
+msgstr "Show technical details"
 
 msgid "Converting..."
 msgstr "Converting..."
@@ -1554,6 +1676,9 @@ msgstr "{mins}m {secs}s"
 #, python-brace-format
 msgid "{secs}s"
 msgstr "{secs}s"
+
+msgid "Completed"
+msgstr "Completed"
 
 msgid "Failed"
 msgstr "Failed"
@@ -1704,6 +1829,18 @@ msgstr "Edit segment times"
 msgid "Remove segment"
 msgstr "Remove segment"
 
+msgid "Hours"
+msgstr "Hours"
+
+msgid "Minutes"
+msgstr "Minutes"
+
+msgid "Seconds"
+msgstr "Seconds"
+
+msgid "Centiseconds"
+msgstr "Centiseconds"
+
 msgid "Edit Segment"
 msgstr "Edit Segment"
 
@@ -1753,6 +1890,12 @@ msgstr "Add Segment"
 msgid "Frame: {current}/{total}"
 msgstr "Frame: {current}/{total}"
 
+msgid "Video position"
+msgstr "Video position"
+
+msgid "Drag to seek or adjust segment edges"
+msgstr "Drag to seek or adjust segment edges"
+
 msgid "Mark segment point"
 msgstr "Mark segment point"
 
@@ -1789,8 +1932,9 @@ msgstr "Forward 1 second (Right)"
 msgid "Forward 1 second"
 msgstr "Forward 1 second"
 
-msgid "Playback Speed"
-msgstr "Playback Speed"
+#, python-brace-format
+msgid "Playback speed: {speed}x"
+msgstr "Playback speed: {speed}x"
 
 msgid "Audio Track"
 msgstr "Audio Track"
@@ -1805,14 +1949,26 @@ msgstr "Frame: {current} / {total}"
 msgid "Left"
 msgstr "Left"
 
+msgid "Crop from left"
+msgstr "Crop from left"
+
 msgid "Right"
 msgstr "Right"
+
+msgid "Crop from right"
+msgstr "Crop from right"
 
 msgid "Top"
 msgstr "Top"
 
+msgid "Crop from top"
+msgstr "Crop from top"
+
 msgid "Bottom"
 msgstr "Bottom"
+
+msgid "Crop from bottom"
+msgstr "Crop from bottom"
 
 msgid "Visual crop editor"
 msgstr "Visual crop editor"
@@ -1880,8 +2036,15 @@ msgstr "Join segments into a single file"
 msgid "Save each segment as a separate file"
 msgstr "Save each segment as a separate file"
 
-msgid "Reset to default"
-msgstr "Reset to default"
+msgid "Segment output"
+msgstr "Segment output"
+
+msgid "Choose how marked segments are saved"
+msgstr "Choose how marked segments are saved"
+
+#, python-brace-format
+msgid "Reset {setting} to default"
+msgstr "Reset {setting} to default"
 
 msgid "Video Encoding"
 msgstr "Video Encoding"

@@ -2,6 +2,7 @@
 
 import gettext
 import os
+import threading
 
 from gi.repository import Gdk, Gio, GLib, Gtk
 
@@ -45,52 +46,68 @@ class FileHandlerMixin:
         ext = os.path.splitext(file_path)[1].lower()
         return ext in valid_extensions
 
-    def process_path_recursively(self, path: str):
-        """Process a path (file or folder) recursively adding all valid video files to the queue"""
-        if not os.path.exists(path):
-            self.logger.debug(f"Path does not exist: {path}")
-            return 0
+    def add_paths_to_queue(self, paths, on_complete=None, *, selected_files=False):
+        """Enumerate storage off-thread, then publish one batch on the GTK thread."""
+        if getattr(self, "_quitting", False):
+            return
+        self._pending_imports = getattr(self, "_pending_imports", 0) + 1
+        self.header_bar.set_buttons_sensitive(False)
 
-        files_added = 0
+        def finish(files, error):
+            self._pending_imports -= 1
+            if getattr(self, "_quitting", False):
+                return False
+            added = 0
+            try:
+                with self.settings_manager.batch_update():
+                    for file_path in files:
+                        added += self.add_file_to_queue(file_path)
+                if error is not None:
+                    self.show_error_dialog(str(error))
+                elif on_complete is not None:
+                    on_complete(added)
+            except OSError as persistence_error:
+                self.show_error_dialog(str(persistence_error))
+            finally:
+                self.header_bar.set_buttons_sensitive(
+                    not self._pending_imports and not self.active_conversions)
+            return False
 
-        if os.path.isfile(path):
-            # If it's a single file, just add it if valid
-            if self.is_valid_video_file(path):
-                if self.add_file_to_queue(path):
-                    files_added += 1
-        elif os.path.isdir(path):
-            # If it's a directory, walk through it recursively
-            self.logger.debug(f"Processing directory recursively: {path}")
-            for root, dirs, files in os.walk(path):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    if self.is_valid_video_file(file_path):
-                        if self.add_file_to_queue(file_path):
-                            files_added += 1
+        def scan():
+            files = []
+            error = None
+            try:
+                for path in paths:
+                    if getattr(self, "_quitting", False):
+                        break
+                    if os.path.isdir(path):
+                        def failed_walk(error):
+                            raise error
+                        for directory, _dirs, names in os.walk(path, onerror=failed_walk):
+                            if getattr(self, "_quitting", False):
+                                break
+                            files.extend(os.path.join(directory, name) for name in names
+                                         if self.is_valid_video_file(name))
+                    elif selected_files or self.is_valid_video_file(path):
+                        files.append(path)
+            except OSError as caught:
+                error = caught
+            GLib.idle_add(finish, files, error)
 
-        return files_added
+        threading.Thread(target=scan, name="bvc-file-scan", daemon=True).start()
 
-    def on_drop_file(self, drop_target, value: str, x, y):
-        """Handle single dropped file or folder"""
-        if isinstance(value, Gio.File):
-            file_path = value.get_path()
-            if file_path and os.path.exists(file_path):
-                files_added = self.process_path_recursively(file_path)
-                return files_added > 0
+    def on_drop_file(self, drop_target, value, x, y):
+        if isinstance(value, Gio.File) and (path := value.get_path()):
+            self.add_paths_to_queue([path])
+            return True
         return False
 
-    def on_drop_filelist(self, drop_target, value: str, x, y):
-        """Handle multiple dropped files or folders"""
+    def on_drop_filelist(self, drop_target, value, x, y):
         if isinstance(value, Gdk.FileList):
-            files_added = 0
-            for file in value.get_files():
-                if (
-                    file
-                    and (file_path := file.get_path())
-                    and os.path.exists(file_path)
-                ):
-                    files_added += self.process_path_recursively(file_path)
-            return files_added > 0
+            paths = [file.get_path() for file in value.get_files() if file.get_path()]
+            if paths:
+                self.add_paths_to_queue(paths)
+                return True
         return False
 
     # File selection methods
@@ -136,77 +153,28 @@ class FileHandlerMixin:
         dialog.select_folder(self.window, None, self._on_folder_selected)
 
     def _on_folder_selected(self, dialog, result):
-        """Handle selected folder from folder chooser dialog"""
         try:
             folder = dialog.select_folder_finish(result)
-            if folder:
-                folder_path = folder.get_path()
-                if folder_path and os.path.isdir(folder_path):
-                    files_added = self.process_path_recursively(folder_path)
-                    if files_added > 0:
-                        self.last_accessed_directory = folder_path
-                        self.settings_manager.save_setting(
-                            "last-accessed-directory", self.last_accessed_directory
-                        )
-                        message = _(
-                            "{} video files have been added to the queue."
-                        ).format(files_added)
-                        GLib.idle_add(
-                            lambda msg=message: self.show_info_dialog(
-                                _("Files Added"), msg
-                            )
-                        )
+            if folder and (path := folder.get_path()):
+                def completed(count):
+                    if count:
+                        self.show_info_dialog(_("Files Added"),
+                            _("{} video files have been added to the queue.").format(count))
                     else:
-                        GLib.idle_add(
-                            lambda: self.show_info_dialog(
-                                _("No Files Found"),
-                                _(
-                                    "No valid video files were found in the selected folder."
-                                ),
-                            )
-                        )
-                else:
-                    GLib.idle_add(
-                        lambda: self.show_error_dialog(
-                            _("Please select a folder, not a file.")
-                        )
-                    )
-        except (ValueError, KeyError, OSError) as e:
-            self.logger.error(f"Error selecting folder: {e}")
-            error_msg = str(e)
-            GLib.idle_add(
-                lambda msg=error_msg: self.show_error_dialog(
-                    _("Error selecting folder: {}").format(msg)
-                )
-            )
+                        self.show_info_dialog(_("No Files Found"),
+                            _("No valid video files were found in the selected folder."))
+                self.add_paths_to_queue([path], completed)
+        except (GLib.Error, OSError) as error:
+            self.logger.debug("Folder not selected: %s", error)
 
     def _on_files_selected(self, dialog, result):
         try:
             files = dialog.open_multiple_finish(result)
-            files_added = 0
-            first_file = None
-
             if files:
-                for file in files:
-                    file_path = file.get_path()
-                    if file_path:
-                        if self.add_file_to_queue(file_path):
-                            files_added += 1
-                            if not first_file:
-                                first_file = file_path
-
-                if files_added > 0:
-                    self.conversion_page.update_queue_display()
-                else:
-                    GLib.idle_add(
-                        lambda: self.show_info_dialog(
-                            _("No Files Added"),
-                            _("No valid video files were found in your selection."),
-                        )
-                    )
+                self.add_paths_to_queue(
+                    [file.get_path() for file in files if file.get_path()], selected_files=True)
         except (GLib.Error, OSError) as error:
-            if self.logger:
-                self.logger.warning(f"Files not selected: {error}")
+            self.logger.debug("Files not selected: %s", error)
 
     def show_network_file_dialog(self) -> None:
         """Show dialog to add files from network locations (SFTP, SMB, FTP)"""

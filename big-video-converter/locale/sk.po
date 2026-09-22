@@ -718,15 +718,15 @@ msgid "Select Folder with Video Files"
 msgstr "Vyberte priečinok s video súbormi"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 915
+msgid "Files Added"
+msgstr "Súbory pridané"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format
 msgid "{} video files have been added to the queue."
 msgstr "{} video súbory boli pridané do fronty."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 915
-msgid "Files Added"
-msgstr "Súbory pridané"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
@@ -737,27 +737,6 @@ msgstr "Žiadne súbory nenájdené"
 # converter/main.py, line: 924
 msgid "No valid video files were found in the selected folder."
 msgstr "V zvolenom priečinku neboli nájdené žiadne platné video súbory."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 932
-msgid "Please select a folder, not a file."
-msgstr "Vyberte prosím priečinok, nie súbor."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 940
-#, python-brace-format
-msgid "Error selecting folder: {}"
-msgstr "Chyba pri výbere priečinka: {}"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 974
-msgid "No Files Added"
-msgstr "Žiadne súbory neboli pridané."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 975
-msgid "No valid video files were found in your selection."
-msgstr "Neboli nájdené platné video súbory vo vašom výbere."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1563,20 +1542,20 @@ msgstr "Vlastné FFmpeg prapory"
 msgid "No customizations"
 msgstr "Žiadne prispôsobenia"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 122
-msgid "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
-msgstr "Nastavte, ako sa bude spracovávať zvuková stopa. Kopírovanie zachová pôvodnú kvalitu. Prekódovanie umožňuje zmeny."
+msgid "Keep original audio"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 139
-msgid "Audio Handling"
-msgstr "Spracovanie zvuku"
+msgid "Convert audio"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 141
-msgid "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
-msgstr "Vyberte, čo robiť s audio stopou. 'Kopírovať' uchová pôvodnú. 'Prekódovať' umožňuje zmenu kodeku, bitovej rýchlosti a aplikovanie čistenia zvuku."
+msgid "Choose what the converted video should contain."
+msgstr ""
+
+msgid "Audio operation"
+msgstr ""
+
+msgid "Audio conversion"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 156
@@ -1584,24 +1563,9 @@ msgid "Audio Codec"
 msgstr "Audio kodek"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 158
-msgid "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
-msgstr "Formát používaný na kompresiu zvuku. AAC je široko kompatibilný. Opus ponúka lepšiu kvalitu pri nižších bitratoch. Vyberte 'Kopírovať' v správe zvuku, aby ste zachovali pôvodný kodek."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 173
 msgid "Audio Bitrate"
 msgstr "Audio Bitrate"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 175
-msgid "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
-msgstr "Vyšší bitrate znamená lepšiu kvalitu zvuku, ale väčšie súbory. 192k je dobrá rovnováha pre väčšinu obsahu."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/settings_page.py, line: 221
-msgid "Custom bitrate"
-msgstr "Vlastný bitrate"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 228
@@ -1609,14 +1573,29 @@ msgid "Audio Channels"
 msgstr "Zvukové kanály"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 230
-msgid "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
-msgstr "'Predvolené' zachováva pôvodný počet kanálov zo zdrojového videa. Stereo (2) je štandard. Mono (1) iba pre hlas. 5.1 (6) pre priestorový zvuk."
+# converter/ui/settings_page.py, line: 221
+msgid "Custom bitrate"
+msgstr "Vlastný bitrate"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 251
 msgid "Custom channels"
 msgstr "Vlastné kanály"
+
+msgid "Changes are saved automatically for future conversions."
+msgstr ""
+
+msgid "Original audio is kept. Codec, bitrate and channel settings do not apply."
+msgstr ""
+
+msgid "Audio will be converted using the settings below."
+msgstr ""
+
+msgid "The converted video will have no audio."
+msgstr ""
+
+msgid "Select an audio operation."
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 67
@@ -2267,90 +2246,183 @@ msgstr "Predvoľba nebola uložená: {0}"
 msgid "Saved as “{0}” in {1}"
 msgstr "Uložené ako „{0}“ v {1}"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 31
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 219
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 222
-msgid "Converting Videos"
-msgstr "Konverzia videí"
+msgid "Back to the queue"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 94
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 323
-msgid "Cancel All"
-msgstr "Zrušiť všetko"
+msgid "Conversion progress"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 699
-msgid "Completed"
-msgstr "Dokončené"
+msgid "Preparing the queue safely"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 789
-msgid "Completed!"
-msgstr "Dokončené!"
+msgid "Cancel all"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 283
+msgid "Overall progress"
+msgstr ""
+
+msgid "Waiting for the first video"
+msgstr ""
+
+msgid "Overall conversion progress"
+msgstr ""
+
+msgid "0 finished"
+msgstr ""
+
+msgid "0 remaining"
+msgstr ""
+
+msgid "Videos"
+msgstr ""
+
+msgid "0 videos"
+msgstr ""
+
+msgid "Back to queue"
+msgstr ""
+
 #, python-brace-format
-msgid "All {} videos converted successfully!"
-msgstr "Všetky {} videá boli úspešne konvertované!"
+msgid "{count} video converted"
+msgid_plural "{count} videos converted"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 288
 #, python-brace-format
-msgid "{} completed, {} failed, {} cancelled"
-msgstr "{} dokončené, {} zlyhané, {} zrušené"
+msgid "{count} conversion failed"
+msgid_plural "{count} conversions failed"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 293
-msgid "All conversions failed or were cancelled"
-msgstr "Všetky konverzie zlyhali alebo boli zrušené."
+#, python-brace-format
+msgid "{count} conversion cancelled"
+msgid_plural "{count} conversions cancelled"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 320
-msgid "Cancel All Conversions?"
-msgstr "Zrušiť všetky konverzie?"
+msgid "Conversion complete"
+msgid_plural "Conversions complete"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#, python-brace-format
+msgid "{count} video converted successfully"
+msgid_plural "{count} videos converted successfully"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+msgid "Conversion failed"
+msgid_plural "Conversions failed"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+msgid "Conversion cancelled"
+msgid_plural "Conversions cancelled"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+msgid "Queue finished with issues"
+msgstr ""
+
+msgid "No conversion results are available"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} video finished"
+msgid_plural "{count} videos finished"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#, python-brace-format
+msgid "{count} video remaining"
+msgid_plural "{count} videos remaining"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+#, python-brace-format
+msgid "{count} video"
+msgid_plural "{count} videos"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+msgid "Review the results below or return to the queue"
+msgstr ""
+
+msgid "Converting videos"
+msgstr ""
+
+#, python-brace-format
+msgid "{} of {} finished"
+msgstr ""
+
+msgid "Pending videos remain unchanged until their conversion starts"
+msgstr ""
+
+#, python-brace-format
+msgid "Queue finished: {results}"
+msgstr ""
+
+msgid "Cancel all conversions?"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 321
 msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
 msgstr "Týmto sa zastavia všetky aktívne konverzie a preskočia sa všetky čakajúce položky. Túto akciu nie je možné zrušiť."
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 436
-msgid "Unknown file"
-msgstr "Neznámy súbor"
+msgid "Keep converting"
+msgstr ""
+
+msgid "Unknown video"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 447
 msgid "Waiting in queue"
 msgstr "Čaká v rade"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 528
-msgid "FFmpeg Command"
-msgstr "Príkaz FFmpeg"
+#, python-brace-format
+msgid "Conversion progress for “{}”"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 544
-msgid "Process Output"
-msgstr "Výstup procesu"
+msgid "Command"
+msgstr ""
+
+msgid "Process output"
+msgstr ""
+
+msgid "Skip this video"
+msgstr ""
+
+#, python-brace-format
+msgid "Skip “{}”"
+msgstr ""
+
+msgid "Skip"
+msgstr ""
+
+msgid "Cancel this conversion"
+msgstr ""
+
+#, python-brace-format
+msgid "Cancel “{}”"
+msgstr ""
+
+msgid "Hide technical details"
+msgstr ""
+
+msgid "Show technical details"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 629
@@ -2371,6 +2443,11 @@ msgstr "{mins}m {secs}s"
 #, python-brace-format
 msgid "{secs}s"
 msgstr "{secs}s"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 699
+msgid "Completed"
+msgstr "Dokončené"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 703
@@ -3389,6 +3466,18 @@ msgstr "Upraviť časy segmentov"
 msgid "Remove segment"
 msgstr "Odstrániť segment"
 
+msgid "Hours"
+msgstr ""
+
+msgid "Minutes"
+msgstr ""
+
+msgid "Seconds"
+msgstr ""
+
+msgid "Centiseconds"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -3662,6 +3751,12 @@ msgstr "Pridať segment"
 msgid "Frame: {current}/{total}"
 msgstr "Rám: {current}/{total}"
 
+msgid "Video position"
+msgstr ""
+
+msgid "Drag to seek or adjust segment edges"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 97
 msgid "Mark segment point"
@@ -3722,10 +3817,9 @@ msgstr "Posunúť o 1 sekundu (Doprava)"
 msgid "Forward 1 second"
 msgstr "Posunúť o 1 sekundu dopredu"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 247
-msgid "Playback Speed"
-msgstr "Rýchlosť prehrávania"
+#, python-brace-format
+msgid "Playback speed: {speed}x"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 173
@@ -3748,20 +3842,32 @@ msgstr "Rám: {current} / {total}"
 msgid "Left"
 msgstr "Vľavo"
 
+msgid "Crop from left"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Right"
 msgstr "Pravda"
+
+msgid "Crop from right"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Top"
 msgstr "Hore"
 
+msgid "Crop from top"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Bottom"
 msgstr "Spodok"
+
+msgid "Crop from bottom"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 363
@@ -3885,18 +3991,15 @@ msgstr "Spojiť segmenty do jedného súboru"
 msgid "Save each segment as a separate file"
 msgstr "Uložte každý segment ako samostatný súbor."
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 439
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 471
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 502
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 533
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 710
-msgid "Reset to default"
-msgstr "Obnoviť na predvolené hodnoty"
+msgid "Segment output"
+msgstr ""
+
+msgid "Choose how marked segments are saved"
+msgstr ""
+
+#, python-brace-format
+msgid "Reset {setting} to default"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4742,3 +4845,142 @@ msgstr "Chyba pri spustení aplikácie"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Nepodarilo sa spustiť Big Video Converter: {0}"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 932
+#~ msgid "Please select a folder, not a file."
+#~ msgstr "Vyberte prosím priečinok, nie súbor."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 940
+#, python-brace-format
+#~ msgid "Error selecting folder: {}"
+#~ msgstr "Chyba pri výbere priečinka: {}"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 974
+#~ msgid "No Files Added"
+#~ msgstr "Žiadne súbory neboli pridané."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 975
+#~ msgid "No valid video files were found in your selection."
+#~ msgstr "Neboli nájdené platné video súbory vo vašom výbere."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 122
+#~ msgid "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
+#~ msgstr "Nastavte, ako sa bude spracovávať zvuková stopa. Kopírovanie zachová pôvodnú kvalitu. Prekódovanie umožňuje zmeny."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 139
+#~ msgid "Audio Handling"
+#~ msgstr "Spracovanie zvuku"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 141
+#~ msgid "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
+#~ msgstr "Vyberte, čo robiť s audio stopou. 'Kopírovať' uchová pôvodnú. 'Prekódovať' umožňuje zmenu kodeku, bitovej rýchlosti a aplikovanie čistenia zvuku."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 158
+#~ msgid "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
+#~ msgstr "Formát používaný na kompresiu zvuku. AAC je široko kompatibilný. Opus ponúka lepšiu kvalitu pri nižších bitratoch. Vyberte 'Kopírovať' v správe zvuku, aby ste zachovali pôvodný kodek."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 175
+#~ msgid "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
+#~ msgstr "Vyšší bitrate znamená lepšiu kvalitu zvuku, ale väčšie súbory. 192k je dobrá rovnováha pre väčšinu obsahu."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 230
+#~ msgid "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
+#~ msgstr "'Predvolené' zachováva pôvodný počet kanálov zo zdrojového videa. Stereo (2) je štandard. Mono (1) iba pre hlas. 5.1 (6) pre priestorový zvuk."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 31
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 219
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 222
+#~ msgid "Converting Videos"
+#~ msgstr "Konverzia videí"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 94
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 323
+#~ msgid "Cancel All"
+#~ msgstr "Zrušiť všetko"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 789
+#~ msgid "Completed!"
+#~ msgstr "Dokončené!"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 283
+#, python-brace-format
+#~ msgid "All {} videos converted successfully!"
+#~ msgstr "Všetky {} videá boli úspešne konvertované!"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 288
+#, python-brace-format
+#~ msgid "{} completed, {} failed, {} cancelled"
+#~ msgstr "{} dokončené, {} zlyhané, {} zrušené"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 293
+#~ msgid "All conversions failed or were cancelled"
+#~ msgstr "Všetky konverzie zlyhali alebo boli zrušené."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 320
+#~ msgid "Cancel All Conversions?"
+#~ msgstr "Zrušiť všetky konverzie?"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 436
+#~ msgid "Unknown file"
+#~ msgstr "Neznámy súbor"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 528
+#~ msgid "FFmpeg Command"
+#~ msgstr "Príkaz FFmpeg"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 544
+#~ msgid "Process Output"
+#~ msgstr "Výstup procesu"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 247
+#~ msgid "Playback Speed"
+#~ msgstr "Rýchlosť prehrávania"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 439
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 471
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 502
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 533
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 710
+#~ msgid "Reset to default"
+#~ msgstr "Obnoviť na predvolené hodnoty"

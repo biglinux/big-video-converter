@@ -717,15 +717,15 @@ msgid "Select Folder with Video Files"
 msgstr "Video Dosyaları ile Klasör Seçin"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 915
+msgid "Files Added"
+msgstr "Dosyalar Eklendi"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format
 msgid "{} video files have been added to the queue."
 msgstr "{} video dosyası kuyruğa eklendi."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 915
-msgid "Files Added"
-msgstr "Dosyalar Eklendi"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
@@ -736,27 +736,6 @@ msgstr "Dosya Bulunamadı"
 # converter/main.py, line: 924
 msgid "No valid video files were found in the selected folder."
 msgstr "Seçilen klasörde geçerli video dosyaları bulunamadı."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 932
-msgid "Please select a folder, not a file."
-msgstr "Lütfen bir dosya değil, bir klasör seçin."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 940
-#, python-brace-format
-msgid "Error selecting folder: {}"
-msgstr "Klasör seçerken hata: {}"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 974
-msgid "No Files Added"
-msgstr "Hiçbir Dosya Eklendi"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 975
-msgid "No valid video files were found in your selection."
-msgstr "Seçiminizde geçerli video dosyaları bulunamadı."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1560,20 +1539,20 @@ msgstr "Özel FFmpeg bayrakları"
 msgid "No customizations"
 msgstr "Özelleştirme yok"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 122
-msgid "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
-msgstr "Ses parçasının nasıl işleneceğini yapılandırın. Kopyalama, orijinal kalitenin korunmasını sağlar. Yeniden kodlama değişikliklere izin verir."
+msgid "Keep original audio"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 139
-msgid "Audio Handling"
-msgstr "Ses İşleme"
+msgid "Convert audio"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 141
-msgid "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
-msgstr "Ses parçası ile ne yapılacağına karar verin. 'Kopyala' orijinalini korur. 'Yeniden kodla' codec, bit hızı değiştirmeye ve ses temizleme uygulamaya olanak tanır."
+msgid "Choose what the converted video should contain."
+msgstr ""
+
+msgid "Audio operation"
+msgstr ""
+
+msgid "Audio conversion"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 156
@@ -1581,24 +1560,9 @@ msgid "Audio Codec"
 msgstr "Ses Codec"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 158
-msgid "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
-msgstr "Ses sıkıştırmak için kullanılan format. AAC geniş uyumluluğa sahiptir. Opus, daha düşük bit hızlarında daha iyi kalite sunar. Orijinal kodeği korumak için ses işleme bölümünde 'Kopyala' seçeneğini seçin."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 173
 msgid "Audio Bitrate"
 msgstr "Ses Bit Hızı"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 175
-msgid "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
-msgstr "Daha yüksek bit hızı, daha iyi ses kalitesi ancak daha büyük dosyalar anlamına gelir. 192k, çoğu içerik için iyi bir denge sağlar."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/settings_page.py, line: 221
-msgid "Custom bitrate"
-msgstr "Özel bit hızı"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 228
@@ -1606,14 +1570,29 @@ msgid "Audio Channels"
 msgstr "Ses Kanalları"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 230
-msgid "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
-msgstr "'Varsayılan', kaynak videodaki orijinal kanal sayısını korur. Stereo (2) standarttır. Mono (1) yalnızca ses içindir. 5.1 (6) surround ses içindir."
+# converter/ui/settings_page.py, line: 221
+msgid "Custom bitrate"
+msgstr "Özel bit hızı"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 251
 msgid "Custom channels"
 msgstr "Özel kanallar"
+
+msgid "Changes are saved automatically for future conversions."
+msgstr ""
+
+msgid "Original audio is kept. Codec, bitrate and channel settings do not apply."
+msgstr ""
+
+msgid "Audio will be converted using the settings below."
+msgstr ""
+
+msgid "The converted video will have no audio."
+msgstr ""
+
+msgid "Select an audio operation."
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 67
@@ -2252,196 +2231,173 @@ msgstr "Hazır ayar kaydedilemedi: {0}"
 msgid "Saved as “{0}” in {1}"
 msgstr "{1} içinde “{0}” olarak kaydedildi"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 31
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 219
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 222
-msgid "Converting Videos"
-msgstr "Videoları Dönüştürme"
+msgid "Back to the queue"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 94
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 323
-msgid "Cancel All"
-msgstr "Tümünü İptal Et"
+msgid "Conversion progress"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 699
-msgid "Completed"
-msgstr "Tamamlandı"
+msgid "Preparing the queue safely"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 789
-msgid "Completed!"
-msgstr "Tamamlandı!"
+msgid "Cancel all"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 283
+msgid "Overall progress"
+msgstr ""
+
+msgid "Waiting for the first video"
+msgstr ""
+
+msgid "Overall conversion progress"
+msgstr ""
+
+msgid "0 finished"
+msgstr ""
+
+msgid "0 remaining"
+msgstr ""
+
+msgid "Videos"
+msgstr ""
+
+msgid "0 videos"
+msgstr ""
+
+msgid "Back to queue"
+msgstr ""
+
 #, python-brace-format
-msgid "All {} videos converted successfully!"
-msgstr "Tüm {} videolar başarıyla dönüştürüldü!"
+msgid "{count} video converted"
+msgid_plural "{count} videos converted"
+msgstr[0] ""
+msgstr[1] ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 288
 #, python-brace-format
-msgid "{} completed, {} failed, {} cancelled"
-msgstr "{} tamamlandı, {} başarısız oldu, {} iptal edildi"
+msgid "{count} conversion failed"
+msgid_plural "{count} conversions failed"
+msgstr[0] ""
+msgstr[1] ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 293
-msgid "All conversions failed or were cancelled"
-msgstr "Tüm dönüşümler başarısız oldu veya iptal edildi."
+#, python-brace-format
+msgid "{count} conversion cancelled"
+msgid_plural "{count} conversions cancelled"
+msgstr[0] ""
+msgstr[1] ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 320
-msgid "Cancel All Conversions?"
-msgstr "Tüm Dönüşümleri İptal Et?"
+msgid "Conversion complete"
+msgid_plural "Conversions complete"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} video converted successfully"
+msgid_plural "{count} videos converted successfully"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Conversion failed"
+msgid_plural "Conversions failed"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Conversion cancelled"
+msgid_plural "Conversions cancelled"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Queue finished with issues"
+msgstr ""
+
+msgid "No conversion results are available"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} video finished"
+msgid_plural "{count} videos finished"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} video remaining"
+msgid_plural "{count} videos remaining"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{count} video"
+msgid_plural "{count} videos"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Review the results below or return to the queue"
+msgstr ""
+
+msgid "Converting videos"
+msgstr ""
+
+#, python-brace-format
+msgid "{} of {} finished"
+msgstr ""
+
+msgid "Pending videos remain unchanged until their conversion starts"
+msgstr ""
+
+#, python-brace-format
+msgid "Queue finished: {results}"
+msgstr ""
+
+msgid "Cancel all conversions?"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 321
 msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
 msgstr "Bu, tüm aktif dönüşümleri durduracak ve bekleyen tüm öğeleri atlayacaktır. Bu işlem geri alınamaz."
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 436
-msgid "Unknown file"
-msgstr "Bilinmeyen dosya"
+msgid "Keep converting"
+msgstr ""
+
+msgid "Unknown video"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 447
 msgid "Waiting in queue"
 msgstr "Sırada bekliyor"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 528
-msgid "FFmpeg Command"
-msgstr "FFmpeg Komutu"
+#, python-brace-format
+msgid "Conversion progress for “{}”"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 544
-msgid "Process Output"
-msgstr "İşlem Çıkışı"
+msgid "Command"
+msgstr ""
+
+msgid "Process output"
+msgstr ""
+
+msgid "Skip this video"
+msgstr ""
+
+#, python-brace-format
+msgid "Skip “{}”"
+msgstr ""
+
+msgid "Skip"
+msgstr ""
+
+msgid "Cancel this conversion"
+msgstr ""
+
+#, python-brace-format
+msgid "Cancel “{}”"
+msgstr ""
+
+msgid "Hide technical details"
+msgstr ""
+
+msgid "Show technical details"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 629
@@ -2462,6 +2418,11 @@ msgstr "{mins}d {secs}s"
 #, python-brace-format
 msgid "{secs}s"
 msgstr "{secs}s"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 699
+msgid "Completed"
+msgstr "Tamamlandı"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 703
@@ -2754,6 +2715,18 @@ msgstr "Bölüm sürelerini düzenle"
 msgid "Remove segment"
 msgstr "Segmenti kaldırın"
 
+msgid "Hours"
+msgstr ""
+
+msgid "Minutes"
+msgstr ""
+
+msgid "Seconds"
+msgstr ""
+
+msgid "Centiseconds"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -2875,6 +2848,12 @@ msgstr "Segment Ekle"
 msgid "Frame: {current}/{total}"
 msgstr "Kare: {current}/{total}"
 
+msgid "Video position"
+msgstr ""
+
+msgid "Drag to seek or adjust segment edges"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 97
 msgid "Mark segment point"
@@ -2935,10 +2914,9 @@ msgstr "1 saniye ileri (Sağ)"
 msgid "Forward 1 second"
 msgstr "1 saniye ileri al"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 247
-msgid "Playback Speed"
-msgstr "Oynatma Hızı"
+#, python-brace-format
+msgid "Playback speed: {speed}x"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 173
@@ -2961,20 +2939,32 @@ msgstr "Kare: {current} / {total}"
 msgid "Left"
 msgstr "Sol."
 
+msgid "Crop from left"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Right"
 msgstr "Doğru"
+
+msgid "Crop from right"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Top"
 msgstr "Üst"
 
+msgid "Crop from top"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Bottom"
 msgstr "Alt kısmı"
+
+msgid "Crop from bottom"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 363
@@ -3098,18 +3088,15 @@ msgstr "Bölümleri tek bir dosyada birleştir."
 msgid "Save each segment as a separate file"
 msgstr "Her bir segmenti ayrı bir dosya olarak kaydedin."
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 439
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 471
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 502
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 533
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 710
-msgid "Reset to default"
-msgstr "Varsayılan ayarlara sıfırla"
+msgid "Segment output"
+msgstr ""
+
+msgid "Choose how marked segments are saved"
+msgstr ""
+
+#, python-brace-format
+msgid "Reset {setting} to default"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4067,3 +4054,248 @@ msgstr "Uygulama Başlatma Hatası"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Büyük Video Dönüştürücü başlatılamadı: {0}"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 932
+#~ msgid "Please select a folder, not a file."
+#~ msgstr "Lütfen bir dosya değil, bir klasör seçin."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 940
+#, python-brace-format
+#~ msgid "Error selecting folder: {}"
+#~ msgstr "Klasör seçerken hata: {}"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 974
+#~ msgid "No Files Added"
+#~ msgstr "Hiçbir Dosya Eklendi"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 975
+#~ msgid "No valid video files were found in your selection."
+#~ msgstr "Seçiminizde geçerli video dosyaları bulunamadı."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 122
+#~ msgid "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
+#~ msgstr "Ses parçasının nasıl işleneceğini yapılandırın. Kopyalama, orijinal kalitenin korunmasını sağlar. Yeniden kodlama değişikliklere izin verir."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 139
+#~ msgid "Audio Handling"
+#~ msgstr "Ses İşleme"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 141
+#~ msgid "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
+#~ msgstr "Ses parçası ile ne yapılacağına karar verin. 'Kopyala' orijinalini korur. 'Yeniden kodla' codec, bit hızı değiştirmeye ve ses temizleme uygulamaya olanak tanır."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 158
+#~ msgid "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
+#~ msgstr "Ses sıkıştırmak için kullanılan format. AAC geniş uyumluluğa sahiptir. Opus, daha düşük bit hızlarında daha iyi kalite sunar. Orijinal kodeği korumak için ses işleme bölümünde 'Kopyala' seçeneğini seçin."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 175
+#~ msgid "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
+#~ msgstr "Daha yüksek bit hızı, daha iyi ses kalitesi ancak daha büyük dosyalar anlamına gelir. 192k, çoğu içerik için iyi bir denge sağlar."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/audio_dialog.py, line: 230
+#~ msgid "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
+#~ msgstr "'Varsayılan', kaynak videodaki orijinal kanal sayısını korur. Stereo (2) standarttır. Mono (1) yalnızca ses içindir. 5.1 (6) surround ses içindir."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 31
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 219
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 222
+#~ msgid "Converting Videos"
+#~ msgstr "Videoları Dönüştürme"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 94
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 323
+#~ msgid "Cancel All"
+#~ msgstr "Tümünü İptal Et"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/conversion.py, line: 789
+#~ msgid "Completed!"
+#~ msgstr "Tamamlandı!"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 283
+#, python-brace-format
+#~ msgid "All {} videos converted successfully!"
+#~ msgstr "Tüm {} videolar başarıyla dönüştürüldü!"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 288
+#, python-brace-format
+#~ msgid "{} completed, {} failed, {} cancelled"
+#~ msgstr "{} tamamlandı, {} başarısız oldu, {} iptal edildi"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 293
+#~ msgid "All conversions failed or were cancelled"
+#~ msgstr "Tüm dönüşümler başarısız oldu veya iptal edildi."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 320
+#~ msgid "Cancel All Conversions?"
+#~ msgstr "Tüm Dönüşümleri İptal Et?"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 335
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/queue_manager.py, line: 148
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 322
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 436
+#~ msgid "Unknown file"
+#~ msgstr "Bilinmeyen dosya"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 528
+#~ msgid "FFmpeg Command"
+#~ msgstr "FFmpeg Komutu"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 544
+#~ msgid "Process Output"
+#~ msgstr "İşlem Çıkışı"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 247
+#~ msgid "Playback Speed"
+#~ msgstr "Oynatma Hızı"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 439
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 471
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 502
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 533
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 710
+#~ msgid "Reset to default"
+#~ msgstr "Varsayılan ayarlara sıfırla"

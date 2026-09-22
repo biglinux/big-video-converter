@@ -167,3 +167,13 @@ def test_two_jobs_on_one_destination_leave_a_whole_file(media,tmp_path,cli_env):
     assert codes==[0,0]
     assert stream_count(probe_media(str(out)),'video')==1
     assert not list(tmp_path.glob('.bvc*'))
+
+
+def test_extract_refuses_to_replace_existing_subtitles(media, tmp_path, run_cli):
+    existing = tmp_path / 'extract.por.srt'
+    existing.write_text('Manually corrected subtitles', encoding='utf-8')
+    result = run_cli(media['multi'], tmp_path / 'extract.mp4',
+                     subtitle_extract='extract', only_extract_subtitles='1')
+    assert result.returncode != 0
+    assert existing.read_text() == 'Manually corrected subtitles'
+    assert not list(tmp_path.glob('.bvc-*'))

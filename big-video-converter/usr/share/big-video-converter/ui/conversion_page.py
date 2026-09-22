@@ -1,4 +1,5 @@
 import os
+import subprocess
 from copy import deepcopy
 import threading
 
@@ -542,7 +543,10 @@ class ConversionPage:
             self.app.header_bar, "convert_button"
         ):
             self.app.header_bar.convert_button.set_sensitive(
-                len(self.app.conversion_queue) > 0
+                bool(self.app.conversion_queue)
+                and not self.app.active_conversions
+                and not getattr(self.app, "_pending_imports", 0)
+                and not getattr(self.app, "_quitting", False)
             )
 
     # Unified drag and drop handlers for listbox

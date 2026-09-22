@@ -3,7 +3,7 @@ name: Backend and GTK regression tests
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, dev-bigbruno]
   workflow_dispatch:
 
 permissions:

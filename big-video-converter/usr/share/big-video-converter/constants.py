@@ -16,33 +16,11 @@ APP_VERSION = "3.9.42"
 APP_DEVELOPERS = ["Tales A. Mendonça", "Bruno Gonçalves Araujo"]
 APP_WEBSITES = ["communitybig.org", "biglinux.com.br"]
 
-# Paths to executables
-# Detect if running from AppImage or system install
-if "APPIMAGE" in os.environ or "APPDIR" in os.environ:
-    # Running from AppImage
-    # constants.py is in: usr/share/big-video-converter/constants.py
-    # Script is in: usr/bin/big-video-converter
-    # Need to go up to AppImage root and then to usr/bin
-    script_dir = os.path.dirname(
-        os.path.abspath(__file__)
-    )  # usr/share/big-video-converter
-    usr_dir = os.path.dirname(os.path.dirname(script_dir))  # usr
-    appimage_root = os.path.dirname(usr_dir)  # AppImage root
-    CONVERT_SCRIPT_PATH = os.path.join(
-        appimage_root, "usr", "bin", "big-video-converter"
-    )
-elif os.path.exists("/usr/bin/big-video-converter"):
-    # System install
-    CONVERT_SCRIPT_PATH = "/usr/bin/big-video-converter"
-else:
-    # Development/local — resolve relative to this file's location
-    _constants_dir = os.path.dirname(
-        os.path.abspath(__file__)
-    )  # usr/share/big-video-converter
-    _usr_dir = os.path.dirname(os.path.dirname(_constants_dir))  # usr
-    CONVERT_SCRIPT_PATH = os.path.join(
-        os.path.dirname(_usr_dir), "usr", "bin", "big-video-converter"
-    )
+# Use the backend from the running application tree, including local builds
+# on machines that also have a system installation.
+CONVERT_SCRIPT_PATH = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), "..", "..", "bin", "big-video-converter"
+))
 
 # File dialog filters
 VIDEO_FILE_MIME_TYPES = [

@@ -263,3 +263,85 @@ def test_audio_mode_changes_preserve_noise_cleaning_preference(app):
     finally:
         app.audio_handling_combo.set_selected(original_mode)
         app.noise_reduction_switch.set_active(original_noise)
+
+
+def test_folder_import_is_async_and_redraws_once(app, tmp_path, monkeypatch):
+    import threading
+
+    import file_handler
+
+    app.clear_queue()
+    pump()
+    for index in range(100):
+        (tmp_path / f'{index}.mp4').touch()
+    (tmp_path / 'not-video.txt').touch()
+    scanned_on = []
+    redraws = []
+    walk = file_handler.os.walk
+    update = app.conversion_page.update_queue_display
+
+    def record_walk(*args, **kwargs):
+        scanned_on.append(threading.current_thread().name)
+        yield from walk(*args, **kwargs)
+
+    def record_update():
+        redraws.append(len(app.conversion_queue))
+        update()
+
+    monkeypatch.setattr(file_handler.os, 'walk', record_walk)
+    monkeypatch.setattr(app.conversion_page, 'update_queue_display', record_update)
+    app.add_paths_to_queue([str(tmp_path)])
+    until(lambda: len(app.conversion_queue) == 100 and not app._pending_imports)
+    pump()
+    assert scanned_on == ['bvc-file-scan']
+    assert redraws == [100]
+    assert app.header_bar.convert_button.get_sensitive()
+    app.clear_queue()
+
+
+def test_space_check_uses_selected_destinations(app, tmp_path, monkeypatch):
+    from types import SimpleNamespace
+
+    import queue_manager
+
+    sources = [tmp_path / 'one', tmp_path / 'two']
+    for source in sources:
+        source.mkdir()
+        (source / 'video.mp4').write_bytes(b'video')
+    app.settings_manager.save_setting('output-folder', str(tmp_path / 'stale'))
+    app.settings_manager.save_setting('use-custom-output-folder', False)
+    original_stat = queue_manager.os.stat
+    checked = []
+
+    def different_volumes(path, *args, **kwargs):
+        if str(path) in map(str, sources):
+            return SimpleNamespace(st_dev=sources.index(Path(path)))
+        return original_stat(path, *args, **kwargs)
+
+    from pathlib import Path
+    monkeypatch.setattr(queue_manager.os, 'stat', different_volumes)
+    monkeypatch.setattr(queue_manager.shutil, 'disk_usage',
+                        lambda path: checked.append(path) or SimpleNamespace(free=100))
+    assert app._check_disk_space([str(path / 'video.mp4') for path in sources])
+    assert checked == list(map(str, sources))
+    app.settings_manager.save_setting('output-folder', '')
+
+
+def test_selected_file_survives_unusual_suffix_and_settings_write_failure(app, tmp_path, monkeypatch):
+    from gi.repository import Gio
+
+    app.clear_queue()
+    pump()
+    source = tmp_path / 'selected-video-without-extension'
+    source.touch()
+    errors = []
+    monkeypatch.setattr(app.settings_manager, 'save_to_disk', lambda: False)
+    monkeypatch.setattr(app, 'show_error_dialog', errors.append)
+    dialog = SimpleNamespace(open_multiple_finish=lambda result: [Gio.File.new_for_path(str(source))])
+    app._on_files_selected(dialog, None)
+    until(lambda: not app._pending_imports)
+    pump()
+    assert list(app.conversion_queue) == [str(source)]
+    assert len(errors) == 1
+    assert app.header_bar.add_button.get_sensitive()
+    app.clear_queue()

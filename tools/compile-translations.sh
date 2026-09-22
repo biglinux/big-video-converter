@@ -7,6 +7,6 @@ for po in "$app"/locale/*.po; do
     lang=$(basename "$po" .po)
     target="$app/usr/share/locale/$lang/LC_MESSAGES"
     mkdir -p "$target"
-    msgfmt --check-format -o "$target/big-video-converter.mo" "$po"
+    msgfmt --check --check-header -o "$target/big-video-converter.mo" "$po"
 done
 echo "compiled $(ls "$app"/locale/*.po | wc -l) catalogues"

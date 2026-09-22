@@ -19,7 +19,9 @@ class QueueManagerMixin:
 
     def add_file_to_queue(self, file_path: str) -> bool:
         """Add a file to the conversion queue"""
-        if file_path and os.path.exists(file_path):
+        if getattr(self, "_quitting", False) or file_path in self.conversion_queue:
+            return False
+        if file_path and os.path.isfile(file_path):
             # Update last accessed directory
             input_dir = os.path.dirname(file_path)
             self.last_accessed_directory = input_dir
@@ -47,10 +49,17 @@ class QueueManagerMixin:
                 self.logger.debug(f"Initialized clean metadata for: {os.path.basename(file_path)}")
 
             # Update UI
-            if hasattr(self, "conversion_page"):
-                GLib.idle_add(self.conversion_page.update_queue_display)
+            if (hasattr(self, "conversion_page")
+                    and getattr(self, "_queue_refresh_id", None) is None):
+                self._queue_refresh_id = GLib.idle_add(self._refresh_queue_display)
             return True
         return False
+
+    def _refresh_queue_display(self):
+        self._queue_refresh_id = None
+        if not getattr(self, "_quitting", False):
+            self.conversion_page.update_queue_display()
+        return GLib.SOURCE_REMOVE
 
     def add_to_conversion_queue(self, file_path: str):
         """Add a file to the conversion queue without starting conversion"""
@@ -107,32 +116,29 @@ class QueueManagerMixin:
         Estimates required space as 1.5x total input size to account for
         transcoding overhead. Returns True if enough space, False otherwise.
         """
-        output_folder = self.settings_manager.load_setting("output-folder", "")
-        if output_folder and output_folder.strip():
-            target_dir = os.path.normpath(os.path.abspath(output_folder.strip()))
-        else:
-            # Default: same folder as first input file
-            target_dir = os.path.dirname(files[0]) if files else "/"
-
-        total_input_size = 0
-        for f in files:
+        custom = self.settings_manager.get_boolean("use-custom-output-folder", False)
+        output_folder = self.settings_manager.load_setting("output-folder", "") if custom else ""
+        volumes = {}
+        for file_path in files:
+            target = os.path.abspath(output_folder or os.path.dirname(file_path))
             try:
-                total_input_size += os.path.getsize(f)
+                device = os.stat(target).st_dev
+                size = os.path.getsize(file_path)
+                if device not in volumes:
+                    volumes[device] = [target, 0]
+                volumes[device][1] += size
             except OSError:
                 continue
 
-        if total_input_size == 0:
-            return True
-
-        # Estimate 1.5x input size as needed space
-        required = int(total_input_size * 1.5)
-
-        try:
-            usage = shutil.disk_usage(target_dir)
-        except OSError:
-            return True  # Can't check — proceed anyway
-
-        if usage.free >= required:
+        for target_dir, size in volumes.values():
+            required = int(size * 1.5)
+            try:
+                usage = shutil.disk_usage(target_dir)
+            except OSError:
+                continue
+            if usage.free < required:
+                break
+        else:
             return True
 
         # Not enough space — show warning dialog
@@ -180,6 +186,9 @@ class QueueManagerMixin:
 
     def start_queue_processing(self) -> None:
         """Start processing the conversion queue"""
+        if (getattr(self, "_quitting", False) or self.active_conversions
+                or getattr(self, "_pending_imports", 0)):
+            return
         if not self.conversion_queue:
             self.logger.debug("Queue is empty, nothing to process")
             GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
@@ -275,7 +284,7 @@ class QueueManagerMixin:
         """Process the next file in queue if we have capacity"""
 
         # If cancellation was requested, don't start new conversions
-        if self.is_cancellation_requested:
+        if self.is_cancellation_requested or getattr(self, "_quitting", False):
             self.logger.debug("Cancellation requested, stopping queue processing")
             self.header_bar.set_buttons_sensitive(True)
             self._was_queue_processing = False
@@ -409,7 +418,8 @@ class QueueManagerMixin:
         # Those answers are collected on a worker thread first, so the
         # main loop never blocks; the launch itself stays on the main loop.
         def launch() -> bool:
-            if self.is_cancellation_requested:
+            if self.is_cancellation_requested or getattr(self, "_quitting", False):
+                conversion_info["cancel_event"].set()
                 self.conversion_completed(False, file_path=next_file,
                                           job_id=conversion_info["job_id"])
                 return False

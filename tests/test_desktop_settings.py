@@ -119,9 +119,76 @@ def test_real_application_opens_with_no_gnome_schemas(tmp_path):
             application.window.destroy()
             application.quit()
     ''')
-    result = subprocess.run(
-        [sys.executable, "-X", "faulthandler", "-c", code, str(APP_DIR)],
-        env=env, cwd=tmp_path, capture_output=True, text=True, timeout=20,
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    assert "APPLICATION_OPENED_WITHOUT_GNOME_SCHEMAS" in result.stdout
+    log_path = tmp_path / "application.log"
+    # Session services may inherit stderr after the application has exited.
+    # A file lets wait() observe the process exit instead of waiting for EOF.
+    with log_path.open("w") as log:
+        result = subprocess.run(
+            ["dbus-run-session", "--", sys.executable, "-X", "faulthandler", "-c", code, str(APP_DIR)],
+            env=env, cwd=tmp_path, stdout=log, stderr=subprocess.STDOUT, timeout=20, check=False,
+        )
+    output = log_path.read_text()
+    assert result.returncode == 0, output
+    assert "APPLICATION_OPENED_WITHOUT_GNOME_SCHEMAS" in output
+
+
+@pytest.mark.skipif(not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')),
+                    reason='Requires an isolated display')
+@pytest.mark.parametrize('exit_action', ['quit', 'close'])
+def test_exit_waits_for_conversion_cleanup(tmp_path, exit_action):
+    code = textwrap.dedent('''
+        import os, sys
+        sys.path.insert(0, sys.argv[1])
+        from main import VideoConverterApp
+        from gi.repository import GLib
+        from utils.conversion import run_with_progress_dialog
+        app = VideoConverterApp()
+        app.settings_manager.save_setting('show-welcome-dialog', False)
+        app.settings_manager.save_setting('show-conversion-help-on-startup', False)
+        rows = []
+        def activate(app):
+            run_with_progress_dialog(app,
+                [sys.executable, '-c', 'import time; time.sleep(30)'],
+                'shutdown test', env_vars=os.environ.copy())
+            row = next(iter(app.progress_page.active_conversions.values()))['row']
+            rows.append((row, row.process))
+            def leave():
+                if sys.argv[2] == 'quit':
+                    app.lookup_action('quit').activate(None)
+                else:
+                    app.window.close()
+                return False
+            GLib.timeout_add(50, leave)
+        app.connect('activate', activate)
+        app.run(['shutdown-test'])
+        row, process = rows[0]
+        assert row.cancel_event.is_set()
+        assert process.poll() is not None
+        assert app.conversions_running == 0
+        assert not app.progress_page.active_conversions
+    ''')
+    env = dict(os.environ, HOME=str(tmp_path), XDG_CONFIG_HOME=str(tmp_path / 'config'),
+               XDG_DATA_HOME=str(tmp_path / 'data'))
+    log_path = tmp_path / "shutdown.log"
+    with log_path.open("w") as log:
+        result = subprocess.run(
+            ["dbus-run-session", "--", sys.executable, '-c', code, str(APP_DIR), exit_action],
+            env=env, stdout=log, stderr=subprocess.STDOUT, timeout=30, check=False)
+    assert result.returncode == 0, log_path.read_text()
+
+
+@pytest.mark.parametrize('base', ['arch', 'debian', 'rpm'])
+def test_dependency_transaction_is_visible_and_interactive(base):
+    import shlex
+
+    from utils.dependency_checker import DependencyChecker
+
+    checker = DependencyChecker.__new__(DependencyChecker)
+    checker.distro = {'base': base}
+    info = checker.get_install_command()
+    command = info['command']
+    assert shlex.split(info['display']) == command
+    assert command[0] == 'pkexec'
+    assert not {'sh', '-c', '-y', '--noconfirm', '--allowerasing', '-Sy', '-Syu'} & set(command)
+    assert not any('://' in argument for argument in command)
+    assert set(info['packages']) <= set(command)

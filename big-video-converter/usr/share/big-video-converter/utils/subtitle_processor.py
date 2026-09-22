@@ -10,7 +10,7 @@ import tempfile
 import time
 
 from utils.ffmpeg_path import get_ffmpeg_executable
-from utils.media_validation import probe_media, terminate_process_group
+from utils.media_validation import probe_media, publish_output, terminate_process_group
 
 logger = logging.getLogger(__name__)
 _TIMECODE = r"\d{2,}:\d{2}:\d{2},\d{3}"
@@ -187,9 +187,7 @@ class SubtitleProcessor:
                 file.write(content)
                 file.flush()
                 os.fsync(file.fileno())
-            # A finished file takes the name in one rename, so an interrupted
-            # run cannot leave a half-written sidecar where a good one was.
-            os.replace(staged, destination)
+            publish_output(staged, destination)
             return destination
         finally:
             if os.path.lexists(staged):

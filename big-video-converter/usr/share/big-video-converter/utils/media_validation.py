@@ -222,17 +222,36 @@ def verify_integrity(path: str, cancelled: threading.Event, *,
     producer and file. Decoding is then only needed as a spot check.
     """
     path = os.path.abspath(path)
-    probe = subprocess.run(
+    if cancelled.is_set():
+        raise InterruptedError("Cancelled before checking the output")
+    with subprocess.Popen(
         [ffprobe or get_ffprobe_executable(), "-v", "error", "-err_detect", "explode",
          "-count_packets", "-show_entries", "stream=codec_type,nb_read_packets,duration",
          "-show_entries", "format=duration", "-of", "json", path],
-        capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout,
-    )
-    complaints = probe.stderr.strip().splitlines()
+        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, encoding="utf-8", errors="replace", start_new_session=True,
+    ) as probe:
+        deadline = time.monotonic() + timeout
+        try:
+            while True:
+                if cancelled.is_set():
+                    raise InterruptedError("Cancelled while checking the output")
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError("Output packet validation timed out")
+                try:
+                    stdout, stderr = probe.communicate(timeout=min(0.1, remaining))
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
+        finally:
+            if probe.poll() is None:
+                terminate_process_group(probe)
+    complaints = stderr.strip().splitlines()
     if probe.returncode or complaints:
         raise ValueError("The output is damaged: "
                          + (complaints[-1] if complaints else "could not be read"))
-    data = json.loads(probe.stdout)
+    data = json.loads(stdout)
     packets = {}
     for stream in data.get("streams", []):
         kind = stream.get("codec_type")
@@ -273,6 +292,15 @@ def remove_original(source: str, identity: FileIdentity, outputs: list[str],
         output_identities.append(FileIdentity.capture(path))
         verify_integrity(path, cancelled, ffprobe=ffprobe, ffmpeg=ffmpeg,
                          expected_frames=expected_frames if len(outputs) == 1 else None)
+        # Readable cached data is not yet durable. Both the contents and the
+        # published name must survive a power loss before removing the source.
+        with open(path, "rb") as output:
+            os.fsync(output.fileno())
+        directory = os.open(os.path.dirname(os.path.abspath(path)), os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            os.fsync(directory)
+        finally:
+            os.close(directory)
     if cancelled.is_set():
         raise InterruptedError("Cancelled before deleting the original")
     if FileIdentity.capture(source) != identity:
