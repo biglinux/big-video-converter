@@ -25,173 +25,129 @@ class ProgressPage:
 
     def __init__(self, app):
         self.app = app
-
-        # Create ToolbarView to wrap the content and provide headerbar
         self.toolbar_view = Adw.ToolbarView()
+        self.toolbar_view.add_css_class("bvc-shell")
 
-        # Create HeaderBar with window controls (include close button)
         self.header_bar = Adw.HeaderBar()
+        self.window_buttons_left = self.app._window_buttons_on_left()
+        self.header_bar.set_decoration_layout(
+            "minimize,maximize:" if self.window_buttons_left
+            else ":minimize,maximize"
+        )
 
-        # Title with queue counter
-        self.title_label = Gtk.Label(label=_("Converting Videos"))
-        self.title_label.add_css_class("title")
-        self.header_bar.set_title_widget(self.title_label)
-
-        # Back button (hidden during conversion, shown when complete)
-        self.back_button = Gtk.Button()
-        self.back_button.set_icon_name("go-previous-symbolic")
+        self.back_button = Gtk.Button.new_from_icon_name("go-previous-symbolic")
+        self.back_button.add_css_class("bvc-icon-button")
+        self.back_button.add_css_class("bvc-quiet")
+        self.back_button.set_tooltip_text(_("Back to the queue"))
+        self.back_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Back to the queue")]
+        )
         self.back_button.connect("clicked", self._on_back_clicked)
         self.back_button.set_visible(False)
         self.header_bar.pack_start(self.back_button)
 
-        # Setup custom tooltip for back button
-        if hasattr(self.app, "tooltip_helper"):
-            self.app.tooltip_helper.add_tooltip(self.back_button, "progress_back")
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
+        self.title_label = Gtk.Label(label=_("Conversion progress"))
+        self.title_label.add_css_class("heading")
+        self.progress_context_label = Gtk.Label(
+            label=_("Preparing the queue safely")
+        )
+        self.progress_context_label.add_css_class("caption")
+        self.progress_context_label.add_css_class("dim-label")
+        title_box.append(self.title_label)
+        title_box.append(self.progress_context_label)
+        self.header_bar.set_title_widget(title_box)
 
-        # Store original layout for restoration
-        self.window_buttons_left = self.app._window_buttons_on_left()
-        # Disable close button during conversion (keep minimize and maximize)
-        if self.window_buttons_left:
-            self.header_bar.set_decoration_layout("minimize,maximize:")
-        else:
-            self.header_bar.set_decoration_layout(":minimize,maximize")
-
+        self.cancel_all_button = Gtk.Button(label=_("Cancel all"))
+        self.cancel_all_button.add_css_class("bvc-secondary")
+        self.cancel_all_button.add_css_class("bvc-danger")
+        self.cancel_all_button.connect("clicked", self._on_cancel_all_clicked)
+        self.header_bar.pack_end(self.cancel_all_button)
         self.toolbar_view.add_top_bar(self.header_bar)
 
-        # Main page container
-        self.page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         self.page.set_vexpand(True)
 
-        # Create main content with Clamp for responsive design
-        main_scroll = Gtk.ScrolledWindow()
-        main_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        main_scroll.set_vexpand(True)
-
-        clamp = Adw.Clamp()
-        clamp.set_maximum_size(900)
-        clamp.set_tightening_threshold(600)
-        clamp.set_margin_start(24)
-        clamp.set_margin_end(24)
-        clamp.set_margin_top(16)
-        clamp.set_margin_bottom(24)
-
-        self.content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        scroll = Gtk.ScrolledWindow()
+        scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scroll.set_vexpand(True)
+        clamp = Adw.Clamp(maximum_size=1040, tightening_threshold=680)
+        clamp.set_margin_start(22)
+        clamp.set_margin_end(22)
+        clamp.set_margin_top(20)
+        clamp.set_margin_bottom(28)
+        self.content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18)
         clamp.set_child(self.content_box)
-        main_scroll.set_child(clamp)
-        self.page.append(main_scroll)
+        scroll.set_child(clamp)
+        self.page.append(scroll)
 
-        # ===== QUEUE LIST SECTION =====
-        self.queue_group = Adw.PreferencesGroup()
-        self.queue_group.set_title(_("Queue"))
+        summary_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        summary_card.add_css_class("bvc-card")
+        summary_card.add_css_class("bvc-raised")
+        summary_top = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        summary_text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+        summary_text.set_hexpand(True)
+        label = Gtk.Label(label=_("Overall progress"))
+        label.set_xalign(0)
+        label.add_css_class("bvc-section-title")
+        summary_text.append(label)
+        self.overall_detail_label = Gtk.Label(
+            label=_("Waiting for the first video")
+        )
+        self.overall_detail_label.set_xalign(0)
+        self.overall_detail_label.add_css_class("bvc-subtle")
+        summary_text.append(self.overall_detail_label)
+        summary_top.append(summary_text)
+        self.overall_fraction_label = Gtk.Label(label="0%")
+        self.overall_fraction_label.add_css_class("bvc-metric")
+        self.overall_fraction_label.add_css_class("title-2")
+        summary_top.append(self.overall_fraction_label)
+        summary_card.append(summary_top)
+        self.overall_progress_bar = Gtk.ProgressBar()
+        self.overall_progress_bar.add_css_class("bvc-overall-progress")
+        summary_card.append(self.overall_progress_bar)
+        metric_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=18)
+        self.completed_metric = Gtk.Label(label=_("0 completed"))
+        self.completed_metric.add_css_class("caption")
+        self.remaining_metric = Gtk.Label(label=_("0 remaining"))
+        self.remaining_metric.add_css_class("caption")
+        self.remaining_metric.add_css_class("dim-label")
+        metric_row.append(self.completed_metric)
+        metric_row.append(self.remaining_metric)
+        summary_card.append(metric_row)
+        self.content_box.append(summary_card)
+
+        queue_header = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        queue_title = Gtk.Label(label=_("Videos"))
+        queue_title.set_xalign(0)
+        queue_title.add_css_class("bvc-section-title")
+        queue_header.append(queue_title)
+        self.queue_count_chip = Gtk.Label(label=_("0 videos"))
+        self.queue_count_chip.add_css_class("bvc-count-chip")
+        queue_header.append(self.queue_count_chip)
+        self.content_box.append(queue_header)
 
         self.queue_listbox = Gtk.ListBox()
         self.queue_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.queue_listbox.add_css_class("boxed-list")
-        self.queue_group.add(self.queue_listbox)
+        self.queue_listbox.set_show_separators(False)
+        self.queue_listbox.add_css_class("bvc-progress-list")
+        self.content_box.append(self.queue_listbox)
 
-        self.content_box.append(self.queue_group)
-
-        # ===== BOTTOM ACTION BAR =====
-        self.action_bar = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        self.action_bar.set_halign(Gtk.Align.CENTER)
-        self.action_bar.set_margin_top(8)
-
-        self.cancel_all_button = Gtk.Button(label=_("Cancel All"))
-        self.cancel_all_button.add_css_class("destructive-action")
-        self.cancel_all_button.add_css_class("pill")
-        self.cancel_all_button.connect("clicked", self._on_cancel_all_clicked)
-        self.action_bar.append(self.cancel_all_button)
-
-        self.content_box.append(self.action_bar)
-
-        # ===== COMPLETION BANNER =====
         self.completion_banner = Adw.Banner()
         self.completion_banner.set_revealed(False)
-        self.completion_banner.set_button_label(_("Completed"))
+        self.completion_banner.set_button_label(_("Back to queue"))
         self.completion_banner.connect("button-clicked", self._on_back_clicked)
         self.page.append(self.completion_banner)
-
-        # Set the page as content of toolbar_view
         self.toolbar_view.set_content(self.page)
 
-        # Dictionary to track all queue items
         self.queue_items = {}
         self.active_conversions = {}
         self.count = 0
         self.total_queue_items = 0
         self.completed_count = 0
 
-        # Add CSS for styling
-        self._setup_css()
-
     def _setup_css(self):
-        """Setup CSS for progress page styling"""
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(b"""
-            .queue-row {
-                padding: 8px 12px;
-                min-height: 60px;
-            }
-            .queue-row-active {
-                background: alpha(@accent_bg_color, 0.08);
-                border-left: 3px solid @accent_color;
-            }
-            .queue-row-completed {
-                background: alpha(@success_bg_color, 0.06);
-                border-left: 3px solid @success_color;
-            }
-            .queue-row-failed {
-                background: alpha(@error_bg_color, 0.06);
-                border-left: 3px solid @error_color;
-            }
-            .queue-row-cancelled {
-                background: alpha(@warning_bg_color, 0.06);
-                border-left: 3px solid @warning_color;
-            }
-            .queue-row-pending {
-                opacity: 0.7;
-                border-left: 3px solid transparent;
-            }
-            .status-success { color: @success_color; font-weight: 500; }
-            .status-error { color: @error_color; font-weight: 500; }
-            .status-warning { color: @warning_color; font-weight: 500; }
-            .status-active { color: @accent_color; font-weight: 500; }
-            .status-pending { color: @dim_label_color; }
-            .time-info { 
-                font-size: 0.85em; 
-                color: @dim_label_color;
-                font-variant-numeric: tabular-nums;
-            }
-            .filename-label {
-                font-weight: 500;
-            }
-            .details-box {
-                background: alpha(@card_bg_color, 0.5);
-                border-radius: 6px;
-                padding: 12px;
-                margin-top: 8px;
-            }
-            .log-view {
-                font-family: monospace;
-                font-size: 0.9em;
-                background: alpha(@view_bg_color, 0.8);
-                border-radius: 4px;
-                padding: 8px;
-            }
-            banner button {
-                background-color: @accent_bg_color;
-                color: @accent_fg_color;
-            }
-            banner button:hover {
-                background-color: shade(@accent_bg_color, 1.1);
-            }
-        """)
-
-        display = self.toolbar_view.get_display()
-        if display is not None:
-            Gtk.StyleContext.add_provider_for_display(
-                display, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
-            )
+        """Compatibility no-op; application CSS is installed centrally."""
 
     def get_page(self):
         return self.toolbar_view
@@ -210,17 +166,51 @@ class ProgressPage:
         self._update_overall_progress()
 
     def _update_overall_progress(self):
-        """Update the title based on conversion progress"""
-        if self.total_queue_items > 0:
-            if self.completed_count == self.total_queue_items:
-                self.title_label.set_label(_("Completed!"))
-            else:
-                self.title_label.set_label(
-                    _("Converting Videos")
-                    + f" ({self.completed_count}/{self.total_queue_items})"
-                )
+        """Update title, metrics and the aggregate progress indicator."""
+        total = self.total_queue_items
+        completed = self.completed_count
+        if total:
+            active_fraction = sum(
+                row.current_progress
+                for row in self.queue_items.values()
+                if row.status == "active"
+            )
+            fraction = min(1.0, (completed + active_fraction) / total)
         else:
-            self.title_label.set_label(_("Converting Videos"))
+            fraction = 0.0
+        percent = int(round(fraction * 100))
+        self.overall_progress_bar.set_fraction(fraction)
+        self.overall_fraction_label.set_text(f"{percent}%")
+        self.completed_metric.set_text(
+            _("{} completed").format(completed)
+        )
+        remaining = max(0, total - completed)
+        self.remaining_metric.set_text(
+            _("{} remaining").format(remaining)
+        )
+        self.queue_count_chip.set_text(
+            _("1 video") if total == 1 else _("{} videos").format(total)
+        )
+        if total and completed == total:
+            self.title_label.set_text(_("Conversion complete"))
+            self.progress_context_label.set_text(
+                _("Every video has reached a final state")
+            )
+            self.overall_detail_label.set_text(
+                _("Review the results below or return to the queue")
+            )
+        elif total:
+            self.title_label.set_text(_("Converting videos"))
+            self.progress_context_label.set_text(
+                _("{} of {} finished").format(completed, total)
+            )
+            self.overall_detail_label.set_text(
+                _("The active job is shown first; pending videos remain unchanged")
+            )
+        else:
+            self.title_label.set_text(_("Conversion progress"))
+            self.progress_context_label.set_text(_("Preparing the queue safely"))
+            self.overall_detail_label.set_text(_("Waiting for the first video"))
 
     def add_conversion(self, command_title, input_file: str, process):
         """Start tracking a conversion for a file"""
@@ -449,219 +439,160 @@ class QueueItemRow(Gtk.ListBoxRow):
         self._set_state("pending")
 
     def _build_ui(self):
-        """Build the row UI with fixed layout"""
-        self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.add_css_class("bvc-progress-card")
+        self.main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.set_child(self.main_box)
 
-        # Main content row - fixed height to prevent jumping
-        content = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        content.add_css_class("queue-row")
-
-        # Status icon (fixed size)
+        content = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
         self.status_icon = Gtk.Image()
-        self.status_icon.set_pixel_size(32)
+        self.status_icon.set_pixel_size(28)
         self.status_icon.set_valign(Gtk.Align.CENTER)
         content.append(self.status_icon)
 
-        # Center column: filename, status, progress
-        center_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-        center_box.set_hexpand(True)
-        center_box.set_valign(Gtk.Align.CENTER)
-
-        # Filename
-        filename = (
-            os.path.basename(self.file_path) if self.file_path else _("Unknown file")
-        )
+        center = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        center.set_hexpand(True)
+        center.set_valign(Gtk.Align.CENTER)
+        filename = os.path.basename(self.file_path) if self.file_path else _("Unknown video")
         self.filename_label = Gtk.Label(label=filename)
         self.filename_label.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
-        self.filename_label.set_halign(Gtk.Align.START)
         self.filename_label.set_xalign(0)
-        self.filename_label.add_css_class("filename-label")
-        center_box.append(self.filename_label)
+        self.filename_label.add_css_class("title-3")
+        center.append(self.filename_label)
 
-        # Status row: status text on left, FPS on right (horizontal layout)
         status_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-
         self.status_label = Gtk.Label(label=_("Waiting in queue"))
-        self.status_label.set_halign(Gtk.Align.START)
         self.status_label.set_xalign(0)
         self.status_label.set_hexpand(True)
-        self.status_label.add_css_class("status-pending")
+        self.status_label.add_css_class("bvc-subtle")
         status_row.append(self.status_label)
-
-        # FPS label (shown during conversion, on the right)
         self.fps_label = Gtk.Label(label="")
-        self.fps_label.set_halign(Gtk.Align.END)
-        self.fps_label.add_css_class("dim-label")
+        self.fps_label.add_css_class("bvc-status-chip")
         self.fps_label.set_visible(False)
         status_row.append(self.fps_label)
+        center.append(status_row)
 
-        center_box.append(status_row)
-
-        # Progress bar (always present, hidden when not active)
         self.progress_bar = Gtk.ProgressBar()
-        self.progress_bar.set_margin_top(4)
+        self.progress_bar.add_css_class("bvc-job-progress")
         self.progress_bar.set_visible(False)
-        center_box.append(self.progress_bar)
+        center.append(self.progress_bar)
+        content.append(center)
 
-        content.append(center_box)
-
-        # Right column: time info (fixed width for stability)
-        time_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        time_box.set_valign(Gtk.Align.CENTER)
-        time_box.set_size_request(100, -1)  # Fixed width
-
+        metrics = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        metrics.set_valign(Gtk.Align.CENTER)
+        metrics.set_size_request(105, -1)
         self.time_label_1 = Gtk.Label(label="")
-        self.time_label_1.add_css_class("time-info")
+        self.time_label_1.add_css_class("caption")
+        self.time_label_1.add_css_class("bvc-metric")
         self.time_label_1.set_halign(Gtk.Align.END)
-        time_box.append(self.time_label_1)
-
+        metrics.append(self.time_label_1)
         self.time_label_2 = Gtk.Label(label="")
-        self.time_label_2.add_css_class("time-info")
+        self.time_label_2.add_css_class("caption")
+        self.time_label_2.add_css_class("dim-label")
         self.time_label_2.set_halign(Gtk.Align.END)
-        time_box.append(self.time_label_2)
+        metrics.append(self.time_label_2)
+        content.append(metrics)
 
-        content.append(time_box)
-
-        # Action buttons (fixed width)
-        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
-        button_box.set_valign(Gtk.Align.CENTER)
-        button_box.set_size_request(72, -1)  # Fixed width for 2 buttons
-
-        self.details_button = Gtk.ToggleButton()
-        self.details_button.set_icon_name("view-more-symbolic")
-        self.details_button.add_css_class("flat")
-        self.details_button.add_css_class("circular")
+        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        actions.set_valign(Gtk.Align.CENTER)
+        self.details_button = Gtk.ToggleButton(icon_name="view-more-symbolic")
+        self.details_button.add_css_class("bvc-icon-button")
+        self.details_button.add_css_class("bvc-quiet")
+        self.details_button.set_tooltip_text(_("Show technical details"))
+        self.details_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Show technical details")]
+        )
         self.details_button.connect("toggled", self._on_details_toggled)
         self.details_button.set_sensitive(False)
-        button_box.append(self.details_button)
-
-        self.cancel_button = Gtk.Button()
-        self.cancel_button.set_icon_name("process-stop-symbolic")
-        self.cancel_button.add_css_class("flat")
-        self.cancel_button.add_css_class("circular")
-        self.cancel_button.connect("clicked", lambda b: self.cancel())
+        actions.append(self.details_button)
+        self.cancel_button = Gtk.Button(icon_name="process-stop-symbolic")
+        self.cancel_button.add_css_class("bvc-icon-button")
+        self.cancel_button.add_css_class("bvc-quiet")
+        self.cancel_button.add_css_class("bvc-danger")
+        self.cancel_button.set_tooltip_text(_("Cancel this video"))
+        self.cancel_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Cancel this video")]
+        )
+        self.cancel_button.connect("clicked", lambda _button: self.cancel())
         self.cancel_button.set_visible(False)
-        button_box.append(self.cancel_button)
-
-        # Setup custom tooltips for buttons
-        if hasattr(self.app, "tooltip_helper"):
-            self.app.tooltip_helper.add_tooltip(
-                self.details_button, "progress_show_log"
-            )
-            self.app.tooltip_helper.add_tooltip(
-                self.cancel_button, "progress_cancel_file"
-            )
-
-        content.append(button_box)
+        actions.append(self.cancel_button)
+        content.append(actions)
         self.main_box.append(content)
 
-        # Details revealer
         self.details_revealer = Gtk.Revealer()
         self.details_revealer.set_transition_type(Gtk.RevealerTransitionType.SLIDE_DOWN)
-
-        details_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        details_box.add_css_class("details-box")
-        details_box.set_margin_start(56)
-        details_box.set_margin_end(12)
-        details_box.set_margin_bottom(8)
-
-        # Command section header
-        cmd_header = Gtk.Label(label=_("FFmpeg Command"))
-        cmd_header.set_halign(Gtk.Align.START)
-        cmd_header.add_css_class("heading")
-        cmd_header.set_margin_bottom(4)
-        details_box.append(cmd_header)
-
-        # Command label
+        self.details_revealer.set_transition_duration(180)
+        details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        details.add_css_class("bvc-well")
+        details.set_margin_top(2)
+        details.set_margin_start(42)
+        details.set_margin_end(2)
+        details.set_margin_bottom(2)
+        details.set_margin_top(4)
+        command_title = Gtk.Label(label=_("Command"))
+        command_title.set_xalign(0)
+        command_title.add_css_class("bvc-body-strong")
+        details.append(command_title)
         self.cmd_text = Gtk.Label(label="")
         self.cmd_text.set_selectable(True)
         self.cmd_text.set_wrap(True)
         self.cmd_text.set_wrap_mode(Pango.WrapMode.CHAR)
         self.cmd_text.set_xalign(0)
-        self.cmd_text.add_css_class("log-view")
-        details_box.append(self.cmd_text)
-
-        # Log section header
-        log_header = Gtk.Label(label=_("Process Output"))
-        log_header.set_halign(Gtk.Align.START)
-        log_header.add_css_class("heading")
-        log_header.set_margin_top(8)
-        log_header.set_margin_bottom(4)
-        details_box.append(log_header)
-
-        # Log scroll
+        self.cmd_text.add_css_class("bvc-log")
+        details.append(self.cmd_text)
+        output_title = Gtk.Label(label=_("Process output"))
+        output_title.set_xalign(0)
+        output_title.add_css_class("bvc-body-strong")
+        details.append(output_title)
         log_scroll = Gtk.ScrolledWindow()
         log_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         log_scroll.set_min_content_height(120)
-        log_scroll.set_max_content_height(200)
-
+        log_scroll.set_max_content_height(240)
         self.terminal_view = Gtk.TextView()
         self.terminal_view.set_editable(False)
         self.terminal_view.set_cursor_visible(False)
         self.terminal_view.set_monospace(True)
-        self.terminal_view.add_css_class("log-view")
+        self.terminal_view.add_css_class("bvc-log")
         self.terminal_view.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
-
         self.terminal_buffer = self.terminal_view.get_buffer()
         log_scroll.set_child(self.terminal_view)
-        details_box.append(log_scroll)
-
-        self.details_revealer.set_child(details_box)
+        details.append(log_scroll)
+        self.details_revealer.set_child(details)
         self.main_box.append(self.details_revealer)
 
     def _set_state(self, state):
-        """Set visual state with appropriate icon and styling"""
-        # Remove all state classes
-        for cls in [
-            "queue-row-pending",
-            "queue-row-active",
-            "queue-row-completed",
-            "queue-row-failed",
-            "queue-row-cancelled",
-        ]:
-            self.remove_css_class(cls)
-
-        # Remove status label classes
-        for cls in [
-            "status-pending",
-            "status-active",
-            "status-success",
-            "status-error",
-            "status-warning",
-        ]:
-            self.status_label.remove_css_class(cls)
-
-        # Hide FPS label when not active
+        for css_class in (
+            "bvc-progress-active", "bvc-progress-success", "bvc-progress-error"
+        ):
+            self.remove_css_class(css_class)
+        for css_class in (
+            "status-active", "status-success", "status-error", "status-warning"
+        ):
+            self.status_label.remove_css_class(css_class)
         if state != "active":
             self.fps_label.set_visible(False)
-
         if state == "pending":
-            self.add_css_class("queue-row-pending")
             self.status_icon.set_from_icon_name("content-loading-symbolic")
-            self.status_label.add_css_class("status-pending")
-            self.cancel_button.set_visible(True)  # Allow cancelling pending items
-            # Update tooltip key for pending state
+            self.status_label.set_text(_("Waiting in queue"))
+            self.status_label.add_css_class("dim-label")
+            self.cancel_button.set_visible(True)
             self.cancel_button.tooltip_key = "progress_skip_file"
         elif state == "active":
-            self.add_css_class("queue-row-active")
+            self.add_css_class("bvc-progress-active")
             self.status_icon.set_from_icon_name("media-playback-start-symbolic")
             self.status_label.add_css_class("status-active")
             self.cancel_button.set_visible(True)
-            # Update tooltip key for active state
             self.cancel_button.tooltip_key = "progress_cancel_file"
         elif state == "completed":
-            self.add_css_class("queue-row-completed")
+            self.add_css_class("bvc-progress-success")
             self.status_icon.set_from_icon_name("emblem-ok-symbolic")
             self.status_label.add_css_class("status-success")
             self.cancel_button.set_visible(False)
         elif state == "failed":
-            self.add_css_class("queue-row-failed")
+            self.add_css_class("bvc-progress-error")
             self.status_icon.set_from_icon_name("dialog-error-symbolic")
             self.status_label.add_css_class("status-error")
             self.cancel_button.set_visible(False)
         elif state == "cancelled":
-            self.add_css_class("queue-row-cancelled")
             self.status_icon.set_from_icon_name("action-unavailable-symbolic")
             self.status_label.add_css_class("status-warning")
             self.cancel_button.set_visible(False)

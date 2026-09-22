@@ -134,13 +134,11 @@ if _RENDER_MODE_SETTING == "opengl":
     _USE_X11_MODE = False
     _USE_SOFTWARE_MODE = False
     logger.debug("MPV: Will use OpenGL mode (user preference)")
-    os.environ['GSK_RENDERER'] = 'ngl'
 elif _RENDER_MODE_SETTING == "software":
     # User explicitly chose Software mode
     _USE_X11_MODE = False
     _USE_SOFTWARE_MODE = True
     logger.debug("MPV: Will use software rendering mode (user preference)")
-    os.environ['GSK_RENDERER'] = 'cairo'
 else:
     # Auto mode: let GTK auto-detect the best renderer
     # Do NOT force GSK_RENDERER - it causes issues on some GPUs (e.g. NVIDIA)
@@ -153,7 +151,6 @@ else:
         logger.debug(
             "MPV: Will use software rendering mode (auto: VM on Wayland detected)"
         )
-        os.environ['GSK_RENDERER'] = 'cairo'
     else:
         logger.debug("MPV: Will use auto-detected renderer (no GSK_RENDERER override)")
 
@@ -256,6 +253,7 @@ class MPVPlayer:
         
         # Cache current adjustment values to avoid redundant updates
         self.cached_brightness = 0
+        self.cached_contrast = 0
         self.cached_saturation = 0
         self.cached_hue = 0
 
@@ -757,6 +755,9 @@ class MPVPlayer:
 
     def set_brightness(self, value: float) -> None:
         self._set_color_property("brightness", value * 100)
+
+    def set_contrast(self, value: float) -> None:
+        self._set_color_property("contrast", value * 100)
 
     def set_saturation(self, value: float) -> None:
         self._set_color_property("saturation", (value - 1.0) * 100)

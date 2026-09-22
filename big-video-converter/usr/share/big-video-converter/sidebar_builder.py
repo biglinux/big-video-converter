@@ -26,14 +26,14 @@ class SidebarBuilderMixin:
         """Create left settings pane with contextual ViewStack"""
         # Create ToolbarView for left pane to get the correct sidebar style
         left_toolbar_view = Adw.ToolbarView()
-        left_toolbar_view.add_css_class("sidebar")
+        left_toolbar_view.add_css_class("bvc-sidebar")
 
         # Detect window button layout
         window_buttons_left = self._window_buttons_on_left()
 
         # Create a HeaderBar for the left pane
         left_header = Adw.HeaderBar()
-        left_header.add_css_class("sidebar")
+        left_header.add_css_class("bvc-sidebar")
         left_header.set_show_title(True)
         # Configure left header bar based on window button layout
         left_header.set_decoration_layout(
@@ -45,7 +45,8 @@ class SidebarBuilderMixin:
             # Text truly centered, no icon
             center_box = Gtk.CenterBox()
             center_box.set_hexpand(True)
-            title_label = Gtk.Label(label="Big Video Converter")
+            title_label = Gtk.Label(label=_("Conversion recipe"))
+            title_label.add_css_class("heading")
             title_label.set_halign(Gtk.Align.CENTER)
             title_label.set_valign(Gtk.Align.START)
             title_label.set_hexpand(True)
@@ -53,7 +54,8 @@ class SidebarBuilderMixin:
             left_header.set_title_widget(center_box)
         else:
             title_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-            title_label = Gtk.Label(label="Big Video Converter")
+            title_label = Gtk.Label(label=_("Conversion recipe"))
+            title_label.add_css_class("heading")
             title_box.append(title_label)
             # Add an expanding box to push controls to the left
             expander = Gtk.Box()
@@ -65,8 +67,8 @@ class SidebarBuilderMixin:
         # Create scrolled window for content
         left_scroll = Gtk.ScrolledWindow()
         left_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        left_scroll.set_min_content_width(300)
-        left_scroll.set_max_content_width(400)
+        left_scroll.set_min_content_width(330)
+        left_scroll.set_max_content_width(430)
 
         # Create ViewStack for contextual content
         self.left_stack = Adw.ViewStack()
@@ -94,7 +96,7 @@ class SidebarBuilderMixin:
         left_toolbar_view.set_content(left_scroll)
 
         # Set minimum width for left sidebar
-        left_toolbar_view.set_size_request(300, -1)
+        left_toolbar_view.set_size_request(340, -1)
 
         self.main_paned.set_start_child(left_toolbar_view)
 
@@ -109,11 +111,31 @@ class SidebarBuilderMixin:
         )
 
         settings_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        settings_box.set_spacing(24)
-        settings_box.set_margin_start(12)
-        settings_box.set_margin_end(12)
-        settings_box.set_margin_top(12)
-        settings_box.set_margin_bottom(24)
+        settings_box.set_spacing(22)
+        settings_box.set_margin_start(16)
+        settings_box.set_margin_end(16)
+        settings_box.set_margin_top(14)
+        settings_box.set_margin_bottom(28)
+        settings_box.add_css_class("bvc-sidebar-content")
+
+        intro = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        intro.add_css_class("bvc-recipe-header")
+        intro_title = Gtk.Label(label=_("What should the result be like?"))
+        intro_title.set_xalign(0)
+        intro_title.set_wrap(True)
+        intro_title.add_css_class("bvc-section-title")
+        intro_text = Gtk.Label(
+            label=_(
+                "Choose a simple goal. You can refine audio, subtitles and "
+                "advanced options below."
+            )
+        )
+        intro_text.set_xalign(0)
+        intro_text.set_wrap(True)
+        intro_text.add_css_class("bvc-subtle")
+        intro.append(intro_title)
+        intro.append(intro_text)
+        settings_box.append(intro)
 
         # ── Create all data-holder widgets (not added to sidebar) ──
 
@@ -424,7 +446,10 @@ class SidebarBuilderMixin:
         self.noise_reduction_expander.add_row(self.normalize_row)
 
         # ── Group 1: Video Mode Profiles ──
-        video_group = Adw.PreferencesGroup()
+        video_group = Adw.PreferencesGroup(
+            title=_("Choose a result"),
+            description=_("Start with the outcome, not codec terminology."),
+        )
 
         self._radio_copy = Gtk.CheckButton()
         self._radio_universal = Gtk.CheckButton(group=self._radio_copy)
@@ -448,7 +473,7 @@ class SidebarBuilderMixin:
         self._universal_row.set_activatable_widget(self._radio_universal)
         # Visual badge indicating recommended profile
         recommended_label = Gtk.Label(label=_("Recommended"))
-        recommended_label.add_css_class("caption")
+        recommended_label.add_css_class("bvc-status-chip")
         recommended_label.add_css_class("success")
         recommended_label.set_valign(Gtk.Align.CENTER)
         self._universal_row.add_suffix(recommended_label)
@@ -495,10 +520,25 @@ class SidebarBuilderMixin:
         self._radio_quality.connect("toggled", self._on_profile_toggled)
         self._radio_preset.connect("toggled", self._on_profile_toggled)
 
+        for row in (
+            self._copy_row,
+            self._universal_row,
+            self._efficient_row,
+            self._smallest_row,
+            self._customize_row,
+            self._presets_row,
+        ):
+            row.add_css_class("bvc-recipe-step")
+
         settings_box.append(video_group)
 
         # ── Group 2: Audio / Subtitles / Extra ──
-        other_group = Adw.PreferencesGroup()
+        other_group = Adw.PreferencesGroup(
+            title=_("Refine when needed"),
+            description=_(
+                "These settings are optional; the recommended defaults are safe."
+            ),
+        )
 
         self._audio_row = Adw.ActionRow(title=_("Audio Encoding"))
         self._audio_row.add_prefix(

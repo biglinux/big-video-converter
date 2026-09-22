@@ -1,6 +1,7 @@
 import os
 from copy import deepcopy
 import threading
+import weakref
 
 import gi
 
@@ -14,6 +15,14 @@ from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 from utils.conversion import run_with_progress_dialog
 from utils.segment_batch import start_segment_batch
 from utils.ffmpeg_options import validate_additional_options
+from utils.job_options import (
+    RESOLUTION_MODES,
+    default_metadata,
+    normalize_metadata,
+    snapshot_preset,
+    summary,
+)
+from utils.thumbnail_cache import ThumbnailManager
 from utils.video_settings import SettingsOverride, get_video_filter_string
 
 import logging
@@ -23,8 +32,8 @@ logger = logging.getLogger(__name__)
 _ = gettext.gettext
 
 
-class FileQueueRow(Adw.ActionRow):
-    """Row representing a video file in the queue using Adwaita ActionRow."""
+class FileQueueRow(Gtk.ListBoxRow):
+    """Premium queue card with preview, effective settings and focused actions."""
 
     def __init__(
         self,
@@ -34,218 +43,258 @@ class FileQueueRow(Adw.ActionRow):
         on_play_callback,
         on_edit_callback,
         on_info_callback,
+        on_options_callback,
+        metadata,
+        thumbnail_manager,
         app=None,
     ):
         super().__init__()
-
         self.file_path = file_path
         self.index = index
         self.on_remove_callback = on_remove_callback
         self.on_play_callback = on_play_callback
         self.on_edit_callback = on_edit_callback
         self.on_info_callback = on_info_callback
+        self.on_options_callback = on_options_callback
+        self.metadata = normalize_metadata(metadata)
+        self.thumbnail_manager = thumbnail_manager
         self.app = app
+        self._thumbnail_request = None
+        self._thumbnail_disposed = False
 
-        # Set title to filename (escape special characters for Pango markup)
-        filename = os.path.basename(file_path)
-        self.set_title(GLib.markup_escape_text(filename))
+        self.set_activatable(True)
+        self.set_selectable(False)
+        self.add_css_class("bvc-queue-card")
+        self.set_tooltip_text(_("Open this video in the editor"))
 
-        # Set subtitle with directory and file size
+        content = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=16)
+        content.set_margin_top(2)
+        content.set_margin_bottom(2)
+        self.set_child(content)
+
+        preview_frame = Gtk.Box()
+        preview_frame.add_css_class("bvc-thumbnail-frame")
+        preview_frame.set_valign(Gtk.Align.CENTER)
+        self.thumbnail_stack = Gtk.Stack()
+        self.thumbnail_stack.set_size_request(144, 82)
+        self.thumbnail_stack.set_hhomogeneous(True)
+        self.thumbnail_stack.set_vhomogeneous(True)
+        placeholder = Gtk.Image.new_from_icon_name("video-x-generic-symbolic")
+        placeholder.set_pixel_size(42)
+        placeholder.add_css_class("dim-label")
+        self.thumbnail_picture = Gtk.Picture()
+        self.thumbnail_picture.set_can_shrink(True)
+        if hasattr(self.thumbnail_picture, "set_content_fit"):
+            self.thumbnail_picture.set_content_fit(Gtk.ContentFit.COVER)
+        self.thumbnail_stack.add_named(placeholder, "placeholder")
+        self.thumbnail_stack.add_named(self.thumbnail_picture, "picture")
+        self.thumbnail_stack.set_visible_child_name("placeholder")
+        preview_frame.append(self.thumbnail_stack)
+        content.append(preview_frame)
+
+        details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        details.set_hexpand(True)
+        details.set_valign(Gtk.Align.CENTER)
+
+        title = Gtk.Label(label=os.path.basename(file_path))
+        title.set_xalign(0)
+        title.set_ellipsize(3)
+        title.set_tooltip_text(file_path)
+        title.add_css_class("title-3")
+        details.append(title)
+
+        directory = Gtk.Label(label=os.path.dirname(file_path))
+        directory.set_xalign(0)
+        directory.set_ellipsize(3)
+        directory.add_css_class("caption")
+        directory.add_css_class("dim-label")
+        details.append(directory)
+
+        metadata_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
+        profile = Gtk.Label(label=_(summary(self.metadata)))
+        profile.add_css_class("bvc-profile-chip")
+        profile.set_valign(Gtk.Align.CENTER)
+        metadata_row.append(profile)
         try:
-            directory = os.path.dirname(file_path)
-            file_size = os.path.getsize(file_path) / (1024 * 1024)
-            subtitle = f"{directory}  •  {file_size:.1f} MB"
-            self.set_subtitle(subtitle)
+            size_mb = os.path.getsize(file_path) / (1024 * 1024)
+            size = Gtk.Label(label=f"{size_mb:.1f} MB")
+            size.add_css_class("caption")
+            size.add_css_class("dim-label")
+            size.set_valign(Gtk.Align.CENTER)
+            metadata_row.append(size)
         except OSError:
-            self.set_subtitle(os.path.dirname(file_path))
+            pass
+        details.append(metadata_row)
+        content.append(details)
 
-        # Disable row activation - clicking on the name should not trigger navigation
-        self.set_activatable(False)
+        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        actions.set_valign(Gtk.Align.CENTER)
 
-        # Edit button (added third, appears last)
+        options_button = Gtk.Button()
+        options_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
+        options_box.append(Gtk.Image.new_from_icon_name("preferences-system-symbolic"))
+        options_box.append(Gtk.Label(label=_("Options")))
+        options_button.set_child(options_box)
+        options_button.add_css_class("bvc-secondary")
+        options_button.set_tooltip_text(_("Choose a preset or resolution for this video"))
+        options_button.connect(
+            "clicked", lambda _button: self.on_options_callback(self.file_path)
+        )
+        actions.append(options_button)
+
         edit_button = Gtk.Button.new_from_icon_name("document-edit-symbolic")
-        self.app.tooltip_helper.add_tooltip(edit_button, "file_list_edit_button")
+        edit_button.add_css_class("bvc-icon-button")
+        edit_button.add_css_class("bvc-quiet")
+        edit_button.set_tooltip_text(_("Edit video"))
         edit_button.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Edit file")],
+            [Gtk.AccessibleProperty.LABEL], [_("Edit video")]
         )
-        edit_button.add_css_class("flat")
-        edit_button.set_valign(Gtk.Align.CENTER)
         edit_button.connect(
-            "clicked", lambda btn: self.on_edit_callback(self.file_path)
+            "clicked", lambda _button: self.on_edit_callback(self.file_path)
         )
-        self.add_prefix(edit_button)
+        actions.append(edit_button)
 
-        # Play button (added second, appears middle)
-        play_button = Gtk.Button.new_from_icon_name("media-playback-start-symbolic")
-        self.app.tooltip_helper.add_tooltip(play_button, "file_list_play_button")
-        play_button.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Play file")],
+        more_button = Gtk.MenuButton(icon_name="view-more-symbolic")
+        more_button.add_css_class("bvc-icon-button")
+        more_button.add_css_class("bvc-quiet")
+        more_button.set_tooltip_text(_("More actions"))
+        more_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("More actions")]
         )
-        play_button.add_css_class("flat")
-        play_button.set_valign(Gtk.Align.CENTER)
-        play_button.connect(
-            "clicked", lambda btn: self.on_play_callback(self.file_path)
+        more_button.set_popover(self._create_more_popover())
+        actions.append(more_button)
+        content.append(actions)
+
+        self._request_thumbnail()
+
+    def _menu_action(self, label, icon_name, callback, *, destructive=False):
+        button = Gtk.Button()
+        button.add_css_class("flat")
+        button.add_css_class("bvc-quiet")
+        if destructive:
+            button.add_css_class("bvc-danger")
+        row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        row.append(Gtk.Image.new_from_icon_name(icon_name))
+        text = Gtk.Label(label=label)
+        text.set_xalign(0)
+        text.set_hexpand(True)
+        row.append(text)
+        button.set_child(row)
+        button.connect("clicked", callback)
+        return button
+
+    def _create_more_popover(self):
+        popover = Gtk.Popover()
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        box.set_margin_top(8)
+        box.set_margin_bottom(8)
+        box.set_margin_start(8)
+        box.set_margin_end(8)
+        box.append(self._menu_action(
+            _("Play video"), "media-playback-start-symbolic",
+            lambda _b: self.on_play_callback(self.file_path),
+        ))
+        box.append(self._menu_action(
+            _("Video information"), "dialog-information-symbolic",
+            lambda _b: self.on_info_callback(self.file_path),
+        ))
+        box.append(self._menu_action(
+            _("Open containing folder"), "folder-open-symbolic",
+            lambda _b: self._on_open_folder(),
+        ))
+        separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
+        separator.set_margin_top(4)
+        separator.set_margin_bottom(4)
+        box.append(separator)
+        box.append(self._menu_action(
+            _("Remove from queue"), "list-remove-symbolic",
+            lambda _b: self.on_remove_callback(self.file_path),
+            destructive=True,
+        ))
+        box.append(self._menu_action(
+            _("Delete from disk…"), "user-trash-symbolic",
+            lambda _b: self._on_delete_from_disk(),
+            destructive=True,
+        ))
+        popover.set_child(box)
+        return popover
+
+    def _request_thumbnail(self):
+        row_ref = weakref.ref(self)
+        expected = self.file_path
+
+        def ready(thumbnail_path):
+            row = row_ref()
+            if row is not None:
+                GLib.idle_add(row._apply_thumbnail, expected, thumbnail_path)
+
+        self._thumbnail_request = self.thumbnail_manager.request(
+            self.file_path, ready
         )
-        self.add_prefix(play_button)
 
-        # Remove button (added first, appears first)
-        remove_button = Gtk.Button.new_from_icon_name("trash-symbolic")
-        self.app.tooltip_helper.add_tooltip(remove_button, "file_list_remove_button")
-        remove_button.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Remove from queue")],
-        )
-        remove_button.add_css_class("flat")
-        remove_button.set_valign(Gtk.Align.CENTER)
-        remove_button.connect(
-            "clicked", lambda btn: self.on_remove_callback(self.file_path)
-        )
-        self.add_prefix(remove_button)
+    def _apply_thumbnail(self, expected, thumbnail_path):
+        if (
+            self._thumbnail_disposed
+            or expected != self.file_path
+            or not thumbnail_path
+            or not os.path.isfile(thumbnail_path)
+        ):
+            return GLib.SOURCE_REMOVE
+        self.thumbnail_picture.set_filename(thumbnail_path)
+        self.thumbnail_stack.set_visible_child_name("picture")
+        return GLib.SOURCE_REMOVE
 
-        # Add right-click context menu
-        self._setup_context_menu()
+    def dispose_thumbnail(self):
+        if self._thumbnail_disposed:
+            return
+        self._thumbnail_disposed = True
+        request, self._thumbnail_request = self._thumbnail_request, None
+        if request is not None:
+            request.cancel()
+        self.thumbnail_picture.set_paintable(None)
 
-        # Connect to realize signal to add tooltip to title widget after it's created
-        self.connect("realize", self._on_row_realized)
-
-    def _setup_context_menu(self):
-        """Setup right-click context menu for the file row."""
-        # Create popup menu
-        menu = Gtk.PopoverMenu()
-        menu_model = Gio.Menu()
-
-        # Open containing folder action
-        menu_model.append(_("Open Containing Folder"), "row.open_folder")
-
-        # More information action
-        menu_model.append(_("More Information..."), "row.info")
-
-        # Delete from disk action (destructive)
-        menu_model.append(_("Delete from Disk..."), "row.delete_disk")
-
-        menu.set_menu_model(menu_model)
-        menu.set_parent(self)
-
-        # Create action group
-        action_group = Gio.SimpleActionGroup()
-
-        # Open folder action
-        open_folder_action = Gio.SimpleAction.new("open_folder", None)
-        open_folder_action.connect("activate", self._on_open_folder)
-        action_group.add_action(open_folder_action)
-
-        # Info action
-        info_action = Gio.SimpleAction.new("info", None)
-        info_action.connect(
-            "activate", lambda a, p: self.on_info_callback(self.file_path)
-        )
-        action_group.add_action(info_action)
-
-        # Delete from disk action
-        delete_disk_action = Gio.SimpleAction.new("delete_disk", None)
-        delete_disk_action.connect("activate", self._on_delete_from_disk)
-        action_group.add_action(delete_disk_action)
-
-        self.insert_action_group("row", action_group)
-
-        # Add right-click gesture
-        right_click = Gtk.GestureClick.new()
-        right_click.set_button(3)  # Right mouse button
-        right_click.connect("pressed", lambda g, n, x, y: menu.popup())
-        self.add_controller(right_click)
-
-    def _on_row_realized(self, widget):
-        """Add tooltip to the title label after the row is realized."""
-
-        # The ActionRow creates internal widgets, we need to find the title label
-        # In Adwaita, the title is typically in a Box containing labels
-        def find_title_label(widget):
-            """Recursively find the title label widget."""
-            if isinstance(widget, Gtk.Label):
-                # Check if this label's text matches our title
-                if widget.get_label() == self.get_title():
-                    return widget
-
-            # If widget is a container, check its children
-            if hasattr(widget, "get_first_child"):
-                child = widget.get_first_child()
-                while child:
-                    result = find_title_label(child)
-                    if result:
-                        return result
-                    child = child.get_next_sibling()
-            return None
-
-        # Find and add tooltip to the title label
-        title_label = find_title_label(self)
-        if title_label and hasattr(self.app, "tooltip_helper"):
-            self.app.tooltip_helper.add_tooltip(title_label, "file_list_item")
-
-    def _on_open_folder(self, action, param):
-        """Open the folder containing the file."""
-        import subprocess
-
-        if os.path.isfile(self.file_path):
-            folder_path = os.path.dirname(self.file_path)
-            try:
-                # Open file manager at folder location
-                subprocess.Popen(["xdg-open", folder_path])
-            except (subprocess.SubprocessError, OSError) as e:
-                logger.error(f"Failed to open folder: {e}")
-
-    def _on_delete_from_disk(self, action, param):
-        """Show confirmation dialog and delete file from disk."""
+    def _on_open_folder(self):
         if not os.path.isfile(self.file_path):
             return
+        try:
+            Gio.AppInfo.launch_default_for_uri(
+                Gio.File.new_for_path(os.path.dirname(self.file_path)).get_uri(),
+                None,
+            )
+        except GLib.Error as error:
+            logger.error("Could not open containing folder: %s", error)
 
-        filename = os.path.basename(self.file_path)
-
-        # Create confirmation dialog
+    def _on_delete_from_disk(self):
+        if not os.path.isfile(self.file_path):
+            return
         dialog = Adw.AlertDialog()
-        dialog.set_heading(_("Delete File from Disk?"))
+        dialog.set_heading(_("Delete this video permanently?"))
         dialog.set_body(
-            _(
-                "Are you sure you want to permanently delete '{}'?\n\nThis action cannot be undone."
-            ).format(filename)
+            _("“{}” will be removed from disk. This cannot be undone.").format(
+                os.path.basename(self.file_path)
+            )
         )
-
-        # Add responses
-        dialog.add_response("cancel", _("Cancel"))
-        dialog.add_response("delete", _("Delete"))
-
-        # Set delete button as destructive
-        dialog.set_response_appearance("delete", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.add_response("cancel", _("Keep video"))
+        dialog.add_response("delete", _("Delete permanently"))
+        dialog.set_response_appearance(
+            "delete", Adw.ResponseAppearance.DESTRUCTIVE
+        )
         dialog.set_default_response("cancel")
         dialog.set_close_response("cancel")
 
-        # Connect response handler
-        dialog.connect("response", self._on_delete_dialog_response)
-
-        # Get window from app
-        if self.app and hasattr(self.app, "window"):
-            dialog.present(self.app.window)
-
-    def _on_delete_dialog_response(self, dialog, response):
-        """Handle delete confirmation dialog response."""
-        if response == "delete":
+        def response(_dialog, response_id):
+            if response_id != "delete":
+                return
             try:
-                # Delete the file from disk
                 os.remove(self.file_path)
-                logger.debug(f"Deleted file from disk: {self.file_path}")
-
-                # Remove from queue
                 self.on_remove_callback(self.file_path)
-            except OSError as e:
-                logger.error(f"Error deleting file: {e}")
-                # Show error dialog if app window is available
-                if self.app and hasattr(self.app, "window"):
-                    error_dialog = Adw.AlertDialog()
-                    error_dialog.set_heading(_("Error Deleting File"))
-                    error_dialog.set_body(_("Could not delete file: {}").format(str(e)))
-                    error_dialog.add_response("ok", _("OK"))
-                    error_dialog.present(self.app.window)
+            except OSError as error:
+                self.app.show_error_dialog(
+                    _("Could not delete the video: {} ").format(error)
+                )
+
+        dialog.connect("response", response)
+        dialog.present(self.app.window)
 
 
 class ConversionPage:
@@ -260,6 +309,10 @@ class ConversionPage:
         # Storage for per-file editing metadata
         # Key: file_path, Value: dict with trim, crop, adjustments
         self.file_metadata = {}
+        self.thumbnail_manager = ThumbnailManager(max_workers=2)
+        self._thumbnail_finalizer = weakref.finalize(
+            self, ThumbnailManager.shutdown, self.thumbnail_manager
+        )
 
         self.page = self._create_page()
 
@@ -271,123 +324,158 @@ class ConversionPage:
         return self.page
 
     def _create_page(self):
-        # Create page for conversion
-        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        page.set_spacing(16)
-        page.set_margin_start(6)
-        page.set_margin_end(6)
-        page.set_margin_top(12)
-        page.set_margin_bottom(12)
+        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         page.set_vexpand(True)
+        page.add_css_class("bvc-queue-page")
 
-        # ===== QUEUE SECTION FIRST =====
-        # Create a queue listbox with a scrolled window
+        main = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        main.set_margin_start(22)
+        main.set_margin_end(22)
+        main.set_margin_top(18)
+        main.set_margin_bottom(12)
+        main.set_vexpand(True)
+
+        hero = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        hero.add_css_class("bvc-hero")
+        eyebrow = Gtk.Label(label=_("CONVERSION QUEUE"))
+        eyebrow.set_xalign(0)
+        eyebrow.add_css_class("bvc-eyebrow")
+        hero.append(eyebrow)
+        title = Gtk.Label(label=_("Prepare every video with confidence"))
+        title.set_xalign(0)
+        title.set_wrap(True)
+        title.add_css_class("bvc-page-title")
+        hero.append(title)
+        description = Gtk.Label(
+            label=_(
+                "Use one simple recipe for the whole queue, then customize only "
+                "the videos that need a different profile or resolution."
+            )
+        )
+        description.set_xalign(0)
+        description.set_wrap(True)
+        description.add_css_class("bvc-subtle")
+        hero.append(description)
+        main.append(hero)
+
         queue_scroll = Gtk.ScrolledWindow()
         queue_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         queue_scroll.set_vexpand(True)
-        queue_scroll.set_min_content_height(300)  # Minimum height for better UX
+        queue_scroll.set_min_content_height(330)
 
-        # Create a listbox for the queue items
+        clamp = Adw.Clamp(maximum_size=1180, tightening_threshold=760)
         self.queue_listbox = Gtk.ListBox()
         self.queue_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.queue_listbox.set_show_separators(False)
+        self.queue_listbox.set_vexpand(True)
+        self.queue_listbox.add_css_class("bvc-queue-list")
         self.queue_listbox.connect("row-activated", self.on_queue_item_activated)
-        self.queue_listbox.add_css_class(
-            "boxed-list"
-        )  # Adwaita style for subtle border
 
-        # Create placeholder for empty queue
-        self.placeholder = Adw.StatusPage()
-        self.placeholder.set_icon_name("folder-videos-symbolic")
-        self.placeholder.set_title(_("No Video Files"))
-        self.placeholder.set_description(
-            _("Drag files here or use the Add Files button")
+        empty = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        empty.add_css_class("bvc-empty-state")
+        empty.set_halign(Gtk.Align.FILL)
+        empty.set_valign(Gtk.Align.CENTER)
+        empty.set_vexpand(True)
+        icon_frame = Gtk.Box()
+        icon_frame.add_css_class("bvc-empty-icon")
+        icon_frame.set_halign(Gtk.Align.CENTER)
+        icon = Gtk.Image.new_from_icon_name("folder-videos-symbolic")
+        icon.set_pixel_size(44)
+        icon_frame.append(icon)
+        empty.append(icon_frame)
+        empty_title = Gtk.Label(label=_("Start with the videos you want to convert"))
+        empty_title.add_css_class("title-1")
+        empty_title.set_wrap(True)
+        empty_title.set_justify(Gtk.Justification.CENTER)
+        empty.append(empty_title)
+        empty_text = Gtk.Label(
+            label=_(
+                "Drop files here, choose videos, or add a whole folder. "
+                "Nothing is changed until you start the conversion."
+            )
         )
-        self.placeholder.set_vexpand(True)
-        self.placeholder.set_hexpand(True)
-        self.queue_listbox.set_placeholder(self.placeholder)
+        empty_text.add_css_class("bvc-subtle")
+        empty_text.set_wrap(True)
+        empty_text.set_justify(Gtk.Justification.CENTER)
+        empty_text.set_max_width_chars(54)
+        empty.append(empty_text)
+        empty_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        empty_actions.set_halign(Gtk.Align.CENTER)
+        choose = Gtk.Button(label=_("Choose videos"))
+        choose.add_css_class("suggested-action")
+        choose.add_css_class("bvc-primary")
+        choose.connect("clicked", lambda _b: self.app.select_files_for_queue())
+        empty_actions.append(choose)
+        folder = Gtk.Button(label=_("Add a folder"))
+        folder.add_css_class("bvc-secondary")
+        folder.connect("clicked", lambda _b: self.app.select_folder_for_queue())
+        empty_actions.append(folder)
+        empty.append(empty_actions)
+        self.placeholder = empty
+        self.queue_listbox.set_placeholder(empty)
+        clamp.set_child(self.queue_listbox)
+        queue_scroll.set_child(clamp)
+        main.append(queue_scroll)
+        page.append(main)
 
-        queue_scroll.set_child(self.queue_listbox)
-
-        # Single instance of dragged row tracker
         self.dragged_row = None
         self.queue_dragging_enabled = False
 
-        # Add queue to main content
-        page.append(queue_scroll)
+        tray = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        tray.add_css_class("bvc-action-tray")
 
-        # Create a single-row layout for output folder and delete original
-        options_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        options_box.set_spacing(12)
-        options_box.set_margin_top(16)
-        options_box.set_vexpand(False)  # Ensure this doesn't steal space
+        save_label = Gtk.Label(label=_("Save converted videos"))
+        save_label.add_css_class("bvc-body-strong")
+        save_label.set_valign(Gtk.Align.CENTER)
+        tray.append(save_label)
 
-        # Create ComboBox for folder options
-        folder_options_store = Gtk.StringList()
-        folder_options_store.append(_("Save in the same folder as the original file"))
-        folder_options_store.append(_("Folder to save"))
-
-        self.folder_combo = Gtk.DropDown()
-        self.folder_combo.set_model(folder_options_store)
-        self.folder_combo.set_selected(0)  # Default to "Same as input"
+        folder_options_store = Gtk.StringList.new([
+            _("Next to each original"),
+            _("In one folder"),
+        ])
+        self.folder_combo = Gtk.DropDown(model=folder_options_store)
+        self.folder_combo.set_selected(0)
         self.folder_combo.set_valign(Gtk.Align.CENTER)
-        options_box.append(self.folder_combo)
+        self.folder_combo.connect("notify::selected", self._on_folder_type_changed)
+        tray.append(self.folder_combo)
 
-        # Folder entry box (container that can be shown/hidden)
-        self.folder_entry_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.folder_entry_box.set_spacing(4)
-        self.folder_entry_box.set_visible(False)  # Initially hidden
+        self.folder_entry_box = Gtk.Box(
+            orientation=Gtk.Orientation.HORIZONTAL, spacing=6
+        )
+        self.folder_entry_box.set_visible(False)
         self.folder_entry_box.set_hexpand(True)
-
-        # Output folder entry
         self.output_folder_entry = Gtk.Entry()
         self.output_folder_entry.set_hexpand(True)
-        self.output_folder_entry.set_placeholder_text(_("Select folder"))
+        self.output_folder_entry.set_placeholder_text(_("Choose an output folder"))
         self.folder_entry_box.append(self.output_folder_entry)
-
-        # Folder button
-        folder_button = Gtk.Button()
-        folder_button.set_icon_name("folder-symbolic")
-        folder_button.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Choose output folder")],
+        choose_folder = Gtk.Button.new_from_icon_name("folder-open-symbolic")
+        choose_folder.add_css_class("bvc-icon-button")
+        choose_folder.set_tooltip_text(_("Choose output folder"))
+        choose_folder.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Choose output folder")]
         )
-        folder_button.connect("clicked", self.on_folder_button_clicked)
-        folder_button.add_css_class("flat")
-        folder_button.add_css_class("circular")
-        folder_button.set_valign(Gtk.Align.CENTER)
-        self.folder_entry_box.append(folder_button)
+        choose_folder.connect("clicked", self.on_folder_button_clicked)
+        self.folder_entry_box.append(choose_folder)
+        tray.append(self.folder_entry_box)
 
-        options_box.append(self.folder_entry_box)
-
-        # Connect combo box signal
-        self.folder_combo.connect("notify::selected", self._on_folder_type_changed)
-
-        # Create a spacer to push delete controls to the right
         spacer = Gtk.Box()
         spacer.set_hexpand(True)
-        options_box.append(spacer)
+        tray.append(spacer)
 
-        # Delete original checkbox - now aligned to the right
-        delete_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        delete_box.set_spacing(8)
-        delete_box.set_halign(Gtk.Align.END)
-
-        delete_label = Gtk.Label(label=_("Delete original files"))
-        delete_label.set_halign(Gtk.Align.END)
-        delete_label.set_valign(Gtk.Align.CENTER)
+        delete_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        delete_box.set_valign(Gtk.Align.CENTER)
+        delete_label = Gtk.Label(label=_("Delete originals after verification"))
+        delete_label.set_tooltip_text(
+            _("Originals are kept unless every converted result passes validation")
+        )
         delete_box.append(delete_label)
-
         self.delete_original_check = Gtk.Switch()
         self.delete_original_check.set_valign(Gtk.Align.CENTER)
         delete_box.append(self.delete_original_check)
+        tray.append(delete_box)
+        page.append(tray)
 
-        options_box.append(delete_box)
-
-        page.append(options_box)
-
-        # Update the queue display initially
         self.update_queue_display()
-
         return page
 
     def _connect_settings(self):
@@ -454,8 +542,9 @@ class ConversionPage:
             logger.error(f"Error selecting folder: {e}")
 
     def on_queue_item_activated(self, listbox, row) -> None:
-        """Handle selection of a queue item - disabled since rows are not activatable."""
-        pass
+        """Open the editor when the user activates a queue card."""
+        if row and getattr(row, "file_path", None):
+            self.on_edit_file_by_path(row.file_path)
 
     def update_queue_display(self) -> None:
         """Update the queue display with current items"""
@@ -467,6 +556,8 @@ class ConversionPage:
         while True:
             row = self.queue_listbox.get_first_child()
             if row:
+                if hasattr(row, "dispose_thumbnail"):
+                    row.dispose_thumbnail()
                 self.queue_listbox.remove(row)
             else:
                 break
@@ -480,6 +571,10 @@ class ConversionPage:
             if not os.path.exists(file_path):
                 continue
 
+            self.file_metadata[file_path] = normalize_metadata(
+                self.file_metadata.get(file_path)
+            )
+
             # Create modern ActionRow for the file
             row = FileQueueRow(
                 file_path=file_path,
@@ -488,6 +583,9 @@ class ConversionPage:
                 on_play_callback=self.on_play_file_by_path,
                 on_edit_callback=self.on_edit_file_by_path,
                 on_info_callback=self.on_show_file_info_by_path,
+                on_options_callback=self.on_file_options_by_path,
+                metadata=self.file_metadata[file_path],
+                thumbnail_manager=self.thumbnail_manager,
                 app=self.app,
             )
             row.file_path = file_path  # Store for drag and drop
@@ -1608,6 +1706,157 @@ class ConversionPage:
     def on_show_file_info_by_path(self, file_path: str) -> None:
         """Show file info (callback for FileQueueRow)"""
         self.on_show_file_info(None, file_path)
+
+    def on_file_options_by_path(self, file_path: str) -> None:
+        """Choose a preset and resolution for one queue item."""
+
+        from utils.presets import list_presets
+
+        metadata = normalize_metadata(self.file_metadata.get(file_path))
+        presets = list_presets()
+
+        dialog = Adw.AlertDialog()
+        dialog.set_heading(_("Options for this video"))
+        dialog.set_body(
+            _(
+                "Override the general recipe only when this video needs a "
+                "different destination profile or size."
+            )
+        )
+        if hasattr(dialog, "set_prefer_wide_layout"):
+            dialog.set_prefer_wide_layout(True)
+
+        content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
+        content.set_size_request(520, -1)
+        content.set_margin_top(8)
+
+        group = Adw.PreferencesGroup()
+        group.set_title(_("Effective result"))
+        group.set_description(
+            _("General settings remain the default for every other video.")
+        )
+
+        preset_names = [_("Use the general recipe")] + [
+            preset.display_name for preset in presets
+        ]
+        preset_row = Adw.ComboRow(
+            title=_("Profile"),
+            subtitle=_("Target a platform or workflow"),
+            model=Gtk.StringList.new(preset_names),
+        )
+        selected_preset = 0
+        for index, preset in enumerate(presets, start=1):
+            if preset.id == metadata.get("preset_id"):
+                selected_preset = index
+                break
+        preset_row.set_selected(selected_preset)
+        group.add(preset_row)
+
+        resolution_labels = [
+            _("Use the general resolution"),
+            _("Use the profile resolution"),
+            _("Keep the original resolution"),
+            "4K · 3840×2160",
+            "QHD · 2560×1440",
+            "Full HD · 1920×1080",
+            "HD · 1280×720",
+            "SD · 854×480",
+            "Vertical 4K · 2160×3840",
+            "Vertical QHD · 1440×2560",
+            "Vertical Full HD · 1080×1920",
+            "Vertical HD · 720×1280",
+            "Vertical SD · 480×854",
+            _("Custom size"),
+        ]
+        resolution_row = Adw.ComboRow(
+            title=_("Resolution"),
+            subtitle=_("Controls image dimensions and file size"),
+            model=Gtk.StringList.new(resolution_labels),
+        )
+        try:
+            resolution_row.set_selected(
+                RESOLUTION_MODES.index(metadata.get("resolution_mode", "global"))
+            )
+        except ValueError:
+            resolution_row.set_selected(0)
+        group.add(resolution_row)
+
+        width_spin = Gtk.SpinButton.new_with_range(16, 16384, 2)
+        width_spin.set_value(metadata.get("custom_width") or 1280)
+        width_row = Adw.ActionRow(title=_("Width"), subtitle=_("Even pixels"))
+        width_row.add_suffix(width_spin)
+        group.add(width_row)
+
+        height_spin = Gtk.SpinButton.new_with_range(16, 16384, 2)
+        height_spin.set_value(metadata.get("custom_height") or 720)
+        height_row = Adw.ActionRow(title=_("Height"), subtitle=_("Even pixels"))
+        height_row.add_suffix(height_spin)
+        group.add(height_row)
+
+        preview = Adw.ActionRow(title=_("This video will use"))
+        preview_value = Gtk.Label()
+        preview_value.add_css_class("bvc-profile-chip")
+        preview.add_suffix(preview_value)
+        group.add(preview)
+
+        content.append(group)
+        dialog.set_extra_child(content)
+
+        def refresh(*_args):
+            custom = resolution_row.get_selected() == len(RESOLUTION_MODES) - 1
+            width_row.set_visible(custom)
+            height_row.set_visible(custom)
+            temporary = dict(metadata)
+            temporary["resolution_mode"] = RESOLUTION_MODES[
+                resolution_row.get_selected()
+            ]
+            temporary["custom_width"] = int(width_spin.get_value())
+            temporary["custom_height"] = int(height_spin.get_value())
+            selected = preset_row.get_selected()
+            temporary["preset_snapshot"] = (
+                {"name": presets[selected - 1].display_name}
+                if selected
+                else None
+            )
+            preview_value.set_text(_(summary(temporary)))
+
+        preset_row.connect("notify::selected", refresh)
+        resolution_row.connect("notify::selected", refresh)
+        width_spin.connect("value-changed", refresh)
+        height_spin.connect("value-changed", refresh)
+        refresh()
+
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("save", _("Apply to this video"))
+        dialog.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
+        dialog.set_default_response("save")
+        dialog.set_close_response("cancel")
+
+        def response(_dialog, response_id):
+            if response_id != "save":
+                return
+            selected = preset_row.get_selected()
+            if selected:
+                chosen = presets[selected - 1]
+                metadata["preset_id"] = chosen.id
+                metadata["preset_snapshot"] = snapshot_preset(chosen)
+            else:
+                metadata["preset_id"] = None
+                metadata["preset_snapshot"] = None
+            metadata["resolution_mode"] = RESOLUTION_MODES[
+                resolution_row.get_selected()
+            ]
+            if metadata["resolution_mode"] == "custom":
+                metadata["custom_width"] = int(width_spin.get_value())
+                metadata["custom_height"] = int(height_spin.get_value())
+            else:
+                metadata["custom_width"] = None
+                metadata["custom_height"] = None
+            self.file_metadata[file_path] = normalize_metadata(metadata)
+            self.update_queue_display()
+
+        dialog.connect("response", response)
+        dialog.present(self.app.window)
 
     def generate_trim_options(self):
         """

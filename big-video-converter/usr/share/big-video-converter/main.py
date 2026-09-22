@@ -26,6 +26,7 @@ from ui.conversion_page import ConversionPage
 from ui.dependency_dialog import InstallDependencyDialog
 from ui.header_bar import HeaderBar
 from ui.progress_page import ProgressPage
+from ui.premium_style import install as install_premium_style
 from ui.video_edit_page import VideoEditPage
 from ui.welcome_dialog import WelcomeDialog
 from utils.dependency_checker import DependencyChecker
@@ -277,9 +278,12 @@ class VideoConverterApp(
 
     def _create_window(self):
         """Create the main application window and UI components"""
+        install_premium_style()
+
         # Create main window
         self.window = Adw.ApplicationWindow(application=self)
         self.window.add_css_class("big-video-converter")
+        self.window.add_css_class("bvc-shell")
 
         # Set minimum window size to prevent controls from being cut off
         # Left sidebar (300px) + right content (620px) = 920px minimum width
@@ -323,31 +327,6 @@ class VideoConverterApp(
         # Prevent panes from shrinking below their minimum size
         self.main_paned.set_shrink_start_child(False)
         self.main_paned.set_shrink_end_child(False)
-
-        # Create CSS for sidebar styling
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(
-            b"""
-        .sidebar {
-            background-color: @sidebar_bg_color;
-        }
-        .warning-banner {
-            background-color: alpha(@warning_color, 0.25);
-            color: @warning_color;
-        }
-        .chip {
-            background-color: alpha(@accent_bg_color, 0.12);
-            border-radius: 999px;
-            padding: 1px 8px;
-        }
-        """,
-            -1,
-        )
-        Gtk.StyleContext.add_provider_for_display(
-            Gdk.Display.get_default(),
-            css_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-        )
 
         # Create left and right panes with ToolbarViews
         self._create_left_pane()

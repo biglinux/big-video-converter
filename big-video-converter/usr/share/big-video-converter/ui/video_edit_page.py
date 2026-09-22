@@ -21,6 +21,7 @@ from ui.video_processing import VideoProcessor
 from utils.video_settings import (
     VideoAdjustmentManager,
 )
+from utils.crop_geometry import ASPECT_RATIOS, centered_crop
 
 import logging
 
@@ -50,12 +51,14 @@ class VideoEditPage:
         self.crop_top = 0
         self.crop_bottom = 0
         self.brightness = 0.0
+        self.contrast = 0.0
         self.saturation = 1.0
         self.hue = 0.0
         self.rotation = 0
         self.flip_h = False
         self.flip_v = False
         self.crop_edit_mode = False
+        self.crop_aspect = "free"
         # Load default output mode from settings (last used by user)
         self.output_mode = self.settings.get_value("multi-segment-output-mode", "join")
         self.processor = VideoProcessor(self)
@@ -139,6 +142,7 @@ class VideoEditPage:
                 "rotation": 0,
                 "flip_h": False,
                 "flip_v": False,
+                "crop_aspect": "free",
                 "output_mode": default_output_mode,
             }
             metadata = self.app_state.file_metadata[file_path]
@@ -152,11 +156,13 @@ class VideoEditPage:
         self.crop_top = metadata.get("crop_top", 0)
         self.crop_bottom = metadata.get("crop_bottom", 0)
         self.brightness = metadata.get("brightness", 0.0)
+        self.contrast = metadata.get("contrast", 0.0)
         self.saturation = metadata.get("saturation", 1.0)
         self.hue = metadata.get("hue", 0.0)
         self.rotation = metadata.get("rotation", 0)
         self.flip_h = metadata.get("flip_h", False)
         self.flip_v = metadata.get("flip_v", False)
+        self.crop_aspect = metadata.get("crop_aspect", "free")
         self.output_mode = metadata.get("output_mode", default_output_mode)
         self._update_ui_from_metadata()
         self._update_segments_listbox()
@@ -166,6 +172,8 @@ class VideoEditPage:
         # Update UI sliders to reflect current video's values
         if hasattr(self.ui, "brightness_scale"):
             self.ui.brightness_scale.set_value(self.brightness)
+        if hasattr(self.ui, "contrast_scale"):
+            self.ui.contrast_scale.set_value(self.contrast)
         if hasattr(self.ui, "saturation_scale"):
             self.ui.saturation_scale.set_value(self.saturation)
         if hasattr(self.ui, "hue_scale"):
@@ -176,12 +184,21 @@ class VideoEditPage:
             output_mode_index = {"join": 0, "split": 1}.get(self.output_mode, 0)
             self.ui.output_mode_combo.set_selected(output_mode_index)
 
+        if hasattr(self.ui, "crop_aspect_combo"):
+            aspect_values = tuple(ASPECT_RATIOS)
+            try:
+                aspect_index = aspect_values.index(self.crop_aspect)
+            except ValueError:
+                aspect_index = 0
+            self.ui.crop_aspect_combo.set_selected(aspect_index)
+
         # Update crop spinbuttons
         self.update_crop_spinbuttons()
 
         # Apply values to MPV player
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_brightness(self.brightness)
+            self.mpv_player.set_contrast(self.contrast)
             self.mpv_player.set_saturation(self.saturation)
             self.mpv_player.set_hue(self.hue)
             self.mpv_player.set_crop(
@@ -206,11 +223,13 @@ class VideoEditPage:
             "crop_top": self.crop_top,
             "crop_bottom": self.crop_bottom,
             "brightness": self.brightness,
+            "contrast": self.contrast,
             "saturation": self.saturation,
             "hue": self.hue,
             "rotation": self.rotation,
             "flip_h": self.flip_h,
             "flip_v": self.flip_v,
+            "crop_aspect": self.crop_aspect,
             "output_mode": self.output_mode,
         })
         self.app_state.file_metadata[self.current_video_path] = metadata
@@ -309,6 +328,12 @@ class VideoEditPage:
             # if not self.is_playing:
             #     self._refresh_preview()
 
+    def on_contrast_changed(self, scale) -> None:
+        self.contrast = scale.get_value()
+        self._sync_file_metadata()
+        if getattr(self, "mpv_player", None):
+            self.mpv_player.set_contrast(self.contrast)
+
     def on_crop_value_changed(self, spinbutton) -> None:
         """Handle crop value changes - ensures preview updates immediately"""
         if getattr(self, "_updating_crop_spins", False):
@@ -320,6 +345,10 @@ class VideoEditPage:
         right = self.ui.crop_right_spin.get_value()
         top = self.ui.crop_top_spin.get_value()
         bottom = self.ui.crop_bottom_spin.get_value()
+
+        self.crop_aspect = "free"
+        if hasattr(self.ui, "crop_aspect_combo"):
+            self.ui.crop_aspect_combo.set_selected(0)
 
         # Update instance variables
         self.crop_left = left
@@ -338,6 +367,65 @@ class VideoEditPage:
         else:
             # Apply crop to MPV only when not in edit mode
             self.mpv_player.set_crop(left, right, top, bottom)
+
+    def on_crop_aspect_changed(self, combo, _pspec=None) -> None:
+        if getattr(self, "_updating_crop_aspect", False):
+            return
+        values = tuple(ASPECT_RATIOS)
+        selected = combo.get_selected()
+        if selected >= len(values):
+            return
+        self.crop_aspect = values[selected]
+        if self.crop_aspect in {"free", "original"}:
+            if self.crop_aspect == "original":
+                self.crop_left = self.crop_right = 0
+                self.crop_top = self.crop_bottom = 0
+                self._apply_crop_state()
+            self._save_file_metadata()
+            return
+        if self.video_width <= 1 or self.video_height <= 1:
+            return
+        margins = centered_crop(
+            self.video_width,
+            self.video_height,
+            self.crop_aspect,
+            rotation=self.rotation,
+        )
+        (
+            self.crop_left,
+            self.crop_right,
+            self.crop_top,
+            self.crop_bottom,
+        ) = margins
+        self._apply_crop_state()
+        self._save_file_metadata()
+
+    def _apply_crop_state(self) -> None:
+        self._updating_crop_spins = True
+        try:
+            self.update_crop_spinbuttons()
+        finally:
+            self._updating_crop_spins = False
+        if self.crop_edit_mode:
+            self.ui.crop_overlay.set_crop_values(
+                int(self.crop_left),
+                int(self.crop_right),
+                int(self.crop_top),
+                int(self.crop_bottom),
+            )
+        elif getattr(self, "mpv_player", None):
+            self.mpv_player.set_crop(
+                self.crop_left,
+                self.crop_right,
+                self.crop_top,
+                self.crop_bottom,
+            )
+
+    def _reapply_crop_aspect(self) -> None:
+        if self.crop_aspect in {"free", "original"}:
+            return
+        if hasattr(self.ui, "crop_aspect_combo"):
+            self.on_crop_aspect_changed(self.ui.crop_aspect_combo)
 
     def on_crop_edit_toggled(self, active: bool) -> None:
         """Toggle visual crop editor mode."""
@@ -399,6 +487,9 @@ class VideoEditPage:
         self, left: int, right: int, top: int, bottom: int
     ) -> None:
         """Called when user drags crop boundaries on the overlay."""
+        self.crop_aspect = "free"
+        if hasattr(self.ui, "crop_aspect_combo"):
+            self.ui.crop_aspect_combo.set_selected(0)
         self.crop_left = left
         self.crop_right = right
         self.crop_top = top
@@ -419,6 +510,7 @@ class VideoEditPage:
         self._save_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_rotation(self.rotation)
+        self._reapply_crop_aspect()
 
     def on_flip(self, direction: str) -> None:
         """Toggle horizontal or vertical flip."""
@@ -440,6 +532,7 @@ class VideoEditPage:
             self.mpv_player.set_rotation(0)
             self.mpv_player.set_video_flip(False, False)
         self._update_flip_button_state()
+        self._reapply_crop_aspect()
 
     def _update_flip_button_state(self) -> None:
         """Update flip button appearance to show active state."""
@@ -864,6 +957,15 @@ class VideoEditPage:
         self._save_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_brightness(self.brightness)
+            if not self.is_playing:
+                self._refresh_preview()
+
+    def reset_contrast(self) -> None:
+        self.contrast = 0.0
+        self.ui.contrast_scale.set_value(self.contrast)
+        self._save_file_metadata()
+        if getattr(self, "mpv_player", None):
+            self.mpv_player.set_contrast(self.contrast)
             if not self.is_playing:
                 self._refresh_preview()
 

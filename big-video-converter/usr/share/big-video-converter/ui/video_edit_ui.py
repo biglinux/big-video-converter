@@ -24,33 +24,23 @@ class VideoEditUI:
         # Main container with a vertical layout. Top (video) expands, bottom (toolbar) is fixed.
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         page.set_vexpand(True)
+        page.add_css_class("bvc-editor-page")
+        page.set_spacing(14)
+        page.set_margin_start(18)
+        page.set_margin_end(18)
+        page.set_margin_top(14)
+        page.set_margin_bottom(14)
 
         # TOP: Video preview area
         self.video_overlay = Gtk.Overlay()
         self.video_overlay.set_vexpand(True)
         self.video_overlay.set_hexpand(True)
+        self.video_overlay.add_css_class("bvc-editor-stage")
 
         video_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         video_box.set_vexpand(True)
         video_box.set_hexpand(True)
         video_box.set_size_request(-1, 300)
-
-        css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(b".video-background { background-color: #000; }")
-        display = (
-            self.page.app.get_display()
-            if hasattr(self.page.app, "get_display")
-            else None
-        )
-        if display is None:
-            from gi.repository import Gdk
-
-            display = Gdk.Display.get_default()
-        if display:
-            Gtk.StyleContext.add_provider_for_display(
-                display, css_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER
-            )
-        video_box.add_css_class("video-background")
 
         # Video player widget - choose based on rendering mode
         # X11 mode: Use DrawingArea for X11 window embedding (better VM compatibility)
@@ -94,6 +84,7 @@ class VideoEditUI:
         controls_container.set_margin_bottom(12)
         controls_container.add_css_class("osd")
         controls_container.add_css_class("toolbar")
+        controls_container.add_css_class("bvc-editor-toolbar")
 
         slider_overlay = Gtk.Overlay()
 
@@ -134,6 +125,7 @@ class VideoEditUI:
             [_("Mark segment point")],
         )
         mark_button.connect("clicked", self.page.on_mark_segment_point)
+        mark_button.add_css_class("bvc-icon-button")
         button_row.append(mark_button)
 
         # --- Feedback for marking ---
@@ -150,6 +142,7 @@ class VideoEditUI:
         self.mark_cancel_button.add_css_class("flat")
         self.mark_cancel_button.connect("clicked", self.page.on_mark_cancel)
         self.mark_cancel_button.set_visible(False)
+        self.mark_cancel_button.add_css_class("bvc-icon-button")
         button_row.append(self.mark_cancel_button)
 
         button_row.append(
@@ -168,6 +161,7 @@ class VideoEditUI:
             [_("Back 1 second")],
         )
         seek_back_button.connect("clicked", lambda b: self.page.seek_relative(-1))
+        seek_back_button.add_css_class("bvc-icon-button")
         button_row.append(seek_back_button)
 
         prev_frame_button = Gtk.Button(
@@ -183,6 +177,7 @@ class VideoEditUI:
                 -1 / self.page.video_fps if self.page.video_fps > 0 else -1 / 25
             ),
         )
+        prev_frame_button.add_css_class("bvc-icon-button")
         button_row.append(prev_frame_button)
 
         # Playback controls
@@ -195,6 +190,7 @@ class VideoEditUI:
             [_("Play/Pause")],
         )
         self.play_pause_button.connect("clicked", self.page.on_play_pause_clicked)
+        self.play_pause_button.add_css_class("bvc-icon-button")
         button_row.append(self.play_pause_button)
 
         next_frame_button = Gtk.Button(
@@ -210,6 +206,7 @@ class VideoEditUI:
                 1 / self.page.video_fps if self.page.video_fps > 0 else 1 / 25
             ),
         )
+        next_frame_button.add_css_class("bvc-icon-button")
         button_row.append(next_frame_button)
 
         seek_fwd_button = Gtk.Button(
@@ -221,6 +218,7 @@ class VideoEditUI:
             [_("Forward 1 second")],
         )
         seek_fwd_button.connect("clicked", lambda b: self.page.seek_relative(1))
+        seek_fwd_button.add_css_class("bvc-icon-button")
         button_row.append(seek_fwd_button)
 
         # Playback speed button with popover
@@ -267,6 +265,7 @@ class VideoEditUI:
         )
         self.audio_track_menu = Gio.Menu()
         self.audio_track_button.set_menu_model(self.audio_track_menu)
+        self.audio_track_button.add_css_class("bvc-icon-button")
         button_row.append(self.audio_track_button)
 
         self.subtitle_button = Gtk.MenuButton(
@@ -278,6 +277,7 @@ class VideoEditUI:
         )
         self.subtitle_menu = Gio.Menu()
         self.subtitle_button.set_menu_model(self.subtitle_menu)
+        self.subtitle_button.add_css_class("bvc-icon-button")
         button_row.append(self.subtitle_button)
 
         # Spacer to push fullscreen to the right
@@ -294,6 +294,7 @@ class VideoEditUI:
             [_("Toggle Fullscreen")],
         )
         self.fullscreen_button.connect("clicked", self.page.on_toggle_fullscreen)
+        self.fullscreen_button.add_css_class("bvc-icon-button")
         button_row.append(self.fullscreen_button)
 
         controls_container.append(button_row)
@@ -332,6 +333,7 @@ class VideoEditUI:
         toolbar_box.set_margin_top(6)
         toolbar_box.set_margin_bottom(6)
         toolbar_box.add_css_class("toolbar")
+        toolbar_box.add_css_class("bvc-editor-inspector")
 
         # --- Crop Controls ---
         crop_grid = Gtk.Grid(column_spacing=12, row_spacing=4)
@@ -370,6 +372,29 @@ class VideoEditUI:
 
         crop_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         crop_box.append(crop_grid)
+
+        aspect_model = Gtk.StringList.new([
+            _("Free"),
+            _("Original"),
+            "16:9",
+            "9:16",
+            "1:1",
+            "4:5",
+            "3:2",
+            "2.39:1",
+        ])
+        self.crop_aspect_combo = Gtk.DropDown(model=aspect_model)
+        self.crop_aspect_combo.set_tooltip_text(_("Crop aspect ratio"))
+        self.crop_aspect_combo.update_property(
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Crop aspect ratio")],
+        )
+        self.crop_aspect_combo.connect(
+            "notify::selected", self.page.on_crop_aspect_changed
+        )
+        crop_box.append(self.crop_aspect_combo)
+
+        self.crop_edit_btn.add_css_class("bvc-icon-button")
         crop_box.append(self.crop_edit_btn)
 
         # Add tooltip to crop grid
@@ -497,6 +522,8 @@ class VideoEditUI:
 
         # --- Video Adjustments Group ---
         adjust_group = Adw.PreferencesGroup()
+        adjust_group.set_title(_("Image"))
+        adjust_group.set_description(_("Fine-tune the look only when the source needs it."))
         self.adjust_group = adjust_group  # Store reference for enable/disable
 
         self.brightness_scale, brightness_row = self._create_adjustment_row(
@@ -514,6 +541,17 @@ class VideoEditUI:
         # Add tooltip to brightness row
         if brightness_row and hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(brightness_row, "brightness")
+
+        self.contrast_scale, contrast_row = self._create_adjustment_row(
+            adjust_group,
+            _("Contrast"),
+            -1.0,
+            1.0,
+            0.0,
+            self.page.on_contrast_changed,
+            self.page.reset_contrast,
+        )
+        self.contrast_row = contrast_row
 
         self.saturation_scale, saturation_row = self._create_adjustment_row(
             adjust_group,
@@ -549,6 +587,8 @@ class VideoEditUI:
 
         # --- Rotation / Flip Group ---
         transform_group = Adw.PreferencesGroup()
+        transform_group.set_title(_("Orientation"))
+        transform_group.set_description(_("Rotate or mirror the picture without changing the source file."))
         self.transform_group = transform_group
 
         transform_row = Adw.ActionRow(title=_("Transform"))
@@ -780,6 +820,8 @@ class VideoEditUI:
             [_("Reset to default")],
         )
         reset_button.connect("clicked", lambda b: on_reset())
+        reset_button.add_css_class("flat")
+        reset_button.add_css_class("bvc-icon-button")
 
         box.append(scale)
         box.append(reset_button)
