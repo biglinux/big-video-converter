@@ -1,0 +1,48 @@
+name: Publish R1 capture diagnostics
+
+on:
+  push:
+    branches:
+      - review/uiux-materialized-r1-20260922
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: bvc-uiux-r1-libadwaita-1.9.4-bf138ca03b68c4cfe1c883efa49445102f1650ee
+          path: _capture
+          github-token: ${{ github.token }}
+          repository: biglinux/big-video-converter
+          run-id: 35690359097
+
+      - name: Publish text diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p docs/reviews/diagnostics/r1
+          find _capture -type f -maxdepth 4 -printf '%p\n' \
+            | sort > docs/reviews/diagnostics/r1/artifact-files.txt
+          find _capture -type f \
+            \( -name '*.txt' -o -name '*.log' -o -name '*.json' \) \
+            -exec cp -f {} docs/reviews/diagnostics/r1/ \;
+          rm -rf _capture
+          git config user.name 'Big Video Converter review'
+          git config user.email 'review@example.invalid'
+          git add docs/reviews/diagnostics/r1
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m 'docs(review): preserve R1 capture diagnostics'
+          git push origin HEAD:review/uiux-materialized-r1-20260922
