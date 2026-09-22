@@ -148,6 +148,26 @@ class ProgressPageTests(unittest.TestCase):
             "Show technical details",
         )
 
+    def test_semantic_status_text_uses_readable_theme_colors(self):
+        css = (
+            ROOT
+            / "big-video-converter/usr/share/big-video-converter/ui/premium.css"
+        ).read_text(encoding="utf-8")
+        expected = {
+            "active": "accent_color",
+            "success": "success_color",
+            "error": "error_color",
+            "warning": "warning_color",
+        }
+        for status, color in expected.items():
+            with self.subTest(status=status):
+                rule = (
+                    f".bvc-progress-card .status-{status} {{\n"
+                    f"  color: @{color};\n"
+                    "}"
+                )
+                self.assertIn(rule, css)
+
     def test_progress_states_are_part_of_visual_evidence_matrix(self):
         demo = (ROOT / "tools/ui_demo.py").read_text(encoding="utf-8")
         workflow = (
