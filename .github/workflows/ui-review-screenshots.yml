@@ -32,12 +32,20 @@ jobs:
           dnf -y install \
             git patch tar xz findutils coreutils procps-ng which \
             python3 python3-gobject python3-cairo python3-pip python3-pytest \
-            python3-pillow python3-pyopengl \
+            python3-pillow \
             gtk4 libadwaita adwaita-icon-theme google-cantarell-fonts \
             vte291-gtk4 mpv mpv-libs ffmpeg-free \
-            xorg-x11-server-Xvfb xauth xdotool openbox dbus-x11 \
-            ImageMagick gnome-screenshot gettext
-          python3 -m pip install --disable-pip-version-check --no-input python-mpv
+            xorg-x11-server-Xvfb xorg-x11-xauth xorg-x11-utils \
+            xdotool openbox ImageMagick gettext \
+            mesa-dri-drivers mesa-libGL mesa-libEGL dejavu-sans-fonts
+          dnf -y install --skip-unavailable dbus-x11 gnome-screenshot
+          python3 -m pip install --disable-pip-version-check --no-input \
+            python-mpv PyOpenGL
+          command -v Xvfb
+          command -v xdpyinfo
+          command -v xdotool
+          command -v openbox
+          command -v identify
 
       - name: Check out review branch
         uses: actions/checkout@v4
