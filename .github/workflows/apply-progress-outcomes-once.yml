@@ -1,0 +1,125 @@
+name: Apply progress outcome patch once
+
+on:
+  push:
+    branches:
+      - review/progress-outcomes-r3-20260922
+    paths:
+      - .github/workflows/apply-progress-outcomes-once.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apply-progress-outcomes-r3
+  cancel-in-progress: false
+
+jobs:
+  patch-and-test:
+    runs-on: ubuntu-24.04
+    container:
+      image: debian:13-slim
+    timeout-minutes: 30
+    env:
+      DEBIAN_FRONTEND: noninteractive
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      GDK_BACKEND: x11
+      GSK_RENDERER: opengl
+      PYTHONUNBUFFERED: "1"
+      PYTHONFAULTHANDLER: "1"
+    steps:
+      - name: Install regression runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! { apt-get update && apt-get install -y --no-install-recommends \
+            git ca-certificates bash shellcheck gettext ffmpeg \
+            python3 python3-pytest python3-gi python3-gi-cairo python3-cairo \
+            python3-mpv python3-opengl python3-numpy python3-polib \
+            gsettings-desktop-schemas at-spi2-core \
+            gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-vte-3.91 \
+            libmpv2 libgl1-mesa-dri libegl1 xauth xvfb dbus-x11; \
+            } > /tmp/bvc-apt.log 2>&1; then
+            tail -n 120 /tmp/bvc-apt.log
+            exit 1
+          fi
+          echo "Regression runtime installed."
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Apply reviewed source patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          python3 tools/apply_progress_outcomes_r3.py
+          rm -f \
+            tools/apply_progress_outcomes_r3.py \
+            .github/workflows/apply-progress-outcomes-once.yml
+          test ! -e tools/apply_progress_outcomes_r3.py
+          test ! -e .github/workflows/apply-progress-outcomes-once.yml
+          git diff --check
+
+      - name: Validate syntax and full regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 --version | tee ci-progress-runtime.log
+          python3 -m pytest --version | tee -a ci-progress-runtime.log
+          python3 -m compileall -q \
+            big-video-converter/usr/share/big-video-converter \
+            tests tools/ui_demo.py
+          export XDG_RUNTIME_DIR
+          XDG_RUNTIME_DIR="$(mktemp -d)"
+          trap 'rm -rf -- "$XDG_RUNTIME_DIR"' EXIT
+          chmod 700 "$XDG_RUNTIME_DIR"
+          timeout --signal=TERM --kill-after=20s 20m \
+            xvfb-run -a -e /dev/stderr -s '-screen 0 1440x1000x24' \
+            dbus-run-session -- \
+            python3 -X faulthandler -m pytest \
+              -vv --capture=tee-sys tests --junitxml=results.xml \
+              2>&1 | tee pytest.log
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse('results.xml').getroot()
+          suites = [root] if root.tag == 'testsuite' else list(root.iter('testsuite'))
+          counts = {key: sum(int(s.get(key, 0)) for s in suites)
+                    for key in ('tests', 'failures', 'errors', 'skipped')}
+          print(counts)
+          if not counts['tests'] or any(counts[key] for key in ('failures', 'errors', 'skipped')):
+              raise SystemExit('Expected all regressions to pass without skips.')
+          PY
+
+      - name: Preserve validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: progress-outcomes-r3-${{ github.sha }}
+          path: |
+            results.xml
+            pytest.log
+            ci-progress-runtime.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Commit only the tested tree
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . -type d -name __pycache__ -prune -exec rm -rf {} +
+          rm -rf .pytest_cache results.xml pytest.log ci-progress-runtime.log
+          git diff --check
+          git status --short
+          git config user.name 'Big Video Converter review'
+          git config user.email 'review@example.invalid'
+          git add -A
+          test -n "$(git diff --cached --name-only)"
+          git commit -m 'fix(ui): report queue outcomes precisely'
+          remote_head=$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | cut -f1)
+          test "$remote_head" = "$GITHUB_SHA"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
