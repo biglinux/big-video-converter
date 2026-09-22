@@ -1,13 +1,14 @@
 name: Materialize contextual audio and noise review
 
 on:
-  push:
-    branches:
-      - review/uiux-materialized-r2-20260922
   workflow_dispatch:
 
 permissions:
   contents: write
+
+concurrency:
+  group: materialize-contextual-audio-noise
+  cancel-in-progress: false
 
 jobs:
   materialize:
