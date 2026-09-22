@@ -83,6 +83,7 @@ class AudioDialog(Adw.Dialog):
         self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         self.scroll.set_min_content_width(568)
         self.scroll.set_max_content_height(620)
+        self.scroll.set_propagate_natural_width(True)
         self.scroll.set_propagate_natural_height(True)
 
         content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)
