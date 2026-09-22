@@ -48,6 +48,8 @@ jobs:
           git apply /tmp/uiux-delta3.patch
 
           git diff --check
+          tar --exclude=.git --exclude=screenshots --exclude=media --exclude=logs \
+            -czf /tmp/bvc-uiux-source.tar.gz .
 
       - name: Install GTK review dependencies
         shell: bash
@@ -117,7 +119,7 @@ jobs:
           sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
           find screenshots -maxdepth 1 -type f -printf '%f\n' | sort
 
-      - name: Upload screenshots and logs
+      - name: Upload screenshots, logs and reconstructed source
         uses: actions/upload-artifact@v4
         with:
           name: big-video-converter-ui-review-${{ github.sha }}
@@ -128,5 +130,6 @@ jobs:
             /tmp/uiux-delta.patch
             /tmp/uiux-delta2.patch
             /tmp/uiux-delta3.patch
+            /tmp/bvc-uiux-source.tar.gz
           if-no-files-found: error
           retention-days: 7
