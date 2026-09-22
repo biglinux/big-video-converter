@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   materialize:
-    if: github.event.head_commit.message != 'materialize: reviewed UI source'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -44,5 +43,9 @@ jobs:
           git config user.name 'Big Video Converter review'
           git config user.email 'review@example.invalid'
           git add -A
+          if git diff --cached --quiet; then
+            echo 'Reviewed source is already materialized.'
+            exit 0
+          fi
           git commit -m 'materialize: reviewed UI source'
           git push origin HEAD:review/uiux-materialized-r1-20260922
