@@ -1,0 +1,112 @@
+name: Contextual audio and noise diagnostics
+
+on:
+  push:
+    branches:
+      - review/uiux-materialized-r2-20260922
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    container:
+      image: fedora:44
+    timeout-minutes: 15
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      PYTHONUNBUFFERED: "1"
+      GSETTINGS_BACKEND: memory
+      GDK_BACKEND: x11
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      NO_AT_BRIDGE: "1"
+    steps:
+      - name: Install exact runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          dnf -y upgrade --refresh
+          dnf -y install \
+            git python3 python3-gobject python3-cairo python3-pytest \
+            gtk4 libadwaita adwaita-icon-theme abattis-cantarell-fonts \
+            vte291-gtk4 mpv mpv-libs ffmpeg-free \
+            xorg-x11-server-Xvfb xorg-x11-xauth xdpyinfo \
+            mesa-dri-drivers mesa-libGL mesa-libEGL dbus-daemon
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Run each focused path and persist full tracebacks
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p .ui-review
+          python3 - <<'PY' > .ui-review/contextual-runtime.txt 2>&1
+          import gi
+          gi.require_version('Gtk', '4.0')
+          gi.require_version('Adw', '1')
+          from gi.repository import Adw, Gtk
+          print('GTK', Gtk.get_major_version(), Gtk.get_minor_version(), Gtk.get_micro_version())
+          print('Adw', Adw.get_major_version(), Adw.get_minor_version(), Adw.get_micro_version())
+          PY
+          runtime_status=$?
+
+          timeout --signal=TERM --kill-after=5s 90s \
+            dbus-run-session -- xvfb-run -a \
+            python3 -m pytest -vv -s --tb=long \
+              tests/test_contextual_audio_review.py \
+              > .ui-review/contextual-pytest.txt 2>&1
+          pytest_status=$?
+
+          timeout --signal=TERM --kill-after=5s 90s \
+            dbus-run-session -- xvfb-run -a \
+            python3 -u tests/test_contextual_audio_review.py \
+              > .ui-review/contextual-direct.txt 2>&1
+          direct_status=$?
+
+          python3 -m compileall -q \
+            big-video-converter/usr/share/big-video-converter \
+            tests/test_contextual_audio_review.py \
+            > .ui-review/contextual-compileall.txt 2>&1
+          compile_status=$?
+
+          cat > .ui-review/contextual-status.txt <<EOF
+          runtime_status=$runtime_status
+          pytest_status=$pytest_status
+          direct_status=$direct_status
+          compile_status=$compile_status
+          head_sha=${GITHUB_SHA}
+          EOF
+
+          printf '%s\n' '=== runtime ==='
+          cat .ui-review/contextual-runtime.txt
+          printf '%s\n' '=== status ==='
+          cat .ui-review/contextual-status.txt
+          printf '%s\n' '=== pytest tail ==='
+          tail -n 240 .ui-review/contextual-pytest.txt || true
+          printf '%s\n' '=== direct tail ==='
+          tail -n 240 .ui-review/contextual-direct.txt || true
+
+      - name: Commit diagnostics for connector-readable inspection
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'Big Video Converter review'
+          git config user.email 'review@example.invalid'
+          git add \
+            .ui-review/contextual-runtime.txt \
+            .ui-review/contextual-status.txt \
+            .ui-review/contextual-pytest.txt \
+            .ui-review/contextual-direct.txt \
+            .ui-review/contextual-compileall.txt
+          if git diff --cached --quiet; then
+            echo 'Diagnostics unchanged.'
+            exit 0
+          fi
+          git commit -m 'chore(ci): persist contextual diagnostics [skip ci]'
+          git push origin HEAD:review/uiux-materialized-r2-20260922
