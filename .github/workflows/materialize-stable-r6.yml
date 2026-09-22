@@ -10,7 +10,6 @@ on:
 
 permissions:
   contents: write
-  actions: write
 
 concurrency:
   group: materialize-stable-r6
@@ -44,8 +43,16 @@ jobs:
           echo '5db51e1de29df9153c7e40f3e1bb71d8918f14bb1a794fe93c7646c856344ca2  /tmp/BVC-STABLE-READINESS-R6.diff' | sha256sum -c -
           git apply --check /tmp/BVC-STABLE-READINESS-R6.diff
           git apply /tmp/BVC-STABLE-READINESS-R6.diff
-          rm -f .review/r6.part.* .review/RUN-R6 \
+
+          # A workflow token cannot publish workflow-file changes. Restore all
+          # workflows here; the authorized connector applies them atomically
+          # after this source-only commit lands.
+          git checkout -- \
+            .github/workflows/backend-tests.yml \
+            .github/workflows/build-package.yml \
+            .github/workflows/export-r6-source.yml \
             .github/workflows/materialize-stable-r6.yml
+          rm -f .review/r6.part.* .review/RUN-R6
           rmdir .review
           git diff --check
 
@@ -89,7 +96,7 @@ jobs:
           assert component.findtext('project_license') == 'MIT'
           PY
 
-      - name: Commit the final reviewed tree
+      - name: Commit the source-only reviewed tree
         shell: bash
         run: |
           set -euo pipefail
@@ -97,20 +104,11 @@ jobs:
           git config user.email 'actions@users.noreply.github.com'
           git add -A
           git diff --cached --check
+          if git diff --cached --name-only | grep -q '^\.github/workflows/'; then
+            echo 'Refusing to push workflow changes with the workflow token.' >&2
+            exit 1
+          fi
           git commit -m 'fix(release): harden packaging metadata and launch path'
           git push origin "HEAD:${GITHUB_REF_NAME}"
-          git rev-parse HEAD | tee R6-FINAL-COMMIT.txt
-          git rev-parse 'HEAD^{tree}' | tee R6-FINAL-TREE.txt
-
-      - name: Dispatch exact-commit validation
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          for workflow in backend-tests.yml build-package.yml; do
-            gh api --method POST \
-              -H 'Accept: application/vnd.github+json' \
-              "/repos/${GITHUB_REPOSITORY}/actions/workflows/${workflow}/dispatches" \
-              -f ref="${GITHUB_REF_NAME}"
-          done
+          git rev-parse HEAD
+          git rev-parse 'HEAD^{tree}'
