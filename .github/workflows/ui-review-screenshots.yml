@@ -1,9 +1,9 @@
-name: UI review screenshots
+name: UI review screenshots — GTK 4.22.5 and libadwaita 1.9.4
 
 on:
   push:
     branches:
-      - ai-uiux-aaa-review-20260921
+      - review/uiux-libadwaita194-r2-20260922
   workflow_dispatch:
 
 permissions:
@@ -12,17 +12,37 @@ permissions:
 jobs:
   render:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    container:
+      image: fedora:44
+    timeout-minutes: 50
     env:
-      DEBIAN_FRONTEND: noninteractive
       LANG: C.UTF-8
       LC_ALL: C.UTF-8
       PYTHONUNBUFFERED: "1"
+      GSETTINGS_BACKEND: memory
+      GDK_BACKEND: x11
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      NO_AT_BRIDGE: "1"
     steps:
+      - name: Install exact review runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          dnf -y upgrade --refresh
+          dnf -y install \
+            git patch tar xz findutils coreutils procps-ng which \
+            python3 python3-gobject python3-cairo python3-pip python3-pytest \
+            python3-pillow python3-pyopengl \
+            gtk4 libadwaita adwaita-icon-theme google-cantarell-fonts \
+            vte291-gtk4 mpv mpv-libs ffmpeg-free \
+            xorg-x11-server-Xvfb xauth xdotool openbox dbus-x11 \
+            ImageMagick gnome-screenshot gettext
+          python3 -m pip install --disable-pip-version-check --no-input python-mpv
+
       - name: Check out review branch
         uses: actions/checkout@v4
 
-      - name: Reconstruct and apply the local UI review
+      - name: Reconstruct and apply the UI review
         shell: bash
         run: |
           set -euo pipefail
@@ -49,20 +69,27 @@ jobs:
 
           git diff --check
 
-      - name: Install GTK review dependencies
+      - name: Prove the loaded runtime
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            python3-gi python3-cairo python3-pip python3-pytest \
-            gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-vte-3.91 \
-            libgtk-4-1 libadwaita-1-0 libvte-2.91-gtk4-0 libmpv2 \
-            xvfb dbus-x11 gnome-screenshot xdotool \
-            ffmpeg fonts-dejavu-core gettext imagemagick
-          python3 -m pip install --break-system-packages \
-            --disable-pip-version-check --no-input \
-            python-mpv PyOpenGL
+          mkdir -p logs
+          rpm -q gtk4 libadwaita python3-gobject vte291-gtk4 mpv-libs \
+            | tee logs/runtime-rpms.txt
+          python3 - <<'PY' | tee logs/runtime-python.txt
+          import gi
+          gi.require_version('Gtk', '4.0')
+          gi.require_version('Adw', '1')
+          gi.require_version('Vte', '3.91')
+          from gi.repository import Adw, Gtk, Vte
+          gtk = (Gtk.get_major_version(), Gtk.get_minor_version(), Gtk.get_micro_version())
+          adw = (Adw.get_major_version(), Adw.get_minor_version(), Adw.get_micro_version())
+          print('GTK', '.'.join(map(str, gtk)))
+          print('libadwaita', '.'.join(map(str, adw)))
+          print('VTE', Vte.get_major_version(), Vte.get_minor_version(), Vte.get_micro_version())
+          assert gtk == (4, 22, 5), gtk
+          assert adw == (1, 9, 4), adw
+          PY
 
       - name: Validate source and pure contracts
         shell: bash
@@ -77,11 +104,30 @@ jobs:
             tests/test_thumbnail_cache.py \
             tests/test_queue_preview_contract.py
 
-      - name: Render every major application state
+      - name: Start private X11 review session
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p screenshots media logs
+          mkdir -p screenshots crops contact-sheets media logs
+          Xvfb :99 -screen 0 1600x1000x24 -nolisten tcp -noreset \
+            > logs/xvfb.log 2>&1 &
+          echo $! > /tmp/xvfb.pid
+          export DISPLAY=:99
+          for attempt in $(seq 1 50); do
+            xdpyinfo >/dev/null 2>&1 && break
+            sleep 0.1
+          done
+          openbox > logs/openbox.log 2>&1 &
+          echo $! > /tmp/openbox.pid
+          sleep 1
+          printf 'DISPLAY=%s\n' "$DISPLAY" | tee logs/display.txt
+
+      - name: Render every major application state
+        shell: bash
+        env:
+          DISPLAY: :99
+        run: |
+          set -euo pipefail
           screens=(
             queue-empty queue progress complete editor welcome
             presets video-options audio noise subtitles advanced
@@ -89,15 +135,14 @@ jobs:
 
           render() {
             local screen=$1 theme=$2 width=$3 height=$4 output=$5
-            timeout --signal=TERM --kill-after=10s 75s \
+            timeout --signal=TERM --kill-after=10s 80s \
               dbus-run-session -- \
-              xvfb-run -a -s "-screen 0 1440x900x24" \
-              env GDK_BACKEND=x11 GSETTINGS_BACKEND=memory \
+              env DISPLAY=:99 GDK_BACKEND=x11 GSETTINGS_BACKEND=memory \
                   LIBGL_ALWAYS_SOFTWARE=1 NO_AT_BRIDGE=1 \
                   BVC_DEMO_MEDIA_DIR="$PWD/media" \
               sh tools/capture_ui.sh \
                 "$screen" "$output" "$theme" "$width" "$height"
-            identify "$output" >> logs/image-dimensions.txt
+            identify "$output" | tee -a logs/image-dimensions.txt
           }
 
           for screen in "${screens[@]}"; do
@@ -115,18 +160,86 @@ jobs:
           done
 
           sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
-          find screenshots -maxdepth 1 -type f -printf '%f\n' | sort
 
-      - name: Upload screenshots and logs
+      - name: Create zoomed crops and contact sheets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFont
+          import json
+
+          source = Path('screenshots')
+          crops_root = Path('crops')
+          sheets = Path('contact-sheets')
+          crops_root.mkdir(exist_ok=True)
+          sheets.mkdir(exist_ok=True)
+          manifest = []
+
+          try:
+              font = ImageFont.truetype('/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf', 18)
+          except OSError:
+              font = ImageFont.load_default()
+
+          for path in sorted(source.glob('*.png')):
+              image = Image.open(path).convert('RGB')
+              width, height = image.size
+              tile_w = (width + 2) // 3
+              tile_h = (height + 2) // 3
+              screen_dir = crops_root / path.stem
+              screen_dir.mkdir(exist_ok=True)
+              tiles = []
+              for row in range(3):
+                  for col in range(3):
+                      left = col * tile_w
+                      top = row * tile_h
+                      right = min(width, (col + 1) * tile_w)
+                      bottom = min(height, (row + 1) * tile_h)
+                      crop = image.crop((left, top, right, bottom))
+                      zoom = crop.resize((crop.width * 2, crop.height * 2), Image.Resampling.LANCZOS)
+                      name = f'r{row + 1}-c{col + 1}.png'
+                      zoom.save(screen_dir / name)
+                      tiles.append((name, zoom))
+
+              cell_w = max(tile.width for _, tile in tiles)
+              cell_h = max(tile.height for _, tile in tiles) + 34
+              sheet = Image.new('RGB', (cell_w * 3, cell_h * 3), 'white')
+              draw = ImageDraw.Draw(sheet)
+              for index, (name, tile) in enumerate(tiles):
+                  x = (index % 3) * cell_w
+                  y = (index // 3) * cell_h
+                  sheet.paste(tile, (x, y + 34))
+                  draw.text((x + 8, y + 7), name, fill='black', font=font)
+              sheet_path = sheets / f'{path.stem}-3x3-zoom.png'
+              sheet.save(sheet_path)
+              manifest.append({
+                  'screen': path.name,
+                  'size': [width, height],
+                  'crop_directory': str(screen_dir),
+                  'contact_sheet': str(sheet_path),
+              })
+
+          Path('logs/crop-manifest.json').write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          PY
+          sha256sum crops/*/*.png contact-sheets/*.png \
+            > logs/crops-SHA256SUMS.txt
+
+      - name: Preserve screenshots, crops, logs and tested patches
         uses: actions/upload-artifact@v4
         with:
-          name: big-video-converter-ui-review-${{ github.sha }}
+          name: big-video-converter-libadwaita-1.9.4-review-${{ github.sha }}
           path: |
             screenshots/
+            crops/
+            contact-sheets/
             logs/
             /tmp/uiux.patch
             /tmp/uiux-delta.patch
             /tmp/uiux-delta2.patch
             /tmp/uiux-delta3.patch
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
