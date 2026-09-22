@@ -1,0 +1,315 @@
+name: UI review R1b — audio and cleaning before/after
+
+on:
+  push:
+    branches:
+      - review/uiux-libadwaita194-r2-20260922
+    paths:
+      - .github/workflows/ui-review-audio-noise-r1b.yml
+      - big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py
+      - big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py
+      - big-video-converter/usr/share/big-video-converter/utils/audio_ui_state.py
+      - big-video-converter/usr/share/big-video-converter/sidebar_builder.py
+      - tests/test_audio_ui_state.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  validate-render-publish:
+    runs-on: ubuntu-24.04
+    container:
+      image: fedora:44
+    timeout-minutes: 45
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+      PYTHONUNBUFFERED: "1"
+      GSETTINGS_BACKEND: memory
+      GDK_BACKEND: x11
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      NO_AT_BRIDGE: "1"
+
+    steps:
+      - name: Install exact runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          dnf -y upgrade --refresh
+          dnf -y install \
+            git findutils coreutils procps-ng which \
+            python3 python3-gobject python3-cairo python3-pip python3-pytest \
+            python3-pillow python3-pyopengl \
+            gtk4 libadwaita adwaita-icon-theme abattis-cantarell-fonts \
+            vte291-gtk4 mpv mpv-libs ffmpeg-free \
+            xorg-x11-server-Xvfb xorg-x11-xauth xdpyinfo \
+            xdotool openbox ImageMagick gettext \
+            mesa-dri-drivers mesa-libGL mesa-libEGL dejavu-sans-fonts \
+            dbus-daemon
+          python3 -m pip install --disable-pip-version-check --no-input python-mpv
+
+      - uses: actions/checkout@v4
+        with:
+          ref: review/uiux-libadwaita194-r2-20260922
+          fetch-depth: 0
+
+      - name: Preserve focused patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          patch=/tmp/audio-noise-r1b
+          mkdir -p "$patch/ui" "$patch/utils" "$patch/tests"
+          cp big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py "$patch/ui/"
+          cp big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py "$patch/ui/"
+          cp big-video-converter/usr/share/big-video-converter/utils/audio_ui_state.py "$patch/utils/"
+          cp big-video-converter/usr/share/big-video-converter/sidebar_builder.py "$patch/"
+          cp tests/test_audio_ui_state.py "$patch/tests/"
+
+      - name: Download reconstructed source
+        uses: actions/download-artifact@v4
+        with:
+          name: big-video-converter-uiux-source-9ff242b6d14a7f7029f9ca91fb2b98c1e5758264
+          path: _reconstructed
+          github-token: ${{ github.token }}
+          repository: biglinux/big-video-converter
+          run-id: 35685375122
+
+      - name: Restore source and focused product patch
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d _reconstructed/source
+          cp -a _reconstructed/source/. .
+          cp /tmp/audio-noise-r1b/ui/audio_dialog.py big-video-converter/usr/share/big-video-converter/ui/
+          cp /tmp/audio-noise-r1b/ui/noise_dialog.py big-video-converter/usr/share/big-video-converter/ui/
+          cp /tmp/audio-noise-r1b/utils/audio_ui_state.py big-video-converter/usr/share/big-video-converter/utils/
+          cp /tmp/audio-noise-r1b/sidebar_builder.py big-video-converter/usr/share/big-video-converter/
+          cp /tmp/audio-noise-r1b/tests/test_audio_ui_state.py tests/
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('big-video-converter/usr/share/big-video-converter/sidebar_builder.py')
+          source = path.read_text(encoding='utf-8')
+          destructive = '''        if not audio_will_reencode:
+              self.noise_reduction_switch.set_active(False)
+          '''
+          if destructive in source:
+              source = source.replace(
+                  destructive,
+                  '        # Availability changes without erasing saved cleaning preferences.\n',
+                  1,
+              )
+              path.write_text(source, encoding='utf-8')
+          PY
+
+      - name: Adapt deterministic capture harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          demo = Path('tools/ui_demo.py')
+          source = demo.read_text(encoding='utf-8')
+          updated = (
+              source.replace('libx264', 'mpeg4')
+                    .replace('"-preset"', '"-q:v"')
+                    .replace("'-preset'", "'-q:v'")
+                    .replace('"ultrafast"', '"5"')
+                    .replace("'ultrafast'", "'5'")
+          )
+          if updated == source:
+              raise SystemExit('demo encoder pattern not found')
+          demo.write_text(updated, encoding='utf-8')
+
+          capture = Path('tools/capture_ui.sh')
+          source = capture.read_text(encoding='utf-8')
+          old = 'gnome-screenshot -f "$out"'
+          new = '''window=$(xdotool getactivewindow)
+          xdotool getwindowgeometry --shell "$window" >&2
+          import -window "$window" "$out"'''
+          if old not in source:
+              raise SystemExit('capture command not found')
+          capture.write_text(source.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Validate runtime and focused contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p logs
+          rpm -q gtk4 libadwaita python3-gobject vte291-gtk4 mpv-libs | tee logs/runtime-rpms.txt
+          python3 - <<'PY' | tee logs/runtime-python.txt
+          import gi
+          gi.require_version('Gtk', '4.0')
+          gi.require_version('Adw', '1')
+          from gi.repository import Adw, Gtk
+          gtk = (Gtk.get_major_version(), Gtk.get_minor_version(), Gtk.get_micro_version())
+          adw = (Adw.get_major_version(), Adw.get_minor_version(), Adw.get_micro_version())
+          print('GTK', '.'.join(map(str, gtk)))
+          print('libadwaita', '.'.join(map(str, adw)))
+          assert gtk == (4, 22, 5), gtk
+          assert adw == (1, 9, 4), adw
+          PY
+          python3 -m py_compile \
+            big-video-converter/usr/share/big-video-converter/ui/audio_dialog.py \
+            big-video-converter/usr/share/big-video-converter/ui/noise_dialog.py \
+            big-video-converter/usr/share/big-video-converter/utils/audio_ui_state.py \
+            big-video-converter/usr/share/big-video-converter/sidebar_builder.py \
+            tests/test_audio_ui_state.py
+          python3 -m pytest -q tests/test_audio_ui_state.py
+          ! grep -A20 -F 'def _on_audio_handling_changed' \
+            big-video-converter/usr/share/big-video-converter/sidebar_builder.py \
+            | grep -F 'noise_reduction_switch.set_active(False)'
+
+      - name: Fetch baseline screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p before
+          git fetch --force origin \
+            +refs/heads/review/uiux-evidence-libadwaita194-20260922:refs/remotes/origin/uiux-evidence-before
+          for name in audio-light audio-dark noise-light noise-dark; do
+            git show "origin/uiux-evidence-before:screenshots/${name}.png" > "before/${name}.png"
+          done
+
+      - name: Render corrected screens
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p after after-crops comparison media logs
+          cleanup() { kill "${openbox_pid:-}" "${xvfb_pid:-}" 2>/dev/null || true; }
+          trap cleanup EXIT HUP INT TERM
+          Xvfb :99 -screen 0 1600x1000x24 -nolisten tcp -noreset > logs/xvfb.log 2>&1 &
+          xvfb_pid=$!
+          export DISPLAY=:99
+          for attempt in $(seq 1 80); do xdpyinfo >/dev/null 2>&1 && break; sleep 0.1; done
+          xdpyinfo >/dev/null
+          openbox > logs/openbox.log 2>&1 &
+          openbox_pid=$!
+          sleep 1
+          render() {
+            screen=$1 theme=$2 width=$3 height=$4 output=$5
+            timeout --signal=TERM --kill-after=10s 80s \
+              dbus-run-session -- \
+              env DISPLAY=:99 GDK_BACKEND=x11 GSETTINGS_BACKEND=memory \
+                  LIBGL_ALWAYS_SOFTWARE=1 NO_AT_BRIDGE=1 \
+                  BVC_DEMO_MEDIA_DIR="$PWD/media" \
+              sh -x tools/capture_ui.sh "$screen" "$output" "$theme" "$width" "$height" \
+                > "logs/$(basename "$output").log" 2>&1
+            test -s "$output"
+            identify "$output" | tee -a logs/image-dimensions.txt
+          }
+          for screen in audio noise; do
+            render "$screen" light 1280 760 "after/${screen}-light.png"
+            render "$screen" dark 1280 760 "after/${screen}-dark.png"
+            render "$screen" light 980 620 "after/${screen}-compact-light.png"
+            render "$screen" dark 980 620 "after/${screen}-compact-dark.png"
+          done
+          sha256sum after/*.png > after/SHA256SUMS.txt
+
+      - name: Build zoom sheets and comparison PDF
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFont
+          import json
+          try:
+              title_font = ImageFont.truetype('/usr/share/fonts/dejavu-sans-fonts/DejaVuSans-Bold.ttf', 28)
+              label_font = ImageFont.truetype('/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf', 18)
+          except OSError:
+              title_font = ImageFont.load_default()
+              label_font = ImageFont.load_default()
+
+          def fit(image, area):
+              scale = min(area[0] / image.width, area[1] / image.height)
+              return image.resize((max(1, int(image.width * scale)), max(1, int(image.height * scale))), Image.Resampling.LANCZOS)
+
+          def crop_sheet(path):
+              image = Image.open(path).convert('RGB')
+              w, h = image.size
+              tw, th = (w + 2) // 3, (h + 2) // 3
+              sheet = Image.new('RGB', (tw * 2 * 3, (th * 2 + 32) * 3), 'white')
+              draw = ImageDraw.Draw(sheet)
+              for row in range(3):
+                  for col in range(3):
+                      box = (col * tw, row * th, min(w, (col + 1) * tw), min(h, (row + 1) * th))
+                      crop = image.crop(box).resize((min(w, (col + 1) * tw) - col * tw << 1, min(h, (row + 1) * th) - row * th << 1), Image.Resampling.LANCZOS)
+                      x, y = col * tw * 2, row * (th * 2 + 32)
+                      draw.text((x + 6, y + 5), f'r{row + 1}-c{col + 1}', fill='black', font=label_font)
+                      sheet.paste(crop, (x, y + 32))
+              target = Path('after-crops') / f'{path.stem}-3x3.png'
+              sheet.save(target)
+              return target
+
+          pages, index = [], []
+          page_size = (1800, 1200)
+          for screen in ('audio', 'noise'):
+              for theme in ('light', 'dark'):
+                  before = Image.open(Path('before') / f'{screen}-{theme}.png').convert('RGB')
+                  after_path = Path('after') / f'{screen}-{theme}.png'
+                  after = Image.open(after_path).convert('RGB')
+                  page = Image.new('RGB', page_size, 'white')
+                  draw = ImageDraw.Draw(page)
+                  draw.text((60, 28), f'{screen.title()} — {theme} — before / after', fill='black', font=title_font)
+                  left, right = fit(before, (810, 1030)), fit(after, (810, 1030))
+                  page.paste(left, (45, 110)); page.paste(right, (945, 110))
+                  draw.text((45, 78), 'BEFORE', fill='#555555', font=label_font)
+                  draw.text((945, 78), 'AFTER', fill='#166534', font=label_font)
+                  pages.append(page); index.append({'page': len(pages), 'kind': 'before-after', 'screen': screen, 'theme': theme})
+
+                  zoom = Image.open(crop_sheet(after_path)).convert('RGB')
+                  zoom_page = Image.new('RGB', page_size, 'white')
+                  zoom_draw = ImageDraw.Draw(zoom_page)
+                  zoom_draw.text((60, 28), f'{screen.title()} — {theme} — after 3×3 zoom', fill='black', font=title_font)
+                  rendered = fit(zoom, (1680, 1060))
+                  zoom_page.paste(rendered, ((1800 - rendered.width) // 2, 100))
+                  pages.append(zoom_page); index.append({'page': len(pages), 'kind': 'after-zoom', 'screen': screen, 'theme': theme})
+
+              for theme in ('light', 'dark'):
+                  compact = Image.open(Path('after') / f'{screen}-compact-{theme}.png').convert('RGB')
+                  page = Image.new('RGB', page_size, 'white')
+                  draw = ImageDraw.Draw(page)
+                  draw.text((60, 28), f'{screen.title()} — compact {theme} — 980×620', fill='black', font=title_font)
+                  rendered = fit(compact, (1680, 1060))
+                  page.paste(rendered, ((1800 - rendered.width) // 2, 100))
+                  pages.append(page); index.append({'page': len(pages), 'kind': 'compact-after', 'screen': screen, 'theme': theme})
+
+          output = Path('comparison/BigVideoConverter-audio-noise-r1b-before-after.pdf')
+          pages[0].save(output, 'PDF', resolution=150.0, save_all=True, append_images=pages[1:])
+          Path('comparison/index.json').write_text(json.dumps(index, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+          sha256sum after-crops/*.png comparison/* > comparison/SHA256SUMS.txt
+
+      - name: Publish focused evidence branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence=/tmp/audio-noise-r1b-evidence
+          rm -rf "$evidence" && mkdir -p "$evidence"
+          cp -a before after after-crops comparison logs "$evidence"/
+          printf '# Audio and cleaning UI — R1b evidence\n\nSource commit: %s\n\nGTK 4.22.5 / libadwaita 1.9.4.\n' "$GITHUB_SHA" > "$evidence/README.md"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout --orphan audio-noise-r1b-evidence
+          git rm -rf . >/dev/null 2>&1 || true
+          git clean -fdx >/dev/null 2>&1 || true
+          cp -a "$evidence"/. .
+          git add -A
+          git commit -m "evidence: audio and cleaning R1b $GITHUB_SHA"
+          git push --force origin HEAD:refs/heads/review/uiux-evidence-audio-noise-r1b-20260922
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: big-video-converter-audio-noise-r1b-${{ github.sha }}
+          path: |
+            before/
+            after/
+            after-crops/
+            comparison/
+            logs/
+          if-no-files-found: error
+          retention-days: 14
