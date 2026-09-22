@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 jobs:
@@ -111,11 +111,18 @@ jobs:
             tests/test_queue_preview_contract.py
 
       - name: Render major application states with diagnostics
+        continue-on-error: true
         shell: bash
         run: |
+          set +e
           set -u
           mkdir -p screenshots crops contact-sheets media logs
           : > logs/render-failures.txt
+          : > logs/render-sequence.txt
+          cleanup() {
+            kill "${openbox_pid:-}" "${xvfb_pid:-}" 2>/dev/null || true
+          }
+          trap cleanup EXIT HUP INT TERM
           Xvfb :99 -screen 0 1600x1000x24 -nolisten tcp -noreset \
             > logs/xvfb.log 2>&1 &
           xvfb_pid=$!
@@ -164,7 +171,7 @@ jobs:
             else
               echo "FAIL ${tag} rc=${rc} output_missing_or_empty" \
                 | tee -a logs/render-failures.txt logs/render-sequence.txt
-              tail -n 160 "$log" > "logs/capture-${tag}-tail.txt"
+              tail -n 200 "$log" > "logs/capture-${tag}-tail.txt"
             fi
             return 0
           }
@@ -182,7 +189,6 @@ jobs:
             sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
           fi
           ps -ef > logs/processes-after-render.txt
-          kill "$openbox_pid" "$xvfb_pid" 2>/dev/null || true
           echo '--- render failures ---'
           cat logs/render-failures.txt
           echo '--- render sequence ---'
@@ -190,28 +196,30 @@ jobs:
           exit 0
 
       - name: Summarize render diagnostics
-        if: always()
+        if: ${{ always() }}
         shell: bash
         run: |
           set +e
           echo '=== runtime ==='
-          cat logs/runtime-python.txt
+          cat logs/runtime-python.txt 2>/dev/null
           echo '=== failures ==='
-          cat logs/render-failures.txt
+          cat logs/render-failures.txt 2>/dev/null
           echo '=== screenshots ==='
-          cat logs/screenshots-tree.txt
+          cat logs/screenshots-tree.txt 2>/dev/null
           echo '=== capture log tails ==='
           for file in logs/capture-*-tail.txt; do
             [ -e "$file" ] || continue
             echo "--- $file ---"
             cat "$file"
           done
+          exit 0
 
       - name: Create 3x3 zoom crops and contact sheets
-        if: always()
+        if: ${{ always() }}
+        continue-on-error: true
         shell: bash
         run: |
-          set -euo pipefail
+          set +e
           python3 - <<'PY'
           from pathlib import Path
           from PIL import Image, ImageDraw, ImageFont
@@ -274,16 +282,45 @@ jobs:
               json.dumps(manifest, ensure_ascii=False, indent=2) + '\n',
               encoding='utf-8',
           )
-          if not manifest:
-              print('No screenshots were available for cropping.')
+          print(f'generated contact sheets for {len(manifest)} screenshots')
           PY
           if compgen -G 'crops/*/*.png' >/dev/null; then
             sha256sum crops/*/*.png contact-sheets/*.png \
               > logs/crops-SHA256SUMS.txt
           fi
+          exit 0
+
+      - name: Publish visual evidence branch
+        if: ${{ always() }}
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          evidence=/tmp/bvc-ui-evidence
+          rm -rf "$evidence"
+          mkdir -p "$evidence"
+          cp -a screenshots crops contact-sheets logs "$evidence"/ 2>/dev/null || true
+          printf '%s\n' \
+            '# Big Video Converter visual evidence' \
+            '' \
+            "Source workflow commit: $GITHUB_SHA" \
+            '' \
+            'Runtime proof and per-screen logs are under `logs/`.' \
+            > "$evidence/README.md"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout --orphan evidence-publish
+          git rm -rf . >/dev/null 2>&1 || true
+          git clean -fdx >/dev/null 2>&1 || true
+          cp -a "$evidence"/. .
+          git add -A
+          git commit -m "evidence: libadwaita 1.9.4 UI review $GITHUB_SHA" || true
+          git push --force origin HEAD:refs/heads/review/uiux-evidence-libadwaita194-20260922
+          exit 0
 
       - name: Upload screenshots, crops and diagnostics
-        if: always()
+        if: ${{ always() }}
         uses: actions/upload-artifact@v4
         with:
           name: big-video-converter-libadwaita-1.9.4-review-${{ github.sha }}
