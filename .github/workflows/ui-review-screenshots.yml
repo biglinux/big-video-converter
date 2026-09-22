@@ -75,7 +75,32 @@ jobs:
           tar -xzf "$archive" -C .
           test -f big-video-converter/usr/share/big-video-converter/ui/conversion_page.py
           test -f tools/capture_ui.sh
+          test -f tools/ui_demo.py
           sha256sum "$archive" | tee logs/source-SHA256SUMS.txt
+
+      - name: Adapt demo media to ffmpeg-free
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('tools/ui_demo.py')
+          source = path.read_text(encoding='utf-8')
+          updated = (
+              source
+              .replace('libx264', 'mpeg4')
+              .replace('"-preset"', '"-q:v"')
+              .replace("'-preset'", "'-q:v'")
+              .replace('"ultrafast"', '"5"')
+              .replace("'ultrafast'", "'5'")
+          )
+          if updated == source:
+              raise SystemExit('demo media encoder pattern was not found')
+          path.write_text(updated, encoding='utf-8')
+          PY
+          python3 -m py_compile tools/ui_demo.py
+          ffmpeg -hide_banner -encoders 2>/dev/null | grep -E '(^|[[:space:]])mpeg4([[:space:]]|$)' \
+            | tee logs/demo-encoder.txt
 
       - name: Prove loaded runtime
         shell: bash
