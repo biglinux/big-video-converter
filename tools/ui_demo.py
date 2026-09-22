@@ -50,7 +50,7 @@ def make_media(directory: Path) -> list[Path]:
                 "drawbox=x=70:y=470:w=760:h=150:color=black@0.42:t=fill,"
                 f"drawtext=text='{label}':x=105:y=510:fontsize=52:fontcolor=white"
             ),
-            "-c:v", "mpeg4", "-q:v", "3", "-pix_fmt", "yuv420p",
+            "-c:v", "libx264", "-preset", "ultrafast", "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-shortest", os.fspath(path),
         ]
         subprocess.run(command, check=True, timeout=45)
