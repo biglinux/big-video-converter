@@ -28,4 +28,15 @@ for _ in $(seq 1 160); do
 done
 test -f "$ready" || { echo "demo did not become ready" >&2; exit 1; }
 sleep 0.6
-gnome-screenshot -f "$out"
+mkdir -p "$(dirname -- "$out")"
+if command -v gnome-screenshot >/dev/null 2>&1; then
+    printf '%s\n' 'capture-backend=gnome-screenshot' >&2
+    gnome-screenshot -f "$out"
+elif command -v import >/dev/null 2>&1; then
+    printf '%s\n' 'capture-backend=imagemagick-import' >&2
+    import -window root "$out"
+else
+    printf '%s\n' 'No supported screenshot backend found' >&2
+    exit 1
+fi
+test -s "$out"
