@@ -67,39 +67,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          search_root=_reconstructed
-          conversion=$(find "$search_root" -type f \
-            -path '*/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py' \
-            -print -quit)
-          if [ -z "$conversion" ]; then
-            mkdir -p _reconstructed-unpacked
-            archive=$(find "$search_root" -type f \
-              \( -name '*.tar.gz' -o -name '*.tgz' \) -print -quit)
-            test -n "$archive"
-            tar -xzf "$archive" -C _reconstructed-unpacked
-            conversion=$(find _reconstructed-unpacked -type f \
-              -path '*/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py' \
-              -print -quit)
-          fi
-          test -n "$conversion"
-          suffix=/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py
-          source_root=${conversion%$suffix}
-          printf 'Restoring reviewed source from %s\n' "$source_root"
+          mkdir -p logs
+          find _reconstructed -maxdepth 3 -printf '%y %p %s bytes\n' \
+            | sort > logs/source-artifact-tree.txt
+          archive=$(find _reconstructed -type f \
+            -name 'bvc-uiux-source.tar.gz' -print -quit)
+          test -n "$archive"
+          tar -tzf "$archive" > logs/source-tar-contents.txt
+          tar -xzf "$archive" -C .
+          test -f big-video-converter/usr/share/big-video-converter/ui/conversion_page.py
+          test -f tools/capture_ui.sh
 
-          for entry in big-video-converter tools tests docs README.md AGENTS.md \
-                       CONTRIBUTING.md SECURITY.md SUPPORT.md CHANGELOG.md; do
-            if [ -e "$source_root/$entry" ]; then
-              rm -rf "$entry"
-              cp -a "$source_root/$entry" "$entry"
-            fi
-          done
-
-          git diff --check
+          git diff --check -- \
+            big-video-converter tools tests docs README.md AGENTS.md \
+            CONTRIBUTING.md SECURITY.md SUPPORT.md CHANGELOG.md
           git diff --binary 58ec88d645cd468c218e1289d605152cca6d192b \
             -- big-video-converter tools tests docs README.md AGENTS.md \
                CONTRIBUTING.md SECURITY.md SUPPORT.md CHANGELOG.md \
             > /tmp/uiux-materialized.patch
           test -s /tmp/uiux-materialized.patch
+          sha256sum "$archive" /tmp/uiux-materialized.patch \
+            | tee logs/restored-source-SHA256SUMS.txt
 
       - name: Prove the loaded runtime
         shell: bash
@@ -270,6 +258,7 @@ jobs:
             > logs/crops-SHA256SUMS.txt
 
       - name: Preserve screenshots, crops, logs and tested source
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: big-video-converter-libadwaita-1.9.4-review-${{ github.sha }}
@@ -278,6 +267,7 @@ jobs:
             crops/
             contact-sheets/
             logs/
+            _reconstructed/
             /tmp/uiux-materialized.patch
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 14
