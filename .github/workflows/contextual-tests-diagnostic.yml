@@ -65,6 +65,7 @@ jobs:
             python3 -m pytest -vv -s --tb=long \
               tests/test_contextual_audio_review.py \
               tests/test_progress_page.py \
+              tests/test_video_edit_ui.py \
               > .ui-review/contextual-pytest.txt 2>&1
           pytest_status=$?
 
@@ -72,7 +73,8 @@ jobs:
           : > .ui-review/contextual-direct.txt
           for test_file in \
             tests/test_contextual_audio_review.py \
-            tests/test_progress_page.py
+            tests/test_progress_page.py \
+            tests/test_video_edit_ui.py
           do
             printf '\n=== %s ===\n' "$test_file" \
               >> .ui-review/contextual-direct.txt
@@ -90,6 +92,7 @@ jobs:
             big-video-converter/usr/share/big-video-converter \
             tests/test_contextual_audio_review.py \
             tests/test_progress_page.py \
+            tests/test_video_edit_ui.py \
             > .ui-review/contextual-compileall.txt 2>&1
           compile_status=$?
 
