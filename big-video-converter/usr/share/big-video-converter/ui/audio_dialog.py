@@ -57,7 +57,7 @@ def _make_entry_sync(source, entry, connections):
             source.set_text(text)
 
     def from_source(widget):
-        text = source.get_text()
+        text = widget.get_text()
         if entry.get_text() != text:
             entry.set_text(text)
 
@@ -73,17 +73,16 @@ class AudioDialog(Adw.Dialog):
         self.app = app
         self.connections = SignalConnections(self)
         self.set_title(_("Audio"))
-        # Disable the all-or-nothing natural sizing mode before setting the
-        # per-axis policy: a stable width and a natural, content-driven height.
-        self.set_follows_content_size(False)
-        self.set_content_width(600)
-        self.set_content_height(-1)
+        # Follow the child's natural height while giving it a stable readable
+        # width. Adw.Dialog constrains the result to the parent when necessary.
+        self.set_follows_content_size(True)
         self.set_presentation_mode(Adw.DialogPresentationMode.AUTO)
 
         toolbar = Adw.ToolbarView()
         toolbar.add_top_bar(Adw.HeaderBar())
         self.scroll = Gtk.ScrolledWindow()
         self.scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.scroll.set_size_request(600, -1)
         self.scroll.set_min_content_width(568)
         self.scroll.set_max_content_height(620)
         self.scroll.set_propagate_natural_height(True)
