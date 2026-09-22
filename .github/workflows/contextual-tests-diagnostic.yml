@@ -49,8 +49,9 @@ jobs:
           # is captured and the dedicated enforcement step decides the result.
           set +e
           set -uo pipefail
-          mkdir -p .ui-review
-          python3 - <<'PY' > .ui-review/contextual-runtime.txt 2>&1
+          diagnostics=ci-diagnostics/contextual
+          mkdir -p "$diagnostics"
+          python3 - <<'PY' > "$diagnostics/contextual-runtime.txt" 2>&1
           import gi
           gi.require_version('Gtk', '4.0')
           gi.require_version('Adw', '1')
@@ -66,22 +67,22 @@ jobs:
               tests/test_contextual_audio_review.py \
               tests/test_progress_page.py \
               tests/test_video_edit_ui.py \
-              > .ui-review/contextual-pytest.txt 2>&1
+              > "$diagnostics/contextual-pytest.txt" 2>&1
           pytest_status=$?
 
           direct_status=0
-          : > .ui-review/contextual-direct.txt
+          : > "$diagnostics/contextual-direct.txt"
           for test_file in \
             tests/test_contextual_audio_review.py \
             tests/test_progress_page.py \
             tests/test_video_edit_ui.py
           do
             printf '\n=== %s ===\n' "$test_file" \
-              >> .ui-review/contextual-direct.txt
+              >> "$diagnostics/contextual-direct.txt"
             timeout --signal=TERM --kill-after=5s 90s \
               dbus-run-session -- xvfb-run -a \
               python3 -u "$test_file" \
-                >> .ui-review/contextual-direct.txt 2>&1
+                >> "$diagnostics/contextual-direct.txt" 2>&1
             status=$?
             if [ "$status" -ne 0 ]; then
               direct_status=$status
@@ -93,10 +94,10 @@ jobs:
             tests/test_contextual_audio_review.py \
             tests/test_progress_page.py \
             tests/test_video_edit_ui.py \
-            > .ui-review/contextual-compileall.txt 2>&1
+            > "$diagnostics/contextual-compileall.txt" 2>&1
           compile_status=$?
 
-          cat > .ui-review/contextual-status.txt <<EOF
+          cat > "$diagnostics/contextual-status.txt" <<EOF
           runtime_status=$runtime_status
           pytest_status=$pytest_status
           direct_status=$direct_status
@@ -105,21 +106,20 @@ jobs:
           EOF
 
           printf '%s\n' '=== runtime ==='
-          cat .ui-review/contextual-runtime.txt
+          cat "$diagnostics/contextual-runtime.txt"
           printf '%s\n' '=== status ==='
-          cat .ui-review/contextual-status.txt
+          cat "$diagnostics/contextual-status.txt"
           printf '%s\n' '=== pytest tail ==='
-          tail -n 240 .ui-review/contextual-pytest.txt || true
+          tail -n 240 "$diagnostics/contextual-pytest.txt" || true
           printf '%s\n' '=== direct tail ==='
-          tail -n 240 .ui-review/contextual-direct.txt || true
+          tail -n 240 "$diagnostics/contextual-direct.txt" || true
 
       - name: Upload diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: contextual-ui-diagnostics-${{ github.sha }}
-          path: .ui-review/
-          include-hidden-files: true
+          path: ci-diagnostics/contextual/
           if-no-files-found: error
           retention-days: 14
 
@@ -135,4 +135,4 @@ jobs:
             END {
               if (seen != 4 || failed) exit 1
             }
-          ' .ui-review/contextual-status.txt
+          ' ci-diagnostics/contextual/contextual-status.txt
