@@ -45,6 +45,7 @@ jobs:
           command -v xdpyinfo
           command -v xdotool
           command -v openbox
+          command -v import
           command -v identify
           command -v dbus-run-session
 
@@ -78,14 +79,15 @@ jobs:
           test -f tools/ui_demo.py
           sha256sum "$archive" | tee logs/source-SHA256SUMS.txt
 
-      - name: Adapt demo media to ffmpeg-free
+      - name: Adapt demo harness to Fedora ffmpeg-free and Xvfb
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
-          path = Path('tools/ui_demo.py')
-          source = path.read_text(encoding='utf-8')
+
+          demo = Path('tools/ui_demo.py')
+          source = demo.read_text(encoding='utf-8')
           updated = (
               source
               .replace('libx264', 'mpeg4')
@@ -96,9 +98,20 @@ jobs:
           )
           if updated == source:
               raise SystemExit('demo media encoder pattern was not found')
-          path.write_text(updated, encoding='utf-8')
+          demo.write_text(updated, encoding='utf-8')
+
+          capture = Path('tools/capture_ui.sh')
+          capture_source = capture.read_text(encoding='utf-8')
+          old = 'gnome-screenshot -f "$out"'
+          new = '''window=$(xdotool getactivewindow)
+          xdotool getwindowgeometry --shell "$window" >&2
+          import -window "$window" "$out"'''
+          if old not in capture_source:
+              raise SystemExit('gnome-screenshot capture command was not found')
+          capture.write_text(capture_source.replace(old, new, 1), encoding='utf-8')
           PY
           python3 -m py_compile tools/ui_demo.py
+          bash -n tools/capture_ui.sh
           ffmpeg -hide_banner -encoders 2>/dev/null | grep -E '(^|[[:space:]])mpeg4([[:space:]]|$)' \
             | tee logs/demo-encoder.txt
 
