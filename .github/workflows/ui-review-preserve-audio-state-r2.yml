@@ -1,0 +1,65 @@
+name: UI review R2 — preserve audio cleaning state
+
+on:
+  push:
+    branches:
+      - review/uiux-libadwaita194-r2-20260922
+    paths:
+      - .github/workflows/ui-review-preserve-audio-state-r2.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: review/uiux-libadwaita194-r2-20260922
+          fetch-depth: 0
+
+      - name: Remove destructive preference reset
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('big-video-converter/usr/share/big-video-converter/sidebar_builder.py')
+          source = path.read_text(encoding='utf-8')
+          destructive = '''        if not audio_will_reencode:
+              self.noise_reduction_switch.set_active(False)
+          '''
+          replacement = '''        # Availability changes, but saved cleaning preferences remain intact.
+          '''
+          if destructive not in source:
+              raise SystemExit('destructive audio preference reset was not found')
+          path.write_text(source.replace(destructive, replacement, 1), encoding='utf-8')
+          PY
+
+      - name: Validate focused contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            big-video-converter/usr/share/big-video-converter/sidebar_builder.py \
+            big-video-converter/usr/share/big-video-converter/utils/audio_ui_state.py \
+            tests/test_audio_ui_state.py
+          python3 -m pytest -q tests/test_audio_ui_state.py
+          git diff --check
+          ! grep -A20 -F 'def _on_audio_handling_changed' \
+            big-video-converter/usr/share/big-video-converter/sidebar_builder.py \
+            | grep -F 'noise_reduction_switch.set_active(False)'
+
+      - name: Commit correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add big-video-converter/usr/share/big-video-converter/sidebar_builder.py
+          git commit -m 'fix(ui): preserve saved audio-cleaning preferences'
+          git push origin HEAD:review/uiux-libadwaita194-r2-20260922
