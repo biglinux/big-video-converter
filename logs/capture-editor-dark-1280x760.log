@@ -1,0 +1,281 @@
++ set -eu
++ screen=editor
++ out=screenshots/editor-dark.png
++ theme=dark
++ width=1280
++ height=760
++++ dirname -- tools/capture_ui.sh
+++ CDPATH=
+++ cd -- tools/..
+++ pwd
++ root=/__w/big-video-converter/big-video-converter
+++ mktemp
++ ready=/tmp/tmp.lpbgYHsQq6
++ rm -f /tmp/tmp.lpbgYHsQq6
++ media=/__w/big-video-converter/big-video-converter/media
+++ mktemp -d
++ export XDG_CONFIG_HOME=/tmp/tmp.EaIR7BJask
++ XDG_CONFIG_HOME=/tmp/tmp.EaIR7BJask
+++ mktemp -d
++ export XDG_CACHE_HOME=/tmp/tmp.HP5fJ03yy4
++ XDG_CACHE_HOME=/tmp/tmp.HP5fJ03yy4
++ trap cleanup EXIT HUP INT TERM
++ pid=4079
++ python3 /__w/big-video-converter/big-video-converter/tools/ui_demo.py --screen editor --theme dark --width 1280 --height 760 --media-dir /__w/big-video-converter/big-video-converter/media --ready /tmp/tmp.lpbgYHsQq6 --auto-quit 30
+++ seq 1 160
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Activating service name='org.freedesktop.portal.Desktop' requested by ':1.2' (uid=0 pid=4079 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Activating service name='org.freedesktop.impl.portal.PermissionStore' requested by ':1.3' (uid=0 pid=4101 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.PermissionStore'
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Activating service name='org.freedesktop.portal.Documents' requested by ':1.3' (uid=0 pid=4101 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Successfully activated service 'org.freedesktop.portal.Documents'
+fuse: device /dev/fuse not found. Kernel module not loaded?
+error: fuse init failed: Can't mount path /github/home/.cache/doc
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.879: Document portal fuse mount point unknown: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name :1.5 was not provided by any .service files
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.879: Choosing gtk.portal for org.freedesktop.impl.portal.Access as a last-resort fallback
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Activating service name='org.freedesktop.impl.portal.desktop.gtk' requested by ':1.3' (uid=0 pid=4101 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+
+(xdg-desktop-portal-gtk:4121): xdg-desktop-portal-gtk-WARNING **: 08:08:17.897: error: Could not connect: No such file or directory
+
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.desktop.gtk'
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.914: Failed to create RealtimeKit proxy: Could not connect: No such file or directory
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.914: Choosing gtk.portal for org.freedesktop.impl.portal.Settings as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.914: Choosing gtk.portal for org.freedesktop.impl.portal.FileChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.915: Choosing gtk.portal for org.freedesktop.impl.portal.AppChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.916: Choosing gtk.portal for org.freedesktop.impl.portal.Print as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.917: Choosing gtk.portal for org.freedesktop.impl.portal.Notification as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.917: Choosing gtk.portal for org.freedesktop.impl.portal.Inhibit as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.920: Failed to connect to PipeWire: Couldn't connect to PipeWire
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.920: Choosing gtk.portal for org.freedesktop.impl.portal.Account as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.921: Choosing gtk.portal for org.freedesktop.impl.portal.Email as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:17.921: Choosing gtk.portal for org.freedesktop.impl.portal.DynamicLauncher as a last-resort fallback
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Successfully activated service 'org.freedesktop.portal.Desktop'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Activating service name='org.a11y.Bus' requested by ':1.2' (uid=0 pid=4079 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[4071]: [session uid=0 pid=4071 pidfd=5] Successfully activated service 'org.a11y.Bus'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
+
+(big-video-converter:4079): Gdk-WARNING **: 08:08:18.165: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:4079): Gdk-WARNING **: 08:08:18.165: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:4079): Gdk-WARNING **: 08:08:18.165: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:4079): Gdk-WARNING **: 08:08:18.165: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:4079): Gdk-WARNING **: 08:08:18.165: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:4079): Gdk-WARNING **: 08:08:18.165: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:4079): Gdk-WARNING **: 08:08:18.165: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:4079): Gdk-WARNING **: 08:08:18.165: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
+dbus-daemon[4137]: Activating service name='org.a11y.atspi.Registry' requested by ':1.0' (uid=0 pid=4079 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[4137]: Successfully activated service 'org.a11y.atspi.Registry'
+SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
+MPV: Error applying transform: 'DrawingArea' object has no attribute 'queue_render'
+MPV: Error applying transform: 'DrawingArea' object has no attribute 'queue_render'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
+Home directory not accessible: Permission denied
+[ALSOFT] (EE) Failed to connect PipeWire event context (errno: 112)
+Home directory not accessible: Permission denied
+Home directory not accessible: Permission denied
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ kill -0 4079
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.lpbgYHsQq6
++ break
++ test -f /tmp/tmp.lpbgYHsQq6
++ sleep 0.6
+++ xdotool getactivewindow
++ window=4194309
++ xdotool getwindowgeometry --shell 4194309
+WINDOW=4194309
+X=160
+Y=120
+WIDTH=1280
+HEIGHT=760
+SCREEN=0
++ import -window 4194309 screenshots/editor-dark.png
++ cleanup
++ test -z 4079
++ kill 4079
++ rm -rf /tmp/tmp.EaIR7BJask /tmp/tmp.HP5fJ03yy4 /tmp/tmp.lpbgYHsQq6
+
+(/usr/libexec/xdg-desktop-portal:4101): xdg-desktop-portal-WARNING **: 08:08:22.566: Failed to close session implementation: The connection is closed
+screenshots/editor-dark.png PNG 1280x760 1280x760+0+0 8-bit sRGB 118743B 0.000u 0:00.000

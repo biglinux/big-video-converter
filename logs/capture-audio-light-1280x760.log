@@ -1,0 +1,220 @@
++ set -eu
++ screen=audio
++ out=screenshots/audio-light.png
++ theme=light
++ width=1280
++ height=760
++++ dirname -- tools/capture_ui.sh
+++ CDPATH=
+++ cd -- tools/..
+++ pwd
++ root=/__w/big-video-converter/big-video-converter
+++ mktemp
++ ready=/tmp/tmp.W4cOidKnaX
++ rm -f /tmp/tmp.W4cOidKnaX
++ media=/__w/big-video-converter/big-video-converter/media
+++ mktemp -d
++ export XDG_CONFIG_HOME=/tmp/tmp.TzxAjD7rtI
++ XDG_CONFIG_HOME=/tmp/tmp.TzxAjD7rtI
+++ mktemp -d
++ export XDG_CACHE_HOME=/tmp/tmp.trCg1Fb7nJ
++ XDG_CACHE_HOME=/tmp/tmp.trCg1Fb7nJ
++ trap cleanup EXIT HUP INT TERM
++ pid=5463
++ python3 /__w/big-video-converter/big-video-converter/tools/ui_demo.py --screen audio --theme light --width 1280 --height 760 --media-dir /__w/big-video-converter/big-video-converter/media --ready /tmp/tmp.W4cOidKnaX --auto-quit 30
+++ seq 1 160
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Activating service name='org.freedesktop.portal.Desktop' requested by ':1.2' (uid=0 pid=5463 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Activating service name='org.freedesktop.impl.portal.PermissionStore' requested by ':1.3' (uid=0 pid=5485 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.PermissionStore'
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Activating service name='org.freedesktop.portal.Documents' requested by ':1.3' (uid=0 pid=5485 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Successfully activated service 'org.freedesktop.portal.Documents'
+fuse: device /dev/fuse not found. Kernel module not loaded?
+error: fuse init failed: Can't mount path /github/home/.cache/doc
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.677: Document portal fuse mount point unknown: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name :1.5 was not provided by any .service files
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.677: Choosing gtk.portal for org.freedesktop.impl.portal.Access as a last-resort fallback
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Activating service name='org.freedesktop.impl.portal.desktop.gtk' requested by ':1.3' (uid=0 pid=5485 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+
+(xdg-desktop-portal-gtk:5505): xdg-desktop-portal-gtk-WARNING **: 08:08:45.696: error: Could not connect: No such file or directory
+
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.desktop.gtk'
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.712: Failed to create RealtimeKit proxy: Could not connect: No such file or directory
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.712: Choosing gtk.portal for org.freedesktop.impl.portal.Settings as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.713: Choosing gtk.portal for org.freedesktop.impl.portal.FileChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.714: Choosing gtk.portal for org.freedesktop.impl.portal.AppChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.714: Choosing gtk.portal for org.freedesktop.impl.portal.Print as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.715: Choosing gtk.portal for org.freedesktop.impl.portal.Notification as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.716: Choosing gtk.portal for org.freedesktop.impl.portal.Inhibit as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.719: Failed to connect to PipeWire: Couldn't connect to PipeWire
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.719: Choosing gtk.portal for org.freedesktop.impl.portal.Account as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.719: Choosing gtk.portal for org.freedesktop.impl.portal.Email as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:45.720: Choosing gtk.portal for org.freedesktop.impl.portal.DynamicLauncher as a last-resort fallback
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Successfully activated service 'org.freedesktop.portal.Desktop'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Activating service name='org.a11y.Bus' requested by ':1.2' (uid=0 pid=5463 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[5455]: [session uid=0 pid=5455 pidfd=5] Successfully activated service 'org.a11y.Bus'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
+
+(big-video-converter:5463): Gdk-WARNING **: 08:08:45.932: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:5463): Gdk-WARNING **: 08:08:45.932: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:5463): Gdk-WARNING **: 08:08:45.932: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:5463): Gdk-WARNING **: 08:08:45.932: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:5463): Gdk-WARNING **: 08:08:45.932: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:5463): Gdk-WARNING **: 08:08:45.932: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:5463): Gdk-WARNING **: 08:08:45.932: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:5463): Gdk-WARNING **: 08:08:45.932: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
+dbus-daemon[5521]: Activating service name='org.a11y.atspi.Registry' requested by ':1.0' (uid=0 pid=5463 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[5521]: Successfully activated service 'org.a11y.atspi.Registry'
+SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ kill -0 5463
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.W4cOidKnaX
++ break
++ test -f /tmp/tmp.W4cOidKnaX
++ sleep 0.6
+++ xdotool getactivewindow
++ window=4194309
++ xdotool getwindowgeometry --shell 4194309
+WINDOW=4194309
+X=160
+Y=120
+WIDTH=1280
+HEIGHT=760
+SCREEN=0
++ import -window 4194309 screenshots/audio-light.png
++ cleanup
++ test -z 5463
++ kill 5463
++ rm -rf /tmp/tmp.TzxAjD7rtI /tmp/tmp.trCg1Fb7nJ /tmp/tmp.W4cOidKnaX
+
+(/usr/libexec/xdg-desktop-portal:5485): xdg-desktop-portal-WARNING **: 08:08:48.811: Failed to close session implementation: The connection is closed
+capture_rc=0
+screenshots/audio-light.png PNG 1280x760 1280x760+0+0 8-bit sRGB 149154B 0.000u 0:00.000

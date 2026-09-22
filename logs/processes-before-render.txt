@@ -1,0 +1,6 @@
+UID          PID    PPID  C STIME TTY          TIME CMD
+root           1       0  0 08:06 ?        00:00:00 tail -f /dev/null
+root        2498       0  0 08:07 ?        00:00:00 bash --noprofile --norc -e -o pipefail /__w/_temp/13d36b5c-2a3d-4587-b896-ef29a98ce83c.sh
+root        2505    2498  1 08:07 ?        00:00:00 Xvfb :99 -screen 0 1600x1000x24 -nolisten tcp -noreset
+root        2511    2498  2 08:07 ?        00:00:00 openbox
+root        2517    2498  0 08:07 ?        00:00:00 ps -ef

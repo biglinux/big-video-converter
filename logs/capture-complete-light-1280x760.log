@@ -1,0 +1,216 @@
++ set -eu
++ screen=complete
++ out=screenshots/complete-light.png
++ theme=light
++ width=1280
++ height=760
++++ dirname -- tools/capture_ui.sh
+++ CDPATH=
+++ cd -- tools/..
+++ pwd
++ root=/__w/big-video-converter/big-video-converter
+++ mktemp
++ ready=/tmp/tmp.X66wMHmDsF
++ rm -f /tmp/tmp.X66wMHmDsF
++ media=/__w/big-video-converter/big-video-converter/media
+++ mktemp -d
++ export XDG_CONFIG_HOME=/tmp/tmp.xQ8erXQvfa
++ XDG_CONFIG_HOME=/tmp/tmp.xQ8erXQvfa
+++ mktemp -d
++ export XDG_CACHE_HOME=/tmp/tmp.XAJCrRxNdK
++ XDG_CACHE_HOME=/tmp/tmp.XAJCrRxNdK
++ trap cleanup EXIT HUP INT TERM
++ pid=3549
++ python3 /__w/big-video-converter/big-video-converter/tools/ui_demo.py --screen complete --theme light --width 1280 --height 760 --media-dir /__w/big-video-converter/big-video-converter/media --ready /tmp/tmp.X66wMHmDsF --auto-quit 30
+++ seq 1 160
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Activating service name='org.freedesktop.portal.Desktop' requested by ':1.2' (uid=0 pid=3549 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Activating service name='org.freedesktop.impl.portal.PermissionStore' requested by ':1.3' (uid=0 pid=3571 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.PermissionStore'
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Activating service name='org.freedesktop.portal.Documents' requested by ':1.3' (uid=0 pid=3571 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Successfully activated service 'org.freedesktop.portal.Documents'
+fuse: device /dev/fuse not found. Kernel module not loaded?
+error: fuse init failed: Can't mount path /github/home/.cache/doc
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.685: Document portal fuse mount point unknown: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name :1.5 was not provided by any .service files
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.685: Choosing gtk.portal for org.freedesktop.impl.portal.Access as a last-resort fallback
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Activating service name='org.freedesktop.impl.portal.desktop.gtk' requested by ':1.3' (uid=0 pid=3571 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+
+(xdg-desktop-portal-gtk:3591): xdg-desktop-portal-gtk-WARNING **: 08:08:05.703: error: Could not connect: No such file or directory
+
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.desktop.gtk'
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.714: Failed to create RealtimeKit proxy: Could not connect: No such file or directory
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.714: Choosing gtk.portal for org.freedesktop.impl.portal.Settings as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.715: Choosing gtk.portal for org.freedesktop.impl.portal.FileChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.716: Choosing gtk.portal for org.freedesktop.impl.portal.AppChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.717: Choosing gtk.portal for org.freedesktop.impl.portal.Print as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.718: Choosing gtk.portal for org.freedesktop.impl.portal.Notification as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.718: Choosing gtk.portal for org.freedesktop.impl.portal.Inhibit as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.721: Failed to connect to PipeWire: Couldn't connect to PipeWire
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.721: Choosing gtk.portal for org.freedesktop.impl.portal.Account as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.722: Choosing gtk.portal for org.freedesktop.impl.portal.Email as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:05.723: Choosing gtk.portal for org.freedesktop.impl.portal.DynamicLauncher as a last-resort fallback
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Successfully activated service 'org.freedesktop.portal.Desktop'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Activating service name='org.a11y.Bus' requested by ':1.2' (uid=0 pid=3549 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[3541]: [session uid=0 pid=3541 pidfd=5] Successfully activated service 'org.a11y.Bus'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
+
+(big-video-converter:3549): Gdk-WARNING **: 08:08:05.935: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:3549): Gdk-WARNING **: 08:08:05.935: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:3549): Gdk-WARNING **: 08:08:05.935: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:3549): Gdk-WARNING **: 08:08:05.935: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:3549): Gdk-WARNING **: 08:08:05.935: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:3549): Gdk-WARNING **: 08:08:05.935: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:3549): Gdk-WARNING **: 08:08:05.935: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:3549): Gdk-WARNING **: 08:08:05.935: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
+dbus-daemon[3607]: Activating service name='org.a11y.atspi.Registry' requested by ':1.0' (uid=0 pid=3549 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[3607]: Successfully activated service 'org.a11y.atspi.Registry'
+SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ kill -0 3549
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.X66wMHmDsF
++ break
++ test -f /tmp/tmp.X66wMHmDsF
++ sleep 0.6
+++ xdotool getactivewindow
++ window=4194309
++ xdotool getwindowgeometry --shell 4194309
+WINDOW=4194309
+X=160
+Y=120
+WIDTH=1280
+HEIGHT=760
+SCREEN=0
++ import -window 4194309 screenshots/complete-light.png
++ cleanup
++ test -z 3549
++ kill 3549
++ rm -rf /tmp/tmp.xQ8erXQvfa /tmp/tmp.XAJCrRxNdK /tmp/tmp.X66wMHmDsF
+
+(/usr/libexec/xdg-desktop-portal:3571): xdg-desktop-portal-WARNING **: 08:08:08.698: Failed to close session implementation: The connection is closed
+capture_rc=0
+screenshots/complete-light.png PNG 1280x760 1280x760+0+0 8-bit sRGB 45965B 0.000u 0:00.000

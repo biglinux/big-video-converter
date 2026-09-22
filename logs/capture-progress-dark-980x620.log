@@ -1,0 +1,220 @@
++ set -eu
++ screen=progress
++ out=screenshots/progress-compact-dark.png
++ theme=dark
++ width=980
++ height=620
++++ dirname -- tools/capture_ui.sh
+++ CDPATH=
+++ cd -- tools/..
+++ pwd
++ root=/__w/big-video-converter/big-video-converter
+++ mktemp
++ ready=/tmp/tmp.wCgpryFOX4
++ rm -f /tmp/tmp.wCgpryFOX4
++ media=/__w/big-video-converter/big-video-converter/media
+++ mktemp -d
++ export XDG_CONFIG_HOME=/tmp/tmp.ub3O1pCWwV
++ XDG_CONFIG_HOME=/tmp/tmp.ub3O1pCWwV
+++ mktemp -d
++ export XDG_CACHE_HOME=/tmp/tmp.wrDLavGce0
++ XDG_CACHE_HOME=/tmp/tmp.wrDLavGce0
++ trap cleanup EXIT HUP INT TERM
++ pid=7641
++ python3 /__w/big-video-converter/big-video-converter/tools/ui_demo.py --screen progress --theme dark --width 980 --height 620 --media-dir /__w/big-video-converter/big-video-converter/media --ready /tmp/tmp.wCgpryFOX4 --auto-quit 30
+++ seq 1 160
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Activating service name='org.freedesktop.portal.Desktop' requested by ':1.2' (uid=0 pid=7641 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Activating service name='org.freedesktop.impl.portal.PermissionStore' requested by ':1.3' (uid=0 pid=7665 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.PermissionStore'
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Activating service name='org.freedesktop.portal.Documents' requested by ':1.3' (uid=0 pid=7665 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Successfully activated service 'org.freedesktop.portal.Documents'
+fuse: device /dev/fuse not found. Kernel module not loaded?
+error: fuse init failed: Can't mount path /github/home/.cache/doc
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:27.969: Document portal fuse mount point unknown: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name :1.5 was not provided by any .service files
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:27.970: Choosing gtk.portal for org.freedesktop.impl.portal.Access as a last-resort fallback
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Activating service name='org.freedesktop.impl.portal.desktop.gtk' requested by ':1.3' (uid=0 pid=7665 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+
+(xdg-desktop-portal-gtk:7684): xdg-desktop-portal-gtk-WARNING **: 08:09:27.990: error: Could not connect: No such file or directory
+
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.desktop.gtk'
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.006: Failed to create RealtimeKit proxy: Could not connect: No such file or directory
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.006: Choosing gtk.portal for org.freedesktop.impl.portal.Settings as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.007: Choosing gtk.portal for org.freedesktop.impl.portal.FileChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.008: Choosing gtk.portal for org.freedesktop.impl.portal.AppChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.009: Choosing gtk.portal for org.freedesktop.impl.portal.Print as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.010: Choosing gtk.portal for org.freedesktop.impl.portal.Notification as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.011: Choosing gtk.portal for org.freedesktop.impl.portal.Inhibit as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.014: Failed to connect to PipeWire: Couldn't connect to PipeWire
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.014: Choosing gtk.portal for org.freedesktop.impl.portal.Account as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.015: Choosing gtk.portal for org.freedesktop.impl.portal.Email as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:28.016: Choosing gtk.portal for org.freedesktop.impl.portal.DynamicLauncher as a last-resort fallback
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Successfully activated service 'org.freedesktop.portal.Desktop'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Activating service name='org.a11y.Bus' requested by ':1.2' (uid=0 pid=7641 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[7633]: [session uid=0 pid=7633 pidfd=5] Successfully activated service 'org.a11y.Bus'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
+
+(big-video-converter:7641): Gdk-WARNING **: 08:09:28.261: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:7641): Gdk-WARNING **: 08:09:28.261: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:7641): Gdk-WARNING **: 08:09:28.261: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:7641): Gdk-WARNING **: 08:09:28.261: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:7641): Gdk-WARNING **: 08:09:28.261: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:7641): Gdk-WARNING **: 08:09:28.261: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:7641): Gdk-WARNING **: 08:09:28.261: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:7641): Gdk-WARNING **: 08:09:28.261: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
+dbus-daemon[7700]: Activating service name='org.a11y.atspi.Registry' requested by ':1.0' (uid=0 pid=7641 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[7700]: Successfully activated service 'org.a11y.atspi.Registry'
+SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ kill -0 7641
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.wCgpryFOX4
++ break
++ test -f /tmp/tmp.wCgpryFOX4
++ sleep 0.6
+++ xdotool getactivewindow
++ window=4194309
++ xdotool getwindowgeometry --shell 4194309
+WINDOW=4194309
+X=273
+Y=190
+WIDTH=1054
+HEIGHT=620
+SCREEN=0
++ import -window 4194309 screenshots/progress-compact-dark.png
++ cleanup
++ test -z 7641
++ kill 7641
++ rm -rf /tmp/tmp.ub3O1pCWwV /tmp/tmp.wrDLavGce0 /tmp/tmp.wCgpryFOX4
+
+(/usr/libexec/xdg-desktop-portal:7665): xdg-desktop-portal-WARNING **: 08:09:31.054: Failed to close session implementation: The connection is closed
+capture_rc=0
+screenshots/progress-compact-dark.png PNG 1054x620 1054x620+0+0 8-bit sRGB 45078B 0.000u 0:00.000

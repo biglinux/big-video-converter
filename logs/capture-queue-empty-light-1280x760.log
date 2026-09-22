@@ -1,0 +1,283 @@
++ set -eu
++ screen=queue-empty
++ out=screenshots/queue-empty-light.png
++ theme=light
++ width=1280
++ height=760
++++ dirname -- tools/capture_ui.sh
+++ CDPATH=
+++ cd -- tools/..
+++ pwd
++ root=/__w/big-video-converter/big-video-converter
+++ mktemp
++ ready=/tmp/tmp.JyDbSn3dfj
++ rm -f /tmp/tmp.JyDbSn3dfj
++ media=/__w/big-video-converter/big-video-converter/media
+++ mktemp -d
++ export XDG_CONFIG_HOME=/tmp/tmp.VjnpZDBCX4
++ XDG_CONFIG_HOME=/tmp/tmp.VjnpZDBCX4
+++ mktemp -d
++ export XDG_CACHE_HOME=/tmp/tmp.I2ubdyStwn
++ XDG_CACHE_HOME=/tmp/tmp.I2ubdyStwn
++ trap cleanup EXIT HUP INT TERM
++ pid=2530
++ python3 /__w/big-video-converter/big-video-converter/tools/ui_demo.py --screen queue-empty --theme light --width 1280 --height 760 --media-dir /__w/big-video-converter/big-video-converter/media --ready /tmp/tmp.JyDbSn3dfj --auto-quit 30
+++ seq 1 160
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Activating service name='org.freedesktop.portal.Desktop' requested by ':1.2' (uid=0 pid=2530 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Activating service name='org.freedesktop.impl.portal.PermissionStore' requested by ':1.3' (uid=0 pid=2659 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.PermissionStore'
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Activating service name='org.freedesktop.portal.Documents' requested by ':1.3' (uid=0 pid=2659 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Successfully activated service 'org.freedesktop.portal.Documents'
+fuse: device /dev/fuse not found. Kernel module not loaded?
+error: fuse init failed: Can't mount path /github/home/.cache/doc
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.537: Document portal fuse mount point unknown: GDBus.Error:org.freedesktop.DBus.Error.ServiceUnknown: The name :1.5 was not provided by any .service files
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.537: Choosing gtk.portal for org.freedesktop.impl.portal.Access as a last-resort fallback
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Activating service name='org.freedesktop.impl.portal.desktop.gtk' requested by ':1.3' (uid=0 pid=2659 comm="/usr/libexec/xdg-desktop-portal" label="docker-default (enforce)")
+
+(xdg-desktop-portal-gtk:2678): xdg-desktop-portal-gtk-WARNING **: 08:07:44.582: error: Could not connect: No such file or directory
+
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Successfully activated service 'org.freedesktop.impl.portal.desktop.gtk'
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.593: Failed to create RealtimeKit proxy: Could not connect: No such file or directory
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.593: Choosing gtk.portal for org.freedesktop.impl.portal.Settings as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.593: Choosing gtk.portal for org.freedesktop.impl.portal.FileChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.594: Choosing gtk.portal for org.freedesktop.impl.portal.AppChooser as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.595: Choosing gtk.portal for org.freedesktop.impl.portal.Print as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.596: Choosing gtk.portal for org.freedesktop.impl.portal.Notification as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.596: Choosing gtk.portal for org.freedesktop.impl.portal.Inhibit as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.599: Failed to connect to PipeWire: Couldn't connect to PipeWire
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.599: Choosing gtk.portal for org.freedesktop.impl.portal.Account as a last-resort fallback
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.600: Choosing gtk.portal for org.freedesktop.impl.portal.Email as a last-resort fallback
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:44.601: Choosing gtk.portal for org.freedesktop.impl.portal.DynamicLauncher as a last-resort fallback
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Successfully activated service 'org.freedesktop.portal.Desktop'
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Activating service name='org.a11y.Bus' requested by ':1.2' (uid=0 pid=2530 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[2522]: [session uid=0 pid=2522 pidfd=5] Successfully activated service 'org.a11y.Bus'
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
+
+(big-video-converter:2530): Gdk-WARNING **: 08:07:44.812: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:2530): Gdk-WARNING **: 08:07:44.812: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:2530): Gdk-WARNING **: 08:07:44.812: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:2530): Gdk-WARNING **: 08:07:44.812: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:2530): Gdk-WARNING **: 08:07:44.813: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:2530): Gdk-WARNING **: 08:07:44.813: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
+
+(big-video-converter:2530): Gdk-WARNING **: 08:07:44.813: Vulkan: ../src/imagination/vulkan/pvr_instance.c:75: Failed to enumerate drm devices (errno 2: No such file or directory) (VK_ERROR_INITIALIZATION_FAILED)
+
+(big-video-converter:2530): Gdk-WARNING **: 08:07:44.813: Vulkan: Loader Message: setup_loader_term_phys_devs: Call to 'vkEnumeratePhysicalDevices' in ICD /usr/lib64/libvulkan_powervr_mesa.so failed with error code -3
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
+dbus-daemon[2693]: Activating service name='org.a11y.atspi.Registry' requested by ':1.0' (uid=0 pid=2530 comm="python3 /__w/big-video-converter/big-video-convert" label="docker-default (enforce)")
+dbus-daemon[2693]: Successfully activated service 'org.a11y.atspi.Registry'
+SpiRegistry daemon is running with well-known name - org.a11y.atspi.Registry
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ kill -0 2530
++ sleep 0.1
++ for _ in $(seq 1 160)
++ test -f /tmp/tmp.JyDbSn3dfj
++ break
++ test -f /tmp/tmp.JyDbSn3dfj
++ sleep 0.6
+++ xdotool getactivewindow
++ window=4194309
++ xdotool getwindowgeometry --shell 4194309
+WINDOW=4194309
+X=160
+Y=120
+WIDTH=1280
+HEIGHT=760
+SCREEN=0
++ import -window 4194309 screenshots/queue-empty-light.png
++ cleanup
++ test -z 2530
++ kill 2530
++ rm -rf /tmp/tmp.VjnpZDBCX4 /tmp/tmp.I2ubdyStwn /tmp/tmp.JyDbSn3dfj
+
+(/usr/libexec/xdg-desktop-portal:2659): xdg-desktop-portal-WARNING **: 08:07:47.640: Failed to close session implementation: The connection is closed
+screenshots/queue-empty-light.png PNG 1280x760 1280x760+0+0 8-bit sRGB 95495B 0.000u 0:00.000
