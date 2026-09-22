@@ -7,7 +7,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: contextual-audio-noise-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   diagnose:
@@ -30,18 +34,15 @@ jobs:
           set -euo pipefail
           dnf -y upgrade --refresh
           dnf -y install \
-            git python3 python3-gobject python3-cairo python3-pytest \
+            python3 python3-gobject python3-cairo python3-pytest \
             gtk4 libadwaita adwaita-icon-theme abattis-cantarell-fonts \
             vte291-gtk4 mpv mpv-libs ffmpeg-free \
             xorg-x11-server-Xvfb xorg-x11-xauth xdpyinfo \
             mesa-dri-drivers mesa-libGL mesa-libEGL dbus-daemon
 
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
 
-      - name: Run each focused path and persist full tracebacks
+      - name: Run focused paths and retain full diagnostics
         shell: bash
         run: |
           set -uo pipefail
@@ -92,21 +93,25 @@ jobs:
           printf '%s\n' '=== direct tail ==='
           tail -n 240 .ui-review/contextual-direct.txt || true
 
-      - name: Commit diagnostics for connector-readable inspection
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: contextual-audio-noise-diagnostics-${{ github.sha }}
+          path: .ui-review/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Enforce diagnostic results
         shell: bash
         run: |
           set -euo pipefail
-          git config user.name 'Big Video Converter review'
-          git config user.email 'review@example.invalid'
-          git add \
-            .ui-review/contextual-runtime.txt \
-            .ui-review/contextual-status.txt \
-            .ui-review/contextual-pytest.txt \
-            .ui-review/contextual-direct.txt \
-            .ui-review/contextual-compileall.txt
-          if git diff --cached --quiet; then
-            echo 'Diagnostics unchanged.'
-            exit 0
-          fi
-          git commit -m 'chore(ci): persist contextual diagnostics [skip ci]'
-          git push origin HEAD:review/uiux-materialized-r2-20260922
+          awk -F= '
+            /^(runtime|pytest|direct|compile)_status=/ {
+              seen += 1
+              if ($2 != 0) failed = 1
+            }
+            END {
+              if (seen != 4 || failed) exit 1
+            }
+          ' .ui-review/contextual-status.txt
