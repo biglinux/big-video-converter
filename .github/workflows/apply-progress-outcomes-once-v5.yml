@@ -1,4 +1,4 @@
-name: Apply progress outcome patch once v5
+name: Apply progress outcome patch once v6
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: apply-progress-outcomes-r3-v5
+  group: apply-progress-outcomes-r3-v6
   cancel-in-progress: false
 
 jobs:
@@ -50,18 +50,19 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Apply typed, structurally targeted source patch
+      - name: Apply serialization-safe source patch
         shell: bash
         run: |
           set -euo pipefail
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          python3 tools/apply_progress_outcomes_r3_v5.py
+          python3 tools/apply_progress_outcomes_r3_v6.py
           rm -f \
             tools/apply_progress_outcomes_r3.py \
             tools/apply_progress_outcomes_r3_v3.py \
             tools/apply_progress_outcomes_r3_v4.py \
             tools/apply_progress_outcomes_r3_v5.py \
+            tools/apply_progress_outcomes_r3_v6.py \
             .github/workflows/apply-progress-outcomes-once.yml \
             .github/workflows/apply-progress-outcomes-once-v2.yml \
             .github/workflows/apply-progress-outcomes-once-v3.yml \
@@ -71,6 +72,7 @@ jobs:
           test ! -e tools/apply_progress_outcomes_r3_v3.py
           test ! -e tools/apply_progress_outcomes_r3_v4.py
           test ! -e tools/apply_progress_outcomes_r3_v5.py
+          test ! -e tools/apply_progress_outcomes_r3_v6.py
           git diff --check
 
       - name: Validate syntax and full regression suite
@@ -107,7 +109,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: progress-outcomes-r3-v5-${{ github.sha }}
+          name: progress-outcomes-r3-v6-${{ github.sha }}
           path: |
             results.xml
             pytest.log
