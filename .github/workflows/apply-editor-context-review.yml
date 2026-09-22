@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Apply verified editor patch
+      - name: Apply verified editor source patch
         shell: bash
         run: |
           set -euo pipefail
@@ -34,8 +34,13 @@ jobs:
             'a807030049f4478cfe03083032bb5d653e4ef5fc0a842e60d9c3ffbeeb3f10c8' \
             /tmp/editor-context-review.patch \
             | sha256sum -c -
-          git apply --check /tmp/editor-context-review.patch
-          git apply /tmp/editor-context-review.patch
+          apply_args=(
+            --exclude=.github/workflows/contextual-tests-diagnostic.yml
+            --exclude=.github/workflows/exact-ui-review-r2.yml
+            /tmp/editor-context-review.patch
+          )
+          git apply --check "${apply_args[@]}"
+          git apply "${apply_args[@]}"
           python3 - <<'PY'
           from pathlib import Path
           for path in (
@@ -48,23 +53,17 @@ jobs:
           PY
           git diff --check
 
-      - name: Commit ordinary sources and remove transport
+      - name: Commit ordinary sources
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'Big Video Converter review'
           git config user.email 'review@example.invalid'
-          git rm \
-            tools/editor-context-review.patch.xz.b64 \
-            .github/workflows/apply-editor-context-review.yml \
-            .github/workflows/export-editor-review-source.yml
           git add \
             big-video-converter/usr/share/big-video-converter/ui/video_edit_ui.py \
             big-video-converter/usr/share/big-video-converter/ui/video_edit_page.py \
             tools/ui_demo.py \
             tests/test_video_edit_ui.py \
-            tests/test_progress_page.py \
-            .github/workflows/exact-ui-review-r2.yml \
-            .github/workflows/contextual-tests-diagnostic.yml
+            tests/test_progress_page.py
           git commit -m 'fix(editor): stabilize controls and cleanup'
           git push origin HEAD:review/uiux-materialized-r2-20260922
