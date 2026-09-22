@@ -363,3 +363,31 @@ def test_subtitle_pass_never_drives_the_bar_or_claims_software_encoding(tmp_path
     assert any('Extracting subtitles' in s for s in statuses[:first_encode])
     assert not any('Software encoding' in s for s in statuses)
     assert progress and all(p<0.5 for p in progress), progress  # only the encode's 6 s of 60 s
+
+
+def test_frozen_preset_survives_gpu_fallback(media, tmp_path, cli_env):
+    from test_presets import MINIMAL
+    from test_probe_and_driver_fallback import _fake_ffmpeg
+    from utils.conversion import run_with_progress_dialog
+    from utils.media_validation import probe_media
+
+    wrapper = _fake_ffmpeg(tmp_path, 'unavailable-gpu',
+        'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done')
+    output = tmp_path / 'fallback.mkv'
+    env = {**cli_env, 'gpu': 'amd', 'force_software': '', 'gpu_smoke_test': '0',
+           'ffmpeg_executable': str(wrapper), 'output_file': str(output),
+           'video_resolution': '64x36', 'audio_handling': 'reencode',
+           'audio_codec': 'aac', 'audio_channels': '1', 'audio_bitrate': '48k'}
+    app = App()
+    run_with_progress_dialog(app, [str(CLI), str(media['video'])], 'fallback',
+        str(media['video']), False, env, preset_source=MINIMAL, job_id='fallback')
+    pump_until(lambda: bool(app.notifications))
+    assert app.notifications[0][0], app.progress_page.rows[0].lines
+    log = '\n'.join(app.progress_page.rows[0].lines)
+    assert 'Encode mode: Decode GPU, encode GPU' in log
+    assert 'Encode mode: Decode Software, Encode Software' in log
+    streams = probe_media(str(output))['streams']
+    video = next(s for s in streams if s['codec_type'] == 'video')
+    audio = next(s for s in streams if s['codec_type'] == 'audio')
+    assert (video['width'], video['height'], video['r_frame_rate']) == (64, 36, '10/1')
+    assert audio['sample_rate'] == '22050' and audio['channels'] == 1

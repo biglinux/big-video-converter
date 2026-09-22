@@ -846,6 +846,18 @@ msgstr "Principale"
 msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
 msgstr "⚠ La modalità di estrazione dei sottotitoli è attiva — il video NON verrà convertito"
 
+msgid "Stop converting and close?"
+msgstr ""
+
+msgid "Conversions are still running. Closing stops unfinished work and keeps its originals."
+msgstr ""
+
+msgid "Keep converting"
+msgstr ""
+
+msgid "Stop and close"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 587
 msgid "Queue"
@@ -1085,6 +1097,9 @@ msgstr "Conversione batch completata"
 # converter/queue_manager.py, line: 336
 msgid "All queued files have been processed."
 msgstr "Tutti i file in coda sono stati elaborati."
+
+msgid "Conversion settings"
+msgstr ""
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1422,6 +1437,12 @@ msgstr "Volume uniforme"
 msgid "Normalizes volume to TV/streaming standard"
 msgstr "Normalizza il volume agli standard TV/streaming"
 
+msgid "Choose a result"
+msgstr ""
+
+msgid "General settings apply unless a video has its own options."
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 447
 msgid "Fast Copy"
@@ -1474,6 +1495,9 @@ msgstr "Personalizza codifica..."
 
 msgid "Presets"
 msgstr "Preset"
+
+msgid "Refine when needed"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 502
@@ -1607,128 +1631,100 @@ msgstr ""
 msgid "Select an audio operation."
 msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 67
-msgid "Edit file"
-msgstr "Modifica file"
+msgid "Open this video in the editor"
+msgstr ""
+
+msgid "Options"
+msgstr ""
+
+msgid "Choose a preset or resolution for this video"
+msgstr ""
+
+msgid "Edit video"
+msgstr ""
+
+msgid "More actions"
+msgstr ""
+
+msgid "Play video"
+msgstr ""
+
+msgid "Video information"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 81
-msgid "Play file"
-msgstr "Riproduci file"
+# converter/utils/file_info.py, line: 194
+msgid "Open containing folder"
+msgstr "Apri la cartella contenente"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 95
 msgid "Remove from queue"
 msgstr "Rimuovi dalla coda"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 101
-msgid "Open Containing Folder"
-msgstr "Apri la cartella contenente"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 104
-msgid "More Information..."
-msgstr "Ulteriori informazioni..."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 107
-msgid "Delete from Disk..."
-msgstr "Elimina dal disco..."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 188
-msgid "Delete File from Disk?"
-msgstr "Elimina file dal disco?"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 191
-#, python-brace-format
-msgid ""
-"Are you sure you want to permanently delete '{}'?\n"
-"\n"
-"This action cannot be undone."
+msgid "Delete from disk…"
 msgstr ""
-"Sei sicuro di voler eliminare permanentemente '{}'?\n"
-"\n"
-"Questa azione non può essere annullata."
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 197
-msgid "Delete"
-msgstr "Elimina"
+msgid "Video preview"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 226
-msgid "Error Deleting File"
-msgstr "Errore durante l'eliminazione del file"
+msgid "Delete this video permanently?"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 227
 #, python-brace-format
-msgid "Could not delete file: {}"
-msgstr "Impossibile eliminare il file: {}"
+msgid "“{}” will be removed from disk. This cannot be undone."
+msgstr ""
 
-msgid "OK"
-msgstr "OK"
+msgid "Keep video"
+msgstr ""
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 244
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/settings_page.py, line: 474
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 717
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 244
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/settings_page.py, line: 474
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 717
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 282
-msgid "No Video Files"
-msgstr "Nessun file video"
+msgid "Delete permanently"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 284
-msgid "Drag files here or use the Add Files button"
-msgstr "Trascina i file qui o usa il pulsante Aggiungi file"
+#, python-brace-format
+msgid "Could not delete the video: {} "
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 270
-msgid "Save in the same folder as the original file"
-msgstr "Salva nella stessa cartella del file originale"
+msgid "Choose general settings, or use Options to customize a video."
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 271
-msgid "Folder to save"
-msgstr "Cartella da salvare"
+msgid "Start with the videos you want to convert"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 288
-msgid "Select folder"
-msgstr "Seleziona cartella"
+msgid "Drop files here, choose videos, or add a whole folder. Nothing is changed until you start the conversion."
+msgstr ""
+
+msgid "Choose videos"
+msgstr ""
+
+msgid "Add a folder"
+msgstr ""
+
+msgid "Save converted videos"
+msgstr ""
+
+msgid "Next to each original"
+msgstr ""
+
+msgid "In one folder"
+msgstr ""
+
+msgid "Output folder"
+msgstr ""
+
+msgid "Choose an output folder"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 349
 msgid "Choose output folder"
 msgstr "Scegli la cartella di output"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 315
-msgid "Delete original files"
-msgstr "Elimina i file originali"
+msgid "Delete originals after verification"
+msgstr ""
+
+msgid "Originals are kept unless every converted result passes validation"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -1783,6 +1779,91 @@ msgstr "non supportata da MP4"
 
 msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
 msgstr "La ricodifica converte queste tracce in modo che l'MP4 venga riprodotto ovunque. La copia diretta è più veloce, ma il risultato potrebbe non avere audio o non riprodursi affatto: scegli MKV come formato di output per mantenere le tracce originali invariate."
+
+msgid "General settings"
+msgstr ""
+
+msgid "Original resolution"
+msgstr ""
+
+#, python-brace-format
+msgid "{profile} · {resolution}"
+msgstr ""
+
+msgid "Options for this video"
+msgstr ""
+
+msgid "Override the general recipe only when this video needs a different destination profile or size."
+msgstr ""
+
+msgid "Effective result"
+msgstr ""
+
+msgid "General settings remain the default for every other video."
+msgstr ""
+
+msgid "Use the general recipe"
+msgstr ""
+
+msgid "Profile"
+msgstr ""
+
+msgid "Target a platform or workflow"
+msgstr ""
+
+msgid "Use the general resolution"
+msgstr ""
+
+msgid "Use the profile resolution"
+msgstr ""
+
+msgid "Keep the original resolution"
+msgstr ""
+
+msgid "Vertical 4K · 2160×3840"
+msgstr ""
+
+msgid "Vertical QHD · 1440×2560"
+msgstr ""
+
+msgid "Vertical Full HD · 1080×1920"
+msgstr ""
+
+msgid "Vertical HD · 720×1280"
+msgstr ""
+
+msgid "Vertical SD · 480×854"
+msgstr ""
+
+msgid "Custom size"
+msgstr ""
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/file_info.py, line: 326
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 733
+msgid "Resolution"
+msgstr "Risoluzione"
+
+msgid "Controls image dimensions and file size"
+msgstr ""
+
+msgid "Width"
+msgstr ""
+
+msgid "Even pixels"
+msgstr ""
+
+msgid "Height"
+msgstr ""
+
+msgid "This video will use"
+msgstr ""
+
+msgid "Apply to this video"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 25
@@ -1990,76 +2071,62 @@ msgstr "Importazione fallita"
 msgid "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
 msgstr "Impossibile caricare il profilo. Assicurati che sia un file di profilo Big Video Converter valido."
 
+msgid "Show conversion settings"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 42
 msgid "Back"
 msgstr "Indietro"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 63
-msgid "Clear queue"
-msgstr "Svuota la coda"
+msgid "Add videos"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 69
-msgid "0 files"
-msgstr "0 file"
+msgid "Add from the network"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 196
-msgid "Add Files"
-msgstr "Aggiungi file"
+msgid "Clear the queue"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 230
-msgid "Add Folder"
-msgstr "Aggiungi Cartella"
+msgid "Your videos"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 242
-msgid "Convert All"
-msgstr "Converti tutto"
+msgid "Add videos to begin"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 114
-msgid "Convert This File"
-msgstr "Converti questo file"
+msgid "Convert videos"
+msgstr ""
+
+msgid "Convert this video"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 133
 msgid "Main menu"
 msgstr "Menu principale"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 133
-msgid "Welcome Screen"
-msgstr "Schermata di benvenuto"
+msgid "Welcome and quick tour"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 140
-msgid "Restore Settings"
-msgstr "Ripristina impostazioni"
+msgid "Restore default settings"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 68
-msgid "About"
-msgstr "Informazioni"
+msgid "About Big Video Converter"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 70
 msgid "Quit"
 msgstr "Esci"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 189
-msgid "1 file"
-msgstr "1 file"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 191
 #, python-brace-format
-msgid "{} files"
-msgstr "{} file"
+msgid "{} video ready"
+msgid_plural "{} videos ready"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Changes apply only to the selected video"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 173
@@ -2189,6 +2256,11 @@ msgstr "Esporta…"
 msgid "Open in text editor"
 msgstr "Apri nell'editor di testo"
 
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 197
+msgid "Delete"
+msgstr "Elimina"
+
 #, python-brace-format
 msgid "Saved as “{0}”. Edit it in {1}"
 msgstr "Salvato come “{0}”. Modificalo in {1}"
@@ -2220,6 +2292,9 @@ msgstr "Preset “{0}” importato."
 
 msgid "Invalid preset files"
 msgstr "File di preset non validi"
+
+msgid "OK"
+msgstr "OK"
 
 msgid "Create a preset with AI"
 msgstr "Crea un preset con l'IA"
@@ -2379,9 +2454,6 @@ msgstr ""
 # converter/ui/progress_page.py, line: 321
 msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
 msgstr "Questo fermerà tutte le conversioni attive e salterà tutti gli elementi in attesa. Questa azione non può essere annullata."
-
-msgid "Keep converting"
-msgstr ""
 
 msgid "Unknown video"
 msgstr ""
@@ -3876,6 +3948,15 @@ msgstr ""
 msgid "Visual crop editor"
 msgstr "Editor di ritaglio visivo"
 
+msgid "Free"
+msgstr ""
+
+msgid "Original"
+msgstr ""
+
+msgid "Crop aspect ratio"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 273
 msgid "Resolution:"
@@ -3901,10 +3982,19 @@ msgstr "Durata:"
 msgid "Volume"
 msgstr "Volume"
 
+msgid "Image"
+msgstr ""
+
+msgid "Fine-tune the look only when the source needs it."
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
 msgstr "Luminosità"
+
+msgid "Contrast"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 347
@@ -3915,6 +4005,12 @@ msgstr "Saturazione"
 # converter/ui/video_edit_ui.py, line: 360
 msgid "Hue"
 msgstr "Colore"
+
+msgid "Orientation"
+msgstr ""
+
+msgid "Rotate or mirror the picture without changing the source file."
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 554
@@ -4452,11 +4548,6 @@ msgstr "Copia nome file"
 msgid "Location"
 msgstr "Posizione"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 194
-msgid "Open containing folder"
-msgstr "Apri la cartella contenente"
-
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4611,15 +4702,6 @@ msgstr "Codec"
 # converter/utils/file_info.py, line: 483
 msgid "Copy codec"
 msgstr "Copia codec"
-
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 326
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 733
-msgid "Resolution"
-msgstr "Risoluzione"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 345
@@ -5137,6 +5219,167 @@ msgstr "Errore di avvio dell'applicazione"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Impossibile avviare Big Video Converter: {0}"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 67
+#~ msgid "Edit file"
+#~ msgstr "Modifica file"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 81
+#~ msgid "Play file"
+#~ msgstr "Riproduci file"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 101
+#~ msgid "Open Containing Folder"
+#~ msgstr "Apri la cartella contenente"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 104
+#~ msgid "More Information..."
+#~ msgstr "Ulteriori informazioni..."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 107
+#~ msgid "Delete from Disk..."
+#~ msgstr "Elimina dal disco..."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 188
+#~ msgid "Delete File from Disk?"
+#~ msgstr "Elimina file dal disco?"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 191
+#, python-brace-format
+#~ msgid ""
+#~ "Are you sure you want to permanently delete '{}'?\n"
+#~ "\n"
+#~ "This action cannot be undone."
+#~ msgstr ""
+#~ "Sei sicuro di voler eliminare permanentemente '{}'?\n"
+#~ "\n"
+#~ "Questa azione non può essere annullata."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 226
+#~ msgid "Error Deleting File"
+#~ msgstr "Errore durante l'eliminazione del file"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 227
+#, python-brace-format
+#~ msgid "Could not delete file: {}"
+#~ msgstr "Impossibile eliminare il file: {}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 244
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/settings_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 717
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 244
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/settings_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 717
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 282
+#~ msgid "No Video Files"
+#~ msgstr "Nessun file video"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 284
+#~ msgid "Drag files here or use the Add Files button"
+#~ msgstr "Trascina i file qui o usa il pulsante Aggiungi file"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 270
+#~ msgid "Save in the same folder as the original file"
+#~ msgstr "Salva nella stessa cartella del file originale"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 271
+#~ msgid "Folder to save"
+#~ msgstr "Cartella da salvare"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 288
+#~ msgid "Select folder"
+#~ msgstr "Seleziona cartella"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 315
+#~ msgid "Delete original files"
+#~ msgstr "Elimina i file originali"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 63
+#~ msgid "Clear queue"
+#~ msgstr "Svuota la coda"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 69
+#~ msgid "0 files"
+#~ msgstr "0 file"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 196
+#~ msgid "Add Files"
+#~ msgstr "Aggiungi file"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 230
+#~ msgid "Add Folder"
+#~ msgstr "Aggiungi Cartella"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 242
+#~ msgid "Convert All"
+#~ msgstr "Converti tutto"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 114
+#~ msgid "Convert This File"
+#~ msgstr "Converti questo file"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 133
+#~ msgid "Welcome Screen"
+#~ msgstr "Schermata di benvenuto"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 140
+#~ msgid "Restore Settings"
+#~ msgstr "Ripristina impostazioni"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 68
+#~ msgid "About"
+#~ msgstr "Informazioni"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 189
+#~ msgid "1 file"
+#~ msgstr "1 file"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 191
+#, python-brace-format
+#~ msgid "{} files"
+#~ msgstr "{} file"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 932

@@ -575,6 +575,18 @@ msgstr "Main"
 msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
 msgstr "⚠ Subtitle extraction only mode is active — video will NOT be converted"
 
+msgid "Stop converting and close?"
+msgstr "Stop converting and close?"
+
+msgid "Conversions are still running. Closing stops unfinished work and keeps its originals."
+msgstr "Conversions are still running. Closing stops unfinished work and keeps its originals."
+
+msgid "Keep converting"
+msgstr "Keep converting"
+
+msgid "Stop and close"
+msgstr "Stop and close"
+
 msgid "Queue"
 msgstr "Queue"
 
@@ -773,6 +785,9 @@ msgstr "Batch Conversion Complete"
 msgid "All queued files have been processed."
 msgstr "All queued files have been processed."
 
+msgid "Conversion settings"
+msgstr "Conversion settings"
+
 msgid "Conversion"
 msgstr "Conversion"
 
@@ -923,6 +938,12 @@ msgstr "Uniform Volume"
 msgid "Normalizes volume to TV/streaming standard"
 msgstr "Normalizes volume to TV/streaming standard"
 
+msgid "Choose a result"
+msgstr "Choose a result"
+
+msgid "General settings apply unless a video has its own options."
+msgstr "General settings apply unless a video has its own options."
+
 msgid "Fast Copy"
 msgstr "Fast Copy"
 
@@ -955,6 +976,9 @@ msgstr "Customize encoding..."
 
 msgid "Presets"
 msgstr "Presets"
+
+msgid "Refine when needed"
+msgstr "Refine when needed"
 
 msgid "Audio Encoding"
 msgstr "Audio Encoding"
@@ -1046,70 +1070,94 @@ msgstr "The converted video will have no audio."
 msgid "Select an audio operation."
 msgstr "Select an audio operation."
 
-msgid "Edit file"
-msgstr "Edit file"
+msgid "Open this video in the editor"
+msgstr "Open this video in the editor"
 
-msgid "Play file"
-msgstr "Play file"
+msgid "Options"
+msgstr "Options"
+
+msgid "Choose a preset or resolution for this video"
+msgstr "Choose a preset or resolution for this video"
+
+msgid "Edit video"
+msgstr "Edit video"
+
+msgid "More actions"
+msgstr "More actions"
+
+msgid "Play video"
+msgstr "Play video"
+
+msgid "Video information"
+msgstr "Video information"
+
+msgid "Open containing folder"
+msgstr "Open containing folder"
 
 msgid "Remove from queue"
 msgstr "Remove from queue"
 
-msgid "Open Containing Folder"
-msgstr "Open Containing Folder"
+msgid "Delete from disk…"
+msgstr "Delete from disk…"
 
-msgid "More Information..."
-msgstr "More Information..."
+msgid "Video preview"
+msgstr "Video preview"
 
-msgid "Delete from Disk..."
-msgstr "Delete from Disk..."
-
-msgid "Delete File from Disk?"
-msgstr "Delete File from Disk?"
+msgid "Delete this video permanently?"
+msgstr "Delete this video permanently?"
 
 #, python-brace-format
-msgid ""
-"Are you sure you want to permanently delete '{}'?\n"
-"\n"
-"This action cannot be undone."
-msgstr ""
-"Are you sure you want to permanently delete '{}'?\n"
-"\n"
-"This action cannot be undone."
+msgid "“{}” will be removed from disk. This cannot be undone."
+msgstr "“{}” will be removed from disk. This cannot be undone."
 
-msgid "Delete"
-msgstr "Delete"
+msgid "Keep video"
+msgstr "Keep video"
 
-msgid "Error Deleting File"
-msgstr "Error Deleting File"
+msgid "Delete permanently"
+msgstr "Delete permanently"
 
 #, python-brace-format
-msgid "Could not delete file: {}"
-msgstr "Could not delete file: {}"
+msgid "Could not delete the video: {} "
+msgstr "Could not delete the video: {} "
 
-msgid "OK"
-msgstr "OK"
+msgid "Choose general settings, or use Options to customize a video."
+msgstr "Choose general settings, or use Options to customize a video."
 
-msgid "No Video Files"
-msgstr "No Video Files"
+msgid "Start with the videos you want to convert"
+msgstr "Start with the videos you want to convert"
 
-msgid "Drag files here or use the Add Files button"
-msgstr "Drag files here or use the Add Files button"
+msgid "Drop files here, choose videos, or add a whole folder. Nothing is changed until you start the conversion."
+msgstr "Drop files here, choose videos, or add a whole folder. Nothing is changed until you start the conversion."
 
-msgid "Save in the same folder as the original file"
-msgstr "Save in the same folder as the original file"
+msgid "Choose videos"
+msgstr "Choose videos"
 
-msgid "Folder to save"
-msgstr "Folder to save"
+msgid "Add a folder"
+msgstr "Add a folder"
 
-msgid "Select folder"
-msgstr "Select folder"
+msgid "Save converted videos"
+msgstr "Save converted videos"
+
+msgid "Next to each original"
+msgstr "Next to each original"
+
+msgid "In one folder"
+msgstr "In one folder"
+
+msgid "Output folder"
+msgstr "Output folder"
+
+msgid "Choose an output folder"
+msgstr "Choose an output folder"
 
 msgid "Choose output folder"
 msgstr "Choose output folder"
 
-msgid "Delete original files"
-msgstr "Delete original files"
+msgid "Delete originals after verification"
+msgstr "Delete originals after verification"
+
+msgid "Originals are kept unless every converted result passes validation"
+msgstr "Originals are kept unless every converted result passes validation"
 
 msgid "Select the output folder"
 msgstr "Select the output folder"
@@ -1154,6 +1202,85 @@ msgstr "not supported by MP4"
 
 msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
 msgstr "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
+
+msgid "General settings"
+msgstr "General settings"
+
+msgid "Original resolution"
+msgstr "Original resolution"
+
+#, python-brace-format
+msgid "{profile} · {resolution}"
+msgstr "{profile} · {resolution}"
+
+msgid "Options for this video"
+msgstr "Options for this video"
+
+msgid "Override the general recipe only when this video needs a different destination profile or size."
+msgstr "Override the general recipe only when this video needs a different destination profile or size."
+
+msgid "Effective result"
+msgstr "Effective result"
+
+msgid "General settings remain the default for every other video."
+msgstr "General settings remain the default for every other video."
+
+msgid "Use the general recipe"
+msgstr "Use the general recipe"
+
+msgid "Profile"
+msgstr "Profile"
+
+msgid "Target a platform or workflow"
+msgstr "Target a platform or workflow"
+
+msgid "Use the general resolution"
+msgstr "Use the general resolution"
+
+msgid "Use the profile resolution"
+msgstr "Use the profile resolution"
+
+msgid "Keep the original resolution"
+msgstr "Keep the original resolution"
+
+msgid "Vertical 4K · 2160×3840"
+msgstr "Vertical 4K · 2160×3840"
+
+msgid "Vertical QHD · 1440×2560"
+msgstr "Vertical QHD · 1440×2560"
+
+msgid "Vertical Full HD · 1080×1920"
+msgstr "Vertical Full HD · 1080×1920"
+
+msgid "Vertical HD · 720×1280"
+msgstr "Vertical HD · 720×1280"
+
+msgid "Vertical SD · 480×854"
+msgstr "Vertical SD · 480×854"
+
+msgid "Custom size"
+msgstr "Custom size"
+
+msgid "Resolution"
+msgstr "Resolution"
+
+msgid "Controls image dimensions and file size"
+msgstr "Controls image dimensions and file size"
+
+msgid "Width"
+msgstr "Width"
+
+msgid "Even pixels"
+msgstr "Even pixels"
+
+msgid "Height"
+msgstr "Height"
+
+msgid "This video will use"
+msgstr "This video will use"
+
+msgid "Apply to this video"
+msgstr "Apply to this video"
 
 msgid "Required Dependencies"
 msgstr "Required Dependencies"
@@ -1287,48 +1414,56 @@ msgstr "Import Failed"
 msgid "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
 msgstr "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
 
+msgid "Show conversion settings"
+msgstr "Show conversion settings"
+
 msgid "Back"
 msgstr "Back"
 
-msgid "Clear queue"
-msgstr "Clear queue"
+msgid "Add videos"
+msgstr "Add videos"
 
-msgid "0 files"
-msgstr "0 files"
+msgid "Add from the network"
+msgstr "Add from the network"
 
-msgid "Add Files"
-msgstr "Add Files"
+msgid "Clear the queue"
+msgstr "Clear the queue"
 
-msgid "Add Folder"
-msgstr "Add Folder"
+msgid "Your videos"
+msgstr "Your videos"
 
-msgid "Convert All"
-msgstr "Convert All"
+msgid "Add videos to begin"
+msgstr "Add videos to begin"
 
-msgid "Convert This File"
-msgstr "Convert This File"
+msgid "Convert videos"
+msgstr "Convert videos"
+
+msgid "Convert this video"
+msgstr "Convert this video"
 
 msgid "Main menu"
 msgstr "Main menu"
 
-msgid "Welcome Screen"
-msgstr "Welcome Screen"
+msgid "Welcome and quick tour"
+msgstr "Welcome and quick tour"
 
-msgid "Restore Settings"
-msgstr "Restore Settings"
+msgid "Restore default settings"
+msgstr "Restore default settings"
 
-msgid "About"
-msgstr "About"
+msgid "About Big Video Converter"
+msgstr "About Big Video Converter"
 
 msgid "Quit"
 msgstr "Quit"
 
-msgid "1 file"
-msgstr "1 file"
-
 #, python-brace-format
-msgid "{} files"
-msgstr "{} files"
+msgid "{} video ready"
+msgid_plural "{} videos ready"
+msgstr[0] "{} video ready"
+msgstr[1] "{} videos ready"
+
+msgid "Changes apply only to the selected video"
+msgstr "Changes apply only to the selected video"
 
 msgid "Improve your audio by removing noise, controlling volume and enhancing voice clarity."
 msgstr "Improve your audio by removing noise, controlling volume and enhancing voice clarity."
@@ -1432,6 +1567,9 @@ msgstr "Export…"
 msgid "Open in text editor"
 msgstr "Open in text editor"
 
+msgid "Delete"
+msgstr "Delete"
+
 #, python-brace-format
 msgid "Saved as “{0}”. Edit it in {1}"
 msgstr "Saved as “{0}”. Edit it in {1}"
@@ -1463,6 +1601,9 @@ msgstr "Preset “{0}” imported."
 
 msgid "Invalid preset files"
 msgstr "Invalid preset files"
+
+msgid "OK"
+msgstr "OK"
 
 msgid "Create a preset with AI"
 msgstr "Create a preset with AI"
@@ -1620,9 +1761,6 @@ msgstr "Cancel all conversions?"
 
 msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
 msgstr "This will stop all active conversions and skip all pending items. This action cannot be undone."
-
-msgid "Keep converting"
-msgstr "Keep converting"
 
 msgid "Unknown video"
 msgstr "Unknown video"
@@ -1973,6 +2111,15 @@ msgstr "Crop from bottom"
 msgid "Visual crop editor"
 msgstr "Visual crop editor"
 
+msgid "Free"
+msgstr "Free"
+
+msgid "Original"
+msgstr "Original"
+
+msgid "Crop aspect ratio"
+msgstr "Crop aspect ratio"
+
 msgid "Resolution:"
 msgstr "Resolution:"
 
@@ -1988,14 +2135,29 @@ msgstr "Duration:"
 msgid "Volume"
 msgstr "Volume"
 
+msgid "Image"
+msgstr "Image"
+
+msgid "Fine-tune the look only when the source needs it."
+msgstr "Fine-tune the look only when the source needs it."
+
 msgid "Brightness"
 msgstr "Brightness"
+
+msgid "Contrast"
+msgstr "Contrast"
 
 msgid "Saturation"
 msgstr "Saturation"
 
 msgid "Hue"
 msgstr "Hue"
+
+msgid "Orientation"
+msgstr "Orientation"
+
+msgid "Rotate or mirror the picture without changing the source file."
+msgstr "Rotate or mirror the picture without changing the source file."
 
 msgid "Transform"
 msgstr "Transform"
@@ -2339,9 +2501,6 @@ msgstr "Copy file name"
 msgid "Location"
 msgstr "Location"
 
-msgid "Open containing folder"
-msgstr "Open containing folder"
-
 msgid "File Size"
 msgstr "File Size"
 
@@ -2371,9 +2530,6 @@ msgstr "Codec"
 
 msgid "Copy codec"
 msgstr "Copy codec"
-
-msgid "Resolution"
-msgstr "Resolution"
 
 msgid "Copy resolution"
 msgstr "Copy resolution"

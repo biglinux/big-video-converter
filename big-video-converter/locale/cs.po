@@ -835,6 +835,18 @@ msgstr "Hlavní"
 msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
 msgstr "⚠ Režim extrakce titulků je aktivní — video NEBUDE převedeno"
 
+msgid "Stop converting and close?"
+msgstr ""
+
+msgid "Conversions are still running. Closing stops unfinished work and keeps its originals."
+msgstr ""
+
+msgid "Keep converting"
+msgstr ""
+
+msgid "Stop and close"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 587
 msgid "Queue"
@@ -1074,6 +1086,9 @@ msgstr "Hromadná konverze dokončena"
 # converter/queue_manager.py, line: 336
 msgid "All queued files have been processed."
 msgstr "Všechny zařazené soubory byly zpracovány."
+
+msgid "Conversion settings"
+msgstr ""
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1411,6 +1426,12 @@ msgstr "Jednotný objem"
 msgid "Normalizes volume to TV/streaming standard"
 msgstr "Normalizuje hlasitost na standard TV/streamování"
 
+msgid "Choose a result"
+msgstr ""
+
+msgid "General settings apply unless a video has its own options."
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 447
 msgid "Fast Copy"
@@ -1463,6 +1484,9 @@ msgstr "Přizpůsobit kódování..."
 
 msgid "Presets"
 msgstr "Předvolby"
+
+msgid "Refine when needed"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 502
@@ -1596,112 +1620,100 @@ msgstr ""
 msgid "Select an audio operation."
 msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 67
-msgid "Edit file"
-msgstr "Upravit soubor"
+msgid "Open this video in the editor"
+msgstr ""
+
+msgid "Options"
+msgstr ""
+
+msgid "Choose a preset or resolution for this video"
+msgstr ""
+
+msgid "Edit video"
+msgstr ""
+
+msgid "More actions"
+msgstr ""
+
+msgid "Play video"
+msgstr ""
+
+msgid "Video information"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 81
-msgid "Play file"
-msgstr "Přehrát soubor"
+# converter/utils/file_info.py, line: 194
+msgid "Open containing folder"
+msgstr "Otevřít obsahující složku"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 95
 msgid "Remove from queue"
 msgstr "Odstranit z fronty"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 101
-msgid "Open Containing Folder"
-msgstr "Otevřít obsahující složku"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 104
-msgid "More Information..."
-msgstr "Více informací..."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 107
-msgid "Delete from Disk..."
-msgstr "Smazat z disku..."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 188
-msgid "Delete File from Disk?"
-msgstr "Smazat soubor z disku?"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 191
-#, python-brace-format
-msgid ""
-"Are you sure you want to permanently delete '{}'?\n"
-"\n"
-"This action cannot be undone."
+msgid "Delete from disk…"
 msgstr ""
-"Opravdu chcete trvale smazat '{}'?\n"
-"\n"
-"Tuto akci nelze vrátit zpět."
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 197
-msgid "Delete"
-msgstr "Smazat"
+msgid "Video preview"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 226
-msgid "Error Deleting File"
-msgstr "Chyba při odstraňování souboru"
+msgid "Delete this video permanently?"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 227
 #, python-brace-format
-msgid "Could not delete file: {}"
-msgstr "Nelze smazat soubor: {}"
+msgid "“{}” will be removed from disk. This cannot be undone."
+msgstr ""
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 474
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 228
-msgid "OK"
-msgstr "OK"
+msgid "Keep video"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 282
-msgid "No Video Files"
-msgstr "Žádné video soubory"
+msgid "Delete permanently"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 284
-msgid "Drag files here or use the Add Files button"
-msgstr "Přetáhněte sem soubory nebo použijte tlačítko Přidat soubory"
+#, python-brace-format
+msgid "Could not delete the video: {} "
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 270
-msgid "Save in the same folder as the original file"
-msgstr "Uložit do stejné složky jako původní soubor"
+msgid "Choose general settings, or use Options to customize a video."
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 271
-msgid "Folder to save"
-msgstr "Složka pro uložení"
+msgid "Start with the videos you want to convert"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 288
-msgid "Select folder"
-msgstr "Vyberte složku"
+msgid "Drop files here, choose videos, or add a whole folder. Nothing is changed until you start the conversion."
+msgstr ""
+
+msgid "Choose videos"
+msgstr ""
+
+msgid "Add a folder"
+msgstr ""
+
+msgid "Save converted videos"
+msgstr ""
+
+msgid "Next to each original"
+msgstr ""
+
+msgid "In one folder"
+msgstr ""
+
+msgid "Output folder"
+msgstr ""
+
+msgid "Choose an output folder"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 349
 msgid "Choose output folder"
 msgstr "Vyberte výstupní složku"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 315
-msgid "Delete original files"
-msgstr "Smazat původní soubory"
+msgid "Delete originals after verification"
+msgstr ""
+
+msgid "Originals are kept unless every converted result passes validation"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -1756,6 +1768,91 @@ msgstr "není podporována formátem MP4"
 
 msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
 msgstr "Překódováním se tyto stopy upraví tak, aby MP4 přehrál kdekoli. Kopírování je sice rychlejší, ale výsledek může být bez zvuku nebo se nemusí přehrát vůbec — zvolte MKV jako výstupní formát, pokud chcete původní stopy ponechat beze změny."
+
+msgid "General settings"
+msgstr ""
+
+msgid "Original resolution"
+msgstr ""
+
+#, python-brace-format
+msgid "{profile} · {resolution}"
+msgstr ""
+
+msgid "Options for this video"
+msgstr ""
+
+msgid "Override the general recipe only when this video needs a different destination profile or size."
+msgstr ""
+
+msgid "Effective result"
+msgstr ""
+
+msgid "General settings remain the default for every other video."
+msgstr ""
+
+msgid "Use the general recipe"
+msgstr ""
+
+msgid "Profile"
+msgstr ""
+
+msgid "Target a platform or workflow"
+msgstr ""
+
+msgid "Use the general resolution"
+msgstr ""
+
+msgid "Use the profile resolution"
+msgstr ""
+
+msgid "Keep the original resolution"
+msgstr ""
+
+msgid "Vertical 4K · 2160×3840"
+msgstr ""
+
+msgid "Vertical QHD · 1440×2560"
+msgstr ""
+
+msgid "Vertical Full HD · 1080×1920"
+msgstr ""
+
+msgid "Vertical HD · 720×1280"
+msgstr ""
+
+msgid "Vertical SD · 480×854"
+msgstr ""
+
+msgid "Custom size"
+msgstr ""
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/file_info.py, line: 326
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 733
+msgid "Resolution"
+msgstr "Rozlišení"
+
+msgid "Controls image dimensions and file size"
+msgstr ""
+
+msgid "Width"
+msgstr ""
+
+msgid "Even pixels"
+msgstr ""
+
+msgid "Height"
+msgstr ""
+
+msgid "This video will use"
+msgstr ""
+
+msgid "Apply to this video"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 25
@@ -1963,76 +2060,63 @@ msgstr "Import se nezdařil"
 msgid "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
 msgstr "Profil se nepodařilo načíst. Ujistěte se, že se jedná o platný soubor profilu Big Video Converter."
 
+msgid "Show conversion settings"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 42
 msgid "Back"
 msgstr "Zpět"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 63
-msgid "Clear queue"
-msgstr "Vymazat frontu"
+msgid "Add videos"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 69
-msgid "0 files"
-msgstr "0 souborů"
+msgid "Add from the network"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 196
-msgid "Add Files"
-msgstr "Přidat soubory"
+msgid "Clear the queue"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 230
-msgid "Add Folder"
-msgstr "Přidat složku"
+msgid "Your videos"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 242
-msgid "Convert All"
-msgstr "Převést vše"
+msgid "Add videos to begin"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 114
-msgid "Convert This File"
-msgstr "Převést tento soubor"
+msgid "Convert videos"
+msgstr ""
+
+msgid "Convert this video"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 133
 msgid "Main menu"
 msgstr "Hlavní nabídka"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 133
-msgid "Welcome Screen"
-msgstr "Uvítací obrazovka"
+msgid "Welcome and quick tour"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 140
-msgid "Restore Settings"
-msgstr "Obnovit nastavení"
+msgid "Restore default settings"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 68
-msgid "About"
-msgstr "O aplikaci"
+msgid "About Big Video Converter"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 70
 msgid "Quit"
 msgstr "Ukončit"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 189
-msgid "1 file"
-msgstr "1 soubor"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 191
 #, python-brace-format
-msgid "{} files"
-msgstr "{} soubory"
+msgid "{} video ready"
+msgid_plural "{} videos ready"
+msgstr[0] ""
+msgstr[1] ""
+msgstr[2] ""
+
+msgid "Changes apply only to the selected video"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 173
@@ -2162,6 +2246,11 @@ msgstr "Exportovat…"
 msgid "Open in text editor"
 msgstr "Otevřít v textovém editoru"
 
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 197
+msgid "Delete"
+msgstr "Smazat"
+
 #, python-brace-format
 msgid "Saved as “{0}”. Edit it in {1}"
 msgstr "Uloženo jako „{0}“. Upravte ji v {1}"
@@ -2193,6 +2282,15 @@ msgstr "Předvolba „{0}“ byla importována."
 
 msgid "Invalid preset files"
 msgstr "Neplatné soubory předvoleb"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 474
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 228
+msgid "OK"
+msgstr "OK"
 
 msgid "Create a preset with AI"
 msgstr "Vytvořit předvolbu pomocí AI"
@@ -2362,9 +2460,6 @@ msgstr ""
 # converter/ui/progress_page.py, line: 321
 msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
 msgstr "Tím se zastaví všechny aktivní převody a přeskočí se všechny čekající položky. Tuto akci nelze vrátit zpět."
-
-msgid "Keep converting"
-msgstr ""
 
 msgid "Unknown video"
 msgstr ""
@@ -2916,6 +3011,15 @@ msgstr ""
 msgid "Visual crop editor"
 msgstr "Vizualní editor ořezu"
 
+msgid "Free"
+msgstr ""
+
+msgid "Original"
+msgstr ""
+
+msgid "Crop aspect ratio"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 273
 msgid "Resolution:"
@@ -2941,10 +3045,19 @@ msgstr "Doba:"
 msgid "Volume"
 msgstr "Hlasitost"
 
+msgid "Image"
+msgstr ""
+
+msgid "Fine-tune the look only when the source needs it."
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
 msgstr "Jasnost"
+
+msgid "Contrast"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 347
@@ -2955,6 +3068,12 @@ msgstr "Nasycení"
 # converter/ui/video_edit_ui.py, line: 360
 msgid "Hue"
 msgstr "Odstín"
+
+msgid "Orientation"
+msgstr ""
+
+msgid "Rotate or mirror the picture without changing the source file."
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 554
@@ -3494,11 +3613,6 @@ msgstr "Kopírovat název souboru"
 msgid "Location"
 msgstr "Umístění"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 194
-msgid "Open containing folder"
-msgstr "Otevřít obsahující složku"
-
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -3578,15 +3692,6 @@ msgstr "Kodek"
 # converter/utils/file_info.py, line: 483
 msgid "Copy codec"
 msgstr "Kopírovat kodek"
-
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 326
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 733
-msgid "Resolution"
-msgstr "Rozlišení"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 345
@@ -4880,6 +4985,145 @@ msgstr "Chyba při spuštění aplikace"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Nepodařilo se spustit Big Video Converter: {0}"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 67
+#~ msgid "Edit file"
+#~ msgstr "Upravit soubor"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 81
+#~ msgid "Play file"
+#~ msgstr "Přehrát soubor"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 101
+#~ msgid "Open Containing Folder"
+#~ msgstr "Otevřít obsahující složku"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 104
+#~ msgid "More Information..."
+#~ msgstr "Více informací..."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 107
+#~ msgid "Delete from Disk..."
+#~ msgstr "Smazat z disku..."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 188
+#~ msgid "Delete File from Disk?"
+#~ msgstr "Smazat soubor z disku?"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 191
+#, python-brace-format
+#~ msgid ""
+#~ "Are you sure you want to permanently delete '{}'?\n"
+#~ "\n"
+#~ "This action cannot be undone."
+#~ msgstr ""
+#~ "Opravdu chcete trvale smazat '{}'?\n"
+#~ "\n"
+#~ "Tuto akci nelze vrátit zpět."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 226
+#~ msgid "Error Deleting File"
+#~ msgstr "Chyba při odstraňování souboru"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 227
+#, python-brace-format
+#~ msgid "Could not delete file: {}"
+#~ msgstr "Nelze smazat soubor: {}"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 282
+#~ msgid "No Video Files"
+#~ msgstr "Žádné video soubory"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 284
+#~ msgid "Drag files here or use the Add Files button"
+#~ msgstr "Přetáhněte sem soubory nebo použijte tlačítko Přidat soubory"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 270
+#~ msgid "Save in the same folder as the original file"
+#~ msgstr "Uložit do stejné složky jako původní soubor"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 271
+#~ msgid "Folder to save"
+#~ msgstr "Složka pro uložení"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 288
+#~ msgid "Select folder"
+#~ msgstr "Vyberte složku"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 315
+#~ msgid "Delete original files"
+#~ msgstr "Smazat původní soubory"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 63
+#~ msgid "Clear queue"
+#~ msgstr "Vymazat frontu"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 69
+#~ msgid "0 files"
+#~ msgstr "0 souborů"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 196
+#~ msgid "Add Files"
+#~ msgstr "Přidat soubory"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 230
+#~ msgid "Add Folder"
+#~ msgstr "Přidat složku"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 242
+#~ msgid "Convert All"
+#~ msgstr "Převést vše"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 114
+#~ msgid "Convert This File"
+#~ msgstr "Převést tento soubor"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 133
+#~ msgid "Welcome Screen"
+#~ msgstr "Uvítací obrazovka"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 140
+#~ msgid "Restore Settings"
+#~ msgstr "Obnovit nastavení"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 68
+#~ msgid "About"
+#~ msgstr "O aplikaci"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 189
+#~ msgid "1 file"
+#~ msgstr "1 soubor"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 191
+#, python-brace-format
+#~ msgid "{} files"
+#~ msgstr "{} soubory"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 932

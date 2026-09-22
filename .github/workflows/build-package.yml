@@ -22,7 +22,7 @@ jobs:
         run: |
           pacman -Syu --noconfirm git python python-gobject gtk4 ffmpeg \
             python-cairo python-mpv libadwaita libva-utils python-opengl vte4 \
-            namcap desktop-file-utils gettext
+            namcap desktop-file-utils gettext appstream
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -53,6 +53,9 @@ jobs:
           test -x package-build/installed/usr/bin/big-video-converter
           test -x package-build/installed/usr/bin/big-video-converter-gui
           test -s package-build/installed/usr/share/licenses/big-video-converter/LICENSE
+          appstreamcli validate --no-net package-build/installed/usr/share/metainfo/*.xml
+          test "$(cat package-build/installed/usr/share/big-video-converter/VERSION)" = "$(pacman -Qp "$package" | cut -d ' ' -f 2)"
+          sha256sum "$package" > package-build/SHA256SUMS
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
@@ -60,6 +63,7 @@ jobs:
           path: |
             package-build/*.pkg.tar.zst
             package-build/namcap.log
+            package-build/SHA256SUMS
           if-no-files-found: error
                   
                 

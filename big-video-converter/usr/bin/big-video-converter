@@ -215,7 +215,7 @@ if [[ -n ${preset_file:-} ]]; then
         [[ $name =~ ^[a-z_]+$ ]] || continue
         if [[ $name == preset_options ]]; then
             options="$value ${options:-}"
-        elif [[ -z ${!name:-} ]]; then
+        elif [[ ${BVC_PRESET_SETTINGS_RESOLVED:-0} != 1 && -z ${!name:-} ]]; then
             printf -v "$name" '%s' "$value"
         fi
     done < <(python3 "$preset_helper" --env "$preset_file")

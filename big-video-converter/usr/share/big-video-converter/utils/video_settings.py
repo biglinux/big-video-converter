@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 # Video Adjustment Default Values
 VIDEO_ADJUSTMENT_DEFAULTS = {
     "brightness": 0.0,  # Preview player: -1.0 to 1.0, FFmpeg: -1.0 to 1.0 (direct map)
+    "contrast": 0.0,  # Preview: -1.0 to 1.0; FFmpeg eq neutral is 1.0
     "saturation": 1.0,  # Preview player: 0.0 to 2.0, FFmpeg: 0.0 to 16.0 (needs conversion)
     "hue": 0.0,  # Preview player: -1.0 to 1.0, FFmpeg: -3.14 to 3.14 radians (needs conversion)
     "crop_left": 0,
@@ -25,6 +26,7 @@ VIDEO_ADJUSTMENT_DEFAULTS = {
 # Settings key mapping
 SETTING_KEYS = {
     "brightness": "preview-brightness",
+    "contrast": "preview-contrast",
     "saturation": "preview-saturation",
     "hue": "preview-hue",
     "crop_left": "preview-crop-left",
@@ -211,6 +213,10 @@ def generate_video_filters(
         ffmpeg_brightness = gstreamer_brightness_to_ffmpeg(brightness)
         eq_parts.append(f"brightness={ffmpeg_brightness:.3f}")
 
+    contrast = get_adjustment_value(settings, "contrast")
+    if abs(contrast) > FLOAT_THRESHOLD:
+        eq_parts.append(f"contrast={max(0.0, 1.0 + contrast):.3f}")
+
     saturation = get_adjustment_value(settings, "saturation")
     if abs(saturation - 1.0) > FLOAT_THRESHOLD:
         ffmpeg_saturation = gstreamer_saturation_to_ffmpeg(saturation)
@@ -294,6 +300,7 @@ class VideoAdjustmentManager:
         ui = self.page.ui
         ui_controls = {
             "brightness": getattr(ui, "brightness_scale", None),
+            "contrast": getattr(ui, "contrast_scale", None),
             "saturation": getattr(ui, "saturation_scale", None),
             "hue": getattr(ui, "hue_scale", None),
             "crop_left": getattr(ui, "crop_left_spin", None),

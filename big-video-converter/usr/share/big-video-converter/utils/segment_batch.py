@@ -91,6 +91,7 @@ def start_segment_batch(page, context):
                         app, context["cmd"][:2], os.path.basename(source),
                         None, False, env, wait_for_completion=True,
                         is_segment_batch=True, segment_duration=duration,
+                        preset_source=context.get("preset_source"),
                         job_id=job_id, cancel_event=cancel_event,
                         progress_item=row, source_file=source,
                     )

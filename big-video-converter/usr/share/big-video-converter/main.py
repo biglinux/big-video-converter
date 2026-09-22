@@ -25,6 +25,7 @@ from ui.conversion_page import ConversionPage
 from ui.dependency_dialog import InstallDependencyDialog
 from ui.header_bar import HeaderBar
 from ui.progress_page import ProgressPage
+from ui.premium_style import install as install_premium_style
 from ui.video_edit_page import VideoEditPage
 from ui.welcome_dialog import WelcomeDialog
 from utils.dependency_checker import DependencyChecker
@@ -167,7 +168,7 @@ class VideoConverterApp(
         actions = {
             "about": self.on_about_action,
             "welcome": self.on_welcome_action,
-            "quit": lambda a, p: self.quit(),
+            "quit": lambda a, p: self._on_window_close_request(self.window),
             "add_files": lambda a, p: self.select_files_for_queue(),
             "add_folder": lambda a, p: self.select_folder_for_queue(),
             "add_network_file": lambda a, p: self.show_network_file_dialog(),
@@ -277,20 +278,20 @@ class VideoConverterApp(
     def _create_window(self):
         """Create the main application window and UI components"""
         # Create main window
+        install_premium_style()
         self.window = Adw.ApplicationWindow(application=self)
         self.window.add_css_class("big-video-converter")
 
         # Set minimum window size to prevent controls from being cut off
-        # Left sidebar (300px) + right content (620px) = 920px minimum width
-        self.window.set_size_request(920, 600)
+        self.window.set_size_request(700, 560)
 
         # Restore window size from settings
         width = self.settings_manager.load_setting("window-width", 1200)
         height = self.settings_manager.load_setting("window-height", 720)
 
         # Ensure default size is not smaller than minimum
-        width = max(width, 920)
-        height = max(height, 600)
+        width = max(width, 700)
+        height = max(height, 560)
         self.window.set_default_size(width, height)
 
         # Restore maximized state
@@ -315,13 +316,13 @@ class VideoConverterApp(
         # Create master ViewStack for main view and progress view
         self.main_stack = Adw.ViewStack()
 
-        # Create horizontal paned layout for main view
-        self.main_paned = Gtk.Paned(orientation=Gtk.Orientation.HORIZONTAL)
-        self.main_paned.set_vexpand(True)
-
-        # Prevent panes from shrinking below their minimum size
-        self.main_paned.set_shrink_start_child(False)
-        self.main_paned.set_shrink_end_child(False)
+        self.split_view = Adw.OverlaySplitView()
+        self.split_view.set_vexpand(True)
+        self.split_view.set_min_sidebar_width(300)
+        self.split_view.set_max_sidebar_width(430)
+        compact = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 1000sp"))
+        compact.add_setter(self.split_view, "collapsed", True)
+        self.window.add_breakpoint(compact)
 
         # Create CSS for sidebar styling
         css_provider = Gtk.CssProvider()
@@ -352,12 +353,10 @@ class VideoConverterApp(
         self._create_left_pane()
         self._create_right_pane()
 
-        # Set initial paned position (restore from settings or use default 430px)
         sidebar_position = self.settings_manager.load_setting("sidebar-position", 430)
-        self.main_paned.set_position(sidebar_position)
+        self.split_view.set_sidebar_width_fraction(min(0.45, max(0.2, sidebar_position / width)))
 
-        # Add main_paned as first page of main_stack
-        self.main_stack.add_titled(self.main_paned, "main_view", _("Main"))
+        self.main_stack.add_titled(self.split_view, "main_view", _("Main"))
 
         self.toast_overlay.set_child(self.main_stack)
 
@@ -382,7 +381,25 @@ class VideoConverterApp(
         self._create_pages()
 
     def _on_window_close_request(self, window):
-        self.quit()
+        if not self.active_conversions and not self.conversions_running:
+            self.quit()
+            return True
+        if getattr(self, "_close_dialog", None) is not None:
+            return True
+        dialog = Adw.AlertDialog(heading=_("Stop converting and close?"),
+            body=_("Conversions are still running. Closing stops unfinished work and keeps its originals."))
+        self._close_dialog = dialog
+        dialog.add_response("continue", _("Keep converting"))
+        dialog.add_response("close", _("Stop and close"))
+        dialog.set_response_appearance("close", Adw.ResponseAppearance.DESTRUCTIVE)
+        dialog.set_default_response("continue")
+        dialog.set_close_response("continue")
+        def respond(_dialog, response):
+            self._close_dialog = None
+            if response == "close":
+                self.quit()
+        dialog.connect("response", respond)
+        dialog.present(window)
         return True
 
     def quit(self):
@@ -390,6 +407,8 @@ class VideoConverterApp(
         if getattr(self, "_quitting", False):
             return
         self._quitting = True
+        if getattr(self, "conversion_page", None) is not None:
+            self.conversion_page.thumbnail_manager.shutdown()
         self.is_cancellation_requested = True
         self.conversion_queue.clear()
         if getattr(self, "progress_page", None) is not None:
@@ -401,6 +420,9 @@ class VideoConverterApp(
 
     def _finish_quit(self):
         if self.active_conversions or self.conversions_running:
+            return GLib.SOURCE_CONTINUE
+        page = getattr(self, "conversion_page", None)
+        if page is not None and not page.thumbnail_manager.shutdown_complete:
             return GLib.SOURCE_CONTINUE
         if getattr(self, "video_edit_page", None) is not None:
             self.video_edit_page.cleanup()
@@ -421,8 +443,8 @@ class VideoConverterApp(
             self.settings_manager.save_setting("window-height", height)
 
         # Save sidebar position
-        sidebar_position = self.main_paned.get_position()
-        self.settings_manager.save_setting("sidebar-position", sidebar_position)
+        if not self.split_view.get_collapsed() and self.split_view.get_show_sidebar():
+            self.settings_manager.save_setting("sidebar-position", self.split_view.get_sidebar().get_width())
 
     def terminate_process_tree(self, process) -> bool:
         from utils.media_validation import terminate_process_group
@@ -450,6 +472,7 @@ class VideoConverterApp(
 
         # Create ViewStack for queue and editor
         self.right_stack = Adw.ViewStack()
+        self.right_stack.set_hhomogeneous(False)
         self.right_stack.set_vexpand(True)
         self.right_stack.set_hexpand(True)
 
@@ -466,7 +489,7 @@ class VideoConverterApp(
         # Set minimum width for right content area
         self.right_toolbar_view.set_size_request(620, -1)
 
-        self.main_paned.set_end_child(self.right_toolbar_view)
+        self.split_view.set_content(self.right_toolbar_view)
 
     def _create_pages(self):
         """Create and add all application pages"""
@@ -622,8 +645,9 @@ class VideoConverterApp(
         """Show about dialog"""
         from constants import APP_DEVELOPERS, APP_NAME, APP_VERSION
 
-        about = Adw.AboutWindow(
-            transient_for=self.window,
+        about = Adw.AboutDialog(
+            developer_name="BigLinux",
+            issue_url="https://github.com/biglinux/big-video-converter/issues",
             application_name=APP_NAME,
             application_icon="big-video-converter",
             version=APP_VERSION,
@@ -631,7 +655,7 @@ class VideoConverterApp(
             license_type=Gtk.License.MIT_X11,
             website="https://www.biglinux.com.br",
         )
-        about.present()
+        about.present(self.window)
 
     def on_welcome_action(self, action, param) -> None:
         """Show the welcome dialog"""

@@ -8,6 +8,7 @@ import os
 import re
 import selectors
 import subprocess
+import tempfile
 import threading
 import time
 
@@ -257,7 +258,7 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
                              wait_for_completion=False, is_segment_batch=False,
                              segment_duration=None, *, job_id=None,
                              cancel_event=None, progress_item=None,
-                             source_file=None, output_file=None):
+                             source_file=None, output_file=None, preset_source=None):
     """Launch one stage; synchronous callers receive its validated result.
 
     Only this supervisor completes a stage. Segment batches own the one terminal
@@ -280,6 +281,7 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
     result_box = []
     process = None
     counted = False
+    preset_directory = None
 
     try:
         def prepare_item():
@@ -310,6 +312,14 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
                     raise
         if cancel_event.is_set():
             raise InterruptedError("Conversion cancelled before starting")
+        if preset_source is not None:
+            # The GUI already resolved inheritance, including explicit empty
+            # values such as original resolution. Keep only the preset's extras.
+            env["BVC_PRESET_SETTINGS_RESOLVED"] = "1"
+            preset_directory = tempfile.TemporaryDirectory(prefix="bvc-preset-")
+            env["preset_file"] = os.path.join(preset_directory.name, "job.toml")
+            with open(env["preset_file"], "w", encoding="utf-8") as handle:
+                handle.write(preset_source)
         process = subprocess.Popen(
             cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, bufsize=0, env=env, start_new_session=True,
@@ -320,7 +330,8 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
             target=monitor_progress,
             args=(app, process, progress_item, env),
             kwargs=dict(source_file=source_file, identity=identity,
-                        result_box=result_box, job_id=job_id),
+                        result_box=result_box, job_id=job_id,
+                        preset_directory=preset_directory),
             daemon=True,
         )
         thread.start()
@@ -330,6 +341,8 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
         return None
     except Exception as error:
         logger.exception("Could not start conversion")
+        if preset_directory is not None:
+            preset_directory.cleanup()
         if process is not None:
             try:
                 terminate_process_group(process)
@@ -358,7 +371,7 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
 
 
 def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=None,
-                     identity=None, result_box=None, job_id=None):
+                     identity=None, result_box=None, job_id=None, preset_directory=None):
     """Drain both pipes with a monotonic deadline and one terminal callback."""
     env = env_vars or {}
     cancelled = progress_item.cancel_event
@@ -553,6 +566,8 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             logger.exception("Could not reap conversion process group")
         if not result.success:
             discard_job_paths(workspace)
+        if preset_directory is not None:
+            preset_directory.cleanup()
         selector.close()
         for pipe in (process.stdout, process.stderr):
             if pipe and not pipe.closed:

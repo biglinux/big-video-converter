@@ -76,6 +76,258 @@ def test_real_application_opens_without_redesign(app):
     assert app.conversion_page and app.progress_page and app.video_edit_page
 
 
+def test_editor_restores_individual_crop_and_contrast_without_changing_other_video(app, monkeypatch):
+    from copy import deepcopy
+
+    editor = app.video_edit_page
+    values = {
+        'first.mp4': {'crop_left': 28, 'crop_right': 28, 'crop_top': 0,
+                      'crop_bottom': 0, 'crop_aspect': '1:1', 'contrast': 0.5},
+        'second.mp4': {'crop_left': 2, 'crop_right': 4, 'crop_top': 6,
+                       'crop_bottom': 8, 'crop_aspect': 'free', 'contrast': -0.2},
+    }
+    monkeypatch.setattr(app.conversion_page, 'file_metadata', deepcopy(values))
+    monkeypatch.setattr(editor, 'mpv_player', None)
+    monkeypatch.setattr(editor, 'current_video_path', None)
+    for path in ('first.mp4', 'second.mp4', 'first.mp4'):
+        editor.current_video_path = path
+        editor._load_file_metadata(path)
+        assert editor.crop_left == values[path]['crop_left']
+        assert editor.crop_right == values[path]['crop_right']
+        assert editor.crop_aspect == values[path]['crop_aspect']
+        assert editor.contrast == values[path]['contrast']
+    assert app.conversion_page.file_metadata == values
+
+
+def test_crop_choices_apply_to_rotated_odd_and_portrait_sources(app, monkeypatch):
+    editor = app.video_edit_page
+    monkeypatch.setattr(editor, 'mpv_player', None)
+    monkeypatch.setattr(editor, 'current_video_path', 'crop-test.mp4')
+    monkeypatch.setattr(app.conversion_page, 'file_metadata', {})
+    for width, height in ((127, 73), (72, 128)):
+        monkeypatch.setattr(editor, 'video_width', width)
+        monkeypatch.setattr(editor, 'video_height', height)
+        for rotation in (0, 90, 270):
+            monkeypatch.setattr(editor, 'rotation', rotation)
+            model = editor.ui.crop_aspect_combo.get_model()
+            for index in range(2, model.get_n_items()):
+                label = model.get_string(index)
+                editor.ui.crop_aspect_combo.set_selected(index)
+                editor.on_crop_aspect_changed(editor.ui.crop_aspect_combo)
+                w = width - editor.crop_left - editor.crop_right
+                h = height - editor.crop_top - editor.crop_bottom
+                assert w > 0 and h > 0 and w % 2 == h % 2 == 0
+                assert 0 <= editor.crop_left <= editor.crop_right + 1
+                assert 0 <= editor.crop_top <= editor.crop_bottom + 1
+                if rotation in (90, 270):
+                    w, h = h, w
+                numerator, denominator = map(float, label.split(':'))
+                assert abs(w / h - numerator / denominator) <= 4 / h
+                assert app.conversion_page.file_metadata['crop-test.mp4']['crop_aspect'] == label
+    editor.ui.crop_aspect_combo.set_selected(1)
+    assert (editor.crop_left, editor.crop_right, editor.crop_top, editor.crop_bottom) == (0, 0, 0, 0)
+
+
+def test_replacing_queue_cancels_pending_row_creation(app, media, tmp_path, monkeypatch):
+    from collections import deque
+    paths=[]
+    for index in range(30):
+        path=tmp_path / f'queue-{index}.mp4'
+        os.link(media['video'], path)
+        paths.append(str(path))
+    monkeypatch.setattr(app, 'conversion_queue', deque(paths))
+    page=app.conversion_page
+    page.update_queue_display()
+    assert 0 < len(page.queue_rows) < len(paths)
+    app.conversion_queue.clear()
+    app.conversion_queue.append(paths[-1])
+    page.update_queue_display()
+    pump(.15)
+    assert [row.file_path for row in page.queue_rows] == [paths[-1]]
+    assert page._queue_render_id is None
+
+
+def test_close_confirmation_preserves_running_job_when_declined(app, monkeypatch):
+    monkeypatch.setattr(app, 'active_conversions', [{'job_id': 'unfinished'}])
+    stopped = []
+    monkeypatch.setattr(app, 'quit', lambda: stopped.append(True))
+    app._on_window_close_request(app.window)
+    next(w for w in widgets(app._close_dialog)
+         if isinstance(w, Gtk.Button) and w.get_label() == 'Keep converting').emit('clicked')
+    assert not stopped
+    app._on_window_close_request(app.window)
+    next(w for w in widgets(app._close_dialog)
+         if isinstance(w, Gtk.Button) and w.get_label() == 'Stop and close').emit('clicked')
+    assert stopped == [True]
+
+
+@pytest.mark.parametrize('busy', ['currently_converting','active_conversions','conversions_running','_pending_imports','_quitting'])
+def test_view_changes_cannot_reenable_conversion_while_busy(app, monkeypatch, busy):
+    with monkeypatch.context() as patch:
+        patch.setattr(app, busy, True, raising=False)
+        app.header_bar.set_view('editor')
+        assert not app.header_bar.convert_current_button.get_sensitive()
+        app.header_bar.set_buttons_sensitive(True)
+        assert not app.header_bar.convert_current_button.get_sensitive()
+        app.header_bar.set_view('queue')
+        app.header_bar.update_queue_size(2)
+        assert not app.header_bar.convert_button.get_sensitive()
+    app.header_bar.set_view('queue')
+
+
+def test_individual_options_dialog_applies_and_restores_inheritance(app, media, monkeypatch):
+    from copy import deepcopy
+
+    from utils.job_options import RESOLUTION_MODES
+    from utils.presets import list_presets
+
+    page=app.conversion_page
+    source=str(media['video'])
+    metadata={source: {'contrast': .25, 'crop_left': 2}, 'other.mp4': {'contrast': -.2}}
+    monkeypatch.setattr(page, 'file_metadata', deepcopy(metadata))
+    general=deepcopy(app.settings_manager.settings)
+    page.on_file_options_by_path(source)
+    dialog=app.window.get_visible_dialog()
+    profile=next(w for w in widgets(dialog) if isinstance(w, Adw.ComboRow) and w.get_title()=='Profile')
+    resolution=next(w for w in widgets(dialog) if isinstance(w, Adw.ComboRow) and w.get_title()=='Resolution')
+    profile.set_selected(1)
+    resolution.set_selected(RESOLUTION_MODES.index('custom'))
+    for label,value in (('Width',641),('Height',361)):
+        row=next(w for w in widgets(dialog) if isinstance(w, Adw.ActionRow) and w.get_title()==label)
+        row.get_activatable_widget().set_value(value)
+    next(w for w in widgets(dialog) if isinstance(w, Gtk.Button) and w.get_label()=='Apply to this video').emit('clicked')
+    pump(.1)
+    chosen=page.file_metadata[source]
+    assert chosen['preset_snapshot']['id']==list_presets()[0].id
+    assert (chosen['custom_width'],chosen['custom_height'])==(640,360)
+    assert chosen['contrast']==.25 and chosen['crop_left']==2
+    assert page.file_metadata['other.mp4']==metadata['other.mp4']
+    assert app.settings_manager.settings==general
+    page.on_file_options_by_path(source)
+    dialog=app.window.get_visible_dialog()
+    rows=[w for w in widgets(dialog) if isinstance(w,Adw.ComboRow)]
+    profile=next(w for w in rows if w.get_title()=='Profile')
+    resolution=next(w for w in rows if w.get_title()=='Resolution')
+    assert profile.get_selected()==1 and resolution.get_selected()==RESOLUTION_MODES.index('custom')
+    profile.set_selected(0)
+    resolution.set_selected(0)
+    next(w for w in widgets(dialog) if isinstance(w, Gtk.Button) and w.get_label()=='Apply to this video').emit('clicked')
+    pump(.1)
+    chosen=page.file_metadata[source]
+    assert chosen['preset_snapshot'] is None and chosen['resolution_mode']=='global'
+    assert chosen['contrast']==.25 and chosen['crop_left']==2
+    assert app.settings_manager.settings==general
+
+
+@pytest.mark.parametrize("mode", ["single", "split", "join"])
+def test_individual_recipe_reaches_real_conversion(app, monkeypatch, media, tmp_path, request, mode):
+    from copy import deepcopy
+
+    from test_presets import MINIMAL
+    from test_supervisor import App as SupervisorApp
+    from utils.conversion import run_with_progress_dialog
+    from utils.job_options import snapshot_preset
+    from utils.media_validation import probe_media
+    from utils.presets import load_preset
+
+    preset_path = tmp_path / 'individual.toml'
+    preset_path.write_text(MINIMAL.replace('fps = 10', 'fps = 10\nresolution = "96x54"\ngpu = "software"'))
+    snapshot = snapshot_preset(load_preset(str(preset_path)))
+    # A saved per-video choice survives removal or editing of the original TOML.
+    preset_path.unlink()
+    general = {
+        'video-codec': 'h264', 'video-resolution': '64x36', 'gpu': 'software',
+        'force-copy-video': False, 'preset': 'ultrafast', 'audio-handling': 'copy',
+        'output-format-index': 0, 'additional-options': '-threads 1 -filter_threads 1',
+    }
+    monkeypatch.setattr(app.settings_manager, 'settings', general.copy())
+    monkeypatch.setattr(app, 'active_preset', lambda: None)
+    page = app.conversion_page
+    old_folder_mode = page.folder_combo.get_selected()
+    old_folder = page.output_folder_entry.get_text()
+    old_delete = page.delete_original_check.get_active()
+    def restore_controls():
+        page.folder_combo.set_selected(old_folder_mode)
+        page.output_folder_entry.set_text(old_folder)
+        page.delete_original_check.set_active(old_delete)
+    request.addfinalizer(restore_controls)
+    source = str(media['video'])
+    segments = {} if mode == 'single' else {
+        'output_mode': mode, 'trim_segments': [{'start': 0.2, 'end': 1.0}, {'start': 1.5, 'end': 2.5}],
+    }
+    monkeypatch.setattr(page, 'current_file_path', source, raising=False)
+    monkeypatch.setattr(page, 'file_metadata', {source: {
+        **segments, 'preset_snapshot': snapshot, 'resolution_mode': 'original',
+    }})
+    page.folder_combo.set_selected(1)
+    page.output_folder_entry.set_text(str(tmp_path))
+    page.delete_original_check.set_active(False)
+    saved = deepcopy(app.settings_manager.settings)
+    contexts = []
+    monkeypatch.setattr(page, '_continue_conversion', lambda context: contexts.append(context) or True)
+    assert page.force_start_conversion(gpu_override={'type': 'nvidia', 'device': '/dev/missing'})
+    individual = contexts[-1]
+    assert individual['env_vars']['gpu'] == 'software'
+    assert individual['output_ext'] == '.mkv'
+    assert individual['env_vars']['video_resolution'] == ''
+    assert individual['env_vars']['audio_handling'] == 'reencode'
+    page.file_metadata[source] = segments.copy()
+    assert page.force_start_conversion()
+    inherited = contexts[-1]
+    assert inherited['output_ext'] == '.mp4'
+    assert inherited['env_vars']['video_resolution'] == '64x36'
+    assert inherited['env_vars']['audio_handling'] == 'copy'
+    assert app.settings_manager.settings == saved
+    edited_folder = tmp_path / 'edited'
+    edited_folder.mkdir()
+    page.output_folder_entry.set_text(str(edited_folder))
+    app.settings_manager.settings['force-copy-video'] = True
+    page.file_metadata[source] = {
+        **segments, 'resolution_mode': 'original', 'contrast': -1.0, 'saturation': 0.0,
+        'crop_aspect': '1:1', 'crop_left': 28, 'crop_right': 28,
+    }
+    assert page.force_start_conversion()
+    app.settings_manager.settings['video-resolution'] = '32x18'
+    for index, context in enumerate(contexts):
+        supervisor = SupervisorApp()
+        if mode == 'single':
+            run_with_progress_dialog(
+                supervisor, context['cmd'], 'individual recipe', source, False,
+                context['env_vars'], preset_source=context['preset_source'], job_id=str(index),
+            )
+        else:
+            from utils.segment_batch import start_segment_batch
+            batch_page = SimpleNamespace(app=supervisor, _format_time_ffmpeg=page._format_time_ffmpeg)
+            assert start_segment_batch(batch_page, context)
+        until(lambda supervisor=supervisor: bool(supervisor.notifications), timeout=40)
+        assert supervisor.notifications[0][0], supervisor.progress_page.rows[0].lines
+        outputs = ([context['full_output_path']] if mode == 'single' else
+                   supervisor.completed_conversions[-1]['output_files'])
+        assert len(outputs) == (2 if mode == 'split' else 1)
+        for output in outputs:
+            streams = probe_media(output)['streams']
+            video = next(s for s in streams if s['codec_type'] == 'video')
+            audio = next(s for s in streams if s['codec_type'] == 'audio')
+            assert (video['width'], video['height']) == [(128, 72), (64, 36), (72, 72)][index]
+            if index == 0:
+                assert video['r_frame_rate'] == '10/1'
+                assert audio['sample_rate'] == '22050' and audio['channels'] == 1
+            if index == 2:
+                import subprocess
+
+                import numpy as np
+                deviations = []
+                for path in (source, output):
+                    frame = subprocess.run(
+                        ['ffmpeg', '-v', 'error', '-i', str(path), '-frames:v', '1',
+                         '-pix_fmt', 'gray', '-f', 'rawvideo', '-'],
+                        check=True, capture_output=True, timeout=10,
+                    ).stdout
+                    deviations.append(np.frombuffer(frame, dtype=np.uint8).std())
+                assert deviations[0] > 20
+                assert deviations[1] < 2
+
+
 @pytest.mark.parametrize('module,entry',[
     ('audio_dialog','show_audio_dialog'),('video_encoding_dialog','show_video_encoding_dialog'),
     ('extra_dialog','show_extra_dialog'),('noise_dialog','show_noise_dialog'),
@@ -210,6 +462,9 @@ def test_queue_probes_off_the_main_thread_and_converts(app,media,tmp_path,monkey
     app.settings_manager.save_setting('gpu','software')
     app.settings_manager.save_setting('use-custom-output-folder',False)
     assert app.add_file_to_queue(str(source))
+    import gc
+    gc.collect()
+    until(lambda: app.conversion_page.queue_rows[0].thumbnail_stack.get_visible_child_name() == 'picture')
     app.start_queue_processing()
     until(lambda:probe_threads,timeout=10)
     assert probe_threads and 'MainThread' not in probe_threads

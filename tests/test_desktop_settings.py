@@ -157,6 +157,18 @@ def test_exit_waits_for_conversion_cleanup(tmp_path, exit_action):
                     app.lookup_action('quit').activate(None)
                 else:
                     app.window.close()
+                assert app._close_dialog is not None
+                assert not row.cancel_event.is_set()
+                def buttons(widget):
+                    from gi.repository import Gtk
+                    if isinstance(widget, Gtk.Button):
+                        yield widget
+                    child = widget.get_first_child()
+                    while child:
+                        yield from buttons(child)
+                        child = child.get_next_sibling()
+                next(button for button in buttons(app._close_dialog)
+                     if button.get_label() == 'Stop and close').emit('clicked')
                 return False
             GLib.timeout_add(50, leave)
         app.connect('activate', activate)
@@ -166,6 +178,7 @@ def test_exit_waits_for_conversion_cleanup(tmp_path, exit_action):
         assert process.poll() is not None
         assert app.conversions_running == 0
         assert not app.progress_page.active_conversions
+        assert app.conversion_page.thumbnail_manager.shutdown_complete
     ''')
     env = dict(os.environ, HOME=str(tmp_path), XDG_CONFIG_HOME=str(tmp_path / 'config'),
                XDG_DATA_HOME=str(tmp_path / 'data'))

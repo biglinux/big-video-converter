@@ -5,13 +5,17 @@ Global settings, paths, and configuration values.
 
 import gettext
 import os
+from pathlib import Path
 
 _ = gettext.gettext
 
 # Application metadata
 APP_ID = "br.com.biglinux.converter"
 APP_NAME = "Big Video Converter"
-APP_VERSION = "3.9.42"
+try:
+    APP_VERSION = Path(__file__).with_name("VERSION").read_text(encoding="utf-8").strip()
+except OSError:
+    APP_VERSION = "development"
 
 APP_DEVELOPERS = ["Tales A. Mendonça", "Bruno Gonçalves Araujo"]
 APP_WEBSITES = ["communitybig.org", "biglinux.com.br"]

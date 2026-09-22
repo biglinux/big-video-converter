@@ -45,7 +45,7 @@ class SidebarBuilderMixin:
             # Text truly centered, no icon
             center_box = Gtk.CenterBox()
             center_box.set_hexpand(True)
-            title_label = Gtk.Label(label="Big Video Converter")
+            title_label = Gtk.Label(label=_("Conversion settings"))
             title_label.set_halign(Gtk.Align.CENTER)
             title_label.set_valign(Gtk.Align.START)
             title_label.set_hexpand(True)
@@ -53,7 +53,7 @@ class SidebarBuilderMixin:
             left_header.set_title_widget(center_box)
         else:
             title_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-            title_label = Gtk.Label(label="Big Video Converter")
+            title_label = Gtk.Label(label=_("Conversion settings"))
             title_box.append(title_label)
             # Add an expanding box to push controls to the left
             expander = Gtk.Box()
@@ -70,6 +70,7 @@ class SidebarBuilderMixin:
 
         # Create ViewStack for contextual content
         self.left_stack = Adw.ViewStack()
+        self.left_stack.set_hhomogeneous(False)
 
         # Page 1: Conversion Settings
         conversion_settings = self._create_conversion_settings()
@@ -96,7 +97,7 @@ class SidebarBuilderMixin:
         # Set minimum width for left sidebar
         left_toolbar_view.set_size_request(300, -1)
 
-        self.main_paned.set_start_child(left_toolbar_view)
+        self.split_view.set_sidebar(left_toolbar_view)
 
     def _create_conversion_settings(self):
         """Create conversion settings sidebar with ActionRows that open dialogs."""
@@ -424,7 +425,8 @@ class SidebarBuilderMixin:
         self.noise_reduction_expander.add_row(self.normalize_row)
 
         # ── Group 1: Video Mode Profiles ──
-        video_group = Adw.PreferencesGroup()
+        video_group = Adw.PreferencesGroup(title=_("Choose a result"),
+            description=_("General settings apply unless a video has its own options."))
 
         self._radio_copy = Gtk.CheckButton()
         self._radio_universal = Gtk.CheckButton(group=self._radio_copy)
@@ -498,7 +500,7 @@ class SidebarBuilderMixin:
         settings_box.append(video_group)
 
         # ── Group 2: Audio / Subtitles / Extra ──
-        other_group = Adw.PreferencesGroup()
+        other_group = Adw.PreferencesGroup(title=_("Refine when needed"))
 
         self._audio_row = Adw.ActionRow(title=_("Audio Encoding"))
         self._audio_row.add_prefix(
@@ -894,6 +896,8 @@ class SidebarBuilderMixin:
             if self.settings_page.gpu_partial_check.get_active():
                 parts.append(_("SW Decode"))
         self._customize_row.set_subtitle(" · ".join(parts) if parts else "")
+        if getattr(self, "conversion_page", None) is not None:
+            self.conversion_page.refresh_recipe_summaries()
 
     def _on_video_encoding_activated(self, _row):
         """Open the educational video encoding dialog."""
