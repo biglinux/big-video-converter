@@ -57,7 +57,7 @@ def _make_entry_sync(source, entry, connections):
             source.set_text(text)
 
     def from_source(widget):
-        text = widget.get_text()
+        text = source.get_text()
         if entry.get_text() != text:
             entry.set_text(text)
 
@@ -73,12 +73,11 @@ class AudioDialog(Adw.Dialog):
         self.app = app
         self.connections = SignalConnections(self)
         self.set_title(_("Audio"))
-        # The content box uses 16 px margins around a 568 px scroller. Keep the
-        # width explicit: follows-content-size would ignore content-width and
-        # collapse this dialog to the natural width of its shortest state.
+        # Disable the all-or-nothing natural sizing mode before setting the
+        # per-axis policy: a stable width and a natural, content-driven height.
+        self.set_follows_content_size(False)
         self.set_content_width(600)
         self.set_content_height(-1)
-        self.set_follows_content_size(False)
         self.set_presentation_mode(Adw.DialogPresentationMode.AUTO)
 
         toolbar = Adw.ToolbarView()
