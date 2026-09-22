@@ -1,0 +1,48 @@
+name: Materialize reviewed UI source
+
+on:
+  push:
+    branches:
+      - review/uiux-materialized-r1-20260922
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  materialize:
+    if: github.event.head_commit.message != 'materialize: reviewed UI source'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: big-video-converter-uiux-source-9ff242b6d14a7f7029f9ca91fb2b98c1e5758264
+          path: _reconstructed
+          github-token: ${{ github.token }}
+          repository: biglinux/big-video-converter
+          run-id: 35685375122
+
+      - name: Extract reviewed tree and commit it normally
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive=$(find _reconstructed -type f \
+            -name 'bvc-uiux-source.tar.gz' -print -quit)
+          test -n "$archive"
+          tar -tzf "$archive" > /tmp/source-files.txt
+          tar -xzf "$archive" -C .
+          test -f big-video-converter/usr/share/big-video-converter/ui/conversion_page.py
+          test -f tools/capture_ui.sh
+          rm -rf _reconstructed
+          git diff --check
+          git config user.name 'Big Video Converter review'
+          git config user.email 'review@example.invalid'
+          git add -A
+          git commit -m 'materialize: reviewed UI source'
+          git push origin HEAD:review/uiux-materialized-r1-20260922
