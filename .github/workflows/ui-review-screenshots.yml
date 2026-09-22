@@ -110,20 +110,33 @@ jobs:
             tests/test_thumbnail_cache.py \
             tests/test_queue_preview_contract.py
 
-      - name: Render major application states
+      - name: Render major application states with diagnostics
         shell: bash
         run: |
-          set -euo pipefail
+          set -u
           mkdir -p screenshots crops contact-sheets media logs
+          : > logs/render-failures.txt
           Xvfb :99 -screen 0 1600x1000x24 -nolisten tcp -noreset \
             > logs/xvfb.log 2>&1 &
+          xvfb_pid=$!
           export DISPLAY=:99
-          for attempt in $(seq 1 50); do
-            xdpyinfo >/dev/null 2>&1 && break
+          ready=0
+          for attempt in $(seq 1 80); do
+            if xdpyinfo >/dev/null 2>&1; then
+              ready=1
+              break
+            fi
             sleep 0.1
           done
+          if [ "$ready" -ne 1 ]; then
+            echo 'Xvfb did not become ready' | tee -a logs/render-failures.txt
+          fi
           openbox > logs/openbox.log 2>&1 &
+          openbox_pid=$!
           sleep 1
+          xdpyinfo > logs/xdpyinfo.txt 2>&1 || true
+          xdotool getdisplaygeometry > logs/display-geometry.txt 2>&1 || true
+          ps -ef > logs/processes-before-render.txt
 
           screens=(
             queue-empty queue progress complete editor welcome
@@ -131,14 +144,29 @@ jobs:
           )
           render() {
             local screen=$1 theme=$2 width=$3 height=$4 output=$5
+            local tag="${screen}-${theme}-${width}x${height}"
+            local log="logs/capture-${tag}.log"
+            echo "BEGIN ${tag}" | tee -a logs/render-sequence.txt
             timeout --signal=TERM --kill-after=10s 80s \
               dbus-run-session -- \
               env DISPLAY=:99 GDK_BACKEND=x11 GSETTINGS_BACKEND=memory \
                   LIBGL_ALWAYS_SOFTWARE=1 NO_AT_BRIDGE=1 \
                   BVC_DEMO_MEDIA_DIR="$PWD/media" \
-              sh tools/capture_ui.sh \
-                "$screen" "$output" "$theme" "$width" "$height"
-            identify "$output" | tee -a logs/image-dimensions.txt
+              sh -x tools/capture_ui.sh \
+                "$screen" "$output" "$theme" "$width" "$height" \
+                > "$log" 2>&1
+            local rc=$?
+            echo "capture_rc=${rc}" >> "$log"
+            if [ -s "$output" ]; then
+              identify "$output" >> "$log" 2>&1
+              identify "$output" | tee -a logs/image-dimensions.txt
+              echo "PASS ${tag}" | tee -a logs/render-sequence.txt
+            else
+              echo "FAIL ${tag} rc=${rc} output_missing_or_empty" \
+                | tee -a logs/render-failures.txt logs/render-sequence.txt
+              tail -n 160 "$log" > "logs/capture-${tag}-tail.txt"
+            fi
+            return 0
           }
           for screen in "${screens[@]}"; do
             render "$screen" light 1280 760 "screenshots/${screen}-light.png"
@@ -148,9 +176,39 @@ jobs:
             render "$screen" light 980 620 "screenshots/${screen}-compact-light.png"
             render "$screen" dark 980 620 "screenshots/${screen}-compact-dark.png"
           done
-          sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
+          find screenshots -maxdepth 1 -type f -printf '%f %s bytes\n' \
+            | sort > logs/screenshots-tree.txt
+          if compgen -G 'screenshots/*.png' >/dev/null; then
+            sha256sum screenshots/*.png > screenshots/SHA256SUMS.txt
+          fi
+          ps -ef > logs/processes-after-render.txt
+          kill "$openbox_pid" "$xvfb_pid" 2>/dev/null || true
+          echo '--- render failures ---'
+          cat logs/render-failures.txt
+          echo '--- render sequence ---'
+          cat logs/render-sequence.txt
+          exit 0
+
+      - name: Summarize render diagnostics
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          echo '=== runtime ==='
+          cat logs/runtime-python.txt
+          echo '=== failures ==='
+          cat logs/render-failures.txt
+          echo '=== screenshots ==='
+          cat logs/screenshots-tree.txt
+          echo '=== capture log tails ==='
+          for file in logs/capture-*-tail.txt; do
+            [ -e "$file" ] || continue
+            echo "--- $file ---"
+            cat "$file"
+          done
 
       - name: Create 3x3 zoom crops and contact sheets
+        if: always()
         shell: bash
         run: |
           set -euo pipefail
@@ -216,9 +274,13 @@ jobs:
               json.dumps(manifest, ensure_ascii=False, indent=2) + '\n',
               encoding='utf-8',
           )
+          if not manifest:
+              print('No screenshots were available for cropping.')
           PY
-          sha256sum crops/*/*.png contact-sheets/*.png \
-            > logs/crops-SHA256SUMS.txt
+          if compgen -G 'crops/*/*.png' >/dev/null; then
+            sha256sum crops/*/*.png contact-sheets/*.png \
+              > logs/crops-SHA256SUMS.txt
+          fi
 
       - name: Upload screenshots, crops and diagnostics
         if: always()
