@@ -1,0 +1,73 @@
+name: Materialize tested UIUX source
+
+on:
+  push:
+    branches:
+      - review/uiux-materialize-20260922
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  materialize:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download tested reconstructed source
+        uses: actions/download-artifact@v4
+        with:
+          name: big-video-converter-uiux-source-9ff242b6d14a7f7029f9ca91fb2b98c1e5758264
+          path: _reconstructed
+          github-token: ${{ github.token }}
+          repository: biglinux/big-video-converter
+          run-id: 35685375122
+
+      - name: Extract and validate source
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive=$(find _reconstructed -type f \( -name '*.tar.gz' -o -name '*.tgz' \) -print -quit)
+          test -n "$archive"
+          rm -rf /tmp/bvc-source /tmp/bvc-materialized
+          mkdir -p /tmp/bvc-source
+          tar -xzf "$archive" -C /tmp/bvc-source
+          main=$(find /tmp/bvc-source -path '*/big-video-converter/usr/share/big-video-converter/main.py' -print -quit)
+          test -n "$main"
+          root=${main%/big-video-converter/usr/share/big-video-converter/main.py}
+          test -f "$root/big-video-converter/usr/share/big-video-converter/ui/conversion_page.py"
+          cp -a "$root" /tmp/bvc-materialized
+          rm -rf /tmp/bvc-materialized/.git
+          python3 -m compileall -q \
+            /tmp/bvc-materialized/big-video-converter/usr/share/big-video-converter \
+            /tmp/bvc-materialized/tools \
+            /tmp/bvc-materialized/tests
+          printf '%s\n' "$archive" > /tmp/bvc-materialized/MATERIALIZED-SOURCE.txt
+          sha256sum "$archive" >> /tmp/bvc-materialized/MATERIALIZED-SOURCE.txt
+
+      - name: Publish implementation branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git checkout --orphan source-publish
+          git rm -rf . >/dev/null 2>&1 || true
+          git clean -fdx >/dev/null 2>&1 || true
+          cp -a /tmp/bvc-materialized/. .
+          git add -A
+          git commit -m 'checkpoint: materialize tested UIUX source'
+          git push --force origin HEAD:refs/heads/review/uiux-implementation-20260922
+
+      - name: Upload source backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: big-video-converter-uiux-materialized-${{ github.sha }}
+          path: /tmp/bvc-materialized
+          if-no-files-found: error
+          retention-days: 14
