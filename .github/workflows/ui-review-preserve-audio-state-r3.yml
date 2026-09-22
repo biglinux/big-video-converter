@@ -1,0 +1,55 @@
+name: UI review R3 — preserve audio cleaning state
+
+on:
+  push:
+    branches:
+      - review/uiux-libadwaita194-r2-20260922
+    paths:
+      - .github/ui-review/preserve_audio_cleaning_state.py
+      - .github/workflows/ui-review-preserve-audio-state-r3.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: review/uiux-libadwaita194-r2-20260922
+          fetch-depth: 0
+
+      - name: Apply preservation contract
+        run: python3 .github/ui-review/preserve_audio_cleaning_state.py
+
+      - name: Validate focused behavior
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile \
+            .github/ui-review/preserve_audio_cleaning_state.py \
+            big-video-converter/usr/share/big-video-converter/sidebar_builder.py \
+            big-video-converter/usr/share/big-video-converter/utils/audio_ui_state.py \
+            tests/test_audio_ui_state.py
+          python3 -m pytest -q tests/test_audio_ui_state.py
+          git diff --check
+          ! grep -A20 -F 'def _on_audio_handling_changed' \
+            big-video-converter/usr/share/big-video-converter/sidebar_builder.py \
+            | grep -F 'noise_reduction_switch.set_active(False)'
+
+      - name: Commit product correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- big-video-converter/usr/share/big-video-converter/sidebar_builder.py; then
+            echo 'Product file already satisfies the preservation contract.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add big-video-converter/usr/share/big-video-converter/sidebar_builder.py
+          git commit -m 'fix(ui): preserve saved audio-cleaning preferences'
+          git push origin HEAD:review/uiux-libadwaita194-r2-20260922
