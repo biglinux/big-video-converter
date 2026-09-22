@@ -1,0 +1,130 @@
+name: UI review — build inspectable PDF
+
+on:
+  push:
+    branches:
+      - review/uiux-libadwaita194-r2-20260922
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pdf:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Wait for matching evidence publication
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence_ref=review/uiux-evidence-libadwaita194-20260922
+          matched=0
+          for attempt in $(seq 1 100); do
+            git fetch --force origin "+refs/heads/${evidence_ref}:refs/remotes/origin/${evidence_ref}" || true
+            if git show "origin/${evidence_ref}:README.md" 2>/dev/null | grep -Fq "$GITHUB_SHA"; then
+              matched=1
+              break
+            fi
+            sleep 15
+          done
+          if [ "$matched" -ne 1 ]; then
+            echo "Evidence branch did not publish source commit $GITHUB_SHA" >&2
+            exit 1
+          fi
+          git checkout -B evidence-pdf "origin/${evidence_ref}"
+
+      - name: Install PDF dependency
+        run: python3 -m pip install --disable-pip-version-check --no-input Pillow
+
+      - name: Build visual-review PDF
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p pdf
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageDraw, ImageFont
+          import json
+
+          root = Path('.')
+          screenshots = sorted((root / 'screenshots').glob('*.png'))
+          sheets = sorted((root / 'contact-sheets').glob('*.png'))
+          if not screenshots:
+              raise SystemExit('No screenshots found')
+
+          try:
+              title_font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 30)
+              meta_font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 18)
+          except OSError:
+              title_font = ImageFont.load_default()
+              meta_font = ImageFont.load_default()
+
+          page_size = (1800, 1200)
+          margin = 70
+          header = 95
+
+          def make_page(path: Path, kind: str):
+              image = Image.open(path).convert('RGB')
+              page = Image.new('RGB', page_size, 'white')
+              draw = ImageDraw.Draw(page)
+              title = f'{kind}: {path.stem}'
+              draw.text((margin, 28), title, fill='black', font=title_font)
+              draw.text((margin, 66), f'Original: {image.width} × {image.height}', fill='#444444', font=meta_font)
+              available = (page_size[0] - margin * 2, page_size[1] - header - margin)
+              scale = min(available[0] / image.width, available[1] / image.height)
+              rendered = image.resize((max(1, int(image.width * scale)), max(1, int(image.height * scale))), Image.Resampling.LANCZOS)
+              x = (page_size[0] - rendered.width) // 2
+              y = header + (available[1] - rendered.height) // 2
+              page.paste(rendered, (x, y))
+              draw.rectangle((x - 1, y - 1, x + rendered.width, y + rendered.height), outline='#b8b8b8', width=2)
+              return page
+
+          pages = []
+          index = []
+          preferred = [
+              'queue-empty-light', 'queue-light', 'queue-compact-light',
+              'progress-light', 'progress-compact-light', 'complete-light',
+              'editor-light', 'editor-compact-light', 'welcome-light',
+              'presets-light', 'video-options-light', 'audio-light',
+              'noise-light', 'subtitles-light', 'advanced-light',
+              'queue-empty-dark', 'queue-dark', 'queue-compact-dark',
+              'progress-dark', 'progress-compact-dark', 'complete-dark',
+              'editor-dark', 'editor-compact-dark', 'welcome-dark',
+              'presets-dark', 'video-options-dark', 'audio-dark',
+              'noise-dark', 'subtitles-dark', 'advanced-dark',
+          ]
+          by_stem = {p.stem: p for p in screenshots}
+          ordered = [by_stem[name] for name in preferred if name in by_stem]
+          ordered.extend(p for p in screenshots if p not in ordered)
+
+          for path in ordered:
+              pages.append(make_page(path, 'FULL SCREEN'))
+              index.append({'page': len(pages), 'kind': 'screenshot', 'path': str(path)})
+              sheet = root / 'contact-sheets' / f'{path.stem}-3x3-zoom.png'
+              if sheet.is_file():
+                  pages.append(make_page(sheet, '3×3 ZOOM'))
+                  index.append({'page': len(pages), 'kind': 'contact-sheet', 'path': str(sheet)})
+
+          output = root / 'pdf' / 'BigVideoConverter-libadwaita-1.9.4-visual-review.pdf'
+          first, rest = pages[0], pages[1:]
+          first.save(output, 'PDF', resolution=150.0, save_all=True, append_images=rest)
+          (root / 'pdf' / 'visual-review-index.json').write_text(json.dumps(index, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(f'created {output} with {len(pages)} pages')
+          PY
+          sha256sum pdf/* > pdf/SHA256SUMS.txt
+
+      - name: Commit PDF to evidence branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add pdf
+          git commit -m "evidence: add inspectable PDF for $GITHUB_SHA"
+          git push origin HEAD:refs/heads/review/uiux-evidence-libadwaita194-20260922
