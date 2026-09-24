@@ -29,6 +29,7 @@ from ui.premium_style import install as install_premium_style
 from ui.video_edit_page import VideoEditPage
 from ui.welcome_dialog import WelcomeDialog
 from utils.dependency_checker import DependencyChecker
+from utils.job_options import parse_segments_arg
 from utils.settings_manager import SettingsManager
 from utils.tooltip_helper import TooltipHelper
 
@@ -93,6 +94,16 @@ class VideoConverterApp(
             application_id=APP_ID,
             flags=Gio.ApplicationFlags.HANDLES_OPEN
             | Gio.ApplicationFlags.HANDLES_COMMAND_LINE,
+        )
+
+        # Players hand a file over with the cuts the user marked there.
+        self.add_main_option(
+            "segments",
+            0,
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.STRING,
+            "Cuts to keep, in seconds: START-END[,START-END...]",
+            "RANGES",
         )
 
         # No need to call with parameter in constructor - will be called later
@@ -821,13 +832,25 @@ class VideoConverterApp(
     def do_command_line(self, command_line):
         """Handle command line arguments"""
         args = command_line.get_arguments()
+        options = command_line.get_options_dict().end().unpack()
+        segments = None
+        try:
+            if "segments" in options:
+                segments = parse_segments_arg(options["segments"])
+        except ValueError as exc:
+            # Refuse rather than queue the whole file as if no cuts were asked for.
+            command_line.printerr(f"big-video-converter: {exc}\n")
+            return 2
 
-        if len(args) > 1:
-            files = [
-                Gio.File.new_for_path(arg) for arg in args[1:] if os.path.isfile(arg)
-            ]
-            if files:
-                self.do_open(files, len(files), "")
+        # Absolute, because the queue keys its metadata by Gio.File.get_path().
+        paths = [os.path.abspath(arg) for arg in args[1:] if os.path.isfile(arg)]
+        if paths:
+            self.do_open([Gio.File.new_for_path(p) for p in paths], len(paths), "")
+            if segments is not None and hasattr(self, "conversion_page"):
+                for path in paths:
+                    metadata = self.conversion_page.file_metadata.get(path)
+                    if metadata is not None:
+                        metadata["trim_segments"] = [dict(s) for s in segments]
 
         self.activate()
         return 0

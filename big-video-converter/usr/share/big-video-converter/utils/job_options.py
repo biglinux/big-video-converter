@@ -6,6 +6,7 @@ freezes an effective snapshot so later UI changes cannot mutate active work.
 
 from __future__ import annotations
 
+import math
 from copy import deepcopy
 from typing import Any
 
@@ -69,6 +70,31 @@ def normalize_metadata(value: dict[str, Any] | None) -> dict[str, Any]:
             continue
         result[key] = number if number % 2 == 0 else number - 1
     return result
+
+
+MAX_SEGMENTS = 10_000
+
+
+def parse_segments_arg(text: str) -> list[dict[str, float]]:
+    """Parse ``START-END[,START-END...]`` (seconds) given on the command line.
+
+    Used by players that hand a file over with its cuts already marked.
+    Raises ``ValueError`` on anything that is not a list of finite, ordered,
+    non-negative ranges, so a bad hand-off never silently converts the whole
+    file.
+    """
+    segments = []
+    for part in text.split(","):
+        start_text, sep, end_text = part.strip().partition("-")
+        if not sep:
+            raise ValueError(f"segment {part.strip()!r} is not START-END")
+        start, end = float(start_text), float(end_text)
+        if not (math.isfinite(start) and math.isfinite(end) and 0 <= start < end):
+            raise ValueError(f"segment {part.strip()!r} needs 0 <= start < end")
+        segments.append({"start": start, "end": end})
+    if len(segments) > MAX_SEGMENTS:
+        raise ValueError(f"more than {MAX_SEGMENTS} segments")
+    return segments
 
 
 def effective_resolution(metadata: dict[str, Any], global_value: str = "") -> str:

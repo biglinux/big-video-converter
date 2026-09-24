@@ -46,3 +46,20 @@ def test_invalid_custom_dimensions_cannot_start_a_job(width):
             {},
             {"resolution_mode": "custom", "custom_width": width, "custom_height": 720},
         )
+
+
+def test_segments_arg_parses_ordered_ranges():
+    from utils.job_options import parse_segments_arg
+
+    assert parse_segments_arg("1.5-3, 10-12.25") == [
+        {"start": 1.5, "end": 3.0},
+        {"start": 10.0, "end": 12.25},
+    ]
+
+
+@pytest.mark.parametrize("text", ["", "5", "3-1", "2-2", "-1-4", "a-b", "1-inf", "nan-3"])
+def test_segments_arg_rejects_malformed_ranges(text):
+    from utils.job_options import parse_segments_arg
+
+    with pytest.raises(ValueError):
+        parse_segments_arg(text)
