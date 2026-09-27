@@ -10,3 +10,5 @@ not merely dispose. Wait for close animations before asserting finalization.
   leaves the button callback owning the Python controller and its dialog.
 - Information windows are destroyed on close. Track their button subscriptions
   with `SignalConnections(..., "close-request")` and ignore worker results after close.
+- Track child callbacks capturing the Extra dialog with `SignalConnections`,
+  just like subscriptions on long-lived settings widgets.

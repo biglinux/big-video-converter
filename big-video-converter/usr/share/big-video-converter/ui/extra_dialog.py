@@ -238,8 +238,8 @@ def show_extra_dialog(parent_window, app) -> None:
     def _on_import(_btn):
         _import_profile(dialog, parent_window, app)
 
-    export_btn.connect("clicked", _on_export)
-    import_btn.connect("clicked", _on_import)
+    connections.connect(export_btn, "clicked", _on_export)
+    connections.connect(import_btn, "clicked", _on_import)
 
     content.append(
         _make_card(

@@ -97,3 +97,34 @@ def test_info_window_finalizes_after_close(app, media):
         pump(0.6)
         gc.collect()
     assert set(range(10, 15)) <= _finalized
+
+
+@pytest.mark.parametrize(
+    "module,entry",
+    [
+        ("extra_dialog", "show_extra_dialog"),
+    ],
+)
+def test_dialog_tree_finalizes(app, module, entry):
+    import importlib
+
+    from test_gtk import widgets
+
+    created = set()
+    for cycle in range(3):
+        getattr(importlib.import_module("ui." + module), entry)(app.window, app)
+        dialog = app.window.get_visible_dialog()
+        pump(0.3)
+        assert dialog.get_mapped()
+        for index, widget in enumerate(widgets(dialog)):
+            serial = 1000 + cycle * 10000 + index
+            created.add(serial)
+            track(widget, serial)
+        del widget
+        dialog.force_close()
+        del dialog
+        pump(0.6)
+        gc.collect()
+    assert created <= _finalized, (
+        f"{entry}: {len(created - _finalized)}/{len(created)} widgets retained"
+    )
