@@ -6,6 +6,8 @@ import threading
 
 from gi.repository import Gdk, Gio, GLib, Gtk
 
+from utils.signal_connections import SignalConnections
+
 _ = gettext.gettext
 
 
@@ -181,6 +183,7 @@ class FileHandlerMixin:
         from gi.repository import Adw
 
         dialog = Adw.Dialog()
+        connections = SignalConnections(dialog)
         dialog.set_title(_("Add Network File"))
         dialog.set_content_width(480)
         dialog.set_content_height(420)
@@ -334,7 +337,7 @@ class FileHandlerMixin:
                 Gio.MountMountFlags.NONE, mount_op, None, on_mount_finished
             )
 
-        connect_button.connect("clicked", on_connect_clicked)
+        connections.connect(connect_button, "clicked", on_connect_clicked)
         dialog.present(self.window)
 
     def _handle_mount_error(self, status_label, button, error_msg):

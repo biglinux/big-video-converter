@@ -159,3 +159,40 @@ def test_prompt_probe_does_not_block_gtk_or_publish_after_close(app, monkeypatch
     owner.dialog.force_close()
     pump(0.6)
     assert copied == ["measured prompt"]
+
+
+@pytest.mark.parametrize("surface", ["network"])
+def test_additional_surface_finalizes(app, media, surface):
+    from test_gtk import widgets
+    from ui.dependency_dialog import InstallDependencyDialog
+
+    created = set()
+    for cycle in range(3):
+        if surface == "network":
+            app.show_network_file_dialog()
+            dialog = app.window.get_visible_dialog()
+        elif surface == "individual":
+            app.conversion_page.on_file_options_by_path(str(media["video"]))
+            dialog = app.window.get_visible_dialog()
+        else:
+            dialog = InstallDependencyDialog(
+                app.window, {"command": ["true"], "display": "true"}
+            )
+            dialog.present()
+        pump(0.3)
+        assert dialog.get_mapped()
+        for index, widget in enumerate(widgets(dialog)):
+            serial = 100000 + cycle * 10000 + index
+            created.add(serial)
+            track(widget, serial)
+        del widget
+        if surface == "dependency":
+            dialog.close()
+        else:
+            dialog.force_close()
+        del dialog
+        pump(0.6)
+        gc.collect()
+    assert created <= _finalized, (
+        f"{surface}: {len(created - _finalized)}/{len(created)} widgets retained"
+    )
