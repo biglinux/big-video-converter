@@ -230,6 +230,10 @@ class SettingsManager:
         """Update one value, rolling back memory when persistence fails."""
         if self._suspended:
             return True
+        if (key in self.settings
+                and type(self.settings[key]) is type(value)
+                and self.settings[key] == value):
+            return True
         before = copy.deepcopy(self.settings)
         self.settings[key] = value
         if self._batch_mode:

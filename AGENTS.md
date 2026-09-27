@@ -16,3 +16,5 @@ not merely dispose. Wait for close animations before asserting finalization.
   subscriptions, use weak owners for per-card actions, and connect banners once.
 - Build AI prompts on a worker: FFmpeg probes may block. Publish clipboard
   updates on GTK only while the dialog has not emitted `closed`.
+- Saving an already stored value of the same type must perform no disk write.
+  Preserve atomic persistence and rollback for actual changes.
