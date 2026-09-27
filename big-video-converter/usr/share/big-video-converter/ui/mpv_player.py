@@ -510,7 +510,7 @@ class MPVPlayer:
     def _on_mpv_render_update(self):
         """Callback from MPV when it needs to render a new frame"""
         # Safety check - don't process if cleanup has been called
-        if not self.render_context:
+        if not self.render_context or self.current_file is None:
             return
         # Use idle_add to schedule render in GTK main loop
         # This coalesces multiple update requests
@@ -518,7 +518,7 @@ class MPVPlayer:
 
     def _update_frame(self):
         """Update frame rendering - only queue if render context indicates update needed"""
-        if self.render_context:
+        if self.render_context and self.current_file is not None:
             # Check if MPV actually has a new frame to render
             if self.render_context.update():
                 self.video_widget.queue_render()
@@ -627,11 +627,6 @@ class MPVPlayer:
                 logger.error("MPV: Failed to initialize - cannot load video")
                 return False
         
-        # Restore render callback if it was cleared during cleanup (OpenGL mode only)
-        if not _USE_X11_MODE and self.render_context and not self.render_context.update_cb:
-            logger.debug("MPV: Restoring render context update callback")
-            self.render_context.update_cb = self._on_mpv_render_update
-
         # Verify file exists
         if not os.path.exists(file_path):
             logger.debug(f"MPV: File does not exist: {file_path}")
@@ -999,14 +994,6 @@ class MPVPlayer:
                 self.mpv_instance.pause = True
             except Exception as e:
                 logger.error(f"MPV: Error stopping playback: {e}")
-
-        # Clear render context update callback to prevent render updates while inactive
-        if self.render_context:
-            try:
-                logger.debug("MPV: Clearing render context update callback")
-                self.render_context.update_cb = None
-            except Exception:
-                pass
 
         # Reset playback state
         self.is_playing = False

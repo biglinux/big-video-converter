@@ -223,3 +223,23 @@ def test_dependency_window_waits_for_child_and_handles_spawn_failure(app, missin
     window.close()
     pump(0.6)
     assert window._connections._closed
+
+
+def test_player_keeps_native_render_callback_while_inactive(monkeypatch):
+    from types import SimpleNamespace
+
+    from gi.repository import GLib
+    from ui.mpv_player import MPVPlayer
+
+    callback = lambda: None
+    context = SimpleNamespace(update_cb=callback, update=lambda: True)
+    player = MPVPlayer.__new__(MPVPlayer)
+    player.mpv_instance = SimpleNamespace(command=lambda *_: None)
+    player.render_context = context
+    player.current_file = "video.mp4"
+    player.cleanup()
+    assert context.update_cb is callback
+    queued = []
+    monkeypatch.setattr(GLib, "idle_add", lambda *args, **kwargs: queued.append(args))
+    player._on_mpv_render_update()
+    assert not queued

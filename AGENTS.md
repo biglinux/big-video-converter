@@ -24,3 +24,5 @@ not merely dispose. Wait for close animations before asserting finalization.
   emitters on close so the controls cannot keep each other alive.
 - Dependency windows disconnect child and button subscriptions on close. Refuse
   close during installation; asynchronous spawn failure must clear that state.
+- Keep the MPV render callback registered across editor visits. Ignore updates
+  while inactive; replacing its ctypes wrapper can race the native render thread.
