@@ -65,3 +65,19 @@ def test_tooltip_controller_releases_widget(app):
         del button
         gc.collect()
     assert set(range(1, 6)) <= _finalized
+
+
+def test_welcome_dialog_finalizes_after_close(app):
+    from ui.welcome_dialog import WelcomeDialog
+
+    for serial in range(20, 25):
+        welcome = WelcomeDialog(app.window, app.settings_manager)
+        track(welcome.dialog, serial)
+        welcome.present()
+        pump(0.6)
+        assert welcome.dialog.get_mapped()
+        welcome.dialog.force_close()
+        del welcome
+        pump(0.6)
+        gc.collect()
+    assert set(range(20, 25)) <= _finalized

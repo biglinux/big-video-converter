@@ -183,6 +183,7 @@ class WelcomeDialog:
 
         # Create Adwaita Dialog with responsive sizing
         self.dialog = Adw.Dialog()
+        self.dialog.connect("closed", lambda dialog: dialog.set_child(None))
         # Use larger defaults but allow dialog to adapt to screen size
         self.dialog.set_content_width(900)
         self.dialog.set_content_height(650)

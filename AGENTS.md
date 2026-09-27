@@ -6,3 +6,5 @@ not merely dispose. Wait for close animations before asserting finalization.
 
 - A controller callback obtains its widget through `controller.get_widget()`;
   never pass that widget as strong signal user data.
+- The welcome dialog releases its child on `closed`; hiding its sheet alone
+  leaves the button callback owning the Python controller and its dialog.
