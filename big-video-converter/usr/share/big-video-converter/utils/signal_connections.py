@@ -2,10 +2,10 @@
 
 
 class SignalConnections:
-    def __init__(self, dialog):
+    def __init__(self, dialog, close_signal="closed"):
         self._handlers = []
         self._closed = False
-        self._closed_id = dialog.connect("closed", self._on_closed)
+        self._closed_id = dialog.connect(close_signal, self._on_closed)
 
     def connect(self, emitter, signal, callback, *args):
         if self._closed:

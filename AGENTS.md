@@ -8,3 +8,5 @@ not merely dispose. Wait for close animations before asserting finalization.
   never pass that widget as strong signal user data.
 - The welcome dialog releases its child on `closed`; hiding its sheet alone
   leaves the button callback owning the Python controller and its dialog.
+- Information windows are destroyed on close. Track their button subscriptions
+  with `SignalConnections(..., "close-request")` and ignore worker results after close.

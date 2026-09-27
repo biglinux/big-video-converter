@@ -14,6 +14,7 @@ import gettext
 from gi.repository import Adw, Gdk, GLib, Gtk
 
 from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+from utils.signal_connections import SignalConnections
 
 import logging
 
@@ -113,7 +114,7 @@ class VideoInfoDialog:
         self.dialog.set_default_size(780, 600)
         self.dialog.set_modal(True)
         self.dialog.set_transient_for(parent_window)
-        self.dialog.set_hide_on_close(True)
+        self._connections = SignalConnections(self.dialog, "close-request")
 
         # Main content box
         content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -198,6 +199,8 @@ class VideoInfoDialog:
 
     def _load_file_info(self):
         """Load file information using ffprobe"""
+        if not self.dialog.get_visible():
+            return False
         try:
             # Get file info in background thread to avoid blocking UI
             info_thread = threading.Thread(target=self._get_file_info_thread)
@@ -218,6 +221,8 @@ class VideoInfoDialog:
 
     def _update_ui_with_info(self, info):
         """Update the UI with the file information"""
+        if not self.dialog.get_visible():
+            return
         # Remove loading indicators
         self.info_box.remove(self.loading_box)
 
@@ -274,8 +279,8 @@ class VideoInfoDialog:
         open_button = Gtk.Button.new_from_icon_name('folder-open-symbolic')
         open_button.add_css_class("flat")
         open_button.set_tooltip_text(_("Open containing folder"))
-        open_button.connect(
-            "clicked", lambda btn: self._open_containing_folder(file_dir)
+        self._connections.connect(
+            open_button, "clicked", lambda btn: self._open_containing_folder(file_dir)
         )
         file_path_row.add_suffix(open_button)
         group.add(file_path_row)
@@ -343,7 +348,7 @@ class VideoInfoDialog:
         btn = Gtk.Button.new_from_icon_name("edit-copy-symbolic")
         btn.add_css_class("flat")
         btn.set_tooltip_text(tooltip)
-        btn.connect("clicked", lambda b, v=value: self._copy_to_clipboard(v))
+        self._connections.connect(btn, "clicked", lambda b, v=value: self._copy_to_clipboard(v))
         return btn
 
     def _open_containing_folder(self, folder_path):
@@ -654,6 +659,8 @@ class VideoInfoDialog:
 
     def _show_error(self, message):
         """Show error message in the dialog"""
+        if not self.dialog.get_visible():
+            return
         # Remove loading indicators if they exist
         if hasattr(self, "loading_box") and self.loading_box in self.info_box:
             self.info_box.remove(self.loading_box)
@@ -683,7 +690,7 @@ class VideoInfoDialog:
         retry_button.add_css_class("suggested-action")
         retry_button.set_halign(Gtk.Align.CENTER)
         retry_button.set_margin_top(12)
-        retry_button.connect("clicked", self._on_retry_clicked)
+        self._connections.connect(retry_button, "clicked", self._on_retry_clicked)
         error_box.append(retry_button)
 
         self.info_box.append(error_box)

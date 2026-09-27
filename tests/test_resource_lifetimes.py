@@ -81,3 +81,19 @@ def test_welcome_dialog_finalizes_after_close(app):
         pump(0.6)
         gc.collect()
     assert set(range(20, 25)) <= _finalized
+
+
+def test_info_window_finalizes_after_close(app, media):
+    from utils.file_info import VideoInfoDialog
+
+    for serial in range(10, 15):
+        info = VideoInfoDialog(app.window, str(media["video"]))
+        track(info.dialog, serial)
+        info.show()
+        pump(0.6)
+        assert info.dialog.get_mapped()
+        info.dialog.close()
+        del info
+        pump(0.6)
+        gc.collect()
+    assert set(range(10, 15)) <= _finalized
