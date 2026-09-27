@@ -103,6 +103,7 @@ def test_info_window_finalizes_after_close(app, media):
     "module,entry",
     [
         ("extra_dialog", "show_extra_dialog"),
+        ("size_dialog", "show_size_dialog"),
         ("presets_dialog", "show_presets_dialog"),
         ("presets_dialog", "show_ai_preset_dialog"),
     ],

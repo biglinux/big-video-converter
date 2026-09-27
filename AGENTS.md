@@ -26,3 +26,5 @@ not merely dispose. Wait for close animations before asserting finalization.
   close during installation; asynchronous spawn failure must clear that state.
 - Keep the MPV render callback registered across editor visits. Ignore updates
   while inactive; replacing its ctypes wrapper can race the native render thread.
+- Size dialog radio and spin controls share a closure; track every subscription
+  with SignalConnections so the controls finalize when the dialog closes.

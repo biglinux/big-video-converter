@@ -141,11 +141,11 @@ Diretório: `~/.cache/bvc-resource-audit/`.
 - `full-gate-complete.log`: 395 testes; `driver.py`, `surfaces.toml`, `measure.py`:
   sondas e receitas; controles mínimos também acompanham os relatos upstream.
 
-A correção do diálogo de tamanho está aplicada e testada, mas esse arquivo e seu
-módulo de cálculo já eram trabalho não versionado. O patch isolado está em
-`size-lifetime.patch`; incluir a funcionalidade inteira num commit de lifetime
-misturaria trabalhos. Também ficaram no working tree as duas conexões de tamanho
-adicionadas às opções individuais. Essa decisão de inclusão continua pendente.
+A inclusão dos arquivos de tamanho foi autorizada posteriormente: `size_dialog.py`,
+`size_target.py`, seus testes e a regressão de finalização entram juntos num commit.
+A integração da funcionalidade em arquivos preexistentes continua no working tree,
+incluindo as duas conexões de tamanho nas opções individuais; não foi incorporada
+junto com as demais alterações preexistentes de `conversion_page.py`.
 
 Não foram medidos todos os codecs/dispositivos, servidor de rede real, instalação
 privilegiada nem startup com cache de páginas frio. Os resultados não afirmam
