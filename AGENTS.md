@@ -20,3 +20,5 @@ not merely dispose. Wait for close animations before asserting finalization.
   Preserve atomic persistence and rollback for actual changes.
 - Network dialog button closures are disconnected on close, including closures
   that capture the dialog indirectly through an asynchronous mount callback.
+- Individual video controls share a refresh closure; disconnect all of its
+  emitters on close so the controls cannot keep each other alive.

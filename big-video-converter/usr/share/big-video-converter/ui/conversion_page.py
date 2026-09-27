@@ -15,6 +15,7 @@ from constants import CONVERT_SCRIPT_PATH
 from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 from utils.conversion import run_with_progress_dialog
 from utils.segment_batch import start_segment_batch
+from utils.signal_connections import SignalConnections
 from utils.thumbnail_cache import ThumbnailManager
 from utils.ffmpeg_options import validate_additional_options
 from utils.job_options import (RESOLUTION_MODES, freeze, normalize_metadata,
@@ -1766,6 +1767,7 @@ class ConversionPage:
                                       if preset["id"] != saved_preset["id"]]
 
         dialog = Adw.AlertDialog()
+        connections = SignalConnections(dialog)
         dialog.set_heading(_("Options for this video"))
         dialog.set_body(
             _(
@@ -1874,10 +1876,10 @@ class ConversionPage:
             )
             preview_value.set_text(self.file_recipe_summary(temporary))
 
-        preset_row.connect("notify::selected", refresh)
-        resolution_row.connect("notify::selected", refresh)
-        width_spin.connect("value-changed", refresh)
-        height_spin.connect("value-changed", refresh)
+        connections.connect(preset_row, "notify::selected", refresh)
+        connections.connect(resolution_row, "notify::selected", refresh)
+        connections.connect(width_spin, "value-changed", refresh)
+        connections.connect(height_spin, "value-changed", refresh)
         refresh()
 
         dialog.add_response("cancel", _("Cancel"))

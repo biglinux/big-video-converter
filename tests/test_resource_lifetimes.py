@@ -161,7 +161,7 @@ def test_prompt_probe_does_not_block_gtk_or_publish_after_close(app, monkeypatch
     assert copied == ["measured prompt"]
 
 
-@pytest.mark.parametrize("surface", ["network"])
+@pytest.mark.parametrize("surface", ["network", "individual"])
 def test_additional_surface_finalizes(app, media, surface):
     from test_gtk import widgets
     from ui.dependency_dialog import InstallDependencyDialog
