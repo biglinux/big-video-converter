@@ -161,7 +161,7 @@ def test_prompt_probe_does_not_block_gtk_or_publish_after_close(app, monkeypatch
     assert copied == ["measured prompt"]
 
 
-@pytest.mark.parametrize("surface", ["network", "individual"])
+@pytest.mark.parametrize("surface", ["network", "individual", "dependency"])
 def test_additional_surface_finalizes(app, media, surface):
     from test_gtk import widgets
     from ui.dependency_dialog import InstallDependencyDialog
@@ -196,3 +196,30 @@ def test_additional_surface_finalizes(app, media, surface):
     assert created <= _finalized, (
         f"{surface}: {len(created - _finalized)}/{len(created)} widgets retained"
     )
+
+
+@pytest.mark.parametrize("missing", [False, True])
+def test_dependency_window_waits_for_child_and_handles_spawn_failure(app, missing):
+    import sys
+
+    from ui.dependency_dialog import InstallDependencyDialog
+
+    command = (
+        ["/nonexistent-bvc-test"]
+        if missing
+        else [sys.executable, "-c", "import time; time.sleep(0.3)"]
+    )
+    window = InstallDependencyDialog(
+        app.window, {"command": command, "display": "test"}
+    )
+    window.present()
+    pump(0.1)
+    window.install_button.emit("clicked")
+    window.close()
+    assert window.get_visible()
+    assert not window._connections._closed
+    test_gtk.until(lambda: not window._installing)
+    assert window.installation_success is not missing
+    window.close()
+    pump(0.6)
+    assert window._connections._closed

@@ -12,6 +12,8 @@ from gi.repository import Gtk, Adw, Vte, GLib, Pango
 
 # Setup translation
 import gettext
+from utils.signal_connections import SignalConnections
+
 _ = gettext.gettext
 
 
@@ -20,6 +22,9 @@ class InstallDependencyDialog(Adw.Window):
 
     def __init__(self, parent, install_info):
         super().__init__()
+        self._installing = False
+        self.connect("close-request", lambda window: window._installing)
+        self._connections = SignalConnections(self, "close-request")
         self.set_transient_for(parent)
         self.set_modal(True)
         self.set_title(_("Required Dependencies"))
@@ -95,7 +100,7 @@ class InstallDependencyDialog(Adw.Window):
         font_desc = Pango.FontDescription.from_string("Monospace 10")
         self.terminal.set_font(font_desc)
         
-        self.terminal.connect("child-exited", self._on_child_exited)
+        self._connections.connect(self.terminal, "child-exited", self._on_child_exited)
         
         scrolled.set_child(self.terminal)
         terminal_group.add(scrolled)
@@ -106,20 +111,21 @@ class InstallDependencyDialog(Adw.Window):
         content_box.append(button_box)
 
         self.cancel_button = Gtk.Button(label=_("Cancel"))
-        self.cancel_button.connect("clicked", lambda btn: self.close())
+        self._connections.connect(self.cancel_button, "clicked", lambda btn: self.close())
         button_box.append(self.cancel_button)
 
         self.install_button = Gtk.Button(label=_("Install Dependencies"))
         self.install_button.add_css_class("suggested-action")
-        self.install_button.connect("clicked", self._on_install_clicked)
+        self._connections.connect(self.install_button, "clicked", self._on_install_clicked)
         button_box.append(self.install_button)
 
         self.close_button = Gtk.Button(label=_("Close"))
         self.close_button.set_visible(False)
-        self.close_button.connect("clicked", lambda btn: self.close())
+        self._connections.connect(self.close_button, "clicked", lambda btn: self.close())
         button_box.append(self.close_button)
 
     def _on_install_clicked(self, button):
+        self._installing = True
         self.install_button.set_sensitive(False)
         self.cancel_button.set_sensitive(False)
         self._write_to_terminal(_("Starting installation...\n\n"))
@@ -137,10 +143,15 @@ class InstallDependencyDialog(Adw.Window):
         try:
             self.terminal.spawn_async(
                 Vte.PtyFlags.DEFAULT, None, command, None, 
-                GLib.SpawnFlags.DO_NOT_REAP_CHILD, None, None, -1, None, None, None
+                GLib.SpawnFlags.DO_NOT_REAP_CHILD, None, None, -1, None, self._on_spawned, None
             )
         except Exception as e:
             self._write_to_terminal(f"\n{_('Error running command')}: {str(e)}\n")
+            self._finish_installation(False)
+
+    def _on_spawned(self, terminal, pid, error, _data):
+        if error is not None:
+            self._write_to_terminal(str(error))
             self._finish_installation(False)
 
     def _on_child_exited(self, terminal, exit_status):
@@ -164,6 +175,7 @@ class InstallDependencyDialog(Adw.Window):
         self.terminal.feed(text.encode('utf-8'))
 
     def _finish_installation(self, success):
+        self._installing = False
         self.installation_complete = True
         self.installation_success = success
         

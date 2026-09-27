@@ -22,3 +22,5 @@ not merely dispose. Wait for close animations before asserting finalization.
   that capture the dialog indirectly through an asynchronous mount callback.
 - Individual video controls share a refresh closure; disconnect all of its
   emitters on close so the controls cannot keep each other alive.
+- Dependency windows disconnect child and button subscriptions on close. Refuse
+  close during installation; asynchronous spawn failure must clear that state.
