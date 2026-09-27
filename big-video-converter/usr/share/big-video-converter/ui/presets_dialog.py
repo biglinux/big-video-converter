@@ -10,6 +10,7 @@ import gettext
 import logging
 import os
 import subprocess
+import weakref
 
 import gi
 
@@ -19,8 +20,10 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
 
 from utils import presets as preset_store
 from utils.ffmpeg_path import get_ffmpeg_executable
+from utils.signal_connections import SignalConnections
 
 logger = logging.getLogger(__name__)
+
 _ = gettext.gettext
 
 _CODEC_LABELS = {"copy": _("Copy"), "h264": "H.264", "h265": "H.265", "av1": "AV1", "vp9": "VP9", "prores": "ProRes"}
@@ -119,6 +122,7 @@ class PresetsDialog:
         self.app = app
         self.parent_window = parent_window
         self.dialog = Adw.Dialog()
+        self.connections = SignalConnections(self.dialog)
         self.dialog.set_title(_("Presets"))
         self.dialog.set_content_width(920)
         self.dialog.set_content_height(680)
@@ -130,7 +134,7 @@ class PresetsDialog:
 
         ai_button = Gtk.Button(label=_("Create with AI…"))
         ai_button.add_css_class("suggested-action")
-        ai_button.connect("clicked", lambda *_a: show_ai_preset_dialog(self.dialog, app, self.refresh))
+        self.connections.connect(ai_button, "clicked", lambda *_a: show_ai_preset_dialog(self.dialog, app, self.refresh))
         header.pack_start(ai_button)
 
         add_menu = Gio.Menu()
@@ -148,7 +152,7 @@ class PresetsDialog:
         for name, callback in (("import", self._import_file), ("paste", self._paste_clipboard),
                                ("folder", self._open_folder)):
             action = Gio.SimpleAction.new(name, None)
-            action.connect("activate", lambda *_a, cb=callback: cb())
+            self.connections.connect(action, "activate", lambda *_a, cb=callback: cb())
             actions.add_action(action)
         self.dialog.insert_action_group("presets", actions)
 
@@ -160,10 +164,11 @@ class PresetsDialog:
 
         self.search = Gtk.SearchEntry()
         self.search.set_placeholder_text(_("Search by name, tag or codec…"))
-        self.search.connect("search-changed", lambda *_a: self.flowbox.invalidate_filter())
+        self.connections.connect(self.search, "search-changed", lambda *_a: self.flowbox.invalidate_filter())
         content.append(self.search)
 
         self.banner = Adw.Banner()
+        self.connections.connect(self.banner, "button-clicked", lambda *_: self._show_broken(self._broken))
         self.banner.set_revealed(False)
         content.append(self.banner)
 
@@ -175,8 +180,9 @@ class PresetsDialog:
         self.flowbox.set_row_spacing(4)
         self.flowbox.set_column_spacing(4)
         self.flowbox.set_valign(Gtk.Align.START)
-        self.flowbox.set_filter_func(lambda child: _matches(child.preset, self.search.get_text()))
-        self.flowbox.connect("child-activated", self._on_card_activated)
+        owner = weakref.proxy(self)
+        self.flowbox.set_filter_func(lambda child: _matches(child.preset, owner.search.get_text()))
+        self.connections.connect(self.flowbox, "child-activated", self._on_card_activated)
 
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -209,12 +215,11 @@ class PresetsDialog:
         for preset in self.presets:
             self.flowbox.append(_PresetCard(preset, preset.id == active_id, self._card_menu))
         self.empty.set_visible(not self.presets)
-        broken = preset_store.broken_presets()
+        broken = self._broken = preset_store.broken_presets()
         if broken:
             names = ", ".join(os.path.basename(path) for path, _reason in broken[:3])
             self.banner.set_title(_("Ignored invalid preset file(s): {0}").format(names))
             self.banner.set_button_label(_("Details"))
-            self.banner.connect("button-clicked", lambda *_a: self._show_broken(broken))
             self.banner.set_revealed(True)
         else:
             self.banner.set_revealed(False)
@@ -247,10 +252,10 @@ class PresetsDialog:
             menu.append(_("Delete"), f"card.delete::{preset.id}")
         popover = Gtk.PopoverMenu.new_from_model(menu)
         group = Gio.SimpleActionGroup()
-        for name, callback in (("duplicate", self._duplicate), ("export", self._export),
-                               ("edit", self._edit), ("delete", self._delete)):
+        owner = weakref.proxy(self)
+        for name in ("duplicate", "export", "edit", "delete"):
             action = Gio.SimpleAction.new(name, GLib.VariantType.new("s"))
-            action.connect("activate", lambda _a, param, cb=callback: cb(self._by_id(param.get_string())))
+            action.connect("activate", lambda _a, param, name=name: getattr(owner, "_" + name)(owner._by_id(param.get_string())))
             group.add_action(action)
         popover.insert_action_group("card", group)
         return popover
@@ -421,6 +426,7 @@ class AiPresetDialog:
         self.app = app
         self.on_saved = on_saved
         self.dialog = Adw.Dialog()
+        self.connections = SignalConnections(self.dialog)
         self.dialog.set_title(_("Create a preset with AI"))
         self.dialog.set_content_width(720)
         self.dialog.set_content_height(700)
@@ -468,7 +474,7 @@ class AiPresetDialog:
         copy_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         self.copy_button = Gtk.Button(label=_("Copy prompt"))
         self.copy_button.add_css_class("suggested-action")
-        self.copy_button.connect("clicked", self._on_copy)
+        self.connections.connect(self.copy_button, "clicked", self._on_copy)
         copy_row.append(self.copy_button)
         copy_hint = Gtk.Label(label=_("Then paste it into ChatGPT, Gemini, Claude, Copilot or any other assistant."), xalign=0)
         copy_hint.add_css_class("dim-label")
@@ -495,10 +501,10 @@ class AiPresetDialog:
         save_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         self.save_button = Gtk.Button(label=_("Save preset"))
         self.save_button.add_css_class("suggested-action")
-        self.save_button.connect("clicked", self._on_save)
+        self.connections.connect(self.save_button, "clicked", self._on_save)
         save_row.append(self.save_button)
         paste_button = Gtk.Button(label=_("Paste from clipboard"))
-        paste_button.connect("clicked", self._on_paste)
+        self.connections.connect(paste_button, "clicked", self._on_paste)
         save_row.append(paste_button)
         content.append(save_row)
 

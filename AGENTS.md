@@ -12,3 +12,5 @@ not merely dispose. Wait for close animations before asserting finalization.
   with `SignalConnections(..., "close-request")` and ignore worker results after close.
 - Track child callbacks capturing the Extra dialog with `SignalConnections`,
   just like subscriptions on long-lived settings widgets.
+- Preset actions and filters must not retain the owning dialog. Track fixed
+  subscriptions, use weak owners for per-card actions, and connect banners once.

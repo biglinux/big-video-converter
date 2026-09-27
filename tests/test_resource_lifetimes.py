@@ -103,6 +103,8 @@ def test_info_window_finalizes_after_close(app, media):
     "module,entry",
     [
         ("extra_dialog", "show_extra_dialog"),
+        ("presets_dialog", "show_presets_dialog"),
+        ("presets_dialog", "show_ai_preset_dialog"),
     ],
 )
 def test_dialog_tree_finalizes(app, module, entry):
