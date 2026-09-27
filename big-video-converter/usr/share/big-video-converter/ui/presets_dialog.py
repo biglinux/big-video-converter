@@ -10,6 +10,7 @@ import gettext
 import logging
 import os
 import subprocess
+import threading
 import weakref
 
 import gi
@@ -527,9 +528,33 @@ class AiPresetDialog:
         return buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True)
 
     def _on_copy(self, *_args):
-        prompt = build_prompt(self.request_text())
-        copy_to_clipboard(prompt)
-        self.toasts.add_toast(Adw.Toast.new(_("Prompt copied. Paste it into your AI assistant.")))
+        if not self.copy_button.get_sensitive():
+            return
+        request = self.request_text()
+        self.copy_button.set_sensitive(False)
+        owner_ref = weakref.ref(self)
+
+        def publish(prompt, error):
+            owner = owner_ref()
+            if owner is None or owner.connections._closed:
+                return GLib.SOURCE_REMOVE
+            owner.copy_button.set_sensitive(True)
+            if error is not None:
+                owner._set_status(error, error=True)
+            else:
+                copy_to_clipboard(prompt)
+                owner.toasts.add_toast(Adw.Toast.new(_("Prompt copied. Paste it into your AI assistant.")))
+            return GLib.SOURCE_REMOVE
+
+        def probe():
+            try:
+                prompt = build_prompt(request)
+            except (OSError, ValueError, subprocess.SubprocessError) as error:
+                GLib.idle_add(publish, None, str(error))
+            else:
+                GLib.idle_add(publish, prompt, None)
+
+        threading.Thread(target=probe, name="bvc-prompt", daemon=True).start()
 
     def _on_paste(self, *_args):
         clipboard = Gdk.Display.get_default().get_clipboard()

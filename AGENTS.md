@@ -14,3 +14,5 @@ not merely dispose. Wait for close animations before asserting finalization.
   just like subscriptions on long-lived settings widgets.
 - Preset actions and filters must not retain the owning dialog. Track fixed
   subscriptions, use weak owners for per-card actions, and connect banners once.
+- Build AI prompts on a worker: FFmpeg probes may block. Publish clipboard
+  updates on GTK only while the dialog has not emitted `closed`.

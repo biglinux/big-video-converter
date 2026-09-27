@@ -130,3 +130,32 @@ def test_dialog_tree_finalizes(app, module, entry):
     assert created <= _finalized, (
         f"{entry}: {len(created - _finalized)}/{len(created)} widgets retained"
     )
+
+
+def test_prompt_probe_does_not_block_gtk_or_publish_after_close(app, monkeypatch):
+    import threading
+
+    from ui import presets_dialog
+
+    main_thread = threading.get_ident()
+    probe_threads = []
+    copied = []
+    finished = threading.Event()
+
+    def build(_request):
+        probe_threads.append(threading.get_ident())
+        finished.set()
+        return "measured prompt"
+
+    monkeypatch.setattr(presets_dialog, "build_prompt", build)
+    monkeypatch.setattr(presets_dialog, "copy_to_clipboard", copied.append)
+    owner = presets_dialog.show_ai_preset_dialog(app.window, app)
+    pump(0.1)
+    owner._on_copy()
+    assert finished.wait(2)
+    assert probe_threads == [probe_threads[0]] and probe_threads[0] != main_thread
+    test_gtk.until(lambda: copied == ["measured prompt"])
+    owner._on_copy()
+    owner.dialog.force_close()
+    pump(0.6)
+    assert copied == ["measured prompt"]
