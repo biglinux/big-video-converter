@@ -134,7 +134,7 @@ class TooltipHelper:
         widget.tooltip_key = tooltip_key
         
         motion_controller = Gtk.EventControllerMotion.new()
-        motion_controller.connect("enter", self._on_enter, widget)
+        motion_controller.connect("enter", self._on_enter)
         motion_controller.connect("leave", self._on_leave)
         widget.add_controller(motion_controller)
 
@@ -143,7 +143,8 @@ class TooltipHelper:
             GLib.source_remove(self.show_timer_id)
             self.show_timer_id = None
 
-    def _on_enter(self, controller, x, y, widget):
+    def _on_enter(self, controller, x, y):
+        widget = controller.get_widget()
         if not self.is_enabled() or self.active_widget == widget:
             return
 
