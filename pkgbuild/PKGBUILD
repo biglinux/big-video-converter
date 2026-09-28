@@ -10,8 +10,8 @@ optdepends=('deepfilternet3-native: light AI noise reduction for speech (DeepFil
             'libnautilus-extension: Nautilus API used by the context menu extension')
 conflicts=('comm-video-converter')
 replaces=('comm-video-converter')
-pkgver=26.09.22
-pkgrel=2
+pkgver=$(date +%y.%m.%d)
+pkgrel=$(date +%H%M)
 arch=('any')
 license=('MIT')
 url="https://github.com/biglinux/$pkgname"
