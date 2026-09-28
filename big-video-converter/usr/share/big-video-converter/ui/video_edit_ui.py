@@ -1,3 +1,6 @@
+import os
+import threading
+
 import gi
 
 gi.require_version("Gtk", "4.0")
@@ -5,12 +8,13 @@ gi.require_version("Adw", "1")
 # Setup translation
 import gettext
 
-from gi.repository import Adw, Gio, GLib, Gtk, Pango
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
 
 _ = gettext.gettext
 
-# Import MPVPlayer to check rendering mode
-from ui.mpv_player import MPVPlayer
+from utils.job_options import EFFECT_LEVELS, SOURCE_HDR_MODES
+from utils.video_settings import available_filters
+
 from ui.crop_overlay import CropOverlay
 
 
@@ -41,22 +45,13 @@ class VideoEditUI:
         video_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         video_box.set_vexpand(True)
         video_box.set_hexpand(True)
-        video_box.set_size_request(-1, 300)
+        video_box.set_size_request(-1, 260)
 
-        # Video player widget - choose based on rendering mode
-        # X11 mode: Use DrawingArea for X11 window embedding (better VM compatibility)
-        # OpenGL mode: Use GLArea for MPV OpenGL render API
-        if MPVPlayer.use_x11_mode:
-            # X11 mode: DrawingArea allows MPV to embed its window directly
-            self.preview_video = Gtk.DrawingArea()
-            self.preview_video.set_hexpand(True)
-            self.preview_video.set_vexpand(True)
-        else:
-            # OpenGL mode: GLArea provides OpenGL context for MPV render API
-            self.preview_video = Gtk.GLArea()
-            self.preview_video.set_hexpand(True)
-            self.preview_video.set_vexpand(True)
-            self.preview_video.set_auto_render(False)  # MPV controls rendering
+        # GLArea provides the OpenGL context for the MPV render API
+        self.preview_video = Gtk.GLArea()
+        self.preview_video.set_hexpand(True)
+        self.preview_video.set_vexpand(True)
+        self.preview_video.set_auto_render(False)  # MPV controls rendering
         video_box.append(self.preview_video)
 
         self.video_overlay.set_child(video_box)
@@ -83,8 +78,10 @@ class VideoEditUI:
         controls_container.set_margin_start(12)
         controls_container.set_margin_end(12)
         controls_container.set_margin_bottom(12)
+        # Not "toolbar": desktop themes recolour that class (BigStyle paints it
+        # with the header bar colours), and this bar sits on video, so it keeps
+        # the fixed dark OSD look in every theme and focus state.
         controls_container.add_css_class("osd")
-        controls_container.add_css_class("toolbar")
         controls_container.add_css_class("bvc-editor-toolbar")
 
         slider_overlay = Gtk.Overlay()
@@ -305,6 +302,19 @@ class VideoEditUI:
         spacer.set_hexpand(True)
         button_row.append(spacer)
 
+        # In fullscreen the header and its sidebar button are hidden, so the
+        # editing tools get their own toggle here.
+        self.sidebar_button = Gtk.ToggleButton(
+            icon_name="sidebar-show-symbolic",
+            tooltip_text=_("Show editing tools ({shortcut})").format(shortcut="F9"),
+            visible=False,
+        )
+        self.sidebar_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Show editing tools")]
+        )
+        self.sidebar_button.add_css_class("bvc-icon-button")
+        button_row.append(self.sidebar_button)
+
         # Fullscreen button
         self.fullscreen_button = Gtk.Button()
         self.fullscreen_button.set_icon_name('view-fullscreen-symbolic')
@@ -337,7 +347,6 @@ class VideoEditUI:
         self.overlay_controls = controls_container
 
         # Auto-hide functionality
-        self.controls_visible = True
         self.hide_timer_id = None
         motion = Gtk.EventControllerMotion.new()
         motion.connect("enter", self._on_video_mouse_enter)
@@ -355,12 +364,11 @@ class VideoEditUI:
         toolbar_box.set_margin_end(12)
         toolbar_box.set_margin_top(6)
         toolbar_box.set_margin_bottom(6)
-        toolbar_box.add_css_class("toolbar")
         toolbar_box.add_css_class("bvc-editor-inspector")
 
         # --- Crop Controls ---
         crop_grid = Gtk.Grid(column_spacing=12, row_spacing=4)
-        self.crop_grid = crop_grid  # Store reference for enable/disable
+        self.crop_grid = crop_grid
         crop_grid.set_valign(Gtk.Align.CENTER)
 
         crop_controls = (
@@ -386,10 +394,10 @@ class VideoEditUI:
             crop_grid.attach(label, col * 2, row, 1, 1)
             crop_grid.attach(spin, col * 2 + 1, row, 1, 1)
 
-        setattr(self, "crop_left_spin", self.crop_spins["left"])
-        setattr(self, "crop_right_spin", self.crop_spins["right"])
-        setattr(self, "crop_top_spin", self.crop_spins["top"])
-        setattr(self, "crop_bottom_spin", self.crop_spins["bottom"])
+        self.crop_left_spin = self.crop_spins["left"]
+        self.crop_right_spin = self.crop_spins["right"]
+        self.crop_top_spin = self.crop_spins["top"]
+        self.crop_bottom_spin = self.crop_spins["bottom"]
 
         # Crop edit toggle button
         self.crop_edit_btn = Gtk.ToggleButton()
@@ -557,233 +565,143 @@ class VideoEditUI:
         while child := sidebar_box.get_first_child():
             sidebar_box.remove(child)
 
-        # --- Video Adjustments Group ---
+        # The controls stay usable in copy mode: freeze() re-encodes a file
+        # once it is cropped, adjusted or turned, and this note says so.
+        self.copy_mode_note = Gtk.Label(
+            label=_("The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."),
+            wrap=True, xalign=0, css_classes=["dim-label"], visible=False,
+        )
+        sidebar_box.append(self.copy_mode_note)
+
+        # --- Image ---
         adjust_group = Adw.PreferencesGroup()
         adjust_group.set_title(_("Image"))
-        adjust_group.set_description(_("Fine-tune the look only when the source needs it."))
-        self.adjust_group = adjust_group  # Store reference for enable/disable
+        self._image_refreshers = []
+        self.image_reset_button = self._group_reset_button(
+            _("Reset image adjustments"), self._on_reset_image_clicked
+        )
+        adjust_group.set_header_suffix(self.image_reset_button)
 
-        self.brightness_scale, brightness_row = self._create_adjustment_row(
-            adjust_group,
-            _("Brightness"),
-            -1.0,
-            1.0,
-            0.0,
-            self.page.on_brightness_changed,
-            self.page.reset_brightness,
-        )
-        self.brightness_row = (
-            brightness_row  # Store reference for tooltip reapplication
-        )
-        # Add tooltip to brightness row
-        if brightness_row and hasattr(self.page.app, "tooltip_helper"):
-            self.page.app.tooltip_helper.add_tooltip(brightness_row, "brightness")
+        def percent(value):
+            return f"{round(value * 100):+d}%" if round(value * 100) else "0%"
 
-        self.contrast_scale, contrast_row = self._create_adjustment_row(
-            adjust_group,
-            _("Contrast"),
-            -1.0,
-            1.0,
-            0.0,
-            self.page.on_contrast_changed,
-            self.page.reset_contrast,
+        self.brightness_scale, self.brightness_row = self._create_adjustment_row(
+            adjust_group, _("Brightness"), -1.0, 1.0, 0.0,
+            self.page.on_brightness_changed, self.page.reset_brightness, percent,
         )
-        self.contrast_row = contrast_row
-
-        self.saturation_scale, saturation_row = self._create_adjustment_row(
-            adjust_group,
-            _("Saturation"),
-            0.0,
-            2.0,
-            1.0,
-            self.page.on_saturation_changed,
-            self.page.reset_saturation,
+        self.contrast_scale, self.contrast_row = self._create_adjustment_row(
+            adjust_group, _("Contrast"), -1.0, 1.0, 0.0,
+            self.page.on_contrast_changed, self.page.reset_contrast, percent,
         )
-        self.saturation_row = (
-            saturation_row  # Store reference for tooltip reapplication
+        self.saturation_scale, self.saturation_row = self._create_adjustment_row(
+            adjust_group, _("Saturation"), 0.0, 2.0, 1.0,
+            self.page.on_saturation_changed, self.page.reset_saturation,
+            lambda value: percent(value - 1.0),
         )
-        # Add tooltip to saturation row
-        if saturation_row and hasattr(self.page.app, "tooltip_helper"):
-            self.page.app.tooltip_helper.add_tooltip(saturation_row, "saturation")
-
-        self.hue_scale, hue_row = self._create_adjustment_row(
-            adjust_group,
-            _("Hue"),
-            -1.0,
-            1.0,
-            0.0,
-            self.page.on_hue_changed,
-            self.page.reset_hue,
+        self.hue_scale, self.hue_row = self._create_adjustment_row(
+            adjust_group, _("Hue"), -1.0, 1.0, 0.0,
+            self.page.on_hue_changed, self.page.reset_hue, percent,
         )
-        self.hue_row = hue_row  # Store reference for tooltip reapplication
-        # Add tooltip to hue row
-        if hue_row and hasattr(self.page.app, "tooltip_helper"):
-            self.page.app.tooltip_helper.add_tooltip(hue_row, "hue")
-
+        # For a file that does not say how its colours are coded: HDR read
+        # as SDR looks grey and washed out, and is converted that way too.
+        self.source_hdr_combo = Adw.ComboRow(
+            title=_("Source colours"),
+            model=Gtk.StringList.new([_("As the file says"), _("HDR10 (PQ)"), _("HDR (HLG)"),
+                                      _("Standard (SDR)")]),
+        )
+        self.source_hdr_combo.connect("notify::selected", lambda row, _p: self.page.on_source_hdr_changed(
+            SOURCE_HDR_MODES[row.get_selected()]))
+        adjust_group.add(self.source_hdr_combo)
+        self._refresh_image_reset()
         sidebar_box.append(adjust_group)
 
-        # --- Rotation / Flip Group ---
+        # --- Orientation ---
         transform_group = Adw.PreferencesGroup()
         transform_group.set_title(_("Orientation"))
-        transform_group.set_description(_("Rotate or mirror the picture without changing the source file."))
-        self.transform_group = transform_group
+        self.transform_reset_button = self._group_reset_button(
+            _("Reset Transform"), lambda _b: self.page.on_reset_transform()
+        )
+        transform_group.set_header_suffix(self.transform_reset_button)
 
-        transform_row = Adw.ActionRow(title=_("Transform"))
-        transform_buttons = Gtk.Box(spacing=6, valign=Gtk.Align.CENTER)
-
-        rotate_ccw_btn = Gtk.Button(
-            icon_name="object-rotate-left-symbolic", tooltip_text=_("Rotate 90° Left")
+        # One row: turning and mirroring are four buttons, not two sections.
+        self.rotation_row = Adw.ActionRow(title=_("Rotation"))
+        for icon, label, degrees in (
+            ("object-rotate-left-symbolic", _("Rotate 90° Left"), -90),
+            ("object-rotate-right-symbolic", _("Rotate 90° Right"), 90),
+        ):
+            button = Gtk.Button(icon_name=icon, tooltip_text=label, valign=Gtk.Align.CENTER)
+            button.update_property([Gtk.AccessibleProperty.LABEL], [label])
+            button.add_css_class("flat")
+            button.connect("clicked", lambda _b, d=degrees: self.page.on_rotate(d))
+            self.rotation_row.add_suffix(button)
+        self.flip_h_btn = self._flip_toggle(
+            "object-flip-horizontal-symbolic", _("Flip Horizontal"), "horizontal"
         )
-        rotate_ccw_btn.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Rotate 90° Left")],
+        self.flip_v_btn = self._flip_toggle(
+            "object-flip-vertical-symbolic", _("Flip Vertical"), "vertical"
         )
-        rotate_ccw_btn.add_css_class("flat")
-        rotate_ccw_btn.connect("clicked", lambda b: self.page.on_rotate(-90))
-        transform_buttons.append(rotate_ccw_btn)
-
-        rotate_cw_btn = Gtk.Button(
-            icon_name="object-rotate-right-symbolic", tooltip_text=_("Rotate 90° Right")
-        )
-        rotate_cw_btn.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Rotate 90° Right")],
-        )
-        rotate_cw_btn.add_css_class("flat")
-        rotate_cw_btn.connect("clicked", lambda b: self.page.on_rotate(90))
-        transform_buttons.append(rotate_cw_btn)
-
-        flip_h_btn = Gtk.Button(
-            icon_name="object-flip-horizontal-symbolic",
-            tooltip_text=_("Flip Horizontal"),
-        )
-        flip_h_btn.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Flip Horizontal")],
-        )
-        flip_h_btn.add_css_class("flat")
-        flip_h_btn.connect("clicked", lambda b: self.page.on_flip("horizontal"))
-        self.flip_h_btn = flip_h_btn
-        transform_buttons.append(flip_h_btn)
-
-        flip_v_btn = Gtk.Button(
-            icon_name="object-flip-vertical-symbolic", tooltip_text=_("Flip Vertical")
-        )
-        flip_v_btn.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Flip Vertical")],
-        )
-        flip_v_btn.add_css_class("flat")
-        flip_v_btn.connect("clicked", lambda b: self.page.on_flip("vertical"))
-        self.flip_v_btn = flip_v_btn
-        transform_buttons.append(flip_v_btn)
-
-        reset_transform_btn = Gtk.Button(
-            icon_name="edit-undo-symbolic", tooltip_text=_("Reset Transform")
-        )
-        reset_transform_btn.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Reset Transform")],
-        )
-        reset_transform_btn.add_css_class("flat")
-        reset_transform_btn.connect("clicked", lambda b: self.page.on_reset_transform())
-        transform_buttons.append(reset_transform_btn)
-
-        transform_row.add_suffix(transform_buttons)
-        transform_group.add(transform_row)
+        self.rotation_row.add_suffix(self.flip_h_btn)
+        self.rotation_row.add_suffix(self.flip_v_btn)
+        transform_group.add(self.rotation_row)
+        self.update_transform_state(0, False, False)
         sidebar_box.append(transform_group)
+
+        sidebar_box.append(self._create_effects_group())
 
         # --- Audio Cleaning Group (visible only when re-encode active) ---
         self.nr_sidebar_group = self._create_nr_sidebar_group()
         self.nr_sidebar_group.set_visible(False)
         sidebar_box.append(self.nr_sidebar_group)
 
-        # --- Trim Segments Group ---
+        # --- Trim Segments ---
         trim_group = Adw.PreferencesGroup(title=_("Trim Segments"))
-        self.trim_group = trim_group  # Store reference for tooltip reapplication
-
-        list_row = Adw.ActionRow(title=_("Segments List"))
-        list_row.set_visible(False)
-
-        self.segments_scrolled = Gtk.ScrolledWindow(
-            min_content_height=120, vexpand=True
+        self.trim_group = trim_group
+        segment_actions = Gtk.Box(spacing=4)
+        add_button = Gtk.Button(icon_name="list-add-symbolic", valign=Gtk.Align.CENTER)
+        add_button.add_css_class("flat")
+        add_button.set_tooltip_text(_("Add segment manually"))
+        add_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Add segment manually")])
+        add_button.connect("clicked", self.page._on_add_manual_segment_clicked)
+        segment_actions.append(add_button)
+        self.clear_segments_button = Gtk.Button(
+            icon_name="user-trash-symbolic", valign=Gtk.Align.CENTER, sensitive=False
         )
-        self.segments_scrolled.set_policy(
-            Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC
+        self.clear_segments_button.add_css_class("flat")
+        self.clear_segments_button.set_tooltip_text(_("Clear all segments"))
+        self.clear_segments_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Clear all segments")]
         )
-        self.segments_scrolled.set_max_content_height(300)
-        self.segments_scrolled.set_propagate_natural_height(True)
+        self.clear_segments_button.connect(
+            "clicked", self.page._on_clear_all_segments_with_confirmation
+        )
+        segment_actions.append(self.clear_segments_button)
+        trim_group.set_header_suffix(segment_actions)
 
         self.segments_listbox = Gtk.ListBox(
             selection_mode=Gtk.SelectionMode.NONE, css_classes=["boxed-list"]
         )
-
-        self.segments_scrolled.set_child(self.segments_listbox)
-        list_row.set_child(self.segments_scrolled)
-        self.segments_list_row = list_row
-        trim_group.add(list_row)
-
-        # Placeholder shown when no segments
-        self.segments_placeholder_row = Adw.ActionRow()
-        placeholder_box = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL,
-            spacing=4,
-            margin_top=12,
-            margin_bottom=12,
+        placeholder = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL, spacing=6,
+            margin_top=18, margin_bottom=18, margin_start=12, margin_end=12,
         )
-        placeholder_box.set_halign(Gtk.Align.CENTER)
-        placeholder_icon = Gtk.Image(
+        placeholder.append(Gtk.Image(
             icon_name="bookmark-new-symbolic", pixel_size=32, css_classes=["dim-label"]
-        )
-        placeholder_label = Gtk.Label(
+        ))
+        placeholder.append(Gtk.Label(
             label=_("Press M or use the mark button to add segments"),
-            css_classes=["dim-label"],
+            css_classes=["dim-label"], wrap=True, justify=Gtk.Justification.CENTER,
+        ))
+        self.segments_listbox.set_placeholder(placeholder)
+        self.segments_listbox.connect(
+            "row-activated", lambda _box, row: self.page._on_goto_segment_clicked(None, row.segment_start)
         )
-        placeholder_box.append(placeholder_icon)
-        placeholder_box.append(placeholder_label)
-        self.segments_placeholder_row.set_child(placeholder_box)
-        trim_group.add(self.segments_placeholder_row)
-
-        # Action buttons row with + and trash icons
-        actions_row = Adw.ActionRow()
-        button_box = Gtk.Box(
-            spacing=30, halign=Gtk.Align.CENTER, valign=Gtk.Align.CENTER
-        )
-        button_box.set_hexpand(True)
-
-        # Add segment button
-        add_button = Gtk.Button(icon_name="list-add-symbolic")
-        add_button.add_css_class("circular")
-        add_button.add_css_class("suggested-action")
-        add_button.set_tooltip_text(_("Add segment manually"))
-        add_button.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Add segment manually")],
-        )
-        add_button.connect("clicked", self.page._on_add_manual_segment_clicked)
-        button_box.append(add_button)
-
-        # Clear all segments button
-        clear_button = Gtk.Button(icon_name="user-trash-symbolic")
-        clear_button.add_css_class("circular")
-        clear_button.add_css_class("destructive-action")
-        clear_button.set_tooltip_text(_("Clear all segments"))
-        clear_button.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Clear all segments")],
-        )
-        clear_button.connect(
-            "clicked", self.page._on_clear_all_segments_with_confirmation
-        )
-        button_box.append(clear_button)
-
-        actions_row.set_child(button_box)
-        trim_group.add(actions_row)
-
-        # Add tooltip to trim group
+        trim_group.add(self.segments_listbox)
         if hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(trim_group, "segments")
+        sidebar_box.append(trim_group)
 
+        # Join/split only means something with two or more segments.
+        self.output_group = Adw.PreferencesGroup(visible=False)
         output_mode_model = Gtk.StringList.new([
             _("Join segments into a single file"),
             _("Save each segment as a separate file"),
@@ -796,78 +714,225 @@ class VideoEditUI:
         self.output_mode_combo.connect(
             "notify::selected", self.page._on_output_mode_changed
         )
-        trim_group.add(self.output_mode_combo)
+        self.output_group.add(self.output_mode_combo)
+        sidebar_box.append(self.output_group)
 
-        sidebar_box.append(trim_group)
+        self.apply_tooltips()
+
+    def _create_effects_group(self):
+        """Noise reduction, sharpening, stabilization and a look or shader."""
+        group = Adw.PreferencesGroup(title=_("Effects"))
+        self.effects_reset_button = self._group_reset_button(
+            _("Reset effects"), lambda _b: self.page.on_reset_effects()
+        )
+        group.set_header_suffix(self.effects_reset_button)
+
+        levels = Gtk.StringList.new([_("Off"), _("Light"), _("Medium"), _("Strong")])
+        self.denoise_combo = Adw.ComboRow(title=_("Noise reduction"), model=levels, visible=False)
+        self.sharpen_combo = Adw.ComboRow(title=_("Sharpening"), model=levels, visible=False)
+        for combo, name in ((self.denoise_combo, "denoise"), (self.sharpen_combo, "sharpen")):
+            combo.connect("notify::selected", lambda row, _p, n=name: self.page.on_effect_changed(
+                n, EFFECT_LEVELS[row.get_selected()]))
+            group.add(combo)
+
+        self.stabilize_row = Adw.SwitchRow(
+            title=_("Stabilization"), subtitle=_("Applied when converting, not in the preview"),
+            visible=False,
+        )
+        self.stabilize_row.connect(
+            "notify::active", lambda row, _p: self.page.on_effect_changed("stabilize", row.get_active())
+        )
+        group.add(self.stabilize_row)
+
+        self.effect_file_row = Adw.ActionRow(title=_("Look or shader"), subtitle=_("None"))
+        choose_label = _("Choose a colour look (.cube) or shader (.hook)")
+        choose = Gtk.Button(icon_name="document-open-symbolic", tooltip_text=choose_label,
+                            valign=Gtk.Align.CENTER, css_classes=["flat"])
+        choose.update_property([Gtk.AccessibleProperty.LABEL], [choose_label])
+        choose.connect("clicked", self._on_choose_effect_file)
+        clear_label = _("Remove the look or shader")
+        self.effect_clear_button = Gtk.Button(icon_name="edit-clear-symbolic", tooltip_text=clear_label,
+                                              valign=Gtk.Align.CENTER, css_classes=["flat"],
+                                              sensitive=False)
+        self.effect_clear_button.update_property([Gtk.AccessibleProperty.LABEL], [clear_label])
+        self.effect_clear_button.connect(
+            "clicked", lambda _b: self.page.on_effect_changed("effect_file", ""))
+        self.effect_file_row.add_suffix(self.effect_clear_button)
+        self.effect_file_row.add_suffix(choose)
+        self.effect_file_row.set_activatable_widget(choose)
+        group.add(self.effect_file_row)
+
+        # Which effects this FFmpeg can apply: hqdn3d needs a GPL build,
+        # stabilization libvidstab, shaders libplacebo. Asked off the GTK
+        # thread; an option the build lacks is not offered.
+        self._shaders_available = False
+
+        def probe():
+            names = available_filters()
+            GLib.idle_add(show, names)
+
+        def show(names):
+            self.denoise_combo.set_visible("hqdn3d" in names)
+            self.sharpen_combo.set_visible("cas" in names)
+            self.stabilize_row.set_visible("vidstabdetect" in names)
+            self._shaders_available = "libplacebo" in names
+            return GLib.SOURCE_REMOVE
+
+        threading.Thread(target=probe, daemon=True).start()
+        return group
+
+    def _on_choose_effect_file(self, _button):
+        dialog = Gtk.FileDialog(title=_("Choose a Look or Shader"))
+        file_filter = Gtk.FileFilter()
+        patterns = ["*.cube", "*.3dl"] + (["*.hook", "*.glsl"] if self._shaders_available else [])
+        file_filter.set_name(_("Looks and shaders") + f" ({', '.join(patterns)})")
+        for pattern in patterns:
+            file_filter.add_pattern(pattern)
+            file_filter.add_pattern(pattern.upper())
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+        filters.append(file_filter)
+        dialog.set_filters(filters)
+
+        def done(dlg, result):
+            try:
+                gfile = dlg.open_finish(result)
+            except GLib.Error:
+                return
+            if gfile is not None and gfile.get_path():
+                self.page.on_effect_changed("effect_file", gfile.get_path())
+
+        dialog.open(self.page.app.window, None, done)
+
+    def update_source_hdr(self, mode) -> None:
+        self.source_hdr_combo.set_selected(SOURCE_HDR_MODES.index(mode) if mode in SOURCE_HDR_MODES else 0)
+        self._refresh_image_reset()
+
+    def update_effects_state(self, denoise, sharpen, stabilize, effect_file) -> None:
+        """Show the file's effects; enable the group's Reset only when set."""
+        self.denoise_combo.set_selected(EFFECT_LEVELS.index(denoise) if denoise in EFFECT_LEVELS else 0)
+        self.sharpen_combo.set_selected(EFFECT_LEVELS.index(sharpen) if sharpen in EFFECT_LEVELS else 0)
+        self.stabilize_row.set_active(bool(stabilize))
+        self.effect_file_row.set_subtitle(
+            GLib.markup_escape_text(os.path.basename(effect_file)) if effect_file else _("None"))
+        self.effect_clear_button.set_sensitive(bool(effect_file))
+        self.effects_reset_button.set_sensitive(
+            denoise != "off" or sharpen != "off" or bool(stabilize) or bool(effect_file))
+
+    def _group_reset_button(self, label, on_clicked):
+        button = Gtk.Button(
+            icon_name="edit-undo-symbolic", tooltip_text=label,
+            valign=Gtk.Align.CENTER, sensitive=False,
+        )
+        button.update_property([Gtk.AccessibleProperty.LABEL], [label])
+        button.add_css_class("flat")
+        button.connect("clicked", on_clicked)
+        return button
+
+    def _flip_toggle(self, icon, label, direction):
+        button = Gtk.ToggleButton(icon_name=icon, tooltip_text=label, valign=Gtk.Align.CENTER)
+        button.update_property([Gtk.AccessibleProperty.LABEL], [label])
+        button.add_css_class("flat")
+        button.connect("clicked", lambda _b: self.page.on_flip(direction))
+        return button
+
+    def update_transform_state(self, rotation, flip_h, flip_v) -> None:
+        """Show the current rotation and mirroring; enable Reset only when set."""
+        self.rotation_row.set_subtitle(f"{rotation}°")
+        self.flip_h_btn.set_active(flip_h)
+        self.flip_v_btn.set_active(flip_v)
+        self.transform_reset_button.set_sensitive(bool(rotation or flip_h or flip_v))
+
+    def update_segment_actions(self, count) -> None:
+        self.clear_segments_button.set_sensitive(count > 0)
+        self.output_group.set_visible(count > 1)
+
+    def _on_reset_image_clicked(self, _button):
+        for reset in (self.page.reset_brightness, self.page.reset_contrast,
+                      self.page.reset_saturation, self.page.reset_hue):
+            reset()
+        self.page.on_source_hdr_changed("auto")
+
+    def _refresh_image_reset(self, *_args):
+        source_set = getattr(self, "source_hdr_combo", None) is not None and self.source_hdr_combo.get_selected() != 0
+        self.image_reset_button.set_sensitive(
+            source_set or any(changed() for changed in self._image_refreshers))
 
     def update_for_force_copy_state(self, force_copy_enabled) -> None:
-        """Enable/disable editing controls based on force copy state"""
-        # When force copy is enabled, color adjustments and crop don't work
-        # Only trim segments continue to work
-        enable_editing_options = not force_copy_enabled
-
-        # Disable/enable color adjustments group
-        if hasattr(self, "adjust_group"):
-            self.adjust_group.set_sensitive(enable_editing_options)
-
-        # Disable/enable crop controls
-        if hasattr(self, "crop_grid"):
-            self.crop_grid.set_sensitive(enable_editing_options)
-        if hasattr(self, "crop_edit_btn"):
-            self.crop_edit_btn.set_sensitive(enable_editing_options)
-            if force_copy_enabled and self.crop_edit_btn.get_active():
-                self.crop_edit_btn.set_active(False)
-
-        # Disable/enable transform controls
-        if hasattr(self, "transform_group"):
-            self.transform_group.set_sensitive(enable_editing_options)
-
-        # Trim segments always stay enabled - they work with stream copy
+        """Say that editing the picture takes this video out of copy mode."""
+        if hasattr(self, "copy_mode_note"):
+            self.copy_mode_note.set_visible(force_copy_enabled)
 
     def _create_adjustment_row(
-        self, container, title, min_val, max_val, default_val, on_change, on_reset
+        self, container, title, min_val, max_val, default_val, on_change, on_reset, describe
     ):
-        """Helper to create a single adjustment row for the sidebar."""
-        row = Adw.ActionRow(title=title)
+        """Name, slider, current value and reset, all on one line."""
+        # Not focusable: Tab goes straight to the slider, the row does nothing.
+        row = Adw.PreferencesRow(title=title, activatable=False, focusable=False)
+        box = Gtk.Box(spacing=6, margin_start=12, margin_end=6, margin_top=4, margin_bottom=4)
+        name = Gtk.Label(label=title, xalign=0, width_chars=9, max_width_chars=12,
+                         ellipsize=Pango.EllipsizeMode.END)
+        box.append(name)
 
-        box = Gtk.Box(spacing=6, valign=Gtk.Align.CENTER)
-
-        scale = Gtk.Scale(
-            orientation=Gtk.Orientation.HORIZONTAL,
-            digits=2,
-            value_pos=Gtk.PositionType.RIGHT,
-            hexpand=True,
-        )
-        scale.set_adjustment(
-            Gtk.Adjustment(
-                value=default_val, lower=min_val, upper=max_val, step_increment=0.05
-            )
-        )
+        scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, hexpand=True, round_digits=2)
+        scale.set_adjustment(Gtk.Adjustment(
+            value=default_val, lower=min_val, upper=max_val,
+            step_increment=0.01, page_increment=0.1,
+        ))
         scale.set_tooltip_text(title)
-        scale.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [title],
-        )
-        scale.connect("value-changed", on_change)
+        scale.update_property([Gtk.AccessibleProperty.LABEL], [title])
+        self._forward_wheel_unless_focused(scale)
+        box.append(scale)
 
+        value_label = Gtk.Label(css_classes=["dim-label", "numeric"], width_chars=5, xalign=1)
+        box.append(value_label)
         reset_label = _("Reset {setting} to default").format(setting=title)
-        reset_button = Gtk.Button(
-            icon_name="edit-undo-symbolic", tooltip_text=reset_label
-        )
-        reset_button.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [reset_label],
-        )
-        reset_button.connect("clicked", lambda b: on_reset())
+        reset_button = Gtk.Button(icon_name="edit-undo-symbolic", tooltip_text=reset_label,
+                                  valign=Gtk.Align.CENTER)
+        reset_button.update_property([Gtk.AccessibleProperty.LABEL], [reset_label])
+        reset_button.connect("clicked", lambda _b: on_reset())
         reset_button.add_css_class("flat")
         reset_button.add_css_class("bvc-icon-button")
-
-        box.append(scale)
         box.append(reset_button)
 
-        row.add_suffix(box)
+        def is_changed():
+            return abs(scale.get_value() - default_val) > 1e-6
+
+        def refresh(*_args):
+            text = describe(scale.get_value())
+            value_label.set_text(text)
+            scale.update_property([Gtk.AccessibleProperty.VALUE_TEXT], [text])
+            reset_button.set_sensitive(is_changed())
+            self._refresh_image_reset()
+
+        scale.connect("value-changed", on_change)
+        scale.connect("value-changed", refresh)
+        self._image_refreshers.append(is_changed)
+        refresh()
+
+        row.set_child(box)
         container.add(row)
         return scale, row
+
+    @staticmethod
+    def _forward_wheel_unless_focused(scale):
+        """Scrolling the sidebar must not change a slider the pointer crosses."""
+        controller = Gtk.EventControllerScroll(flags=Gtk.EventControllerScrollFlags.VERTICAL)
+        controller.set_propagation_phase(Gtk.PropagationPhase.CAPTURE)
+
+        def on_scroll(ctrl, _dx, dy):
+            if scale.has_focus():
+                return False
+            scroller = scale.get_ancestor(Gtk.ScrolledWindow)
+            if scroller is None:
+                return True
+            if ctrl.get_unit() == Gdk.ScrollUnit.WHEEL:
+                dy *= 48
+            adjustment = scroller.get_vadjustment()
+            adjustment.set_value(adjustment.get_value() + dy)
+            return True
+
+        controller.connect("scroll", on_scroll)
+        scale.add_controller(controller)
 
     def _draw_segment_markers(self, area, cr, width, height):
         """Draw segment markers on the progress bar"""
@@ -1035,6 +1100,8 @@ class VideoEditUI:
         elif edge == "end" and new_time > self.page.trim_segments[idx]["start"]:
             self.page.trim_segments[idx]["end"] = new_time
             self.position_scale.set_value(new_time)
+        # The page edits its own copy of the segments; store the change.
+        self.page._save_file_metadata()
         self.update_segment_markers()
         self.page._update_segments_listbox()
 
@@ -1071,7 +1138,6 @@ class VideoEditUI:
             return
         if hasattr(self, "overlay_controls"):
             self.overlay_controls.set_visible(True)
-            self.controls_visible = True
             if self.hide_timer_id is not None:
                 GLib.source_remove(self.hide_timer_id)
                 self.hide_timer_id = None
@@ -1088,7 +1154,6 @@ class VideoEditUI:
             return True
         if hasattr(self, "overlay_controls"):
             self.overlay_controls.set_visible(False)
-        self.controls_visible = False
         self.hide_timer_id = None
         return False
 
@@ -1099,7 +1164,6 @@ class VideoEditUI:
             self.hide_timer_id = None
         if hasattr(self, "overlay_controls"):
             self.overlay_controls.set_visible(True)
-        self.controls_visible = True
 
     def apply_tooltips(self) -> None:
         """Apply tooltips to all video edit UI elements"""
@@ -1119,15 +1183,21 @@ class VideoEditUI:
             tooltip_helper.add_tooltip(self.hue_row, "hue")
         if hasattr(self, "trim_group") and self.trim_group:
             tooltip_helper.add_tooltip(self.trim_group, "segments")
+        for widget, key in ((getattr(self, "denoise_combo", None), "denoise"),
+                            (getattr(self, "sharpen_combo", None), "sharpen"),
+                            (getattr(self, "stabilize_row", None), "stabilize"),
+                            (getattr(self, "effect_file_row", None), "effect_file"),
+                            (getattr(self, "source_hdr_combo", None), "source_hdr")):
+            if widget is not None:
+                tooltip_helper.add_tooltip(widget, key)
 
     def disconnect_all_handlers(self) -> None:
         """Disconnect handlers and remove callbacks owned by the editor UI."""
         self.cancel_scheduled_sources()
+        # Handler ids come from connect(); disconnect() raises only for a
+        # non-integer id and reports a stale one as a GLib warning.
         for widget, hid in self._handler_ids:
-            try:
-                widget.disconnect(hid)
-            except Exception:
-                pass
+            widget.disconnect(hid)
         self._handler_ids.clear()
         # Reset the handler ID so stale references are not used after cleanup
         self.page.position_changed_handler_id = None
