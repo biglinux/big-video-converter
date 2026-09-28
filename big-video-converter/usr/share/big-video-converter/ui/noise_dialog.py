@@ -270,7 +270,7 @@ def show_noise_dialog(parent_window, app) -> bool:
     card1.append(model_note)
 
     def _show_model_note(model):
-        plugin, *_rest, package = NOISE_MODELS[model]
+        plugin, package = NOISE_MODELS[model][0], NOISE_MODELS[model][4]
         installed = os.path.exists(plugin)
         if not installed:
             text = _("Unavailable: install {package}").format(package=package)

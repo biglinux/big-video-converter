@@ -953,15 +953,16 @@ if [[ $noise_reduction == "1" ]]; then
 	case ${noise_model:-0} in
 	1)
 		nr_plugin=/usr/lib/ladspa/libdpdfnet_native.so nr_label=dpdfnet_native_48hr
-		nr_delay=2880 nr_extra="" ;;
+		nr_delay=2880 nr_extra="" nr_full_db=48 ;;
 	*)
 		# DFN3 mutes its first second by default, meant for a live microphone.
 		nr_plugin=/usr/lib/ladspa/libdfn3_ladspa.so nr_label=deep_filter_net3_rs_mono
-		nr_delay=1919 nr_extra="|c6=0" ;;
+		nr_delay=1919 nr_extra="|c6=0" nr_full_db=24 ;;
 	esac
 	if [[ -e $nr_plugin ]]; then
-		# Strength 0..1 limits the attenuation to strength² × 100 dB.
-		nr_attenuation=$(awk -v s="${noise_strength:-1.0}" 'BEGIN { printf "%.2f", s * s * 100 }')
+		# Strength 0..1 is linear in dB up to where the model stops removing
+		# more (see constants.NOISE_MODELS).
+		nr_attenuation=$(awk -v s="${noise_strength:-1.0}" -v full="$nr_full_db" 'BEGIN { if (s > 1) s = 1; printf "%.2f", s * full }')
 		local_filters+=("aresample=48000,asplit[bvcnr_main][bvcnr_head];[bvcnr_head]atrim=end_sample=24000,apad=whole_len=24000,areverse,asetpts=PTS-STARTPTS-24000/SR/TB[bvcnr_pre];[bvcnr_pre][bvcnr_main]concat=n=2:v=0:a=1,apad=pad_len=${nr_delay},ladspa=file=${nr_plugin}:plugin=${nr_label}:controls=c0=${nr_attenuation}${nr_extra},atrim=start_sample=$((24000 + nr_delay)),asetpts=PTS-${nr_delay}/SR/TB")
 		echo "Noise reduction enabled: ${nr_label} attenuation=${nr_attenuation}dB"
 	else

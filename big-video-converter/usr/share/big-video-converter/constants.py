@@ -26,14 +26,18 @@ CONVERT_SCRIPT_PATH = os.path.abspath(os.path.join(
 ))
 
 # AI noise reduction models, by the "noise-model" setting: LADSPA plugin,
-# label, output delay in samples at 48 kHz, extra controls, and the package
-# that installs it. The export script keeps the same table.
+# label, output delay in samples at 48 kHz, extra controls, the package that
+# installs it, and the attenuation at full strength. The export script keeps
+# the same table.
+# Full strength is where the model stops removing more (measured on speech in
+# pink noise): DFN3's residual moves under 1 dB past 24 dB, while DPDFNet-2 at
+# 48 dB leaves noise at -74 dBFS. A higher cap left half the slider silent.
 NOISE_MODELS = (
     # DFN3 mutes its first second by default, meant for a live microphone.
     ("/usr/lib/ladspa/libdfn3_ladspa.so", "deep_filter_net3_rs_mono", 1919,
-     "|c6=0", "deepfilternet-quantized-ladspa"),
+     "|c6=0", "deepfilternet-quantized-ladspa", 24),
     ("/usr/lib/ladspa/libdpdfnet_native.so", "dpdfnet_native_48hr", 2880,
-     "", "dpdfnet-native"),
+     "", "dpdfnet-native", 48),
 )
 
 
@@ -47,8 +51,9 @@ def noise_reduction_filter(model: int, strength: float) -> str:
     backwards, which is cut away again; that lead-in ends at timestamp 0, so
     concat keeps the stream's own timeline across seeks and offset starts.
     """
-    plugin, plugin_label, delay, extra, _package = NOISE_MODELS[model]
-    attenuation = strength * strength * 100
+    plugin, plugin_label, delay, extra, _package, full_db = NOISE_MODELS[model]
+    # Linear in dB, so every step of the slider changes what is heard.
+    attenuation = min(max(strength, 0.0), 1.0) * full_db
     return (
         f"aresample=48000,asplit[bvcnr_main][bvcnr_head];"
         f"[bvcnr_head]atrim=end_sample=24000,apad=whole_len=24000,areverse,"
