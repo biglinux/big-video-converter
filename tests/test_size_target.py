@@ -107,6 +107,9 @@ def test_parts_come_out_even_with_no_stub_at_the_end():
 def test_targets():
     assert target_bytes("email") == 23_000_000
     assert target_bytes("fat32") == 4 * 1024**3 - 1
+    # Telegram's own limits are 4000 and 8000 parts of 512 KiB.
+    assert target_bytes("telegram") <= 4000 * 512 * 1024
+    assert target_bytes("telegram-premium") <= 8000 * 512 * 1024 < target_bytes("fat32")
     assert target_bytes("custom", 50) == 50_000_000
     with pytest.raises(SizeTargetError):
         target_bytes("custom", 0)

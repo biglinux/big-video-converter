@@ -946,6 +946,30 @@ msgstr "verticaal"
 msgid "social"
 msgstr "sociaal"
 
+msgid "Telegram Premium"
+msgstr "Telegram Premium"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 4 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 met AAC-stereo in MP4, onder 4 GB zodat het in de chat al tijdens het downloaden speelt."
+
+msgid "telegram"
+msgstr "telegram"
+
+msgid "chat"
+msgstr "chat"
+
+msgid "upload"
+msgstr "uploaden"
+
+msgid "1080p"
+msgstr "1080p"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 2 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 met AAC-stereo in MP4, onder 2 GB zodat het in de chat al tijdens het downloaden speelt."
+
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -954,12 +978,6 @@ msgstr "720p H.264 met lichte AAC-audio in MP4: klein genoeg om via chat te vers
 
 msgid "whatsapp"
 msgstr "whatsapp"
-
-msgid "telegram"
-msgstr "telegram"
-
-msgid "chat"
-msgstr "chat"
 
 msgid "720p"
 msgstr "720p"
@@ -984,12 +1002,6 @@ msgstr "H.264 High-profiel met de door YouTube aanbevolen GOP- en B-frame-instel
 
 msgid "youtube"
 msgstr "youtube"
-
-msgid "upload"
-msgstr "uploaden"
-
-msgid "1080p"
-msgstr "1080p"
 
 msgid "YouTube 1440p (H.265)"
 msgstr "YouTube 1440p (H.265)"
@@ -5080,6 +5092,10 @@ msgid "[ffmpeg] has unknown key(s): {0}"
 msgstr "[ffmpeg] heeft onbekende sleutel(s): {0}"
 
 #, python-brace-format
+msgid "[size] has unknown key(s): {0}"
+msgstr "[size] bevat onbekende sleutels: {0}"
+
+#, python-brace-format
 msgid "[encoder.{0}] is not an encoder name."
 msgstr "[encoder.{0}] is geen naam van een encoder."
 
@@ -5180,8 +5196,11 @@ msgstr "Uploadsites"
 msgid "Telegram or WhatsApp document"
 msgstr "Telegram- of WhatsApp-document"
 
-msgid "FAT32 drive or Telegram Premium"
-msgstr "FAT32-schijf of Telegram Premium"
+msgid "Telegram Premium document"
+msgstr "Telegram Premium-document"
+
+msgid "FAT32 drive"
+msgstr "FAT32-schijf"
 
 msgid "Copied as it is: it already fits"
 msgstr "Ongewijzigd gekopieerd: past al"
@@ -5240,6 +5259,9 @@ msgstr "Toepassingsstartfout"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Kon Big Video Converter niet starten: {0}"
+
+#~ msgid "FAT32 drive or Telegram Premium"
+#~ msgstr "FAT32-schijf of Telegram Premium"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 321

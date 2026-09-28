@@ -950,6 +950,30 @@ msgstr "svislé"
 msgid "social"
 msgstr "sociální sítě"
 
+msgid "Telegram Premium"
+msgstr "Telegram Premium"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 4 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 se stereo AAC v MP4, pod 4 GB, aby se v chatu přehrávalo už během stahování."
+
+msgid "telegram"
+msgstr "telegram"
+
+msgid "chat"
+msgstr "chat"
+
+msgid "upload"
+msgstr "nahrání"
+
+msgid "1080p"
+msgstr "1080p"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 2 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 se stereo AAC v MP4, pod 2 GB, aby se v chatu přehrávalo už během stahování."
+
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -958,12 +982,6 @@ msgstr "720p H.264 s odlehčeným zvukem AAC v MP4: dost malé na odeslání v c
 
 msgid "whatsapp"
 msgstr "whatsapp"
-
-msgid "telegram"
-msgstr "telegram"
-
-msgid "chat"
-msgstr "chat"
 
 msgid "720p"
 msgstr "720p"
@@ -988,12 +1006,6 @@ msgstr "H.264 High profile s doporučeným nastavením GOP a B-snímků od YouTu
 
 msgid "youtube"
 msgstr "youtube"
-
-msgid "upload"
-msgstr "nahrání"
-
-msgid "1080p"
-msgstr "1080p"
 
 msgid "YouTube 1440p (H.265)"
 msgstr "YouTube 1440p (H.265)"
@@ -5135,6 +5147,10 @@ msgid "[ffmpeg] has unknown key(s): {0}"
 msgstr "[ffmpeg] obsahuje neznámé klíče: {0}"
 
 #, python-brace-format
+msgid "[size] has unknown key(s): {0}"
+msgstr "[size] má neznámé klíče: {0}"
+
+#, python-brace-format
 msgid "[encoder.{0}] is not an encoder name."
 msgstr "[encoder.{0}] není název kodéru."
 
@@ -5242,8 +5258,11 @@ msgstr "Weby pro nahrávání"
 msgid "Telegram or WhatsApp document"
 msgstr "Dokument pro Telegram nebo WhatsApp"
 
-msgid "FAT32 drive or Telegram Premium"
-msgstr "Disk FAT32 nebo Telegram Premium"
+msgid "Telegram Premium document"
+msgstr "Dokument v Telegram Premium"
+
+msgid "FAT32 drive"
+msgstr "Disk FAT32"
 
 msgid "Copied as it is: it already fits"
 msgstr "Zkopírováno beze změny: už se vejde"
@@ -5304,6 +5323,9 @@ msgstr "Chyba při spuštění aplikace"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Nepodařilo se spustit Big Video Converter: {0}"
+
+#~ msgid "FAT32 drive or Telegram Premium"
+#~ msgstr "Disk FAT32 nebo Telegram Premium"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 321

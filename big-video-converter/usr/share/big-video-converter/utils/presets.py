@@ -78,6 +78,7 @@ class Preset:
     container: dict = field(default_factory=dict)
     ffmpeg: dict = field(default_factory=dict)
     encoders: dict[str, list[str]] = field(default_factory=dict)
+    size: dict = field(default_factory=dict)
     path: str = ""
     bundled: bool = False
 
@@ -110,7 +111,17 @@ class Preset:
             parts.append(self.video["resolution"])
         if self.container.get("format"):
             parts.append(self.container["format"].upper())
+        if self.size_limit_text:
+            parts.append(self.size_limit_text)
         return " · ".join(parts)
+
+    @property
+    def size_limit_text(self) -> str:
+        if not self.size.get("target"):
+            return ""
+        from utils.size_target import TARGETS
+
+        return _("up to {size}").format(size=next(t[3] for t in TARGETS if t[0] == self.size["target"]))
 
 
 # --------------------------------------------------------------------------
@@ -228,7 +239,8 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
     version = data.get("format", FORMAT_VERSION)
     if isinstance(version, bool) or not isinstance(version, int) or version != FORMAT_VERSION:
         raise PresetError(_("Unsupported preset format {0}; this version reads format {1}.").format(version, FORMAT_VERSION))
-    unknown = set(data) - {"format", "preset", "video", "audio", "subtitles", "container", "ffmpeg", "encoder"}
+    unknown = set(data) - {"format", "preset", "video", "audio", "subtitles", "container", "ffmpeg", "encoder",
+                           "size"}
     if unknown:
         raise PresetError(_("Unknown section(s): {0}").format(", ".join(sorted(unknown))))
 
@@ -323,6 +335,17 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
     if unknown:
         raise PresetError(_("[ffmpeg] has unknown key(s): {0}").format(", ".join(sorted(unknown))))
 
+    from utils.size_target import TARGETS
+
+    size_in = _table(data, "size")
+    size: dict = {}
+    target = _choice(size_in, "size", "target", tuple(t[0] for t in TARGETS))
+    if target:
+        size["target"] = target
+    unknown = set(size_in) - {"target"}
+    if unknown:
+        raise PresetError(_("[size] has unknown key(s): {0}").format(", ".join(sorted(unknown))))
+
     encoders_in = _table(data, "encoder")
     encoders: dict[str, list[str]] = {}
     for enc_name, table in encoders_in.items():
@@ -341,7 +364,7 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
         raise PresetError(_("Invalid preset identifier: {0}").format(preset_id))
     return Preset(id=preset_id, name=name, description=description, tags=tags, author=author,
                   video=video, audio=audio, subtitles=subtitles, container=container,
-                  ffmpeg=ffmpeg, encoders=encoders, path=path, bundled=bundled)
+                  ffmpeg=ffmpeg, encoders=encoders, size=size, path=path, bundled=bundled)
 
 
 def preset_file_access(preset: Preset) -> list[str]:
@@ -542,6 +565,7 @@ def preset_settings(preset: Preset) -> dict:
         out["subtitle-extract"] = preset.subtitles["mode"]
     if "format" in preset.container:
         out["output-format-index"] = CONTAINER_INDEX[preset.container["format"]]
+    out["size-target"] = preset.size.get("target", "")
     return out
 
 
@@ -592,6 +616,10 @@ def preset_environment(preset: Preset) -> dict[str, str]:
     options = preset_options(preset)
     if options:
         env["preset_options"] = options
+    if "target" in preset.size:
+        from utils.size_target import target_bytes
+
+        env["size_limit"] = str(target_bytes(preset.size["target"]))
     return env
 
 
@@ -692,6 +720,9 @@ output_options = "-g 60 -bf 2"   # extra FFmpeg output options, only from this l
 
 [encoder.libx264]                # one table per encoder; only the encoder actually used gets its args
 args = ["-tune", "film"]
+
+[size]
+target = "telegram"      # optional largest file: {size_targets}
 ```
 
 Encoders the program may pick, depending on the machine: {encoders}.
@@ -706,6 +737,7 @@ Request from the user:
 def build_ai_prompt(request: str, *, available_encoders=(), ffmpeg_version: str = "unknown",
                     language: str | None = None) -> str:
     from utils.ffmpeg_options import ALLOWED_FFMPEG_FLAGS
+    from utils.size_target import TARGETS
 
     request = (request or "").strip() or "(the user did not describe the request; ask them what the preset is for)"
     available = ", ".join(sorted(e for e in available_encoders if e in KNOWN_ENCODERS)) or "unknown"
@@ -713,6 +745,7 @@ def build_ai_prompt(request: str, *, available_encoders=(), ffmpeg_version: str 
         language=language or system_language(),
         allowed_flags=" ".join(sorted(ALLOWED_FFMPEG_FLAGS)),
         encoders=", ".join(KNOWN_ENCODERS),
+        size_targets=", ".join(t[0] for t in TARGETS),
         available=available,
         ffmpeg_version=ffmpeg_version,
         request=request,

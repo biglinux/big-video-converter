@@ -948,6 +948,30 @@ msgstr "pionowy"
 msgid "social"
 msgstr "społecznościowe"
 
+msgid "Telegram Premium"
+msgstr "Telegram Premium"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 4 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 ze stereo AAC w MP4, poniżej 4 GB, aby odtwarzał się w czacie już podczas pobierania."
+
+msgid "telegram"
+msgstr "telegram"
+
+msgid "chat"
+msgstr "czat"
+
+msgid "upload"
+msgstr "przesyłanie"
+
+msgid "1080p"
+msgstr "1080p"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 2 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 ze stereo AAC w MP4, poniżej 2 GB, aby odtwarzał się w czacie już podczas pobierania."
+
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -956,12 +980,6 @@ msgstr "720p H.264 z lekkim dźwiękiem AAC w MP4: wystarczająco mały, by wys�
 
 msgid "whatsapp"
 msgstr "whatsapp"
-
-msgid "telegram"
-msgstr "telegram"
-
-msgid "chat"
-msgstr "czat"
 
 msgid "720p"
 msgstr "720p"
@@ -986,12 +1004,6 @@ msgstr "H.264 profil High z zalecanymi przez YouTube ustawieniami GOP i klatek B
 
 msgid "youtube"
 msgstr "youtube"
-
-msgid "upload"
-msgstr "przesyłanie"
-
-msgid "1080p"
-msgstr "1080p"
 
 msgid "YouTube 1440p (H.265)"
 msgstr "YouTube 1440p (H.265)"
@@ -4145,6 +4157,10 @@ msgid "[ffmpeg] has unknown key(s): {0}"
 msgstr "[ffmpeg] zawiera nieznany klucz (klucze): {0}"
 
 #, python-brace-format
+msgid "[size] has unknown key(s): {0}"
+msgstr "[size] zawiera nieznane klucze: {0}"
+
+#, python-brace-format
 msgid "[encoder.{0}] is not an encoder name."
 msgstr "[encoder.{0}] nie jest nazwą kodera."
 
@@ -4252,8 +4268,11 @@ msgstr "Serwisy do przesyłania"
 msgid "Telegram or WhatsApp document"
 msgstr "Dokument w Telegramie lub WhatsApp"
 
-msgid "FAT32 drive or Telegram Premium"
-msgstr "Dysk FAT32 lub Telegram Premium"
+msgid "Telegram Premium document"
+msgstr "Dokument w Telegram Premium"
+
+msgid "FAT32 drive"
+msgstr "Dysk FAT32"
 
 msgid "Copied as it is: it already fits"
 msgstr "Skopiowano bez zmian: już się mieści"
@@ -4314,6 +4333,9 @@ msgstr "Błąd uruchamiania aplikacji"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Nie udało się uruchomić Big Video Converter: {0}"
+
+#~ msgid "FAT32 drive or Telegram Premium"
+#~ msgstr "Dysk FAT32 lub Telegram Premium"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 321

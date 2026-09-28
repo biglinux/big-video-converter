@@ -433,7 +433,7 @@ class SettingsManager:
             "subtitle-extract": {"extract", "embedded", "none"},
             "multi-segment-output-mode": {"join", "split"},
             "size-target": {"", "custom", "whatsapp", "discord", "email", "100mb",
-                            "telegram", "fat32"},
+                            "telegram", "telegram-premium", "fat32"},
             "size-strategy": {"auto", "keep_resolution", "split"},
         }
         if key in enums and value not in enums[key]:

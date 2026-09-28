@@ -1213,6 +1213,30 @@ msgstr "pystysuora"
 msgid "social"
 msgstr "some"
 
+msgid "Telegram Premium"
+msgstr "Telegram Premium"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 4 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 ja AAC-stereo MP4:ssä, alle 4 Gt, jotta se toistuu keskustelussa jo latautuessaan."
+
+msgid "telegram"
+msgstr "telegram"
+
+msgid "chat"
+msgstr "chat"
+
+msgid "upload"
+msgstr "lataus"
+
+msgid "1080p"
+msgstr "1080p"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 2 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 ja AAC-stereo MP4:ssä, alle 2 Gt, jotta se toistuu keskustelussa jo latautuessaan."
+
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -1221,12 +1245,6 @@ msgstr "720p H.264 kevyellä AAC-äänellä MP4-muodossa: tarpeeksi pieni lähet
 
 msgid "whatsapp"
 msgstr "whatsapp"
-
-msgid "telegram"
-msgstr "telegram"
-
-msgid "chat"
-msgstr "chat"
 
 msgid "720p"
 msgstr "720p"
@@ -1251,12 +1269,6 @@ msgstr "H.264 High -profiili YouTuben suosittelemilla GOP- ja B-kehysasetuksilla
 
 msgid "youtube"
 msgstr "youtube"
-
-msgid "upload"
-msgstr "lataus"
-
-msgid "1080p"
-msgstr "1080p"
 
 msgid "YouTube 1440p (H.265)"
 msgstr "YouTube 1440p (H.265)"
@@ -5389,6 +5401,10 @@ msgid "[ffmpeg] has unknown key(s): {0}"
 msgstr "[ffmpeg] sisältää tuntemattomia avaimia: {0}"
 
 #, python-brace-format
+msgid "[size] has unknown key(s): {0}"
+msgstr "[size] sisältää tuntemattomia avaimia: {0}"
+
+#, python-brace-format
 msgid "[encoder.{0}] is not an encoder name."
 msgstr "[encoder.{0}] ei ole koodaimen nimi."
 
@@ -5489,8 +5505,11 @@ msgstr "Latauspalvelut"
 msgid "Telegram or WhatsApp document"
 msgstr "Telegram- tai WhatsApp-asiakirja"
 
-msgid "FAT32 drive or Telegram Premium"
-msgstr "FAT32-asema tai Telegram Premium"
+msgid "Telegram Premium document"
+msgstr "Telegram Premium -asiakirja"
+
+msgid "FAT32 drive"
+msgstr "FAT32-asema"
 
 msgid "Copied as it is: it already fits"
 msgstr "Kopioitu sellaisenaan: mahtuu jo"
@@ -5549,6 +5568,9 @@ msgstr "Sovelluksen käynnistysvirhe"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Big Video Converterin käynnistys epäonnistui: {0}"
+
+#~ msgid "FAT32 drive or Telegram Premium"
+#~ msgstr "FAT32-asema tai Telegram Premium"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 321

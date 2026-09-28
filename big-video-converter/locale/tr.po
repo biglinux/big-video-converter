@@ -947,6 +947,30 @@ msgstr "dikey"
 msgid "social"
 msgstr "sosyal"
 
+msgid "Telegram Premium"
+msgstr "Telegram Premium"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 4 GB so it plays in the chat while it downloads."
+msgstr "MP4 içinde AAC stereo ile 1080p H.264; sohbette indirilirken oynatılabilmesi için 4 GB altında."
+
+msgid "telegram"
+msgstr "telegram"
+
+msgid "chat"
+msgstr "sohbet"
+
+msgid "upload"
+msgstr "yükleme"
+
+msgid "1080p"
+msgstr "1080p"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 2 GB so it plays in the chat while it downloads."
+msgstr "MP4 içinde AAC stereo ile 1080p H.264; sohbette indirilirken oynatılabilmesi için 2 GB altında."
+
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -955,12 +979,6 @@ msgstr "MP4 içinde hafif AAC sesli 720p H.264: sohbette göndermeye yetecek kad
 
 msgid "whatsapp"
 msgstr "whatsapp"
-
-msgid "telegram"
-msgstr "telegram"
-
-msgid "chat"
-msgstr "sohbet"
 
 msgid "720p"
 msgstr "720p"
@@ -985,12 +1003,6 @@ msgstr "YouTube'un önerdiği GOP ve B-çerçeve ayarlarıyla H.264 High profil,
 
 msgid "youtube"
 msgstr "youtube"
-
-msgid "upload"
-msgstr "yükleme"
-
-msgid "1080p"
-msgstr "1080p"
 
 msgid "YouTube 1440p (H.265)"
 msgstr "YouTube 1440p (H.265)"
@@ -4303,6 +4315,10 @@ msgid "[ffmpeg] has unknown key(s): {0}"
 msgstr "[ffmpeg] bilinmeyen anahtar(lar) içeriyor: {0}"
 
 #, python-brace-format
+msgid "[size] has unknown key(s): {0}"
+msgstr "[size] bilinmeyen anahtar(lar) içeriyor: {0}"
+
+#, python-brace-format
 msgid "[encoder.{0}] is not an encoder name."
 msgstr "[encoder.{0}] bir kodlayıcı adı değil."
 
@@ -4403,8 +4419,11 @@ msgstr "Yükleme siteleri"
 msgid "Telegram or WhatsApp document"
 msgstr "Telegram veya WhatsApp belgesi"
 
-msgid "FAT32 drive or Telegram Premium"
-msgstr "FAT32 sürücü veya Telegram Premium"
+msgid "Telegram Premium document"
+msgstr "Telegram Premium belgesi"
+
+msgid "FAT32 drive"
+msgstr "FAT32 sürücü"
 
 msgid "Copied as it is: it already fits"
 msgstr "Olduğu gibi kopyalandı: zaten sığıyor"
@@ -4463,6 +4482,9 @@ msgstr "Uygulama Başlatma Hatası"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Büyük Video Dönüştürücü başlatılamadı: {0}"
+
+#~ msgid "FAT32 drive or Telegram Premium"
+#~ msgstr "FAT32 sürücü veya Telegram Premium"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 321

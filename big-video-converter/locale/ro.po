@@ -948,6 +948,30 @@ msgstr "vertical"
 msgid "social"
 msgstr "social"
 
+msgid "Telegram Premium"
+msgstr "Telegram Premium"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 4 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 cu AAC stereo în MP4, sub 4 GB, ca să ruleze în conversație chiar în timpul descărcării."
+
+msgid "telegram"
+msgstr "telegram"
+
+msgid "chat"
+msgstr "chat"
+
+msgid "upload"
+msgstr "încărcare"
+
+msgid "1080p"
+msgstr "1080p"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 2 GB so it plays in the chat while it downloads."
+msgstr "1080p H.264 cu AAC stereo în MP4, sub 2 GB, ca să ruleze în conversație chiar în timpul descărcării."
+
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -956,12 +980,6 @@ msgstr "720p H.264 cu audio AAC ușor în MP4: suficient de mic pentru a fi trim
 
 msgid "whatsapp"
 msgstr "whatsapp"
-
-msgid "telegram"
-msgstr "telegram"
-
-msgid "chat"
-msgstr "chat"
 
 msgid "720p"
 msgstr "720p"
@@ -986,12 +1004,6 @@ msgstr "H.264 High profile cu setările de GOP și cadre B recomandate de YouTub
 
 msgid "youtube"
 msgstr "youtube"
-
-msgid "upload"
-msgstr "încărcare"
-
-msgid "1080p"
-msgstr "1080p"
 
 msgid "YouTube 1440p (H.265)"
 msgstr "YouTube 1440p (H.265)"
@@ -5099,6 +5111,10 @@ msgid "[ffmpeg] has unknown key(s): {0}"
 msgstr "[ffmpeg] are cheie(i) necunoscută(e): {0}"
 
 #, python-brace-format
+msgid "[size] has unknown key(s): {0}"
+msgstr "[size] are chei necunoscute: {0}"
+
+#, python-brace-format
 msgid "[encoder.{0}] is not an encoder name."
 msgstr "[encoder.{0}] nu este un nume de codor."
 
@@ -5206,8 +5222,11 @@ msgstr "Site-uri de încărcare"
 msgid "Telegram or WhatsApp document"
 msgstr "Document Telegram sau WhatsApp"
 
-msgid "FAT32 drive or Telegram Premium"
-msgstr "Unitate FAT32 sau Telegram Premium"
+msgid "Telegram Premium document"
+msgstr "Document Telegram Premium"
+
+msgid "FAT32 drive"
+msgstr "Unitate FAT32"
 
 msgid "Copied as it is: it already fits"
 msgstr "Copiat ca atare: se încadrează deja"
@@ -5268,6 +5287,9 @@ msgstr "Eroare la lansarea aplicației"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Nu s-a reușit să se pornească Big Video Converter: {0}"
+
+#~ msgid "FAT32 drive or Telegram Premium"
+#~ msgstr "Unitate FAT32 sau Telegram Premium"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 321

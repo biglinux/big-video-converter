@@ -68,7 +68,7 @@ EFFECT_LEVELS = ("off", "light", "medium", "strong")
 SOURCE_HDR_MODES = ("auto", "pq", "hlg", "sdr")
 
 SIZE_MODES = ("global", "none", "custom", "whatsapp", "discord", "email", "100mb",
-              "telegram", "fat32")
+              "telegram", "telegram-premium", "fat32")
 
 
 def normalize_metadata(value: dict[str, Any] | None) -> dict[str, Any]:

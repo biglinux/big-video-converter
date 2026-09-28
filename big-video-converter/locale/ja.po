@@ -945,6 +945,30 @@ msgstr "縦型"
 msgid "social"
 msgstr "SNS"
 
+msgid "Telegram Premium"
+msgstr "Telegram Premium"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 4 GB so it plays in the chat while it downloads."
+msgstr "MP4 に AAC ステレオの 1080p H.264。4 GB 未満に収め、ダウンロード中からチャットで再生できます。"
+
+msgid "telegram"
+msgstr "telegram"
+
+msgid "chat"
+msgstr "チャット"
+
+msgid "upload"
+msgstr "アップロード"
+
+msgid "1080p"
+msgstr "1080p"
+
+msgid "Telegram"
+msgstr "Telegram"
+
+msgid "1080p H.264 with AAC stereo in MP4, kept under 2 GB so it plays in the chat while it downloads."
+msgstr "MP4 に AAC ステレオの 1080p H.264。2 GB 未満に収め、ダウンロード中からチャットで再生できます。"
+
 msgid "WhatsApp"
 msgstr "WhatsApp"
 
@@ -953,12 +977,6 @@ msgstr "720p H.264と軽量AAC音声のMP4。チャットで送れるほど小�
 
 msgid "whatsapp"
 msgstr "whatsapp"
-
-msgid "telegram"
-msgstr "telegram"
-
-msgid "chat"
-msgstr "チャット"
 
 msgid "720p"
 msgstr "720p"
@@ -983,12 +1001,6 @@ msgstr "YouTube推奨のGOPとBフレーム設定を使ったH.264 Highプロフ
 
 msgid "youtube"
 msgstr "youtube"
-
-msgid "upload"
-msgstr "アップロード"
-
-msgid "1080p"
-msgstr "1080p"
 
 msgid "YouTube 1440p (H.265)"
 msgstr "YouTube 1440p (H.265)"
@@ -5059,6 +5071,10 @@ msgid "[ffmpeg] has unknown key(s): {0}"
 msgstr "[ffmpeg] に不明なキーがあります: {0}"
 
 #, python-brace-format
+msgid "[size] has unknown key(s): {0}"
+msgstr "[size] に不明なキーがあります: {0}"
+
+#, python-brace-format
 msgid "[encoder.{0}] is not an encoder name."
 msgstr "[encoder.{0}] はエンコーダー名ではありません。"
 
@@ -5152,8 +5168,11 @@ msgstr "アップロードサイト"
 msgid "Telegram or WhatsApp document"
 msgstr "Telegram または WhatsApp のドキュメント"
 
-msgid "FAT32 drive or Telegram Premium"
-msgstr "FAT32 ドライブまたは Telegram Premium"
+msgid "Telegram Premium document"
+msgstr "Telegram Premium のファイル"
+
+msgid "FAT32 drive"
+msgstr "FAT32 ドライブ"
 
 msgid "Copied as it is: it already fits"
 msgstr "そのままコピー: すでに収まっています"
@@ -5210,6 +5229,9 @@ msgstr "アプリケーション起動エラー"
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "ビッグビデオコンバータの起動に失敗しました: {0}"
+
+#~ msgid "FAT32 drive or Telegram Premium"
+#~ msgstr "FAT32 ドライブまたは Telegram Premium"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 321

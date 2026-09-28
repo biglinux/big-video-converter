@@ -92,6 +92,8 @@ class _PresetCard(Gtk.FlowBoxChild):
             chips.append(_chip(preset.video["resolution"]))
         if preset.container.get("format"):
             chips.append(_chip(preset.container["format"].upper()))
+        if preset.size_limit_text:
+            chips.append(_chip(preset.size_limit_text))
         chips.append(_chip(_("Bundled") if preset.bundled else _("Yours"), "success" if not preset.bundled else "dim-label"))
         inner.append(chips)
 

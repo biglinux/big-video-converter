@@ -65,6 +65,8 @@ class TestContract:
         ('[preset]\nname=""', 'name is required'),
         ('[preset]\nname="x"\n[ffmpeg]\noutput_options="out.mp4"', 'not allowed'),
         ('[preset]\nname="x"\n[video]\nfps=250', 'between 1 and 240'),
+        ('[preset]\nname="x"\n[size]\ntarget="10gb"', 'target must be one of'),
+        ('[preset]\nname="x"\n[size]\ntarget="telegram"\nbytes=1', 'unknown key'),
     ])
     def test_rejections_name_the_problem(self, text, fragment):
         with pytest.raises(presets.PresetError, match=fragment):
@@ -109,6 +111,15 @@ class TestContract:
             '[preset]\nname="ntsc"\n[video]\ncodec="h264"\nfps=29.97'))
         assert presets.preset_environment(preset)['video_fps'] == '30000/1001'
         assert presets.preset_settings(preset)['video-fps'] == '30000/1001'
+
+    def test_size_target_reaches_the_gui_and_the_script(self):
+        telegram = presets.load_preset(str(BUNDLED / 'telegram-premium.toml'), bundled=True)
+        assert presets.preset_settings(telegram)['size-target'] == 'telegram-premium'
+        assert presets.preset_environment(telegram)['size_limit'] == '4000000000'
+        # A preset without a limit clears the one a previous preset left.
+        plain = presets.validate_preset(presets.parse_preset_text(MINIMAL))
+        assert presets.preset_settings(plain)['size-target'] == ''
+        assert 'size_limit' not in presets.preset_environment(plain)
 
     def test_copy_preset_maps_to_copy_mode(self):
         preset = presets.validate_preset(presets.parse_preset_text('[preset]\nname="c"\n[video]\ncodec="copy"\nresolution="640x480"'))

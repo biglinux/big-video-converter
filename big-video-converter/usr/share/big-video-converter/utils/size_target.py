@@ -37,9 +37,12 @@ TARGETS = (
     # Gmail counts 25 MB before encoding; 2 MB are left for the message.
     ("email", _("E-mail"), 23_000_000, "23 MB"),
     ("100mb", _("Upload sites"), 100_000_000, "100 MB"),
+    # Telegram takes up to 4000 parts of 512 KiB (2,097,152,000 bytes), and
+    # 8000 for Premium accounts (4,194,304,000 bytes).
     ("telegram", _("Telegram or WhatsApp document"), 2_000_000_000, "2 GB"),
-    # The largest file FAT32 can hold.
-    ("fat32", _("FAT32 drive or Telegram Premium"), 4 * 1024**3 - 1, "4 GB"),
+    ("telegram-premium", _("Telegram Premium document"), 4_000_000_000, "4 GB"),
+    # The largest file FAT32 can hold; above Telegram Premium's limit.
+    ("fat32", _("FAT32 drive"), 4 * 1024**3 - 1, "4 GB"),
 )
 STRATEGIES = ("auto", "keep_resolution", "split")
 
