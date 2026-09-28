@@ -35,7 +35,7 @@ CONVERT_SCRIPT_PATH = os.path.abspath(os.path.join(
 NOISE_MODELS = (
     # DFN3 mutes its first second by default, meant for a live microphone.
     ("/usr/lib/ladspa/libdfn3_ladspa.so", "deep_filter_net3_rs_mono", 1919,
-     "|c6=0", "deepfilternet-quantized-ladspa", 24),
+     "|c6=0", "deepfilternet3-native", 24),
     ("/usr/lib/ladspa/libdpdfnet_native.so", "dpdfnet_native_48hr", 2880,
      "", "dpdfnet-native", 48),
 )
