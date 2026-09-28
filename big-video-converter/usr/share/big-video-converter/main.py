@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Main entry point for Big Video Converter application.
 """
@@ -13,34 +12,35 @@ from collections import deque
 import gi
 
 gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
 gi.require_version("Adw", "1")
-# gi.require_version("Vte", "3.91")
 
 import gettext
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
-# Import local modules
+# The *Mixin classes were extracted from this file to reduce its size.
+from audio_settings import AudioSettingsMixin
 from constants import APP_ID
+from file_handler import FileHandlerMixin
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from profile_manager import ProfileManagerMixin
+from queue_manager import QueueManagerMixin
+from sidebar_builder import SidebarBuilderMixin
 from ui.conversion_page import ConversionPage
 from ui.dependency_dialog import InstallDependencyDialog
 from ui.header_bar import HeaderBar
 from ui.progress_page import ProgressPage
-from ui.premium_style import install as install_premium_style
+from ui.style import install as install_style
 from ui.video_edit_page import VideoEditPage
 from ui.welcome_dialog import WelcomeDialog
 from utils.dependency_checker import DependencyChecker
-from utils.job_options import parse_segments_arg
+from utils.job_options import SOURCE_HDR_MODES, parse_segments_arg
 from utils.settings_manager import SettingsManager
 from utils.tooltip_helper import TooltipHelper
 
-# Mixins (extracted from this file to reduce god-object size)
-from audio_settings import AudioSettingsMixin
-from file_handler import FileHandlerMixin
-from profile_manager import ProfileManagerMixin
-from queue_manager import QueueManagerMixin
-from sidebar_builder import SidebarBuilderMixin
-
 _ = gettext.gettext
+ngettext = gettext.ngettext
+
+MIN_WIDTH, MIN_HEIGHT = 640, 480
 
 
 class VideoConverterApp(
@@ -82,9 +82,9 @@ class VideoConverterApp(
                 # If no colon, treat as right side (default GNOME)
                 if "close" in layout:
                     return False
-        except Exception:
-            # Logger not initialized yet, use print fallback or ignore
-            pass
+        except GLib.Error as error:
+            # Called before self.logger exists, and in tests without an instance.
+            logging.getLogger(__name__).debug("Could not read the button layout: %s", error)
         # Default: right side
         return False
 
@@ -105,14 +105,18 @@ class VideoConverterApp(
             "Cuts to keep, in seconds: START-END[,START-END...]",
             "RANGES",
         )
+        # And how they read its colours, when the file does not say.
+        self.add_main_option(
+            "source-hdr",
+            0,
+            GLib.OptionFlags.NONE,
+            GLib.OptionArg.STRING,
+            "Colours of a file that does not describe them: pq, hlg or sdr",
+            "MODE",
+        )
 
-        # No need to call with parameter in constructor - will be called later
-        self.set_resource_base_path("/org/communitybig/converter")
         GLib.set_prgname("big-video-converter")
-
-        # Connect signals
         self.connect("activate", self.on_activate)
-        self.connect("handle-local-options", self.on_handle_local_options)
 
         # Initialize settings
         self.settings_manager = SettingsManager(APP_ID)
@@ -135,15 +139,16 @@ class VideoConverterApp(
 
         # Initialize state variables
         self.conversions_running = 0
-        self.progress_widgets = []
-        self.previous_page = "conversion"
         self.conversion_queue = deque()
         # Track active conversions for parallel processing
         self.active_conversions = []  # List of dictionaries with conversion info
         self.gpu_slots = deque()  # Queue of available GPU slots for parallel processing
-        self.auto_convert = False
-        self.queue_display_widgets = []
         self.is_cancellation_requested = False
+        # From queue start until it settles, between its jobs too.
+        self.currently_converting = False
+        # Output paths reserved by jobs that have not finished yet, so two
+        # parallel jobs never pick the same free name.
+        self.claimed_outputs = set()
 
         # Track completed conversions for completion screen
         self.completed_conversions = []
@@ -152,24 +157,8 @@ class VideoConverterApp(
         self.conversions_lock = threading.Lock()
         self.completion_lock = threading.Lock()
 
-        # Initialize missing attributes
-        self._was_queue_processing = False
         self._processing_completion = False
         self.is_minimized = False
-
-        # Video editing state - initialize with reset values
-        self.trim_start_time = 0
-        self.trim_end_time = None
-        self.video_duration = 0
-        self.crop_x = self.crop_y = self.crop_width = self.crop_height = 0
-        self.crop_enabled = False
-
-        # Reset trim settings in the actual settings storage
-        self.reset_trim_settings()
-
-        # Add a tracking variable to prevent double loading during previews
-        self.previewing_specific_file = False
-        self.preview_file_path = None
 
         # Setup application actions
         self._setup_actions()
@@ -186,6 +175,9 @@ class VideoConverterApp(
             "start_conversion": lambda a, p: self.start_queue_processing(),
             "clear_queue": lambda a, p: self.clear_queue(),
             "restore_settings": lambda a, p: self._on_restore_settings(),
+            "toggle_sidebar": lambda a, p: self.split_view.set_show_sidebar(
+                not self.split_view.get_show_sidebar()
+            ),
         }
 
         for name, callback in actions.items():
@@ -209,6 +201,9 @@ class VideoConverterApp(
         self.set_accels_for_action("app.start_conversion", ["<Control>Return"])
         self.set_accels_for_action("app.clear_queue", ["<Control>Delete"])
         self.set_accels_for_action("app.quit", ["<Control>q"])
+        self.set_accels_for_action("app.toggle_sidebar", ["F9"])
+        # The queue always shows its settings; only the editor hides them.
+        self.lookup_action("toggle_sidebar").set_enabled(False)
 
     def _setup_icon_theme(self):
         """Setup custom icon theme path for bundled icons with PRIORITY"""
@@ -222,11 +217,11 @@ class VideoConverterApp(
                 # Get default icon theme
                 icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
 
-                # Get current search paths
+                # Prepend our icons directory so bundled icons win, once:
+                # every activation runs this.
                 current_paths = icon_theme.get_search_path()
-
-                # Prepend our icons directory to ensure priority
-                # This guarantees our icons are found FIRST
+                if icons_dir in current_paths:
+                    return
                 new_paths = [icons_dir] + current_paths
                 icon_theme.set_search_path(new_paths)
 
@@ -265,15 +260,6 @@ class VideoConverterApp(
             return
         # --- End of Check ---
 
-        # Reset trim settings on startup
-        self.reset_trim_settings()
-
-        # Process any queued files
-        if hasattr(self, "queued_files") and self.queued_files:
-            for file_path in self.queued_files:
-                self.add_to_conversion_queue(file_path)
-            self.queued_files = []
-
         # Show welcome dialog only on first activation
         if is_first_activation and WelcomeDialog.should_show_welcome(
             self.settings_manager
@@ -289,20 +275,22 @@ class VideoConverterApp(
     def _create_window(self):
         """Create the main application window and UI components"""
         # Create main window
-        install_premium_style()
+        install_style()
         self.window = Adw.ApplicationWindow(application=self)
         self.window.add_css_class("big-video-converter")
 
-        # Set minimum window size to prevent controls from being cut off
-        self.window.set_size_request(700, 560)
+        # Small enough for 1024x600 panels and 1366x768 at 150 % (911x512
+        # logical) with room for a desktop panel. Below 1000sp the sidebar
+        # overlays the content instead of sitting beside it.
+        self.window.set_size_request(MIN_WIDTH, MIN_HEIGHT)
 
         # Restore window size from settings
         width = self.settings_manager.load_setting("window-width", 1200)
         height = self.settings_manager.load_setting("window-height", 720)
 
         # Ensure default size is not smaller than minimum
-        width = max(width, 700)
-        height = max(height, 560)
+        width = max(width, MIN_WIDTH)
+        height = max(height, MIN_HEIGHT)
         self.window.set_default_size(width, height)
 
         # Restore maximized state
@@ -315,8 +303,7 @@ class VideoConverterApp(
         # Add close request handler to ensure processes are terminated and save window state
         self.window.connect("close-request", self._on_window_close_request)
 
-        # Set application icon
-        self.set_application_icon()
+        self.window.set_icon_name("big-video-converter")
 
         # Setup drag and drop
         self._setup_drag_and_drop()
@@ -330,9 +317,12 @@ class VideoConverterApp(
         self.split_view = Adw.OverlaySplitView()
         self.split_view.set_vexpand(True)
         self.split_view.set_min_sidebar_width(300)
-        self.split_view.set_max_sidebar_width(430)
+        self.split_view.set_max_sidebar_width(640)
         compact = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 1000sp"))
         compact.add_setter(self.split_view, "collapsed", True)
+        # Collapsed, the overlay takes the sidebar's natural width, which can
+        # be the whole window; leave the queue visible beside it.
+        compact.add_setter(self.split_view, "max-sidebar-width", 360)
         self.window.add_breakpoint(compact)
 
         # Create CSS for sidebar styling
@@ -365,7 +355,7 @@ class VideoConverterApp(
         self._create_right_pane()
 
         sidebar_position = self.settings_manager.load_setting("sidebar-position", 430)
-        self.split_view.set_sidebar_width_fraction(min(0.45, max(0.2, sidebar_position / width)))
+        self.split_view.set_sidebar_width_fraction(min(0.5, max(0.2, sidebar_position / width)))
 
         self.main_stack.add_titled(self.split_view, "main_view", _("Main"))
 
@@ -424,6 +414,8 @@ class VideoConverterApp(
         self.conversion_queue.clear()
         if getattr(self, "progress_page", None) is not None:
             self.progress_page._do_cancel_all()
+        if getattr(self, "conversion_page", None) is not None:
+            self.conversion_page.close_decision_dialogs()
         if getattr(self, "window", None) is not None and self.window.get_realized():
             self._save_window_state()
         if self._finish_quit():
@@ -454,7 +446,7 @@ class VideoConverterApp(
             self.settings_manager.save_setting("window-height", height)
 
         # Save sidebar position
-        if not self.split_view.get_collapsed() and self.split_view.get_show_sidebar():
+        if self.split_view.get_show_sidebar():
             self.settings_manager.save_setting("sidebar-position", self.split_view.get_sidebar().get_width())
 
     def terminate_process_tree(self, process) -> bool:
@@ -484,6 +476,8 @@ class VideoConverterApp(
         # Create ViewStack for queue and editor
         self.right_stack = Adw.ViewStack()
         self.right_stack.set_hhomogeneous(False)
+        # The queue needs less height than the editor; do not make it pay.
+        self.right_stack.set_vhomogeneous(False)
         self.right_stack.set_vexpand(True)
         self.right_stack.set_hexpand(True)
 
@@ -500,107 +494,65 @@ class VideoConverterApp(
         # Set minimum width for right content area
         self.right_toolbar_view.set_size_request(620, -1)
 
-        self.split_view.set_content(self.right_toolbar_view)
+        content = Gtk.Overlay(child=self.right_toolbar_view)
+        content.add_overlay(self._create_sidebar_resize_handle())
+        self.split_view.set_content(content)
 
     def _create_pages(self):
         """Create and add all application pages"""
         # Initialize pages
         self.conversion_page = ConversionPage(self)
 
-        # Create app_state wrapper for VideoEditPage
-        class AppState:
-            def __init__(self, conversion_page):
-                self._conversion_page = conversion_page
-
-            @property
-            def file_metadata(self):
-                return self._conversion_page.file_metadata
-
-        self.app_state = AppState(self.conversion_page)
-        self.video_edit_page = VideoEditPage(self, self.app_state)
+        self.video_edit_page = VideoEditPage(self, self.conversion_page)
         self.progress_page = ProgressPage(self)
 
         # Populate the sidebar now that video_edit_page is initialized
         self.video_edit_page.ui.populate_sidebar(self.editing_tools_box)
+        # The left pane loaded its settings before the editor existed.
+        self.video_edit_page.ui.update_for_force_copy_state(
+            self.settings_manager.get_boolean("force-copy-video", False)
+        )
 
         # Add queue view to right stack
         self.right_stack.add_titled(
             self.conversion_page.get_page(), "queue_view", _("Queue")
         )
 
-        # Add editor view to right stack
-        self.right_stack.add_titled(
-            self.video_edit_page.get_page(), "editor_view", _("Editor")
+        # Add editor view to right stack. In a small window the editor's
+        # controls wrap below the video; they scroll instead of being clipped.
+        editor_scroller = Gtk.ScrolledWindow(
+            hscrollbar_policy=Gtk.PolicyType.NEVER, child=self.video_edit_page.get_page()
         )
+        self.right_stack.add_titled(editor_scroller, "editor_view", _("Editor"))
 
         # Add progress page to main_stack
         self.main_stack.add_titled(
             self.progress_page.get_page(), "progress_view", _("Progress")
         )
 
-    # ── Sidebar subtitle update methods ──
-
-    def _apply_all_tooltips(self):
-        """Apply tooltips to all UI elements"""
-        if not hasattr(self, "tooltip_helper"):
-            return
-
-        # Apply tooltips to settings controls
-        if hasattr(self, "gpu_combo"):
-            self.tooltip_helper.add_tooltip(self.gpu_combo, "gpu")
-        if hasattr(self, "video_quality_combo"):
-            self.tooltip_helper.add_tooltip(self.video_quality_combo, "video_quality")
-        if hasattr(self, "video_codec_combo"):
-            self.tooltip_helper.add_tooltip(self.video_codec_combo, "video_codec")
-        if hasattr(self, "audio_handling_combo"):
-            self.tooltip_helper.add_tooltip(self.audio_handling_combo, "audio_handling")
-        if hasattr(self, "subtitle_combo"):
-            self.tooltip_helper.add_tooltip(self.subtitle_combo, "subtitles")
-        if hasattr(self, "force_copy_video_check"):
-            self.tooltip_helper.add_tooltip(self.force_copy_video_check, "force_copy")
-
-        # Apply tooltips to video edit UI if it exists
-        if hasattr(self, "video_edit_page") and self.video_edit_page:
-            if hasattr(self.video_edit_page, "ui") and self.video_edit_page.ui:
-                self.video_edit_page.ui.apply_tooltips()
-
     def _on_tooltip_action_activated(self, action, _param):
         """Toggle the tooltip action state from the hamburger menu."""
         current = action.get_state().get_boolean()
         new_state = not current
         action.set_state(GLib.Variant.new_boolean(new_state))
-        self._on_tooltips_toggle(new_state)
-
-    def _on_tooltips_toggle(self, is_active):
-        """Handle tooltip toggle change"""
-        self.settings_manager.save_setting("show-tooltips", is_active)
+        self.settings_manager.save_setting("show-tooltips", new_state)
         # Re-apply tooltips when re-enabled (they check is_enabled() before showing)
-        if hasattr(self, "tooltip_helper") and is_active:
-            self._apply_all_tooltips()
-
-    # File handling methods
-
-    def on_handle_local_options(self, app, options):
-        """Handle command line parameters"""
-        self.queued_files = []
-        return -1  # Continue processing
-
-    # Queue management
-
-    # Conversion processing
+        if new_state:
+            self.video_edit_page.ui.apply_tooltips()
 
     # UI Navigation
     def show_queue_view(self) -> None:
         """Show the file queue view"""
         self.right_stack.set_visible_child_name("queue_view")
-        if hasattr(self.header_bar, "set_view"):
-            self.header_bar.set_view("queue")
-        if hasattr(self, "left_stack"):
-            self.left_stack.set_visible_child_name("conversion_settings")
-        if hasattr(self.video_edit_page, "cleanup"):
-            self.video_edit_page.cleanup()
-        if hasattr(self, "conversion_page"):
-            self.conversion_page.update_queue_display()
+        self.header_bar.set_view("queue")
+        self.left_stack.set_visible_child_name("conversion_settings")
+        self.sidebar_title.set_title("Big Video Converter")
+        self.sidebar_title.set_subtitle("")
+        # Collapsed, the settings would cover the queue; the header's
+        # toggle brings them over it.
+        self.split_view.set_show_sidebar(not self.split_view.get_collapsed())
+        self.video_edit_page.cleanup()
+        self.conversion_page.update_queue_display()
 
     def show_editor_for_file(self, file_path: str) -> None:
         """The single, authoritative method to show the editor for a file."""
@@ -611,10 +563,10 @@ class VideoConverterApp(
         self.logger.debug(f"Opening file in editor: {os.path.basename(file_path)}")
 
         self.right_stack.set_visible_child_name("editor_view")
-        if hasattr(self.header_bar, "set_view"):
-            self.header_bar.set_view("editor")
-        if hasattr(self, "left_stack"):
-            self.left_stack.set_visible_child_name("editing_tools")
+        self.header_bar.set_view("editor")
+        self.left_stack.set_visible_child_name("editing_tools")
+        self.sidebar_title.set_title(_("Edit video"))
+        self.sidebar_title.set_subtitle(_("Changes apply only to the selected video"))
 
         def load_video_action() -> None:
             if not self.video_edit_page.set_video(file_path):
@@ -625,31 +577,18 @@ class VideoConverterApp(
 
     def show_progress_page(self) -> None:
         """Show progress page by switching to progress view"""
-        if hasattr(self, "main_stack"):
-            self.main_stack.set_visible_child_name("progress_view")
-            self.logger.debug("Switched to progress view")
-
-    def return_to_previous_page(self) -> None:
-        """Return to queue view after conversion completes"""
-        if hasattr(self, "main_stack"):
-            current_view = self.main_stack.get_visible_child_name()
-            if current_view == "progress_view":
-                self.main_stack.set_visible_child_name("main_view")
-        self.show_queue_view()
+        self.main_stack.set_visible_child_name("progress_view")
 
     def return_to_main_view(self) -> None:
         """Return to main view from progress view"""
         self.main_stack.set_visible_child_name("main_view")
         self.show_queue_view()
-        if hasattr(self, "header_bar"):
-            self.header_bar.set_buttons_sensitive(True)
+        self.header_bar.set_buttons_sensitive(True)
 
     def on_visible_child_changed(self, stack, param) -> None:
-        """Update UI when the visible right stack child changes"""
-        visible_name = stack.get_visible_child_name()
-        if visible_name != "editor_view":
-            if hasattr(self.video_edit_page, "cleanup"):
-                self.video_edit_page.cleanup()
+        """Leaving the editor releases its player."""
+        if stack.get_visible_child_name() != "editor_view":
+            self.video_edit_page.cleanup()
 
     # Menu actions
     def on_about_action(self, action, param) -> None:
@@ -677,69 +616,8 @@ class VideoConverterApp(
         """Delegate to settings_page reset (reuses existing implementation)."""
         self.settings_page._on_reset_button_clicked(None)
 
-    # Application utilities
-    def set_application_icon(self, icon_name=None) -> None:
-        """Sets the application icon - improved for Wayland compatibility"""
-        try:
-            if icon_name:
-                Gio.Application.set_application_icon(self, icon_name)
-
-            if hasattr(self, "window"):
-                self.window.set_icon_name("big-video-converter")
-
-            GLib.set_prgname("big-video-converter")
-
-            self.logger.debug("Application icon set successfully")
-        except Exception as e:
-            self.logger.error(f"Error setting application icon: {e}")
-            try:
-                if hasattr(self, "window"):
-                    self.window.set_icon_name("video-x-generic")
-                self.logger.debug("Using fallback icon")
-            except Exception as e2:
-                self.logger.error(f"Could not set fallback icon: {e2}")
-
-    # Video editing parameters
-    def get_trim_times(self):
-        """Get the current trim start and end times"""
-        start_time = self.settings_manager.load_setting("video-trim-start", 0.0)
-        end_time_setting = self.settings_manager.load_setting("video-trim-end", -1.0)
-        end_time = None if end_time_setting < 0 else end_time_setting
-
-        self.logger.debug(f"get_trim_times: start={start_time}, end={end_time}")
-        return start_time, end_time, self.video_duration
-
-    def reset_trim_settings(self) -> None:
-        """Reset trim settings in the app and in the settings storage"""
-        self.trim_start_time = 0
-        self.trim_end_time = None
-        self.video_duration = 0
-
-        self.settings_manager.save_setting("video-trim-start", 0.0)
-        self.settings_manager.save_setting("video-trim-end", -1.0)
-
-        if hasattr(self, "video_edit_page") and self.video_edit_page:
-            if hasattr(self.video_edit_page, "trim_segments"):
-                self.video_edit_page.trim_segments = []
-                self.video_edit_page._save_file_metadata()
-                if hasattr(self.video_edit_page, "_update_segments_listbox"):
-                    self.video_edit_page._update_segments_listbox()
-
-        self.logger.debug("Trim settings have been reset")
-
-    def get_selected_format_extension(self):
-        """Return the extension of the selected file format"""
-        format_index = self.settings_manager.load_setting("output-format-index", 0)
-        format_extensions = {0: ".mp4", 1: ".mkv", 2: ".mov", 3: ".webm"}
-        return format_extensions.get(format_index, ".mp4")
-
-    def get_selected_format_name(self):
-        """Return the format name without the leading dot"""
-        extension = self.get_selected_format_extension()
-        return extension.lstrip(".")
-
     # Dialog helpers
-    def show_error_dialog(self, message: str, detail: str = None) -> None:
+    def show_error_dialog(self, message: str, detail: str | None = None) -> None:
         """Shows an error dialog.
 
         The second argument is optional so callers can pass either
@@ -766,24 +644,6 @@ class VideoConverterApp(
         notification = Gio.Notification.new(title)
         notification.set_body(body)
         self.send_notification(None, notification)
-
-    def show_completion_screen(self) -> None:
-        """Show the completion summary on the progress page"""
-        if hasattr(self, "progress_page"):
-            self.progress_page.show_completion_summary()
-
-        # Send final system notification
-        count = len(self.completed_conversions) if self.completed_conversions else 0
-        if count == 1:
-            self.send_system_notification(
-                _("All Conversions Complete"),
-                _("1 video has been converted successfully!"),
-            )
-        elif count > 1:
-            self.send_system_notification(
-                _("All Conversions Complete"),
-                _("{0} videos have been converted successfully!").format(count),
-            )
 
     # GIO Application overrides
     def _present_window_and_request_focus(self, window):
@@ -813,6 +673,9 @@ class VideoConverterApp(
             self.activate()
 
         files_added = 0
+        refused_busy = False
+        # smb:// or sftp:// without a FUSE mount has no path FFmpeg can read.
+        remote = [file.get_uri() for file in files if not file.get_path()]
         for file in files:
             file_path = file.get_path()
             if (
@@ -822,6 +685,24 @@ class VideoConverterApp(
             ):
                 if self.add_file_to_queue(file_path):
                     files_added += 1
+                elif self.currently_converting:
+                    refused_busy = True
+        if refused_busy:
+            self.show_info_dialog(
+                _("Conversion in progress"),
+                _("New videos can be added when the current conversions finish."))
+        if remote:
+            self.show_error_dialog(
+                ngettext("This file cannot be opened", "These files cannot be opened",
+                         len(remote)),
+                ngettext(
+                    "It is not on a local or mounted drive. Open its network share "
+                    "in the file manager, or use “Add Network File”, then add it "
+                    "again:\n{files}",
+                    "They are not on a local or mounted drive. Open their network "
+                    "share in the file manager, or use “Add Network File”, then add "
+                    "them again:\n{files}",
+                    len(remote)).format(files="\n".join(remote)))
 
         if files_added > 0:
             GLib.idle_add(self.show_queue_view)
@@ -834,31 +715,44 @@ class VideoConverterApp(
         args = command_line.get_arguments()
         options = command_line.get_options_dict().end().unpack()
         segments = None
+        source_hdr = options.get("source-hdr")
         try:
             if "segments" in options:
                 segments = parse_segments_arg(options["segments"])
+            if source_hdr is not None and source_hdr not in SOURCE_HDR_MODES:
+                raise ValueError(f"source-hdr {source_hdr!r} is not one of {', '.join(SOURCE_HDR_MODES)}")
         except ValueError as exc:
-            # Refuse rather than queue the whole file as if no cuts were asked for.
+            # Refuse rather than queue the whole file as if no cuts were asked
+            # for. Players start us detached, so stderr alone reaches nobody.
             command_line.printerr(f"big-video-converter: {exc}\n")
+            self.activate()
+            self.show_error_dialog(_("The settings sent by the player could not be used"), str(exc))
             return 2
 
-        # Absolute, because the queue keys its metadata by Gio.File.get_path().
-        paths = [os.path.abspath(arg) for arg in args[1:] if os.path.isfile(arg)]
-        if paths:
-            self.do_open([Gio.File.new_for_path(p) for p in paths], len(paths), "")
-            if segments is not None and hasattr(self, "conversion_page"):
-                for path in paths:
-                    metadata = self.conversion_page.file_metadata.get(path)
-                    if metadata is not None:
-                        metadata["trim_segments"] = [dict(s) for s in segments]
+        # A second instance forwards its arguments: resolve them against its
+        # working directory, not ours, and keep URIs for do_open to report.
+        files = [command_line.create_file_for_arg(arg) for arg in args[1:]]
+        files = [f for f in files if not f.get_path() or os.path.isfile(f.get_path())]
+        if files:
+            self.do_open(files, len(files), "")
+            for path in filter(None, (f.get_path() for f in files)):
+                metadata = self.conversion_page.file_metadata.get(path)
+                if metadata is None:
+                    continue
+                if segments is not None:
+                    metadata["trim_segments"] = [dict(s) for s in segments]
+                if source_hdr is not None:
+                    metadata["source_hdr"] = source_hdr
 
         self.activate()
         return 0
 
-    # File selection methods
-
     def _show_dependency_install_dialog(self):
         """Shows the dialog to install required dependencies (FFmpeg and MPV)."""
+        # Opening files and a second instance activate again; one prompt only.
+        if getattr(self, "_dependency_prompted", False):
+            return
+        self._dependency_prompted = True
         install_info = self.dependency_checker.get_install_command()
         if not install_info:
             self.show_error_dialog(

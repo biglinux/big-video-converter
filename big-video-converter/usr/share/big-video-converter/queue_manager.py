@@ -19,7 +19,10 @@ class QueueManagerMixin:
 
     def add_file_to_queue(self, file_path: str) -> bool:
         """Add a file to the conversion queue"""
-        if getattr(self, "_quitting", False) or file_path in self.conversion_queue:
+        # A running queue already has one progress row per file; a file added
+        # now would have none.
+        if (getattr(self, "_quitting", False) or self.currently_converting
+                or file_path in self.conversion_queue):
             return False
         if file_path and os.path.isfile(file_path):
             # Update last accessed directory
@@ -27,12 +30,10 @@ class QueueManagerMixin:
             self.last_accessed_directory = input_dir
             self.settings_manager.save_setting("last-accessed-directory", input_dir)
 
-            # Add to queue if not already present
-            if file_path not in self.conversion_queue:
-                self.conversion_queue.append(file_path)
-                self.logger.debug(
-                    f"Added file to queue: {os.path.basename(file_path)}, Queue size: {len(self.conversion_queue)}"
-                )
+            self.conversion_queue.append(file_path)
+            self.logger.debug(
+                f"Added file to queue: {os.path.basename(file_path)}, Queue size: {len(self.conversion_queue)}"
+            )
 
             # Initialize new files without discarding edits when a file is added again
             if hasattr(self, "conversion_page"):
@@ -61,19 +62,15 @@ class QueueManagerMixin:
             self.conversion_page.update_queue_display()
         return GLib.SOURCE_REMOVE
 
-    def add_to_conversion_queue(self, file_path: str):
-        """Add a file to the conversion queue without starting conversion"""
-        return self.add_file_to_queue(file_path)
-
     def clear_queue(self) -> None:
         """Clear the conversion queue"""
+        # Clearing a running queue left its progress rows pending forever.
+        if self.currently_converting or self.active_conversions:
+            return
         self.conversion_queue.clear()
 
-        # Clear all file metadata
         if hasattr(self, "conversion_page"):
             self.conversion_page.file_metadata.clear()
-
-        if hasattr(self, "conversion_page"):
             self.conversion_page.update_queue_display()
         self.logger.debug("Conversion queue cleared")
 
@@ -158,9 +155,6 @@ class QueueManagerMixin:
         dialog.set_default_response("cancel")
         dialog.set_close_response("cancel")
 
-        # Store response for the async callback
-        self._disk_space_ok = False
-
         def on_response(_dialog: Adw.AlertDialog, result: object) -> None:
             try:
                 response = _dialog.choose_finish(result)
@@ -179,19 +173,28 @@ class QueueManagerMixin:
         leave it disabled until the application was restarted.
         """
         if response == "continue":
-            self._disk_space_ok = True
             self._do_start_queue_processing()
             return
+        self._restore_queue_after_single_file(False)
         self.header_bar.set_buttons_sensitive(True)
 
     def start_queue_processing(self) -> None:
         """Start processing the conversion queue"""
         if (getattr(self, "_quitting", False) or self.active_conversions
-                or getattr(self, "_pending_imports", 0)):
+                or self.currently_converting or getattr(self, "_pending_imports", 0)):
+            self._restore_queue_after_single_file(False)
             return
         if not self.conversion_queue:
             self.logger.debug("Queue is empty, nothing to process")
             GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
+            return
+
+        # One message for the whole queue, not one dialog for every job.
+        options_error = self.conversion_page.additional_options_error(self.conversion_queue)
+        if options_error:
+            self._restore_queue_after_single_file(False)
+            self.show_error_dialog(_("The additional FFmpeg options cannot be used"), options_error)
+            self.header_bar.set_buttons_sensitive(True)
             return
 
         # Check disk space before starting
@@ -204,8 +207,10 @@ class QueueManagerMixin:
         """Internal: actually start queue processing after checks pass."""
         self.logger.debug("Starting queue processing")
         self.is_cancellation_requested = False
-        self._was_queue_processing = True
         self.completed_conversions = []
+        # True for the whole generation, between jobs too: the header, the
+        # queue actions and file additions stay off until it settles.
+        self.currently_converting = True
         self.header_bar.set_buttons_sensitive(False)
 
         # Initialize one progress model for this queue generation.
@@ -213,7 +218,6 @@ class QueueManagerMixin:
         if hasattr(self, "progress_page"):
             self.progress_page.initialize_queue(list(self.conversion_queue))
 
-        self.currently_converting = False
         self.main_stack.set_visible_child_name("progress_view")
         GLib.timeout_add(300, self.process_next_in_queue)
 
@@ -280,14 +284,37 @@ class QueueManagerMixin:
         self.conversion_queue = deque([current_file])
         self.start_queue_processing()
 
+    def _restore_queue_after_single_file(self, success: bool) -> None:
+        """Bring back the queue a "Convert this file" run replaced.
+
+        Every way that run ends comes here: success drops the converted file,
+        anything else (cancel, failure, a refused start) keeps it queued.
+        """
+        if not getattr(self, "_single_file_conversion", False):
+            return
+        self._single_file_conversion = False
+        restored = list(getattr(self, "_original_queue_before_single_conversion", ()))
+        if success:
+            restored = [f for f in restored if f != self._single_file_to_convert]
+        self.conversion_queue = deque(restored)
+        if hasattr(self, "conversion_page"):
+            GLib.idle_add(self.conversion_page.update_queue_display)
+
+    def _finish_queue_generation(self, success: bool) -> None:
+        self._restore_queue_after_single_file(success)
+        self.is_cancellation_requested = False
+        self.currently_converting = False
+        self.header_bar.set_buttons_sensitive(True)
+        self._present_queue_completion()
+
     def process_next_in_queue(self) -> bool:
         """Process the next file in queue if we have capacity"""
 
         # If cancellation was requested, don't start new conversions
         if self.is_cancellation_requested or getattr(self, "_quitting", False):
             self.logger.debug("Cancellation requested, stopping queue processing")
-            self.header_bar.set_buttons_sensitive(True)
-            self._was_queue_processing = False
+            if not self.active_conversions:
+                self._finish_queue_generation(False)
             return False
 
         # Determine max concurrent conversions based on settings/hardware
@@ -370,11 +397,8 @@ class QueueManagerMixin:
             # Only finish if no active conversions remain
             if not self.active_conversions:
                 self.logger.debug("Queue processing complete")
-                self.header_bar.set_buttons_sensitive(True)
-                self.is_cancellation_requested = False
-                self.currently_converting = False
-
-                self._present_queue_completion()
+                # A single file only reaches here when it never ran.
+                self._finish_queue_generation(False)
             return False
 
         # Get next file
@@ -383,7 +407,8 @@ class QueueManagerMixin:
         # Verify file exists
         if not os.path.exists(next_file):
             self.logger.debug(f"Skipping missing file: {next_file}")
-            self.progress_page.finish_pending(next_file, success=False)
+            self.progress_page.finish_pending(next_file, success=False,
+                                              reason=_("File not found"))
             # Try next one immediately
             GLib.idle_add(self.process_next_in_queue)
             return False
@@ -408,8 +433,6 @@ class QueueManagerMixin:
         with self.conversions_lock:
             self.active_conversions.append(conversion_info)
 
-        self.currently_converting = True
-
         # Update UI queue display
         GLib.idle_add(self.conversion_page.update_queue_display)
 
@@ -418,7 +441,9 @@ class QueueManagerMixin:
         # Those answers are collected on a worker thread first, so the
         # main loop never blocks; the launch itself stays on the main loop.
         def launch() -> bool:
-            if self.is_cancellation_requested or getattr(self, "_quitting", False):
+            # A row skipped during the pre-flight probe set its job's event.
+            if (self.is_cancellation_requested or getattr(self, "_quitting", False)
+                    or conversion_info["cancel_event"].is_set()):
                 conversion_info["cancel_event"].set()
                 self.conversion_completed(False, file_path=next_file,
                                           job_id=conversion_info["job_id"])
@@ -455,32 +480,8 @@ class QueueManagerMixin:
 
         return False
 
-    def _force_start_conversion(self):
-        """Helper to force start conversion with proper error handling"""
-        import traceback
-
-        self.currently_converting = True
-        result = False
-        try:
-            self.logger.debug("Forcing conversion to start automatically...")
-            if hasattr(self, "conversion_page"):
-                result = self.conversion_page.force_start_conversion()
-        except Exception as e:
-            self.logger.error(f"Error starting automatic conversion: {e}")
-            traceback.print_exc()
-            result = False
-
-        if result is False:
-            self.logger.error("Conversion failed to start or was deferred, resetting state.")
-            self.currently_converting = False
-            failed_path = self.conversion_page.current_file_path
-            GLib.idle_add(lambda: self.conversion_completed(False, file_path=failed_path))
-
-        return False
-
     def conversion_completed(
-        self, success, skip_tracking: bool = False, file_path: str = None,
-        job_id: str = None,
+        self, success, file_path: str | None = None, job_id: str | None = None,
     ) -> None:
         """Called when a conversion is completed.
 
@@ -510,7 +511,7 @@ class QueueManagerMixin:
                 finished = self.active_conversions.pop(matches[0])
                 if finished.get("gpu_slot"):
                     self.gpu_slots.append(finished["gpu_slot"])
-                self.currently_converting = bool(self.active_conversions)
+                self.claimed_outputs.discard(finished.get("output_path"))
 
             self.progress_page.finish_pending(
                 finished["file_path"], success=success,
@@ -518,31 +519,12 @@ class QueueManagerMixin:
             )
             if self.is_cancellation_requested:
                 if not self.active_conversions:
-                    self.is_cancellation_requested = False
-                    self.header_bar.set_buttons_sensitive(True)
-                    self.currently_converting = False
-                    self._was_queue_processing = False
-                    self._present_queue_completion()
+                    self._finish_queue_generation(success)
                 return
 
-            # Check single file conversion mode
-            if (
-                hasattr(self, "_single_file_conversion")
-                and self._single_file_conversion
-            ):
-                self._single_file_conversion = False
-                # Restore original queue, removing the converted file on success
-                if hasattr(self, "_original_queue_before_single_conversion"):
-                    restored = list(self._original_queue_before_single_conversion)
-                    if success and hasattr(self, "_single_file_to_convert"):
-                        converted = self._single_file_to_convert
-                        restored = [f for f in restored if f != converted]
-                    self.conversion_queue = deque(restored)
-                    # Update UI to show restored queue
-                    if hasattr(self, "conversion_page"):
-                        GLib.idle_add(self.conversion_page.update_queue_display)
-
-                GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
+            # A "Convert this file" run ends with its one job.
+            if getattr(self, "_single_file_conversion", False):
+                self._finish_queue_generation(success)
                 return
 
             # Continue queue processing

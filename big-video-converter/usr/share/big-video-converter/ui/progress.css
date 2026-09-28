@@ -1,126 +1,120 @@
-.bvc-shell {
-  background: @window_bg_color;
-}
+/* Progress and result page. Cards, thumbnails, chips and buttons come from
+ * style.css so this page matches the queue; only what is specific to
+ * progress lives here. Status colours stay small: an icon and its text. */
 
-.bvc-card,
-.bvc-progress-card {
-  background: @card_bg_color;
-  color: @card_fg_color;
-  border: 1px solid alpha(@window_fg_color, 0.10);
-  border-radius: 18px;
-}
-
-.bvc-card {
-  padding: 18px;
-}
-
-.bvc-progress-card {
-  padding: 14px;
-}
-
-.bvc-raised {
-  box-shadow: 0 2px 8px alpha(black, 0.08), 0 14px 36px alpha(black, 0.06);
-}
-
-.bvc-well {
-  background: alpha(@window_fg_color, 0.035);
-  border: 1px solid alpha(@window_fg_color, 0.07);
-  border-radius: 16px;
-}
-
-.bvc-section-title {
-  font-size: 1.08em;
-  font-weight: 750;
-}
-
-.bvc-body-strong {
-  font-weight: 650;
-}
-
-.bvc-metric {
-  font-feature-settings: "tnum" 1;
-  font-variant-numeric: tabular-nums;
-  font-weight: 650;
-}
-
-.bvc-secondary,
-.bvc-quiet,
-.bvc-danger,
-.bvc-icon-button {
-  min-height: 40px;
-  border-radius: 12px;
-  padding: 0 14px;
-}
-
-.bvc-icon-button {
-  min-width: 40px;
-  padding: 0;
-}
-
-.bvc-quiet {
+.bvc-progress-list {
   background: transparent;
+}
+
+.bvc-progress-list row {
+  margin-bottom: 12px;
+}
+
+.bvc-progress-list row:last-child {
+  margin-bottom: 0;
+}
+
+.bvc-progress-card.bvc-progress-hero {
+  padding: 24px;
+}
+
+.bvc-summary-strip {
+  padding: 14px 18px;
+}
+
+/* A card's state is read before its text: the running job is lifted in the
+ * accent, finished jobs carry a faint verdict tint, and waiting jobs recede
+ * into the sidebar plane with no shadow. */
+.bvc-progress-card.bvc-state-active {
+  background: mix(@card_bg_color, @accent_bg_color, 0.05);
+  border-color: alpha(@accent_color, 0.45);
+  box-shadow: 0 2px 8px alpha(@accent_bg_color, 0.14);
+}
+
+.bvc-progress-card.bvc-state-completed {
+  background: mix(@card_bg_color, @success_bg_color, 0.05);
+  border-color: alpha(@success_color, 0.35);
+}
+
+.bvc-progress-card.bvc-state-failed {
+  background: mix(@card_bg_color, @error_bg_color, 0.05);
+  border-color: alpha(@error_color, 0.40);
+}
+
+.bvc-progress-card.bvc-state-cancelled {
+  border-color: alpha(@warning_color, 0.40);
+}
+
+.bvc-progress-card.bvc-state-pending {
+  background: @sidebar_bg_color;
   box-shadow: none;
 }
 
-.bvc-danger {
+.bvc-state-pending .bvc-dimmable {
+  opacity: 0.72;
+}
+
+/* On a waiting card the thumbnail well would vanish into the card itself. */
+.bvc-state-pending .bvc-thumbnail-frame {
+  background: alpha(@window_fg_color, 0.06);
+}
+
+.bvc-thumbnail-frame.bvc-thumb-compact {
+  min-width: 96px;
+  min-height: 54px;
+  border-radius: 12px;
+}
+
+.bvc-thumbnail-frame.bvc-thumb-compact picture {
+  border-radius: 9px;
+}
+
+/* Progress bars: the accent colour carries progress. */
+.bvc-progress-bar trough {
+  min-height: 8px;
+  border-radius: 999px;
+  background: @sidebar_bg_color;
+  box-shadow: inset 0 0 0 1px alpha(@window_fg_color, 0.06);
+}
+
+.bvc-progress-bar progress {
+  min-height: 8px;
+  border-radius: 999px;
+}
+
+.bvc-progress-hero .bvc-progress-bar trough,
+.bvc-progress-hero .bvc-progress-bar progress {
+  min-height: 10px;
+}
+
+.bvc-progress-bar.bvc-thin trough,
+.bvc-progress-bar.bvc-thin progress {
+  min-height: 6px;
+}
+
+.bvc-percent {
+  font-feature-settings: "tnum" 1;
+}
+
+/* Stopping a running job loses its work: only the icon says so. */
+.bvc-cancel-job image {
   color: @error_color;
 }
 
-.bvc-status-chip,
-.bvc-count-chip {
-  min-height: 26px;
-  border-radius: 999px;
-  padding: 2px 10px;
-  font-size: 0.83em;
-  font-weight: 650;
-}
-
-.bvc-count-chip {
-  background: alpha(@window_fg_color, 0.07);
-}
-
-.bvc-overall-progress trough,
-.bvc-job-progress trough {
-  min-height: 8px;
-  border-radius: 999px;
-  background: alpha(@window_fg_color, 0.08);
-}
-
-.bvc-overall-progress progress,
-.bvc-job-progress progress {
-  min-height: 8px;
-  border-radius: 999px;
-}
-
-.bvc-progress-active {
-  border-color: alpha(@accent_color, 0.36);
-  background: alpha(@accent_bg_color, 0.055);
-}
-
-.bvc-progress-success {
-  border-color: alpha(@success_color, 0.28);
-  background: alpha(@success_bg_color, 0.045);
-}
-
-.bvc-progress-error {
-  border-color: alpha(@error_color, 0.30);
-  background: alpha(@error_bg_color, 0.045);
-}
-
-.bvc-progress-card .status-active {
-  color: @accent_color;
-}
-
-.bvc-progress-card .status-success {
+.bvc-status-success {
   color: @success_color;
 }
 
-.bvc-progress-card .status-error {
+.bvc-status-error {
   color: @error_color;
 }
 
-.bvc-progress-card .status-warning {
+.bvc-status-warning {
   color: @warning_color;
+}
+
+.bvc-details {
+  padding: 14px;
 }
 
 .bvc-log {
@@ -131,10 +125,50 @@
   font-family: monospace;
 }
 
-.bvc-progress-list row {
-  margin-bottom: 12px;
+/* Result summary: the header bar and the outcome form one band on the
+ * sidebar plane across the top of the window, above the file cards. */
+toolbarview.bvc-result-shown > .top-bar {
+  background-color: @sidebar_bg_color;
+  box-shadow: inset 0 -1px alpha(@window_fg_color, 0.07);
 }
 
-.bvc-progress-list row:last-child {
-  margin-bottom: 0;
+toolbarview.bvc-result-shown > .top-bar headerbar {
+  background: transparent;
+  box-shadow: none;
+}
+
+.bvc-result-summary {
+  padding: 0 4px 16px;
+}
+
+.bvc-result-badge {
+  min-width: 26px;
+  min-height: 26px;
+  border-radius: 999px;
+  color: alpha(@window_fg_color, 0.7);
+  background: alpha(@window_fg_color, 0.08);
+}
+
+.bvc-result-badge image {
+  margin: 5px;
+}
+
+.bvc-result-badge.success {
+  color: @success_color;
+  background: alpha(@success_color, 0.14);
+}
+
+.bvc-result-badge.failed {
+  color: @error_color;
+  background: alpha(@error_color, 0.14);
+}
+
+.bvc-result-badge.mixed {
+  color: @warning_color;
+  background: alpha(@warning_color, 0.16);
+}
+
+.bvc-result-stats,
+.bvc-result-reason {
+  opacity: 0.75;
 }

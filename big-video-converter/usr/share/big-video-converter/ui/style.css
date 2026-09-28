@@ -1,0 +1,231 @@
+/* Big Video Converter — semantic visual system.
+ * Keep colors theme-aware.  Cards sit on the window in @card_bg_color; what
+ * they hold that is not text (thumbnail, facts, actions) sits recessed in
+ * @sidebar_bg_color, so a card reads as grouped parts instead of one flat sheet.
+ */
+
+/* Surfaces */
+.bvc-shell {
+  background: @window_bg_color;
+}
+
+.bvc-queue-card,
+.bvc-progress-card {
+  background: @card_bg_color;
+  color: @card_fg_color;
+  border: 1px solid alpha(@window_fg_color, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 1px 3px alpha(black, 0.06);
+}
+
+.bvc-queue-card,
+.bvc-progress-card {
+  padding: 14px;
+}
+
+.bvc-queue-card:hover {
+  background: mix(@card_bg_color, @accent_bg_color, 0.04);
+  border-color: alpha(@accent_color, 0.25);
+}
+
+.bvc-well {
+  background: alpha(@window_fg_color, 0.035);
+  border: 1px solid alpha(@window_fg_color, 0.07);
+  border-radius: 16px;
+}
+
+/* Typography */
+.bvc-body-strong {
+  font-weight: 650;
+}
+
+.bvc-metric {
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
+/* Buttons: 40–44 px hit targets, visible focus, restrained decoration. */
+.bvc-secondary,
+.bvc-quiet,
+.bvc-danger,
+.bvc-icon-button {
+  min-height: 40px;
+  border-radius: 12px;
+  padding: 0 14px;
+}
+
+.bvc-icon-button {
+  min-width: 40px;
+  padding: 0;
+}
+
+.bvc-quiet {
+  background: transparent;
+  box-shadow: none;
+}
+
+.bvc-danger {
+  color: @error_color;
+}
+
+/* :focus-visible also matches the focused widget's ancestors, so a row draws
+ * its ring only when it has focus itself, and a dropdown leaves the ring to
+ * its own button. */
+button:focus-visible,
+entry:focus-visible,
+switch:focus-visible,
+row:focus:focus-visible {
+  outline: 2px solid @accent_color;
+  outline-offset: 2px;
+}
+
+/* Main queue */
+.bvc-queue-list {
+  background: transparent;
+}
+
+.bvc-duration-badge {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: alpha(black, 0.62);
+  color: white;
+  font-size: 0.78em;
+  font-weight: 700;
+  font-feature-settings: "tnum" 1;
+}
+
+
+.bvc-tabular {
+  font-feature-settings: "tnum" 1;
+}
+
+/* The destination and the originals switch: quiet, like the row actions. */
+.bvc-queue-footer {
+  padding: 2px 0;
+}
+
+.bvc-queue-footer dropdown > button {
+  background: transparent;
+  box-shadow: none;
+}
+
+.bvc-queue-footer dropdown > button:hover {
+  background: alpha(currentColor, 0.07);
+}
+
+.bvc-thumbnail-frame {
+  min-width: 144px;
+  min-height: 82px;
+  border-radius: 14px;
+  background: @sidebar_bg_color;
+  border: 1px solid alpha(@window_fg_color, 0.09);
+  padding: 2px;
+}
+
+/* Resolution, codec and size: one recessed fact chip. */
+.bvc-meta-chip {
+  padding: 2px 8px;
+  border-radius: 7px;
+  background: @sidebar_bg_color;
+  color: alpha(@window_fg_color, 0.78);
+}
+
+/* The row's actions share one recessed rail at the standard button height,
+ * split by short rules. */
+.bvc-row-actions {
+  border-radius: 9px;
+  background: @sidebar_bg_color;
+}
+
+.bvc-row-actions > button,
+.bvc-row-actions > menubutton > button {
+  border-radius: 9px;
+}
+
+.bvc-row-actions > separator {
+  margin: 9px 0;
+  background: alpha(@window_fg_color, 0.15);
+}
+
+/* Editor */
+.bvc-editor-page {
+  background: @window_bg_color;
+}
+
+.bvc-editor-inspector {
+  min-height: 74px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: @card_bg_color;
+  border: 1px solid alpha(@window_fg_color, 0.10);
+}
+
+.bvc-editor-stage {
+  background: black;
+  border-radius: 20px;
+  box-shadow: 0 12px 42px alpha(black, 0.25);
+}
+
+/* The transport bar sits on video: dark plate and light glyphs in every
+ * theme and focus state, as players draw it. */
+.bvc-editor-toolbar,
+.bvc-editor-toolbar:backdrop {
+  padding: 8px 10px;
+  border-radius: 16px;
+  background-color: rgb(0 0 0 / 70%);
+  color: white;
+}
+
+.bvc-editor-toolbar button {
+  background: transparent;
+  box-shadow: none;
+  color: white;
+}
+
+.bvc-editor-toolbar button:hover {
+  background: rgb(255 255 255 / 14%);
+}
+
+.bvc-editor-toolbar button:active,
+.bvc-editor-toolbar button:checked {
+  background: rgb(255 255 255 / 24%);
+}
+
+.bvc-editor-toolbar button.circular {
+  background: rgb(255 255 255 / 16%);
+}
+
+.bvc-editor-toolbar button.circular:hover {
+  background: rgb(255 255 255 / 26%);
+}
+
+.bvc-queue-list row {
+  margin-bottom: 12px;
+}
+.bvc-queue-list row:last-child {
+  margin-bottom: 0;
+}
+
+.bvc-editor-inspector dropdown,
+.bvc-editor-inspector spinbutton {
+  min-height: 40px;
+}
+
+.bvc-editor-toolbar button,
+.bvc-editor-toolbar menubutton {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+/* Sidebar resize edge: invisible until hovered, focused or dragged. */
+.bvc-sidebar-handle {
+  background: transparent;
+  transition: box-shadow 120ms ease-out;
+}
+
+.bvc-sidebar-handle:hover,
+.bvc-sidebar-handle:focus-visible,
+.bvc-sidebar-handle.dragging {
+  box-shadow: inset 3px 0 alpha(@accent_color, 0.7);
+}

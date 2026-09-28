@@ -5,11 +5,11 @@ with SVG illustrations and explanations.
 """
 
 import gettext
-from utils.signal_connections import SignalConnections
 import os
 import sys
 
 import gi
+from utils.signal_connections import SignalConnections
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -254,6 +254,23 @@ def show_video_encoding_dialog(parent_window, app) -> None:
         )
 
     res_dd.connect("notify::selected", _on_res_changed)
+
+    # --- Frame Rate ---
+    fps_dd = Gtk.DropDown(model=_clone_model(app.settings_page.video_fps_combo))
+    fps_dd.set_selected(app.settings_page.video_fps_combo.get_selected())
+    _make_combo_sync(app.settings_page.video_fps_combo, fps_dd, connections)
+    content.append(
+        _make_card(
+            "frame_rate.svg",
+            _("Frame Rate"),
+            _(
+                "Fewer frames per second make a smaller file. More frames are "
+                "blended from their neighbours: smoother, with a faint trail "
+                "on fast movement."
+            ),
+            fps_dd,
+        )
+    )
 
     # --- Conversion Speed (Preset) ---
     preset_dd = Gtk.DropDown(model=_clone_model(app.settings_page.preset_combo))

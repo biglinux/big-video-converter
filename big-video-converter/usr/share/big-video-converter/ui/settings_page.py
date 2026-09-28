@@ -4,11 +4,10 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 # Setup translation
 import gettext
+import logging
 
 import constants
-from gi.repository import Adw, Gtk
-
-import logging
+from gi.repository import Adw, GLib, Gtk
 
 logger = logging.getLogger(__name__)
 
@@ -49,16 +48,9 @@ class SettingsPage:
         self.preset_combo.set_sensitive(enable_encoding_options)
         self.video_resolution_combo.set_sensitive(enable_encoding_options)
         self.custom_resolution_row.set_sensitive(enable_encoding_options)
-
-        # Output format stays enabled - user can still choose container
-        # self.output_format_combo.set_sensitive(True)  # Always enabled
-
-        # Note: Audio settings remain enabled even in copy mode
-        # Users may want to configure audio handling/extraction separately
-
-        # General options stay enabled (additional ffmpeg options, extract subtitles)
-        # self.options_entry.set_sensitive(True)  # Always enabled
-        # self.only_extract_subtitles_check.set_sensitive(True)  # Always enabled
+        self.video_fps_combo.set_sensitive(enable_encoding_options)
+        # Output format, audio, extra FFmpeg options and subtitle extraction
+        # still apply to a stream copy, so they stay enabled.
 
     def _create_page(self):
         # Create page for settings
@@ -177,6 +169,13 @@ class SettingsPage:
 
         encoding_group.add(self.video_resolution_combo)
         encoding_group.add(self.custom_resolution_row)
+
+        self._fps_values = list(constants.VIDEO_FPS_VALUES.values())
+        self.video_fps_combo = Adw.ComboRow(title=_("Frame rate"))
+        self.video_fps_combo.set_subtitle(_("Frames per second of the converted video"))
+        self.video_fps_combo.set_model(Gtk.StringList.new(constants.VIDEO_FPS_OPTIONS))
+        self.app.tooltip_helper.add_tooltip(self.video_fps_combo, "fps")
+        encoding_group.add(self.video_fps_combo)
 
         main_content.append(encoding_group)
 
@@ -408,6 +407,11 @@ class SettingsPage:
         self.video_resolution_combo.connect(
             "notify::selected", self._on_resolution_combo_changed
         )
+        self.video_fps_combo.connect(
+            "notify::selected",
+            lambda combo, _param: self.settings_manager.save_setting(
+                "video-fps", self._fps_values[combo.get_selected()]),
+        )
 
         # Connect audio codec combo change
         self.audio_codec_combo.connect(
@@ -498,6 +502,23 @@ class SettingsPage:
 
     def _load_settings_inner(self):
         """Actual widget restore; never writes settings (see caller)."""
+
+        # A preset may ask for a rate the list lacks (20, 29.97): show it too.
+        saved_fps = self.settings_manager.load_setting("video-fps", "")
+        try:
+            self.settings_manager._validate_profile_value("video-fps", saved_fps)
+        except ValueError:
+            saved_fps = ""
+        values = list(constants.VIDEO_FPS_VALUES.values())
+        labels = list(constants.VIDEO_FPS_OPTIONS)
+        if saved_fps not in values:
+            number, _slash, divisor = saved_fps.partition("/")
+            values.append(saved_fps)
+            labels.append(f"{float(number) / float(divisor or 1):g} fps")
+        if values != self._fps_values:
+            self._fps_values = values
+            self.video_fps_combo.set_model(Gtk.StringList.new(labels))
+        self.video_fps_combo.set_selected(values.index(saved_fps))
 
         # Load video resolution setting
         saved_resolution = self.settings_manager.load_setting("video-resolution", "")
@@ -654,21 +675,28 @@ class SettingsPage:
         """Handle response from reset confirmation dialog"""
         try:
             response = dialog.choose_finish(result)
-            if response == 1:  # User clicked Reset
-                # Reset all settings to defaults
-                self._reset_all_settings()
+        except GLib.Error:
+            return
+        if response != 1:  # Only the Reset button resets
+            return
+        try:
+            self._reset_all_settings()
+        except OSError as error:
+            logger.error("Could not reset settings: %s", error)
+            failure_dialog = Gtk.AlertDialog()
+            failure_dialog.set_message(_("Settings Could Not Be Reset"))
+            failure_dialog.set_detail(
+                _("The settings file could not be saved: {0}").format(error)
+            )
+            failure_dialog.show(self.app.window)
+            return
 
-                # Show a confirmation message
-                success_dialog = Gtk.AlertDialog()
-                success_dialog.set_message(_("Settings Reset"))
-                success_dialog.set_detail(
-                    _("All settings have been reset to their default values.")
-                )
-                success_dialog.show(self.app.window)
-            else:
-                pass
-        except Exception:
-            pass
+        success_dialog = Gtk.AlertDialog()
+        success_dialog.set_message(_("Settings Reset"))
+        success_dialog.set_detail(
+            _("All settings have been reset to their default values.")
+        )
+        success_dialog.show(self.app.window)
 
     def _reset_all_settings(self):
         """Reset all settings to their default values"""

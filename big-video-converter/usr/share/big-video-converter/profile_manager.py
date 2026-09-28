@@ -59,11 +59,9 @@ class ProfileManagerMixin:
         self.video_codec_combo.set_selected(codec_idx)
         self.video_quality_combo.set_selected(quality_idx)
         self.force_copy_video_check.set_active(force_copy)
-        self.settings_manager.save_setting("video-profile", profile)
         self._update_encoding_options_state(force_copy)
         self._update_customize_subtitle()
-        if hasattr(self, "_update_presets_subtitle"):
-            self._update_presets_subtitle()
+        self._update_presets_subtitle()
 
     def _select_profile_radio(self, profile: str):
         """Select the correct radio for a profile without triggering the handler."""
@@ -92,8 +90,7 @@ class ProfileManagerMixin:
             # encoder arguments would keep shaping a conversion that no longer
             # looks like the preset on screen.
             self.settings_manager.save_setting("active-preset", "")
-            if hasattr(self, "_update_presets_subtitle"):
-                self._update_presets_subtitle()
+            self._update_presets_subtitle()
         if force_copy or codec_idx == 0:
             return "copy"
         if codec_idx == 1 and quality_idx == 0:
@@ -130,9 +127,7 @@ class ProfileManagerMixin:
         if codec and VIDEO_CODEC_VALUES.get(codec_idx) != codec:
             return False
         quality = preset.video.get("quality")
-        if quality and VIDEO_QUALITY_VALUES.get(quality_idx) != quality:
-            return False
-        return True
+        return not quality or VIDEO_QUALITY_VALUES.get(quality_idx) == quality
 
     def apply_preset(self, preset) -> None:
         """Write a preset into the settings and refresh every widget from them."""
@@ -143,18 +138,15 @@ class ProfileManagerMixin:
             for key, value in values.items():
                 self.settings_manager.save_setting(key, value)
             self.settings_manager.save_setting("active-preset", preset.id)
-            self.settings_manager.save_setting("video-profile", "custom")
         force_copy = values.get("force-copy-video", self.settings_manager.load_setting("force-copy-video", False))
         self._load_left_pane_settings()
-        if hasattr(self, "settings_page"):
-            self.settings_page._load_settings()
-            self.settings_page.update_for_force_copy_state(force_copy)
+        self.settings_page._load_settings()
+        self.settings_page.update_for_force_copy_state(force_copy)
         self._update_encoding_options_state(force_copy)
         self._select_profile_radio("preset")
         self._update_customize_subtitle()
-        if hasattr(self, "_update_presets_subtitle"):
-            self._update_presets_subtitle()
-        for updater in ("_update_audio_subtitle", "_update_subtitles_subtitle", "_update_extra_subtitle"):
-            if hasattr(self, updater):
-                getattr(self, updater)()
+        self._update_presets_subtitle()
+        self._update_audio_subtitle()
+        self._update_subtitles_subtitle()
+        self._update_extra_subtitle()
         logger.info("Preset applied: %s (%s)", preset.name, preset.id)

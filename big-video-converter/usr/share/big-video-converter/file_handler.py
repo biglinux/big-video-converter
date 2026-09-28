@@ -4,8 +4,8 @@ import gettext
 import os
 import threading
 
+from constants import VIDEO_FILE_EXTENSIONS
 from gi.repository import Gdk, Gio, GLib, Gtk
-
 from utils.signal_connections import SignalConnections
 
 _ = gettext.gettext
@@ -32,21 +32,8 @@ class FileHandlerMixin:
         if not file_path:
             return False
 
-        valid_extensions = [
-            ".mp4",
-            ".mkv",
-            ".webm",
-            ".mov",
-            ".avi",
-            ".wmv",
-            ".mpeg",
-            ".m4v",
-            ".ts",
-            ".flv",
-        ]
-
         ext = os.path.splitext(file_path)[1].lower()
-        return ext in valid_extensions
+        return ext in VIDEO_FILE_EXTENSIONS
 
     def add_paths_to_queue(self, paths, on_complete=None, *, selected_files=False):
         """Enumerate storage off-thread, then publish one batch on the GTK thread."""
@@ -99,12 +86,18 @@ class FileHandlerMixin:
         threading.Thread(target=scan, name="bvc-file-scan", daemon=True).start()
 
     def on_drop_file(self, drop_target, value, x, y):
+        # Refusing the drop tells the file manager it did not happen; the
+        # queue itself also refuses files while a conversion runs.
+        if self.currently_converting:
+            return False
         if isinstance(value, Gio.File) and (path := value.get_path()):
             self.add_paths_to_queue([path])
             return True
         return False
 
     def on_drop_filelist(self, drop_target, value, x, y):
+        if self.currently_converting:
+            return False
         if isinstance(value, Gdk.FileList):
             paths = [file.get_path() for file in value.get_files() if file.get_path()]
             if paths:
@@ -121,7 +114,7 @@ class FileHandlerMixin:
         dialog.set_title(_("Select Video Files"))
         dialog.set_modal(True)
 
-        if hasattr(self, "last_accessed_directory") and self.last_accessed_directory:
+        if self.last_accessed_directory:
             try:
                 initial_folder = Gio.File.new_for_path(self.last_accessed_directory)
                 dialog.set_initial_folder(initial_folder)
@@ -145,7 +138,7 @@ class FileHandlerMixin:
         dialog.set_title(_("Select Folder with Video Files"))
         dialog.set_modal(True)
 
-        if hasattr(self, "last_accessed_directory") and self.last_accessed_directory:
+        if self.last_accessed_directory:
             try:
                 initial_folder = Gio.File.new_for_path(self.last_accessed_directory)
                 dialog.set_initial_folder(initial_folder)
@@ -320,7 +313,7 @@ class FileHandlerMixin:
                     gfile.mount_enclosing_volume_finish(result)
                 except GLib.Error as e:
                     # Already mounted is not an error
-                    if "already mounted" not in str(e).lower():
+                    if not e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.ALREADY_MOUNTED):
                         error_msg = str(e)
                         self.logger.error(f"Mount error: {e}")
                         GLib.idle_add(
@@ -361,16 +354,18 @@ class FileHandlerMixin:
             try:
                 mount = gfile.find_enclosing_mount(None)
                 root = mount.get_root()
+                # None when gvfs-fuse does not expose the mount as a path.
                 local_path = root.get_path()
             except (GLib.Error, OSError) as e:
                 self.logger.error(f"Could not resolve GVFS path: {e}")
-                self.show_error_dialog(
-                    _("Error"),
-                    _(
-                        "Connected but could not resolve local path. Try browsing via file manager."
-                    ),
-                )
-                return
+        if not local_path:
+            self.show_error_dialog(
+                _("Error"),
+                _(
+                    "Connected but could not resolve local path. Try browsing via file manager."
+                ),
+            )
+            return
 
         self.logger.debug(f"Browsing network files at: {local_path}")
 

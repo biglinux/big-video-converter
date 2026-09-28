@@ -7,9 +7,8 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
-
-from utils.size_target import TARGETS, shown_size
 from utils.signal_connections import SignalConnections
+from utils.size_target import TARGETS, shown_size
 
 _ = gettext.gettext
 

@@ -2,9 +2,6 @@
 
 import gettext
 import logging
-import os
-
-from gi.repository import Adw, Gtk
 
 from constants import (
     AUDIO_VALUES,
@@ -13,6 +10,8 @@ from constants import (
     VIDEO_CODEC_VALUES,
     VIDEO_QUALITY_VALUES,
 )
+from gi.repository import Adw, Gdk, Gtk
+from utils.gpu_selector import detect_render_devices
 
 _ = gettext.gettext
 
@@ -42,19 +41,13 @@ class SidebarBuilderMixin:
 
         # Create title box with label and (optionally) app icon
         if not window_buttons_left:
-            # Text truly centered, no icon
-            center_box = Gtk.CenterBox()
-            center_box.set_hexpand(True)
-            title_label = Gtk.Label(label=_("Conversion settings"))
-            title_label.set_halign(Gtk.Align.CENTER)
-            title_label.set_valign(Gtk.Align.START)
-            title_label.set_hexpand(True)
-            center_box.set_center_widget(title_label)
-            left_header.set_title_widget(center_box)
+            # The editor puts its own title and note here (show_editor_for_file).
+            self.sidebar_title = Adw.WindowTitle(title="Big Video Converter")
+            left_header.set_title_widget(self.sidebar_title)
         else:
             title_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-            title_label = Gtk.Label(label=_("Conversion settings"))
-            title_box.append(title_label)
+            self.sidebar_title = Adw.WindowTitle(title="Big Video Converter")
+            title_box.append(self.sidebar_title)
             # Add an expanding box to push controls to the left
             expander = Gtk.Box()
             expander.set_hexpand(True)
@@ -71,6 +64,9 @@ class SidebarBuilderMixin:
         # Create ViewStack for contextual content
         self.left_stack = Adw.ViewStack()
         self.left_stack.set_hhomogeneous(False)
+        # Each page scrolls by its own height: the taller editing page would
+        # otherwise give the conversion page a scrollbar over empty space.
+        self.left_stack.set_vhomogeneous(False)
 
         # Page 1: Conversion Settings
         conversion_settings = self._create_conversion_settings()
@@ -81,8 +77,8 @@ class SidebarBuilderMixin:
         # Page 2: Editing Tools (This is now a container to be populated later)
         self.editing_tools_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
-            spacing=16,
-            margin_top=12,
+            spacing=12,
+            margin_top=6,
             margin_bottom=12,
             margin_start=12,
             margin_end=12,
@@ -98,6 +94,86 @@ class SidebarBuilderMixin:
         left_toolbar_view.set_size_request(300, -1)
 
         self.split_view.set_sidebar(left_toolbar_view)
+
+    def _create_sidebar_resize_handle(self):
+        """Edge the user drags (or moves with Left/Right) to resize the sidebar.
+
+        Adw.OverlaySplitView has no resize handle of its own. The handle lies
+        on the content's leading edge, clear of the sidebar's scrollbar, and
+        only exists while there is a boundary to move.
+        """
+        split = self.split_view
+        handle = Gtk.Box(
+            halign=Gtk.Align.START,
+            width_request=8,
+            focusable=True,
+            accessible_role=Gtk.AccessibleRole.SEPARATOR,
+            tooltip_text=_("Resize sidebar"),
+        )
+        handle.add_css_class("bvc-sidebar-handle")
+        handle.set_cursor_from_name("col-resize")
+        handle.update_property(
+            [Gtk.AccessibleProperty.LABEL, Gtk.AccessibleProperty.VALUE_MIN,
+             Gtk.AccessibleProperty.VALUE_MAX],
+            [_("Resize sidebar"), split.get_min_sidebar_width(),
+             split.get_max_sidebar_width()],
+        )
+
+        def resize(width):
+            total = split.get_width()
+            if total <= 0:
+                return
+            width = max(split.get_min_sidebar_width(), min(split.get_max_sidebar_width(), width))
+            split.set_sidebar_width_fraction(width / total)
+            handle.update_property([Gtk.AccessibleProperty.VALUE_NOW], [float(width)])
+
+        # The handle moves with the edge, so drag offsets (relative to the
+        # handle) are converted to split-view coordinates first. In a
+        # right-to-left layout the sidebar is on the right and grows leftwards.
+        drag = Gtk.GestureDrag()
+        start = [0, 0.0]
+
+        def outwards():
+            return -1 if handle.get_direction() == Gtk.TextDirection.RTL else 1
+
+        def pointer_x(gesture, dx):
+            x, _y = gesture.get_start_point()[1:]
+            return handle.translate_coordinates(split, x + dx, 0)[0]
+
+        def on_begin(gesture, _x, _y):
+            start[:] = [split.get_sidebar().get_width(), pointer_x(gesture, 0)]
+            handle.add_css_class("dragging")
+            handle.grab_focus()
+
+        drag.connect("drag-begin", on_begin)
+        drag.connect(
+            "drag-update",
+            lambda g, dx, _dy: resize(start[0] + outwards() * (pointer_x(g, dx) - start[1])),
+        )
+        drag.connect("drag-end", lambda *_a: handle.remove_css_class("dragging"))
+        handle.add_controller(drag)
+
+        keys = Gtk.EventControllerKey()
+
+        def on_key(_controller, keyval, _keycode, _state):
+            step = {Gdk.KEY_Left: -24, Gdk.KEY_Right: 24}.get(keyval)
+            if step is None:
+                return False
+            resize(split.get_sidebar().get_width() + outwards() * step)
+            return True
+
+        keys.connect("key-pressed", on_key)
+        handle.add_controller(keys)
+
+        # A collapsed sidebar floats over the content and has a fixed width,
+        # so the handle would only be an invisible Tab stop under the overlay.
+        def sync_visible(split, _pspec=None):
+            handle.set_visible(split.get_show_sidebar() and not split.get_collapsed())
+
+        split.connect("notify::show-sidebar", sync_visible)
+        split.connect("notify::collapsed", sync_visible)
+        sync_visible(split)
+        return handle
 
     def _create_conversion_settings(self):
         """Create conversion settings sidebar with ActionRows that open dialogs."""
@@ -141,7 +217,7 @@ class SidebarBuilderMixin:
         self.gpu_combo.set_model(gpu_model)
 
         # GPU Device
-        self.detected_gpus = self._detect_gpu_devices()
+        self.detected_gpus = detect_render_devices()
         self.gpu_device_combo = Adw.ComboRow(title=_("GPU Device"))
         self.gpu_device_combo.set_subtitle(_("Select which GPU to use"))
         gpu_device_model = Gtk.StringList()
@@ -212,75 +288,15 @@ class SidebarBuilderMixin:
             self.noise_strength_row, "noise_reduction_strength"
         )
 
-        # GTCRN Advanced Controls
+        # In the order of constants.NOISE_MODELS.
         self._noise_model_list = [
-            _("Maximum Cleaning"),
-            _("Natural Voice"),
-            _("Smart (both combined)"),
+            _("Light — DeepFilterNet3"),
+            _("Higher quality — DPDFNet-2 48 kHz"),
         ]
         noise_model_model = Gtk.StringList.new(self._noise_model_list)
         self.noise_model_row = Adw.ComboRow(title=_("AI Model"), model=noise_model_model)
         self.noise_model_row.set_selected(0)
         self.noise_reduction_expander.add_row(self.noise_model_row)
-
-        self.noise_speech_strength_row = Adw.ActionRow(title=_("Speech Strength"))
-        self.noise_speech_strength_adj = Gtk.Adjustment(value=1.0, lower=0.0, upper=1.0, step_increment=0.05, page_increment=0.1)
-        self.noise_speech_strength_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.noise_speech_strength_adj)
-        self.noise_speech_strength_scale.set_digits(2)
-        self.noise_speech_strength_scale.set_hexpand(True)
-        self.noise_speech_strength_scale.set_size_request(200, -1)
-        self.noise_speech_strength_scale.set_valign(Gtk.Align.CENTER)
-        self.noise_speech_strength_scale.add_mark(0.0, Gtk.PositionType.BOTTOM, _("0%"))
-        self.noise_speech_strength_scale.add_mark(0.5, Gtk.PositionType.BOTTOM, _("50%"))
-        self.noise_speech_strength_scale.add_mark(1.0, Gtk.PositionType.BOTTOM, _("100%"))
-        self._speech_strength_label = Gtk.Label(label="100%")
-        self._speech_strength_label.set_size_request(45, -1)
-        self._speech_strength_label.add_css_class("numeric")
-        self._speech_strength_label.add_css_class("caption")
-        self.noise_speech_strength_adj.connect("notify::value", lambda a, _: self._speech_strength_label.set_text(f"{a.get_value()*100:.0f}%"))
-        self.noise_speech_strength_row.add_suffix(self.noise_speech_strength_scale)
-        self.noise_speech_strength_row.add_suffix(self._speech_strength_label)
-        self.noise_reduction_expander.add_row(self.noise_speech_strength_row)
-
-        self.noise_lookahead_row = Adw.ActionRow(title=_("Lookahead"))
-        self.noise_lookahead_adj = Gtk.Adjustment(value=0, lower=0, upper=200, step_increment=5, page_increment=20)
-        self.noise_lookahead_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.noise_lookahead_adj)
-        self.noise_lookahead_scale.set_digits(0)
-        self.noise_lookahead_scale.set_hexpand(True)
-        self.noise_lookahead_scale.set_size_request(200, -1)
-        self.noise_lookahead_scale.set_valign(Gtk.Align.CENTER)
-        self.noise_lookahead_scale.add_mark(0, Gtk.PositionType.BOTTOM, "0")
-        self.noise_lookahead_scale.add_mark(50, Gtk.PositionType.BOTTOM, "50")
-        self.noise_lookahead_scale.add_mark(100, Gtk.PositionType.BOTTOM, "100")
-        self.noise_lookahead_scale.add_mark(200, Gtk.PositionType.BOTTOM, "200")
-        self._lookahead_label = Gtk.Label(label="0 ms")
-        self._lookahead_label.set_size_request(55, -1)
-        self._lookahead_label.add_css_class("numeric")
-        self._lookahead_label.add_css_class("caption")
-        self.noise_lookahead_adj.connect("notify::value", lambda a, _: self._lookahead_label.set_text(f"{a.get_value():.0f} ms"))
-        self.noise_lookahead_row.add_suffix(self.noise_lookahead_scale)
-        self.noise_lookahead_row.add_suffix(self._lookahead_label)
-        self.noise_reduction_expander.add_row(self.noise_lookahead_row)
-
-        self.noise_voice_recovery_row = Adw.ActionRow(title=_("Voice Recovery"))
-        self.noise_voice_recovery_adj = Gtk.Adjustment(value=0.75, lower=0.0, upper=1.0, step_increment=0.05, page_increment=0.1)
-        self.noise_voice_recovery_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.noise_voice_recovery_adj)
-        self.noise_voice_recovery_scale.set_digits(2)
-        self.noise_voice_recovery_scale.set_hexpand(True)
-        self.noise_voice_recovery_scale.set_size_request(200, -1)
-        self.noise_voice_recovery_scale.set_valign(Gtk.Align.CENTER)
-        self.noise_voice_recovery_scale.add_mark(0.0, Gtk.PositionType.BOTTOM, _("0%"))
-        self.noise_voice_recovery_scale.add_mark(0.5, Gtk.PositionType.BOTTOM, _("50%"))
-        self.noise_voice_recovery_scale.add_mark(0.75, Gtk.PositionType.BOTTOM, _("75%"))
-        self.noise_voice_recovery_scale.add_mark(1.0, Gtk.PositionType.BOTTOM, _("100%"))
-        self._voice_recovery_label = Gtk.Label(label="75%")
-        self._voice_recovery_label.set_size_request(45, -1)
-        self._voice_recovery_label.add_css_class("numeric")
-        self._voice_recovery_label.add_css_class("caption")
-        self.noise_voice_recovery_adj.connect("notify::value", lambda a, _: self._voice_recovery_label.set_text(f"{a.get_value()*100:.0f}%"))
-        self.noise_voice_recovery_row.add_suffix(self.noise_voice_recovery_scale)
-        self.noise_voice_recovery_row.add_suffix(self._voice_recovery_label)
-        self.noise_reduction_expander.add_row(self.noise_voice_recovery_row)
 
         # Noise Gate - simplified with intensity slider
         self.gate_expander = Adw.ExpanderRow(title=_("Noise Gate"))
@@ -425,8 +441,7 @@ class SidebarBuilderMixin:
         self.noise_reduction_expander.add_row(self.normalize_row)
 
         # ── Group 1: Video Mode Profiles ──
-        video_group = Adw.PreferencesGroup(title=_("Choose a result"),
-            description=_("General settings apply unless a video has its own options."))
+        video_group = Adw.PreferencesGroup()
 
         self._radio_copy = Gtk.CheckButton()
         self._radio_universal = Gtk.CheckButton(group=self._radio_copy)
@@ -500,7 +515,7 @@ class SidebarBuilderMixin:
         settings_box.append(video_group)
 
         # ── Group 2: Audio / Subtitles / Extra ──
-        other_group = Adw.PreferencesGroup(title=_("Refine when needed"))
+        other_group = Adw.PreferencesGroup()
 
         self._audio_row = Adw.ActionRow(title=_("Audio Encoding"))
         self._audio_row.add_prefix(
@@ -536,6 +551,13 @@ class SidebarBuilderMixin:
         self._subtitles_row.set_activatable(True)
         self._subtitles_row.connect("activated", self._on_subtitles_activated)
         other_group.add(self._subtitles_row)
+
+        self._size_row = Adw.ActionRow(title=_("Maximum size"))
+        self._size_row.add_prefix(Gtk.Image.new_from_icon_name("drive-harddisk-symbolic"))
+        self._size_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
+        self._size_row.set_activatable(True)
+        self._size_row.connect("activated", self._on_size_activated)
+        other_group.add(self._size_row)
 
         self._extra_row = Adw.ActionRow(title=_("Extra"))
         self._extra_row.add_prefix(
@@ -636,35 +658,9 @@ class SidebarBuilderMixin:
             ),
         )
 
-        # GTCRN Advanced
         def _on_model_combo_changed(w, p):
-            index = w.get_selected()
-            model = 0 if index != 1 else 1
-            blending = index == 2
-            self.settings_manager.save_setting("noise-model", model)
-            self.settings_manager.save_setting("noise-model-blend", blending)
-            if hasattr(self, "video_edit_page") and self.video_edit_page:
-                self.video_edit_page._apply_audio_filters()
+            _nr_save_and_preview("noise-model", w.get_selected())
         self.noise_model_row.connect("notify::selected", _on_model_combo_changed)
-        self.noise_speech_strength_scale.connect(
-            "value-changed",
-            lambda w: _nr_save_and_preview(
-                "noise-speech-strength", w.get_value()
-            ),
-        )
-        self.noise_lookahead_scale.connect(
-            "value-changed",
-            lambda w: _nr_save_and_preview(
-                "noise-lookahead", int(w.get_value())
-            ),
-        )
-        self.noise_voice_recovery_scale.connect(
-            "value-changed",
-            lambda w: _nr_save_and_preview(
-                "noise-voice-recovery", w.get_value()
-            ),
-        )
-
         # Gate intensity
         self.gate_intensity_scale.connect(
             "value-changed",
@@ -785,25 +781,8 @@ class SidebarBuilderMixin:
         )
         self.noise_strength_scale.set_value(noise_strength)
 
-        # GTCRN Advanced — derive combo index from model + blending
-        saved_model = self.settings_manager.load_setting("noise-model", 0)
-        saved_blending = self.settings_manager.load_setting("noise-model-blend", False)
-        if saved_blending:
-            model_combo_index = 2  # Smart (both combined)
-        elif saved_model == 1:
-            model_combo_index = 1  # Natural Voice (VCTK)
-        else:
-            model_combo_index = 0  # Maximum Cleaning (DNS3)
-        self.noise_model_row.set_selected(model_combo_index)
-
-        self.noise_speech_strength_scale.set_value(
-            self.settings_manager.load_setting("noise-speech-strength", 1.0)
-        )
-        self.noise_lookahead_scale.set_value(
-            self.settings_manager.load_setting("noise-lookahead", 50)
-        )
-        self.noise_voice_recovery_scale.set_value(
-            self.settings_manager.load_setting("noise-voice-recovery", 0.75)
+        self.noise_model_row.set_selected(
+            self.settings_manager.load_setting("noise-model", 0)
         )
 
         # Noise Gate
@@ -855,6 +834,7 @@ class SidebarBuilderMixin:
         self._update_audio_cleaning_subtitle()
         self._update_subtitles_subtitle()
         self._update_extra_subtitle()
+        self._update_size_subtitle()
 
     def _update_customize_subtitle(self):
         """Update the 'Customize encoding...' row subtitle with current settings."""
@@ -1011,6 +991,18 @@ class SidebarBuilderMixin:
                     self._audio_row, self._audio_cleaning_row, self._extra_row):
             row.set_sensitive(enable)
 
+    def _on_size_activated(self, _row):
+        from ui.size_dialog import show_size_dialog
+
+        show_size_dialog(self.window, self)
+
+    def _update_size_subtitle(self):
+        from ui.size_dialog import size_summary
+
+        self._size_row.set_subtitle(size_summary(self.settings_manager))
+        if getattr(self, "conversion_page", None) is not None:
+            self.conversion_page.refresh_recipe_summaries()
+
     def _update_extra_subtitle(self):
         """Update the Extra ActionRow subtitle."""
         parts = []
@@ -1042,43 +1034,6 @@ class SidebarBuilderMixin:
         if self.force_copy_video_check.get_active() != is_copy:
             self.force_copy_video_check.set_active(is_copy)
         self._update_encoding_options_state(is_copy)
-
-    def _detect_gpu_devices(self):
-        """Detect available GPU render devices in the system"""
-        gpus = []
-        try:
-            import glob
-            import subprocess
-
-            render_devices = sorted(glob.glob("/dev/dri/renderD*"))
-            if len(render_devices) <= 1:
-                return gpus
-
-            result = subprocess.run(
-                ["lspci", "-nn"], capture_output=True, text=True, timeout=5
-            )
-            gpu_lines = [
-                line
-                for line in result.stdout.splitlines()
-                if any(kw in line.lower() for kw in ["vga", "3d", "display"])
-            ]
-
-            for i, device_path in enumerate(render_devices):
-                if i < len(gpu_lines):
-                    name = (
-                        gpu_lines[i].split(": ", 1)[-1]
-                        if ": " in gpu_lines[i]
-                        else gpu_lines[i]
-                    )
-                    # Trim to reasonable length
-                    if len(name) > 50:
-                        name = name[:47] + "..."
-                else:
-                    name = os.path.basename(device_path)
-                gpus.append({"name": name, "device": device_path})
-        except (subprocess.SubprocessError, OSError) as e:
-            logger.error(f"GPU detection error: {e}")
-        return gpus
 
     def _find_gpu_index(self, value):
         """Find index of GPU value"""
@@ -1135,8 +1090,11 @@ class SidebarBuilderMixin:
         self._customize_row.set_sensitive(enable)
 
         # Update video edit page if it exists
-        if hasattr(self, "video_edit_page") and self.video_edit_page:
-            if hasattr(self.video_edit_page, "ui"):
-                self.video_edit_page.ui.update_for_force_copy_state(force_copy_enabled)
+        if (
+            hasattr(self, "video_edit_page")
+            and self.video_edit_page
+            and hasattr(self.video_edit_page, "ui")
+        ):
+            self.video_edit_page.ui.update_for_force_copy_state(force_copy_enabled)
 
         self._update_customize_subtitle()

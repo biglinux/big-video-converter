@@ -15,7 +15,7 @@ _PROVIDER = None
 
 
 def install() -> None:
-    """Install the premium visual system once for the current display."""
+    """Install the application stylesheet once for the current display."""
 
     global _PROVIDER
     if _PROVIDER is not None:
@@ -23,7 +23,7 @@ def install() -> None:
     display = Gdk.Display.get_default()
     if display is None:
         return
-    css_path = Path(__file__).with_name("premium.css")
+    css_path = Path(__file__).with_name("style.css")
     provider = Gtk.CssProvider()
     provider.load_from_path(str(css_path))
     Gtk.StyleContext.add_provider_for_display(

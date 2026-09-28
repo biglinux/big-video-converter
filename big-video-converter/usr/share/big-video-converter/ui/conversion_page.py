@@ -1,8 +1,9 @@
 import os
 import subprocess
-from copy import deepcopy
 import threading
 import weakref
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 
 import gi
 
@@ -10,24 +11,42 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 # Setup translation
 import gettext
+import logging
+import re
 
 from constants import CONVERT_SCRIPT_PATH
-from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 from utils.conversion import run_with_progress_dialog
+from utils.ffmpeg_options import validate_additional_options
+from utils.job_options import (
+    RESOLUTION_MODES,
+    freeze,
+    has_picture_edits,
+    normalize_metadata,
+    snapshot_preset,
+)
+from utils.presets import PresetError
 from utils.segment_batch import start_segment_batch
 from utils.signal_connections import SignalConnections
+from utils.size_target import (
+    TARGETS,
+    describe_plan,
+    prepare_size_job,
+    shown_size,
+    target_bytes,
+)
 from utils.thumbnail_cache import ThumbnailManager
-from utils.ffmpeg_options import validate_additional_options
-from utils.job_options import (RESOLUTION_MODES, freeze, normalize_metadata,
-                               snapshot_preset)
-from utils.presets import PresetError
-from utils.video_settings import SettingsOverride, get_video_filter_string
+from utils.video_settings import CropError, SettingsOverride, get_ffmpeg_filter_string
 
-import logging
+from ui.progress_page import CODEC_NAMES, format_clock, format_size
 
 logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
+
+# Settings the conversion script reads from its environment are all named so.
+_SCRIPT_SETTING = re.compile(r"[a-z_]+")
+_PROXY_VARIABLES = frozenset({"http_proxy", "https_proxy", "no_proxy", "all_proxy"})
 
 
 class FileQueueRow(Gtk.ListBoxRow):
@@ -46,6 +65,8 @@ class FileQueueRow(Gtk.ListBoxRow):
         thumbnail_manager,
         summary_text,
         app=None,
+        custom_settings=False,
+        summary_pool=None,
     ):
         super().__init__()
         self.file_path = file_path
@@ -84,8 +105,7 @@ class FileQueueRow(Gtk.ListBoxRow):
         placeholder.add_css_class("dim-label")
         self.thumbnail_picture = Gtk.Picture()
         self.thumbnail_picture.set_can_shrink(True)
-        if hasattr(self.thumbnail_picture, "set_content_fit"):
-            self.thumbnail_picture.set_content_fit(Gtk.ContentFit.COVER)
+        self.thumbnail_picture.set_content_fit(Gtk.ContentFit.COVER)
         self.thumbnail_stack.add_named(placeholder, "placeholder")
         picture_frame = Gtk.Overlay()
         picture_frame.set_child(Gtk.Box(width_request=144, height_request=82))
@@ -93,86 +113,116 @@ class FileQueueRow(Gtk.ListBoxRow):
         picture_frame.set_measure_overlay(self.thumbnail_picture, False)
         self.thumbnail_stack.add_named(picture_frame, "picture")
         self.thumbnail_stack.set_visible_child_name("placeholder")
-        preview_frame.append(self.thumbnail_stack)
+        # Duration on the picture's corner, as video apps show it.
+        preview = Gtk.Overlay(child=self.thumbnail_stack)
+        self.duration_badge = Gtk.Label(halign=Gtk.Align.END, valign=Gtk.Align.END)
+        self.duration_badge.add_css_class("bvc-duration-badge")
+        self.duration_badge.set_margin_end(6)
+        self.duration_badge.set_margin_bottom(6)
+        self.duration_badge.set_visible(False)
+        preview.add_overlay(self.duration_badge)
+        preview_frame.append(preview)
         content.append(preview_frame)
 
-        details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        details = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
         details.set_hexpand(True)
         details.set_valign(Gtk.Align.CENTER)
 
-        title = Gtk.Label(label=os.path.basename(file_path))
+        name = os.path.basename(file_path)
+        title = Gtk.Label(label=name)
         title.set_xalign(0)
-        title.set_ellipsize(3)
+        title.set_ellipsize(Pango.EllipsizeMode.MIDDLE)
         title.set_tooltip_text(file_path)
         title.add_css_class("title-3")
         details.append(title)
 
-        directory = Gtk.Label(label=os.path.dirname(file_path))
-        directory.set_xalign(0)
-        directory.set_ellipsize(3)
-        directory.add_css_class("caption")
-        directory.add_css_class("dim-label")
-        details.append(directory)
+        folder = os.path.dirname(file_path)
+        home = os.path.expanduser("~")
+        if folder == home or folder.startswith(home + os.sep):
+            folder = "~" + folder[len(home):]
+        self.folder_label = Gtk.Label(label=folder, xalign=0)
+        # The end of a path names the folder; its start is the same for all.
+        self.folder_label.set_ellipsize(Pango.EllipsizeMode.START)
+        self.folder_label.add_css_class("caption")
+        self.folder_label.add_css_class("dim-label")
+        details.append(self.folder_label)
 
-        metadata_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
-        profile = Gtk.Label(label=summary_text)
-        profile.set_ellipsize(3)
-        profile.set_hexpand(True)
+        metadata_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+        metadata_row.set_margin_top(3)
+        self.meta_label = Gtk.Label(xalign=0)
+        self.meta_label.set_ellipsize(Pango.EllipsizeMode.END)
+        self.meta_label.add_css_class("caption")
+        self.meta_label.add_css_class("bvc-tabular")
+        self.meta_label.add_css_class("bvc-meta-chip")
+        self.meta_label.set_valign(Gtk.Align.CENTER)
+        try:
+            self._size_text = format_size(os.path.getsize(file_path))
+            self.meta_label.set_text(self._size_text)
+        except OSError:
+            # Moved or deleted since it was queued: say so instead of hiding
+            # a file the queue still counts and will report as failed.
+            self._size_text = None
+            self.meta_label.set_text(_("File not found"))
+            self.meta_label.add_css_class("error")
+        metadata_row.append(self.meta_label)
+        # Only a video with settings of its own carries a chip; the others
+        # follow the sidebar, which already says what they use.
+        profile = Gtk.Label()
+        profile.set_ellipsize(Pango.EllipsizeMode.END)
         profile.set_xalign(0)
-        self.recipe_label = profile
         profile.add_css_class("bvc-profile-chip")
         profile.set_valign(Gtk.Align.CENTER)
+        self.recipe_label = profile
         metadata_row.append(profile)
-        try:
-            size_mb = os.path.getsize(file_path) / (1024 * 1024)
-            size = Gtk.Label(label=f"{size_mb:.1f} MB")
-            size.add_css_class("caption")
-            size.add_css_class("dim-label")
-            size.set_valign(Gtk.Align.CENTER)
-            metadata_row.append(size)
-        except OSError:
-            pass
+        self.set_recipe(summary_text, custom_settings)
         details.append(metadata_row)
         content.append(details)
 
-        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         actions.set_valign(Gtk.Align.CENTER)
+        actions.add_css_class("bvc-row-actions")
 
         options_button = Gtk.Button()
         options_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=7)
         options_box.append(Gtk.Image.new_from_icon_name("preferences-system-symbolic"))
         options_box.append(Gtk.Label(label=_("Options")))
         options_button.set_child(options_box)
-        options_button.add_css_class("bvc-secondary")
+        options_button.add_css_class("flat")
         options_button.set_tooltip_text(_("Choose a preset or resolution for this video"))
+        options_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Options for “{name}”").format(name=name)]
+        )
         options_button.connect(
             "clicked", lambda _button: row.on_options_callback(row.file_path)
         )
         actions.append(options_button)
+        actions.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
 
         edit_button = Gtk.Button.new_from_icon_name("document-edit-symbolic")
-        edit_button.add_css_class("bvc-icon-button")
-        edit_button.add_css_class("bvc-quiet")
+        edit_button.add_css_class("flat")
         edit_button.set_tooltip_text(_("Edit video"))
         edit_button.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Edit video")]
+            [Gtk.AccessibleProperty.LABEL], [_("Edit “{name}”").format(name=name)]
         )
         edit_button.connect(
             "clicked", lambda _button: row.on_edit_callback(row.file_path)
         )
         actions.append(edit_button)
+        actions.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
 
         more_button = Gtk.MenuButton(icon_name="view-more-symbolic")
-        more_button.add_css_class("bvc-icon-button")
-        more_button.add_css_class("bvc-quiet")
+        more_button.add_css_class("flat")
         more_button.set_tooltip_text(_("More actions"))
         more_button.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("More actions")]
+            [Gtk.AccessibleProperty.LABEL],
+            [_("More actions for “{name}”").format(name=name)],
         )
         more_button.set_popover(self._create_more_popover())
         actions.append(more_button)
         content.append(actions)
 
+        self._summary_future = None
+        self._request_summary(summary_pool)
         self._request_thumbnail()
 
     def _menu_action(self, label, icon_name, callback, *, destructive=False):
@@ -255,10 +305,41 @@ class FileQueueRow(Gtk.ListBoxRow):
             [Gtk.AccessibleProperty.LABEL], [_("Video preview")])
         return GLib.SOURCE_REMOVE
 
+    def set_recipe(self, summary_text: str, custom: bool) -> None:
+        text = _("Own: {recipe}").format(recipe=summary_text)
+        self.recipe_label.set_text(text)
+        self.recipe_label.set_tooltip_text(text)
+        self.recipe_label.set_visible(custom)
+
+    def _request_summary(self, pool) -> None:
+        """Probe duration, size and codec on a worker; the result is cached."""
+        if pool is None or self._size_text is None:
+            return
+        row_ref = weakref.ref(self)
+        expected = self.file_path
+
+        def done(future):
+            if future.cancelled():
+                return
+            try:
+                summary = future.result()
+            except Exception:
+                logger.exception("Queue probe failed")
+                summary = None
+            GLib.idle_add(_apply_summary, row_ref, expected, summary)
+
+        from utils.file_info import get_queue_summary
+
+        self._summary_future = pool.submit(get_queue_summary, expected)
+        self._summary_future.add_done_callback(done)
+
     def dispose_thumbnail(self):
         if self._thumbnail_disposed:
             return
         self._thumbnail_disposed = True
+        future, self._summary_future = self._summary_future, None
+        if future is not None:
+            future.cancel()
         request, self._thumbnail_request = self._thumbnail_request, None
         if request is not None:
             request.cancel()
@@ -308,6 +389,32 @@ class FileQueueRow(Gtk.ListBoxRow):
         dialog.present(self.app.window)
 
 
+def _apply_summary(row_ref, expected, summary):
+    row = row_ref()
+    if row is None or row._thumbnail_disposed or expected != row.file_path or not summary:
+        return GLib.SOURCE_REMOVE
+    duration = summary.get("duration")
+    if duration and duration > 0:
+        row.duration_badge.set_text(format_clock(duration))
+        row.duration_badge.set_visible(True)
+    facts = []
+    if summary.get("width") and summary.get("height"):
+        facts.append(f"{summary['width']} × {summary['height']}")
+    codec = summary.get("codec")
+    if codec:
+        facts.append(CODEC_NAMES.get(codec, codec.upper()))
+    facts.append(row._size_text)
+    row.meta_label.set_text(" · ".join(facts))
+    return GLib.SOURCE_REMOVE
+
+
+def has_own_settings(metadata) -> bool:
+    """True when a video overrides the sidebar's profile, resolution or size."""
+    metadata = normalize_metadata(metadata)
+    return bool(metadata.get("preset_snapshot")) or any(
+        metadata[key] != "global" for key in ("resolution_mode", "size_mode"))
+
+
 class ConversionPage:
     """
     Conversion page UI component.
@@ -323,9 +430,14 @@ class ConversionPage:
         # GTK can recreate Python wrappers; own rows until their requests stop.
         self.queue_rows = []
         self._queue_render_id = None
+        self._decision_dialogs = set()
         self.thumbnail_manager = ThumbnailManager(max_workers=2)
         self._thumbnail_finalizer = weakref.finalize(
             self, ThumbnailManager.shutdown, self.thumbnail_manager)
+        # FFprobe for the rows' duration and codec: two at a time, cached.
+        self.summary_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="bvc-queue-probe")
+        self._summary_finalizer = weakref.finalize(
+            self, self.summary_pool.shutdown, wait=False, cancel_futures=True)
 
         self.page = self._create_page()
 
@@ -337,34 +449,17 @@ class ConversionPage:
         return self.page
 
     def _create_page(self):
-        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
+        page.set_margin_start(6)
+        page.set_margin_end(6)
+        page.set_margin_top(12)
+        page.set_margin_bottom(12)
         page.set_vexpand(True)
-        page.add_css_class("bvc-queue-page")
-
-        main = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=16)
-        main.set_margin_start(22)
-        main.set_margin_end(22)
-        main.set_margin_top(18)
-        main.set_margin_bottom(12)
-        main.set_vexpand(True)
-
-        hero = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
-        hero.add_css_class("bvc-hero")
-        description = Gtk.Label(
-            label=_(
-                "Choose general settings, or use Options to customize a video."
-            )
-        )
-        description.set_xalign(0)
-        description.set_wrap(True)
-        description.add_css_class("bvc-subtle")
-        hero.append(description)
-        main.append(hero)
 
         queue_scroll = Gtk.ScrolledWindow()
         queue_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         queue_scroll.set_vexpand(True)
-        queue_scroll.set_min_content_height(160)
+        queue_scroll.set_min_content_height(300)
 
         clamp = Adw.Clamp(maximum_size=1180, tightening_threshold=760)
         self.queue_listbox = Gtk.ListBox()
@@ -374,111 +469,86 @@ class ConversionPage:
         self.queue_listbox.add_css_class("bvc-queue-list")
         self.queue_listbox.connect("row-activated", self.on_queue_item_activated)
 
-        empty = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        empty.add_css_class("bvc-empty-state")
-        empty.set_halign(Gtk.Align.FILL)
-        empty.set_valign(Gtk.Align.CENTER)
-        empty.set_vexpand(True)
-        icon_frame = Gtk.Box()
-        icon_frame.add_css_class("bvc-empty-icon")
-        icon_frame.set_halign(Gtk.Align.CENTER)
-        icon = Gtk.Image.new_from_icon_name("folder-videos-symbolic")
-        icon.set_pixel_size(44)
-        icon_frame.append(icon)
-        empty.append(icon_frame)
-        empty_title = Gtk.Label(label=_("Start with the videos you want to convert"))
-        empty_title.add_css_class("title-1")
-        empty_title.set_wrap(True)
-        empty_title.set_justify(Gtk.Justification.CENTER)
-        empty.append(empty_title)
-        empty_text = Gtk.Label(
-            label=_(
-                "Drop files here, choose videos, or add a whole folder. "
-                "Nothing is changed until you start the conversion."
-            )
+        self.placeholder = Adw.StatusPage()
+        self.placeholder.add_css_class("card")
+        self.placeholder.set_icon_name("folder-videos-symbolic")
+        self.placeholder.set_title(_("No Video Files"))
+        self.placeholder.set_description(
+            _("Drag files here or use the Add Files button")
         )
-        empty_text.add_css_class("bvc-subtle")
-        empty_text.set_wrap(True)
-        empty_text.set_justify(Gtk.Justification.CENTER)
-        empty_text.set_max_width_chars(54)
-        empty.append(empty_text)
-        empty_actions = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
-        empty_actions.set_halign(Gtk.Align.CENTER)
-        choose = Gtk.Button(label=_("Choose videos"))
-        choose.add_css_class("suggested-action")
-        choose.add_css_class("bvc-primary")
-        choose.connect("clicked", lambda _b: self.app.select_files_for_queue())
-        empty_actions.append(choose)
-        folder = Gtk.Button(label=_("Add a folder"))
-        folder.add_css_class("bvc-secondary")
-        folder.connect("clicked", lambda _b: self.app.select_folder_for_queue())
-        empty_actions.append(folder)
-        empty.append(empty_actions)
-        self.placeholder = empty
-        self.queue_listbox.set_placeholder(empty)
+        self.placeholder.set_vexpand(True)
+        self.placeholder.set_hexpand(True)
+        self.queue_listbox.set_placeholder(self.placeholder)
         clamp.set_child(self.queue_listbox)
         queue_scroll.set_child(clamp)
-        main.append(queue_scroll)
-        page.append(main)
+        page.append(queue_scroll)
 
         self.dragged_row = None
         self.queue_dragging_enabled = False
 
-        tray = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        destination_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-        tray.append(destination_row)
-        tray.add_css_class("bvc-action-tray")
-
-        save_label = Gtk.Label(label=_("Save converted videos"))
-        save_label.add_css_class("bvc-body-strong")
-        save_label.set_valign(Gtk.Align.CENTER)
-        destination_row.append(save_label)
+        # Destination on the left, the originals switch on the right.
+        options_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        options_box.add_css_class("bvc-queue-footer")
 
         folder_options_store = Gtk.StringList.new([
-            _("Next to each original"),
-            _("In one folder"),
+            _("Save in the same folder as the original file"),
+            _("Folder to save"),
         ])
-        self.folder_combo = Gtk.DropDown(model=folder_options_store)
+        # Long translations ellipsize instead of widening a narrow window.
+        shrinking_labels = Gtk.SignalListItemFactory()
+        shrinking_labels.connect("setup", lambda _factory, item: item.set_child(
+            Gtk.Label(xalign=0, ellipsize=3)))
+        shrinking_labels.connect("bind", lambda _factory, item: item.get_child().set_label(
+            item.get_item().get_string()))
+        self.folder_combo = Gtk.DropDown(model=folder_options_store, factory=shrinking_labels)
         self.folder_combo.set_selected(0)
-        self.folder_combo.update_property([Gtk.AccessibleProperty.LABEL], [_("Save converted videos")])
+        self.folder_combo.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Save converted videos")]
+        )
         self.folder_combo.set_valign(Gtk.Align.CENTER)
         self.folder_combo.connect("notify::selected", self._on_folder_type_changed)
-        destination_row.append(self.folder_combo)
+        options_box.append(self.folder_combo)
 
         self.folder_entry_box = Gtk.Box(
-            orientation=Gtk.Orientation.HORIZONTAL, spacing=6
+            orientation=Gtk.Orientation.HORIZONTAL, spacing=4
         )
         self.folder_entry_box.set_visible(False)
         self.folder_entry_box.set_hexpand(True)
         self.output_folder_entry = Gtk.Entry()
         self.output_folder_entry.set_hexpand(True)
         self.output_folder_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Output folder")])
-        self.output_folder_entry.set_placeholder_text(_("Choose an output folder"))
+        self.output_folder_entry.set_placeholder_text(_("Select folder"))
         self.folder_entry_box.append(self.output_folder_entry)
-        choose_folder = Gtk.Button.new_from_icon_name("folder-open-symbolic")
-        choose_folder.add_css_class("bvc-icon-button")
+        choose_folder = Gtk.Button.new_from_icon_name("folder-symbolic")
+        choose_folder.add_css_class("flat")
+        choose_folder.add_css_class("circular")
+        choose_folder.set_valign(Gtk.Align.CENTER)
         choose_folder.set_tooltip_text(_("Choose output folder"))
         choose_folder.update_property(
             [Gtk.AccessibleProperty.LABEL], [_("Choose output folder")]
         )
         choose_folder.connect("clicked", self.on_folder_button_clicked)
         self.folder_entry_box.append(choose_folder)
-        tray.append(self.folder_entry_box)
+        options_box.append(self.folder_entry_box)
 
+        spacer = Gtk.Box()
+        spacer.set_hexpand(True)
+        options_box.append(spacer)
 
         delete_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         delete_box.set_valign(Gtk.Align.CENTER)
-        delete_label = Gtk.Label(label=_("Delete originals after verification"))
+        delete_label = Gtk.Label(label=_("Delete original files"), ellipsize=3)
         delete_label.set_tooltip_text(
             _("Originals are kept unless every converted result passes validation")
         )
         delete_box.append(delete_label)
         self.delete_original_check = Gtk.Switch()
         self.delete_original_check.set_valign(Gtk.Align.CENTER)
-        self.delete_original_check.update_property([Gtk.AccessibleProperty.LABEL], [_("Delete originals after verification")])
+        self.delete_original_check.update_property([Gtk.AccessibleProperty.LABEL], [_("Delete original files")])
         delete_box.append(self.delete_original_check)
-        tray.append(delete_box)
-        page.append(tray)
+        options_box.append(delete_box)
+        # The same clamp as the list, so both share their edges at any width.
+        page.append(Adw.Clamp(maximum_size=1180, tightening_threshold=760, child=options_box))
 
         self.update_queue_display()
         return page
@@ -511,10 +581,6 @@ class ConversionPage:
         # Set output folder path if using custom folder
         self.output_folder_entry.set_text(output_folder)
 
-        # Connect signals
-        # Only persist what the user typed: set_file() also writes into this
-        # entry to display the input folder, and that must not overwrite the
-        # destination the user configured.
         self.output_folder_entry.connect("changed", self._on_output_folder_entry_changed)
 
         # Set delete original switch
@@ -572,8 +638,7 @@ class ConversionPage:
 
         # Re-set placeholder after clearing (GTK may remove it during clear)
         self.queue_rows.clear()
-        if hasattr(self, "placeholder"):
-            self.queue_listbox.set_placeholder(self.placeholder)
+        self.queue_listbox.set_placeholder(self.placeholder)
 
         pending = iter(enumerate(tuple(self.app.conversion_queue)))
 
@@ -588,9 +653,6 @@ class ConversionPage:
                 except StopIteration:
                     self._queue_render_id = None
                     return GLib.SOURCE_REMOVE
-                if not os.path.exists(file_path):
-                    continue
-
                 row = FileQueueRow(
                     file_path=file_path,
                     index=index,
@@ -603,6 +665,8 @@ class ConversionPage:
                     thumbnail_manager=self.thumbnail_manager,
                     summary_text=self.file_recipe_summary(self.file_metadata.get(file_path)),
                     app=self.app,
+                    custom_settings=has_own_settings(self.file_metadata.get(file_path)),
+                    summary_pool=self.summary_pool,
                 )
 
                 self.queue_listbox.append(row)
@@ -612,8 +676,7 @@ class ConversionPage:
         if append_rows():
             self._queue_render_id = GLib.idle_add(append_rows)
 
-        # Update header button visibility based on queue content
-        self._update_header_buttons_visibility()
+        self.app.header_bar.update_queue_size(len(self.app.conversion_queue))
 
         # Setup drag and drop on the listbox if we have items to reorder
         if len(self.app.conversion_queue) > 1 and not self.queue_dragging_enabled:
@@ -701,12 +764,17 @@ class ConversionPage:
         try:
             # Get source index from drag data
             source_index = int(value)
+            # Only a row dragged from this list reorders it; text dropped
+            # from elsewhere ("5") is not an index into the queue.
+            if (self.dragged_row is None
+                    or not 0 <= source_index < len(self.app.conversion_queue)):
+                return False
 
             # Get target row
             target_row = self.queue_listbox.get_row_at_y(y)
             if not target_row:
-                # If dropped outside any row, assume end of list
-                target_index = len(self.app.conversion_queue) - 1
+                # Dropped below the last row: move it to the end.
+                target_index = len(self.app.conversion_queue)
             else:
                 target_index = target_row.index
 
@@ -748,7 +816,7 @@ class ConversionPage:
             traceback.print_exc()
             return False
 
-    def on_edit_file(self, button, file_path: str) -> None:
+    def on_edit_file_by_path(self, file_path: str) -> None:
         """Open file in the video editor"""
         if file_path and os.path.exists(file_path):
             self.app.show_editor_for_file(file_path)
@@ -756,12 +824,12 @@ class ConversionPage:
             logger.error(f"Error: Invalid file path for edit: {file_path}")
             self.app.show_error_dialog(_("Could not open this video file"))
 
-    def on_remove_from_queue(self, button, file_path: str) -> None:
+    def on_remove_from_queue_by_path(self, file_path: str) -> None:
         """Remove a specific file from the queue"""
         self.app.remove_from_queue(file_path)
         self.update_queue_display()
 
-    def on_play_file(self, button, file_path: str) -> None:
+    def on_play_file_by_path(self, file_path: str) -> None:
         """Play file in the default system video player"""
         if file_path and os.path.exists(file_path):
             logger.debug(f"Opening file in default video player: {file_path}")
@@ -787,26 +855,6 @@ class ConversionPage:
         else:
             logger.error(f"Error: Invalid file path: {file_path}")
             self.app.show_error_dialog(_("Could not find this video file"))
-
-    def set_file(self, file_path: str) -> bool:
-        """Set the current file path for conversion (required for queue processing)"""
-        if file_path and os.path.exists(file_path):
-            # Store the current file to be processed
-            self.current_file_path = file_path
-
-            # Update output folder ONLY if using "Same as input" option
-            if (
-                self.folder_combo.get_selected() == 0
-            ):  # 0 = "Same folder as original file"
-                input_dir = os.path.dirname(file_path)
-                self.output_folder_entry.set_text(input_dir)
-
-            # Keep last accessed directory updated
-            input_dir = os.path.dirname(file_path)
-            self.app.last_accessed_directory = input_dir
-            self.app.settings_manager.save_setting("last-accessed-directory", input_dir)
-            return True
-        return False
 
     def _encoding_environment(self, gpu_override=None, settings=None):
         """Hardware and encoder settings for a job that re-encodes video.
@@ -895,7 +943,7 @@ class ConversionPage:
 
         try:
             file_metadata = deepcopy(self.file_metadata.get(input_file, {}))
-            active_preset = self.app.active_preset() if hasattr(self.app, "active_preset") else None
+            active_preset = self.app.active_preset()
             preset_snapshot = file_metadata.get("preset_snapshot")
             if preset_snapshot and preset_snapshot.get("settings", {}).get("gpu", "auto") != "auto":
                 gpu_override = None
@@ -907,295 +955,257 @@ class ConversionPage:
             self.app.show_error_dialog(str(error))
             return False
 
-        # Get absolute path to input directory
-        input_dir = os.path.dirname(os.path.abspath(input_file))
-
-        # Build environment variables
-        env_vars = os.environ.copy()  # Start with current environment
-
-        # Generate up-to-date trim options before starting conversion
-        trim_config = self.generate_trim_options()
-        trim_start = trim_config["start_time"]
-        trim_end = trim_config["end_time"]
-
         # Load app settings for conversion
         try:
-            if hasattr(self.app, "settings_manager"):
-                # Start with a copy of the current environment to preserve PATH, etc.
-                env_vars = os.environ.copy()
+            # The script reads its settings from lowercase variables. An
+            # inherited one (an exported "options" or "size_limit") would
+            # silently change the job, so only the proxy variables pass.
+            env_vars = {name: value for name, value in os.environ.items()
+                        if not _SCRIPT_SETTING.fullmatch(name) or name in _PROXY_VARIABLES}
 
-                # Check if force copy video is enabled
-                force_copy_video_enabled = settings.get_boolean(
-                    "force-copy-video", False
-                )
+            # Check if force copy video is enabled
+            force_copy_video_enabled = settings.get_boolean(
+                "force-copy-video", False
+            )
 
-                # GPU - Use direct string value, but disable if copying without reencoding
-                if force_copy_video_enabled:
-                    # When copying without reencoding, hardware acceleration is not needed
-                    env_vars["gpu"] = "software"
-                    logger.debug(
-                        "Force copy video enabled: disabling hardware acceleration "
-                        "and skipping video_quality, video_encoder, preset"
-                    )
-                else:
-                    env_vars.update(self._encoding_environment(gpu_override, settings))
-
-                # Subtitle handling (works regardless of copy mode)
-                env_vars["subtitle_extract"] = settings.load_setting(
-                    "subtitle-extract", "embedded"
-                )
-
-                # The widgets already carry a preset's structured choices; the
-                # file adds what has no widget: per-encoder arguments and the
-                # preset's own FFmpeg options.
-                env_vars.pop("preset_file", None)
-                for key in ("force_copy_video", "video_resolution", "audio_bitrate",
-                            "audio_channels", "normalize_enabled"):
-                    env_vars[key] = ""
-                if force_copy_video_enabled:
-                    env_vars["force_copy_video"] = "1"
-
-                # Audio handling - Check if video has audio streams
-                audio_handling = settings.load_setting(
-                    "audio-handling", "copy"
-                )
-
-                # Import audio detection function
-                from utils.file_info import has_audio_streams
-
-                if not has_audio_streams(input_file):
-                    # Video has no audio streams, force audio_handling to "none"
-                    audio_handling = "none"
-                    logger.debug(
-                        f"No audio streams detected in {os.path.basename(input_file)}, setting audio_handling to 'none'"
-                    )
-
-                env_vars["audio_handling"] = audio_handling
-
-                # Only set video resolution if NOT in copy mode
-                if not force_copy_video_enabled:
-                    video_resolution = settings.load_setting(
-                        "video-resolution", ""
-                    )
-                    if video_resolution:
-                        env_vars["video_resolution"] = video_resolution
-                else:
-                    logger.debug("Copy mode enabled - skipping video_resolution")
-
-                # Set flags
-                if settings.get_boolean("gpu-partial", False):
-                    env_vars["gpu_partial"] = "1"
-                if force_copy_video_enabled:
-                    env_vars["force_copy_video"] = "1"
-                if settings.get_boolean(
-                    "only-extract-subtitles", False
-                ):
-                    env_vars["only_extract_subtitles"] = "1"
-
-                # Noise reduction
-                sm = settings
-                if sm.get_boolean("noise-reduction", False):
-                    env_vars["noise_reduction"] = "1"
-
-                    # Core NR parameters
-                    env_vars["noise_strength"] = str(
-                        sm.load_setting("noise-reduction-strength", 1.0)
-                    )
-                    env_vars["noise_model"] = str(sm.load_setting("noise-model", 0))
-                    env_vars["noise_speech_strength"] = str(
-                        sm.load_setting("noise-speech-strength", 1.0)
-                    )
-                    env_vars["noise_lookahead"] = str(
-                        sm.load_setting("noise-lookahead", 50)
-                    )
-                    env_vars["noise_model_blend"] = (
-                        "1" if sm.get_boolean("noise-model-blend", False) else "0"
-                    )
-                    env_vars["noise_voice_recovery"] = str(
-                        sm.load_setting("noise-voice-recovery", 0.75)
-                    )
-
-                # Audio filters (work independently of NR)
-                # Noise gate
-                if sm.get_boolean("noise-gate-enabled", False):
-                    env_vars["noise_gate"] = "1"
-                    env_vars["gate_intensity"] = str(
-                        sm.load_setting("noise-gate-intensity", 0.5)
-                    )
-
-                # High-pass filter
-                if sm.get_boolean("hpf-enabled", False):
-                    env_vars["hpf_enabled"] = "1"
-                    env_vars["hpf_frequency"] = str(
-                        sm.load_setting("hpf-frequency", 80)
-                    )
-
-                # Compressor
-                if sm.get_boolean("compressor-enabled", False):
-                    env_vars["compressor_enabled"] = "1"
-                    env_vars["compressor_intensity"] = str(
-                        sm.load_setting("compressor-intensity", 1.0)
-                    )
-
-                # Equalizer
-                if sm.get_boolean("eq-enabled", False):
-                    env_vars["eq_enabled"] = "1"
-                    env_vars["eq_bands"] = str(
-                        sm.load_setting("eq-bands", "0,0,0,0,0,0,0,0,0,0")
-                    )
-
-                # Loudness normalization
-                if sm.get_boolean("normalize-enabled", False):
-                    env_vars["normalize_enabled"] = "1"
-
-                # Handle audio settings
-                audio_bitrate = settings.load_setting(
-                    "audio-bitrate", ""
-                )
-                if audio_bitrate:
-                    env_vars["audio_bitrate"] = audio_bitrate
-                audio_channels = settings.load_setting(
-                    "audio-channels", ""
-                )
-                if audio_channels:
-                    env_vars["audio_channels"] = audio_channels
-                audio_codec = settings.load_setting(
-                    "audio-codec", "aac"
-                )
-                if audio_codec:
-                    env_vars["audio_codec"] = audio_codec
-
-                # Get per-file metadata for this file
+            # GPU - Use direct string value, but disable if copying without reencoding
+            if force_copy_video_enabled:
+                # When copying without reencoding, hardware acceleration is not needed
+                env_vars["gpu"] = "software"
                 logger.debug(
-                    f"Using per-file metadata for {os.path.basename(input_file)}"
+                    "Force copy video enabled: disabling hardware acceleration "
+                    "and skipping video_quality, video_encoder, preset"
+                )
+            else:
+                env_vars.update(self._encoding_environment(gpu_override, settings))
+
+            # Subtitle handling (works regardless of copy mode)
+            env_vars["subtitle_extract"] = settings.load_setting(
+                "subtitle-extract", "embedded"
+            )
+
+            # The widgets already carry a preset's structured choices; the
+            # file adds what has no widget: per-encoder arguments and the
+            # preset's own FFmpeg options.
+            env_vars.pop("preset_file", None)
+            for key in ("force_copy_video", "video_resolution", "video_fps", "video_stabilize", "source_hdr",
+                        "audio_bitrate", "audio_channels", "normalize_enabled"):
+                env_vars[key] = ""
+            if force_copy_video_enabled:
+                env_vars["force_copy_video"] = "1"
+
+            # Audio handling - Check if video has audio streams
+            audio_handling = settings.load_setting(
+                "audio-handling", "copy"
+            )
+
+            # Import audio detection function
+            from utils.file_info import has_audio_streams
+
+            if not has_audio_streams(input_file):
+                # Video has no audio streams, force audio_handling to "none"
+                audio_handling = "none"
+                logger.debug(
+                    f"No audio streams detected in {os.path.basename(input_file)}, setting audio_handling to 'none'"
                 )
 
-                # Get trim segments from per-file metadata
-                trim_segments = deepcopy(file_metadata.get("trim_segments", []))
+            env_vars["audio_handling"] = audio_handling
 
-                # Get output mode from per-file metadata (not global settings)
-                output_mode = file_metadata.get("output_mode", "join")
+            # Only set video resolution if NOT in copy mode
+            if not force_copy_video_enabled:
+                video_resolution = settings.load_setting(
+                    "video-resolution", ""
+                )
+                if video_resolution:
+                    env_vars["video_resolution"] = video_resolution
+                env_vars["video_fps"] = settings.load_setting("video-fps", "")
+                if file_metadata.get("stabilize"):
+                    env_vars["video_stabilize"] = "1"
+                if file_metadata.get("source_hdr", "auto") != "auto":
+                    env_vars["source_hdr"] = file_metadata["source_hdr"]
+            else:
+                logger.debug("Copy mode enabled - skipping video_resolution")
 
-                # Get crop values from per-file metadata (not global settings)
-                crop_left = file_metadata.get("crop_left", 0)
-                crop_right = file_metadata.get("crop_right", 0)
-                crop_top = file_metadata.get("crop_top", 0)
-                crop_bottom = file_metadata.get("crop_bottom", 0)
+            # Set flags
+            if settings.get_boolean("gpu-partial", False):
+                env_vars["gpu_partial"] = "1"
+            if force_copy_video_enabled:
+                env_vars["force_copy_video"] = "1"
+            if settings.get_boolean(
+                "only-extract-subtitles", False
+            ):
+                env_vars["only_extract_subtitles"] = "1"
 
-                # Per-file editing values are applied through a local override
-                # instead of being written to the global settings: two parallel
-                # conversions would otherwise overwrite each other's filters.
-                filter_settings = SettingsOverride(
-                    settings,
-                    {
-                        "preview-crop-left": crop_left,
-                        "preview-crop-right": crop_right,
-                        "preview-crop-top": crop_top,
-                        "preview-crop-bottom": crop_bottom,
-                        "preview-brightness": file_metadata.get("brightness", 0.0),
-                        "preview-contrast": file_metadata.get("contrast", 0.0),
-                        "preview-saturation": file_metadata.get("saturation", 1.0),
-                        "preview-hue": file_metadata.get("hue", 0.0),
-                        "preview-rotation": file_metadata.get("rotation", 0),
-                        "preview-flip-h": file_metadata.get("flip_h", False),
-                        "preview-flip-v": file_metadata.get("flip_v", False),
-                    },
+            # Noise reduction
+            sm = settings
+            if sm.get_boolean("noise-reduction", False):
+                env_vars["noise_reduction"] = "1"
+
+                # Core NR parameters
+                env_vars["noise_strength"] = str(
+                    sm.load_setting("noise-reduction-strength", 1.0)
+                )
+                env_vars["noise_model"] = str(sm.load_setting("noise-model", 0))
+
+            # Audio filters (work independently of NR)
+            # Noise gate
+            if sm.get_boolean("noise-gate-enabled", False):
+                env_vars["noise_gate"] = "1"
+                env_vars["gate_intensity"] = str(
+                    sm.load_setting("noise-gate-intensity", 0.5)
                 )
 
-                # Try to get video dimensions if there are crop values
-                video_width = None
-                video_height = None
+            # High-pass filter
+            if sm.get_boolean("hpf-enabled", False):
+                env_vars["hpf_enabled"] = "1"
+                env_vars["hpf_frequency"] = str(
+                    sm.load_setting("hpf-frequency", 80)
+                )
 
-                # If we need to crop and don't have dimensions, try to get them
-                if (
-                    crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0
-                ) and (video_width is None or video_height is None):
-                    # Answered from the probe cache the queue warmed off the
-                    # main thread; a cache miss still probes synchronously.
-                    from utils.file_info import get_video_dimensions
+            # Compressor
+            if sm.get_boolean("compressor-enabled", False):
+                env_vars["compressor_enabled"] = "1"
+                env_vars["compressor_intensity"] = str(
+                    sm.load_setting("compressor-intensity", 1.0)
+                )
 
-                    video_width, video_height = get_video_dimensions(input_file)
+            # Equalizer
+            if sm.get_boolean("eq-enabled", False):
+                env_vars["eq_enabled"] = "1"
+                env_vars["eq_bands"] = str(
+                    sm.load_setting("eq-bands", "0,0,0,0,0,0,0,0,0,0")
+                )
 
-                if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:
-                    logger.debug(
-                        f"Using crop values: left={crop_left}, right={crop_right}, top={crop_top}, bottom={crop_bottom}"
-                    )
+            # Loudness normalization
+            if sm.get_boolean("normalize-enabled", False):
+                env_vars["normalize_enabled"] = "1"
 
-                # Get the unified video filter string from the per-file values.
-                # Skip video filters when in copy mode since filters require re-encoding
-                if not force_copy_video_enabled:
-                    # Pass input file for H.265 10-bit detection
-                    video_filter = get_video_filter_string(
-                        filter_settings,
-                        video_width=video_width,
-                        video_height=video_height,
-                        input_file=input_file,
-                    )
+            # Handle audio settings
+            audio_bitrate = settings.load_setting(
+                "audio-bitrate", ""
+            )
+            if audio_bitrate:
+                env_vars["audio_bitrate"] = audio_bitrate
+            audio_channels = settings.load_setting(
+                "audio-channels", ""
+            )
+            if audio_channels:
+                env_vars["audio_channels"] = audio_channels
+            audio_codec = settings.load_setting(
+                "audio-codec", "aac"
+            )
+            if audio_codec:
+                env_vars["audio_codec"] = audio_codec
 
-                    if video_filter:
-                        env_vars["video_filter"] = video_filter
-                        logger.debug(f"Using video_filter: {env_vars['video_filter']}")
-                    else:
-                        logger.debug(
-                            "No video filters applied (may be handled by optimized GPU conversion)"
-                        )
+            # Get per-file metadata for this file
+            logger.debug(
+                f"Using per-file metadata for {os.path.basename(input_file)}"
+            )
+
+            # Get trim segments from per-file metadata
+            trim_segments = deepcopy(file_metadata.get("trim_segments", []))
+
+            # Get output mode from per-file metadata (not global settings)
+            output_mode = file_metadata.get("output_mode", "join")
+
+            # Get crop values from per-file metadata (not global settings)
+            crop_left = file_metadata.get("crop_left", 0)
+            crop_right = file_metadata.get("crop_right", 0)
+            crop_top = file_metadata.get("crop_top", 0)
+            crop_bottom = file_metadata.get("crop_bottom", 0)
+
+            # Per-file editing values are applied through a local override
+            # instead of being written to the global settings: two parallel
+            # conversions would otherwise overwrite each other's filters.
+            filter_settings = SettingsOverride(
+                settings,
+                {
+                    "preview-crop-left": crop_left,
+                    "preview-crop-right": crop_right,
+                    "preview-crop-top": crop_top,
+                    "preview-crop-bottom": crop_bottom,
+                    "preview-brightness": file_metadata.get("brightness", 0.0),
+                    "preview-contrast": file_metadata.get("contrast", 0.0),
+                    "preview-saturation": file_metadata.get("saturation", 1.0),
+                    "preview-hue": file_metadata.get("hue", 0.0),
+                    "preview-rotation": file_metadata.get("rotation", 0),
+                    "preview-flip-h": file_metadata.get("flip_h", False),
+                    "preview-flip-v": file_metadata.get("flip_v", False),
+                    "preview-denoise": file_metadata.get("denoise", "off"),
+                    "preview-sharpen": file_metadata.get("sharpen", "off"),
+                    "preview-effect-file": file_metadata.get("effect_file", ""),
+                },
+            )
+
+            # Cropping needs the frame size. Answered from the probe cache
+            # the queue warmed off the main thread; a cache miss still
+            # probes synchronously.
+            video_width = video_height = None
+            if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:
+                from utils.file_info import get_video_dimensions
+
+                video_width, video_height = get_video_dimensions(input_file)
+                logger.debug(
+                    f"Using crop values: left={crop_left}, right={crop_right}, top={crop_top}, bottom={crop_bottom}"
+                )
+
+            # The unified video filter string from the per-file values, also
+            # used when a copy job is re-encoded after all.
+            try:
+                video_filter = get_ffmpeg_filter_string(
+                    filter_settings,
+                    video_width=video_width,
+                    video_height=video_height,
+                )
+            except CropError as error:
+                # Converting without the crop the user asked for is a wrong
+                # result, not a fallback.
+                logger.error(f"Crop not applicable: {error}")
+                self.app.show_error_dialog(
+                    _("The crop cannot be applied"),
+                    _("“{name}” was not converted: its picture size could not be read, "
+                      "or the crop removes the whole picture. Check the crop in the "
+                      "editor and try again.").format(name=os.path.basename(input_file)))
+                return False
+
+            # Skip video filters when in copy mode since filters require re-encoding
+            env_vars["video_filter"] = ""
+            if not force_copy_video_enabled:
+                env_vars["video_filter"] = video_filter
+                if video_filter:
+                    logger.debug(f"Using video_filter: {env_vars['video_filter']}")
                 else:
                     logger.debug(
-                        "Copy mode enabled - skipping video_filter (filters require re-encoding)"
+                        "No video filters applied (may be handled by optimized GPU conversion)"
                     )
-
-                # Validate the option grammar shared with the backend. The
-                # transport text is parsed into argv, never executed as shell.
-                raw_additional_options = settings.load_setting(
-                    "additional-options", ""
+            else:
+                logger.debug(
+                    "Copy mode enabled - skipping video_filter (filters require re-encoding)"
                 )
-                options_ok, additional_options = validate_additional_options(
-                    raw_additional_options
+
+            # Validate the option grammar shared with the backend. The
+            # transport text is parsed into argv, never executed as shell.
+            raw_additional_options = settings.load_setting(
+                "additional-options", ""
+            )
+            options_ok, additional_options = validate_additional_options(
+                raw_additional_options
+            )
+            if not options_ok:
+                error_message = additional_options
+                logger.error(f"Rejected additional options: {error_message}")
+                GLib.idle_add(
+                    lambda msg=error_message: self.app.show_error_dialog(msg)
                 )
-                if not options_ok:
-                    error_message = additional_options
-                    logger.error(f"Rejected additional options: {error_message}")
-                    GLib.idle_add(
-                        lambda msg=error_message: self.app.show_error_dialog(msg)
-                    )
-                    return False
+                return False
 
-                # Handle trimming based on number of segments
-                if len(trim_segments) == 0:
-                    # No trimming, process full video
-                    logger.debug("No segments defined, processing full video")
-                    pass
-                elif len(trim_segments) == 1:
-                    # Single segment trimming - use the segment's start/end times
-                    trim_start = trim_segments[0]["start"]
-                    trim_end = trim_segments[0]["end"]
+            env_vars["options"] = additional_options
+            if additional_options:
+                logger.debug(f"Setting options={additional_options}")
 
-                    if trim_start > 0:
-                        start_str = self._format_time_ffmpeg(trim_start)
-                        if additional_options:
-                            additional_options += f" -ss {start_str}"
-                        else:
-                            additional_options = f"-ss {start_str}"
-                        logger.debug(f"Adding trim start to options: -ss {start_str}")
-
-                    if trim_end is not None:
-                        duration_secs = trim_end - trim_start
-                        duration_str = self._format_time_ffmpeg(duration_secs)
-                        additional_options += f" -t {duration_str}"
-                        logger.debug(
-                            f"Adding trim duration to options: -t {duration_str}"
-                        )
-
-                # Set the final options environment variable
-                if additional_options:
-                    env_vars["options"] = additional_options
-                    logger.debug(f"Setting options={additional_options}")
-
-                # REMOVED: Separate crop handling - this is now done through the video_filter mechanism
-                # We still pass the dimensions to the environment for other potential uses
-                if video_width is not None and video_height is not None:
-                    env_vars["video_width"] = str(video_width)
-                    env_vars["video_height"] = str(video_height)
+            if video_width is not None and video_height is not None:
+                env_vars["video_width"] = str(video_width)
+                env_vars["video_height"] = str(video_height)
 
         except (subprocess.SubprocessError, OSError) as e:
             logger.error(f"Error setting up conversion environment: {e}")
@@ -1240,9 +1250,13 @@ class ConversionPage:
         if not os.path.isabs(output_folder):
             output_folder = os.path.abspath(output_folder)
 
-        # Check if file exists and find an available filename
+        job_info = next((info for info in getattr(self.app, "active_conversions", [])
+                         if info.get("file_path") == input_file), {})
+        claimed = self.app.claimed_outputs
+
+        # Find a name neither on disk nor reserved by a parallel job
         full_output_path = os.path.join(output_folder, output_basename)
-        if os.path.exists(full_output_path):
+        if os.path.exists(full_output_path) or full_output_path in claimed:
             # Find an available filename by adding a counter
             base_name = os.path.splitext(output_basename)[0]
             extension = os.path.splitext(output_basename)[1]
@@ -1250,82 +1264,88 @@ class ConversionPage:
             while True:
                 output_basename = f"{base_name}_{counter}{extension}"
                 full_output_path = os.path.join(output_folder, output_basename)
-                if not os.path.exists(full_output_path):
+                if not os.path.exists(full_output_path) and full_output_path not in claimed:
                     logger.debug(
                         f"Output file exists, using alternative name: {output_basename}"
                     )
                     break
                 counter += 1
 
+        # Reserved until conversion_completed releases it with the job.
+        if job_info:
+            job_info["output_path"] = full_output_path
+            claimed.add(full_output_path)
         # Set the full path as output_file
         env_vars["output_file"] = full_output_path
-
-        # Remove output_folder to avoid confusion in the bash script
-        if "output_folder" in env_vars:
-            del env_vars["output_folder"]
 
         logger.debug(f"Full output path: {full_output_path}")
 
         # Set the output format
         env_vars["output_format"] = output_format
 
-        # Build the conversion command
         cmd = [CONVERT_SCRIPT_PATH, input_file]
-
-        # Add trim options if applicable
-        trim_options = self._get_trim_command_options()
-        if trim_options:
-            cmd.extend(trim_options)
 
         # Delete original setting
         delete_original = self.delete_original_check.get_active()
 
-        job_info = next((info for info in getattr(self.app, "active_conversions", [])
-                         if info.get("file_path") == input_file), {})
         job_id = job_info.get("job_id")
         cancel_event = job_info.get("cancel_event") or threading.Event()
 
         # Check MP4 compatibility when copying without reencoding to MP4
         force_copy_video = env_vars.get("force_copy_video") == "1"
+        # Re-encoding uses the settings copy mode had skipped, the accelerator
+        # included: choosing "re-encode" is not a request to fall back to the
+        # processor. Offered when MP4 refuses the copied tracks, and taken by
+        # a trim whose cut is not on a keyframe (utils/segment_batch.py).
+        reencode_env = None
+        if force_copy_video:
+            reencode_env = dict(env_vars)
+            reencode_env.pop("force_copy_video", None)
+            reencode_env.pop("force_software", None)
+            reencode_env.update(self._encoding_environment(gpu_override, settings))
+            video_resolution = settings.load_setting("video-resolution", "")
+            if video_resolution:
+                reencode_env["video_resolution"] = video_resolution
+            reencode_env["video_fps"] = settings.load_setting("video-fps", "")
+            if file_metadata.get("stabilize"):
+                reencode_env["video_stabilize"] = "1"
+            if file_metadata.get("source_hdr", "auto") != "auto":
+                reencode_env["source_hdr"] = file_metadata["source_hdr"]
+            reencode_env["video_filter"] = video_filter
+        conversion_context = {
+            "preset_source": preset_snapshot["source"] if preset_snapshot else None,
+            "cmd": cmd,
+            "env_vars": env_vars,
+            "job_id": job_id,
+            "cancel_event": cancel_event,
+            "delete_original": delete_original,
+            "full_output_path": full_output_path,
+            "input_file": input_file,
+            "input_basename": input_basename,
+            "input_ext": input_ext,
+            "output_ext": output_ext,
+            "output_folder": output_folder,
+            "trim_segments": trim_segments,
+            "output_mode": output_mode,
+            "reencode_env": reencode_env,
+        }
+        # A size target decides copy or encode itself, so it comes before the
+        # copy-mode MP4 check.
+        size_target = self._size_target(settings)
+        if size_target is not None:
+            conversion_context.update(size_target=size_target,
+                                      encode_env=reencode_env or env_vars)
+            return self._start_size_job(conversion_context)
         if force_copy_video and output_format == "mp4":
             from utils.file_info import check_mp4_compatibility
 
             is_compatible, incompatible_streams = check_mp4_compatibility(input_file)
             if not is_compatible:
                 # Package all needed variables
-                conversion_context = {
-                    "preset_source": preset_snapshot["source"] if preset_snapshot else None,
-                    "cmd": cmd,
-                    "env_vars": env_vars,
-                    "job_id": job_id,
-                    "cancel_event": cancel_event,
-                    "delete_original": delete_original,
-                    "full_output_path": full_output_path,
-                    "input_file": input_file,
-                    "input_basename": input_basename,
-                    "input_ext": input_ext,
-                    "output_ext": output_ext,
-                    "output_folder": output_folder,
-                    "trim_segments": trim_segments,
-                    "output_mode": output_mode,
-                }
-
-                # Re-encoding uses the settings copy mode had skipped, the
-                # accelerator included: choosing "re-encode" is not a request
-                # to fall back to the processor.
-                reencode_env = dict(env_vars)
-                reencode_env.pop("force_copy_video", None)
-                reencode_env.pop("force_software", None)
-                reencode_env.update(self._encoding_environment(gpu_override, settings))
-                video_resolution = settings.load_setting(
-                    "video-resolution", "")
-                if video_resolution:
-                    reencode_env["video_resolution"] = video_resolution
-                reencode_env["video_filter"] = get_video_filter_string(
-                    filter_settings, video_width=video_width, video_height=video_height,
-                    input_file=input_file)
-
                 def show_compatibility_warning() -> None:
+                    if cancel_event.is_set():
+                        self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
+                        return
                     dialog = Adw.AlertDialog()
                     dialog.set_heading(_("These tracks can't be copied into MP4"))
                     dialog.set_body(
@@ -1339,8 +1359,7 @@ class ConversionPage:
                         self._build_incompatible_streams_child(incompatible_streams)
                     )
 
-                    # Wider layout when libadwaita supports it (1.5+).
-                    if hasattr(dialog, "set_prefer_wide_layout"):
+                    if hasattr(dialog, "set_prefer_wide_layout"):  # libadwaita 1.6
                         dialog.set_prefer_wide_layout(True)
 
                     dialog.add_response("cancel", _("Cancel"))
@@ -1372,30 +1391,37 @@ class ConversionPage:
                             self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
 
                     dialog.connect("response", on_response)
+                    # Quitting closes it: the job it holds must not keep the
+                    # application waiting for an answer nobody can give.
+                    self._decision_dialogs.add(dialog)
+                    dialog.connect("closed", self._decision_dialogs.discard)
                     dialog.present(self.app.window)
 
                 # Show dialog in main thread
                 GLib.idle_add(show_compatibility_warning)
                 return True  # The active job remains reserved while awaiting a decision.
 
-        # Continue with conversion
-        conversion_context = {
-            "preset_source": preset_snapshot["source"] if preset_snapshot else None,
-            "cmd": cmd,
-            "env_vars": env_vars,
-            "job_id": job_id,
-            "cancel_event": cancel_event,
-            "delete_original": delete_original,
-            "full_output_path": full_output_path,
-            "input_file": input_file,
-            "input_basename": input_basename,
-            "input_ext": input_ext,
-            "output_ext": output_ext,
-            "output_folder": output_folder,
-            "trim_segments": trim_segments,
-            "output_mode": output_mode,
-        }
         return self._continue_conversion(conversion_context)
+
+    def close_decision_dialogs(self) -> None:
+        """Answer every open question about a job with its close response."""
+        for dialog in list(self._decision_dialogs):
+            dialog.force_close()
+
+    def additional_options_error(self, files) -> str | None:
+        """Why the FFmpeg options of a queued file are rejected, if they are."""
+        for path in files:
+            try:
+                resolved = freeze(self.app.settings_manager.settings,
+                                  deepcopy(self.file_metadata.get(path, {})))
+            except (OSError, ValueError, PresetError):
+                continue  # The job reports its own recipe error.
+            settings = SettingsOverride(self.app.settings_manager, resolved["settings"])
+            accepted, message = validate_additional_options(
+                settings.load_setting("additional-options", ""))
+            if not accepted:
+                return message
+        return None
 
     def _build_incompatible_streams_child(self, streams):
         """Build the list of MP4-incompatible tracks shown in the warning dialog."""
@@ -1458,6 +1484,46 @@ class ConversionPage:
 
         return box
 
+    def _size_target(self, settings):
+        """{"bytes", "strategy"} when converted videos must fit a size, else None."""
+        target_id = settings.load_setting("size-target", "")
+        if not target_id:
+            return None
+        return {"bytes": target_bytes(target_id, float(settings.load_setting("size-target-mb", 50))),
+                "strategy": settings.load_setting("size-strategy", "auto")}
+
+    def _start_size_job(self, context):
+        """Plan off the GTK thread (it probes the file), then start the job."""
+        input_file, job_id = context["input_file"], context.get("job_id")
+
+        def dispatch(job):
+            try:
+                if job["route"] == "batch":
+                    start_segment_batch(self, job)
+                else:
+                    self._continue_conversion(job)
+            except (OSError, ValueError) as error:
+                logger.exception("Size job could not start")
+                fail(str(error))
+            return GLib.SOURCE_REMOVE
+
+        def fail(message):
+            self.app.show_error_dialog(_("This video cannot be made to fit the size"), message)
+            self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
+            return GLib.SOURCE_REMOVE
+
+        def plan():
+            try:
+                job = prepare_size_job(context)
+            except (OSError, ValueError, subprocess.SubprocessError) as error:
+                logger.warning("Size target not applied: %s", error)
+                GLib.idle_add(fail, str(error))
+                return
+            GLib.idle_add(dispatch, job)
+
+        threading.Thread(target=plan, daemon=True).start()
+        return True
+
     def _continue_conversion(self, context):
         """Continue with the actual conversion process"""
         # The naming and segment fields are read by start_segment_batch, which
@@ -1468,80 +1534,36 @@ class ConversionPage:
         input_file = context["input_file"]
         trim_segments = context["trim_segments"]
 
-        # Log the command and environment variables for debugging
-        logger.debug("\n=== CONVERSION COMMAND ===")
-        logger.debug(f"Command: {' '.join(cmd)}")
-        logger.debug("\n=== ENVIRONMENT VARIABLES ===")
-        conversion_vars = {
-            k: v
-            for k, v in env_vars.items()
-            if k
-            in [
-                "gpu",
-                "video_quality",
-                "video_encoder",
-                "preset",
-                "subtitle_extract",
-                "audio_handling",
-                "audio_bitrate",
-                "audio_channels",
-                "resolution",
-                "options",
-                "gpu_partial",
-                "force_copy_video",
-                "only_extract_subtitles",
-                "video_filter",
-                "output_folder",
-                "trim_start",
-                "trim_end",
-                "trim_duration",
-                # Add the new crop environment variables
-                "crop_x",
-                "crop_y",
-                "crop_width",
-                "crop_height",
-                "crop_left",
-                "crop_right",
-                "crop_top",
-                "crop_bottom",
-                "video_width",
-                "video_height",
-            ]
-        }
-
-        # Show raw settings value for debugging
-        settings_dict = {}
-        if hasattr(self.app.settings_manager, "settings"):
-            settings_dict = self.app.settings_manager.settings
-
-        if "video-quality" in settings_dict:
-            logger.debug(f"Raw video-quality setting: {settings_dict['video-quality']}")
-        else:
-            logger.debug("video-quality setting not found in config")
-
-        if "video-codec" in settings_dict:
-            logger.debug(f"Raw video-codec setting: {settings_dict['video-codec']}")
-        else:
-            logger.debug("video-codec setting not found in config")
-
-        for key, value in conversion_vars.items():
-            logger.debug(f"{key}={value}")
-        logger.debug("===========================\n")
+        logger.debug(f"Conversion command: {' '.join(cmd)}")
+        for key in ("gpu", "video_quality", "video_encoder", "preset", "subtitle_extract",
+                    "audio_handling", "audio_bitrate", "audio_channels", "video_resolution",
+                    "video_fps", "video_stabilize", "source_hdr",
+                    "options", "gpu_partial", "force_copy_video", "only_extract_subtitles",
+                    "video_filter", "video_width", "video_height"):
+            if key in env_vars:
+                logger.debug(f"{key}={env_vars[key]}")
 
         if context.get("cancel_event") is not None and context["cancel_event"].is_set():
             self.app.conversion_completed(False, file_path=input_file, job_id=context.get("job_id"))
             return False
-        if len(trim_segments) > 1:
+        # Several cuts go to a segment batch, and so does one cut copied
+        # without re-encoding: the batch checks that it starts on a keyframe
+        # and re-encodes it otherwise.
+        if len(trim_segments) > 1 or (trim_segments and env_vars.get("force_copy_video") == "1"):
             return start_segment_batch(self, context)
 
         # Single segment or no segments - use standard conversion
         # Calculate segment duration for single-segment trimming for accurate progress
         segment_duration = None
         if len(trim_segments) == 1:
-            segment_duration = trim_segments[0]["end"] - trim_segments[0]["start"]
-            logger.debug(
-                f"Single segment mode: segment_duration={segment_duration:.2f}s"
-            )
+            trim_start = trim_segments[0]["start"]
+            segment_duration = trim_segments[0]["end"] - trim_start
+            trim = f"-t {self._format_time_ffmpeg(segment_duration)}"
+            if trim_start > 0:
+                trim = f"-ss {self._format_time_ffmpeg(trim_start)} {trim}"
+            env_vars = {**env_vars, "options": " ".join(
+                filter(None, [env_vars.get("options", "").strip(), trim]))}
+            logger.debug(f"Single segment trim: {trim}")
 
         # Create and display progress dialog
         # Always pass input_file for proper queue tracking
@@ -1559,46 +1581,17 @@ class ConversionPage:
 
         return True
 
-    def _get_trim_command_options(self):
-        """Get ffmpeg command options for trimming based on set trim points"""
-        # Get trim times - first try app values, then fall back to settings
-        start_time, end_time, duration = self.app.get_trim_times()
-
-        # If we don't have values from the app (video edit page), check settings
-        if start_time == 0 and end_time is None:
-            # Get trim values from settings
-            start_time = self.app.settings_manager.load_setting("video-trim-start", 0.0)
-            end_time_setting = self.app.settings_manager.load_setting(
-                "video-trim-end", -1.0
-            )
-            end_time = None if end_time_setting < 0 else end_time_setting
-            logger.debug(
-                f"Using trim settings from settings: start={start_time}, end={end_time}"
-            )
-
-        # Always store the trim values as object attributes for force_start_conversion to use
-        self.trim_start_time = start_time
-        self.trim_end_time = end_time
-        self.trim_duration = duration
-
-        # Return empty list since we're using environment variables instead of command-line args
-        return []
-
     def _format_time_ffmpeg(self, seconds):
-        """Format time in seconds to HH:MM:SS.mmm format for ffmpeg"""
-        hours = int(seconds) // 3600
-        minutes = (int(seconds) % 3600) // 60
-        seconds_remainder = int(seconds) % 60
-        milliseconds = int((seconds - int(seconds)) * 1000)
-        return f"{hours:02d}:{minutes:02d}:{seconds_remainder:02d}.{milliseconds:03d}"
+        """HH:MM:SS.ffffff for ffmpeg, rounded to the microsecond FFmpeg keeps.
+
+        Players hand over exact cut positions; truncating 3.3 (stored as
+        3.2999…) to milliseconds cut a frame early.
+        """
+        whole, micro = divmod(round(seconds * 1_000_000), 1_000_000)
+        return f"{whole // 3600:02d}:{whole // 60 % 60:02d}:{whole % 60:02d}.{micro:06d}"
 
     def _on_output_folder_entry_changed(self, entry) -> None:
-        """Persist the destination folder, but only while it is in use.
-
-        set_file() writes the input folder into this entry when the "same
-        folder as the original file" mode is active; saving that would replace
-        the destination the user configured.
-        """
+        """Persist the destination folder while "In one folder" is selected."""
         if self.folder_combo.get_selected() != 1:
             return
         self.app.settings_manager.save_setting("output-folder", entry.get_text())
@@ -1621,81 +1614,7 @@ class ConversionPage:
         # still there when they switch the option on again. The path is simply
         # ignored while this mode is active.
 
-    def _filter_subtitle_range(self, srt_content, start_time, end_time, offset_seconds):
-        """Filter subtitles within time range and adjust timecodes by offset."""
-        import re
-
-        # Helper to convert timecode to seconds
-        def time_to_seconds(time_str):
-            h, m, s = time_str.split(":")
-            s, ms = s.split(",")
-            return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000
-
-        # Helper to convert seconds to timecode
-        def seconds_to_time(seconds):
-            h = int(seconds // 3600)
-            seconds %= 3600
-            m = int(seconds // 60)
-            seconds %= 60
-            s = int(seconds)
-            ms = int((seconds - s) * 1000)
-            return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
-
-        # Split into subtitle blocks
-        blocks = srt_content.strip().split("\n\n")
-        filtered_blocks = []
-        counter = 1
-
-        for block in blocks:
-            if not block.strip():
-                continue
-
-            lines = block.strip().split("\n")
-            if len(lines) < 2:
-                continue
-
-            # Find timecode line (usually line 1, but skip subtitle number)
-            timecode_line = None
-            for line in lines[1:]:
-                if "-->" in line:
-                    timecode_line = line
-                    break
-
-            if not timecode_line:
-                continue
-
-            # Parse timecodes
-            match = re.match(
-                r"(\d{2}:\d{2}:\d{2},\d{3})\s+-->\s+(\d{2}:\d{2}:\d{2},\d{3})",
-                timecode_line,
-            )
-            if not match:
-                continue
-
-            sub_start = time_to_seconds(match.group(1))
-            sub_end = time_to_seconds(match.group(2))
-
-            # Check if subtitle is within segment range
-            if sub_start >= start_time and sub_end <= end_time:
-                # Adjust timecodes: subtract segment start, add cumulative offset
-                adjusted_start = sub_start - start_time + offset_seconds
-                adjusted_end = sub_end - start_time + offset_seconds
-
-                # Build new block with sequential numbering
-                text_lines = [
-                    line
-                    for line in lines
-                    if line.strip() and not line.strip().isdigit() and "-->" not in line
-                ]
-                new_block = f"{counter}\n{seconds_to_time(adjusted_start)} --> {seconds_to_time(adjusted_end)}\n"
-                new_block += "\n".join(text_lines)
-
-                filtered_blocks.append(new_block)
-                counter += 1
-
-        return "\n\n".join(filtered_blocks)
-
-    def on_show_file_info(self, button, file_path: str) -> None:
+    def on_show_file_info_by_path(self, file_path: str) -> None:
         """Show detailed information about the video file"""
         if file_path and os.path.exists(file_path):
             from utils.file_info import VideoInfoDialog
@@ -1706,38 +1625,12 @@ class ConversionPage:
             logger.error(f"Error: Invalid file path: {file_path}")
             self.app.show_error_dialog(_("Could not find this video file"))
 
-    def _update_header_buttons_visibility(self):
-        """Update visibility of Clear Queue and Convert All buttons based on queue content"""
-        queue_count = len(self.app.conversion_queue)
-
-        if hasattr(self.app, "header_bar"):
-            # Update queue size label and clear button visibility
-            if hasattr(self.app.header_bar, "update_queue_size"):
-                self.app.header_bar.update_queue_size(queue_count)
-
-    # Wrapper methods for FileQueueRow callbacks (without button parameter)
-    def on_remove_from_queue_by_path(self, file_path: str) -> None:
-        """Remove file from queue (callback for FileQueueRow)"""
-        self.on_remove_from_queue(None, file_path)
-
-    def on_play_file_by_path(self, file_path: str) -> None:
-        """Play file (callback for FileQueueRow)"""
-        self.on_play_file(None, file_path)
-
-    def on_edit_file_by_path(self, file_path: str) -> None:
-        """Edit file (callback for FileQueueRow)"""
-        self.on_edit_file(None, file_path)
-
-    def on_show_file_info_by_path(self, file_path: str) -> None:
-        """Show file info (callback for FileQueueRow)"""
-        self.on_show_file_info(None, file_path)
-
     def refresh_recipe_summaries(self) -> None:
         row = self.queue_listbox.get_first_child()
         while row is not None:
             if isinstance(row, FileQueueRow):
-                row.recipe_label.set_text(self.file_recipe_summary(
-                    self.file_metadata.get(row.file_path)))
+                metadata = self.file_metadata.get(row.file_path)
+                row.set_recipe(self.file_recipe_summary(metadata), has_own_settings(metadata))
             row = row.get_next_sibling()
 
     def file_recipe_summary(self, metadata) -> str:
@@ -1748,6 +1641,11 @@ class ConversionPage:
         resolution = settings.get("video-resolution") or _("Original resolution")
         if settings.get("force-copy-video"):
             resolution = _("Original resolution")
+        target_id = settings.get("size-target", "")
+        if target_id:
+            # The size decides the resolution, so the limit takes its place.
+            resolution = _("up to {size}").format(
+                size=shown_size(target_id, settings.get("size-target-mb", 50.0)))
         return _("{profile} · {resolution}").format(profile=name, resolution=resolution)
 
     def on_file_options_by_path(self, file_path: str) -> None:
@@ -1775,7 +1673,7 @@ class ConversionPage:
                 "different destination profile or size."
             )
         )
-        if hasattr(dialog, "set_prefer_wide_layout"):
+        if hasattr(dialog, "set_prefer_wide_layout"):  # libadwaita 1.6
             dialog.set_prefer_wide_layout(True)
 
         content = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=14)
@@ -1849,11 +1747,39 @@ class ConversionPage:
         height_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Height")])
         group.add(height_row)
 
+        # Where this one video is going, when that differs from the others.
+        size_modes = ("global", "none", *(t[0] for t in TARGETS), "custom")
+        size_labels = [_("Use the general size"), _("No limit"),
+                       *(f"{t[3]} · {_(t[1])}" for t in TARGETS), _("Another size")]
+        size_row = Adw.ComboRow(
+            title=_("Maximum size"),
+            subtitle=_("Fits this video under a size, whatever the general setting"),
+            model=Gtk.StringList.new(size_labels),
+        )
+        size_row.set_selected(size_modes.index(metadata["size_mode"]))
+        group.add(size_row)
+        size_spin = Gtk.SpinButton.new_with_range(1, 1_000_000, 1)
+        size_spin.set_value(metadata.get("size_mb") or 50)
+        size_spin.set_valign(Gtk.Align.CENTER)
+        size_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Size in megabytes")])
+        size_mb_row = Adw.ActionRow(title=_("Size in megabytes"))
+        size_mb_row.add_suffix(size_spin)
+        size_mb_row.set_activatable_widget(size_spin)
+        group.add(size_mb_row)
+
         preview = Adw.ActionRow(title=_("This video will use"))
         preview_value = Gtk.Label()
         preview_value.add_css_class("bvc-profile-chip")
         preview.add_suffix(preview_value)
         group.add(preview)
+        # What the size target will do, worked out from the file itself.
+        size_result = Adw.ActionRow(title=_("To fit the size"))
+        size_result.add_css_class("property")
+        group.add(size_result)
+        size_generation = [0]
+        # Each spin step used to start its own ffprobe; wait for a pause.
+        size_timer = [None]
+        dialog_closed = [False]
 
         content.append(group)
         dialog.set_extra_child(content)
@@ -1868,6 +1794,9 @@ class ConversionPage:
             ]
             temporary["custom_width"] = int(width_spin.get_value())
             temporary["custom_height"] = int(height_spin.get_value())
+            size_mb_row.set_visible(size_modes[size_row.get_selected()] == "custom")
+            temporary["size_mode"] = size_modes[size_row.get_selected()]
+            temporary["size_mb"] = float(size_spin.get_value())
             selected = preset_row.get_selected()
             temporary["preset_snapshot"] = (
                 presets[selected - 1]
@@ -1875,11 +1804,68 @@ class ConversionPage:
                 else None
             )
             preview_value.set_text(self.file_recipe_summary(temporary))
+            refresh_size_result(temporary)
+
+        def refresh_size_result(temporary):
+            size_generation[0] += 1
+            generation = size_generation[0]
+            settings = freeze(self.app.settings_manager.settings, temporary)["settings"]
+            if not settings.get("size-target"):
+                size_result.set_visible(False)
+                return
+            size_result.set_visible(True)
+            size_result.set_subtitle(_("Checking the video…"))
+            output_ext = {0: ".mp4", 1: ".mkv", 2: ".mov", 3: ".webm"}.get(
+                settings.get("output-format-index", 0), ".mp4")
+            context = {
+                "size_target": self._size_target(SettingsOverride(self.app.settings_manager, settings)),
+                "input_file": file_path, "output_ext": output_ext,
+                "trim_segments": temporary.get("trim_segments") or [],
+                "output_mode": temporary.get("output_mode", "join"),
+                "encode_env": {
+                    "video_encoder": settings.get("video-codec", "h264"),
+                    "audio_handling": settings.get("audio-handling", "copy"),
+                    "audio_bitrate": settings.get("audio-bitrate", ""),
+                    "video_filter": "edited" if has_picture_edits(temporary) else "",
+                    "video_resolution": settings.get("video-resolution", ""),
+                    "video_fps": settings.get("video-fps", ""),
+                },
+            }
+
+            def work():
+                try:
+                    text = describe_plan(prepare_size_job(context))
+                except (OSError, ValueError, subprocess.SubprocessError) as error:
+                    text = str(error)
+
+                def show():
+                    if not dialog_closed[0] and generation == size_generation[0]:
+                        size_result.set_subtitle(text)
+                    return GLib.SOURCE_REMOVE
+                GLib.idle_add(show)
+
+            def start():
+                size_timer[0] = None
+                threading.Thread(target=work, daemon=True).start()
+                return GLib.SOURCE_REMOVE
+
+            if size_timer[0] is not None:
+                GLib.source_remove(size_timer[0])
+            size_timer[0] = GLib.timeout_add(300, start)
+
+        def on_closed(_dialog):
+            dialog_closed[0] = True
+            if size_timer[0] is not None:
+                GLib.source_remove(size_timer[0])
+                size_timer[0] = None
 
         connections.connect(preset_row, "notify::selected", refresh)
         connections.connect(resolution_row, "notify::selected", refresh)
         connections.connect(width_spin, "value-changed", refresh)
         connections.connect(height_spin, "value-changed", refresh)
+        connections.connect(size_row, "notify::selected", refresh)
+        connections.connect(size_spin, "value-changed", refresh)
+        dialog.connect("closed", on_closed)
         refresh()
 
         dialog.add_response("cancel", _("Cancel"))
@@ -1902,6 +1888,8 @@ class ConversionPage:
             metadata["resolution_mode"] = RESOLUTION_MODES[
                 resolution_row.get_selected()
             ]
+            metadata["size_mode"] = size_modes[size_row.get_selected()]
+            metadata["size_mb"] = float(size_spin.get_value())
             if metadata["resolution_mode"] == "custom":
                 metadata["custom_width"] = int(width_spin.get_value())
                 metadata["custom_height"] = int(height_spin.get_value())
@@ -1913,43 +1901,3 @@ class ConversionPage:
 
         dialog.connect("response", response)
         dialog.present(self.app.window)
-
-    def generate_trim_options(self):
-        """
-        Generate trim options with the most up-to-date values
-        and update the object attributes and environment variables.
-        Should be called right before conversion starts.
-        """
-        # Always get the latest trim values directly from the app
-        start_time, end_time, duration = self.app.get_trim_times()
-
-        # If we don't have values from the app, check settings
-        if start_time == 0 and end_time is None:
-            start_time = self.app.settings_manager.load_setting("video-trim-start", 0.0)
-            end_time_setting = self.app.settings_manager.load_setting(
-                "video-trim-end", -1.0
-            )
-            end_time = None if end_time_setting < 0 else end_time_setting
-            logger.debug(
-                f"Using trim settings from settings: start={start_time}, end={end_time}"
-            )
-        else:
-            logger.debug(
-                f"Using trim settings from app state: start={start_time}, end={end_time}"
-            )
-
-        # Validate that end_time is not less than or equal to start_time
-        if end_time is not None and end_time <= start_time:
-            logger.warning(
-                "WARNING: Invalid trim values detected (end_time <= start_time)"
-            )
-            end_time = None
-            self.app.settings_manager.save_setting("video-trim-end", -1.0)
-
-        # Always update the object attributes for consistency
-        self.trim_start_time = start_time
-        self.trim_end_time = end_time
-        self.trim_duration = duration
-
-        # Return a dictionary with trim configuration to be used by force_start_conversion
-        return {"start_time": start_time, "end_time": end_time, "duration": duration}

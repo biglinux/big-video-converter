@@ -18,7 +18,6 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
-
 from utils import presets as preset_store
 from utils.ffmpeg_path import get_ffmpeg_executable
 from utils.signal_connections import SignalConnections
@@ -114,6 +113,45 @@ class _PresetCard(Gtk.FlowBoxChild):
             inner.append(tags)
         self.set_child(box)
         self.set_tooltip_text(_("Click to use this preset"))
+
+
+def confirm_file_access(parent, heading: str, settings: list[str], on_accept) -> None:
+    """Ask before keeping someone else's settings that reach outside the job."""
+    alert = Adw.AlertDialog()
+    alert.set_heading(heading)
+    alert.set_body(_(
+        "It contains FFmpeg settings that can open, create or overwrite files on this "
+        "computer, or reach the network:\n\n{settings}\n\n"
+        "Import it only if you trust where it came from.").format(settings="\n".join(settings)))
+    alert.add_response("cancel", _("Cancel"))
+    alert.add_response("import", _("Import anyway"))
+    alert.set_response_appearance("import", Adw.ResponseAppearance.DESTRUCTIVE)
+    alert.set_default_response("cancel")
+    alert.set_close_response("cancel")
+
+    def chosen(dialog, result):
+        if dialog.choose_finish(result) == "import":
+            on_accept()
+
+    alert.choose(parent, None, chosen)
+
+
+def save_imported(parent, text: str, store, refuse):
+    """Store preset text from a file, the clipboard or an AI answer.
+
+    A preset that reaches files is stored only after the user allows it; the
+    folder's own files and the options field are the user's and never ask.
+    """
+    try:
+        preset = preset_store.validate_preset(preset_store.parse_preset_text(text))
+    except preset_store.PresetError as error:
+        refuse(error)
+        return None
+    settings = preset_store.preset_file_access(preset)
+    if not settings:
+        return store(text)
+    confirm_file_access(parent, _("This preset can read or write files"), settings, lambda: store(text))
+    return None
 
 
 class PresetsDialog:
@@ -311,13 +349,16 @@ class PresetsDialog:
                 return
             if gfile is None:
                 return
+            path = gfile.get_path()
+            if path is None:
+                self._toast(_("Choose a folder on this computer to export the preset."))
+                return
             try:
-                with open(preset.path, "rb") as source, open(gfile.get_path(), "wb") as target:
-                    target.write(source.read())
-            except OSError as error:
+                preset_store.export_preset(preset, path)
+            except (OSError, UnicodeDecodeError) as error:
                 self._toast(str(error))
                 return
-            self._toast(_("Preset exported to {0}").format(gfile.get_path()))
+            self._toast(_("Preset exported to {0}").format(path))
 
         file_dialog.save(self.parent_window, None, done)
 
@@ -339,6 +380,9 @@ class PresetsDialog:
             except GLib.Error:
                 return
             if gfile is None:
+                return
+            if gfile.get_path() is None:
+                self._toast(_("Choose a preset file on this computer to import."))
                 return
             try:
                 with open(gfile.get_path(), "r", encoding="utf-8") as handle:
@@ -362,7 +406,12 @@ class PresetsDialog:
         clipboard.read_text_async(None, done)
 
     def import_text(self, text: str):
-        """Validate and store TOML text as a user preset; returns the Preset or None."""
+        """Validate and store TOML text as a user preset; returns the Preset,
+        or None when refused or waiting for the user to allow file access."""
+        return save_imported(self.dialog, text, self._store,
+                             lambda error: self._toast(_("The preset was not imported: {0}").format(error)))
+
+    def _store(self, text: str):
         try:
             preset = preset_store.save_user_preset(text)
         except (preset_store.PresetError, OSError) as error:
@@ -391,8 +440,28 @@ class PresetsDialog:
         self.dialog.present(self.parent_window)
 
 
+_open_presets_dialog = None
+
+
 def show_presets_dialog(parent_window, app) -> PresetsDialog:
-    dialog = PresetsDialog(parent_window, app)
+    """Open the grid, or bring back the one already open.
+
+    Clicking the Presets row both ticks its radio and activates the row, and
+    each path asks for the grid; a second one used to stack on the first, so
+    Close had to be pressed twice.
+    """
+    global _open_presets_dialog
+    if _open_presets_dialog is not None:
+        return _open_presets_dialog
+    dialog = _open_presets_dialog = PresetsDialog(parent_window, app)
+
+    def forget(_widget):
+        global _open_presets_dialog
+        _open_presets_dialog = None
+        # Closed without choosing: the radio goes back to what is in use.
+        app._select_profile_radio(app._detect_current_profile())
+
+    dialog.dialog.connect("closed", forget)
     dialog.present()
     return dialog
 
@@ -401,7 +470,8 @@ def show_presets_dialog(parent_window, app) -> PresetsDialog:
 
 def _ffmpeg_version() -> str:
     try:
-        out = subprocess.run([get_ffmpeg_executable(), "-version"], capture_output=True, text=True, timeout=5)
+        out = subprocess.run([get_ffmpeg_executable(), "-version"], capture_output=True, text=True, timeout=5,
+                             check=False)
         first = (out.stdout or "").splitlines()[0] if out.stdout else ""
         return first.replace("ffmpeg version ", "").split(" Copyright")[0] or "unknown"
     except (OSError, subprocess.SubprocessError, IndexError):
@@ -573,7 +643,12 @@ class AiPresetDialog:
         self.save(self.answer_text())
 
     def save(self, text: str):
-        """Validate the pasted TOML, store it, apply it; returns the Preset or None."""
+        """Validate the pasted TOML, store it, apply it; returns the Preset,
+        or None when refused or waiting for the user to allow file access."""
+        return save_imported(self.dialog, text, self._store, lambda error: self._set_status(
+            _("The preset was not saved: {0}").format(error), error=True))
+
+    def _store(self, text: str):
         try:
             preset = preset_store.save_user_preset(text)
         except (preset_store.PresetError, OSError) as error:

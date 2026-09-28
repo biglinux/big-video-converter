@@ -4,11 +4,11 @@ FFmpeg custom flags, preview rendering, profile export/import and reset.
 """
 
 import gettext
-from utils.signal_connections import SignalConnections
 import logging
 import os
 
 import gi
+from utils.signal_connections import SignalConnections
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -342,7 +342,23 @@ def _import_profile(dialog, parent_window, app) -> None:
         filepath = gfile.get_path()
         if not filepath:
             return
-        ok = app.settings_manager.import_profile(filepath)
+        updates = app.settings_manager.read_profile(filepath)
+        if updates is None:
+            _finish(filepath, False)
+            return
+        from utils.ffmpeg_options import file_access_settings
+
+        from ui.presets_dialog import confirm_file_access
+
+        # Someone else's profile may carry options that reach the user's files.
+        settings = file_access_settings(updates.get("additional-options", ""))
+        if settings:
+            confirm_file_access(parent_window, _("This profile can read or write files"), settings,
+                                lambda: _finish(filepath, app.settings_manager.apply_profile(updates)))
+        else:
+            _finish(filepath, app.settings_manager.apply_profile(updates))
+
+    def _finish(filepath, ok):
         msg = Gtk.AlertDialog()
         if ok:
             msg.set_message(_("Profile Imported"))

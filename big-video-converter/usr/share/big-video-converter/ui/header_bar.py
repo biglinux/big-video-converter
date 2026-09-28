@@ -6,156 +6,150 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GObject, Gtk
+from gi.repository import Adw, Gio, GObject, Gtk
 
 _ = gettext.gettext
 ngettext = gettext.ngettext
 
-
-def _labeled_button(label: str, icon_name: str) -> Gtk.Button:
-    button = Gtk.Button()
-    box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
-    box.append(Gtk.Image.new_from_icon_name(icon_name))
-    box.append(Gtk.Label(label=label))
-    button.set_child(box)
-    return button
-
-
-def _action_popover(actions: tuple[tuple[str, str], ...]) -> Gtk.Popover:
-    popover = Gtk.Popover()
-    box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-    for label, action in actions:
-        button = Gtk.Button(label=label, action_name=action)
-        button.add_css_class("flat")
-        button.get_child().set_xalign(0)
-        button.connect("clicked", lambda button: button.get_ancestor(Gtk.Popover).popdown())
-        box.append(button)
-    popover.set_child(box)
-    return popover
+# Actions that change the queue or its settings; shortcuts reach them from
+# the progress view too, so they follow the buttons.
+QUEUE_ACTIONS = ("add_files", "add_folder", "add_network_file", "clear_queue",
+                 "start_conversion", "restore_settings")
 
 
 class HeaderBar(Gtk.Box):
-    """Stable application header with one obvious primary action."""
+    """Header with the queue actions centered, as the BigLinux apps do."""
 
     def __init__(self, app, window_buttons_left=False):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
         self.app = app
-        self.view_name = "queue"
         self.window_buttons_left = window_buttons_left
         self.set_hexpand(True)
 
         self.header_bar = Adw.HeaderBar()
         self.header_bar.set_hexpand(True)
-        self.header_bar.add_css_class("bvc-app-header")
         self.header_bar.set_decoration_layout(
-            "" if window_buttons_left else ":minimize,maximize,close"
+            "" if window_buttons_left else "menu:minimize,maximize,close"
         )
         self.append(self.header_bar)
+
+        # Only the editor, or a window too narrow for both panes, lets the
+        # sidebar go; a wide queue always shows its settings.
+        self.view_name = "queue"
         self.sidebar_button = Gtk.ToggleButton(icon_name="sidebar-show-symbolic")
-        self.sidebar_button.set_tooltip_text(_("Show conversion settings"))
-        self.sidebar_button.update_property([Gtk.AccessibleProperty.LABEL], [_("Show conversion settings")])
-        self.app.split_view.bind_property("show-sidebar", self.sidebar_button, "active",
-            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
+        self.app.split_view.bind_property(
+            "show-sidebar", self.sidebar_button, "active",
+            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
+        )
+        self.app.split_view.connect("notify::collapsed", self._sync_sidebar_toggle)
         self.header_bar.pack_start(self.sidebar_button)
 
-        self.back_button = _labeled_button(_("Back"), "go-previous-symbolic")
-        self.back_button.add_css_class("bvc-secondary")
+        # Labels ellipsize rather than push the header past a narrow window.
+        self.back_button = Gtk.Button(child=Adw.ButtonContent(
+            icon_name="go-previous-symbolic", label=_("Back"), can_shrink=True))
         self.back_button.connect("clicked", self._on_back_clicked)
         self.back_button.set_visible(False)
         self.header_bar.pack_start(self.back_button)
 
-        self.add_button = Adw.SplitButton(label=_("Add videos"))
-        self.add_button.add_css_class("bvc-secondary")
-        self.add_button.connect("clicked", self._on_add_files_clicked)
-        self.add_button.set_popover(_action_popover((
-            (_("Add a folder"), "app.add_folder"),
-            (_("Add from the network"), "app.add_network_file"),
-        )))
-        self.header_bar.pack_start(self.add_button)
-
-        self.clear_queue_button = Gtk.Button.new_from_icon_name(
-            "user-trash-symbolic"
-        )
-        self.clear_queue_button.add_css_class("bvc-icon-button")
-        self.clear_queue_button.add_css_class("bvc-quiet")
-        self.clear_queue_button.add_css_class("bvc-danger")
-        self.clear_queue_button.set_tooltip_text(_("Clear the queue"))
+        left_controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
+        left_controls.set_margin_start(14)
+        self.clear_queue_button = Gtk.Button(icon_name="trash-symbolic")
+        self.clear_queue_button.set_tooltip_text(_("Clear queue"))
         self.clear_queue_button.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Clear the queue")]
+            [Gtk.AccessibleProperty.LABEL], [_("Clear queue")]
         )
+        self.clear_queue_button.add_css_class("circular")
+        self.clear_queue_button.add_css_class("destructive-action")
         self.clear_queue_button.connect("clicked", self._on_clear_queue_clicked)
         self.clear_queue_button.set_visible(False)
-        self.header_bar.pack_start(self.clear_queue_button)
+        left_controls.append(self.clear_queue_button)
+        self.queue_size_label = Gtk.Label()
+        self.queue_size_label.add_css_class("caption")
+        self.queue_size_label.add_css_class("dim-label")
+        self.queue_size_label.set_margin_start(4)
+        self.queue_size_label.set_margin_end(8)
+        self.queue_size_label.set_visible(False)
+        left_controls.append(self.queue_size_label)
+        self.header_bar.pack_start(left_controls)
 
-        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
-        title_box.set_halign(Gtk.Align.CENTER)
-        self.title_label = Gtk.Label(label=_("Your videos"))
-        self.title_label.add_css_class("heading")
-        self.title_label.set_ellipsize(3)
-        self.context_label = Gtk.Label(label=_("Add videos to begin"))
-        self.context_label.set_ellipsize(3)
-        self.context_label.add_css_class("caption")
-        self.context_label.add_css_class("dim-label")
-        title_box.append(self.title_label)
-        title_box.append(self.context_label)
-        self.header_bar.set_title_widget(title_box)
+        action_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        action_box.set_halign(Gtk.Align.CENTER)
 
-        self.convert_button = _labeled_button(
-            _("Convert videos"), "media-playback-start-symbolic"
-        )
+        # Neutral: "Convert All" is the one primary action, and an empty
+        # queue offers adding files as the primary action of its own page.
+        self.add_button = Adw.SplitButton(label=_("Add Files"), can_shrink=True)
+        self.add_button.add_css_class("suggested-action")
+        self.add_button.connect("clicked", self._on_add_files_clicked)
+        add_menu = Gio.Menu()
+        for label, action, icon in (
+            (_("Add Folder"), "app.add_folder", "folder-symbolic"),
+            (_("Add Network File"), "app.add_network_file", "network-server-symbolic"),
+        ):
+            item = Gio.MenuItem.new(label, action)
+            item.set_icon(Gio.ThemedIcon.new(icon))
+            add_menu.append_item(item)
+        self.add_button.set_menu_model(add_menu)
+        action_box.append(self.add_button)
+
+        self.convert_button = Gtk.Button(label=_("Convert All"), can_shrink=True)
         self.convert_button.add_css_class("suggested-action")
-        self.convert_button.add_css_class("bvc-primary")
+        self.convert_button.set_margin_start(12)
         self.convert_button.connect("clicked", self._on_convert_all_clicked)
         self.convert_button.set_visible(False)
-        self.header_bar.pack_end(self.convert_button)
+        action_box.append(self.convert_button)
 
-        self.convert_current_button = _labeled_button(
-            _("Convert this video"), "media-playback-start-symbolic"
-        )
+        self.convert_current_button = Gtk.Button(label=_("Convert This File"), can_shrink=True)
         self.convert_current_button.add_css_class("suggested-action")
-        self.convert_current_button.add_css_class("bvc-primary")
         self.convert_current_button.connect(
             "clicked", self._on_convert_current_clicked
         )
         self.convert_current_button.set_visible(False)
-        self.header_bar.pack_end(self.convert_current_button)
+        action_box.append(self.convert_current_button)
+
+        self.header_bar.set_title_widget(action_box)
 
         self.menu_button = Gtk.MenuButton(icon_name="open-menu-symbolic")
-        self.menu_button.add_css_class("bvc-icon-button")
-        self.menu_button.add_css_class("bvc-quiet")
         self.menu_button.set_tooltip_text(_("Main menu"))
         self.menu_button.update_property(
             [Gtk.AccessibleProperty.LABEL], [_("Main menu")]
         )
-        self.menu_button.set_popover(_action_popover((
-            (_("Welcome and quick tour"), "app.welcome"),
-            (_("Restore default settings"), "app.restore_settings"),
-            (_("About Big Video Converter"), "app.about"),
-            (_("Quit"), "app.quit"),
-        )))
-        self.header_bar.pack_end(self.menu_button)
+        menu = Gio.Menu()
+        menu.append(_("Welcome Screen"), "app.welcome")
+        menu.append(_("Restore Settings"), "app.restore_settings")
+        menu.append(_("About"), "app.about")
+        menu.append(_("Quit"), "app.quit")
+        self.menu_button.set_menu_model(menu)
+
+        if window_buttons_left:
+            icon_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+            icon_box.set_valign(Gtk.Align.CENTER)
+            icon_box.append(self.menu_button)
+            app_icon = Gtk.Image.new_from_icon_name("big-video-converter")
+            app_icon.set_pixel_size(20)
+            app_icon.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
+            icon_box.append(app_icon)
+            self.header_bar.pack_end(icon_box)
+        else:
+            self.header_bar.pack_end(self.menu_button)
+        self._sync_sidebar_toggle()
 
     def _on_add_files_clicked(self, _button):
-        if hasattr(self.app, "select_files_for_queue"):
-            self.app.select_files_for_queue()
+        self.app.select_files_for_queue()
 
     def _on_back_clicked(self, _button):
-        if hasattr(self.app, "show_queue_view"):
-            self.app.show_queue_view()
+        self.app.show_queue_view()
 
     def _on_clear_queue_clicked(self, _button):
-        if hasattr(self.app, "clear_queue"):
-            self.app.clear_queue()
+        self.app.clear_queue()
 
     def _on_convert_all_clicked(self, button):
+        # Disabled at once so a double click cannot start the queue twice.
         button.set_sensitive(False)
-        if hasattr(self.app, "start_queue_processing"):
-            self.app.start_queue_processing()
+        self.app.start_queue_processing()
 
     def _on_convert_current_clicked(self, button):
         button.set_sensitive(False)
-        if hasattr(self.app, "convert_current_file"):
-            self.app.convert_current_file()
+        self.app.convert_current_file()
 
     def _can_start_conversion(self) -> bool:
         return not any(getattr(self.app, name, False) for name in (
@@ -169,40 +163,40 @@ class HeaderBar(Gtk.Box):
         self.clear_queue_button.set_sensitive(sensitive)
         self.convert_button.set_sensitive(sensitive)
         self.convert_current_button.set_sensitive(sensitive)
+        for name in QUEUE_ACTIONS:
+            self.app.lookup_action(name).set_enabled(sensitive)
 
     def update_queue_size(self, count: int) -> None:
-        has_files = count > 0 and self.view_name == "queue"
-        has_multiple = count > 1 and self.view_name == "queue"
-        self.clear_queue_button.set_visible(has_multiple)
-        self.convert_button.set_visible(has_files)
-        self.convert_button.set_sensitive(has_files and self._can_start_conversion())
-        if self.view_name == "queue":
-            self.context_label.set_text(
-                ngettext("{} video ready", "{} videos ready", count).format(count)
-                if count > 0
-                else _("Add videos to begin")
-            )
+        queue = self.add_button.get_visible()
+        # Count and clear only matter once there is more than one file.
+        self.queue_size_label.set_text(
+            ngettext("{count} file", "{count} files", count).format(count=count))
+        self.clear_queue_button.set_visible(queue and count > 1)
+        self.queue_size_label.set_visible(queue and count > 1)
+        self.convert_button.set_visible(queue and count > 0)
+        self.convert_button.set_sensitive(count > 0 and self._can_start_conversion())
+
+    def _sync_sidebar_toggle(self, *_args) -> None:
+        queue = self.view_name == "queue"
+        available = not queue or self.app.split_view.get_collapsed()
+        self.sidebar_button.set_visible(available)
+        self.app.lookup_action("toggle_sidebar").set_enabled(available)
+        # Same msgids as the editor's own toggle (ui/video_edit_ui.py).
+        if queue:
+            label = _("Show conversion settings")
+            tooltip = _("Show conversion settings ({shortcut})").format(shortcut="F9")
+        else:
+            label = _("Show editing tools")
+            tooltip = _("Show editing tools ({shortcut})").format(shortcut="F9")
+        self.sidebar_button.set_tooltip_text(tooltip)
+        self.sidebar_button.update_property([Gtk.AccessibleProperty.LABEL], [label])
 
     def set_view(self, view_name) -> None:
-        self.view_name = view_name
         queue = view_name == "queue"
-        can_start = self._can_start_conversion()
-        self.add_button.set_visible(queue)
-        self.clear_queue_button.set_visible(
-            queue and len(getattr(self.app, "conversion_queue", ())) > 1
-        )
-        self.convert_button.set_visible(
-            queue and len(getattr(self.app, "conversion_queue", ())) > 0
-        )
-        self.convert_current_button.set_visible(not queue)
+        self.view_name = view_name
+        self._sync_sidebar_toggle()
         self.back_button.set_visible(not queue)
-        if queue:
-            self.title_label.set_text(_("Your videos"))
-            self.update_queue_size(len(getattr(self.app, "conversion_queue", ())))
-            self.convert_button.set_sensitive(can_start)
-        else:
-            self.title_label.set_text(_("Edit video"))
-            self.context_label.set_text(
-                _("Changes apply only to the selected video")
-            )
-            self.convert_current_button.set_sensitive(can_start)
+        self.add_button.set_visible(queue)
+        self.convert_current_button.set_visible(not queue)
+        self.convert_current_button.set_sensitive(self._can_start_conversion())
+        self.update_queue_size(len(getattr(self.app, "conversion_queue", ())))

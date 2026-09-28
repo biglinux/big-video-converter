@@ -4,14 +4,15 @@ Adapted from appimage-creator project.
 """
 
 import gi
+
 gi.require_version('Gtk', '4.0')
 gi.require_version('Adw', '1')
 gi.require_version('Vte', '3.91')
 
-from gi.repository import Gtk, Adw, Vte, GLib, Pango
-
 # Setup translation
 import gettext
+
+from gi.repository import Adw, GLib, Gtk, Pango, Vte
 from utils.signal_connections import SignalConnections
 
 _ = gettext.gettext
@@ -32,7 +33,6 @@ class InstallDependencyDialog(Adw.Window):
         self.set_resizable(True)
         
         self.install_info = install_info
-        self.installation_complete = False
         self.installation_success = False
         self.current_command_is_pre = False
         
@@ -62,6 +62,12 @@ class InstallDependencyDialog(Adw.Window):
         command_row.set_title(_("Command to be executed"))
         command_row.set_subtitle(install_info['display'])
         info_group.add(command_row)
+
+        if install_info.get('note'):
+            note_row = Adw.ActionRow()
+            note_row.set_title(_("Before installing"))
+            note_row.set_subtitle(install_info['note'])
+            info_group.add(note_row)
 
         warning_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         warning_box.set_margin_top(8)
@@ -145,8 +151,8 @@ class InstallDependencyDialog(Adw.Window):
                 Vte.PtyFlags.DEFAULT, None, command, None, 
                 GLib.SpawnFlags.DO_NOT_REAP_CHILD, None, None, -1, None, self._on_spawned, None
             )
-        except Exception as e:
-            self._write_to_terminal(f"\n{_('Error running command')}: {str(e)}\n")
+        except (TypeError, ValueError) as e:
+            self._write_to_terminal(f"\n{_('Error running command')}: {e!s}\n")
             self._finish_installation(False)
 
     def _on_spawned(self, terminal, pid, error, _data):
@@ -176,7 +182,6 @@ class InstallDependencyDialog(Adw.Window):
 
     def _finish_installation(self, success):
         self._installing = False
-        self.installation_complete = True
         self.installation_success = success
         
         if success:
