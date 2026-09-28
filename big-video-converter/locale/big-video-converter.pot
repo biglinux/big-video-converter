@@ -155,6 +155,9 @@ msgstr ""
 msgid "Custom"
 msgstr ""
 
+msgid "24 fps (cinema)"
+msgstr ""
+
 msgid ""
 "If your GPU supports video encoding, conversion will be much faster.\n"
 "\n"
@@ -225,6 +228,28 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Frames per second of the converted video:\n"
+"\n"
+"• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
+"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+msgstr ""
+
+msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
+msgstr ""
+
+msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
+msgstr ""
+
+msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgstr ""
+
+msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgstr ""
+
+msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgstr ""
+
+msgid ""
 "• MP4: Most compatible\n"
 "• MKV: More features\n"
 "• MOV: Apple/ProRes workflows\n"
@@ -240,7 +265,7 @@ msgstr ""
 msgid ""
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
-"• Default: 1.0 (no change)"
+"• Default: 0% (no change)"
 msgstr ""
 
 msgid ""
@@ -298,11 +323,8 @@ msgstr ""
 msgid "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
 msgstr ""
 
-msgid "You’re seeing an example of help shown when hovering over an item."
-msgstr ""
-
 msgid ""
-"Reduces background noise from audio using the GTCRN neural network.\n"
+"Reduces background noise from speech with a neural network.\n"
 "\n"
 "• Requires audio re-encoding\n"
 "• Works best for constant background noise\n"
@@ -324,44 +346,6 @@ msgid ""
 "residual noise during pauses between speech.\n"
 "\n"
 "Adjust intensity from low to maximum."
-msgstr ""
-
-msgid ""
-"Voice Recovery — high-frequency reconstruction\n"
-"\n"
-"Recovers frequencies above 8 kHz that the AI\n"
-"noise reduction model removes.\n"
-"\n"
-"• 0%: Cuts all HF (maximum NR)\n"
-"• 75%: Natural default\n"
-"• 100%: Full original HF preserved"
-msgstr ""
-
-msgid "Remove all files from the queue"
-msgstr ""
-
-msgid "Open application menu"
-msgstr ""
-
-msgid "Right-click for more options"
-msgstr ""
-
-msgid "Preview this video file"
-msgstr ""
-
-msgid "Open video editor for this file"
-msgstr ""
-
-msgid "Show detailed file information"
-msgstr ""
-
-msgid "Remove this file from the queue"
-msgstr ""
-
-msgid "Go back to the main screen"
-msgstr ""
-
-msgid "Show conversion log output"
 msgstr ""
 
 msgid "Cancel conversion of this file"
@@ -487,17 +471,37 @@ msgstr ""
 msgid "File not found"
 msgstr ""
 
+msgid "Edit video"
+msgstr ""
+
+msgid "Changes apply only to the selected video"
+msgstr ""
+
 msgid "Could not load video file"
 msgstr ""
 
-msgid "All Conversions Complete"
+msgid "Conversion in progress"
 msgstr ""
 
-msgid "1 video has been converted successfully!"
+msgid "New videos can be added when the current conversions finish."
 msgstr ""
+
+msgid "This file cannot be opened"
+msgid_plural "These files cannot be opened"
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
-msgid "{0} videos have been converted successfully!"
+msgid ""
+"It is not on a local or mounted drive. Open its network share in the file manager, or use “Add Network File”, then add it again:\n"
+"{files}"
+msgid_plural ""
+"They are not on a local or mounted drive. Open their network share in the file manager, or use “Add Network File”, then add them again:\n"
+"{files}"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "The settings sent by the player could not be used"
 msgstr ""
 
 msgid "Dependencies Not Found"
@@ -631,6 +635,21 @@ msgstr ""
 msgid "1080p"
 msgstr ""
 
+msgid "YouTube 1440p (H.265)"
+msgstr ""
+
+msgid "H.265 upload for 2560x1440 footage. Smaller files than H.264 at the same quality, and YouTube keeps a sharper stream than it does for 1080p uploads."
+msgstr ""
+
+msgid "1440p"
+msgstr ""
+
+msgid "2k"
+msgstr ""
+
+msgid "hevc"
+msgstr ""
+
 msgid "YouTube 4K (H.265)"
 msgstr ""
 
@@ -641,9 +660,6 @@ msgid "4k"
 msgstr ""
 
 msgid "2160p"
-msgstr ""
-
-msgid "hevc"
 msgstr ""
 
 msgid "Low disk space"
@@ -662,19 +678,22 @@ msgstr ""
 msgid "Continue"
 msgstr ""
 
+msgid "The additional FFmpeg options cannot be used"
+msgstr ""
+
 msgid "Batch Conversion Complete"
 msgstr ""
 
 msgid "All queued files have been processed."
 msgstr ""
 
-msgid "Conversion settings"
-msgstr ""
-
 msgid "Conversion"
 msgstr ""
 
 msgid "Editing"
+msgstr ""
+
+msgid "Resize sidebar"
 msgstr ""
 
 msgid "Video Codec"
@@ -734,28 +753,13 @@ msgstr ""
 msgid "100%"
 msgstr ""
 
-msgid "Maximum Cleaning"
+msgid "Light — DeepFilterNet3"
 msgstr ""
 
-msgid "Natural Voice"
-msgstr ""
-
-msgid "Smart (both combined)"
+msgid "Higher quality — DPDFNet-2 48 kHz"
 msgstr ""
 
 msgid "AI Model"
-msgstr ""
-
-msgid "Speech Strength"
-msgstr ""
-
-msgid "Lookahead"
-msgstr ""
-
-msgid "Voice Recovery"
-msgstr ""
-
-msgid "75%"
 msgstr ""
 
 msgid "Noise Gate"
@@ -821,12 +825,6 @@ msgstr ""
 msgid "Normalizes volume to TV/streaming standard"
 msgstr ""
 
-msgid "Choose a result"
-msgstr ""
-
-msgid "General settings apply unless a video has its own options."
-msgstr ""
-
 msgid "Fast Copy"
 msgstr ""
 
@@ -860,13 +858,13 @@ msgstr ""
 msgid "Presets"
 msgstr ""
 
-msgid "Refine when needed"
-msgstr ""
-
 msgid "Audio Encoding"
 msgstr ""
 
 msgid "Audio Settings"
+msgstr ""
+
+msgid "Maximum size"
 msgstr ""
 
 msgid "Extra"
@@ -962,10 +960,19 @@ msgstr ""
 msgid "Choose a preset or resolution for this video"
 msgstr ""
 
-msgid "Edit video"
+#, python-brace-format
+msgid "Options for “{name}”"
+msgstr ""
+
+#, python-brace-format
+msgid "Edit “{name}”"
 msgstr ""
 
 msgid "More actions"
+msgstr ""
+
+#, python-brace-format
+msgid "More actions for “{name}”"
 msgstr ""
 
 msgid "Play video"
@@ -986,6 +993,10 @@ msgstr ""
 msgid "Video preview"
 msgstr ""
 
+#, python-brace-format
+msgid "Own: {recipe}"
+msgstr ""
+
 msgid "Delete this video permanently?"
 msgstr ""
 
@@ -1003,40 +1014,31 @@ msgstr ""
 msgid "Could not delete the video: {} "
 msgstr ""
 
-msgid "Choose general settings, or use Options to customize a video."
+msgid "No Video Files"
 msgstr ""
 
-msgid "Start with the videos you want to convert"
+msgid "Drag files here or use the Add Files button"
 msgstr ""
 
-msgid "Drop files here, choose videos, or add a whole folder. Nothing is changed until you start the conversion."
+msgid "Save in the same folder as the original file"
 msgstr ""
 
-msgid "Choose videos"
-msgstr ""
-
-msgid "Add a folder"
+msgid "Folder to save"
 msgstr ""
 
 msgid "Save converted videos"
 msgstr ""
 
-msgid "Next to each original"
-msgstr ""
-
-msgid "In one folder"
-msgstr ""
-
 msgid "Output folder"
 msgstr ""
 
-msgid "Choose an output folder"
+msgid "Select folder"
 msgstr ""
 
 msgid "Choose output folder"
 msgstr ""
 
-msgid "Delete originals after verification"
+msgid "Delete original files"
 msgstr ""
 
 msgid "Originals are kept unless every converted result passes validation"
@@ -1052,6 +1054,13 @@ msgid "Could not open the video file with the default player"
 msgstr ""
 
 msgid "Could not find this video file"
+msgstr ""
+
+msgid "The crop cannot be applied"
+msgstr ""
+
+#, python-brace-format
+msgid "“{name}” was not converted: its picture size could not be read, or the crop removes the whole picture. Check the crop in the editor and try again."
 msgstr ""
 
 msgid "These tracks can't be copied into MP4"
@@ -1086,10 +1095,17 @@ msgstr ""
 msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
 msgstr ""
 
+msgid "This video cannot be made to fit the size"
+msgstr ""
+
 msgid "General settings"
 msgstr ""
 
 msgid "Original resolution"
+msgstr ""
+
+#, python-brace-format
+msgid "up to {size}"
 msgstr ""
 
 #, python-brace-format
@@ -1159,7 +1175,28 @@ msgstr ""
 msgid "Height"
 msgstr ""
 
+msgid "Use the general size"
+msgstr ""
+
+msgid "No limit"
+msgstr ""
+
+msgid "Another size"
+msgstr ""
+
+msgid "Fits this video under a size, whatever the general setting"
+msgstr ""
+
+msgid "Size in megabytes"
+msgstr ""
+
 msgid "This video will use"
+msgstr ""
+
+msgid "To fit the size"
+msgstr ""
+
+msgid "Checking the video…"
 msgstr ""
 
 msgid "Apply to this video"
@@ -1178,6 +1215,9 @@ msgid "FFmpeg is needed for conversion, and MPV for the video editor preview. Du
 msgstr ""
 
 msgid "Command to be executed"
+msgstr ""
+
+msgid "Before installing"
 msgstr ""
 
 msgid ""
@@ -1274,6 +1314,9 @@ msgstr ""
 msgid "Could not save the profile file."
 msgstr ""
 
+msgid "This profile can read or write files"
+msgstr ""
+
 msgid "Profile Imported"
 msgstr ""
 
@@ -1289,55 +1332,61 @@ msgstr ""
 msgid "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
 msgstr ""
 
-msgid "Show conversion settings"
-msgstr ""
-
 msgid "Back"
 msgstr ""
 
-msgid "Add videos"
+msgid "Clear queue"
 msgstr ""
 
-msgid "Add from the network"
+msgid "Add Files"
 msgstr ""
 
-msgid "Clear the queue"
+msgid "Add Folder"
 msgstr ""
 
-msgid "Your videos"
+msgid "Convert All"
 msgstr ""
 
-msgid "Add videos to begin"
-msgstr ""
-
-msgid "Convert videos"
-msgstr ""
-
-msgid "Convert this video"
+msgid "Convert This File"
 msgstr ""
 
 msgid "Main menu"
 msgstr ""
 
-msgid "Welcome and quick tour"
+msgid "Welcome Screen"
 msgstr ""
 
-msgid "Restore default settings"
+msgid "Restore Settings"
 msgstr ""
 
-msgid "About Big Video Converter"
+msgid "About"
 msgstr ""
 
 msgid "Quit"
 msgstr ""
 
 #, python-brace-format
-msgid "{} video ready"
-msgid_plural "{} videos ready"
+msgid "{count} file"
+msgid_plural "{count} files"
 msgstr[0] ""
 msgstr[1] ""
 
-msgid "Changes apply only to the selected video"
+msgid "Show conversion settings"
+msgstr ""
+
+#, python-brace-format
+msgid "Show conversion settings ({shortcut})"
+msgstr ""
+
+msgid "Show editing tools"
+msgstr ""
+
+#, python-brace-format
+msgid "Show editing tools ({shortcut})"
+msgstr ""
+
+#, python-brace-format
+msgid "Track {number}"
 msgstr ""
 
 msgid "Improve your audio by removing noise, controlling volume and enhancing voice clarity."
@@ -1352,7 +1401,14 @@ msgstr ""
 msgid "Uses a neural network to separate voice from noise. Strength controls how aggressively noise is removed."
 msgstr ""
 
-msgid "Lookahead (ms)"
+#, python-brace-format
+msgid "Unavailable: install {package}"
+msgstr ""
+
+msgid "For speech. Uses less processing."
+msgstr ""
+
+msgid "For speech. Higher quality, more processing."
 msgstr ""
 
 msgid "Silence Low Sounds"
@@ -1392,6 +1448,21 @@ msgid "Yours"
 msgstr ""
 
 msgid "Click to use this preset"
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"It contains FFmpeg settings that can open, create or overwrite files on this computer, or reach the network:\n"
+"\n"
+"{settings}\n"
+"\n"
+"Import it only if you trust where it came from."
+msgstr ""
+
+msgid "Import anyway"
+msgstr ""
+
+msgid "This preset can read or write files"
 msgstr ""
 
 msgid "Create with AI…"
@@ -1456,6 +1527,9 @@ msgstr ""
 msgid "Export Preset"
 msgstr ""
 
+msgid "Choose a folder on this computer to export the preset."
+msgstr ""
+
 #, python-brace-format
 msgid "Preset exported to {0}"
 msgstr ""
@@ -1464,6 +1538,9 @@ msgid "Import Preset"
 msgstr ""
 
 msgid "Preset files (*.toml)"
+msgstr ""
+
+msgid "Choose a preset file on this computer to import."
 msgstr ""
 
 #, python-brace-format
@@ -1515,40 +1592,59 @@ msgstr ""
 msgid "Saved as “{0}” in {1}"
 msgstr ""
 
+#, python-brace-format
+msgid "{percent}%"
+msgstr ""
+
+#, python-brace-format
+msgid "≈ {seconds} s left"
+msgid_plural "≈ {seconds} s left"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "≈ {minutes} min left"
+msgid_plural "≈ {minutes} min left"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "≈ {hours} h {minutes} min left"
+msgid_plural "≈ {hours} h {minutes} min left"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "{mins}m {secs}s"
+msgstr ""
+
+#, python-brace-format
+msgid "{secs}s"
+msgstr ""
+
+#, python-brace-format
+msgid "Could not open “{name}”: {error}"
+msgstr ""
+
 msgid "Back to the queue"
 msgstr ""
 
 msgid "Conversion progress"
 msgstr ""
 
-msgid "Preparing the queue safely"
-msgstr ""
-
 msgid "Cancel all"
-msgstr ""
-
-msgid "Overall progress"
-msgstr ""
-
-msgid "Waiting for the first video"
 msgstr ""
 
 msgid "Overall conversion progress"
 msgstr ""
 
-msgid "0 finished"
+msgid "Convert more videos"
 msgstr ""
 
-msgid "0 remaining"
+msgid "Open video"
 msgstr ""
 
-msgid "Videos"
-msgstr ""
-
-msgid "0 videos"
-msgstr ""
-
-msgid "Back to queue"
+msgid "Show in folder"
 msgstr ""
 
 #, python-brace-format
@@ -1597,38 +1693,38 @@ msgid "No conversion results are available"
 msgstr ""
 
 #, python-brace-format
-msgid "{count} video finished"
-msgid_plural "{count} videos finished"
+msgid "{finished} of {total} finished · {percent}"
+msgid_plural "{finished} of {total} finished · {percent}"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Converting video"
+msgid_plural "Converting videos"
 msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
-msgid "{count} video remaining"
-msgid_plural "{count} videos remaining"
+msgid "{results} · {duration}"
+msgstr ""
+
+#, python-brace-format
+msgid "{before} → {after} ({change}%)"
+msgstr ""
+
+#, python-brace-format
+msgid "“{name}”: {reason}"
+msgstr ""
+
+#, python-brace-format
+msgid "+{count} more"
+msgid_plural "+{count} more"
 msgstr[0] ""
 msgstr[1] ""
 
-#, python-brace-format
-msgid "{count} video"
-msgid_plural "{count} videos"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "Review the results below or return to the queue"
+msgid "Back to queue"
 msgstr ""
 
-msgid "Converting videos"
-msgstr ""
-
-#, python-brace-format
-msgid "{} of {} finished"
-msgstr ""
-
-msgid "Pending videos remain unchanged until their conversion starts"
-msgstr ""
-
-#, python-brace-format
-msgid "Queue finished: {results}"
+msgid "Open folder"
 msgstr ""
 
 msgid "Cancel all conversions?"
@@ -1647,10 +1743,27 @@ msgstr ""
 msgid "Conversion progress for “{}”"
 msgstr ""
 
+msgid "FFmpeg output"
+msgstr ""
+
+#, python-brace-format
+msgid "FFmpeg output for “{name}”"
+msgstr ""
+
 msgid "Command"
 msgstr ""
 
 msgid "Process output"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} output file"
+msgid_plural "{count} output files"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Open “{name}”"
 msgstr ""
 
 msgid "Skip this video"
@@ -1676,18 +1789,19 @@ msgstr ""
 msgid "Show technical details"
 msgstr ""
 
-msgid "Converting..."
-msgstr ""
-
-msgid "Converting"
+msgid "Starting process..."
 msgstr ""
 
 #, python-brace-format
-msgid "{mins}m {secs}s"
+msgid "{codec} · {status}"
 msgstr ""
 
 #, python-brace-format
-msgid "{secs}s"
+msgid "{percent}, {remaining}"
+msgstr ""
+
+#, python-brace-format
+msgid "{fps} · {elapsed}"
 msgstr ""
 
 msgid "Completed"
@@ -1697,6 +1811,9 @@ msgid "Failed"
 msgstr ""
 
 msgid "Cancelled"
+msgstr ""
+
+msgid "The conversion failed. The details are in “FFmpeg output”."
 msgstr ""
 
 msgid "Encoding Settings"
@@ -1724,6 +1841,12 @@ msgid "Custom resolution"
 msgstr ""
 
 msgid "Ex: 1280x720, 1920x1080"
+msgstr ""
+
+msgid "Frame rate"
+msgstr ""
+
+msgid "Frames per second of the converted video"
 msgstr ""
 
 msgid "Default"
@@ -1801,10 +1924,51 @@ msgstr ""
 msgid "Reset"
 msgstr ""
 
+msgid "Settings Could Not Be Reset"
+msgstr ""
+
+#, python-brace-format
+msgid "The settings file could not be saved: {0}"
+msgstr ""
+
 msgid "Settings Reset"
 msgstr ""
 
 msgid "All settings have been reset to their default values."
+msgstr ""
+
+msgid "Copies what already fits, lowers the bitrate and the resolution, and splits only when nothing else fits"
+msgstr ""
+
+msgid "Keep the resolution"
+msgstr ""
+
+msgid "Only the bitrate goes down; refuses a video that would need a smaller picture"
+msgstr ""
+
+msgid "Split into parts"
+msgstr ""
+
+msgid "Keeps the quality and makes several files, each under the size"
+msgstr ""
+
+#, python-brace-format
+msgid "Up to {size}"
+msgstr ""
+
+msgid "Where the video is going"
+msgstr ""
+
+msgid "Every converted video comes out no bigger than this."
+msgstr ""
+
+msgid "The size follows the quality"
+msgstr ""
+
+msgid "In megabytes"
+msgstr ""
+
+msgid "How to fit it"
 msgstr ""
 
 msgid "Configure how subtitles are handled during conversion."
@@ -1823,11 +1987,11 @@ msgid "Skip video conversion entirely and only extract the subtitle tracks to .s
 msgstr ""
 
 #, python-brace-format
-msgid "Segment {num}: {start} → {end}"
+msgid "Segment {num}"
 msgstr ""
 
 #, python-brace-format
-msgid "Duration: {duration}"
+msgid "{start} → {end} ({duration})"
 msgstr ""
 
 msgid "Go to segment start"
@@ -1873,6 +2037,10 @@ msgid "Time values cannot be negative"
 msgstr ""
 
 msgid "Invalid Time Range"
+msgstr ""
+
+#, python-brace-format
+msgid "Start time must be before the end of the video ({duration})"
 msgstr ""
 
 msgid "Start time must be before end time"
@@ -2007,10 +2175,13 @@ msgstr ""
 msgid "Volume"
 msgstr ""
 
+msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
+msgstr ""
+
 msgid "Image"
 msgstr ""
 
-msgid "Fine-tune the look only when the source needs it."
+msgid "Reset image adjustments"
 msgstr ""
 
 msgid "Brightness"
@@ -2025,13 +2196,28 @@ msgstr ""
 msgid "Hue"
 msgstr ""
 
+msgid "Source colours"
+msgstr ""
+
+msgid "As the file says"
+msgstr ""
+
+msgid "HDR10 (PQ)"
+msgstr ""
+
+msgid "HDR (HLG)"
+msgstr ""
+
+msgid "Standard (SDR)"
+msgstr ""
+
 msgid "Orientation"
 msgstr ""
 
-msgid "Rotate or mirror the picture without changing the source file."
+msgid "Reset Transform"
 msgstr ""
 
-msgid "Transform"
+msgid "Rotation"
 msgstr ""
 
 msgid "Rotate 90° Left"
@@ -2046,22 +2232,16 @@ msgstr ""
 msgid "Flip Vertical"
 msgstr ""
 
-msgid "Reset Transform"
-msgstr ""
-
 msgid "Trim Segments"
-msgstr ""
-
-msgid "Segments List"
-msgstr ""
-
-msgid "Press M or use the mark button to add segments"
 msgstr ""
 
 msgid "Add segment manually"
 msgstr ""
 
 msgid "Clear all segments"
+msgstr ""
+
+msgid "Press M or use the mark button to add segments"
 msgstr ""
 
 msgid "Join segments into a single file"
@@ -2074,6 +2254,51 @@ msgid "Segment output"
 msgstr ""
 
 msgid "Choose how marked segments are saved"
+msgstr ""
+
+msgid "Effects"
+msgstr ""
+
+msgid "Reset effects"
+msgstr ""
+
+msgid "Off"
+msgstr ""
+
+msgid "Light"
+msgstr ""
+
+msgid "Strong"
+msgstr ""
+
+msgid "Noise reduction"
+msgstr ""
+
+msgid "Sharpening"
+msgstr ""
+
+msgid "Stabilization"
+msgstr ""
+
+msgid "Applied when converting, not in the preview"
+msgstr ""
+
+msgid "Look or shader"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "Choose a colour look (.cube) or shader (.hook)"
+msgstr ""
+
+msgid "Remove the look or shader"
+msgstr ""
+
+msgid "Choose a Look or Shader"
+msgstr ""
+
+msgid "Looks and shaders"
 msgstr ""
 
 #, python-brace-format
@@ -2101,6 +2326,12 @@ msgstr ""
 msgid "Increasing beyond the original resolution does not improve quality. Reducing the resolution creates smaller files."
 msgstr ""
 
+msgid "Frame Rate"
+msgstr ""
+
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgstr ""
+
 msgid "Conversion Speed"
 msgstr ""
 
@@ -2122,16 +2353,17 @@ msgstr ""
 msgid "Decode on CPU and only encode on GPU. Enable this if GPU decoding causes errors or artifacts."
 msgstr ""
 
-msgid "Change the video size. 'Original' keeps it as-is. Lower resolutions create smaller files."
-msgstr ""
-
-msgid "Video Options"
-msgstr ""
-
-msgid "Choose how your video will be encoded. The defaults work well for most cases."
-msgstr ""
-
 msgid "The video metadata could not be read"
+msgstr ""
+
+#, python-brace-format
+msgid "Error getting video info: {error}"
+msgstr ""
+
+msgid "Error: No video stream found"
+msgstr ""
+
+msgid "Error: Failed to load video file. Please check the file format and try again."
 msgstr ""
 
 msgid "Welcome to Big Video Converter"
@@ -2207,13 +2439,16 @@ msgstr ""
 msgid "Let's Start"
 msgstr ""
 
-msgid "There is no space left on the disk."
+msgid "The file container could not be read. It may be a corrupted download or an unsupported format."
+msgstr ""
+
+msgid "File or folder not found."
 msgstr ""
 
 msgid "Permission denied — check file/folder permissions."
 msgstr ""
 
-msgid "File or folder not found."
+msgid "There is no space left on the disk."
 msgstr ""
 
 msgid "The file appears to be corrupted or in an unsupported format."
@@ -2261,6 +2496,9 @@ msgstr ""
 msgid "The encoder stopped making progress and was terminated."
 msgstr ""
 
+msgid "WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. Choose one of those codecs, or MKV to keep the original ones."
+msgstr ""
+
 msgid "The conversion finished without producing a file."
 msgstr ""
 
@@ -2269,7 +2507,17 @@ msgid "Conversion failed with code {0}"
 msgstr ""
 
 #, python-brace-format
+msgid "Video stream: codec={codec}, pixel format={pixel_format}"
+msgstr ""
+
+msgid "Could not analyze the video stream with ffprobe"
+msgstr ""
+
+#, python-brace-format
 msgid "Error starting conversion: {0}"
+msgstr ""
+
+msgid "The conversion could not start."
 msgstr ""
 
 msgid "Preparing…"
@@ -2278,10 +2526,16 @@ msgstr ""
 msgid "Extracting subtitles…"
 msgstr ""
 
+msgid "Measuring camera shake…"
+msgstr ""
+
 msgid "Checking the GPU encoder…"
 msgstr ""
 
 msgid "GPU unavailable, using the processor"
+msgstr ""
+
+msgid "Adding subtitles…"
 msgstr ""
 
 msgid "Copying without re-encoding"
@@ -2296,16 +2550,34 @@ msgstr ""
 msgid "Software encoding"
 msgstr ""
 
-msgid "Improving audio quality"
+msgid "Analyzing the video for the target size…"
 msgstr ""
 
-msgid "Starting process..."
+#, python-brace-format
+msgid "Input probe unavailable: {0}"
 msgstr ""
 
 msgid "No progress detected. Process may be stuck."
 msgstr ""
 
+#, python-brace-format
+msgid "Output duration not verified: {0}"
+msgstr ""
+
+msgid "The output could not be verified against the input"
+msgstr ""
+
+msgid "The output does not carry every subtitle track of the original"
+msgstr ""
+
 msgid "Checking output file..."
+msgstr ""
+
+msgid "Original deleted after output validation"
+msgstr ""
+
+#, python-brace-format
+msgid "Original preserved: {0}"
 msgstr ""
 
 msgid "Conversion Complete"
@@ -2314,8 +2586,7 @@ msgstr ""
 msgid "Conversion completed successfully!"
 msgstr ""
 
-#, python-brace-format
-msgid "The conversion failed with error code {0}."
+msgid "The full FFmpeg comes from the RPM Fusion repository, which must be enabled first. The command replaces the limited ffmpeg-free package."
 msgstr ""
 
 #, python-brace-format
@@ -2390,9 +2661,6 @@ msgstr ""
 msgid "Copy resolution"
 msgstr ""
 
-msgid "Frame Rate"
-msgstr ""
-
 msgid "Copy frame rate"
 msgstr ""
 
@@ -2459,6 +2727,10 @@ msgstr ""
 msgid "Retry"
 msgstr ""
 
+#, python-brace-format
+msgid "The segment {0} starts before the previous one ends; list the segments in order without overlaps."
+msgstr ""
+
 msgid "Copy video"
 msgstr ""
 
@@ -2467,6 +2739,9 @@ msgstr ""
 
 #, python-brace-format
 msgid "The preset is not valid TOML: {0}"
+msgstr ""
+
+msgid "The preset is not valid TOML: its tables are nested too deeply."
 msgstr ""
 
 msgid "The preset must be a TOML table."
@@ -2533,7 +2808,7 @@ msgstr ""
 msgid "[video] resolution must look like 1920x1080."
 msgstr ""
 
-msgid "[video] fps must be a number between 1 and 300."
+msgid "[video] fps must be a number between 1 and 240."
 msgstr ""
 
 msgid "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
@@ -2587,20 +2862,119 @@ msgstr ""
 msgid "{0} (copy)"
 msgstr ""
 
-#, python-brace-format
-msgid "All {0} segments have been joined successfully!"
+msgid "The keyframes of the video are too far apart to split it into parts under the size limit."
+msgstr ""
+
+msgid "The video could not be split into parts under the size limit."
 msgstr ""
 
 #, python-brace-format
-msgid "All {0} segments have been processed successfully!"
+msgid "{0} cannot hold picture subtitles (PGS, DVD): {1} track left out. Choose MKV to keep it."
+msgid_plural "{0} cannot hold picture subtitles (PGS, DVD): {1} tracks left out. Choose MKV to keep them."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Part {0} starts {1:.3f} s after a keyframe, where a stream copy would have to begin. Re-encoding the video instead, so every part starts exactly where it was cut; this takes longer."
+msgstr ""
+
+msgid "Splitting into parts…"
+msgstr ""
+
+msgid "Completed — re-encoded: a cut was not on a keyframe"
+msgstr ""
+
+#, python-brace-format
+msgid "Split into {0} part that fits the size limit. The video was re-encoded because a cut did not start on a keyframe."
+msgid_plural "Split into {0} parts that fit the size limit. The video was re-encoded because a cut did not start on a keyframe."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Split into {0} part that fits the size limit."
+msgid_plural "Split into {0} parts that fit the size limit."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Conversion completed successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgstr ""
+
+#, python-brace-format
+msgid "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgid_plural "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "All {0} segment has been joined successfully!"
+msgid_plural "All {0} segments have been joined successfully!"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "All {0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgid_plural "All {0} segments have been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "All {0} segment has been processed successfully!"
+msgid_plural "All {0} segments have been processed successfully!"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "WhatsApp video"
+msgstr ""
+
+msgid "Discord"
+msgstr ""
+
+msgid "E-mail"
+msgstr ""
+
+msgid "Upload sites"
+msgstr ""
+
+msgid "Telegram or WhatsApp document"
+msgstr ""
+
+msgid "FAT32 drive or Telegram Premium"
+msgstr ""
+
+msgid "Copied as it is: it already fits"
+msgstr ""
+
+msgid "Converted at the chosen quality: it already fits"
+msgstr ""
+
+#, python-brace-format
+msgid "Split without re-encoding into {0} part"
+msgid_plural "Split without re-encoding into {0} parts"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Converted at the chosen quality, then split into even parts"
+msgstr ""
+
+msgid "original resolution"
+msgstr ""
+
+#, python-brace-format
+msgid "{picture} at {rate} Mbit/s"
+msgstr ""
+
+#, python-brace-format
+msgid "audio at {rate} kbit/s"
 msgstr ""
 
 msgid "Convert Video"
 msgstr ""
 
 #, python-brace-format
-msgid "Convert {0} Videos"
-msgstr ""
+msgid "Convert {0} Video"
+msgid_plural "Convert {0} Videos"
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "No valid local files selected"
 msgstr ""

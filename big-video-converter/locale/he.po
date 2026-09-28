@@ -7,8 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: big-video-converter\n"
 "Report-Msgid-Bugs-To: \n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2026-09-28 01:08+0000\n"
+"Last-Translator: BigLinux\n"
+"Language-Team: BigLinux\n"
 "Language: he\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -280,6 +281,9 @@ msgstr "SD אנכי (480×854)"
 msgid "Custom"
 msgstr "מותאם אישית"
 
+msgid "24 fps (cinema)"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 217
 msgid ""
@@ -409,6 +413,28 @@ msgstr ""
 "• אנכי: עבור טלפונים ורשתות חברתיות\n"
 "• מותאם אישית: קבע את הממדים שלך"
 
+msgid ""
+"Frames per second of the converted video:\n"
+"\n"
+"• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
+"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+msgstr ""
+
+msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
+msgstr ""
+
+msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
+msgstr ""
+
+msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgstr ""
+
+msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgstr ""
+
+msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 265
 msgid ""
@@ -433,16 +459,11 @@ msgstr ""
 "• הזז שמאלה: כהה יותר\n"
 "• ברירת מחדל: 0 (ללא שינוי)"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 265
 msgid ""
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
-"• Default: 1.0 (no change)"
+"• Default: 0% (no change)"
 msgstr ""
-"• הזז ימינה: יותר חי\n"
-"• הזז שמאלה: יותר מעומעם\n"
-"• ברירת מחדל: 1.0 (ללא שינוי)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 270
@@ -545,21 +566,14 @@ msgstr ""
 msgid "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
 msgstr "מדלג על כל התהליכים הנותרים ומייצא רק את כתוביות המובנות כקובץ SRT."
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 318
-msgid "You’re seeing an example of help shown when hovering over an item."
-msgstr "אתה רואה דוגמה לעזרה המוצגת כאשר מרחפים מעל פריט."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 321
 msgid ""
-"Reduces background noise from audio using the GTCRN neural network.\n"
+"Reduces background noise from speech with a neural network.\n"
 "\n"
 "• Requires audio re-encoding\n"
 "• Works best for constant background noise\n"
 "• Automatically re-encodes audio if set to copy"
 msgstr ""
-"מפחית רעש רקע מהאודיו באמצעות רשת עצבית GTCRN.\n"
+"מפחית רעש רקע מדיבור באמצעות רשת עצבית.\n"
 "\n"
 "• דורש קידוד מחדש של האודיו\n"
 "• עובד הכי טוב עם רעש רקע קבוע\n"
@@ -596,71 +610,6 @@ msgstr ""
 "רעש שארי במהלך הפסקות בין דיבור.\n"
 "\n"
 "התאם אינטנסיביות מעוצמה נמוכה למקסימלית."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 339
-msgid ""
-"Voice Recovery — high-frequency reconstruction\n"
-"\n"
-"Recovers frequencies above 8 kHz that the AI\n"
-"noise reduction model removes.\n"
-"\n"
-"• 0%: Cuts all HF (maximum NR)\n"
-"• 75%: Natural default\n"
-"• 100%: Full original HF preserved"
-msgstr ""
-"שחזור קול — שיקום תדרים גבוהים\n"
-"\n"
-"שחזר תדרים מעל 8 קה\"ץ שהמודל להפחתת רעש של AI מסיר.\n"
-"\n"
-"• 0%: חותך את כל התדרים הגבוהים (הפחתה מקסימלית)\n"
-"• 75%: ברירת מחדל טבעית\n"
-"• 100%: שמירה מלאה על התדרים הגבוהים המקוריים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 253
-msgid "Remove all files from the queue"
-msgstr "הסר את כל הקבצים מהתור"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 256
-msgid "Open application menu"
-msgstr "פתח את תפריט היישומים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 258
-msgid "Right-click for more options"
-msgstr "לחץ לחיצה ימנית עבור אפשרויות נוספות"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 259
-msgid "Preview this video file"
-msgstr "הצג תצוגה מקדימה של קובץ הווידאו הזה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 260
-msgid "Open video editor for this file"
-msgstr "פתח עורך וידאו עבור קובץ זה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 261
-msgid "Show detailed file information"
-msgstr "הצג מידע מפורט על הקובץ"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 262
-msgid "Remove this file from the queue"
-msgstr "הסר קובץ זה מהתור"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 323
-msgid "Go back to the main screen"
-msgstr "חזור למסך הראשי"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/constants.py, line: 324
-msgid "Show conversion log output"
-msgstr "הצג פלט יומן המרה"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 325
@@ -866,32 +815,40 @@ msgstr "התקדמות"
 msgid "File not found"
 msgstr "הקובץ לא נמצא"
 
+msgid "Edit video"
+msgstr ""
+
+msgid "Changes apply only to the selected video"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
 msgstr "לא ניתן לטעון את קובץ הווידאו"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1448
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1453
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/completion_page.py, line: 41
-msgid "All Conversions Complete"
-msgstr "כל ההמרות הושלמו"
+msgid "Conversion in progress"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1449
-msgid "1 video has been converted successfully!"
-msgstr "הווידאו הומר בהצלחה!"
+msgid "New videos can be added when the current conversions finish."
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1454
+msgid "This file cannot be opened"
+msgid_plural "These files cannot be opened"
+msgstr[0] ""
+msgstr[1] ""
+
 #, python-brace-format
-msgid "{0} videos have been converted successfully!"
-msgstr "{0} סרטונים הומרו בהצלחה!"
+msgid ""
+"It is not on a local or mounted drive. Open its network share in the file manager, or use “Add Network File”, then add it again:\n"
+"{files}"
+msgid_plural ""
+"They are not on a local or mounted drive. Open their network share in the file manager, or use “Add Network File”, then add them again:\n"
+"{files}"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "The settings sent by the player could not be used"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1677
@@ -1036,6 +993,21 @@ msgstr "העלאה"
 msgid "1080p"
 msgstr "1080p"
 
+msgid "YouTube 1440p (H.265)"
+msgstr "YouTube 1440p (H.265)"
+
+msgid "H.265 upload for 2560x1440 footage. Smaller files than H.264 at the same quality, and YouTube keeps a sharper stream than it does for 1080p uploads."
+msgstr "העלאה ב־H.265 לחומר ב־2560x1440. קבצים קטנים יותר מ־H.264 באותה איכות, ו־YouTube שומר זרם חד יותר מאשר בהעלאות 1080p."
+
+msgid "1440p"
+msgstr "1440p"
+
+msgid "2k"
+msgstr "2k"
+
+msgid "hevc"
+msgstr "hevc"
+
 msgid "YouTube 4K (H.265)"
 msgstr "YouTube 4K (H.265)"
 
@@ -1047,9 +1019,6 @@ msgstr "4k"
 
 msgid "2160p"
 msgstr "2160p"
-
-msgid "hevc"
-msgstr "hevc"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 140
@@ -1076,6 +1045,9 @@ msgstr "ביטול"
 msgid "Continue"
 msgstr "המשך"
 
+msgid "The additional FFmpeg options cannot be used"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 335
 msgid "Batch Conversion Complete"
@@ -1085,9 +1057,6 @@ msgstr "המרת אצווה הושלמה"
 # converter/queue_manager.py, line: 336
 msgid "All queued files have been processed."
 msgstr "כל הקבצים בתור טופלו."
-
-msgid "Conversion settings"
-msgstr ""
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1102,6 +1071,9 @@ msgstr "המרה"
 # converter/main.py, line: 417
 msgid "Editing"
 msgstr "עריכה"
+
+msgid "Resize sidebar"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 468
@@ -1234,20 +1206,11 @@ msgstr "50%"
 msgid "100%"
 msgstr "100%"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/sidebar_builder.py, line: 225
-msgid "Maximum Cleaning"
-msgstr "ניקוי מקסימלי"
+msgid "Light — DeepFilterNet3"
+msgstr "קל — DeepFilterNet3"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/sidebar_builder.py, line: 226
-msgid "Natural Voice"
-msgstr "קול טבעי"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/sidebar_builder.py, line: 227
-msgid "Smart (both combined)"
-msgstr "חכם (שניהם משולבים)"
+msgid "Higher quality — DPDFNet-2 48 kHz"
+msgstr "איכות גבוהה יותר — DPDFNet-2 48 kHz"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1257,34 +1220,6 @@ msgstr "חכם (שניהם משולבים)"
 # converter/sidebar_builder.py, line: 230
 msgid "AI Model"
 msgstr "מודל בינה מלאכותית"
-
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/noise_dialog.py, line: 264
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/sidebar_builder.py, line: 234
-msgid "Speech Strength"
-msgstr "עוצמת דיבור"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/sidebar_builder.py, line: 253
-msgid "Lookahead"
-msgstr "הסתכלות קדימה"
-
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/noise_dialog.py, line: 307
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/sidebar_builder.py, line: 273
-msgid "Voice Recovery"
-msgstr "שחזור קול"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/sidebar_builder.py, line: 282
-msgid "75%"
-msgstr "75%"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1425,12 +1360,6 @@ msgstr "נפח אחיד"
 msgid "Normalizes volume to TV/streaming standard"
 msgstr "מנרמל את העוצמה לסטנדרט טלוויזיה/סטרימינג"
 
-msgid "Choose a result"
-msgstr ""
-
-msgid "General settings apply unless a video has its own options."
-msgstr ""
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 447
 msgid "Fast Copy"
@@ -1484,9 +1413,6 @@ msgstr "התאם קידוד..."
 msgid "Presets"
 msgstr "תבניות מוכנות"
 
-msgid "Refine when needed"
-msgstr ""
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 502
 msgid "Audio Encoding"
@@ -1496,6 +1422,9 @@ msgstr "קידוד שמע"
 # converter/ui/settings_page.py, line: 197
 msgid "Audio Settings"
 msgstr "הגדרות שמע"
+
+msgid "Maximum size"
+msgstr "גודל מרבי"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1628,10 +1557,19 @@ msgstr ""
 msgid "Choose a preset or resolution for this video"
 msgstr ""
 
-msgid "Edit video"
+#, python-brace-format
+msgid "Options for “{name}”"
+msgstr ""
+
+#, python-brace-format
+msgid "Edit “{name}”"
 msgstr ""
 
 msgid "More actions"
+msgstr ""
+
+#, python-brace-format
+msgid "More actions for “{name}”"
 msgstr ""
 
 msgid "Play video"
@@ -1656,6 +1594,10 @@ msgstr ""
 msgid "Video preview"
 msgstr ""
 
+#, python-brace-format
+msgid "Own: {recipe}"
+msgstr ""
+
 msgid "Delete this video permanently?"
 msgstr ""
 
@@ -1673,43 +1615,46 @@ msgstr ""
 msgid "Could not delete the video: {} "
 msgstr ""
 
-msgid "Choose general settings, or use Options to customize a video."
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 282
+msgid "No Video Files"
+msgstr "אין קבצי וידאו"
 
-msgid "Start with the videos you want to convert"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 284
+msgid "Drag files here or use the Add Files button"
+msgstr "גרור קבצים לכאן או השתמש בכפתור הוסף קבצים"
 
-msgid "Drop files here, choose videos, or add a whole folder. Nothing is changed until you start the conversion."
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 270
+msgid "Save in the same folder as the original file"
+msgstr "שמור באותו תיקייה כמו הקובץ המקורי"
 
-msgid "Choose videos"
-msgstr ""
-
-msgid "Add a folder"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 271
+msgid "Folder to save"
+msgstr "תיקייה לשמירה"
 
 msgid "Save converted videos"
-msgstr ""
-
-msgid "Next to each original"
-msgstr ""
-
-msgid "In one folder"
 msgstr ""
 
 msgid "Output folder"
 msgstr ""
 
-msgid "Choose an output folder"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 288
+msgid "Select folder"
+msgstr "בחר תיקייה"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 349
 msgid "Choose output folder"
 msgstr "בחר תיקיית פלט"
 
-msgid "Delete originals after verification"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 315
+msgid "Delete original files"
+msgstr "מחק קבצים מקוריים"
 
 msgid "Originals are kept unless every converted result passes validation"
 msgstr ""
@@ -1735,6 +1680,13 @@ msgstr "לא ניתן לפתוח את קובץ הווידאו עם הנגן בר
 # converter/ui/conversion_page.py, line: 1436
 msgid "Could not find this video file"
 msgstr "לא ניתן למצוא את קובץ הווידאו הזה"
+
+msgid "The crop cannot be applied"
+msgstr ""
+
+#, python-brace-format
+msgid "“{name}” was not converted: its picture size could not be read, or the crop removes the whole picture. Check the crop in the editor and try again."
+msgstr ""
 
 msgid "These tracks can't be copied into MP4"
 msgstr "לא ניתן להעתיק רצועות אלה לקובץ MP4"
@@ -1768,11 +1720,18 @@ msgstr "אינה נתמכת על ידי MP4"
 msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
 msgstr "קידוד מחדש ממיר רצועות אלה כך שה-MP4 יופעל בכל מקום. העתקה בכל זאת מהירה יותר, אך התוצאה עשויה להיות ללא קול או שלא תופעל כלל — בחר בפורמט הפלט MKV כדי לשמור על הרצועות המקוריות ללא שינוי."
 
+msgid "This video cannot be made to fit the size"
+msgstr "לא ניתן להתאים את הווידאו לגודל"
+
 msgid "General settings"
 msgstr ""
 
 msgid "Original resolution"
 msgstr ""
+
+#, python-brace-format
+msgid "up to {size}"
+msgstr "עד {size}"
 
 #, python-brace-format
 msgid "{profile} · {resolution}"
@@ -1847,8 +1806,29 @@ msgstr ""
 msgid "Height"
 msgstr ""
 
+msgid "Use the general size"
+msgstr "שימוש בגודל הכללי"
+
+msgid "No limit"
+msgstr "ללא הגבלה"
+
+msgid "Another size"
+msgstr "גודל אחר"
+
+msgid "Fits this video under a size, whatever the general setting"
+msgstr "מתאים את הווידאו הזה לגודל, ללא קשר להגדרה הכללית"
+
+msgid "Size in megabytes"
+msgstr "גודל במגה־בייט"
+
 msgid "This video will use"
 msgstr ""
+
+msgid "To fit the size"
+msgstr "כדי להתאים לגודל"
+
+msgid "Checking the video…"
+msgstr "הווידאו נבדק…"
 
 msgid "Apply to this video"
 msgstr ""
@@ -1877,6 +1857,9 @@ msgstr "נדרש FFmpeg להמרה, ו-MPV לצפייה מקדימה בעורך 
 # converter/ui/dependency_dialog.py, line: 57
 msgid "Command to be executed"
 msgstr "פקודה שתתבצע"
+
+msgid "Before installing"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 72
@@ -2034,6 +2017,9 @@ msgstr "הייצוא נכשל"
 msgid "Could not save the profile file."
 msgstr "לא ניתן לשמור את קובץ הפרופיל."
 
+msgid "This profile can read or write files"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 346
 msgid "Profile Imported"
@@ -2059,48 +2045,55 @@ msgstr "הייבוא נכשל"
 msgid "Could not load the profile. Make sure it is a valid Big Video Converter profile file."
 msgstr "לא ניתן לטעון את הפרופיל. וודא שזהו קובץ פרופיל תקין של Big Video Converter."
 
-msgid "Show conversion settings"
-msgstr ""
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 42
 msgid "Back"
 msgstr "חזור"
 
-msgid "Add videos"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 63
+msgid "Clear queue"
+msgstr "נקה תור"
 
-msgid "Add from the network"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 196
+msgid "Add Files"
+msgstr "הוסף קבצים"
 
-msgid "Clear the queue"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 230
+msgid "Add Folder"
+msgstr "הוסף תיקייה"
 
-msgid "Your videos"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 242
+msgid "Convert All"
+msgstr "המיר הכל"
 
-msgid "Add videos to begin"
-msgstr ""
-
-msgid "Convert videos"
-msgstr ""
-
-msgid "Convert this video"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 114
+msgid "Convert This File"
+msgstr "המר את הקובץ הזה"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 133
 msgid "Main menu"
 msgstr "תפריט ראשי"
 
-msgid "Welcome and quick tour"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 133
+msgid "Welcome Screen"
+msgstr "מסך ברוך הבא"
 
-msgid "Restore default settings"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 140
+msgid "Restore Settings"
+msgstr "שחזר הגדרות"
 
-msgid "About Big Video Converter"
-msgstr ""
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/header_bar.py, line: 68
+msgid "About"
+msgstr "אודות"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 70
@@ -2108,12 +2101,27 @@ msgid "Quit"
 msgstr "צא"
 
 #, python-brace-format
-msgid "{} video ready"
-msgid_plural "{} videos ready"
+msgid "{count} file"
+msgid_plural "{count} files"
 msgstr[0] ""
 msgstr[1] ""
 
-msgid "Changes apply only to the selected video"
+msgid "Show conversion settings"
+msgstr ""
+
+#, python-brace-format
+msgid "Show conversion settings ({shortcut})"
+msgstr ""
+
+msgid "Show editing tools"
+msgstr ""
+
+#, python-brace-format
+msgid "Show editing tools ({shortcut})"
+msgstr ""
+
+#, python-brace-format
+msgid "Track {number}"
 msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -2136,10 +2144,15 @@ msgstr "הסר רעש רקע"
 msgid "Uses a neural network to separate voice from noise. Strength controls how aggressively noise is removed."
 msgstr "משתמש ברשת עצבית כדי להפריד בין קול לרעש. בקרת העוצמה קובעת עד כמה רעש מוסר באגרסיביות."
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/noise_dialog.py, line: 285
-msgid "Lookahead (ms)"
-msgstr "הסתכלות קדימה (מילישניות)"
+#, python-brace-format
+msgid "Unavailable: install {package}"
+msgstr "לא זמין: התקן את {package}"
+
+msgid "For speech. Uses less processing."
+msgstr "לדיבור. דורש פחות עיבוד."
+
+msgid "For speech. Higher quality, more processing."
+msgstr "לדיבור. איכות גבוהה יותר, יותר עיבוד."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 348
@@ -2195,6 +2208,21 @@ msgstr "שלך"
 
 msgid "Click to use this preset"
 msgstr "לחצו כדי להשתמש בתבנית זו"
+
+#, python-brace-format
+msgid ""
+"It contains FFmpeg settings that can open, create or overwrite files on this computer, or reach the network:\n"
+"\n"
+"{settings}\n"
+"\n"
+"Import it only if you trust where it came from."
+msgstr ""
+
+msgid "Import anyway"
+msgstr ""
+
+msgid "This preset can read or write files"
+msgstr ""
 
 msgid "Create with AI…"
 msgstr "יצירה בעזרת בינה מלאכותית…"
@@ -2260,6 +2288,9 @@ msgstr "התבנית “{0}” נמחקה."
 msgid "Export Preset"
 msgstr "ייצוא תבנית"
 
+msgid "Choose a folder on this computer to export the preset."
+msgstr ""
+
 #, python-brace-format
 msgid "Preset exported to {0}"
 msgstr "התבנית יוצאה אל {0}"
@@ -2269,6 +2300,9 @@ msgstr "ייבוא תבנית"
 
 msgid "Preset files (*.toml)"
 msgstr "קובצי תבנית (*.toml)"
+
+msgid "Choose a preset file on this computer to import."
+msgstr ""
 
 #, python-brace-format
 msgid "The preset was not imported: {0}"
@@ -2329,40 +2363,63 @@ msgstr "התבנית לא נשמרה: {0}"
 msgid "Saved as “{0}” in {1}"
 msgstr "נשמר בתור “{0}” ב-{1}"
 
+#, python-brace-format
+msgid "{percent}%"
+msgstr ""
+
+#, python-brace-format
+msgid "≈ {seconds} s left"
+msgid_plural "≈ {seconds} s left"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "≈ {minutes} min left"
+msgid_plural "≈ {minutes} min left"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "≈ {hours} h {minutes} min left"
+msgid_plural "≈ {hours} h {minutes} min left"
+msgstr[0] ""
+msgstr[1] ""
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 737
+#, python-brace-format
+msgid "{mins}m {secs}s"
+msgstr "{mins}ד {secs}ש"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/progress_page.py, line: 737
+#, python-brace-format
+msgid "{secs}s"
+msgstr "{secs}שניות"
+
+#, python-brace-format
+msgid "Could not open “{name}”: {error}"
+msgstr ""
+
 msgid "Back to the queue"
 msgstr ""
 
 msgid "Conversion progress"
 msgstr ""
 
-msgid "Preparing the queue safely"
-msgstr ""
-
 msgid "Cancel all"
-msgstr ""
-
-msgid "Overall progress"
-msgstr ""
-
-msgid "Waiting for the first video"
 msgstr ""
 
 msgid "Overall conversion progress"
 msgstr ""
 
-msgid "0 finished"
+msgid "Convert more videos"
 msgstr ""
 
-msgid "0 remaining"
+msgid "Open video"
 msgstr ""
 
-msgid "Videos"
-msgstr ""
-
-msgid "0 videos"
-msgstr ""
-
-msgid "Back to queue"
+msgid "Show in folder"
 msgstr ""
 
 #, python-brace-format
@@ -2411,38 +2468,38 @@ msgid "No conversion results are available"
 msgstr ""
 
 #, python-brace-format
-msgid "{count} video finished"
-msgid_plural "{count} videos finished"
+msgid "{finished} of {total} finished · {percent}"
+msgid_plural "{finished} of {total} finished · {percent}"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Converting video"
+msgid_plural "Converting videos"
 msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
-msgid "{count} video remaining"
-msgid_plural "{count} videos remaining"
+msgid "{results} · {duration}"
+msgstr ""
+
+#, python-brace-format
+msgid "{before} → {after} ({change}%)"
+msgstr ""
+
+#, python-brace-format
+msgid "“{name}”: {reason}"
+msgstr ""
+
+#, python-brace-format
+msgid "+{count} more"
+msgid_plural "+{count} more"
 msgstr[0] ""
 msgstr[1] ""
 
-#, python-brace-format
-msgid "{count} video"
-msgid_plural "{count} videos"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "Review the results below or return to the queue"
+msgid "Back to queue"
 msgstr ""
 
-msgid "Converting videos"
-msgstr ""
-
-#, python-brace-format
-msgid "{} of {} finished"
-msgstr ""
-
-msgid "Pending videos remain unchanged until their conversion starts"
-msgstr ""
-
-#, python-brace-format
-msgid "Queue finished: {results}"
+msgid "Open folder"
 msgstr ""
 
 msgid "Cancel all conversions?"
@@ -2465,10 +2522,27 @@ msgstr "ממתין בתור"
 msgid "Conversion progress for “{}”"
 msgstr ""
 
+msgid "FFmpeg output"
+msgstr ""
+
+#, python-brace-format
+msgid "FFmpeg output for “{name}”"
+msgstr ""
+
 msgid "Command"
 msgstr ""
 
 msgid "Process output"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} output file"
+msgid_plural "{count} output files"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Open “{name}”"
 msgstr ""
 
 msgid "Skip this video"
@@ -2495,24 +2569,21 @@ msgid "Show technical details"
 msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 629
-msgid "Converting..."
-msgstr "ממיר..."
+# converter/utils/conversion.py, line: 246
+msgid "Starting process..."
+msgstr "מתחיל תהליך..."
 
-msgid "Converting"
-msgstr "ממיר"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 737
 #, python-brace-format
-msgid "{mins}m {secs}s"
-msgstr "{mins}ד {secs}ש"
+msgid "{codec} · {status}"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 737
 #, python-brace-format
-msgid "{secs}s"
-msgstr "{secs}שניות"
+msgid "{percent}, {remaining}"
+msgstr ""
+
+#, python-brace-format
+msgid "{fps} · {elapsed}"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 699
@@ -2528,6 +2599,9 @@ msgstr "נכשל"
 # converter/utils/conversion.py, line: 766
 msgid "Cancelled"
 msgstr "בוטל"
+
+msgid "The conversion failed. The details are in “FFmpeg output”."
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 104
@@ -2573,6 +2647,12 @@ msgstr "רזולוציה מותאמת אישית"
 # converter/ui/settings_page.py, line: 164
 msgid "Ex: 1280x720, 1920x1080"
 msgstr "1280x720, 1920x1080"
+
+msgid "Frame rate"
+msgstr ""
+
+msgid "Frames per second of the converted video"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 146
@@ -2704,6 +2784,13 @@ msgstr "זה יחזיר את כל ההגדרות לערכים ברירת המח�
 msgid "Reset"
 msgstr "איפוס"
 
+msgid "Settings Could Not Be Reset"
+msgstr ""
+
+#, python-brace-format
+msgid "The settings file could not be saved: {0}"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 705
 msgid "Settings Reset"
@@ -2713,6 +2800,40 @@ msgstr "איפוס הגדרות"
 # converter/ui/settings_page.py, line: 706
 msgid "All settings have been reset to their default values."
 msgstr "כל ההגדרות הוחזרו לערכי ברירת המחדל שלהן."
+
+msgid "Copies what already fits, lowers the bitrate and the resolution, and splits only when nothing else fits"
+msgstr "מעתיק את מה שכבר מתאים, מוריד את קצב הסיביות והרזולוציה, ומפצל רק כששום דבר אחר לא עוזר"
+
+msgid "Keep the resolution"
+msgstr "שמירה על הרזולוציה"
+
+msgid "Only the bitrate goes down; refuses a video that would need a smaller picture"
+msgstr "רק קצב הסיביות יורד; וידאו שיצטרך תמונה קטנה יותר נדחה"
+
+msgid "Split into parts"
+msgstr "פיצול לחלקים"
+
+msgid "Keeps the quality and makes several files, each under the size"
+msgstr "שומר על האיכות ויוצר כמה קבצים, כל אחד מתחת לגודל"
+
+#, python-brace-format
+msgid "Up to {size}"
+msgstr "עד {size}"
+
+msgid "Where the video is going"
+msgstr "לאן הווידאו הולך"
+
+msgid "Every converted video comes out no bigger than this."
+msgstr "כל וידאו מומר יוצא לא גדול מזה."
+
+msgid "The size follows the quality"
+msgstr "הגודל תלוי באיכות"
+
+msgid "In megabytes"
+msgstr "במגה־בייט"
+
+msgid "How to fit it"
+msgstr "איך להתאים"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 132
@@ -2739,17 +2860,13 @@ msgstr "רק להוציא כתוביות"
 msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
 msgstr "דלג על המרת הווידאו לחלוטין וחלץ רק את מסלולי הכתוביות לקבצי .srt."
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 522
 #, python-brace-format
-msgid "Segment {num}: {start} → {end}"
-msgstr "קטע {num}: {start} → {end}"
+msgid "Segment {num}"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 526
 #, python-brace-format
-msgid "Duration: {duration}"
-msgstr "משך: {duration}"
+msgid "{start} → {end} ({duration})"
+msgstr ""
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -2893,6 +3010,10 @@ msgstr "ערכי הזמן אינם יכולים להיות שליליים"
 # converter/ui/video_edit_page.py, line: 577
 msgid "Invalid Time Range"
 msgstr "טווח זמן לא תקין"
+
+#, python-brace-format
+msgid "Start time must be before the end of the video ({duration})"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 454
@@ -3124,10 +3245,13 @@ msgstr "משך:"
 msgid "Volume"
 msgstr "עוצמה"
 
+msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
+msgstr ""
+
 msgid "Image"
 msgstr ""
 
-msgid "Fine-tune the look only when the source needs it."
+msgid "Reset image adjustments"
 msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -3148,16 +3272,33 @@ msgstr "רוויה"
 msgid "Hue"
 msgstr "גוֹן"
 
+msgid "Source colours"
+msgstr ""
+
+msgid "As the file says"
+msgstr ""
+
+msgid "HDR10 (PQ)"
+msgstr ""
+
+msgid "HDR (HLG)"
+msgstr ""
+
+msgid "Standard (SDR)"
+msgstr ""
+
 msgid "Orientation"
 msgstr ""
 
-msgid "Rotate or mirror the picture without changing the source file."
-msgstr ""
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 554
-msgid "Transform"
-msgstr "שנה"
+# converter/ui/video_edit_ui.py, line: 605
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 609
+msgid "Reset Transform"
+msgstr "אפס טרנספורמציה"
+
+msgid "Rotation"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 554
@@ -3197,26 +3338,9 @@ msgid "Flip Vertical"
 msgstr "הפוך אנכית"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "אפס טרנספורמציה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 374
 msgid "Trim Segments"
 msgstr "גזירת קטעים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 376
-msgid "Segments List"
-msgstr "רשימת קטעים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 662
-msgid "Press M or use the mark button to add segments"
-msgstr "לחץ על M או השתמש בכפתור הסימון כדי להוסיף קטעים"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 406
@@ -3227,6 +3351,11 @@ msgstr "הוסף קטע ידנית"
 # converter/ui/video_edit_ui.py, line: 414
 msgid "Clear all segments"
 msgstr "נקה את כל הקטעים"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 662
+msgid "Press M or use the mark button to add segments"
+msgstr "לחץ על M או השתמש בכפתור הסימון כדי להוסיף קטעים"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 429
@@ -3242,6 +3371,53 @@ msgid "Segment output"
 msgstr ""
 
 msgid "Choose how marked segments are saved"
+msgstr ""
+
+msgid "Effects"
+msgstr ""
+
+msgid "Reset effects"
+msgstr ""
+
+# File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
+# converter/app/ui/main_window.py, line: 769
+msgid "Off"
+msgstr "כבוי"
+
+msgid "Light"
+msgstr ""
+
+msgid "Strong"
+msgstr ""
+
+msgid "Noise reduction"
+msgstr ""
+
+msgid "Sharpening"
+msgstr ""
+
+msgid "Stabilization"
+msgstr ""
+
+msgid "Applied when converting, not in the preview"
+msgstr ""
+
+msgid "Look or shader"
+msgstr ""
+
+msgid "None"
+msgstr ""
+
+msgid "Choose a colour look (.cube) or shader (.hook)"
+msgstr ""
+
+msgid "Remove the look or shader"
+msgstr ""
+
+msgid "Choose a Look or Shader"
+msgstr ""
+
+msgid "Looks and shaders"
 msgstr ""
 
 #, python-brace-format
@@ -3292,6 +3468,18 @@ msgstr "הגדלה מעבר לרזולוציה המקורית אינה משפר�
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/utils/file_info.py, line: 361
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_ui.py, line: 764
+msgid "Frame Rate"
+msgstr "קצב פריימים"
+
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgstr ""
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_options_dialog.py, line: 94
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_options_dialog.py, line: 166
@@ -3334,23 +3522,18 @@ msgstr "פענח באמצעות תוכנה"
 msgid "Decode on CPU and only encode on GPU. Enable this if GPU decoding causes errors or artifacts."
 msgstr "פענח במעבד ורק קודד בכרטיס גרפי. הפעל זאת אם פענוח בכרטיס גרפי גורם לשגיאות או לארפקטים."
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_options_dialog.py, line: 119
-msgid "Change the video size. 'Original' keeps it as-is. Lower resolutions create smaller files."
-msgstr "שנה את גודל הווידאו. 'מקורי' שומר עליו כפי שהוא. רזולוציות נמוכות יוצרות קבצים קטנים יותר."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_options_dialog.py, line: 135
-msgid "Video Options"
-msgstr "אפשרויות וידאו"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_options_dialog.py, line: 156
-msgid "Choose how your video will be encoded. The defaults work well for most cases."
-msgstr "בחר כיצד הווידאו שלך יוקודד. ההגדרות המוגדרות מראש פועלות היטב עבור רוב המקרים."
-
 msgid "The video metadata could not be read"
 msgstr "לא ניתן היה לקרוא את מטא-נתוני הסרטון"
+
+#, python-brace-format
+msgid "Error getting video info: {error}"
+msgstr ""
+
+msgid "Error: No video stream found"
+msgstr ""
+
+msgid "Error: Failed to load video file. Please check the file format and try again."
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 53
@@ -3465,10 +3648,13 @@ msgstr "הצג דיאלוג בהפעלה"
 msgid "Let's Start"
 msgstr "בוא נתחיל"
 
+msgid "The file container could not be read. It may be a corrupted download or an unsupported format."
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 20
-msgid "There is no space left on the disk."
-msgstr "אין מקום פנוי בדיסק."
+# converter/utils/conversion.py, line: 22
+msgid "File or folder not found."
+msgstr "קובץ או תיקייה לא נמצאו."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 21
@@ -3476,9 +3662,9 @@ msgid "Permission denied — check file/folder permissions."
 msgstr "ההרשאה נדחתה - בדוק את ההרשאות של הקובץ/תיקייה."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 22
-msgid "File or folder not found."
-msgstr "קובץ או תיקייה לא נמצאו."
+# converter/utils/conversion.py, line: 20
+msgid "There is no space left on the disk."
+msgstr "אין מקום פנוי בדיסק."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 23
@@ -3545,6 +3731,9 @@ msgstr "לא ניתן היה לפתוח את ה-GPU. נסו להשבית קיד�
 msgid "The encoder stopped making progress and was terminated."
 msgstr "המקודד הפסיק להתקדם והופסק."
 
+msgid "WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. Choose one of those codecs, or MKV to keep the original ones."
+msgstr ""
+
 msgid "The conversion finished without producing a file."
 msgstr "ההמרה הסתיימה מבלי לייצר קובץ."
 
@@ -3554,11 +3743,21 @@ msgstr "ההמרה הסתיימה מבלי לייצר קובץ."
 msgid "Conversion failed with code {0}"
 msgstr "המרה נכשלה עם קוד {0}"
 
+#, python-brace-format
+msgid "Video stream: codec={codec}, pixel format={pixel_format}"
+msgstr ""
+
+msgid "Could not analyze the video stream with ffprobe"
+msgstr ""
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 185
 #, python-brace-format
 msgid "Error starting conversion: {0}"
 msgstr "שגיאה בהתחלת ההמרה: {0}"
+
+msgid "The conversion could not start."
+msgstr ""
 
 msgid "Preparing…"
 msgstr "מכין…"
@@ -3566,11 +3765,17 @@ msgstr "מכין…"
 msgid "Extracting subtitles…"
 msgstr "מחלץ כתוביות…"
 
+msgid "Measuring camera shake…"
+msgstr ""
+
 msgid "Checking the GPU encoder…"
 msgstr "בודק את מקודד ה-GPU…"
 
 msgid "GPU unavailable, using the processor"
 msgstr "ה-GPU אינו זמין, משתמש במעבד"
+
+msgid "Adding subtitles…"
+msgstr ""
 
 msgid "Copying without re-encoding"
 msgstr "מעתיק ללא קידוד מחדש"
@@ -3594,25 +3799,37 @@ msgstr "פיענוח תוכנה וקידוד GPU"
 msgid "Software encoding"
 msgstr "קידוד תוכנה"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 579
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 586
-msgid "Improving audio quality"
-msgstr "שיפור איכות השמע"
+msgid "Analyzing the video for the target size…"
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 246
-msgid "Starting process..."
-msgstr "מתחיל תהליך..."
+#, python-brace-format
+msgid "Input probe unavailable: {0}"
+msgstr ""
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 325
 msgid "No progress detected. Process may be stuck."
 msgstr "לא זוהה שום התקדמות. ייתכן שהתהליך תקוע."
 
+#, python-brace-format
+msgid "Output duration not verified: {0}"
+msgstr ""
+
+msgid "The output could not be verified against the input"
+msgstr ""
+
+msgid "The output does not carry every subtitle track of the original"
+msgstr ""
+
 msgid "Checking output file..."
 msgstr "בודק את קובץ הפלט..."
+
+msgid "Original deleted after output validation"
+msgstr ""
+
+#, python-brace-format
+msgid "Original preserved: {0}"
+msgstr ""
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -3634,11 +3851,8 @@ msgstr "המרה הושלמה"
 msgid "Conversion completed successfully!"
 msgstr "המרה הושלמה בהצלחה!"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 1340
-#, python-brace-format
-msgid "The conversion failed with error code {0}."
-msgstr "ההמרה נכשלה עם קוד שגיאה {0}."
+msgid "The full FFmpeg comes from the RPM Fusion repository, which must be enabled first. The command replaces the limited ffmpeg-free package."
+msgstr ""
 
 #, python-brace-format
 msgid "Additional options could not be parsed: {0}"
@@ -4839,15 +5053,6 @@ msgstr "העתק קודק"
 msgid "Copy resolution"
 msgstr "העתק רזולוציה"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 361
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 764
-msgid "Frame Rate"
-msgstr "קצב פריימים"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 368
 msgid "Copy frame rate"
@@ -4977,6 +5182,10 @@ msgstr "שגיאה בהשגת מידע על הקובץ"
 msgid "Retry"
 msgstr "נסה שוב"
 
+#, python-brace-format
+msgid "The segment {0} starts before the previous one ends; list the segments in order without overlaps."
+msgstr ""
+
 msgid "Copy video"
 msgstr "העתקת וידאו"
 
@@ -4986,6 +5195,9 @@ msgstr "טקסט התבנית ריק או גדול מדי."
 #, python-brace-format
 msgid "The preset is not valid TOML: {0}"
 msgstr "התבנית אינה TOML תקין: {0}"
+
+msgid "The preset is not valid TOML: its tables are nested too deeply."
+msgstr ""
 
 msgid "The preset must be a TOML table."
 msgstr "התבנית חייבת להיות טבלת TOML."
@@ -5051,8 +5263,8 @@ msgstr "[preset] tags חייב להיות רשימת מילים קצרות."
 msgid "[video] resolution must look like 1920x1080."
 msgstr "[video] resolution חייב להיראות כמו 1920x1080."
 
-msgid "[video] fps must be a number between 1 and 300."
-msgstr "[video] fps חייב להיות מספר בין 1 ל-300."
+msgid "[video] fps must be a number between 1 and 240."
+msgstr ""
 
 msgid "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
 msgstr "[video] pixel_format חייב להיות שם פורמט פיקסלים של FFmpeg כגון yuv420p."
@@ -5105,28 +5317,121 @@ msgstr "לא ניתן למחוק תבניות מובנות; שכפלו אחת כ
 msgid "{0} (copy)"
 msgstr "{0} (עותק)"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1467
-#, python-brace-format
-msgid "All {0} segments have been joined successfully!"
-msgstr "כל {0} הקטעים הוצמדו בהצלחה!"
+msgid "The keyframes of the video are too far apart to split it into parts under the size limit."
+msgstr ""
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1304
+msgid "The video could not be split into parts under the size limit."
+msgstr ""
+
 #, python-brace-format
-msgid "All {0} segments have been processed successfully!"
-msgstr "כל {0} הקטעים עובדו בהצלחה!"
+msgid "{0} cannot hold picture subtitles (PGS, DVD): {1} track left out. Choose MKV to keep it."
+msgid_plural "{0} cannot hold picture subtitles (PGS, DVD): {1} tracks left out. Choose MKV to keep them."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Part {0} starts {1:.3f} s after a keyframe, where a stream copy would have to begin. Re-encoding the video instead, so every part starts exactly where it was cut; this takes longer."
+msgstr ""
+
+msgid "Splitting into parts…"
+msgstr "מפצל לחלקים…"
+
+msgid "Completed — re-encoded: a cut was not on a keyframe"
+msgstr ""
+
+#, python-brace-format
+msgid "Split into {0} part that fits the size limit. The video was re-encoded because a cut did not start on a keyframe."
+msgid_plural "Split into {0} parts that fit the size limit. The video was re-encoded because a cut did not start on a keyframe."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "Split into {0} part that fits the size limit."
+msgid_plural "Split into {0} parts that fit the size limit."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Conversion completed successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgstr ""
+
+#, python-brace-format
+msgid "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgid_plural "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "All {0} segment has been joined successfully!"
+msgid_plural "All {0} segments have been joined successfully!"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "All {0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgid_plural "All {0} segments have been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "All {0} segment has been processed successfully!"
+msgid_plural "All {0} segments have been processed successfully!"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "WhatsApp video"
+msgstr "וידאו WhatsApp"
+
+msgid "Discord"
+msgstr "Discord"
+
+msgid "E-mail"
+msgstr "דוא״ל"
+
+msgid "Upload sites"
+msgstr "אתרי העלאה"
+
+msgid "Telegram or WhatsApp document"
+msgstr "מסמך Telegram או WhatsApp"
+
+msgid "FAT32 drive or Telegram Premium"
+msgstr "כונן FAT32 או Telegram Premium"
+
+msgid "Copied as it is: it already fits"
+msgstr "הועתק כמו שהוא: כבר מתאים"
+
+msgid "Converted at the chosen quality: it already fits"
+msgstr "הומר באיכות שנבחרה: כבר מתאים"
+
+#, python-brace-format
+msgid "Split without re-encoding into {0} part"
+msgid_plural "Split without re-encoding into {0} parts"
+msgstr[0] "פוצל ללא קידוד מחדש ל־{0} חלק"
+msgstr[1] "פוצל ללא קידוד מחדש ל־{0} חלקים"
+
+msgid "Converted at the chosen quality, then split into even parts"
+msgstr "הומר באיכות שנבחרה ואז פוצל לחלקים שווים"
+
+msgid "original resolution"
+msgstr "רזולוציה מקורית"
+
+#, python-brace-format
+msgid "{picture} at {rate} Mbit/s"
+msgstr "{picture} ב־{rate} Mbit/s"
+
+#, python-brace-format
+msgid "audio at {rate} kbit/s"
+msgstr "שמע ב־{rate} kbit/s"
 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 67
 msgid "Convert Video"
 msgstr "המרת וידאו"
 
-# File: big-video-converter/big-video-converter/usr/share/nautilus-
-# python/extensions/big_video_converter_extension.py, line: 70
 #, python-brace-format
-msgid "Convert {0} Videos"
-msgstr "המיר {0} סרטונים"
+msgid "Convert {0} Video"
+msgid_plural "Convert {0} Videos"
+msgstr[0] ""
+msgstr[1] ""
 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 108
@@ -5150,385 +5455,84 @@ msgid "Failed to start Big Video Converter: {0}"
 msgstr "כישלון בהפעלה של הממיר וידאו הגדול: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 67
-#~ msgid "Edit file"
-#~ msgstr "ערוך קובץ"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 81
-#~ msgid "Play file"
-#~ msgstr "נגן קובץ"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 101
-#~ msgid "Open Containing Folder"
-#~ msgstr "פתח תיק מכיל"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 104
-#~ msgid "More Information..."
-#~ msgstr "מידע נוסף..."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 107
-#~ msgid "Delete from Disk..."
-#~ msgstr "מחק מהדיסק..."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 188
-#~ msgid "Delete File from Disk?"
-#~ msgstr "מחק קובץ מהדיסק?"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 191
-#, python-brace-format
+# converter/constants.py, line: 321
 #~ msgid ""
-#~ "Are you sure you want to permanently delete '{}'?\n"
+#~ "Reduces background noise from audio using the GTCRN neural network.\n"
 #~ "\n"
-#~ "This action cannot be undone."
+#~ "• Requires audio re-encoding\n"
+#~ "• Works best for constant background noise\n"
+#~ "• Automatically re-encodes audio if set to copy"
 #~ msgstr ""
-#~ "האם אתה בטוח שברצונך למחוק לצמיתות את '{}'?\n"
+#~ "מפחית רעש רקע מהאודיו באמצעות רשת עצבית GTCRN.\n"
 #~ "\n"
-#~ "פעולה זו אינה ניתנת לביטול."
+#~ "• דורש קידוד מחדש של האודיו\n"
+#~ "• עובד הכי טוב עם רעש רקע קבוע\n"
+#~ "• מקודד מחדש את האודיו באופן אוטומטי אם מוגדר להעתקה"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 226
-#~ msgid "Error Deleting File"
-#~ msgstr "שגיאה במחיקת קובץ"
+# converter/constants.py, line: 339
+#~ msgid ""
+#~ "Voice Recovery — high-frequency reconstruction\n"
+#~ "\n"
+#~ "Recovers frequencies above 8 kHz that the AI\n"
+#~ "noise reduction model removes.\n"
+#~ "\n"
+#~ "• 0%: Cuts all HF (maximum NR)\n"
+#~ "• 75%: Natural default\n"
+#~ "• 100%: Full original HF preserved"
+#~ msgstr ""
+#~ "שחזור קול — שיקום תדרים גבוהים\n"
+#~ "\n"
+#~ "שחזר תדרים מעל 8 קה\"ץ שהמודל להפחתת רעש של AI מסיר.\n"
+#~ "\n"
+#~ "• 0%: חותך את כל התדרים הגבוהים (הפחתה מקסימלית)\n"
+#~ "• 75%: ברירת מחדל טבעית\n"
+#~ "• 100%: שמירה מלאה על התדרים הגבוהים המקוריים"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 227
-#, python-brace-format
-#~ msgid "Could not delete file: {}"
-#~ msgstr "לא ניתן למחוק את הקובץ: {}"
+# converter/sidebar_builder.py, line: 225
+#~ msgid "Maximum Cleaning"
+#~ msgstr "ניקוי מקסימלי"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 282
-#~ msgid "No Video Files"
-#~ msgstr "אין קבצי וידאו"
+# converter/sidebar_builder.py, line: 226
+#~ msgid "Natural Voice"
+#~ msgstr "קול טבעי"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 284
-#~ msgid "Drag files here or use the Add Files button"
-#~ msgstr "גרור קבצים לכאן או השתמש בכפתור הוסף קבצים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 270
-#~ msgid "Save in the same folder as the original file"
-#~ msgstr "שמור באותו תיקייה כמו הקובץ המקורי"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 271
-#~ msgid "Folder to save"
-#~ msgstr "תיקייה לשמירה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 288
-#~ msgid "Select folder"
-#~ msgstr "בחר תיקייה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 315
-#~ msgid "Delete original files"
-#~ msgstr "מחק קבצים מקוריים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 63
-#~ msgid "Clear queue"
-#~ msgstr "נקה תור"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 69
-#~ msgid "0 files"
-#~ msgstr "0 קבצים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 196
-#~ msgid "Add Files"
-#~ msgstr "הוסף קבצים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 230
-#~ msgid "Add Folder"
-#~ msgstr "הוסף תיקייה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 242
-#~ msgid "Convert All"
-#~ msgstr "המיר הכל"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 114
-#~ msgid "Convert This File"
-#~ msgstr "המר את הקובץ הזה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 133
-#~ msgid "Welcome Screen"
-#~ msgstr "מסך ברוך הבא"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 140
-#~ msgid "Restore Settings"
-#~ msgstr "שחזר הגדרות"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 68
-#~ msgid "About"
-#~ msgstr "אודות"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 189
-#~ msgid "1 file"
-#~ msgstr "1 קובץ"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/header_bar.py, line: 191
-#, python-brace-format
-#~ msgid "{} files"
-#~ msgstr "{} קבצים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 932
-#~ msgid "Please select a folder, not a file."
-#~ msgstr "אנא בחר תיקייה, לא קובץ."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 940
-#, python-brace-format
-#~ msgid "Error selecting folder: {}"
-#~ msgstr "שגיאה בבחירת תיקייה: {}"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 974
-#~ msgid "No Files Added"
-#~ msgstr "לא הוספו קבצים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 975
-#~ msgid "No valid video files were found in your selection."
-#~ msgstr "לא נמצאו קבצי וידאו תקפים בבחירה שלך."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 122
-#~ msgid "Configure how the audio track will be handled. Copying keeps the original quality. Re-encoding allows changes."
-#~ msgstr "הגדר כיצד יטופל מסלול השמע. העתקה שומרת על האיכות המקורית. המרה מחדש מאפשרת שינויים."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 139
-#~ msgid "Audio Handling"
-#~ msgstr "טיפול באודיו"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 141
-#~ msgid "Choose what to do with the audio track. 'Copy' keeps the original. 'Re-encode' allows changing codec, bitrate and applying audio cleaning."
-#~ msgstr "בחר מה לעשות עם מסלול השמע. 'העתק' שומר על המקורי. 'שובקודד' מאפשר שינוי קודק, קצב סיביות ויישום ניקוי שמע."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 158
-#~ msgid "The format used to compress audio. AAC is widely compatible. Opus offers better quality at lower bitrates. Choose 'Copy' in audio handling to keep the original codec."
-#~ msgstr "הפורמט המשמש לדחיסת אודיו. AAC תואם באופן נרחב. Opus מציע איכות טובה יותר בנתוני קצב נמוכים יותר. בחר 'העתק' בניהול אודיו כדי לשמור על הקודק המקורי."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 175
-#~ msgid "Higher bitrate means better audio quality but larger files. 192k is a good balance for most content."
-#~ msgstr "קצב סיביות גבוה יותר משמעותו איכות שמע טובה יותר אך קבצים גדולים יותר. 192k הוא איזון טוב לרוב התוכן."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/audio_dialog.py, line: 230
-#~ msgid "'Default' keeps the original channel count from the source video. Stereo (2) is standard. Mono (1) for voice only. 5.1 (6) for surround sound."
-#~ msgstr "'ברירת מחדל' שומרת על מספר הערוצים המקורי מהווידאו המקורי. סטריאו (2) הוא הסטנדרט. מונו (1) עבור קול בלבד. 5.1 (6) עבור סאונד היקפי."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 31
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 219
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 222
-#~ msgid "Converting Videos"
-#~ msgstr "המרת סרטונים"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 94
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 323
-#~ msgid "Cancel All"
-#~ msgstr "בטל הכל"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 789
-#~ msgid "Completed!"
-#~ msgstr "הושלם!"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 283
-#, python-brace-format
-#~ msgid "All {} videos converted successfully!"
-#~ msgstr "כל {} הסרטונים המומרים בהצלחה!"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 288
-#, python-brace-format
-#~ msgid "{} completed, {} failed, {} cancelled"
-#~ msgstr "{} הושלם, {} נכשל, {} בוטל"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 293
-#~ msgid "All conversions failed or were cancelled"
-#~ msgstr "כל ההמרות נכשלו או בוטלו"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 320
-#~ msgid "Cancel All Conversions?"
-#~ msgstr "לבטל את כל ההמרות?"
+# converter/sidebar_builder.py, line: 227
+#~ msgid "Smart (both combined)"
+#~ msgstr "חכם (שניהם משולבים)"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
+# converter/ui/noise_dialog.py, line: 264
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 335
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 148
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 322
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 436
-#~ msgid "Unknown file"
-#~ msgstr "קובץ לא ידוע"
+# converter/sidebar_builder.py, line: 234
+#~ msgid "Speech Strength"
+#~ msgstr "עוצמת דיבור"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 528
-#~ msgid "FFmpeg Command"
-#~ msgstr "פקודת FFmpeg"
+# converter/sidebar_builder.py, line: 253
+#~ msgid "Lookahead"
+#~ msgstr "הסתכלות קדימה"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/noise_dialog.py, line: 307
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/sidebar_builder.py, line: 273
+#~ msgid "Voice Recovery"
+#~ msgstr "שחזור קול"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/progress_page.py, line: 544
-#~ msgid "Process Output"
-#~ msgstr "פלט תהליך"
+# converter/sidebar_builder.py, line: 282
+#~ msgid "75%"
+#~ msgstr "75%"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 247
-#~ msgid "Playback Speed"
-#~ msgstr "מהירות השמעה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 439
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 471
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 502
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 533
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 710
-#~ msgid "Reset to default"
-#~ msgstr "אפס לברירת מחדל"
+# converter/ui/noise_dialog.py, line: 285
+#~ msgid "Lookahead (ms)"
+#~ msgstr "הסתכלות קדימה (מילישניות)"

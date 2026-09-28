@@ -35,6 +35,11 @@ for po in "$locale"/*.po; do
     else
         msgmerge --update --no-wrap --backup=none --no-fuzzy-matching "$po" "$pot"
     fi
-    sed -i '/^"POT-Creation-Date:/d;/^"PO-Revision-Date:/d' "$po"
+    # msgfmt --check-header warns about placeholder or missing header fields.
+    # The revision date is only filled in when absent, so reruns cause no churn.
+    sed -i -e '/^"POT-Creation-Date:/d;/^"PO-Revision-Date: YEAR/d' \
+        -e 's/FULL NAME <EMAIL@ADDRESS>/BigLinux/;s/LANGUAGE <LL@li.org>/BigLinux/' "$po"
+    grep -q '^"PO-Revision-Date:' "$po" ||
+        sed -i "0,/^\"Last-Translator:/s//\"PO-Revision-Date: $(date -u +'%Y-%m-%d %H:%M+0000')\\\\n\"\\n&/" "$po"
     printf '%-6s untranslated: %s\n' "$lang" "$(msgattrib --untranslated "$po" | grep -c '^msgid' || true)"
 done
