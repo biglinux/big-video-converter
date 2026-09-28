@@ -15,11 +15,21 @@
     <ul>
       <li>Convert queues of videos to MP4, MKV, MOV or WebM</li>
       <li>Trim segments and adjust crop, rotation, color and audio</li>
+      <li>Fit videos under a target size, or split them into parts that fit</li>
+      <li>Stabilize shaky footage, sharpen the picture and reduce noise</li>
+      <li>Apply color looks (.cube LUTs) or shaders and change the frame rate</li>
+      <li>Give any video its own settings while the rest of the queue keeps the general ones</li>
       <li>Use NVIDIA, Intel or AMD acceleration with software fallback</li>
       <li>Copy or re-encode audio and embed or extract subtitles</li>
       <li>Apply reusable presets for common publishing and editing workflows</li>
     </ul>
   </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Video queue with a thumbnail, individual options, general settings and output destination</caption>
+      <image>https://raw.githubusercontent.com/biglinux/big-video-converter/main/docs/screenshot.png</image>
+    </screenshot>
+  </screenshots>
   <launchable type="desktop-id">br.com.biglinux.converter.desktop</launchable>
   <translation type="gettext">big-video-converter</translation>
   <provides>

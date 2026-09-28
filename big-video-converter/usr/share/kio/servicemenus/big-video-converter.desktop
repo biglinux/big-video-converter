@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Service
 ServiceTypes=KonqPopupMenu/Plugin
-MimeType=video/mp4;video/x-matroska;video/webm;video/quicktime;video/x-msvideo;video/x-ms-wmv;video/mpeg;video/x-m4v;video/mp2t;video/x-flv;
+MimeType=video/mp4;video/matroska;video/x-matroska;video/3gpp;video/ogg;video/webm;video/quicktime;video/x-msvideo;video/x-ms-wmv;video/mpeg;video/x-m4v;video/mp2t;video/x-flv;
 Actions=ConvertVideo;
 X-KDE-Priority=TopLevel
 X-KDE-StartupNotify=true
@@ -28,7 +28,7 @@ Name[it]=Converti o taglia video
 Name[ja]=ビデオを変換またはカット
 Name[ko]=비디오 변환 또는 자르기
 Name[nl]=Video converteren of knippen
-Name[no]=Konverter eller klipp video
+Name[nb]=Konverter eller klipp video
 Name[pl]=Konwertuj lub przytnij wideo
 Name[ro]=Convertește sau taie video
 Name[ru]=Конвертировать или обрезать Видео
@@ -37,4 +37,4 @@ Name[sv]=Konvertera eller klipp video
 Name[tr]=Video dönüştür veya Kes
 Name[uk]=Конвертувати або обрізати Відео
 Name[zh]=转换或剪辑视频
-Exec=big-video-converter-gui %U
+Exec=big-video-converter-gui %F
