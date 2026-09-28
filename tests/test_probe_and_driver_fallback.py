@@ -15,7 +15,6 @@ import subprocess
 import time
 
 import pytest
-
 from conftest import CLI, media_command
 from utils.media_validation import probe_media
 
@@ -61,7 +60,7 @@ class TestFfprobeStreamGroups:
                   'probe_value a:0 stream=channels; echo ---\n'
                   'probe_value v:0 stream=pix_fmt; echo ---\n'
                   'probe_rows s stream=index,codec_name; echo ---\n')
-        out = subprocess.run(['bash', '-c', script], capture_output=True, text=True, timeout=20)
+        out = subprocess.run(['bash', '-c', script], capture_output=True, text=True, timeout=20, check=False)
         rows, channels, pix_fmt, subtitles, _ = out.stdout.split('---\n')
         assert rows.split() == ['1', '2'], out.stdout
         assert channels.strip() == '1'
@@ -74,7 +73,7 @@ class TestFfprobeStreamGroups:
         end = text.index('\n}\n', text.index('probe_value() {')) + 2
         script = (f'ffprobe_executable={shutil.which("ffprobe")}\ninput_file={str(media["multi"])!r}\n'
                   + text[start:end] + '\nprobe_rows s stream=index,codec_name\n')
-        out = subprocess.run(['bash', '-c', script], capture_output=True, text=True, timeout=20)
+        out = subprocess.run(['bash', '-c', script], capture_output=True, text=True, timeout=20, check=False)
         assert out.stdout.split() == ['3,subrip', '4,subrip'], out.stdout
 
     def test_reencode_keeps_channel_count_and_drops_timecode_track(self, timecode_mov, tmp_path, run_cli):
@@ -116,7 +115,7 @@ class TestStallWatchdog:
         assert not (tmp_path / 'out.mp4').exists()
         assert not list(tmp_path.glob('.bvc-*'))
         time.sleep(0.5)
-        assert subprocess.run(['pgrep', '-f', 'sleep 613'], capture_output=True).returncode != 0
+        assert subprocess.run(['pgrep', '-f', 'sleep 613'], capture_output=True, check=False).returncode != 0
 
     def test_disabled_watchdog_adds_no_progress_option(self, media, tmp_path, run_cli):
         result = run_cli(media['silent'], tmp_path / 'out.mp4', stall_timeout=0, options='-t 0.4 -threads 1')
@@ -141,7 +140,7 @@ class TestStallWatchdog:
         process.stdout.read()
         assert process.wait(timeout=15) == 143
         time.sleep(0.5)
-        assert subprocess.run(['pgrep', '-f', 'sleep 617'], capture_output=True).returncode != 0
+        assert subprocess.run(['pgrep', '-f', 'sleep 617'], capture_output=True, check=False).returncode != 0
         assert not list(tmp_path.glob('.bvc-*'))
 
 
@@ -156,7 +155,7 @@ class TestGpuSmokeTest:
                'ffmpeg_executable': str(wrapper), 'output_file': str(tmp_path / 'out.mp4'),
                'options': '-t 0.4 -threads 1'}
         result = subprocess.run(['bash', str(CLI), str(media['silent'])], env=env, cwd=cli_env['HOME'],
-                                capture_output=True, text=True, timeout=90)
+                                capture_output=True, text=True, timeout=90, check=False)
         assert result.returncode == 0, result.stdout + result.stderr
         assert 'Checking GPU encoder h264_vaapi' in result.stdout
         assert 'GPU encoder check failed' in result.stdout
@@ -171,11 +170,28 @@ class TestGpuSmokeTest:
                'ffmpeg_executable': str(wrapper), 'output_file': str(tmp_path / 'out.mp4'),
                'options': '-t 0.4 -threads 1'}
         result = subprocess.run(['bash', str(CLI), str(media['silent'])], env=env, cwd=cli_env['HOME'],
-                                capture_output=True, text=True, timeout=90)
+                                capture_output=True, text=True, timeout=90, check=False)
         assert result.returncode == 0, result.stdout + result.stderr
         assert 'Checking GPU encoder' not in result.stdout
         assert 'Encode mode: Decode GPU, encode GPU' in result.stdout
         assert 'Encode mode: Decode Software, Encode Software' in result.stdout
+
+    def test_vulkan_scales_in_software_before_the_upload(self, media, tmp_path, cli_env):
+        """scale_vulkan garbles 1280x720 and 1920x1080; it must never be used."""
+        wrapper = _fake_ffmpeg(tmp_path, 'no-gpu-ffmpeg',
+                               'for a in "$@"; do [[ $a == -init_hw_device ]] && exit 1; done')
+        env = {**cli_env, 'gpu': 'vulkan', 'force_software': '', 'gpu_smoke_test': '0',
+               'video_resolution': '64x36', 'ffmpeg_executable': str(wrapper),
+               'output_file': str(tmp_path / 'out.mp4'), 'options': '-t 0.4 -threads 1'}
+        result = subprocess.run(['bash', str(CLI), str(media['silent'])], env=env, cwd=cli_env['HOME'],
+                                capture_output=True, text=True, timeout=90, check=False)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert 'Encode mode: Decode GPU' not in result.stdout
+        assert 'scale_vulkan' not in result.stdout
+        vulkan_run = next(line for line in result.stdout.splitlines()
+                          if line.startswith('Running command:') and 'h264_vulkan' in line)
+        assert vulkan_run.index('scale=') < vulkan_run.index('hwupload=derive_device=vulkan')
+        assert _streams(tmp_path / 'out.mp4', 'video')[0]['width'] == 64
 
     def test_exit_255_is_an_error_and_still_falls_back(self, media, tmp_path, cli_env):
         """ffmpeg returns 255 for AVERROR(EPERM); it used to be read as a cancel."""
@@ -185,7 +201,76 @@ class TestGpuSmokeTest:
                'ffmpeg_executable': str(wrapper), 'output_file': str(tmp_path / 'out.mp4'),
                'options': '-t 0.4 -threads 1'}
         result = subprocess.run(['bash', str(CLI), str(media['silent'])], env=env, cwd=cli_env['HOME'],
-                                capture_output=True, text=True, timeout=90)
+                                capture_output=True, text=True, timeout=90, check=False)
         assert result.returncode == 0, result.stdout + result.stderr
         assert 'interrupted by user' not in result.stdout
         assert (tmp_path / 'out.mp4').exists()
+
+
+class TestFileInfoFailures:
+    def test_a_failed_probe_is_asked_again(self, media, monkeypatch):
+        from utils import file_info
+
+        file_info.clear_probe_cache()
+        real_run = subprocess.run
+        calls = []
+
+        def run(command, **kwargs):
+            calls.append(command)
+            if len(calls) == 1:
+                raise subprocess.TimeoutExpired(command, 10)
+            return real_run(command, **kwargs)
+
+        monkeypatch.setattr(file_info.subprocess, 'run', run)
+        assert file_info.get_video_dimensions(str(media['video'])) == (None, None)
+        answer = file_info.get_video_dimensions(str(media['video']))
+        assert answer[0] and answer[1]
+        assert file_info.get_video_dimensions(str(media['video'])) == answer
+        assert len(calls) == 2
+        file_info.clear_probe_cache()
+
+    def test_latin1_metadata_is_read(self, tmp_path, monkeypatch):
+        """Tags are copied into ffmpeg's and ffprobe's output as written."""
+        from utils import file_info
+
+        (tmp_path / 'stderr').write_bytes(
+            b"Input #0, matroska,webm, from 'x.mkv':\n  Metadata:\n    title : Caf\xe9\n"
+            b'  Duration: 00:00:01.00, start: 0.000000, bitrate: 1 kb/s\n'
+            b'  Stream #0:0: Video: h264, yuv420p, 64x48, 25 fps\n')
+        (tmp_path / 'stdout').write_bytes(
+            b'{"streams": [{"codec_type": "video", "tags": {"title": "Caf\xe9"}}], "format": {}}')
+        tool = tmp_path / 'tool'
+        tool.write_text(f'#!/bin/bash\ncat {tmp_path}/stderr >&2\n')
+        tool.chmod(0o755)
+        monkeypatch.setattr(file_info, 'get_ffmpeg_executable', lambda: str(tool))
+        monkeypatch.setattr(file_info, 'get_ffprobe_executable', lambda: str(tool))
+        video = tmp_path / 'x.mkv'
+        video.write_bytes(b'')
+
+        info = file_info._probe_with_ffmpeg(str(video))
+        assert info['streams'][0]['codec_type'] == 'video'
+        tool.write_text(f'#!/bin/bash\ncat {tmp_path}/stdout\n')
+        info = file_info.get_video_file_info(str(video))
+        assert info['streams'][0]['tags']['title'] == 'Caf\ufffd'
+
+    def test_info_dialog_reports_any_failure_and_opens_escaped_folders(self, monkeypatch):
+        from utils import file_info
+
+        shown = []
+        dialog = file_info.VideoInfoDialog.__new__(file_info.VideoInfoDialog)
+        dialog.file_path = '/videos/x.mp4'
+        dialog.dialog = None
+        dialog._show_error = shown.append
+
+        def fail(_path):
+            raise UnicodeDecodeError('utf-8', b'\xe9', 0, 1, 'invalid')
+
+        monkeypatch.setattr(file_info, 'get_video_file_info', fail)
+        monkeypatch.setattr(file_info.GLib, 'idle_add', lambda f, *a: f(*a))
+        dialog._get_file_info_thread()
+        assert shown and 'invalid' in shown[0]
+
+        opened = []
+        monkeypatch.setattr(file_info.Gtk, 'show_uri', lambda _parent, uri, _time: opened.append(uri))
+        dialog._open_containing_folder('/videos/a#b%c?d')
+        assert opened == ['file:///videos/a%23b%25c%3Fd']

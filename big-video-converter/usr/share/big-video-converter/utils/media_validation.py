@@ -4,18 +4,17 @@ A successful exit and a non-empty file are necessary, not sufficient. In
 particular, deletion must never discover an output by guessing its filename.
 """
 
-from dataclasses import dataclass
 import json
 import math
 import os
-from pathlib import Path
 import shutil
 import signal
 import stat
 import subprocess
-import tempfile
 import threading
 import time
+from dataclasses import dataclass
+from pathlib import Path
 
 from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
 
@@ -57,7 +56,7 @@ def probe_media(path: str, *, executable: str | None = None, timeout=15) -> dict
     )
     data = json.loads(result.stdout)
     if not isinstance(data, dict) or not isinstance(data.get("streams"), list):
-        raise ValueError("FFprobe did not return a media stream inventory")
+        raise ValueError("FFprobe did not return a media stream inventory")  # noqa: TRY004 - invalid tool output; callers handle ValueError
     return data
 
 
@@ -154,6 +153,35 @@ def terminate_process_group(process: subprocess.Popen, grace: float = 20.0) -> N
     process.wait(timeout=5)
 
 
+def run_cancellable(argv, cancelled, *, timeout, task):
+    """Run a helper in a session of its own, ended at once by cancel or deadline.
+
+    subprocess.run with a timeout made cancel and quit wait for a probe or a
+    stream copy nobody wanted any more, for up to an hour. Returns the
+    CompletedProcess with text output; the caller judges the exit status.
+    """
+    with subprocess.Popen(
+        argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        text=True, encoding="utf-8", errors="replace", start_new_session=True,
+    ) as process:
+        deadline = time.monotonic() + timeout
+        try:
+            while True:
+                if cancelled is not None and cancelled.is_set():
+                    raise InterruptedError(f"Cancelled while {task}")
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError(f"Timed out while {task}")
+                try:
+                    stdout, stderr = process.communicate(timeout=min(0.1, remaining))
+                    return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
+                except subprocess.TimeoutExpired:
+                    continue
+        finally:
+            if process.poll() is None:
+                terminate_process_group(process)
+
+
 FULL_DECODE_SECONDS = 30.0
 
 
@@ -182,29 +210,15 @@ def _decode_window(path: str, start: float, length: float,
     # the keyframe itself is what keeps a window's cost proportional to it.
     interval = ([] if math.isinf(length) else
                 ["-noaccurate_seek", "-ss", f"{start:.3f}", "-t", f"{length:.3f}"])
-    with tempfile.TemporaryFile() as error_log:
-        with subprocess.Popen(
-            [ffmpeg or get_ffmpeg_executable(), "-nostdin", "-v", "error", "-xerror",
-             "-err_detect", "explode", *interval,
-             "-i", path, "-map", "0:v", "-map", "0:a?", "-f", "null", "-"],
-            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-            stderr=error_log, start_new_session=True,
-        ) as process:
-            deadline = time.monotonic() + timeout
-            try:
-                while process.poll() is None:
-                    if cancelled.wait(0.1):
-                        raise InterruptedError("Cancelled before deleting the original")
-                    if time.monotonic() >= deadline:
-                        raise TimeoutError("Output decoding validation timed out")
-            finally:
-                if process.poll() is None:
-                    terminate_process_group(process)
-        if process.returncode:
-            error_log.seek(0)
-            detail = error_log.read().decode("utf-8", "replace").strip().splitlines()
-            raise ValueError(f"The output failed to decode at {start:.1f}s: "
-                             + (detail[-1] if detail else "unknown decoder error"))
+    process = run_cancellable(
+        [ffmpeg or get_ffmpeg_executable(), "-nostdin", "-v", "error", "-xerror",
+         "-err_detect", "explode", *interval,
+         "-i", path, "-map", "0:v", "-map", "0:a?", "-f", "null", "-"],
+        cancelled, timeout=timeout, task="decoding the output")
+    if process.returncode:
+        detail = process.stderr.strip().splitlines()
+        raise ValueError(f"The output failed to decode at {start:.1f}s: "
+                         + (detail[-1] if detail else "unknown decoder error"))
 
 
 def verify_integrity(path: str, cancelled: threading.Event, *,
@@ -224,34 +238,16 @@ def verify_integrity(path: str, cancelled: threading.Event, *,
     path = os.path.abspath(path)
     if cancelled.is_set():
         raise InterruptedError("Cancelled before checking the output")
-    with subprocess.Popen(
+    probe = run_cancellable(
         [ffprobe or get_ffprobe_executable(), "-v", "error", "-err_detect", "explode",
          "-count_packets", "-show_entries", "stream=codec_type,nb_read_packets,duration",
          "-show_entries", "format=duration", "-of", "json", path],
-        stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        text=True, encoding="utf-8", errors="replace", start_new_session=True,
-    ) as probe:
-        deadline = time.monotonic() + timeout
-        try:
-            while True:
-                if cancelled.is_set():
-                    raise InterruptedError("Cancelled while checking the output")
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise TimeoutError("Output packet validation timed out")
-                try:
-                    stdout, stderr = probe.communicate(timeout=min(0.1, remaining))
-                    break
-                except subprocess.TimeoutExpired:
-                    continue
-        finally:
-            if probe.poll() is None:
-                terminate_process_group(probe)
-    complaints = stderr.strip().splitlines()
+        cancelled, timeout=timeout, task="counting the output packets")
+    complaints = probe.stderr.strip().splitlines()
     if probe.returncode or complaints:
         raise ValueError("The output is damaged: "
                          + (complaints[-1] if complaints else "could not be read"))
-    data = json.loads(stdout)
+    data = json.loads(probe.stdout)
     packets = {}
     for stream in data.get("streams", []):
         kind = stream.get("codec_type")
@@ -305,7 +301,7 @@ def remove_original(source: str, identity: FileIdentity, outputs: list[str],
         raise InterruptedError("Cancelled before deleting the original")
     if FileIdentity.capture(source) != identity:
         raise ValueError("The original changed while the conversion was running")
-    if any(FileIdentity.capture(p) != expected for p, expected in zip(outputs, output_identities)):
+    if any(FileIdentity.capture(p) != expected for p, expected in zip(outputs, output_identities, strict=True)):
         raise ValueError("An output changed after validation")
     os.unlink(source)
 

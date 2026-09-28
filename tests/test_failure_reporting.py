@@ -1,5 +1,4 @@
 """What the user is told when a job fails, and what the queue does before launching one."""
-import os
 import subprocess
 from types import SimpleNamespace
 
@@ -126,6 +125,7 @@ class TestDiskSpaceDialog:
         queue = SimpleNamespace(calls=[], started=[])
         queue.header_bar = SimpleNamespace(set_buttons_sensitive=lambda value: queue.calls.append(value))
         queue._do_start_queue_processing = lambda: queue.started.append(True)
+        queue._restore_queue_after_single_file = lambda success: None
         return queue
 
     def test_cancel_hands_the_convert_button_back(self):
@@ -136,4 +136,4 @@ class TestDiskSpaceDialog:
     def test_continue_starts_the_queue(self):
         queue = self._queue()
         QueueManagerMixin._on_disk_space_response(queue, 'continue')
-        assert queue.started == [True] and queue._disk_space_ok is True
+        assert queue.started == [True] and not queue.calls

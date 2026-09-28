@@ -1,11 +1,12 @@
-"""
-Unified video settings management module.
-Provides constants, utilities, and management for video adjustments.
-"""
-
-import math
+"""FFmpeg video filters built from one file's crop, colour and transform edits."""
 
 import logging
+import math
+import os
+import subprocess
+from functools import lru_cache
+
+from utils.ffmpeg_path import get_ffmpeg_executable
 
 logger = logging.getLogger(__name__)
 
@@ -19,8 +20,6 @@ VIDEO_ADJUSTMENT_DEFAULTS = {
     "crop_right": 0,
     "crop_top": 0,
     "crop_bottom": 0,
-    "trim_start": 0.0,  # Start time for trimming (seconds)
-    "trim_end": -1.0,  # End time for trimming (seconds, -1 means no trim)
 }
 
 # Settings key mapping
@@ -33,15 +32,88 @@ SETTING_KEYS = {
     "crop_right": "preview-crop-right",
     "crop_top": "preview-crop-top",
     "crop_bottom": "preview-crop-bottom",
-    "trim_start": "video-trim-start",
-    "trim_end": "video-trim-end",
 }
+
+# Effect levels, chosen by eye and measured on 1080p (GTX 1660 Ti, Ryzen
+# 5600H): each runs at 90 frames per second or more. hqdn3d removes grain and
+# low-light noise (and 5-10% of the file on a clean film); CAS is AMD's
+# contrast adaptive sharpening, which sharpens without the halos of unsharp.
+DENOISE_FILTERS = {
+    "light": "hqdn3d=2:1.5:3:2.25",
+    "medium": "hqdn3d=4:3:6:4.5",
+    "strong": "hqdn3d=8:6:12:9",
+}
+SHARPEN_FILTERS = {
+    "light": "cas=strength=0.3:planes=1",
+    "medium": "cas=strength=0.6:planes=1",
+    "strong": "cas=strength=0.9:planes=1",
+}
+LUT_SUFFIXES = (".cube", ".3dl")
+SHADER_SUFFIXES = (".hook", ".glsl")
+
+
+@lru_cache(maxsize=1)
+def available_filters() -> frozenset[str]:
+    """Filter names this FFmpeg build has: hqdn3d needs a GPL build, the
+    stabilizer libvidstab, shaders libplacebo."""
+    try:
+        result = subprocess.run(
+            [get_ffmpeg_executable(), "-hide_banner", "-filters"],
+            capture_output=True, text=True, timeout=10, check=False,
+        )
+    except (subprocess.SubprocessError, OSError) as error:
+        logger.warning("Failed to query ffmpeg filters: %s", error)
+        return frozenset()
+    # " TS  hqdn3d  V->V  Apply a High Quality 3D Denoiser."
+    return frozenset(parts[1] for parts in map(str.split, result.stdout.splitlines())
+                     if len(parts) >= 3 and "->" in parts[2])
+
+
+def filter_path(path: str) -> str:
+    """A path escaped for an option value inside a filter graph.
+
+    FFmpeg parses it twice, as the option value and then as part of the graph;
+    escaped for both, a folder named "a,b" or "x:y" stays one path instead of
+    ending the option or starting another filter (the script's filter_path).
+    """
+    for special in ("\\", "'", ":"):
+        path = path.replace(special, "\\" + special)
+    for special in ("\\", "'", "[", "]", ",", ";"):
+        path = path.replace(special, "\\" + special)
+    return path
+
+
+def effect_file_filter(path: str) -> str:
+    """lut3d for a colour LUT, libplacebo for an mpv shader, "" otherwise."""
+    suffix = os.path.splitext(path)[1].lower()
+    if suffix in LUT_SUFFIXES:
+        return f"lut3d=file={filter_path(path)}"
+    if suffix in SHADER_SUFFIXES:
+        return f"libplacebo=custom_shader_path={filter_path(path)}"
+    return ""
+
+
+def effects_graph(denoise: str, sharpen: str, effect_file: str) -> str:
+    """The effects that run before the colour adjustments, as one graph.
+
+    The order is the preview's: mpv runs its filter graph first and applies
+    brightness, contrast, saturation and hue afterwards, when it converts the
+    picture for display. A shader runs after those, so it is not part of this.
+    """
+    parts = [DENOISE_FILTERS.get(denoise), SHARPEN_FILTERS.get(sharpen)]
+    if os.path.splitext(effect_file)[1].lower() in LUT_SUFFIXES:
+        parts.append(effect_file_filter(effect_file))
+    return ",".join(part for part in parts if part)
+
 
 # Threshold for determining if a value needs to be included
 FLOAT_THRESHOLD = 0.01
 
-# Alias for backward compatibility
-DEFAULT_VALUES = VIDEO_ADJUSTMENT_DEFAULTS
+
+class CropError(ValueError):
+    """The file's crop cannot be applied: its frame size is unknown or the
+    margins leave no picture. Converting without it would silently produce
+    an uncropped video."""
 
 
 class SettingsOverride:
@@ -82,49 +154,14 @@ class SettingsOverride:
         return getattr(self._settings, name)
 
 
-#
-# Value Access Functions
-#
 def get_adjustment_value(settings, name: str):
     """Get adjustment value from settings"""
-    setting_key = SETTING_KEYS.get(name)
-    if not setting_key:
-        return DEFAULT_VALUES.get(name, 0)
-
-    if name in ["crop_left", "crop_right", "crop_top", "crop_bottom"]:
-        return settings.get_value(setting_key, DEFAULT_VALUES.get(name, 0))
-    elif name == "trim_end":
-        # Special handling for trim_end to ensure we get None when it's -1
-        value = settings.get_value(setting_key, DEFAULT_VALUES.get(name, -1.0))
-        return None if value < 0 else value
-    else:
-        return settings.get_value(setting_key, DEFAULT_VALUES.get(name, 0.0))
-
-
-def save_adjustment_value(settings, name: str, value: str):
-    """Save an adjustment value to settings"""
-    setting_key = SETTING_KEYS.get(name)
-    if not setting_key:
-        return False
-
-    if name in ["crop_left", "crop_right", "crop_top", "crop_bottom"]:
-        return settings.set_int(setting_key, value)
-    else:
-        return settings.set_double(setting_key, value)
+    return settings.get_value(SETTING_KEYS[name], VIDEO_ADJUSTMENT_DEFAULTS[name])
 
 
 #
 # Value Conversion Functions (Preview Player to FFmpeg)
 #
-def preview_brightness_to_ffmpeg(brightness):
-    """
-    Preview player brightness: -1.0 to 1.0 (0.0 is neutral)
-    FFmpeg eq brightness: -1.0 to 1.0 (0.0 is neutral)
-    Direct 1:1 mapping.
-    """
-    return brightness
-
-
 def preview_saturation_to_ffmpeg(saturation):
     """
     Preview player saturation: 0.0 to 2.0 (1.0 is neutral)
@@ -161,20 +198,13 @@ def preview_hue_to_ffmpeg(hue):
     return hue * math.pi
 
 
-# Backward compatibility aliases (for existing code that references GStreamer names)
-gstreamer_brightness_to_ffmpeg = preview_brightness_to_ffmpeg
-gstreamer_saturation_to_ffmpeg = preview_saturation_to_ffmpeg
-gstreamer_hue_to_ffmpeg = preview_hue_to_ffmpeg
-
-
 #
 # FFmpeg Filter Generation
 #
-def generate_video_filters(
-    settings, video_width: int = None, video_height: int = None, input_file: str = None
-):
-    """
-    Generate all needed FFmpeg filters in one go.
+def get_ffmpeg_filter_string(settings, video_width: int | None = None, video_height: int | None = None):
+    """The comma-separated FFmpeg filter chain, or "" when nothing changes.
+
+    Raises CropError when crop margins are set but cannot be applied.
     """
     filters = []
 
@@ -188,30 +218,30 @@ def generate_video_filters(
     crop_bottom = get_adjustment_value(settings, "crop_bottom")
 
     logger.debug(
-        f"DEBUG generate_video_filters: crop_left={crop_left}, crop_right={crop_right}, crop_top={crop_top}, crop_bottom={crop_bottom}"
+        f"Video filters: crop_left={crop_left}, crop_right={crop_right}, crop_top={crop_top}, crop_bottom={crop_bottom}"
     )
     logger.debug(
-        f"DEBUG generate_video_filters: video_width={video_width}, video_height={video_height}"
+        f"Video filters: video_width={video_width}, video_height={video_height}"
     )
 
-    if (
-        (crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0)
-        and video_width is not None
-        and video_height is not None
-    ):
+    if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:
+        if not video_width or not video_height:
+            raise CropError("the video frame size is unknown")
         crop_width = video_width - crop_left - crop_right
         crop_height = video_height - crop_top - crop_bottom
-
-        if crop_width > 0 and crop_height > 0:
-            filters.append(f"crop={crop_width}:{crop_height}:{crop_left}:{crop_top}")
+        if crop_width <= 0 or crop_height <= 0 or min(crop_left, crop_right, crop_top, crop_bottom) < 0:
+            raise CropError(
+                f"crop margins {crop_left}/{crop_right}/{crop_top}/{crop_bottom} "
+                f"leave no picture of a {video_width}x{video_height} frame")
+        filters.append(f"crop={crop_width}:{crop_height}:{crop_left}:{crop_top}")
 
     # 2. Add eq filter with calibrated values (brightness, saturation)
     eq_parts = []
 
+    # Preview and FFmpeg eq brightness share the -1.0..1.0 range, 0.0 neutral.
     brightness = get_adjustment_value(settings, "brightness")
     if abs(brightness) > FLOAT_THRESHOLD:
-        ffmpeg_brightness = gstreamer_brightness_to_ffmpeg(brightness)
-        eq_parts.append(f"brightness={ffmpeg_brightness:.3f}")
+        eq_parts.append(f"brightness={brightness:.3f}")
 
     contrast = get_adjustment_value(settings, "contrast")
     if abs(contrast) > FLOAT_THRESHOLD:
@@ -219,8 +249,15 @@ def generate_video_filters(
 
     saturation = get_adjustment_value(settings, "saturation")
     if abs(saturation - 1.0) > FLOAT_THRESHOLD:
-        ffmpeg_saturation = gstreamer_saturation_to_ffmpeg(saturation)
+        ffmpeg_saturation = preview_saturation_to_ffmpeg(saturation)
         eq_parts.append(f"saturation={ffmpeg_saturation:.3f}")
+
+    # Effects before the colour adjustments, as the preview shows them.
+    effect_file = settings.get_value("preview-effect-file", "") or ""
+    effects = effects_graph(settings.get_value("preview-denoise", "off"),
+                            settings.get_value("preview-sharpen", "off"), effect_file)
+    if effects:
+        filters.append(effects)
 
     if eq_parts:
         filters.append(f"eq={':'.join(eq_parts)}")
@@ -228,7 +265,7 @@ def generate_video_filters(
     # 3. Add hue filter separately (FFmpeg requires separate hue filter, not in eq)
     hue = get_adjustment_value(settings, "hue")
     if abs(hue) > FLOAT_THRESHOLD:
-        ffmpeg_hue = gstreamer_hue_to_ffmpeg(hue) * 180 / math.pi
+        ffmpeg_hue = preview_hue_to_ffmpeg(hue) * 180 / math.pi
         filters.append(f"hue=h={ffmpeg_hue:.3f}")
 
     # 4. Rotation (transpose for 90/270, hflip+vflip for 180)
@@ -250,64 +287,8 @@ def generate_video_filters(
     if flip_v:
         filters.append("vflip")
 
-    return filters
+    # mpv runs a shader on the displayed picture, after the colour changes.
+    if os.path.splitext(effect_file)[1].lower() in SHADER_SUFFIXES:
+        filters.append(effect_file_filter(effect_file))
 
-
-def get_ffmpeg_filter_string(
-    settings, video_width: int = None, video_height: int = None, input_file: str = None
-):
-    """Get the complete FFmpeg filter string for command-line use"""
-    filters = generate_video_filters(settings, video_width, video_height, input_file)
-    if not filters:
-        return ""
     return ",".join(filters)
-
-
-# Legacy functions kept for compatibility
-generate_all_filters = generate_video_filters
-get_video_filter_string = get_ffmpeg_filter_string
-
-
-#
-# Video Adjustment Manager
-#
-class VideoAdjustmentManager:
-    """
-    Manages video adjustment settings with UI updates.
-    """
-
-    def __init__(self, settings_manager, page=None):
-        self.settings = settings_manager
-        self.page = page
-        self.values = {name: self.get_value(name) for name in DEFAULT_VALUES}
-
-    def get_value(self, name: str):
-        return get_adjustment_value(self.settings, name)
-
-    def set_value(self, name: str, value: str, update_ui: bool = True):
-        setting_key = SETTING_KEYS.get(name)
-        if not setting_key:
-            return False
-        self.values[name] = value
-        success = save_adjustment_value(self.settings, name, value)
-        if update_ui and success and self.page:
-            self._update_ui_for_setting(name, value)
-        return success
-
-    def _update_ui_for_setting(self, name, value):
-        if not self.page or not hasattr(self.page, "ui"):
-            return
-        ui = self.page.ui
-        ui_controls = {
-            "brightness": getattr(ui, "brightness_scale", None),
-            "contrast": getattr(ui, "contrast_scale", None),
-            "saturation": getattr(ui, "saturation_scale", None),
-            "hue": getattr(ui, "hue_scale", None),
-            "crop_left": getattr(ui, "crop_left_spin", None),
-            "crop_right": getattr(ui, "crop_right_spin", None),
-            "crop_top": getattr(ui, "crop_top_spin", None),
-            "crop_bottom": getattr(ui, "crop_bottom_spin", None),
-        }
-        control = ui_controls.get(name)
-        if control:
-            control.set_value(value)

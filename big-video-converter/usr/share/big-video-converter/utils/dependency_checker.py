@@ -1,11 +1,10 @@
 # Setup translation
 import gettext
-import os
-import shutil
-import shlex
-import subprocess
-
 import logging
+import os
+import shlex
+import shutil
+import subprocess
 
 logger = logging.getLogger(__name__)
 
@@ -62,23 +61,19 @@ class DependencyChecker:
        if not self.ffmpeg_path or not self.mpv_path:
            return False
 
-       # If the distro is RPM-based, we need to ensure it's not the limited 'ffmpeg-free'.
+       # On RPM systems the limited 'ffmpeg-free' package lacks most encoders.
+       # A build no package owns (AppImage, /usr/local, jellyfin) is usable,
+       # and so is one whose owner cannot be determined.
        if self.distro.get('base') == 'rpm':
            try:
-               # Ask the system which package owns the ffmpeg executable.
-               command = ['rpm', '-qf', self.ffmpeg_path]
-               result = subprocess.run(command, capture_output=True, text=True, check=True, timeout=5)
-               
-               package_name = result.stdout.strip()
-
-               # If the owner package is 'ffmpeg-free', the dependency is not met.
-               if 'ffmpeg-free' in package_name:
+               command = ['rpm', '-qf', '--queryformat', '%{NAME}\\n', self.ffmpeg_path]
+               result = subprocess.run(command, capture_output=True, text=True, timeout=5, check=False)
+           except (subprocess.SubprocessError, OSError) as e:
+               logger.warning("Could not verify the ffmpeg package provider: %s", e)
+           else:
+               if result.returncode == 0 and 'ffmpeg-free' in result.stdout.split():
                    logger.debug("Found 'ffmpeg-free' package. Triggering installation of the full version.")
                    return False
-           except (subprocess.SubprocessError, OSError) as e:
-               # If the check fails for any reason, it's safer to assume the dependency is not met.
-               logger.error(f"Warning: Could not verify the ffmpeg package provider: {e}")
-               return False
 
        # If we passed all checks, the dependencies are considered available.
        return True
@@ -90,11 +85,30 @@ class DependencyChecker:
             packages = ['ffmpeg', 'mpv']
             command = ['pkexec', 'pacman', '-S', *packages]
         elif base == 'debian':
-            packages = ['ffmpeg', 'mpv', 'libmpv2']
+            packages = ['ffmpeg', 'mpv', _debian_libmpv()]
             command = ['pkexec', 'apt', 'install', *packages]
         elif base == 'rpm':
+            # The full ffmpeg (RPM Fusion) conflicts with ffmpeg-free; dnf only
+            # swaps them when it may erase the installed package.
             packages = ['ffmpeg', 'mpv']
-            command = ['pkexec', 'dnf', 'install', *packages]
+            command = ['pkexec', 'dnf', 'install', '--allowerasing', *packages]
+            note = _("The full FFmpeg comes from the RPM Fusion repository, which must be "
+                     "enabled first. The command replaces the limited ffmpeg-free package.")
+            return {'command': command, 'display': shlex.join(command), 'packages': packages,
+                    'note': note}
         else:
             return None
         return {'command': command, 'display': shlex.join(command), 'packages': packages}
+
+
+def _debian_libmpv():
+    """libmpv2 on Debian 12 and Ubuntu 24.04, libmpv1 on Ubuntu 22.04."""
+    for name in ('libmpv2', 'libmpv1'):
+        try:
+            result = subprocess.run(['apt-cache', 'show', '--no-all-versions', name],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5, check=False)
+        except (subprocess.SubprocessError, OSError):
+            break
+        if result.returncode == 0:
+            return name
+    return 'libmpv2'

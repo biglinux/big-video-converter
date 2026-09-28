@@ -1,13 +1,12 @@
 """Regressions for optional desktop integration, including native GIO aborts."""
 import os
-from pathlib import Path
 import subprocess
 import sys
 import textwrap
+from pathlib import Path
 from unittest.mock import Mock
 
 import pytest
-
 
 SCHEMA_ID = "org.gnome.desktop.wm.preferences"
 APP_DIR = Path(__file__).resolve().parents[1] / "big-video-converter/usr/share/big-video-converter"
@@ -67,6 +66,12 @@ def test_available_desktop_schema_preserves_button_layout(main_module, monkeypat
     settings.get_string.assert_called_once_with("button-layout")
 
 
+# On the private bus of dbus-run-session, GTK and libadwaita activated the
+# desktop's portal (xdg-desktop-portal-kde, which started ksecretd), and both
+# outlived the bus, one pair per test run. These tests need no portal.
+NO_PORTALS = {"ADW_DISABLE_PORTAL": "1", "GDK_DEBUG": "no-portals"}
+
+
 @pytest.mark.skipif(
     not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")),
     reason="Requires an X11 or Wayland display")
@@ -85,6 +90,7 @@ def test_real_application_opens_with_no_gnome_schemas(tmp_path):
         GSETTINGS_SCHEMA_DIR=str(empty),
         GSETTINGS_BACKEND="memory",
         PYTHONUNBUFFERED="1",
+        **NO_PORTALS,
     )
     code = textwrap.dedent('''
         import sys
@@ -97,7 +103,6 @@ def test_real_application_opens_with_no_gnome_schemas(tmp_path):
         assert VideoConverterApp._window_buttons_on_left(None) is False
         application = VideoConverterApp()
         application.settings_manager.save_setting("show-welcome-dialog", False)
-        application.settings_manager.save_setting("show-conversion-help-on-startup", False)
         assert application.register(None)
         application.activate()
         try:
@@ -144,7 +149,6 @@ def test_exit_waits_for_conversion_cleanup(tmp_path, exit_action):
         from utils.conversion import run_with_progress_dialog
         app = VideoConverterApp()
         app.settings_manager.save_setting('show-welcome-dialog', False)
-        app.settings_manager.save_setting('show-conversion-help-on-startup', False)
         rows = []
         def activate(app):
             run_with_progress_dialog(app,
@@ -181,7 +185,7 @@ def test_exit_waits_for_conversion_cleanup(tmp_path, exit_action):
         assert app.conversion_page.thumbnail_manager.shutdown_complete
     ''')
     env = dict(os.environ, HOME=str(tmp_path), XDG_CONFIG_HOME=str(tmp_path / 'config'),
-               XDG_DATA_HOME=str(tmp_path / 'data'))
+               XDG_DATA_HOME=str(tmp_path / 'data'), **NO_PORTALS)
     log_path = tmp_path / "shutdown.log"
     with log_path.open("w") as log:
         result = subprocess.run(
@@ -202,6 +206,104 @@ def test_dependency_transaction_is_visible_and_interactive(base):
     command = info['command']
     assert shlex.split(info['display']) == command
     assert command[0] == 'pkexec'
-    assert not {'sh', '-c', '-y', '--noconfirm', '--allowerasing', '-Sy', '-Syu'} & set(command)
+    assert not {'sh', '-c', '-y', '--noconfirm', '-Sy', '-Syu'} & set(command)
     assert not any('://' in argument for argument in command)
     assert set(info['packages']) <= set(command)
+    # Replacing ffmpeg-free needs --allowerasing; dnf still asks before erasing.
+    assert ('--allowerasing' in command) == (base == 'rpm') == bool(info.get('note'))
+
+
+@pytest.mark.parametrize('returncode,owner,available', [
+    (0, 'ffmpeg-free\n', False), (0, 'ffmpeg\n', True),
+    (1, 'file /usr/local/bin/ffmpeg is not owned by any package\n', True),
+])
+def test_only_an_ffmpeg_free_owner_needs_replacement(monkeypatch, returncode, owner, available):
+    from utils import dependency_checker
+
+    checker = dependency_checker.DependencyChecker.__new__(dependency_checker.DependencyChecker)
+    checker.distro, checker.ffmpeg_path, checker.mpv_path = {'base': 'rpm'}, '/x/ffmpeg', '/x/mpv'
+    monkeypatch.setattr(dependency_checker.subprocess, 'run',
+                        lambda *a, **k: subprocess.CompletedProcess(a[0], returncode, owner, ''))
+    assert checker.are_dependencies_available() is available
+
+
+def _fake_drm(tmp_path, nodes):
+    for node, slot, vendor in nodes:
+        pci = tmp_path / 'pci' / slot
+        pci.mkdir(parents=True)
+        if vendor:
+            (pci / 'vendor').write_text(vendor + '\n')
+        (tmp_path / 'drm' / node).mkdir(parents=True)
+        (tmp_path / 'drm' / node / 'device').symlink_to(pci)
+    return str(tmp_path / 'drm')
+
+
+def test_render_nodes_are_named_by_their_own_pci_device(tmp_path):
+    from utils.gpu_selector import detect_render_devices
+
+    drm = _fake_drm(tmp_path, [('card0', '0000:00:01.0', None),
+                               ('renderD128', '0000:00:02.0', '0x8086'),
+                               ('renderD129', '0000:01:00.0', '0x10de'),
+                               ('renderD130', '0000:05:00.0', '0x1a03'),
+                               ('renderD131', '0000:06:00.0', '0x10de')])
+    lspci = {'0000:00:02.0': 'Vendor:\tIntel Corporation\nDevice:\tCoffeeLake-S GT2 [UHD Graphics 630]\n',
+             '0000:01:00.0': 'Vendor:\tNVIDIA Corporation\nDevice:\tTU116 [GeForce GTX 1660 Ti]\n',
+             '0000:05:00.0': 'Vendor:\tASPEED Technology, Inc.\nDevice:\tASPEED Graphics Family with a very long name\n',
+             '0000:06:00.0': 'Vendor:\tNVIDIA Corporation\nDevice:\tTU116 [GeForce GTX 1660 Ti]\n'}
+    calls = []
+
+    def run(argv, **kwargs):
+        calls.append(argv)
+        assert kwargs['timeout'] <= 2
+        return subprocess.CompletedProcess(argv, 0, lspci[argv[-1]], '')
+
+    gpus = detect_render_devices(drm, run)
+    assert calls == [['lspci', '-vmm', '-s', slot] for slot in sorted(lspci)]
+    assert [(g['device'], g['type'], g['name']) for g in gpus] == [
+        ('/dev/dri/renderD128', 'intel', 'Intel CoffeeLake-S GT2 [UHD Graphics 630]'),
+        ('/dev/dri/renderD129', 'nvidia', 'NVIDIA TU116 [GeForce GTX 1660 Ti] (renderD129)'),
+        ('/dev/dri/renderD130', 'unknown', 'ASPEED Technology, Inc. ASPEED Graphics Family...'),
+        ('/dev/dri/renderD131', 'nvidia', 'NVIDIA TU116 [GeForce GTX 1660 Ti] (renderD131)')]
+
+
+@pytest.mark.parametrize('failure', [FileNotFoundError('lspci'), subprocess.TimeoutExpired('lspci', 2), None])
+def test_render_nodes_fall_back_to_the_vendor_without_lspci(tmp_path, failure):
+    from utils.gpu_selector import detect_render_devices
+
+    drm = _fake_drm(tmp_path, [('renderD128', '0000:00:02.0', '0x8086'),
+                               ('renderD129', '0000:01:00.0', '0x10de'),
+                               ('renderD130', '0000:05:00.0', '0x1a03')])
+
+    def run(argv, **kwargs):
+        if failure:
+            raise failure
+        return subprocess.CompletedProcess(argv, 1, '', 'lspci: -s: Invalid slot number')
+
+    assert [g['name'] for g in detect_render_devices(drm, run)] == [
+        'Intel (renderD128)', 'NVIDIA (renderD129)', 'renderD130']
+
+
+def test_every_integration_offers_the_same_video_files():
+    """Nautilus cannot import the application, so it keeps its own copy."""
+    import ast
+    import configparser
+
+    import constants
+    from file_handler import FileHandlerMixin
+
+    share = APP_DIR.parent
+    tree = ast.parse((share / 'nautilus-python/extensions/big_video_converter_extension.py').read_text())
+    literal = next(node.value for node in ast.walk(tree) if isinstance(node, ast.Assign)
+                   and ast.unparse(node.targets[0]) == 'self.supported_extensions')
+    assert ast.literal_eval(literal) == constants.VIDEO_FILE_EXTENSIONS
+    for suffix in ('.mpg', '.3gp', '.ogv', '.m2ts', '.mts'):
+        assert FileHandlerMixin.is_valid_video_file(None, 'clip' + suffix.upper())
+    for path in [share / 'kio/servicemenus/big-video-converter.desktop',
+                 share / 'applications/br.com.biglinux.converter.desktop']:
+        entry = configparser.ConfigParser(interpolation=None, strict=False)
+        entry.read(path, encoding='utf-8')
+        execs = [entry[s]['Exec'] for s in entry.sections() if 'Exec' in entry[s]]
+        assert execs and all('%U' not in e and '%u' not in e for e in execs), path
+        assert set(entry['Desktop Entry']['MimeType'].strip(';').split(';')) >= {
+            'video/matroska', 'video/x-matroska', 'video/3gpp', 'video/ogg', 'video/mpeg', 'video/mp2t'}
+

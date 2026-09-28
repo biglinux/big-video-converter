@@ -21,11 +21,11 @@ from __future__ import annotations
 import gettext
 import json
 import math
-import subprocess
 from dataclasses import dataclass
+from itertools import pairwise
 
 from utils.ffmpeg_path import get_ffprobe_executable
-from utils.media_validation import probe_media
+from utils.media_validation import probe_media, run_cancellable
 
 _ = gettext.gettext
 
@@ -103,7 +103,7 @@ def shown_size(target_id: str, custom_mb: float = 0) -> str:
 
 
 def _even(value: float) -> int:
-    return max(2, int(round(value / 2)) * 2)
+    return max(2, round(value / 2) * 2)
 
 
 def plan_size(source: Source, target: int, *, strategy="auto", codec="h264",
@@ -211,12 +211,11 @@ def keyframe_cuts(packets, target: int) -> tuple | None:
     if greedy is None:
         return None
     count = len(greedy) + 1
-    keys, total, packets_before = [], 0, 0  # (time, bytes before, packets before)
-    for time, size, key in packets:
+    keys, total = [], 0  # (time, bytes before, packets before)
+    for packets_before, (time, size, key) in enumerate(packets):
         if key and time > packets[0][0]:
             keys.append((time, total, packets_before))
         total += size
-        packets_before += 1
     even, previous = [], (packets[0][0], 0, 0)
     for part in range(1, count):
         wanted = total * part / count
@@ -228,10 +227,10 @@ def keyframe_cuts(packets, target: int) -> tuple | None:
     bounds = [(packets[0][0], 0, 0), *even, (math.inf, total, len(packets))]
     fits = len(even) == count - 1 and all(
         b[1] - a[1] + PART_RESERVE + INDEX_BYTES_PER_PACKET * (b[2] - a[2]) <= target
-        for a, b in zip(bounds, bounds[1:]))
+        for a, b in pairwise(bounds))
     cuts = [k[0] for k in even] if fits else greedy
     edges = [packets[0][0], *cuts, math.inf]
-    return tuple(zip(edges, edges[1:]))
+    return tuple(pairwise(edges))
 
 
 def probe_source(path: str) -> Source:
@@ -252,12 +251,14 @@ def probe_source(path: str) -> Source:
                   int(data["format"].get("size") or 0), width, height, fps)
 
 
-def probe_packets(path: str) -> list:
+def probe_packets(path: str, cancelled=None) -> list:
     """(seconds, bytes, is_video_keyframe) of every audio and video packet."""
-    out = subprocess.run(
+    probe = run_cancellable(
         [get_ffprobe_executable(), "-v", "error",
          "-show_entries", "packet=codec_type,pts_time,dts_time,size,flags", "-of", "json", path],
-        capture_output=True, text=True, timeout=600, check=True).stdout
+        cancelled, timeout=600, task="reading the packets")
+    probe.check_returncode()
+    out = probe.stdout
     packets = []
     for packet in json.loads(out).get("packets", ()):
         if packet.get("codec_type") not in ("video", "audio"):
@@ -325,7 +326,7 @@ def prepare_size_job(context: dict) -> dict:
 
         copy_ok = check_mp4_compatibility(source_path)[0]
     audio_bps, audio_streams = _audio_cost(data, encode_env)
-    packets = probe_packets(source_path) if copy_ok and (
+    packets = probe_packets(source_path, context.get("cancel_event")) if copy_ok and (
         strategy == "split" or target >= LARGE_TARGET) and source.size > target else None
     plan = plan_size(source, target, strategy=strategy, codec=encode_env["video_encoder"],
                      copy_ok=copy_ok, audio_bps=audio_bps, audio_streams=audio_streams,

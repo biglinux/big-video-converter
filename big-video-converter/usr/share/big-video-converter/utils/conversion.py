@@ -1,6 +1,5 @@
 """Supervise conversion processes without guessing outputs or touching GTK off-thread."""
 
-from collections import deque
 import codecs
 import gettext
 import logging
@@ -11,15 +10,23 @@ import subprocess
 import tempfile
 import threading
 import time
+from collections import deque
 
 from gi.repository import GLib
 
-from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
 from utils.ffmpeg_options import parse_additional_options
+from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
 from utils.media_validation import (
-    ConversionResult, FileIdentity, OutputDurationMismatch, discard_job_paths,
-    media_duration, probe_media, remove_original, stream_count,
-    terminate_process_group, validate_output,
+    ConversionResult,
+    FileIdentity,
+    OutputDurationMismatch,
+    discard_job_paths,
+    media_duration,
+    probe_media,
+    remove_original,
+    stream_count,
+    terminate_process_group,
+    validate_output,
 )
 
 logger = logging.getLogger(__name__)
@@ -36,6 +43,11 @@ def _ffmpeg_error_map() -> list[tuple[str, str]]:
     Keys are lowercased substrings matched against stderr lines.
     """
     return [
+        # The script's own checks name the input; the path stays in the log.
+        ("input file is corrupted or not a valid video file",
+         _("The file container could not be read. It may be a corrupted download or an unsupported format.")),
+        ("input file not found", _("File or folder not found.")),
+        ("input file is not readable", _("Permission denied — check file/folder permissions.")),
         ("no space left on device", _("There is no space left on the disk.")),
         ("permission denied", _("Permission denied — check file/folder permissions.")),
         ("no such file or directory", _("File or folder not found.")),
@@ -58,6 +70,9 @@ def _ffmpeg_error_map() -> list[tuple[str, str]]:
         ("device creation failed", _("The GPU could not be opened. Try disabling GPU encoding.")),
         ("failed to initialise vaapi", _("The GPU could not be opened. Try disabling GPU encoding.")),
         ("stall watchdog", _("The encoder stopped making progress and was terminated.")),
+        ("only vp8 or vp9 or av1 video and vorbis or opus audio",
+         _("WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. "
+           "Choose one of those codecs, or MKV to keep the original ones.")),
         ("conversion produced no output", _("The conversion finished without producing a file.")),
     ]
 
@@ -75,10 +90,20 @@ def _friendly_ffmpeg_error(stderr_lines: list[str]) -> str:
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 # FFmpeg's periodic statistics and its build banner: noise, never the cause.
-_NOISE_RE = re.compile(r"^(frame=|size=|\s*(configuration|built with|lib[a-z0-9]+\s+\d))|^\s*$", re.I)
+_NOISE_RE = re.compile(r"^(frame=|size=|\s*(configuration|built with|lib[a-z0-9]+\s+\d))|^\s*$", re.IGNORECASE)
 _HINT_RE = re.compile(
     r"error|invalid|fail|missing|could not|cannot|can't|unrecogni|not supported|"
-    r"no such|denied|unable|stall watchdog|gpu encoder check", re.I)
+    r"no such|denied|unable|stall watchdog|gpu encoder check|only vp8 or vp9", re.IGNORECASE)
+
+
+def _failure_reason(stderr_tail, error_hints=()) -> str:
+    """The one friendly sentence for a failed job, or "" when none is known.
+
+    It never carries a path or an exit code: the progress page shows it in
+    summaries, and the raw evidence stays in the job's log.
+    """
+    lines = [_ANSI_RE.sub("", line).strip() for line in (*error_hints, *stderr_tail)]
+    return _friendly_ffmpeg_error(lines)
 
 
 def _failure_message(returncode: int, stderr_tail, error_hints=()) -> str:
@@ -91,7 +116,7 @@ def _failure_message(returncode: int, stderr_tail, error_hints=()) -> str:
     """
     hints = [_ANSI_RE.sub("", line).strip() for line in error_hints]
     tail = [_ANSI_RE.sub("", line).strip() for line in stderr_tail]
-    message = _friendly_ffmpeg_error(hints + tail) or _("Conversion failed with code {0}").format(returncode)
+    message = _failure_reason(stderr_tail, error_hints) or _("Conversion failed with code {0}").format(returncode)
     # The hints are ordered by arrival across every attempt, so the first and
     # the last three are the cause and the final symptoms. stdout and stderr
     # are separate pipes, so nothing here depends on their relative order.
@@ -195,9 +220,10 @@ def detect_bit_depth_info(file_path: str):
         stream = next(s for s in data["streams"] if s.get("codec_type") == "video")
         pixel_format = stream.get("pix_fmt", "unknown")
         codec = stream.get("codec_name", "unknown")
-        return f"Video stream: codec={codec}, pixel format={pixel_format}"
+        return _("Video stream: codec={codec}, pixel format={pixel_format}").format(
+            codec=codec, pixel_format=pixel_format)
     except (OSError, subprocess.SubprocessError, ValueError, StopIteration):
-        return "Could not analyze the video stream with ffprobe"
+        return _("Could not analyze the video stream with ffprobe")
 
 
 def _time_value(value: str) -> float:
@@ -254,7 +280,7 @@ def _expected_media(source, env, duration, destination=None):
 
 
 def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
-                             delete_original=None, env_vars=None,
+                             delete_original=False, env_vars=None,
                              wait_for_completion=False, is_segment_batch=False,
                              segment_duration=None, *, job_id=None,
                              cancel_event=None, progress_item=None,
@@ -275,13 +301,11 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
         destination = os.path.abspath(destination)
         env["output_file"] = destination
         env.pop("output_folder", None)
-    if delete_original is None:
-        delete_original = bool(getattr(app, "delete_original_after_conversion", False))
     cancel_event = cancel_event or threading.Event()
     result_box = []
     process = None
     counted = False
-    preset_directory = None
+    job_directory = None
 
     try:
         def prepare_item():
@@ -297,6 +321,8 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
             progress_item.expected_duration = segment_duration
             progress_item.delete_original = bool(delete_original)
             progress_item.expected_output = destination
+            copying = "1" in (env.get("force_copy_video"), env.get("only_extract_subtitles"))
+            progress_item.video_codec = "" if copying else env.get("video_encoder", "")
             app.conversions_running += 1
             counted = True
             return progress_item
@@ -312,26 +338,32 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
                     raise
         if cancel_event.is_set():
             raise InterruptedError("Conversion cancelled before starting")
+        # The job runs in a private directory removed with it: a filter that
+        # writes a relative file (vidstabdetect's transforms.trf, a stats log)
+        # lands there, never in the directory the application started from.
+        # Beside the output, so large side files stay off a RAM-backed /tmp.
+        job_directory = tempfile.TemporaryDirectory(
+            prefix=".bvc-cwd-", dir=os.path.dirname(destination) if destination else None)
         if preset_source is not None:
             # The GUI already resolved inheritance, including explicit empty
             # values such as original resolution. Keep only the preset's extras.
             env["BVC_PRESET_SETTINGS_RESOLVED"] = "1"
-            preset_directory = tempfile.TemporaryDirectory(prefix="bvc-preset-")
-            env["preset_file"] = os.path.join(preset_directory.name, "job.toml")
+            env["preset_file"] = os.path.join(job_directory.name, "job.toml")
             with open(env["preset_file"], "w", encoding="utf-8") as handle:
                 handle.write(preset_source)
         process = subprocess.Popen(
             cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, bufsize=0, env=env, start_new_session=True,
+            cwd=job_directory.name,
         )
 
         call_on_main(setattr, progress_item, "process", process, wait=True)
         thread = threading.Thread(
             target=monitor_progress,
             args=(app, process, progress_item, env),
-            kwargs=dict(source_file=source_file, identity=identity,
-                        result_box=result_box, job_id=job_id,
-                        preset_directory=preset_directory),
+            kwargs={"source_file": source_file, "identity": identity,
+                    "result_box": result_box, "job_id": job_id,
+                    "job_directory": job_directory},
             daemon=True,
         )
         thread.start()
@@ -341,8 +373,8 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
         return None
     except Exception as error:
         logger.exception("Could not start conversion")
-        if preset_directory is not None:
-            preset_directory.cleanup()
+        if job_directory is not None:
+            job_directory.cleanup()
         if process is not None:
             try:
                 terminate_process_group(process)
@@ -355,8 +387,10 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
         def failed(message=str(error)):
             if counted:
                 app.conversions_running = max(0, app.conversions_running - 1)
-            if not was_cancelled:
-                app.show_error_dialog(_("Error starting conversion: {0}").format(message))
+            detail = _("Error starting conversion: {0}").format(message)
+            # Only a job without a progress row has no summary to explain it.
+            if not was_cancelled and progress_item is None:
+                app.show_error_dialog(detail)
             if not is_segment_batch:
                 if progress_item is not None:
                     progress_item.process = None
@@ -364,14 +398,15 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
                         progress_item.mark_cancelled()
                         app.progress_page.mark_conversion_complete(progress_item.conversion_id, False)
                     else:
-                        progress_item.mark_failure()
+                        progress_item.add_output_text(detail)
+                        progress_item.mark_failure(_("The conversion could not start."), detail)
                 app.conversion_completed(False, file_path=input_file, job_id=job_id)
         call_on_main(failed)
         return ConversionResult(False, -1, cancelled=was_cancelled, error=str(error))
 
 
 def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=None,
-                     identity=None, result_box=None, job_id=None, preset_directory=None):
+                     identity=None, result_box=None, job_id=None, job_directory=None):
     """Drain both pipes with a monotonic deadline and one terminal callback."""
     env = env_vars or {}
     cancelled = progress_item.cancel_event
@@ -397,17 +432,38 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
     encoding = False
     warning_shown = False
     monitor_error = None
+    failure_reason = None
     encoded_frames = None
     reported_duration = None
     workspace = None
+    # The share of the bar the current pass fills, and the share of the
+    # encode: all of it, unless a stabilization analysis runs first over the
+    # same video. A two-pass encode fills the encode's share in two steps.
+    bar_start, bar_share = 0.0, 1.0
+    encode_start, encode_share = 0.0, 1.0
+    encode_mode = stage_mode
+    # The script never replaces a file: it names the one it published, which
+    # can be "name_1.ext" when another job took the requested name first.
+    published = None
+    # A subtitle track the output does not carry, as a sidecar or embedded,
+    # makes the original the only copy of it.
+    subtitles_left_out = False
 
     def consume(text, source):
         nonlocal duration, stage_mode, encoding, encoded_frames, workspace, reported_duration
+        nonlocal bar_start, bar_share, encode_start, encode_share, encode_mode
+        nonlocal published, subtitles_left_out
         updates.push(text=text)
         # The script announces the directory it owns, so a job killed before
         # its own cleanup leaves nothing for the user to find and wonder about.
         if text.startswith("Job workspace:"):
             workspace = text.partition(":")[2].strip()
+        if text.startswith("Output file:"):
+            # One line: the script escapes backslash, newline and return.
+            published = re.sub(r"\\(.)", lambda m: {"n": "\n", "r": "\r"}.get(m[1], m[1]),
+                               text.partition(": ")[2])
+        if text.startswith(("Warning: skipping subtitle stream", "Warning: Subtitle extraction failed")):
+            subtitles_left_out = True
         if source == "stderr":
             stderr_tail.append(text.strip())
         if _HINT_RE.search(text) and not _NOISE_RE.match(text):
@@ -417,10 +473,22 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
         if text.startswith("Extracting subtitles"):
             stage_mode = _("Extracting subtitles…")
             updates.push(status=stage_mode)
+        if text.startswith("Stabilization analysis"):
+            # The first of two passes over the video. Measured on 1080p it
+            # takes about 40 % of the time, so it fills that much of the bar.
+            stage_mode = _("Measuring camera shake…")
+            encoding = True
+            bar_start, bar_share = 0.0, 0.4
+            encode_start, encode_share = 0.4, 0.6
+            updates.push(status=stage_mode)
         if text.startswith("Checking GPU encoder"):
             updates.push(status=_("Checking the GPU encoder…"))
         if text.startswith("GPU encoder check failed"):
             updates.push(status=_("GPU unavailable, using the processor"))
+        if text.startswith("Adding subtitles"):
+            # A stream copy after the encode, whose time= restarts at zero.
+            encoding = False
+            updates.push(status=_("Adding subtitles…"))
         if text.startswith("Generating file without re-encoding"):
             stage_mode = _("Copying without re-encoding")
             encoding = True
@@ -431,7 +499,19 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                 "Decode GPU, encode GPU": _("Full GPU acceleration"),
                 "Decode Software, Encode GPU": _("Software Decoding and GPU encoding"),
             }.get(technical, _("Software encoding"))
+            encode_mode = stage_mode
             encoding = True
+            bar_start, bar_share = encode_start, encode_share
+            updates.push(status=stage_mode)
+        if text.startswith("Analysis pass"):
+            # The first pass of a sized encode, which takes about 40 % of its
+            # time; the bar used to fill for it and drop to zero for the second.
+            stage_mode = _("Analyzing the video for the target size…")
+            bar_start, bar_share = encode_start, encode_share * 0.4
+            updates.push(status=stage_mode)
+        if text.startswith("Running command:") and " -pass 2 " in text:
+            stage_mode = encode_mode
+            bar_start, bar_share = encode_start + encode_share * 0.4, encode_share * 0.6
             updates.push(status=stage_mode)
         # FFmpeg's own frame tally, used later to prove the muxed file is not
         # short of what the encoder said it wrote.
@@ -452,12 +532,11 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
         # time= lines, and letting them drive it made the bar jump to 80 %
         # and drop back to zero when the real work started.
         if match and total and total > 0 and encoding:
-            progress = min(0.99, max(0.0, _time_value(match[1]) / total))
+            done = min(1.0, max(0.0, _time_value(match[1]) / total))
+            progress = min(0.99, bar_start + bar_share * done)
             fps = re.search(r"fps=\s*(\d+(?:\.\d+)?)", text)
             status = f"{stage_mode} | {fps[1]} fps" if fps else stage_mode
             updates.push(progress=progress, status=status)
-        if "Waiting for audio NR" in text or "waiting for audio NR" in text:
-            updates.push(status=_("Improving audio quality"))
 
     try:
         for name, pipe in (("stdout", process.stdout), ("stderr", process.stderr)):
@@ -475,12 +554,12 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
         except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as error:
             # Metadata failure is not proof of input corruption. It does,
             # however, prohibit automatic deletion of the source.
-            updates.push(text=f"Input probe unavailable: {error}")
+            updates.push(text=_("Input probe unavailable: {0}").format(error))
             identity = None
         while selector.get_map() or process.poll() is None:
             if cancelled.is_set() or progress_item.was_cancelled():
                 cancelled.set()
-                raise InterruptedError("Conversion cancelled")
+                raise InterruptedError(_("Conversion cancelled"))
             now = time.monotonic()
             if now - started >= MAX_CONVERSION_SECONDS:
                 raise TimeoutError("Conversion exceeded the time limit")
@@ -513,13 +592,15 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
         remaining = max(0.01, MAX_CONVERSION_SECONDS - (time.monotonic() - started))
         returncode = process.wait(timeout=remaining)
         if cancelled.is_set():
-            raise InterruptedError("Conversion cancelled")
+            raise InterruptedError(_("Conversion cancelled"))
         if returncode:
             error = _failure_message(returncode, stderr_tail, error_hints)
+            failure_reason = _failure_reason(stderr_tail, error_hints) or None
             result = ConversionResult(False, returncode, destination, error=error)
         else:
             extraction_only = env.get("only_extract_subtitles") == "1"
             duration_verified = duration is not None
+            destination = published or destination
             if not extraction_only:
                 if not destination:
                     raise ValueError("No explicit output path was supplied")
@@ -535,22 +616,24 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                     # copy cuts on keyframes and a variable frame rate source
                     # gets re-timed. Report it and keep the original.
                     duration_verified = False
-                    updates.push(text=f"Output duration not verified: {mismatch}")
+                    updates.push(text=_("Output duration not verified: {0}").format(mismatch))
             result = ConversionResult(True, 0, None if extraction_only else destination)
             if progress_item.delete_original and source_file and not extraction_only:
                 try:
                     if identity is None or not duration_verified:
-                        raise ValueError("The output could not be verified against the input")
+                        raise ValueError(_("The output could not be verified against the input"))
+                    if subtitles_left_out:
+                        raise ValueError(_("The output does not carry every subtitle track of the original"))
                     updates.push(status=_("Checking output file..."))
                     remove_original(source_file, identity, [destination], cancelled,
                                     expected_frames=encoded_frames,
                                     ffmpeg=env.get("ffmpeg_executable"),
                                     ffprobe=env.get("ffprobe_executable"))
-                    updates.push(text="Original deleted after output validation")
+                    updates.push(text=_("Original deleted after output validation"))
                 except InterruptedError:
                     raise
                 except (OSError, ValueError, TimeoutError, subprocess.SubprocessError) as error:
-                    updates.push(text=f"Original preserved: {error}")
+                    updates.push(text=_("Original preserved: {0}").format(error))
     except InterruptedError as error:
         cancelled.set()
         result = ConversionResult(False, -1, destination, cancelled=True, error=str(error))
@@ -566,8 +649,8 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             logger.exception("Could not reap conversion process group")
         if not result.success:
             discard_job_paths(workspace)
-        if preset_directory is not None:
-            preset_directory.cleanup()
+        if job_directory is not None:
+            job_directory.cleanup()
         selector.close()
         for pipe in (process.stdout, process.stderr):
             if pipe and not pipe.closed:
@@ -589,8 +672,7 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             elif result.success:
                 progress_item.mark_success()
             else:
-                progress_item.mark_failure()
-                progress_item.update_status(result.error or _("Failed"))
+                progress_item.mark_failure(failure_reason, result.error or _("Failed"))
             progress_item.cancel_button.set_sensitive(False)
             if not result.cancelled:
                 notify_completion(app, result)
@@ -604,19 +686,14 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
 
 
 def notify_completion(app, result, *, body=None) -> None:
-    """Announce the end of a job the way the application always has.
+    """Announce the end of a job with a system notification.
 
-    A system notification is the point of an hour-long conversion the user
-    minimized. The dialog is only for a job with nothing behind it in the
-    queue, which keeps its own summary instead.
+    It is the point of an hour-long conversion the user minimized. Every job
+    has a row on the progress page, whose summary explains a failure, so no
+    dialog is stacked over it.
     """
     if result.success:
         app.send_system_notification(
             _("Conversion Complete"), body or _("Conversion completed successfully!"))
         return
-    detail = result.error or _("Failed")
-    app.send_system_notification(_("Error"), detail)
-    if not getattr(app, "conversion_queue", None):
-        app.show_error_dialog(
-            _("The conversion failed with error code {0}.").format(result.returncode)
-            + f"\n\n{detail}")
+    app.send_system_notification(_("Error"), result.error or _("Failed"))

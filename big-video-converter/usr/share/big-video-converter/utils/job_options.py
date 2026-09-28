@@ -6,9 +6,12 @@ freezes an effective snapshot so later UI changes cannot mutate active work.
 
 from __future__ import annotations
 
+import gettext
 import math
 from copy import deepcopy
 from typing import Any
+
+_ = gettext.gettext
 
 RESOLUTION_MODES = (
     "global",
@@ -40,13 +43,32 @@ DEFAULT_METADATA = {
     "rotation": 0,
     "flip_h": False,
     "flip_v": False,
+    # Effects: noise reduction and sharpening levels (utils/video_settings),
+    # two-pass stabilization, and a colour LUT (.cube/.3dl) or mpv shader
+    # (.hook/.glsl) the user chose.
+    "denoise": "off",
+    "sharpen": "off",
+    "stabilize": False,
+    "effect_file": "",
+    # How to read the source's colours when its file does not say (see the
+    # script's source_hdr): "auto" trusts the file.
+    "source_hdr": "auto",
     "output_mode": "join",
     "preset_id": None,
     "preset_snapshot": None,
     "resolution_mode": "global",
     "custom_width": None,
     "custom_height": None,
+    # "global" follows the sidebar; "none", a target id or "custom" (size_mb).
+    "size_mode": "global",
+    "size_mb": None,
 }
+
+EFFECT_LEVELS = ("off", "light", "medium", "strong")
+SOURCE_HDR_MODES = ("auto", "pq", "hlg", "sdr")
+
+SIZE_MODES = ("global", "none", "custom", "whatsapp", "discord", "email", "100mb",
+              "telegram", "fat32")
 
 
 def normalize_metadata(value: dict[str, Any] | None) -> dict[str, Any]:
@@ -55,6 +77,23 @@ def normalize_metadata(value: dict[str, Any] | None) -> dict[str, Any]:
         result.update(deepcopy(value))
     if result.get("resolution_mode") not in RESOLUTION_MODES:
         result["resolution_mode"] = "global"
+    if result.get("size_mode") not in SIZE_MODES:
+        result["size_mode"] = "global"
+    for key in ("denoise", "sharpen"):
+        if result.get(key) not in EFFECT_LEVELS:
+            result[key] = "off"
+    result["stabilize"] = result.get("stabilize") is True
+    if result.get("source_hdr") not in SOURCE_HDR_MODES:
+        result["source_hdr"] = "auto"
+    effect_file = result.get("effect_file")
+    if not isinstance(effect_file, str) or len(effect_file) > 4096 or "\0" in effect_file:
+        result["effect_file"] = ""
+    size_mb = result.get("size_mb")
+    if (isinstance(size_mb, bool) or not isinstance(size_mb, (int, float))
+            or not math.isfinite(size_mb) or not 1 <= size_mb <= 1_000_000):
+        result["size_mb"] = None
+        if result["size_mode"] == "custom":
+            result["size_mode"] = "global"
     for key in ("custom_width", "custom_height"):
         raw = result.get(key)
         if raw in (None, "") or isinstance(raw, bool):
@@ -91,6 +130,9 @@ def parse_segments_arg(text: str) -> list[dict[str, float]]:
         start, end = float(start_text), float(end_text)
         if not (math.isfinite(start) and math.isfinite(end) and 0 <= start < end):
             raise ValueError(f"segment {part.strip()!r} needs 0 <= start < end")
+        if segments and start < segments[-1]["end"]:
+            raise ValueError(_("The segment {0} starts before the previous one ends; "
+                               "list the segments in order without overlaps.").format(part.strip()))
         segments.append({"start": start, "end": end})
     if len(segments) > MAX_SEGMENTS:
         raise ValueError(f"more than {MAX_SEGMENTS} segments")
@@ -121,16 +163,9 @@ def effective_resolution(metadata: dict[str, Any], global_value: str = "") -> st
     return mode
 
 
-def freeze(settings: dict[str, Any], metadata: dict[str, Any] | None) -> dict[str, Any]:
-    metadata = normalize_metadata(metadata)
-    effective = deepcopy(settings)
-    preset = metadata.get("preset_snapshot")
-    if isinstance(preset, dict):
-        effective.update(deepcopy(preset.get("settings", {})))
-    effective["video-resolution"] = effective_resolution(
-        metadata, str(settings.get("video-resolution") or "")
-    )
-    edited = any(
+def has_picture_edits(metadata: dict[str, Any]) -> bool:
+    """Cropped, adjusted or turned: a video that can no longer be copied."""
+    return any(
         (
             metadata.get("crop_left"),
             metadata.get("crop_right"),
@@ -143,10 +178,30 @@ def freeze(settings: dict[str, Any], metadata: dict[str, Any] | None) -> dict[st
             int(metadata.get("rotation", 0)) % 360,
             metadata.get("flip_h"),
             metadata.get("flip_v"),
-            metadata["resolution_mode"] != "global"
-            and bool(effective.get("video-resolution")),
+            metadata.get("denoise", "off") != "off",
+            metadata.get("sharpen", "off") != "off",
+            metadata.get("stabilize"),
+            metadata.get("effect_file"),
+            metadata.get("source_hdr", "auto") != "auto",
         )
     )
+
+
+def freeze(settings: dict[str, Any], metadata: dict[str, Any] | None) -> dict[str, Any]:
+    metadata = normalize_metadata(metadata)
+    effective = deepcopy(settings)
+    preset = metadata.get("preset_snapshot")
+    if isinstance(preset, dict):
+        effective.update(deepcopy(preset.get("settings", {})))
+    effective["video-resolution"] = effective_resolution(
+        metadata, str(settings.get("video-resolution") or "")
+    )
+    if metadata["size_mode"] != "global":
+        effective["size-target"] = "" if metadata["size_mode"] == "none" else metadata["size_mode"]
+        if metadata["size_mode"] == "custom":
+            effective["size-target-mb"] = float(metadata["size_mb"])
+    edited = has_picture_edits(metadata) or (
+        metadata["resolution_mode"] != "global" and bool(effective.get("video-resolution")))
     if edited:
         effective["force-copy-video"] = False
         if effective.get("video-codec") == "copy":

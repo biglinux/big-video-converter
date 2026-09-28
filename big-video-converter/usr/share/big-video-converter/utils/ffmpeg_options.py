@@ -3,6 +3,8 @@
 Every option has a known arity. Positional arguments (additional inputs or
 outputs) are rejected. The CLI and GUI share this contract. The returned quoted
 text is a transport format for shlex, not a command to execute in a shell.
+Any filter FFmpeg has is accepted; file_access_settings() lists the settings
+that reach outside the conversion, so imported text can be confirmed first.
 """
 
 import gettext
@@ -36,7 +38,7 @@ ALLOWED_FFMPEG_FLAGS = {
     "-color_primaries", "-color_trc", "-colorspace", "-color_range",
     "-video_track_timescale", "-frag_duration", "-min_frag_duration",
     # Video / audio format
-    "-pix_fmt", "-r", "-fps_mode", "-vsync", "-aspect", "-s",
+    "-pix_fmt", "-r", "-fps_mode", "-aspect", "-s",
     "-ar", "-ac", "-sample_fmt", "-channel_layout",
     # Filters
     "-vf", "-af", "-filter", "-filter:v", "-filter:a", "-filter_complex", "-lavfi",
@@ -48,8 +50,8 @@ ALLOWED_FFMPEG_FLAGS = {
     # Threads / misc
     "-threads", "-filter_threads", "-thread_queue_size", "-loglevel",
     "-stats", "-nostats", "-hide_banner", "-probesize", "-analyzeduration",
-    "-err_detect", "-hwaccel", "-hwaccel_output_format", "-init_hw_device",
-    "-filter_hw_device", "-frames", "-vframes", "-aframes",
+    "-err_detect", "-hwaccel", "-hwaccel_output_format", "-filter_hw_device",
+    "-frames", "-vframes", "-aframes",
 }
 
 
@@ -60,6 +62,44 @@ _NO_VALUE_FLAGS = {
 # Keep the existing restrictions on arbitrary filter/option expressions. These
 # are an application policy, not the defence against shell interpretation.
 _FORBIDDEN = re.compile(r"[;&|`$><\n\r\\()]|\x00")
+_FILTERGRAPH_FLAGS = {"-vf", "-af", "-filter", "-filter_complex", "-lavfi"}
+# Settings that may read or write files, load code or reach the network. They
+# are legitimate in the user's own options, so this only drives a confirmation
+# when someone else's text (an imported preset or profile) carries them.
+# Being generous costs a question, never a conversion.
+_FILE_ACCESS_FILTERS = {
+    "movie", "amovie", "subtitles", "ass", "lut1d", "lut3d", "ladspa", "lv2",
+    "frei0r", "frei0r_src", "vidstabdetect", "vidstabtransform", "libvmaf",
+    "vmafmotion", "sofalizer", "lensfun", "sendcmd", "asendcmd", "zmq", "azmq",
+    "removelogo", "find_rect", "cover_rect", "arnndn", "sr", "derain",
+    "dnn_processing", "dnn_detect", "dnn_classify", "ocr", "asr", "flite",
+    "whisper", "signature", "program_opencl", "openclsrc",
+}
+# Filters whose file option a positional (unnamed) value can land on.
+_POSITIONAL_FILE_FILTERS = {
+    "drawtext", "curves", "deshake", "psnr", "ssim", "xpsnr", "metadata",
+    "ametadata", "firequalizer", "libplacebo",
+}
+_FILE_KEYS = {
+    "result", "input", "sofa", "model", "plot", "object", "cover", "shader",
+    "destination", "fontsdir",
+}
+_FILTER_NAME = re.compile(r"([A-Za-z0-9_]+)(?:@[A-Za-z0-9_]+)?")
+_LABELS = re.compile(r"^(?:\s*\[[^\]]*\])*\s*|(?:\s*\[[^\]]*\])*\s*$")
+_URL = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:\S")
+# libx264/libx265 read these from, or write them to, a named file (or, for
+# "pass", a default log in the working directory). x264 and x265 treat "_" as
+# "-" and accept a "no-" prefix, so keys are compared after that folding.
+# SVT-AV1's "film-grain" is a strength, not the x265 grain file.
+_ENCODER_PARAM_FLAGS = {"-x264-params", "-x264opts", "-x265-params", "-svtav1-params"}
+_FILE_ENCODER_PARAMS = {
+    "stats", "pass", "qpfile", "cqmfile", "dump-yuv", "opencl-clbin", "recon",
+    "csv", "csv-log-level", "zonefile", "analysis-load", "analysis-save",
+    "analysis-reuse-file", "lambda-file", "scaling-list", "dhdr10-info",
+    "film-grain", "aom-film-grain", "dolby-vision-rpu", "nalu-file",
+    "fovea-gaze-file",
+}
+_FILE_SVTAV1_PARAMS = {"stats", "pass", "fgs-table"}
 _SPECIFIER = re.compile(r"^(-[A-Za-z0-9_\-]+)(:[A-Za-z0-9_:.]+)?$")
 _NEGATIVE_NUMBER = re.compile(r"^-\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$")
 
@@ -100,6 +140,80 @@ def parse_additional_options(text: str) -> list[str]:
                 raise ValueError(_("Additional options could not be parsed: {0}").format(flag))
         i += 1
     return tokens
+
+
+def file_access_settings(text: str) -> list[str]:
+    """The settings in valid option text that may reach files or the network.
+
+    Each filter is returned whole, each encoder parameter as key=value.
+    FFmpeg splits a graph at commas and an argument list at colons outside
+    single quotes, then drops the quotes; backslashes and semicolons never get
+    this far (_FORBIDDEN).
+    """
+    tokens = parse_additional_options(text)
+    found = []
+    i = 0
+    while i < len(tokens):
+        base = _base_flag(tokens[i])
+        if base in _NO_VALUE_FLAGS:
+            i += 1
+            continue
+        value = tokens[i + 1]
+        i += 2
+        if base in _FILTERGRAPH_FLAGS:
+            found += [f for f in _split(value, ",") if _filter_reaches_out(_LABELS.sub("", f))]
+        elif base in _ENCODER_PARAM_FLAGS:
+            listed = _FILE_SVTAV1_PARAMS if base == "-svtav1-params" else _FILE_ENCODER_PARAMS
+            for item in value.replace("'", "").replace('"', "").split(":"):
+                key, _sep, option = item.partition("=")
+                key = re.sub(r"^no-?", "", key.strip().lower().replace("_", "-"))
+                if key in listed or _names_file(key) or _reaches_out(option):
+                    found.append(item)
+    return list(dict.fromkeys(f.strip() for f in found))
+
+
+def _filter_reaches_out(text: str) -> bool:
+    name, args = (_split(text, "=", 1) + [""])[:2]
+    match = _FILTER_NAME.fullmatch(_unquote(name))
+    if not match or match[1] in _FILE_ACCESS_FILTERS:
+        return True
+    for item in _split(args, ":") if args else ():
+        parts = _split(item, "=", 1)
+        if len(parts) == 1:
+            if match[1] in _POSITIONAL_FILE_FILTERS or _reaches_out(item):
+                return True
+        elif _names_file(_unquote(parts[0])) or _reaches_out(parts[1]):
+            return True
+    return False
+
+
+def _split(text: str, separator: str, limit: int = -1) -> list[str]:
+    """Split at separators outside single quotes, keeping the quotes."""
+    parts, quoted, start = [], False, 0
+    for index, char in enumerate(text):
+        if char == "'":
+            quoted = not quoted
+        elif char == separator and not quoted and limit != len(parts):
+            parts.append(text[start:index])
+            start = index + 1
+    return parts + [text[start:]]
+
+
+def _unquote(text: str) -> str:
+    return text.replace("'", "").strip()
+
+
+def _names_file(key: str) -> bool:
+    """qpfile, stats_file, filename, db_path, result... but not profile."""
+    key = key.lower()
+    return (key.startswith("/") or key in _FILE_KEYS
+            or bool(re.search(r"file|path", key.replace("profile", ""))))
+
+
+def _reaches_out(value: str) -> bool:
+    """An absolute, home, parent or URL-like location such as file: or http:."""
+    value = _unquote(value)
+    return value.startswith(("/", "~")) or ".." in value or bool(_URL.match(value))
 
 
 def validate_additional_options(text: str):

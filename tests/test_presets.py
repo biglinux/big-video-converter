@@ -4,8 +4,7 @@ import shlex
 import subprocess
 
 import pytest
-
-from conftest import APP, CLI
+from conftest import APP
 from utils import presets
 from utils.media_validation import probe_media
 
@@ -65,10 +64,25 @@ class TestContract:
         ('[preset]\nname="x"\n[video]\ncodec="copy"\n[encoder.libx264]\nargs=["-crf","1"]', 'copies the video'),
         ('[preset]\nname=""', 'name is required'),
         ('[preset]\nname="x"\n[ffmpeg]\noutput_options="out.mp4"', 'not allowed'),
+        ('[preset]\nname="x"\n[video]\nfps=250', 'between 1 and 240'),
     ])
     def test_rejections_name_the_problem(self, text, fragment):
         with pytest.raises(presets.PresetError, match=fragment):
             presets.validate_preset(presets.parse_preset_text(text))
+
+    def test_frame_rate_limit_matches_the_script(self):
+        from utils.settings_manager import SettingsManager
+        preset = presets.validate_preset(presets.parse_preset_text('[preset]\nname="x"\n[video]\nfps=240'))
+        SettingsManager._validate_profile_value('video-fps', presets.preset_fps(preset))
+
+    def test_deeply_nested_toml_is_a_preset_error(self, user_presets):
+        deep = 'a = ' + '[' * 5000 + ']' * 5000
+        with pytest.raises(presets.PresetError, match='TOML'):
+            presets.parse_preset_text(deep)
+        user_presets.mkdir(parents=True)
+        (user_presets / 'deep.toml').write_text(deep)
+        assert all(p.id != 'deep' for p in presets.list_presets())
+        assert [path for path, _reason in presets.broken_presets()] == [str(user_presets / 'deep.toml')]
 
     def test_not_toml_is_reported(self):
         with pytest.raises(presets.PresetError, match='TOML'):
@@ -80,12 +94,21 @@ class TestContract:
         assert env['video_encoder'] == 'h264' and env['video_quality'] == 'low' and env['preset'] == 'ultrafast'
         assert env['audio_handling'] == 'reencode' and env['audio_bitrate'] == '48k' and env['audio_channels'] == '1'
         assert env['output_format'] == 'mkv'
-        assert shlex.split(env['preset_options']) == ['-r', '10', '-ar', '22050', '-g', '5']
+        # The frame rate reaches the script as video_fps, which the GUI's
+        # frame rate choice also sets, so -r cannot override it behind it.
+        assert shlex.split(env['preset_options']) == ['-ar', '22050', '-g', '5']
+        assert env['video_fps'] == '10' and presets.preset_settings(preset)['video-fps'] == '10'
         assert presets.encoder_args(preset, 'libx264')[:2] == ['-pix_fmt', 'yuv420p']
         assert presets.encoder_args(preset, 'h264_vaapi') == []
         settings = presets.preset_settings(preset)
         assert settings['video-codec'] == 'h264' and settings['force-copy-video'] is False
         assert settings['output-format-index'] == 1 and settings['audio-channels'] == '1'
+
+    def test_fractional_frame_rate_is_exact(self):
+        preset = presets.validate_preset(presets.parse_preset_text(
+            '[preset]\nname="ntsc"\n[video]\ncodec="h264"\nfps=29.97'))
+        assert presets.preset_environment(preset)['video_fps'] == '30000/1001'
+        assert presets.preset_settings(preset)['video-fps'] == '30000/1001'
 
     def test_copy_preset_maps_to_copy_mode(self):
         preset = presets.validate_preset(presets.parse_preset_text('[preset]\nname="c"\n[video]\ncodec="copy"\nresolution="640x480"'))
@@ -94,11 +117,115 @@ class TestContract:
         assert presets.preset_settings(preset)['video-resolution'] == ''
 
 
+RISKY = MINIMAL.replace('output_options = "-g 5"',
+                       'output_options = "-g 5 -vf vidstabdetect=result=.bashrc"')
+
+
+class TestFileAccess:
+    def test_filters_older_builds_refused_now_validate_and_are_reported(self):
+        preset = presets.validate_preset(presets.parse_preset_text(
+            '[preset]\nname="x"\n[ffmpeg]\ninput_options="-hwaccel vaapi"\n'
+            'output_options="-vf subtitles=s.srt,lut3d=file=/abs/x.cube"\n'
+            '[encoder.libx264]\nargs=["-af","ladspa=file=/tmp/x.so","-x264-params","pass=1"]'))
+        assert presets.preset_file_access(preset) == [
+            'subtitles=s.srt', 'lut3d=file=/abs/x.cube', 'ladspa=file=/tmp/x.so', 'pass=1']
+
+    def test_plain_preset_reaches_nothing(self):
+        assert presets.preset_file_access(presets.validate_preset(presets.parse_preset_text(MINIMAL))) == []
+
+    def test_a_file_in_the_presets_folder_is_the_users_own(self, user_presets):
+        user_presets.mkdir(parents=True)
+        (user_presets / 'mine.toml').write_text(RISKY)
+        assert 'mine' in {p.id for p in presets.list_presets()}
+
+
+@pytest.fixture
+def presets_window(user_presets, tmp_path):
+    if not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')):
+        pytest.skip('Requires an X11 or Wayland display')
+    import gi
+    gi.require_version('Adw', '1')
+    from types import SimpleNamespace
+
+    from gi.repository import Adw
+    from ui.presets_dialog import PresetsDialog
+    from utils.settings_manager import SettingsManager
+    Adw.init()
+    window = Adw.Window()
+    window.present()
+    app = SimpleNamespace(settings_manager=SettingsManager('test', True, str(tmp_path / 's.json')))
+    dialog = PresetsDialog(window, app)
+    dialog.present()
+    yield window, dialog
+    dialog.dialog.force_close()
+    window.destroy()
+    _pump(.1)
+
+
+def _pump(seconds):
+    import time
+
+    from gi.repository import GLib
+    context = GLib.MainContext.default()
+    end = time.monotonic() + seconds
+    while time.monotonic() < end:
+        while context.pending():
+            context.iteration(False)
+        time.sleep(.005)
+
+
+def _answer(window, label):
+    """Press a response button of the alert on top of the window."""
+    from gi.repository import Adw, Gtk
+    alert = window.get_visible_dialog()
+    assert isinstance(alert, Adw.AlertDialog)
+    stack = [alert]
+    while stack:
+        widget = stack.pop()
+        if isinstance(widget, Gtk.Button) and widget.get_label() == label:
+            widget.emit('clicked')
+            _pump(.5)
+            return alert
+        child = widget.get_first_child()
+        while child is not None:
+            stack.append(child)
+            child = child.get_next_sibling()
+    raise AssertionError(f'No {label} button')
+
+
+class TestImportConfirmation:
+    def test_cancel_saves_nothing_and_import_anyway_saves(self, presets_window, user_presets):
+        window, dialog = presets_window
+        assert dialog.import_text(RISKY) is None
+        _pump(.3)
+        alert = window.get_visible_dialog()
+        assert alert.get_heading() == 'This preset can read or write files'
+        assert 'vidstabdetect=result=.bashrc' in alert.get_body()
+        assert alert.get_default_response() == 'cancel'
+        _answer(window, 'Cancel')
+        assert window.get_visible_dialog() is dialog.dialog
+        assert not list(user_presets.glob('*.toml'))
+        dialog.import_text(RISKY)
+        _pump(.3)
+        _answer(window, 'Import anyway')
+        assert [p.name for p in user_presets.glob('*.toml')] == ['tiny-test.toml']
+        assert 'tiny-test' in {p.id for p in dialog.presets}
+
+    def test_plain_preset_imports_without_asking(self, presets_window, user_presets):
+        window, dialog = presets_window
+        preset = dialog.import_text(MINIMAL)
+        _pump(.2)
+        assert preset is not None and preset.id == 'tiny-test'
+        assert window.get_visible_dialog() is dialog.dialog
+
+
 class TestBundled:
     def test_every_bundled_preset_is_valid_with_a_unique_id(self):
         files = sorted(BUNDLED.glob('*.toml'))
         assert len(files) >= 6
-        ids = [presets.load_preset(str(f), bundled=True).id for f in files]
+        loaded = [presets.load_preset(str(f), bundled=True) for f in files]
+        assert all(presets.preset_file_access(p) == [] for p in loaded)
+        ids = [p.id for p in loaded]
         assert len(set(ids)) == len(ids)
         assert {'youtube-1080p', 'instagram-reels', 'x-twitter', 'whatsapp', 'davinci-resolve'} <= set(ids)
 
@@ -130,6 +257,26 @@ class TestUserFiles:
             presets.delete_user_preset(bundled)
         presets.delete_user_preset(copy)
         assert not os.path.exists(copy.path)
+
+    def test_import_never_takes_the_name_of_a_broken_file(self, user_presets):
+        user_presets.mkdir(parents=True)
+        broken = user_presets / 'tiny-test.toml'
+        broken.write_text('[preset]\nname = "Tiny test"\n# hand edit in progress\n[video\n')
+        saved = presets.save_user_preset(MINIMAL)
+        assert saved.id == 'tiny-test-2'
+        assert 'hand edit in progress' in broken.read_text()
+
+    def test_export_copies_atomically_and_onto_itself_changes_nothing(self, user_presets, tmp_path):
+        preset = presets.save_user_preset(MINIMAL)
+        with open(preset.path) as file:
+            before = file.read()
+        presets.export_preset(preset, preset.path)
+        with open(preset.path) as file:
+            assert file.read() == before
+        target = tmp_path / 'out.toml'
+        target.write_text('old')
+        presets.export_preset(preset, str(target))
+        assert target.read_text() == before
 
     def test_broken_user_file_is_reported_not_fatal(self, user_presets):
         user_presets.mkdir(parents=True)
@@ -168,7 +315,7 @@ class TestScript:
         command = next(line for line in result.stdout.splitlines() if line.startswith('Running command:'))
         assert '-pix_fmt yuv420p -tune animation -crf 35' in command, command
         assert '-cq 40' not in command, 'arguments for another encoder must not leak'
-        assert '-r 10 -ar 22050 -g 5' in command
+        assert '-ar 22050 -g 5' in command and 'fps=10' in command
         streams = probe_media(str(out))['streams']
         audio = next(s for s in streams if s['codec_type'] == 'audio')
         assert audio['channels'] == 1 and audio['sample_rate'] == '22050'
@@ -193,11 +340,11 @@ class TestScript:
     def test_helper_cli_speaks_nul_separated(self, user_presets):
         preset = presets.save_user_preset(MINIMAL)
         env = subprocess.run(['python3', str(APP / 'utils' / 'presets.py'), '--env', preset.path],
-                             capture_output=True, timeout=20).stdout
+                             capture_output=True, timeout=20, check=False).stdout
         pairs = dict(item.split(b'=', 1) for item in env.split(b'\0') if item)
         assert pairs[b'video_encoder'] == b'h264' and pairs[b'output_format'] == b'mkv'
         args = subprocess.run(['python3', str(APP / 'utils' / 'presets.py'), '--encoder-args', preset.path, 'h264_nvenc'],
-                              capture_output=True, timeout=20).stdout
+                              capture_output=True, timeout=20, check=False).stdout
         assert args.split(b'\0')[:-1] == [b'-cq', b'40']
 
 

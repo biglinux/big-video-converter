@@ -6,9 +6,9 @@ The second mux keeps intersecting packets and rebases/clamps their timestamps.
 Only parsed finite numbers, never user expressions, enter the bitstream filter.
 """
 
-from decimal import Decimal, InvalidOperation
 import re
 import sys
+from decimal import Decimal, InvalidOperation
 
 
 def seconds(text: str) -> Decimal:

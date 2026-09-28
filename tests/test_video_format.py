@@ -7,27 +7,24 @@ it; the picture was also washed out because the bits were truncated rather than
 tone mapped. Every case here is generated with FFmpeg, never taken from a
 user's library.
 """
-import json
-import shutil
 import subprocess
 
 import pytest
-
 from conftest import CLI, media_command
 from utils.media_validation import probe_media
 
 
 def _video(path):
-    return [s for s in probe_media(str(path))['streams'] if s['codec_type'] == 'video'][0]
+    return next(s for s in probe_media(str(path))['streams'] if s['codec_type'] == 'video')
 
 
 def _has_encoder(name):
-    out = subprocess.run(['ffmpeg', '-hide_banner', '-encoders'], capture_output=True, text=True).stdout
+    out = subprocess.run(['ffmpeg', '-hide_banner', '-encoders'], capture_output=True, text=True, check=False).stdout
     return f' {name} ' in out
 
 
 def _has_filter(name):
-    out = subprocess.run(['ffmpeg', '-hide_banner', '-filters'], capture_output=True, text=True).stdout
+    out = subprocess.run(['ffmpeg', '-hide_banner', '-filters'], capture_output=True, text=True, check=False).stdout
     return f' {name} ' in out
 
 
@@ -136,7 +133,7 @@ class TestH264Level:
         start = text.index('h264_level_for() {')
         end = text.index('\n}\n', start) + 2
         script = text[start:end] + f'\nh264_level_for "{w}" "{h}" "{num}" "{den}"\n'
-        return subprocess.run(['bash', '-c', script], capture_output=True, text=True, timeout=10).stdout.strip()
+        return subprocess.run(['bash', '-c', script], capture_output=True, text=True, timeout=10, check=False).stdout.strip()
 
     @pytest.mark.parametrize('w,h,num,den,expected', [
         (1920, 1080, 24000, 1001, '4.1'),   # what used to be hardcoded, still right here

@@ -63,6 +63,61 @@ def _available_ffmpeg_encoders() -> frozenset[str]:
         return frozenset()
 
 
+_PCI_VENDORS = {"0x10de": ("nvidia", "NVIDIA"), "0x1002": ("amd", "AMD"), "0x8086": ("intel", "Intel")}
+
+
+def _pci_name(slot: str, fallback_vendor: str, run) -> str:
+    """Commercial name of one PCI device, e.g. "NVIDIA TU116 [GeForce GTX 1660 Ti]"."""
+    try:
+        out = run(["lspci", "-vmm", "-s", slot], capture_output=True, text=True,
+                  timeout=2, check=False).stdout
+    except (subprocess.SubprocessError, OSError):
+        return ""
+    fields = dict(line.split(":\t", 1) for line in out.splitlines() if ":\t" in line)
+    device = fields.get("Device", "").strip()
+    if not device:
+        return ""
+    name = f"{fallback_vendor or fields.get('Vendor', '').strip()} {device}".strip()
+    return name[:47].rstrip() + "..." if len(name) > 50 else name
+
+
+def detect_render_devices(drm_dir: str = "/sys/class/drm", run=subprocess.run) -> list[dict]:
+    """Render nodes with the GPU vendor each belongs to, read from sysfs.
+
+    The vendor and the lspci name both come from the node's own PCI device,
+    so the pairing cannot drift the way the i-th lspci VGA line and the i-th
+    node did (a BMC VGA without a render node shifted every name). One
+    `lspci -s` per node costs about 10 ms, acceptable on the GTK thread.
+    A single node needs no choice: [].
+    """
+    try:
+        nodes = sorted(n for n in os.listdir(drm_dir) if n.startswith("renderD"))
+    except OSError:
+        return []
+    if len(nodes) <= 1:
+        return []
+    gpus = []
+    for node in nodes:
+        device_dir = os.path.join(drm_dir, node, "device")
+        try:
+            with open(os.path.join(device_dir, "vendor"), encoding="ascii") as f:
+                vendor = f.read().strip().lower()
+        except (OSError, UnicodeError):
+            vendor = ""
+        gpu_type, label = _PCI_VENDORS.get(vendor, ("unknown", ""))
+        slot = os.path.basename(os.path.realpath(device_dir))
+        gpus.append({
+            "name": _pci_name(slot, label, run) or (f"{label} ({node})" if label else node),
+            "device": os.path.join("/dev/dri", node),
+            "type": gpu_type,
+        })
+    names = [g["name"] for g in gpus]
+    for gpu in gpus:
+        if names.count(gpu["name"]) > 1:
+            gpu["name"] += f" ({os.path.basename(gpu['device'])})"
+    return gpus
+
+
 def _classify_gpu(name: str) -> str:
     """Classify a GPU name string into nvidia/amd/intel."""
     low = name.lower()
@@ -141,7 +196,7 @@ def select_best_gpu(
     candidates: list[tuple[int, str, str, str]] = []  # (score, type, device, name)
 
     for gpu in detected_gpus:
-        gpu_type = _classify_gpu(gpu.get("name", ""))
+        gpu_type = gpu.get("type") or _classify_gpu(gpu.get("name", ""))
         if gpu_type == "unknown":
             continue
 

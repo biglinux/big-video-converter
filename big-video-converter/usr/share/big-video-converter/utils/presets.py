@@ -15,7 +15,6 @@ never a shell program).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import gettext
 import locale
 import os
@@ -23,6 +22,9 @@ import re
 import shlex
 import sys
 import tempfile
+from dataclasses import dataclass, field
+from fractions import Fraction
+
 import tomllib
 
 _ = gettext.gettext
@@ -55,7 +57,7 @@ _RESOLUTION_RE = re.compile(r"^([1-9]\d{1,4})x([1-9]\d{1,4})$")
 _BITRATE_RE = re.compile(r"^[1-9][0-9]*[kKmM]?$")
 _PIX_FMT_RE = re.compile(r"^[a-z0-9_]{3,32}$")
 _ENCODER_RE = re.compile(r"^[a-z0-9_-]{2,32}$")
-_FENCE_RE = re.compile(r"```(?:toml)?\s*\n(.*?)```", re.S)
+_FENCE_RE = re.compile(r"```(?:toml)?\s*\n(.*?)```", re.DOTALL)
 _MAX_TEXT = 65536
 
 
@@ -140,6 +142,8 @@ def parse_preset_text(text: str) -> dict:
         data = tomllib.loads(text)
     except tomllib.TOMLDecodeError as error:
         raise PresetError(_("The preset is not valid TOML: {0}").format(error)) from error
+    except RecursionError as error:
+        raise PresetError(_("The preset is not valid TOML: its tables are nested too deeply.")) from error
     if not isinstance(data, dict):
         raise PresetError(_("The preset must be a TOML table."))
     return data
@@ -255,8 +259,8 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
         video["resolution"] = resolution
     if "fps" in video_in:
         fps = video_in["fps"]
-        if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not 1 <= fps <= 300:
-            raise PresetError(_("[video] fps must be a number between 1 and 300."))
+        if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not 1 <= fps <= 240:
+            raise PresetError(_("[video] fps must be a number between 1 and 240."))
         video["fps"] = fps
     if "pixel_format" in video_in:
         pix = _text(video_in, "video", "pixel_format", 32)
@@ -338,6 +342,14 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
     return Preset(id=preset_id, name=name, description=description, tags=tags, author=author,
                   video=video, audio=audio, subtitles=subtitles, container=container,
                   ffmpeg=ffmpeg, encoders=encoders, path=path, bundled=bundled)
+
+
+def preset_file_access(preset: Preset) -> list[str]:
+    """Settings in a validated preset that may reach files or the network."""
+    from utils.ffmpeg_options import file_access_settings
+
+    texts = [*preset.ffmpeg.values(), *(shlex.join(args) for args in preset.encoders.values())]
+    return list(dict.fromkeys(s for text in texts for s in file_access_settings(text)))
 
 
 def slugify(name: str) -> str:
@@ -424,7 +436,8 @@ def save_user_preset(text: str, *, preset_id: str = "", replace: bool = False) -
     os.makedirs(directory, exist_ok=True)
     target_id = preset.id
     if not replace:
-        existing = {p.id for p in list_presets(include_bundled=False)}
+        # A broken file still holds the user's text: never take its name.
+        existing = {os.path.splitext(os.path.basename(f))[0] for f in _toml_files(directory)}
         counter = 2
         while target_id in existing:
             target_id = f"{preset.id}-{counter}"
@@ -432,6 +445,15 @@ def save_user_preset(text: str, *, preset_id: str = "", replace: bool = False) -
     path = os.path.join(directory, target_id + ".toml")
     _atomic_write(path, text if not _FENCE_RE.search(text) else _FENCE_RE.search(text).group(1))
     return load_preset(path)
+
+
+def export_preset(preset: Preset, path: str) -> None:
+    """Copy a preset's text to path atomically; exporting onto itself is a no-op."""
+    if os.path.exists(path) and os.path.samefile(preset.path, path):
+        return
+    with open(preset.path, "r", encoding="utf-8") as handle:
+        text = handle.read()
+    _atomic_write(path, text)
 
 
 def delete_user_preset(preset: Preset) -> None:
@@ -446,7 +468,7 @@ def duplicate_preset(preset: Preset) -> Preset:
         text = handle.read()
     copy_name = _("{0} (copy)").format(preset.display_name)
     text, count = re.subn(r'^(\s*name\s*=\s*)"[^"\n]*"', lambda m: m.group(1) + _toml_string(copy_name), text,
-                          count=1, flags=re.M)
+                          count=1, flags=re.MULTILINE)
     if count == 0:
         text = text.replace("[preset]", "[preset]\nname = " + _toml_string(copy_name), 1)
     return save_user_preset(text, preset_id=preset.id + "-copy")
@@ -477,6 +499,20 @@ def _atomic_write(path: str, text: str) -> None:
 # Applying a preset
 # --------------------------------------------------------------------------
 
+def preset_fps(preset: Preset) -> str:
+    """The frame rate as the script's video_fps: "30", or "30000/1001" for
+    29.97; "" keeps the source's."""
+    if "fps" not in preset.video or preset.video.get("codec") == "copy":
+        return ""
+    value = preset.video["fps"]
+    # 23.976, 29.97 and 59.94 are written short for the NTSC rates n*1000/1001.
+    ntsc = round(value * 1.001)
+    if value != int(value) and abs(value - ntsc / 1.001) < 0.005:
+        return f"{ntsc * 1000}/1001"
+    fps = Fraction(value).limit_denominator(1001)
+    return str(fps.numerator) if fps.denominator == 1 else f"{fps.numerator}/{fps.denominator}"
+
+
 def preset_settings(preset: Preset) -> dict:
     """Settings-manager keys a preset fixes; the GUI applies these to widgets."""
     out: dict = {}
@@ -491,6 +527,7 @@ def preset_settings(preset: Preset) -> dict:
     if "gpu" in preset.video:
         out["gpu"] = preset.video["gpu"]
     out["video-resolution"] = preset.video.get("resolution", "") if codec != "copy" else ""
+    out["video-fps"] = preset_fps(preset)
     if "mode" in preset.audio:
         out["audio-handling"] = preset.audio["mode"]
     if "codec" in preset.audio:
@@ -511,9 +548,6 @@ def preset_settings(preset: Preset) -> dict:
 def preset_options(preset: Preset) -> str:
     """Output options the structured fields imply, plus the free ones."""
     tokens: list[str] = []
-    if "fps" in preset.video:
-        fps = preset.video["fps"]
-        tokens += ["-r", str(int(fps)) if float(fps).is_integer() else repr(float(fps))]
     if "sample_rate" in preset.audio:
         tokens += ["-ar", str(preset.audio["sample_rate"])]
     text = shlex.join(tokens)
@@ -539,6 +573,8 @@ def preset_environment(preset: Preset) -> dict[str, str]:
         env["gpu"] = preset.video["gpu"]
     if preset.video.get("resolution") and codec != "copy":
         env["video_resolution"] = preset.video["resolution"]
+    if preset_fps(preset):
+        env["video_fps"] = preset_fps(preset)
     if "mode" in preset.audio:
         env["audio_handling"] = preset.audio["mode"]
     if "codec" in preset.audio:
@@ -733,7 +769,7 @@ def _main(argv: list[str]) -> int:
     out = sys.stdout.buffer
     if mode == "--env" and len(argv) == 3:
         for key, value in preset_environment(preset).items():
-            out.write(f"{key}={value}".encode("utf-8") + b"\0")
+            out.write(f"{key}={value}".encode() + b"\0")
     elif mode == "--encoder-args" and len(argv) == 4:
         for token in encoder_args(preset, argv[3]):
             out.write(token.encode("utf-8") + b"\0")

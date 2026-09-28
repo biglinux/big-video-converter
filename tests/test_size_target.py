@@ -4,9 +4,13 @@ import math
 from itertools import pairwise
 
 import pytest
-
 from utils.size_target import (
-    INDEX_BYTES_PER_PACKET, PART_RESERVE, Source, SizeTargetError, keyframe_cuts, plan_size,
+    INDEX_BYTES_PER_PACKET,
+    PART_RESERVE,
+    SizeTargetError,
+    Source,
+    keyframe_cuts,
+    plan_size,
     target_bytes,
 )
 
@@ -145,3 +149,19 @@ def test_joined_cuts_split_but_separate_cuts_do_not(media):
     with pytest.raises(SizeTargetError):
         _context(media['video'], 50_000, "split", output_mode="split",
                  trim_segments=[{"start": 0, "end": 1}, {"start": 2, "end": 3}])
+
+
+def test_parts_are_copied_into_a_folder_named_with_percent(media, tmp_path):
+    """The segment muxer reads its output path as a template."""
+    import threading
+
+    from utils.segment_batch import _copy_parts, _split_to_size
+    work = tmp_path / "100% done"
+    work.mkdir()
+    parts = _copy_parts(str(media['video']), ((0.0, 1.0), (1.0, math.inf)), str(work), ".mp4",
+                        threading.Event())
+    assert [p.rpartition("/")[2] for p in parts] == ["segment-0000.mp4", "segment-0001.mp4"]
+    cancelled = threading.Event()
+    cancelled.set()
+    with pytest.raises(InterruptedError):
+        _split_to_size(str(media['video']), 60_000, str(work), ".mp4", cancelled)
