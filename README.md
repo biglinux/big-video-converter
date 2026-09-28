@@ -7,6 +7,7 @@ Convert a queue of videos with FFmpeg, choose settings for each video, and previ
 - Apply one conversion profile to the queue or choose a preset and resolution for an individual video.
 - Preview videos, trim segments, crop, rotate, mirror and adjust the image.
 - Copy compatible streams or re-encode with available hardware or software encoders.
+- Fit videos under a target size or split them into parts, stabilize, sharpen, reduce noise, apply color looks or shaders and change the frame rate.
 - Follow each conversion and inspect completed, failed or cancelled results.
 
 ## Install
@@ -34,7 +35,7 @@ bash tools/compile-translations.sh
 2. Choose general conversion settings in the sidebar.
 3. Use **Options** on a video to select its own profile or resolution. Other videos keep their general settings.
 4. Use **Edit video** to preview and adjust that video.
-5. Choose whether to save beside each original or in one output folder, then select **Convert videos**.
+5. Choose whether to save beside each original or in one output folder, then select **Convert All**. While editing a video, **Convert This File** converts only that video.
 
 Use Tab and Shift+Tab to move between controls, Enter or Space to activate them, and Escape to dismiss dialogs. The sidebar toggle makes the conversion settings available in narrow windows.
 
@@ -52,7 +53,7 @@ Originals are kept by default. The optional deletion setting applies only after 
 
 ## Development
 
-Clone the repository and install the runtime dependencies above, plus pytest, NumPy, polib, gettext, ShellCheck, Xvfb and a session D-Bus launcher for the regression suite.
+Clone the repository and install the runtime dependencies above, plus pytest, NumPy, polib, gettext, ShellCheck and Xvfb for the regression suite.
 
 ```sh
 git clone https://github.com/biglinux/big-video-converter.git
@@ -60,10 +61,10 @@ cd big-video-converter
 bash -n big-video-converter/usr/bin/big-video-converter
 shellcheck -S warning big-video-converter/usr/bin/big-video-converter
 python3 -m compileall -q big-video-converter/usr/share/big-video-converter tests
-xvfb-run -a dbus-run-session -- python3 -m pytest -q tests
+python3 -m pytest -q tests
 ```
 
-Tests generate their own media. Native GTK tests require a display and accessibility bus; running without a display skips them and is not a complete validation. See the [regression workflow](.github/workflows/backend-tests.yml) for the CI dependencies and commands. Use an isolated graphical session for visual, focus and accessibility checks.
+Tests generate their own media. The suite starts its own hidden Xvfb display and D-Bus session bus, so test windows never open on your desktop and never reach a converter you have running; set `BVC_TESTS_KEEP_SESSION=1` only inside an already isolated session. Without Xvfb, the native GTK tests are skipped, which is not a complete validation. See the [regression workflow](.github/workflows/backend-tests.yml) for the CI dependencies and commands. Use an isolated graphical session for visual, focus and accessibility checks.
 
 The GUI entry point is `main.py` under `usr/share/big-video-converter`. Queue scheduling prepares each job; `ui/conversion_page.py` resolves its settings and destination; `utils/conversion.py` supervises the shell converter under `usr/bin`. The supervisor publishes successful results and reports completion to the queue. Per-video settings must therefore reach the real conversion path, including segment jobs and fallback, rather than only updating a dialog.
 

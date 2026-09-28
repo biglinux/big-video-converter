@@ -1,11 +1,14 @@
 """Local regression tests; media is generated, never taken from a user's videos."""
-from contextlib import contextmanager
+import atexit
 import os
-from pathlib import Path
 import shutil
+import signal
 import subprocess
 import sys
+import tempfile
 import traceback
+from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
 
@@ -13,6 +16,62 @@ ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / 'big-video-converter/usr/share/big-video-converter'
 CLI = ROOT / 'big-video-converter/usr/bin/big-video-converter'
 sys.path.insert(0, str(APP))
+
+
+def _private_session():
+    """Give the tests a display and a session bus of their own.
+
+    Windows must never reach the desktop of the person running the tests, and
+    xvfb-run alone does not prevent it: GTK prefers Wayland, and without
+    WAYLAND_DISPLAY libwayland connects to $XDG_RUNTIME_DIR/wayland-0, the live
+    desktop. A GApplication on the live bus would also hand its activation to
+    a converter the person has open. Sessions that already run in a private
+    runtime directory (a nested KWin harness) are kept as they are.
+    """
+    runtime = os.environ.get('XDG_RUNTIME_DIR', '')
+    if os.environ.get('BVC_TESTS_KEEP_SESSION') or (runtime and runtime != f'/run/user/{os.getuid()}'):
+        return
+    for name in ('WAYLAND_DISPLAY', 'DISPLAY', 'AT_SPI_BUS_ADDRESS'):
+        os.environ.pop(name, None)
+    os.environ['GDK_BACKEND'] = 'x11'  # never the Wayland fallback socket
+    started = []
+    atexit.register(lambda: [os.killpg(p.pid, signal.SIGTERM) for p in started if p.poll() is None])
+
+    if shutil.which('Xvfb'):
+        read_end, write_end = os.pipe()
+        started.append(subprocess.Popen(
+            ['Xvfb', '-displayfd', str(write_end), '-screen', '0', '1440x1000x24', '-nolisten', 'tcp'],
+            pass_fds=[write_end], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True))
+        os.close(write_end)
+        with os.fdopen(read_end) as reader:
+            number = reader.readline().strip()
+        if number:
+            os.environ['DISPLAY'] = f':{number}'
+
+    if not shutil.which('dbus-daemon'):
+        return
+    # Only AT-SPI may be activated: desktop portals and ksecretd started on a
+    # throwaway bus outlive it. Activated services share the daemon's process
+    # group, which is terminated at exit with it.
+    bus_dir = Path(tempfile.mkdtemp(prefix='bvc-test-bus-'))
+    atexit.register(shutil.rmtree, bus_dir, True)
+    (bus_dir / 'services').mkdir()
+    for service in Path('/usr/share/dbus-1/services').glob('org.a11y.*.service'):
+        (bus_dir / 'services' / service.name).symlink_to(service)
+    (bus_dir / 'session.conf').write_text(
+        '<busconfig><type>session</type>'
+        f'<listen>unix:dir={bus_dir}</listen><servicedir>{bus_dir}/services</servicedir>'
+        '<policy context="default"><allow send_destination="*" eavesdrop="true"/>'
+        '<allow eavesdrop="true"/><allow own="*"/></policy></busconfig>', encoding='utf-8')
+    bus = subprocess.Popen(['dbus-daemon', '--nofork', f'--config-file={bus_dir}/session.conf',
+                            '--print-address=1'], stdout=subprocess.PIPE, text=True,
+                           start_new_session=True)
+    started.append(bus)
+    os.environ['DBUS_SESSION_BUS_ADDRESS'] = bus.stdout.readline().strip()
+
+
+_private_session()
 # Encoders must not create hundreds of threads on a shared CI runner.
 if hasattr(os, 'sched_getaffinity'):
     available = sorted(os.sched_getaffinity(0))
@@ -108,5 +167,5 @@ def run_cli(cli_env):
         if destination is not None:
             env['output_file'] = str(destination)
         return subprocess.run(['bash', str(CLI), str(source)], env=env,
-                              capture_output=True, text=True, timeout=timeout, cwd=cli_env["HOME"])
+                              capture_output=True, text=True, timeout=timeout, cwd=cli_env["HOME"], check=False)
     return run
