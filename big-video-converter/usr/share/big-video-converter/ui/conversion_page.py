@@ -462,6 +462,9 @@ class ConversionPage:
         queue_scroll.set_min_content_height(300)
 
         clamp = Adw.Clamp(maximum_size=1180, tightening_threshold=760)
+        # The cards' rounded bottom edge and shadow need room inside the
+        # scrolled area, or its edge cuts them off.
+        clamp.set_margin_bottom(8)
         self.queue_listbox = Gtk.ListBox()
         self.queue_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self.queue_listbox.set_show_separators(False)
