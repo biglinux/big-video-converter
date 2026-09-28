@@ -18,13 +18,46 @@ except OSError:
     APP_VERSION = "development"
 
 APP_DEVELOPERS = ["Tales A. Mendonça", "Bruno Gonçalves Araujo"]
-APP_WEBSITES = ["communitybig.org", "biglinux.com.br"]
 
 # Use the backend from the running application tree, including local builds
 # on machines that also have a system installation.
 CONVERT_SCRIPT_PATH = os.path.abspath(os.path.join(
     os.path.dirname(__file__), "..", "..", "bin", "big-video-converter"
 ))
+
+# AI noise reduction models, by the "noise-model" setting: LADSPA plugin,
+# label, output delay in samples at 48 kHz, extra controls, and the package
+# that installs it. The export script keeps the same table.
+NOISE_MODELS = (
+    # DFN3 mutes its first second by default, meant for a live microphone.
+    ("/usr/lib/ladspa/libdfn3_ladspa.so", "deep_filter_net3_rs_mono", 1919,
+     "|c6=0", "deepfilternet-quantized-ladspa"),
+    ("/usr/lib/ladspa/libdpdfnet_native.so", "dpdfnet_native_48hr", 2880,
+     "", "dpdfnet-native"),
+)
+
+
+def noise_reduction_filter(model: int, strength: float) -> str:
+    """FFmpeg chain for the AI noise reduction; the export script builds the same.
+
+    The plugins are mono 48 kHz and FFmpeg runs one per channel. The end is
+    padded and the start trimmed by the plugin's delay, keeping sync and the
+    last words. A plugin starts from an empty model state and under-restores
+    the first ~150 ms, so it first runs over the opening half second played
+    backwards, which is cut away again; that lead-in ends at timestamp 0, so
+    concat keeps the stream's own timeline across seeks and offset starts.
+    """
+    plugin, plugin_label, delay, extra, _package = NOISE_MODELS[model]
+    attenuation = strength * strength * 100
+    return (
+        f"aresample=48000,asplit[bvcnr_main][bvcnr_head];"
+        f"[bvcnr_head]atrim=end_sample=24000,apad=whole_len=24000,areverse,"
+        f"asetpts=PTS-STARTPTS-24000/SR/TB[bvcnr_pre];"
+        f"[bvcnr_pre][bvcnr_main]concat=n=2:v=0:a=1,apad=pad_len={delay},"
+        f"ladspa=file={plugin}:plugin={plugin_label}:controls=c0={attenuation:.2f}{extra},"
+        f"atrim=start_sample={24000 + delay},asetpts=PTS-{delay}/SR/TB"
+    )
+
 
 # File dialog filters
 VIDEO_FILE_MIME_TYPES = [
@@ -43,6 +76,14 @@ VIDEO_FILE_MIME_TYPES = [
     "video/ogg",
     "video/mp2t",
 ]
+
+# The file names those types cover, for paths opened without a MIME check
+# ("Open with", the command line, folders). The Nautilus extension keeps a
+# copy of this set.
+VIDEO_FILE_EXTENSIONS = frozenset({
+    ".mp4", ".mkv", ".webm", ".mov", ".avi", ".wmv", ".mpeg", ".mpg", ".m4v",
+    ".ts", ".m2ts", ".mts", ".flv", ".3gp", ".ogv",
+})
 
 # Encoding options - User-friendly display names
 def get_gpu_options():
@@ -204,6 +245,24 @@ VIDEO_RESOLUTION_VALUES = {
     11: "custom",  # Custom
 }
 
+# Output frame rate: fewer frames drop the extra ones, more blend neighbours.
+def get_video_fps_options():
+    """Return translated frame rate options"""
+    return [
+        _("Original (no change)"),
+        "60 fps",
+        "50 fps",
+        "30 fps",
+        "25 fps",
+        _("24 fps (cinema)"),
+        "15 fps",
+    ]
+
+VIDEO_FPS_OPTIONS = get_video_fps_options()  # Default initialization
+
+# Internal frame rate values for the script's video_fps
+VIDEO_FPS_VALUES = {0: "", 1: "60", 2: "50", 3: "30", 4: "25", 5: "24", 6: "15"}
+
 # Beginner-friendly tooltips for all UI elements
 def get_tooltips():
     """Return translated tooltips dictionary"""
@@ -252,6 +311,38 @@ def get_tooltips():
             "• Vertical: For phones and social media\n"
             "• Custom: Set your own dimensions"
         ),
+        "fps": _(
+            "Frames per second of the converted video:\n\n"
+            "• Fewer frames: a smaller file. Measured with the same quality: "
+            "30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
+            "• More frames: in-between frames are blended from their "
+            "neighbours, so motion looks smoother but fast movement leaves "
+            "a faint trail"
+        ),
+        "denoise": _(
+            "Removes grain and the speckles of low-light video. Stronger "
+            "levels also soften fine detail. Cleaner video compresses into "
+            "a slightly smaller file."
+        ),
+        "sharpen": _(
+            "Makes edges and fine detail crisper (AMD contrast adaptive "
+            "sharpening). Sharper video makes a slightly larger file."
+        ),
+        "stabilize": _(
+            "Steadies shaky camera footage. The video is analysed first, so "
+            "the conversion takes about twice as long; the edges are zoomed "
+            "in slightly to hide the movement."
+        ),
+        "source_hdr": _(
+            "How the colours of this video are coded. Keep the file's own "
+            "description unless the preview looks grey and washed out: then "
+            "the file is HDR without saying so, usually HDR10 (PQ), or HLG "
+            "for some broadcasts. The conversion reads it the same way."
+        ),
+        "effect_file": _(
+            "Applies a colour look from a LUT file (.cube, .3dl) or an mpv "
+            "shader (.hook, .glsl) to the whole video."
+        ),
         "output_format": _(
             "• MP4: Most compatible\n• MKV: More features\n• MOV: Apple/ProRes workflows\n• WebM: Web optimized (VP9/AV1)"
         ),
@@ -262,7 +353,7 @@ def get_tooltips():
         "saturation": _(
             "• Move right: More vivid\n"
             "• Move left: More muted\n"
-            "• Default: 1.0 (no change)"
+            "• Default: 0% (no change)"
         ),
         "hue": _(
             "• Positive: More red/yellow\n"
@@ -305,11 +396,8 @@ def get_tooltips():
         "extract_subtitles": _(
             "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
         ),
-        "show_tooltips": _(
-            "You’re seeing an example of help shown when hovering over an item."
-        ),
         "noise_reduction": _(
-            "Reduces background noise from audio using the GTCRN neural network.\n\n"
+            "Reduces background noise from speech with a neural network.\n\n"
             "• Requires audio re-encoding\n"
             "• Works best for constant background noise\n"
             "• Automatically re-encodes audio if set to copy"
@@ -326,26 +414,7 @@ def get_tooltips():
             "residual noise during pauses between speech.\n\n"
             "Adjust intensity from low to maximum."
         ),
-        "noise_voice_recovery": _(
-            "Voice Recovery — high-frequency reconstruction\n\n"
-            "Recovers frequencies above 8 kHz that the AI\n"
-            "noise reduction model removes.\n\n"
-            "• 0%: Cuts all HF (maximum NR)\n"
-            "• 75%: Natural default\n"
-            "• 100%: Full original HF preserved"
-        ),
-        # Header bar buttons
-        "clear_queue_button": _("Remove all files from the queue"),
-        "menu_button": _("Open application menu"),
-        # File list
-        "file_list_item": _("Right-click for more options"),
-        "file_list_play_button": _("Preview this video file"),
-        "file_list_edit_button": _("Open video editor for this file"),
-        "file_list_info_button": _("Show detailed file information"),
-        "file_list_remove_button": _("Remove this file from the queue"),
         # Progress page buttons
-        "progress_back": _("Go back to the main screen"),
-        "progress_show_log": _("Show conversion log output"),
         "progress_cancel_file": _("Cancel conversion of this file"),
         "progress_skip_file": _("Skip this file and do not convert it"),
         # Sidebar profiles
@@ -377,6 +446,7 @@ def refresh_translations() -> None:
     """Refresh all translated constants after gettext is properly initialized"""
     global GPU_OPTIONS, VIDEO_QUALITY_OPTIONS, VIDEO_CODEC_OPTIONS, PRESET_OPTIONS
     global SUBTITLE_OPTIONS, AUDIO_OPTIONS, AUDIO_CODEC_OPTIONS, VIDEO_RESOLUTION_OPTIONS
+    global VIDEO_FPS_OPTIONS
     
     GPU_OPTIONS = get_gpu_options()
     VIDEO_QUALITY_OPTIONS = get_video_quality_options()
@@ -386,3 +456,4 @@ def refresh_translations() -> None:
     AUDIO_OPTIONS = get_audio_options()
     AUDIO_CODEC_OPTIONS = get_audio_codec_options()
     VIDEO_RESOLUTION_OPTIONS = get_video_resolution_options()
+    VIDEO_FPS_OPTIONS = get_video_fps_options()

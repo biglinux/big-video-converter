@@ -1,41 +1,32 @@
-import json
 import copy
+import json
+import logging
 import math
+import os
 import re
+import shlex
 import tempfile
 from contextlib import contextmanager
-import os
-
-import logging
+from typing import ClassVar
 
 logger = logging.getLogger(__name__)
-
-# Remove translation imports if not directly used in this file
 
 
 class SettingsManager:
     """Simple settings manager using JSON file."""
 
     # Combined default values
-    DEFAULT_VALUES = {
+    DEFAULT_VALUES: ClassVar[dict[str, object]] = {
         # General settings
         "last-accessed-directory": "",
         "output-folder": "",
         "delete-original": False,
-        "show-single-help-on-startup": True,
-        "show-conversion-help-on-startup": True,
         "show-tooltips": True,
         # Window state
         "window-width": 1200,
         "window-height": 720,
         "window-maximized": False,
         "sidebar-position": 430,
-        # Batch conversion
-        "search-directory": "",
-        "max-processes": 2,
-        "min-mp4-size": 1024,
-        "log-file": "mkv-mp4-convert.log",
-        "delete-batch-originals": False,
         # Encoding settings - use strings directly
         "gpu": "auto",
         "video-quality": "default",
@@ -49,6 +40,13 @@ class SettingsManager:
         "audio-codec": "aac",
         # Video settings
         "video-resolution": "",
+        # Output frame rate ("" keeps the source's), see constants.VIDEO_FPS_VALUES.
+        "video-fps": "",
+        # Fit every converted video under a size ("" = no limit): a target
+        # id from utils/size_target.TARGETS, or "custom" with size-target-mb.
+        "size-target": "",
+        "size-target-mb": 50.0,
+        "size-strategy": "auto",
         "additional-options": "",
         "output-format-index": 0,
         # Feature toggles
@@ -58,24 +56,16 @@ class SettingsManager:
         # Noise reduction settings
         "noise-reduction": False,
         "noise-reduction-strength": 1.0,
+        # Index into constants.NOISE_MODELS: 0 DeepFilterNet3, 1 DPDFNet-2.
         "noise-model": 0,
-        "noise-model-blend": False,
-        "noise-speech-strength": 1.0,
-        "noise-lookahead": 50,
-        "noise-voice-recovery": 0.75,
         "noise-gate-enabled": False,
         "noise-gate-intensity": 0.5,
-        "noise-gate-threshold": -30,
-        "noise-gate-range": -60,
-        "noise-gate-attack": 20.0,
-        "noise-gate-release": 150.0,
         # Compressor settings
         "compressor-enabled": False,
         "compressor-intensity": 1.0,
         # HPF settings
         "hpf-enabled": False,
         "hpf-frequency": 80,
-        # Transient settings
         # EQ settings
         "eq-enabled": False,
         "eq-preset": "flat",
@@ -84,24 +74,9 @@ class SettingsManager:
         "normalize-enabled": False,
         "use-custom-output-folder": False,
         # Sidebar state
-        "video-profile": "universal",
         "active-preset": "",
         "gpu-device-index": 0,
         "show-welcome-dialog": True,
-        "preview-rotation": 0,
-        "preview-flip-h": False,
-        "preview-flip-v": False,
-        # Preview settings
-        "preview-crop-left": 0,
-        "preview-crop-right": 0,
-        "preview-crop-top": 0,
-        "preview-crop-bottom": 0,
-        "preview-brightness": 0.0,
-        "preview-saturation": 1.0,
-        "preview-hue": 0.0,
-        # Video trim settings
-        "video-trim-start": 0.0,
-        "video-trim-end": -1.0,  # -1 means no end time (use full video)
         # Multi-segment output mode
         "multi-segment-output-mode": "join",  # Options: "join", "split"
         # Video preview rendering mode
@@ -141,7 +116,15 @@ class SettingsManager:
             data = json.loads(text, parse_constant=self._reject_constant,
                               object_pairs_hook=self._unique_object)
             if not isinstance(data, dict):
-                raise ValueError("Settings must be a JSON object")
+                raise ValueError("Settings must be a JSON object")  # noqa: TRY004 - invalid file content, reported with the other ValueErrors
+            # There are two models (0 and 1); older builds imported 2.
+            model = data.get("noise-model")
+            if type(model) is int and model > 1:
+                data["noise-model"] = 0
+            # FFmpeg 7 removed -vsync; -fps_mode takes the same modes by name.
+            options = data.get("additional-options")
+            if isinstance(options, str) and "-vsync" in options:
+                data["additional-options"] = self._migrate_vsync(options)
             return data
         except FileNotFoundError:
             return None
@@ -216,12 +199,12 @@ class SettingsManager:
         elif isinstance(default, int):
             try:
                 return int(value)
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, OverflowError):
                 return default
         elif isinstance(default, float):
             try:
                 return float(value)
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, OverflowError):
                 return default
         else:
             return str(value) if value is not None else ""
@@ -261,9 +244,13 @@ class SettingsManager:
         self._batch_mode = True
         try:
             yield self
-            if not previous and self.settings != before and not self._suspended:
-                if not self.save_to_disk():
-                    raise OSError("Could not persist settings transaction")
+            if (
+                not previous
+                and self.settings != before
+                and not self._suspended
+                and not self.save_to_disk()
+            ):
+                raise OSError("Could not persist settings transaction")
         except BaseException:
             self.settings = before
             raise
@@ -298,17 +285,13 @@ class SettingsManager:
             return False
 
     # Keys excluded from profile export (UI state, not conversion settings)
-    _PROFILE_EXCLUDE_KEYS = {
+    _PROFILE_EXCLUDE_KEYS: ClassVar[set[str]] = {
         "last-accessed-directory",
         "output-folder",
-        "search-directory",
         "window-width",
         "window-height",
         "window-maximized",
         "sidebar-position",
-        "show-single-help-on-startup",
-        "show-conversion-help-on-startup",
-        "log-file",
     }
 
     def export_profile(self, filepath: str) -> bool:
@@ -328,14 +311,17 @@ class SettingsManager:
 
     def import_profile(self, filepath: str) -> bool:
         """Validate all fields before committing; never import local/destructive state."""
+        updates = self.read_profile(filepath)
+        return updates is not None and self.apply_profile(updates)
+
+    def read_profile(self, filepath: str):
+        """The validated portable settings of a profile file, or None."""
         try:
             profile = self._read_file(filepath)
             if not isinstance(profile, dict) or profile.get("_app") != "big-video-converter":
                 raise ValueError("Invalid profile application identifier")
             if type(profile.get("_profile_version")) is not int or profile["_profile_version"] != 1:
                 raise ValueError("Unsupported profile version")
-            if self._batch_mode or self._suspended:
-                raise ValueError("Cannot import during another settings transaction")
             updates = {}
             for key, value in profile.items():
                 if key in ("_app", "_profile_version"):
@@ -352,15 +338,25 @@ class SettingsManager:
                     continue
                 self._validate_profile_value(key, value)
                 updates[key] = value
-            before = copy.deepcopy(self.settings)
-            self.settings.update(updates)
-            if not self.save_to_disk():
-                self.settings = before
-                return False
-            return True
+            return updates
         except (OSError, ValueError, TypeError, UnicodeError, RecursionError) as error:
             logger.error("Error importing profile: %s", error)
+            return None
+
+    def apply_profile(self, updates: dict) -> bool:
+        """Commit settings from read_profile atomically; unchanged ones write nothing."""
+        if self._batch_mode or self._suspended:
+            logger.error("Error importing profile: another settings transaction is open")
             return False
+        if all(key in self.settings and type(self.settings[key]) is type(value)
+               and self.settings[key] == value for key, value in updates.items()):
+            return True
+        before = copy.deepcopy(self.settings)
+        self.settings.update(updates)
+        if not self.save_to_disk():
+            self.settings = before
+            return False
+        return True
 
     # Simple aliases for unified API
     def load_setting(self, key: str, default=None):
@@ -369,6 +365,20 @@ class SettingsManager:
     def save_setting(self, key: str, value: str):
         return self.set_value(key, value)
 
+
+    @staticmethod
+    def _migrate_vsync(text: str) -> str:
+        modes = {"-1": "auto", "0": "passthrough", "1": "cfr", "2": "vfr"}
+        try:
+            tokens = shlex.split(text)
+        except ValueError:
+            return text
+        for index, token in enumerate(tokens[:-1]):
+            mode = tokens[index + 1].lower()
+            mode = modes.get(mode, mode)
+            if token == "-vsync" and mode in modes.values():
+                tokens[index:index + 2] = ["-fps_mode", mode]
+        return shlex.join(tokens)
 
     @staticmethod
     def _reject_constant(value):
@@ -422,31 +432,35 @@ class SettingsManager:
             "audio-handling": {"copy", "reencode", "none"},
             "subtitle-extract": {"extract", "embedded", "none"},
             "multi-segment-output-mode": {"join", "split"},
-            "video-profile": {"copy", "universal", "smaller", "quality", "custom"},
+            "size-target": {"", "custom", "whatsapp", "discord", "email", "100mb",
+                            "telegram", "fat32"},
+            "size-strategy": {"auto", "keep_resolution", "split"},
         }
         if key in enums and value not in enums[key]:
             raise ValueError("Unsupported value for " + key)
         ranges = {
-            "output-format-index": (0, 3), "noise-model": (0, 2),
-            "noise-reduction-strength": (0, 1), "noise-speech-strength": (0, 1),
-            "noise-lookahead": (0, 2000), "noise-voice-recovery": (0, 1),
-            "noise-gate-intensity": (0, 1), "noise-gate-threshold": (-90, 0),
-            "noise-gate-range": (-90, 0), "noise-gate-attack": (0.01, 9000),
-            "noise-gate-release": (0.01, 9000), "compressor-intensity": (0, 10),
-            "hpf-frequency": (20, 20000),
+            "output-format-index": (0, 3), "noise-model": (0, 1),
+            "noise-reduction-strength": (0, 1),
+            "noise-gate-intensity": (0, 1), "compressor-intensity": (0, 10),
+            "hpf-frequency": (20, 20000), "size-target-mb": (1, 1_000_000),
         }
         if key in ranges and not ranges[key][0] <= value <= ranges[key][1]:
             raise ValueError("Out-of-range value for " + key)
-        if key == "audio-channels" and value:
-            if not re.fullmatch(r"[1-9][0-9]?", value) or int(value) > 64:
-                raise ValueError("Invalid audio channel count")
-        if key == "audio-bitrate" and value:
-            if not re.fullmatch(r"[1-9][0-9]*[kKmM]?", value):
-                raise ValueError("Invalid audio bitrate")
+        if key == "audio-channels" and value and (
+            not re.fullmatch(r"[1-9][0-9]?", value) or int(value) > 64
+        ):
+            raise ValueError("Invalid audio channel count")
+        if key == "audio-bitrate" and value and not re.fullmatch(r"[1-9][0-9]*[kKmM]?", value):
+            raise ValueError("Invalid audio bitrate")
         if key == "video-resolution" and value:
             match = re.fullmatch(r"([1-9][0-9]*)x([1-9][0-9]*)", value)
             if not match or max(map(int, match.groups())) > 32768:
                 raise ValueError("Invalid video resolution")
+        if key == "video-fps" and value:
+            # The script's video_fps: "24", or "30000/1001" from a preset.
+            match = re.fullmatch(r"([1-9][0-9]{0,5})(?:/([1-9][0-9]{0,4}))?", value)
+            if not match or int(match[1]) > 240 * int(match[2] or 1):
+                raise ValueError("Invalid frame rate")
         if key == "eq-bands":
             bands = [float(part) for part in value.split(",")]
             if len(bands) != 10 or any(not math.isfinite(v) or not -24 <= v <= 24 for v in bands):
@@ -458,14 +472,10 @@ class SettingsManager:
             parse_additional_options(value)
 
 
-# Local preferences and per-file edits are not portable conversion recipes.
+# Local preferences are not portable conversion recipes.
 SettingsManager._PROFILE_EXCLUDE_KEYS.update({
     "active-preset",
-    "delete-original", "delete-batch-originals", "gpu-device-index", "gpu",
-    "gpu-partial", "max-processes", "min-mp4-size", "use-custom-output-folder",
+    "delete-original", "gpu-device-index", "gpu",
+    "gpu-partial", "use-custom-output-folder",
     "show-tooltips", "show-welcome-dialog", "video-preview-render-mode",
-    "video-trim-start", "video-trim-end",
 })
-SettingsManager._PROFILE_EXCLUDE_KEYS.update(
-    key for key in SettingsManager.DEFAULT_VALUES if key.startswith("preview-")
-)
