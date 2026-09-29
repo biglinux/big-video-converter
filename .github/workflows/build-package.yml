@@ -2,42 +2,72 @@ name: Build Package
 
 on:
   workflow_dispatch:
-
+  pull_request:
   push:
-    branches: [ "*" ]
+    branches: ['**']
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
     steps:
-      - uses: actions/checkout@v4
-      # - name: Send Hooks BigLinux Build Package
-      #   shell: bash
-      #   run: |
-      #     if [ -z "$(grep biglinux-package-template pkgbuild/PKGBUILD)" ];then
-      #       curl -X POST -H "Accept: application/json" -H "Authorization: token ${{ secrets.WEBHOOK_TOKEN }}" --data '{"event_type": "${{ github.repository }}", "client_payload": { "branch": "${{ github.ref_name }}", "url": "https://github.com/${{ github.repository }}"}}' https://api.github.com/repos/BigLinux-Package-Build/build-package/dispatches
-      #       curl -X POST -H "Accept: application/json" -H "Authorization: token ${{ secrets.WEBHOOK_TOKEN }}" --data '{"event_type": "${{ github.repository }}", "client_payload": { "branch": "${{ github.ref_name }}", "url": "https://github.com/${{ github.repository }}"}}' https://api.github.com/repos/BigLinux-Package-Build/build-package-ARM/dispatches
-      #     fi
-      #     curl -X POST "https://nebulaapi.nimbusnetwork.dev/webhook" \
-      #       -H "Authorization: token ${{ secrets.WEBHOOK_TOKEN }}" \
-      #       -H "Content-Type: application/json" \
-      #       -d '{
-      #             "event_type": "${{ github.repository }}",
-      #             "branch": "${{ github.ref_name }}",
-      #             "url": "https://github.com/${{ github.repository }}"
-      #           }'
-
-      # - name: Invoke deployment hook
-      #   uses: johannes-huther/webhook.sh@v1
-      #   env:
-      #     webhook_url: https://nebulaapi.nimbusnetwork.dev/webhook
-      #     webhook_secret: ${{ secrets.WEBHOOK_TOKEN }}
-      #     data: '{ "event_type": "${{ github.repository }}", "branch": "${{ github.ref_name }}", "url": "https://github.com/${{ github.repository }}"}'
-                  #xpto28
+      - name: Install package build dependencies
+        run: |
+          pacman -Syu --noconfirm git python python-gobject gtk4 ffmpeg \
+            python-cairo python-mpv libadwaita libva-utils python-opengl vte4 \
+            namcap desktop-file-utils gettext appstream
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build the checked-out sources
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          mkdir package-build
+          git ls-files -z | tar --null --transform='s,^,big-video-converter/,' \
+            -T - -czf package-build/source.tar.gz
+          cp pkgbuild/PKGBUILD package-build/PKGBUILD
+          # Keep the release recipe, but test this checkout rather than main.
+          printf '\nsource=(source.tar.gz)\n' >> package-build/PKGBUILD
+          printf "sha256sums=('%s')\n" "$(sha256sum package-build/source.tar.gz | cut -d ' ' -f 1)" \
+            >> package-build/PKGBUILD
+          useradd -m builder
+          chown -R builder:builder package-build
+          runuser -u builder -- bash -c 'cd package-build && makepkg --cleanbuild --noconfirm'
+      - name: Validate the built package
+        run: |
+          package=$(find package-build -maxdepth 1 -name '*.pkg.tar.zst' -print -quit)
+          test -n "$package"
+          namcap package-build/PKGBUILD "$package" | tee package-build/namcap.log
+          if grep -q ' E: ' package-build/namcap.log; then exit 1; fi
+          mkdir package-build/installed
+          tar -xf "$package" -C package-build/installed
+          desktop-file-validate package-build/installed/usr/share/applications/*.desktop
+          python -m compileall -q package-build/installed/usr/share/big-video-converter
+          test -x package-build/installed/usr/bin/big-video-converter
+          test -x package-build/installed/usr/bin/big-video-converter-gui
+          test -s package-build/installed/usr/share/licenses/big-video-converter/LICENSE
+          appstreamcli validate --no-net package-build/installed/usr/share/metainfo/*.xml
+          test "$(cat package-build/installed/usr/share/big-video-converter/VERSION)" = "$(pacman -Qp "$package" | cut -d ' ' -f 2)"
+          sha256sum "$package" > package-build/SHA256SUMS
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: package-${{ github.sha }}
+          path: |
+            package-build/*.pkg.tar.zst
+            package-build/namcap.log
+            package-build/SHA256SUMS
+          if-no-files-found: error
                   
                 
                   
                   
    
  
-

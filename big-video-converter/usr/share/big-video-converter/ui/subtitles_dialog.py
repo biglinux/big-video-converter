@@ -4,10 +4,10 @@ Shows subtitle handling options with explanations.
 """
 
 import gettext
-from utils.signal_connections import SignalConnections
 import os
 
 import gi
+from utils.signal_connections import SignalConnections
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")

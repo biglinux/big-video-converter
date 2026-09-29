@@ -8,21 +8,22 @@ gi.require_version("GdkPixbuf", "2.0")
 # Setup translation
 import gettext
 
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
 
 _ = gettext.gettext
 
+import logging
+
+from constants import NOISE_MODELS, noise_reduction_filter
+from utils.crop_geometry import ASPECT_RATIOS, centered_crop
+from utils.job_options import EFFECT_LEVELS, SOURCE_HDR_MODES
+from utils.video_settings import SHADER_SUFFIXES, effects_graph
+
 # Import the modules we've split off
+from ui.crop_overlay import display_to_source, displayed_size, source_to_display
 from ui.mpv_player import MPVPlayer
 from ui.video_edit_ui import VideoEditUI
 from ui.video_processing import VideoProcessor
-
-# Import from the unified video_settings module instead of separate modules
-from utils.video_settings import (
-    VideoAdjustmentManager,
-)
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -37,45 +38,57 @@ class VideoEditPage:
         self.current_position = 0
         self.trim_segments = []
         self.first_segment_point = None  # For the new single-button marking logic
-        self.reset_crop_values()
         self.position_update_id = None
         self.position_changed_handler_id = None
         self.cleanup_called = False
         self.video_width = 0
         self.video_height = 0
         self.video_fps = 25
-        self.adjustment_manager = VideoAdjustmentManager(self.settings, self)
         self.crop_left = 0
         self.crop_right = 0
         self.crop_top = 0
         self.crop_bottom = 0
         self.brightness = 0.0
+        self.contrast = 0.0
         self.saturation = 1.0
         self.hue = 0.0
         self.rotation = 0
         self.flip_h = False
         self.flip_v = False
+        self.denoise = "off"
+        self.sharpen = "off"
+        self.stabilize = False
+        self.effect_file = ""
+        self.source_hdr = "auto"
         self.crop_edit_mode = False
+        self.crop_aspect = "free"
         # Load default output mode from settings (last used by user)
         self.output_mode = self.settings.get_value("multi-segment-output-mode", "join")
         self.processor = VideoProcessor(self)
         self.ui = VideoEditUI(self)
         self.page = self.ui.create_page()
-        # RENAMED: self.gst_player is now self.mpv_player
         self.mpv_player = MPVPlayer(self.ui.preview_video)
+        self.mpv_player.on_tracks_changed = self.update_audio_subtitle_controls
         self.is_playing = False
         self.user_is_dragging_slider = False
         self._seek_cooldown = False
         self._seek_cooldown_timer_id = None
         self.loading_video = False
         self.requested_video_path = None
-        self._populate_track_menus_attempts = 0
 
-        # Simple fullscreen support - just hide UI elements
         self.is_video_fullscreen = False
-
-        # Debounce timer for saving metadata to avoid file I/O on every slider change
-        self.metadata_save_timeout = None
+        self._sidebar_shown_before_fullscreen = True
+        app.split_view.bind_property(
+            "show-sidebar", self.ui.sidebar_button, "active",
+            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
+        )
+        # The compositor or a window-manager shortcut can end fullscreen too.
+        app.window.connect("notify::fullscreened", self._on_window_fullscreened)
+        # Escape leaves fullscreen wherever focus is, sidebar included; on the
+        # window's bubble phase, dialogs and entries still get it first.
+        escape = Gtk.EventControllerKey()
+        escape.connect("key-pressed", self._on_window_key_pressed)
+        app.window.add_controller(escape)
 
         # Keyboard shortcuts
         self._setup_keyboard_shortcuts()
@@ -141,6 +154,7 @@ class VideoEditPage:
                 "rotation": 0,
                 "flip_h": False,
                 "flip_v": False,
+                "crop_aspect": "free",
                 "output_mode": default_output_mode,
             }
             metadata = self.app_state.file_metadata[file_path]
@@ -148,94 +162,138 @@ class VideoEditPage:
         default_output_mode = self.settings.get_value(
             "multi-segment-output-mode", "join"
         )
-        self.trim_segments = metadata.get("trim_segments", [])
+        # A copy: until it is saved, an edit belongs to this video alone.
+        self.trim_segments = [dict(s) for s in metadata.get("trim_segments", [])]
         self.crop_left = metadata.get("crop_left", 0)
         self.crop_right = metadata.get("crop_right", 0)
         self.crop_top = metadata.get("crop_top", 0)
         self.crop_bottom = metadata.get("crop_bottom", 0)
         self.brightness = metadata.get("brightness", 0.0)
+        self.contrast = metadata.get("contrast", 0.0)
         self.saturation = metadata.get("saturation", 1.0)
         self.hue = metadata.get("hue", 0.0)
         self.rotation = metadata.get("rotation", 0)
         self.flip_h = metadata.get("flip_h", False)
         self.flip_v = metadata.get("flip_v", False)
+        self.denoise = metadata.get("denoise", "off")
+        self.sharpen = metadata.get("sharpen", "off")
+        self.stabilize = metadata.get("stabilize", False)
+        self.effect_file = metadata.get("effect_file", "")
+        self.source_hdr = metadata.get("source_hdr", "auto")
+        self.crop_aspect = metadata.get("crop_aspect", "free")
         self.output_mode = metadata.get("output_mode", default_output_mode)
         self._update_ui_from_metadata()
         self._update_segments_listbox()
         self.ui.update_segment_markers()
 
     def _update_ui_from_metadata(self):
-        # Update UI sliders to reflect current video's values
-        if hasattr(self.ui, "brightness_scale"):
-            self.ui.brightness_scale.set_value(self.brightness)
-        if hasattr(self.ui, "saturation_scale"):
-            self.ui.saturation_scale.set_value(self.saturation)
-        if hasattr(self.ui, "hue_scale"):
-            self.ui.hue_scale.set_value(self.hue)
+        self._restoring_metadata = True
+        self._updating_crop_aspect = True
+        self._updating_crop_spins = True
+        try:
+            # Update UI sliders to reflect current video's values
+            if hasattr(self.ui, "brightness_scale"):
+                self.ui.brightness_scale.set_value(self.brightness)
+            if hasattr(self.ui, "contrast_scale"):
+                self.ui.contrast_scale.set_value(self.contrast)
+            if hasattr(self.ui, "saturation_scale"):
+                self.ui.saturation_scale.set_value(self.saturation)
+            if hasattr(self.ui, "hue_scale"):
+                self.ui.hue_scale.set_value(self.hue)
 
-        # Update output mode combo
-        if hasattr(self.ui, "output_mode_combo"):
-            output_mode_index = {"join": 0, "split": 1}.get(self.output_mode, 0)
-            self.ui.output_mode_combo.set_selected(output_mode_index)
+            if hasattr(self.ui, "denoise_combo"):
+                self.ui.update_effects_state(
+                    self.denoise, self.sharpen, self.stabilize, self.effect_file)
+            if hasattr(self.ui, "source_hdr_combo"):
+                self.ui.update_source_hdr(self.source_hdr)
 
-        # Update crop spinbuttons
-        self.update_crop_spinbuttons()
+            # Update output mode combo
+            if hasattr(self.ui, "output_mode_combo"):
+                output_mode_index = {"join": 0, "split": 1}.get(self.output_mode, 0)
+                self.ui.output_mode_combo.set_selected(output_mode_index)
 
-        # Apply values to MPV player
-        if hasattr(self, "mpv_player") and self.mpv_player:
-            self.mpv_player.set_brightness(self.brightness)
-            self.mpv_player.set_saturation(self.saturation)
-            self.mpv_player.set_hue(self.hue)
-            self.mpv_player.set_crop(
-                self.crop_left, self.crop_right, self.crop_top, self.crop_bottom
-            )
-            self.mpv_player.set_rotation(self.rotation)
-            self.mpv_player.set_video_flip(self.flip_h, self.flip_v)
-            # MPV handles render updates internally
+            if hasattr(self.ui, "crop_aspect_combo"):
+                aspect_values = tuple(ASPECT_RATIOS)
+                try:
+                    aspect_index = aspect_values.index(self.crop_aspect)
+                except ValueError:
+                    aspect_index = 0
+                self.ui.crop_aspect_combo.set_selected(aspect_index)
 
-        # Update flip button state
-        self._update_flip_button_state()
+            # Update crop spinbuttons
+            self.update_crop_spinbuttons()
+
+            # Apply values to MPV player
+            if hasattr(self, "mpv_player") and self.mpv_player:
+                self.mpv_player.set_brightness(self.brightness)
+                self.mpv_player.set_contrast(self.contrast)
+                self.mpv_player.set_saturation(self.saturation)
+                self.mpv_player.set_hue(self.hue)
+                self.mpv_player.set_crop(
+                    self.crop_left, self.crop_right, self.crop_top, self.crop_bottom
+                )
+                self.mpv_player.set_rotation(self.rotation)
+                self.mpv_player.set_video_flip(self.flip_h, self.flip_v)
+                self._apply_video_effects()
+                # MPV handles render updates internally
+
+            # Update flip button state
+            self._update_transform_state()
+        finally:
+            self._restoring_metadata = False
+            self._updating_crop_aspect = False
+            self._updating_crop_spins = False
 
     def _save_file_metadata(self):
-        """Persist edits in the per-file in-memory model."""
+        """Persist edits in the per-file in-memory model.
+
+        Called on every change, slider drags included: the state is a dict, so
+        writing it is cheap and no pending timer can lose an edit.
+        """
+        if getattr(self, "_restoring_metadata", False):
+            return
         if not self.current_video_path or not hasattr(self.app, "conversion_page"):
             return
         metadata = self.app_state.file_metadata.get(self.current_video_path, {})
         metadata.update({
-            "trim_segments": self.trim_segments,
+            "trim_segments": [dict(s) for s in self.trim_segments],
             "crop_left": self.crop_left,
             "crop_right": self.crop_right,
             "crop_top": self.crop_top,
             "crop_bottom": self.crop_bottom,
             "brightness": self.brightness,
+            "contrast": self.contrast,
             "saturation": self.saturation,
             "hue": self.hue,
             "rotation": self.rotation,
             "flip_h": self.flip_h,
             "flip_v": self.flip_v,
+            "denoise": self.denoise,
+            "sharpen": self.sharpen,
+            "stabilize": self.stabilize,
+            "effect_file": self.effect_file,
+            "source_hdr": self.source_hdr,
+            "crop_aspect": self.crop_aspect,
             "output_mode": self.output_mode,
         })
         self.app_state.file_metadata[self.current_video_path] = metadata
 
-    def _save_file_metadata_debounced(self):
-        """Keep the in-memory job state current, including during slider drags."""
-        if self.metadata_save_timeout:
-            GLib.source_remove(self.metadata_save_timeout)
-            self.metadata_save_timeout = None
-        self._save_file_metadata()
-
     def set_video(self, file_path: str):
-        if self.loading_video:
-            return False
         if not file_path or not os.path.exists(file_path):
             return False
-        if self.current_video_path == file_path:
+        if self.loading_video and self.requested_video_path == file_path:
+            # A second activation of the row that is already loading.
+            return True
+        if not self.loading_video and self.current_video_path == file_path:
             self._load_file_metadata(file_path)
             self.update_nr_button_visibility()
             return True
+        # current_video_path names the video whose edits the controls hold.
+        # The loader sets it once this video's metadata is in the controls;
+        # until then no save may write the previous video's edits into it.
+        self.current_video_path = None
         self.loading_video = True
         self.requested_video_path = file_path
-        self.current_video_path = file_path
         # Reset cleanup flag when loading a new video
         self.cleanup_called = False
         # Reconnect signal handlers if they were disconnected during cleanup
@@ -246,6 +304,7 @@ class VideoEditPage:
         self.ui.info_codec_label.set_text("...")
         self.ui.info_filesize_label.set_text("...")
         self.ui.info_duration_label.set_text("...")
+        self.update_audio_subtitle_controls()
         self.ui.position_scale.set_value(0)
         self.update_position_display(0)
         return self.processor.load_video(file_path)
@@ -257,7 +316,8 @@ class VideoEditPage:
         """Clean up resources when leaving the edit page"""
         if getattr(self, "cleanup_called", False):
             return
-        self._save_file_metadata_debounced()
+        self._save_file_metadata()
+        self._exit_video_fullscreen()
         self.cleanup_called = True
         self.requested_video_path = None
         self.loading_video = False
@@ -279,6 +339,17 @@ class VideoEditPage:
             logger.debug("VideoEditPage: Removing position update timer")
             GLib.source_remove(self.position_update_id)
             self.position_update_id = None
+
+        if self._seek_cooldown_timer_id is not None:
+            GLib.source_remove(self._seek_cooldown_timer_id)
+            self._seek_cooldown_timer_id = None
+        self._seek_cooldown = False
+
+        # A half-finished mark is transient interaction state, not a saved edit.
+        self.first_segment_point = None
+        if hasattr(self, "ui") and self.ui:
+            self.ui.mark_time_label.set_visible(False)
+            self.ui.mark_cancel_button.set_visible(False)
 
         # Update UI immediately before stopping playback
         self.is_playing = False
@@ -303,12 +374,15 @@ class VideoEditPage:
 
     def on_brightness_changed(self, scale) -> None:
         self.brightness = scale.get_value()
-        self._save_file_metadata_debounced()
+        self._save_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_brightness(self.brightness)
-            # Don't refresh preview during drag - MPV updates automatically
-            # if not self.is_playing:
-            #     self._refresh_preview()
+
+    def on_contrast_changed(self, scale) -> None:
+        self.contrast = scale.get_value()
+        self._save_file_metadata()
+        if getattr(self, "mpv_player", None):
+            self.mpv_player.set_contrast(self.contrast)
 
     def on_crop_value_changed(self, spinbutton) -> None:
         """Handle crop value changes - ensures preview updates immediately"""
@@ -317,10 +391,20 @@ class VideoEditPage:
         if not hasattr(self, "mpv_player") or not hasattr(self.ui, "crop_left_spin"):
             return
 
-        left = self.ui.crop_left_spin.get_value()
-        right = self.ui.crop_right_spin.get_value()
-        top = self.ui.crop_top_spin.get_value()
-        bottom = self.ui.crop_bottom_spin.get_value()
+        # The spins name the edges as the preview shows them.
+        left, right, top, bottom = display_to_source(
+            (
+                int(self.ui.crop_left_spin.get_value()),
+                int(self.ui.crop_right_spin.get_value()),
+                int(self.ui.crop_top_spin.get_value()),
+                int(self.ui.crop_bottom_spin.get_value()),
+            ),
+            self.rotation, self.flip_h, self.flip_v,
+        )
+
+        self.crop_aspect = "free"
+        if hasattr(self.ui, "crop_aspect_combo"):
+            self.ui.crop_aspect_combo.set_selected(0)
 
         # Update instance variables
         self.crop_left = left
@@ -330,6 +414,8 @@ class VideoEditPage:
 
         # Save metadata so values persist
         self._save_file_metadata()
+        # The opposite edge's bound follows this one.
+        self.update_crop_spinbuttons()
 
         # Update crop overlay if visible
         if self.crop_edit_mode:
@@ -339,6 +425,65 @@ class VideoEditPage:
         else:
             # Apply crop to MPV only when not in edit mode
             self.mpv_player.set_crop(left, right, top, bottom)
+
+    def on_crop_aspect_changed(self, combo, _pspec=None) -> None:
+        if getattr(self, "_updating_crop_aspect", False):
+            return
+        values = tuple(ASPECT_RATIOS)
+        selected = combo.get_selected()
+        if selected >= len(values):
+            return
+        self.crop_aspect = values[selected]
+        if self.crop_aspect in {"free", "original"}:
+            if self.crop_aspect == "original":
+                self.crop_left = self.crop_right = 0
+                self.crop_top = self.crop_bottom = 0
+                self._apply_crop_state()
+            self._save_file_metadata()
+            return
+        if self.video_width <= 1 or self.video_height <= 1:
+            return
+        margins = centered_crop(
+            self.video_width,
+            self.video_height,
+            self.crop_aspect,
+            rotation=self.rotation,
+        )
+        (
+            self.crop_left,
+            self.crop_right,
+            self.crop_top,
+            self.crop_bottom,
+        ) = margins
+        self._apply_crop_state()
+        self._save_file_metadata()
+
+    def _apply_crop_state(self) -> None:
+        self._updating_crop_spins = True
+        try:
+            self.update_crop_spinbuttons()
+        finally:
+            self._updating_crop_spins = False
+        if self.crop_edit_mode:
+            self.ui.crop_overlay.set_crop_values(
+                int(self.crop_left),
+                int(self.crop_right),
+                int(self.crop_top),
+                int(self.crop_bottom),
+            )
+        elif getattr(self, "mpv_player", None):
+            self.mpv_player.set_crop(
+                self.crop_left,
+                self.crop_right,
+                self.crop_top,
+                self.crop_bottom,
+            )
+
+    def _reapply_crop_aspect(self) -> None:
+        if self.crop_aspect in {"free", "original"}:
+            return
+        if hasattr(self.ui, "crop_aspect_combo"):
+            self.on_crop_aspect_changed(self.ui.crop_aspect_combo)
 
     def on_crop_edit_toggled(self, active: bool) -> None:
         """Toggle visual crop editor mode."""
@@ -361,10 +506,11 @@ class VideoEditPage:
             # Enter crop edit mode: remove crop from MPV, show overlay
             self.mpv_player.clear_crop()
 
-            # Set video dimensions on overlay
-            dims = self.mpv_player.get_video_dimensions()
-            if dims:
-                self.ui.crop_overlay.set_video_dimensions(dims[0], dims[1])
+            # The overlay maps crop margins in displayed pixels (display_size),
+            # not mpv's decoded size, which is sideways for phone recordings,
+            # and shows them turned and mirrored like the preview.
+            self.ui.crop_overlay.set_video_dimensions(self.video_width, self.video_height)
+            self.ui.crop_overlay.set_transform(self.rotation, self.flip_h, self.flip_v)
 
             # Set current crop values on overlay
             self.ui.crop_overlay.set_crop_values(
@@ -400,19 +546,15 @@ class VideoEditPage:
         self, left: int, right: int, top: int, bottom: int
     ) -> None:
         """Called when user drags crop boundaries on the overlay."""
+        self.crop_aspect = "free"
+        if hasattr(self.ui, "crop_aspect_combo"):
+            self.ui.crop_aspect_combo.set_selected(0)
         self.crop_left = left
         self.crop_right = right
         self.crop_top = top
         self.crop_bottom = bottom
         self._save_file_metadata()
-
-        # Update spinbuttons without triggering their changed signal back
-        self._updating_crop_spins = True
-        self.ui.crop_left_spin.set_value(left)
-        self.ui.crop_right_spin.set_value(right)
-        self.ui.crop_top_spin.set_value(top)
-        self.ui.crop_bottom_spin.set_value(bottom)
-        self._updating_crop_spins = False
+        self.update_crop_spinbuttons()
 
     def on_rotate(self, degrees: int) -> None:
         """Rotate video preview by given degrees (cumulative)."""
@@ -420,6 +562,8 @@ class VideoEditPage:
         self._save_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_rotation(self.rotation)
+        self._update_transform_state()
+        self._reapply_crop_aspect()
 
     def on_flip(self, direction: str) -> None:
         """Toggle horizontal or vertical flip."""
@@ -428,7 +572,7 @@ class VideoEditPage:
         else:
             self.flip_v = not getattr(self, "flip_v", False)
         self._save_file_metadata()
-        self._update_flip_button_state()
+        self._update_transform_state()
         self._apply_video_flip()
 
     def on_reset_transform(self) -> None:
@@ -440,20 +584,49 @@ class VideoEditPage:
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_rotation(0)
             self.mpv_player.set_video_flip(False, False)
-        self._update_flip_button_state()
+        self._update_transform_state()
+        self._reapply_crop_aspect()
 
-    def _update_flip_button_state(self) -> None:
-        """Update flip button appearance to show active state."""
-        if hasattr(self.ui, "flip_h_btn"):
-            if getattr(self, "flip_h", False):
-                self.ui.flip_h_btn.add_css_class("accent")
-            else:
-                self.ui.flip_h_btn.remove_css_class("accent")
-        if hasattr(self.ui, "flip_v_btn"):
-            if getattr(self, "flip_v", False):
-                self.ui.flip_v_btn.add_css_class("accent")
-            else:
-                self.ui.flip_v_btn.remove_css_class("accent")
+    def on_effect_changed(self, name: str, value) -> None:
+        """Noise reduction, sharpening, stabilization or the effect file."""
+        if getattr(self, "_restoring_metadata", False):
+            return
+        if name in ("denoise", "sharpen") and value not in EFFECT_LEVELS:
+            return
+        setattr(self, name, value)
+        self._save_file_metadata()
+        self.ui.update_effects_state(self.denoise, self.sharpen, self.stabilize, self.effect_file)
+        self._apply_video_effects()
+
+    def on_source_hdr_changed(self, mode: str) -> None:
+        if getattr(self, "_restoring_metadata", False) or mode not in SOURCE_HDR_MODES:
+            return
+        self.source_hdr = mode
+        self._save_file_metadata()
+        self.ui.update_source_hdr(mode)
+        self._apply_video_effects()
+
+    def on_reset_effects(self) -> None:
+        self.denoise, self.sharpen, self.stabilize, self.effect_file = "off", "off", False, ""
+        self._save_file_metadata()
+        self._update_ui_from_metadata()
+
+    def _apply_video_effects(self) -> None:
+        """Show the effects in the preview; stabilization needs the whole
+        file analysed first, so only the conversion applies it."""
+        if not getattr(self, "mpv_player", None):
+            return
+        shader = self.effect_file if os.path.splitext(self.effect_file)[1].lower() in SHADER_SUFFIXES else ""
+        self.mpv_player.set_video_effects(
+            effects_graph(self.denoise, self.sharpen, self.effect_file), shader, self.source_hdr)
+
+    def _update_transform_state(self) -> None:
+        if hasattr(self.ui, "rotation_row"):
+            self.ui.update_transform_state(self.rotation, self.flip_h, self.flip_v)
+        # The crop controls name the edges as the preview shows them.
+        if hasattr(self.ui, "crop_overlay"):
+            self.ui.crop_overlay.set_transform(self.rotation, self.flip_h, self.flip_v)
+        self.update_crop_spinbuttons()
 
     def _apply_video_flip(self) -> None:
         """Apply flip state to MPV preview."""
@@ -463,12 +636,11 @@ class VideoEditPage:
             )
 
     def format_time_precise(self, seconds):
-        if seconds is None:
-            seconds = 0
-        hours = int(seconds) // 3600
-        minutes = (int(seconds) % 3600) // 60
-        seconds_remainder = int(seconds) % 60
-        milliseconds = int((seconds - int(seconds)) * 1000)
+        # Rounded to the nearest millisecond as a whole: 2.92 is stored as
+        # 2.9199…, which truncation showed as 2.919.
+        total, milliseconds = divmod(round((seconds or 0) * 1000), 1000)
+        hours, total = divmod(total, 3600)
+        minutes, seconds_remainder = divmod(total, 60)
         return f"{hours}:{minutes:02d}:{seconds_remainder:02d}.{milliseconds:03d}"
 
     def on_mark_segment_point(self, button) -> None:
@@ -486,6 +658,9 @@ class VideoEditPage:
             second_point = self.current_position
             start_time = min(self.first_segment_point, second_point)
             end_time = max(self.first_segment_point, second_point)
+            # mpv's clock can run a little past the probed duration.
+            if self.video_duration > 0:
+                end_time = min(end_time, self.video_duration)
 
             if end_time > start_time:
                 new_segment = {"start": start_time, "end": end_time}
@@ -507,54 +682,36 @@ class VideoEditPage:
     def _update_segments_listbox(self):
         if not hasattr(self.ui, "segments_listbox"):
             return
-        while row := self.ui.segments_listbox.get_first_child():
+        # remove_all() would drop the placeholder too.
+        while row := self.ui.segments_listbox.get_row_at_index(0):
             self.ui.segments_listbox.remove(row)
         for i, segment in enumerate(self.trim_segments):
-            row = Adw.ActionRow()
-            start_str = self.format_time_precise(segment["start"])
-            end_str = self.format_time_precise(segment["end"])
-            duration = segment["end"] - segment["start"]
-            duration_str = self.format_time_precise(duration)
-            row.set_title(
-                _("Segment {num}: {start} → {end}").format(
-                    num=i + 1, start=start_str, end=end_str
+            # Activating the row seeks to the segment start.
+            row = Adw.ActionRow(activatable=True)
+            row.segment_start = segment["start"]
+            row.set_title(_("Segment {num}").format(num=i + 1))
+            row.set_subtitle(
+                _("{start} → {end} ({duration})").format(
+                    start=self.format_time_precise(segment["start"]),
+                    end=self.format_time_precise(segment["end"]),
+                    duration=self.format_time_precise(segment["end"] - segment["start"]),
                 )
             )
-            row.set_subtitle(_("Duration: {duration}").format(duration=duration_str))
-            button_box = Gtk.Box(spacing=6, valign=Gtk.Align.CENTER)
-            goto_button = Gtk.Button(
-                icon_name="media-playback-start-symbolic",
-                css_classes=["flat"],
-                tooltip_text=_("Go to segment start"),
-            )
-            goto_button.connect(
-                "clicked", self._on_goto_segment_clicked, segment["start"]
-            )
-            button_box.append(goto_button)
-            edit_button = Gtk.Button(
-                icon_name="document-edit-symbolic",
-                css_classes=["flat"],
-                tooltip_text=_("Edit segment times"),
-            )
-            edit_button.connect("clicked", self._on_edit_segment_clicked, i)
-            button_box.append(edit_button)
-            remove_button = Gtk.Button(
-                icon_name="edit-delete-symbolic",
-                css_classes=["flat"],
-                tooltip_text=_("Remove segment"),
-            )
-            remove_button.connect(
-                "clicked", self._on_remove_segment_clicked, segment
-            )
-            button_box.append(remove_button)
-            row.add_suffix(button_box)
+            row.add_css_class("property")
+            row.set_tooltip_text(_("Go to segment start"))
+            for icon, label, handler, arg in (
+                ("document-edit-symbolic", _("Edit segment times"), self._on_edit_segment_clicked, i),
+                ("edit-delete-symbolic", _("Remove segment"), self._on_remove_segment_clicked, segment),
+            ):
+                button = Gtk.Button(
+                    icon_name=icon, css_classes=["flat"], tooltip_text=label,
+                    valign=Gtk.Align.CENTER,
+                )
+                button.update_property([Gtk.AccessibleProperty.LABEL], [label])
+                button.connect("clicked", handler, arg)
+                row.add_suffix(button)
             self.ui.segments_listbox.append(row)
-        # Toggle visibility: show list when segments exist, placeholder when empty
-        has_segments = len(self.trim_segments) > 0
-        if hasattr(self.ui, "segments_list_row"):
-            self.ui.segments_list_row.set_visible(has_segments)
-        if hasattr(self.ui, "segments_placeholder_row"):
-            self.ui.segments_placeholder_row.set_visible(not has_segments)
+        self.ui.update_segment_actions(len(self.trim_segments))
         self.ui.update_segment_markers()
 
     def _on_goto_segment_clicked(self, button, start_time):
@@ -579,6 +736,10 @@ class VideoEditPage:
         h_spin.set_increments(1, 1)
         h_spin.set_value(hours)
         h_spin.set_width_chars(3)
+        h_spin.set_tooltip_text(_("Hours"))
+        h_spin.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Hours")]
+        )
         fields_box.append(h_spin)
 
         # Minutes
@@ -588,6 +749,10 @@ class VideoEditPage:
         m_spin.set_increments(1, 1)
         m_spin.set_value(minutes)
         m_spin.set_width_chars(3)
+        m_spin.set_tooltip_text(_("Minutes"))
+        m_spin.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Minutes")]
+        )
         fields_box.append(m_spin)
 
         # Seconds
@@ -597,6 +762,10 @@ class VideoEditPage:
         s_spin.set_increments(1, 1)
         s_spin.set_value(seconds)
         s_spin.set_width_chars(3)
+        s_spin.set_tooltip_text(_("Seconds"))
+        s_spin.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Seconds")]
+        )
         fields_box.append(s_spin)
 
         # Centiseconds (hundredths)
@@ -606,6 +775,10 @@ class VideoEditPage:
         cs_spin.set_increments(1, 10)
         cs_spin.set_value(centiseconds)
         cs_spin.set_width_chars(3)
+        cs_spin.set_tooltip_text(_("Centiseconds"))
+        cs_spin.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Centiseconds")]
+        )
         fields_box.append(cs_spin)
 
         return fields_box, (h_spin, m_spin, s_spin, cs_spin)
@@ -679,30 +852,47 @@ class VideoEditPage:
         """Handle the edit segment dialog response with spinbuttons"""
         if response == "save":
             try:
-                start_time = self._get_time_from_spinbuttons(start_spinbuttons)
-                end_time = self._get_time_from_spinbuttons(end_spinbuttons)
-
-                if start_time < 0 or end_time < 0:
-                    self._show_error_dialog(
-                        _("Invalid Time"), _("Time values cannot be negative")
-                    )
-                    return
-
-                if start_time >= end_time:
-                    self._show_error_dialog(
-                        _("Invalid Time Range"), _("Start time must be before end time")
-                    )
+                times = self._segment_times(start_spinbuttons, end_spinbuttons)
+                if times is None:
                     return
 
                 # Update the segment
-                self.trim_segments[segment_index]["start"] = start_time
-                self.trim_segments[segment_index]["end"] = end_time
+                self.trim_segments[segment_index]["start"] = times[0]
+                self.trim_segments[segment_index]["end"] = times[1]
                 self.trim_segments.sort(key=lambda s: s["start"])
                 self._update_segments_listbox()
                 self._save_file_metadata()
 
             except (ValueError, IndexError) as e:
                 self._show_error_dialog(_("Error"), str(e))
+
+    def _segment_times(self, start_spinbuttons, end_spinbuttons):
+        """(start, end) typed into a segment dialog, the end clamped to the
+        video, or None after telling the user why the times cannot be used."""
+        start_time = self._get_time_from_spinbuttons(start_spinbuttons)
+        end_time = self._get_time_from_spinbuttons(end_spinbuttons)
+        if start_time < 0 or end_time < 0:
+            self._show_error_dialog(
+                _("Invalid Time"), _("Time values cannot be negative")
+            )
+            return None
+        if self.video_duration > 0:
+            # A cut past the end never reaches 100%, so the conversion
+            # would not count as finished.
+            if start_time >= self.video_duration:
+                self._show_error_dialog(
+                    _("Invalid Time Range"),
+                    _("Start time must be before the end of the video ({duration})").format(
+                        duration=self.format_time_precise(self.video_duration)),
+                )
+                return None
+            end_time = min(end_time, self.video_duration)
+        if start_time >= end_time:
+            self._show_error_dialog(
+                _("Invalid Time Range"), _("Start time must be before end time")
+            )
+            return None
+        return start_time, end_time
 
     def _show_error_dialog(self, title, message):
         """Show a simple error dialog"""
@@ -799,23 +989,12 @@ class VideoEditPage:
         """Handle the add manual segment dialog response with spinbuttons"""
         if response == "add":
             try:
-                start_time = self._get_time_from_spinbuttons(start_spinbuttons)
-                end_time = self._get_time_from_spinbuttons(end_spinbuttons)
-
-                if start_time < 0 or end_time < 0:
-                    self._show_error_dialog(
-                        _("Invalid Time"), _("Time values cannot be negative")
-                    )
-                    return
-
-                if start_time >= end_time:
-                    self._show_error_dialog(
-                        _("Invalid Time Range"), _("Start time must be before end time")
-                    )
+                times = self._segment_times(start_spinbuttons, end_spinbuttons)
+                if times is None:
                     return
 
                 # Add the new segment
-                new_segment = {"start": start_time, "end": end_time}
+                new_segment = {"start": times[0], "end": times[1]}
                 self.trim_segments.append(new_segment)
                 self.trim_segments.sort(key=lambda s: s["start"])
                 self._update_segments_listbox()
@@ -825,30 +1004,41 @@ class VideoEditPage:
                 self._show_error_dialog(_("Error"), str(e))
 
     def update_crop_spinbuttons(self) -> None:
+        """Show the crop as displayed, each edge bounded so that at least
+        two pixels of the loaded video remain between it and its opposite."""
         if not hasattr(self.ui, "crop_left_spin"):
             return
-        self.ui.crop_left_spin.set_value(self.crop_left)
-        self.ui.crop_right_spin.set_value(self.crop_right)
-        self.ui.crop_top_spin.set_value(self.crop_top)
-        self.ui.crop_bottom_spin.set_value(self.crop_bottom)
+        transform = (self.rotation, self.flip_h, self.flip_v)
+        width, height = displayed_size(self.video_width, self.video_height, self.rotation)
+        left, right, top, bottom = source_to_display(
+            (self.crop_left, self.crop_right, self.crop_top, self.crop_bottom), *transform)
+        previous = getattr(self, "_updating_crop_spins", False)
+        self._updating_crop_spins = True
+        try:
+            for spin, value, extent, opposite in (
+                (self.ui.crop_left_spin, left, width, right),
+                (self.ui.crop_right_spin, right, width, left),
+                (self.ui.crop_top_spin, top, height, bottom),
+                (self.ui.crop_bottom_spin, bottom, height, top),
+            ):
+                # Before a video is loaded its size is unknown.
+                upper = max(0, extent - 2 - opposite) if extent > 2 else 9999
+                spin.set_range(0, max(upper, value))
+                spin.set_value(value)
+        finally:
+            self._updating_crop_spins = previous
 
     def on_saturation_changed(self, scale) -> None:
         self.saturation = scale.get_value()
-        self._save_file_metadata_debounced()
+        self._save_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_saturation(self.saturation)
-            # Don't refresh preview - MPV updates automatically
-            # if not self.is_playing:
-            #     self._refresh_preview()
 
     def on_hue_changed(self, scale) -> None:
         self.hue = scale.get_value()
-        self._save_file_metadata_debounced()
+        self._save_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_hue(self.hue)
-            # Don't refresh preview - MPV updates automatically
-            # if not self.is_playing:
-            #     self._refresh_preview()
 
     def _on_output_mode_changed(self, combo, pspec):
         """Handle output mode combo box change"""
@@ -857,7 +1047,8 @@ class VideoEditPage:
         # Save to per-video metadata
         self._save_file_metadata()
         # Save to global settings as the new default for future videos
-        self.settings.save_setting("multi-segment-output-mode", self.output_mode)
+        if not getattr(self, "_restoring_metadata", False):
+            self.settings.save_setting("multi-segment-output-mode", self.output_mode)
 
     def reset_brightness(self) -> None:
         self.brightness = 0.0
@@ -865,6 +1056,15 @@ class VideoEditPage:
         self._save_file_metadata()
         if hasattr(self, "mpv_player") and self.mpv_player:
             self.mpv_player.set_brightness(self.brightness)
+            if not self.is_playing:
+                self._refresh_preview()
+
+    def reset_contrast(self) -> None:
+        self.contrast = 0.0
+        self.ui.contrast_scale.set_value(self.contrast)
+        self._save_file_metadata()
+        if getattr(self, "mpv_player", None):
+            self.mpv_player.set_contrast(self.contrast)
             if not self.is_playing:
                 self._refresh_preview()
 
@@ -925,7 +1125,7 @@ class VideoEditPage:
             self.mpv_player.seek(position)
             # Prevent position polling from overriding this seek
             self._seek_cooldown = True
-            if self._seek_cooldown_timer_id:
+            if self._seek_cooldown_timer_id is not None:
                 GLib.source_remove(self._seek_cooldown_timer_id)
             self._seek_cooldown_timer_id = GLib.timeout_add(
                 500, self._end_seek_cooldown
@@ -981,14 +1181,6 @@ class VideoEditPage:
         self.update_frame_counter(pos)
         return True
 
-    def reset_crop_values(self) -> None:
-        self.settings.save_setting("preview-crop-left", 0)
-        self.settings.save_setting("preview-crop-right", 0)
-        self.settings.save_setting("preview-crop-top", 0)
-        self.settings.save_setting("preview-crop-bottom", 0)
-        self.settings.save_setting("video-trim-start", 0.0)
-        self.settings.save_setting("video-trim-end", -1.0)
-
     def on_volume_changed(self, scale) -> None:
         volume = scale.get_value()
         if hasattr(self, "mpv_player") and self.mpv_player:
@@ -1028,19 +1220,6 @@ class VideoEditPage:
         else:
             if hasattr(self, "mpv_player") and self.mpv_player:
                 self.mpv_player.set_audio_filter("")
-
-    def on_nr_preview_toggled(self, switch, state) -> bool:
-        """Handle noise reduction preview toggle."""
-        if state:
-            self._apply_audio_filters()
-        else:
-            if hasattr(self, "mpv_player") and self.mpv_player:
-                self.mpv_player.set_audio_filter("")
-        return False
-
-    def on_nr_strength_changed(self, scale) -> None:
-        """Handle noise reduction strength slider change in preview."""
-        self._apply_audio_filters()
 
     def _apply_audio_filters(self) -> None:
         """Debounced wrapper — schedules actual filter rebuild after 150ms.
@@ -1091,21 +1270,14 @@ class VideoEditPage:
         if sm.get_boolean("normalize-enabled", False):
             filters.append("speechnorm=e=12.5:r=0.0001:l=1")
 
-        # 4. GTCRN Noise Reduction (only if NR enabled AND plugin exists)
+        # 4. AI Noise Reduction (only if NR enabled AND its plugin exists)
+        model = sm.load_setting("noise-model", 0)
         if sm.get_boolean("noise-reduction", False) and os.path.exists(
-            "/usr/lib/ladspa/libgtcrn_ladspa.so"
+            NOISE_MODELS[model][0]
         ):
-            strength = sm.load_setting("noise-reduction-strength", 1.0)
-            model = sm.load_setting("noise-model", 0)
-            speech = sm.load_setting("noise-speech-strength", 1.0)
-            lookahead = sm.load_setting("noise-lookahead", 50)
-            blend = 1 if sm.get_boolean("noise-model-blend", False) else 0
-            voice_recovery = sm.load_setting("noise-voice-recovery", 0.75)
-            filters.append(
-                f"ladspa=file=libgtcrn_ladspa:plugin=gtcrn_mono:"
-                f"controls=c0=1|c1={strength}|c2={model}|"
-                f"c3={speech}|c4={lookahead}|c5={blend}|c6={voice_recovery}"
-            )
+            filters.append(noise_reduction_filter(
+                model, sm.load_setting("noise-reduction-strength", 1.0)
+            ))
 
         # 5. Noise Gate (after NR — post-NR audio is mostly speech, so full-band detection is effective)
         if sm.get_boolean("noise-gate-enabled", False):
@@ -1132,8 +1304,12 @@ class VideoEditPage:
                     filters.append(f"equalizer=f={freq}:width_type=o:w=1.5:g={gain}")
 
         if filters:
-            # Each filter wrapped in its own lavfi=[] to avoid mpv comma-splitting
-            lavfi_filter = ",".join(f"lavfi=[{f}]" for f in filters)
+            # Each filter in its own lavfi, quoted by byte length: mpv would
+            # split a bare graph at commas, and [] quoting ends at the noise
+            # chain's first pad label.
+            lavfi_filter = ",".join(
+                f"lavfi=graph=%{len(f.encode())}%{f}" for f in filters
+            )
             self.mpv_player.set_audio_filter(lavfi_filter)
         else:
             self.mpv_player.set_audio_filter("")
@@ -1167,87 +1343,57 @@ class VideoEditPage:
                     )
 
     def update_audio_subtitle_controls(self) -> None:
-        if not hasattr(self, "mpv_player") or not self.mpv_player:
-            return
-        self._populate_track_menus_attempts = 0
-        GLib.timeout_add(200, self._populate_track_menus)
+        """Show the player's current tracks.
 
-    def _populate_track_menus(self):
-        if not hasattr(self, "mpv_player") or not self.mpv_player:
-            return False
-        audio_tracks = self.mpv_player.get_audio_tracks()
-        subtitle_tracks = self.mpv_player.get_subtitle_tracks()
-        if (
-            not audio_tracks
-            and not subtitle_tracks
-            and self._populate_track_menus_attempts < 15
-        ):
-            self._populate_track_menus_attempts += 1
-            return True
+        A newly loaded file has none until mpv's file-loaded event, which
+        calls this again through MPVPlayer.on_tracks_changed.
+        """
+        if not getattr(self, "mpv_player", None):
+            return
+        player = self.mpv_player
         self.ui.audio_track_menu.remove_all()
         self.ui.subtitle_menu.remove_all()
+        audio_tracks = player.get_audio_tracks()
+        subtitle_tracks = player.get_subtitle_tracks()
         if len(audio_tracks) > 1:
             for track in audio_tracks:
-                action_name = f"audio-track-{track['index']}"
-                if not self.app.window.lookup_action(action_name):
-                    action = Gio.SimpleAction.new_stateful(
-                        action_name,
-                        None,
-                        GLib.Variant.new_boolean(
-                            track["index"] == self.mpv_player.current_audio_track
-                        ),
-                    )
-                    action.connect(
-                        "activate",
-                        lambda a, p, idx=track["index"]: self.on_audio_track_changed(
-                            idx
-                        ),
-                    )
-                    self.app.window.add_action(action)
-                self.ui.audio_track_menu.append(track["label"], f"win.{action_name}")
-            self.ui.audio_track_button.set_visible(True)
-        else:
-            self.ui.audio_track_button.set_visible(False)
+                name = self._track_action(
+                    f"audio-track-{track['index']}",
+                    track["index"] == player.current_audio_track,
+                    lambda a, p, idx=track["index"]: self.on_audio_track_changed(idx),
+                )
+                self.ui.audio_track_menu.append(track["label"], f"win.{name}")
+        self.ui.audio_track_button.set_visible(len(audio_tracks) > 1)
         if subtitle_tracks:
-            action_name = "subtitle-track-disabled"
-            if not self.app.window.lookup_action(action_name):
-                action = Gio.SimpleAction.new_stateful(
-                    action_name,
-                    None,
-                    GLib.Variant.new_boolean(
-                        self.mpv_player.current_subtitle_track == -1
-                    ),
-                )
-                action.connect(
-                    "activate", lambda a, p: self.on_subtitle_track_changed(-1)
-                )
-                self.app.window.add_action(action)
-            self.ui.subtitle_menu.append(_("Disabled"), f"win.{action_name}")
+            name = self._track_action(
+                "subtitle-track-disabled",
+                player.current_subtitle_track == -1,
+                lambda a, p: self.on_subtitle_track_changed(-1),
+            )
+            self.ui.subtitle_menu.append(_("Disabled"), f"win.{name}")
             for track in subtitle_tracks:
-                action_name = f"subtitle-track-{track['index']}"
-                if not self.app.window.lookup_action(action_name):
-                    action = Gio.SimpleAction.new_stateful(
-                        action_name,
-                        None,
-                        GLib.Variant.new_boolean(
-                            track["index"] == self.mpv_player.current_subtitle_track
-                        ),
-                    )
-                    action.connect(
-                        "activate",
-                        lambda a, p, idx=track["index"]: self.on_subtitle_track_changed(
-                            idx
-                        ),
-                    )
-                    self.app.window.add_action(action)
-                self.ui.subtitle_menu.append(track["label"], f"win.{action_name}")
-            self.ui.subtitle_button.set_visible(True)
+                name = self._track_action(
+                    f"subtitle-track-{track['index']}",
+                    track["index"] == player.current_subtitle_track,
+                    lambda a, p, idx=track["index"]: self.on_subtitle_track_changed(idx),
+                )
+                self.ui.subtitle_menu.append(track["label"], f"win.{name}")
+        self.ui.subtitle_button.set_visible(bool(subtitle_tracks))
+
+    def _track_action(self, name, active, on_activate):
+        """The window action for one track, its state set for this video."""
+        action = self.app.window.lookup_action(name)
+        if action is None:
+            action = Gio.SimpleAction.new_stateful(
+                name, None, GLib.Variant.new_boolean(active))
+            action.connect("activate", on_activate)
+            self.app.window.add_action(action)
         else:
-            self.ui.subtitle_button.set_visible(False)
-        return False
+            action.set_state(GLib.Variant.new_boolean(active))
+        return name
 
     def on_toggle_fullscreen(self, button) -> None:
-        """Toggle video-only fullscreen (hides sidebar and toolbar)"""
+        """Toggle video-only fullscreen."""
         if self.is_video_fullscreen:
             self._exit_video_fullscreen()
         else:
@@ -1261,71 +1407,43 @@ class VideoEditPage:
             self.ui.fullscreen_button.set_icon_name('view-fullscreen-symbolic')
 
     def _enter_video_fullscreen(self):
-        """Enter video-only fullscreen mode by hiding UI and fullscreening window"""
+        """Video-only fullscreen: chrome and margins go, the tools stay one toggle away."""
         if self.is_video_fullscreen:
             return
-
-        # Store sidebar position before hiding
-        if hasattr(self.app, 'main_paned'):
-            self._saved_sidebar_position = self.app.main_paned.get_position()
-
-        # Hide toolbar
-        if hasattr(self.ui, "toolbar") and self.ui.toolbar:
-            self.ui.toolbar.set_visible(False)
-
-        # Hide the sidebar (left pane of main_paned)
-        if hasattr(self.app, 'main_paned'):
-            # Get the start child (sidebar)
-            start_child = self.app.main_paned.get_start_child()
-            if start_child:
-                start_child.set_visible(False)
-            # Set paned position to 0 to maximize video area
-            self.app.main_paned.set_position(0)
-
-        # Hide the header bar using Adw.ToolbarView's reveal property
-        if hasattr(self.app, 'right_toolbar_view') and self.app.right_toolbar_view:
-            self.app.right_toolbar_view.set_reveal_top_bars(False)
-
-        # Fullscreen the main window
-        self.app.window.fullscreen()
-
-        # Update state
         self.is_video_fullscreen = True
+        self.ui.toolbar.set_visible(False)
+        self.app.right_toolbar_view.set_reveal_top_bars(False)
+        self._sidebar_shown_before_fullscreen = self.app.split_view.get_show_sidebar()
+        self.app.split_view.set_show_sidebar(False)
+        self.ui.sidebar_button.set_visible(True)
+        for side in ("start", "end", "top", "bottom"):
+            getattr(self.page, f"set_margin_{side}")(0)
+        self.app.window.fullscreen()
         self._on_fullscreen_changed()
-        
-        # Force controls to be visible initially
-        if hasattr(self.ui, 'overlay_controls'):
-            self.ui.overlay_controls.set_visible(True)
+        self.ui.overlay_controls.set_visible(True)
 
     def _exit_video_fullscreen(self):
-        """Exit video-only fullscreen mode by showing UI and unfullscreening window"""
+        """Leave fullscreen and restore what entering it changed."""
         if not self.is_video_fullscreen:
             return
-
-        # Unfullscreen the main window
-        self.app.window.unfullscreen()
-
-        # Show the header bar
-        if hasattr(self.app, 'right_toolbar_view') and self.app.right_toolbar_view:
-            self.app.right_toolbar_view.set_reveal_top_bars(True)
-
-        # Show the sidebar (left pane of main_paned)
-        if hasattr(self.app, 'main_paned'):
-            # Get the start child (sidebar)
-            start_child = self.app.main_paned.get_start_child()
-            if start_child:
-                start_child.set_visible(True)
-            # Restore sidebar position
-            if hasattr(self, '_saved_sidebar_position'):
-                self.app.main_paned.set_position(self._saved_sidebar_position)
-            else:
-                # Default position if not saved
-                self.app.main_paned.set_position(430)
-
-        # Show toolbar
-        if hasattr(self.ui, "toolbar") and self.ui.toolbar:
-            self.ui.toolbar.set_visible(True)
-
-        # Update state
         self.is_video_fullscreen = False
+        self.app.window.unfullscreen()
+        self.app.right_toolbar_view.set_reveal_top_bars(True)
+        self.app.split_view.set_show_sidebar(self._sidebar_shown_before_fullscreen)
+        self.ui.sidebar_button.set_visible(False)
+        self.page.set_margin_start(18)
+        self.page.set_margin_end(18)
+        self.page.set_margin_top(14)
+        self.page.set_margin_bottom(14)
+        self.ui.toolbar.set_visible(True)
         self._on_fullscreen_changed()
+
+    def _on_window_key_pressed(self, _controller, keyval, _keycode, _state):
+        if keyval == Gdk.KEY_Escape and self.is_video_fullscreen:
+            self._exit_video_fullscreen()
+            return True
+        return False
+
+    def _on_window_fullscreened(self, window, _pspec):
+        if not window.is_fullscreen():
+            self._exit_video_fullscreen()

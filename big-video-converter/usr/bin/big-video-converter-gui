@@ -1,22 +1,20 @@
 #!/bin/sh
+set -eu
 
-# Stupid complexity to run in appimage
-# Determine the script directory
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SHARE_DIR="$(dirname "$SCRIPT_DIR")/share"
+# Prefer the application tree next to this launcher. This is essential for
+# AppImage and development layouts: an installed system copy must not shadow
+# the bundled copy that the user explicitly launched.
+SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)
+BUNDLED_MAIN=$(dirname -- "$SCRIPT_DIR")/share/big-video-converter/main.py
+SYSTEM_MAIN=/usr/share/big-video-converter/main.py
 
-# OpenGL MPV need ngl renderer
-export GSK_RENDERER="ngl"
-
-# If running from installed location
-if [ -d "/usr/share/big-video-converter" ]; then
-    export PYTHONPATH="/usr/share/big-video-converter:$PYTHONPATH"
-    exec python3 /usr/share/big-video-converter/main.py "$@"
-# If running from development/build directory  
-elif [ -d "$SHARE_DIR/big-video-converter" ]; then
-    export PYTHONPATH="$SHARE_DIR/big-video-converter:$PYTHONPATH"
-    exec python3 "$SHARE_DIR/big-video-converter/main.py" "$@"
-else
-    echo "Error: Could not find big-video-converter installation"
-    exit 1
+if [ -f "$BUNDLED_MAIN" ]; then
+    exec python3 "$BUNDLED_MAIN" "$@"
 fi
+
+if [ -f "$SYSTEM_MAIN" ]; then
+    exec python3 "$SYSTEM_MAIN" "$@"
+fi
+
+printf '%s\n' 'Big Video Converter installation was not found.' >&2
+exit 1

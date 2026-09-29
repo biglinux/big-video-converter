@@ -4,10 +4,12 @@ Groups controls into illustrative cards: AI cleaning, noise gate, audio enhancem
 """
 
 import gettext
-from utils.signal_connections import SignalConnections
 import os
 
 import gi
+from constants import NOISE_MODELS
+from utils.contextual_controls import bind_details_to_switch
+from utils.signal_connections import SignalConnections
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -78,6 +80,7 @@ def _card_header(svg_file: str, title: str, desc: str, control: Gtk.Widget) -> G
     row.append(text)
 
     control.set_valign(Gtk.Align.CENTER)
+    control.update_property([Gtk.AccessibleProperty.LABEL], [title])
     row.append(control)
 
     return row
@@ -102,6 +105,9 @@ def _slider_row(label: str, adj: Gtk.Adjustment, format_func=None) -> Gtk.Box:
     scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=adj)
     scale.set_hexpand(True)
     scale.set_valign(Gtk.Align.CENTER)
+    scale.set_size_request(-1, 44)
+    scale.update_property([Gtk.AccessibleProperty.LABEL], [label])
+    lbl.set_mnemonic_widget(scale)
 
     # Value label on the right side
     val_label = Gtk.Label()
@@ -154,8 +160,8 @@ def show_noise_dialog(parent_window, app) -> bool:
     connections = SignalConnections(dialog)
     dialog.set_title(_("Audio Settings"))
     dialog.set_content_width(700)
-    dialog.set_content_height(920)
-    dialog.set_presentation_mode(Adw.DialogPresentationMode.FLOATING)
+    dialog.set_content_height(680)
+    dialog.set_presentation_mode(Adw.DialogPresentationMode.AUTO)
 
     toolbar = Adw.ToolbarView()
     toolbar.add_top_bar(Adw.HeaderBar())
@@ -254,72 +260,37 @@ def show_noise_dialog(parent_window, app) -> bool:
         if model_dd.get_selected() != sel:
             model_dd.set_selected(sel)
 
+    # What the chosen model is for, or the package it still needs: the
+    # conversion runs without a missing model, so say so before it does.
+    model_note = Gtk.Label(xalign=0, wrap=True)
+    model_note.add_css_class("caption")
+    model_note.set_margin_start(16)
+    model_note.set_margin_end(16)
+    model_note.set_margin_bottom(12)
+    card1.append(model_note)
+
+    def _show_model_note(model):
+        plugin, package = NOISE_MODELS[model][0], NOISE_MODELS[model][4]
+        installed = os.path.exists(plugin)
+        if not installed:
+            text = _("Unavailable: install {package}").format(package=package)
+        elif model == 0:
+            text = _("For speech. Uses less processing.")
+        else:
+            text = _("For speech. Higher quality, more processing.")
+        model_note.set_text(text)
+        for css_class, wanted in (("warning", not installed), ("dim-label", installed)):
+            if wanted:
+                model_note.add_css_class(css_class)
+            else:
+                model_note.remove_css_class(css_class)
+
+    _show_model_note(model_dd.get_selected())
     model_dd.connect("notify::selected", _sync_model_to_sidebar)
+    connections.connect(
+        model_dd, "notify::selected", lambda dd, _p: _show_model_note(dd.get_selected())
+    )
     connections.connect(app.noise_model_row, "notify::selected", _sync_model_from_sidebar)
-
-    # Speech Strength slider
-    speech_adj = Gtk.Adjustment(
-        value=app.noise_speech_strength_adj.get_value(),
-        lower=0.0, upper=1.0,
-        step_increment=0.05, page_increment=0.1,
-    )
-    card1.append(_slider_row(_("Speech Strength"), speech_adj))
-
-    def _sync_speech_to(adj, _p):
-        v = adj.get_value()
-        if abs(app.noise_speech_strength_adj.get_value() - v) > 0.001:
-            app.noise_speech_strength_adj.set_value(v)
-
-    def _sync_speech_from(adj, _p):
-        v = adj.get_value()
-        if abs(speech_adj.get_value() - v) > 0.001:
-            speech_adj.set_value(v)
-
-    speech_adj.connect("notify::value", _sync_speech_to)
-    connections.connect(app.noise_speech_strength_adj, "notify::value", _sync_speech_from)
-
-    # Lookahead slider
-    look_adj = Gtk.Adjustment(
-        value=app.noise_lookahead_adj.get_value(),
-        lower=0, upper=200,
-        step_increment=5, page_increment=20,
-    )
-    card1.append(_slider_row(_("Lookahead (ms)"), look_adj,
-                              format_func=lambda v: f"{v:.0f} ms"))
-
-    def _sync_look_to(adj, _p):
-        v = adj.get_value()
-        if abs(app.noise_lookahead_adj.get_value() - v) > 0.5:
-            app.noise_lookahead_adj.set_value(v)
-
-    def _sync_look_from(adj, _p):
-        v = adj.get_value()
-        if abs(look_adj.get_value() - v) > 0.5:
-            look_adj.set_value(v)
-
-    look_adj.connect("notify::value", _sync_look_to)
-    connections.connect(app.noise_lookahead_adj, "notify::value", _sync_look_from)
-
-    # Voice Recovery slider
-    vr_adj = Gtk.Adjustment(
-        value=app.noise_voice_recovery_adj.get_value(),
-        lower=0.0, upper=1.0,
-        step_increment=0.05, page_increment=0.1,
-    )
-    card1.append(_slider_row(_("Voice Recovery"), vr_adj))
-
-    def _sync_vr_to(adj, _p):
-        v = adj.get_value()
-        if abs(app.noise_voice_recovery_adj.get_value() - v) > 0.001:
-            app.noise_voice_recovery_adj.set_value(v)
-
-    def _sync_vr_from(adj, _p):
-        v = adj.get_value()
-        if abs(vr_adj.get_value() - v) > 0.001:
-            vr_adj.set_value(v)
-
-    vr_adj.connect("notify::value", _sync_vr_to)
-    connections.connect(app.noise_voice_recovery_adj, "notify::value", _sync_vr_from)
 
     content.append(card1)
 
@@ -609,9 +580,12 @@ def show_noise_dialog(parent_window, app) -> bool:
             "eq-bands", ",".join(str(b) for b in bands)
         )
         # Refresh mpv preview
-        if hasattr(app, "video_edit_page") and app.video_edit_page:
-            if hasattr(app.video_edit_page, "_apply_audio_filters"):
-                app.video_edit_page._apply_audio_filters()
+        if (
+            hasattr(app, "video_edit_page")
+            and app.video_edit_page
+            and hasattr(app.video_edit_page, "_apply_audio_filters")
+        ):
+            app.video_edit_page._apply_audio_filters()
 
     for i, freq in enumerate(EQ_FREQS):
         col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
@@ -700,6 +674,17 @@ def show_noise_dialog(parent_window, app) -> bool:
     connections.connect(app.eq_switch, "notify::active", _sync_eq_from_switch)
 
     content.append(card7)
+
+    # Contextual controls: inactive operations retain values, not active knobs.
+    for card, switch in ((card1, nr_switch), (card2, gate_switch),
+                         (card3, hpf_switch), (card6, comp_switch)):
+        header = card.get_first_child()
+        child = header.get_next_sibling()
+        details = []
+        while child is not None:
+            details.append(child)
+            child = child.get_next_sibling()
+        bind_details_to_switch(switch, details, connections)
 
     scroll.set_child(content)
     toolbar.set_content(scroll)

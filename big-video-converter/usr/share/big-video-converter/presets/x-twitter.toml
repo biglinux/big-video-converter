@@ -1,0 +1,32 @@
+# X (Twitter): H.264 High, 1280x720 at 30 fps, AAC-LC, MP4. Uploads above
+# 512 MB or 2:20 are refused by the site, so the bitrate ladder stays moderate.
+format = 1
+
+[preset]
+name = "X / Twitter"
+description = "720p at 30 fps in H.264 with AAC stereo, MP4. Sized for X's upload limits."
+tags = ["x", "twitter", "720p", "social"]
+
+[video]
+codec = "h264"
+quality = "medium"
+speed = "medium"
+resolution = "1280x720"
+fps = 30
+pixel_format = "yuv420p"
+
+[audio]
+mode = "reencode"
+codec = "aac"
+bitrate = "128k"
+channels = 2
+sample_rate = 44100
+
+[subtitles]
+mode = "none"
+
+[container]
+format = "mp4"
+
+[ffmpeg]
+output_options = "-g 60 -bf 2"

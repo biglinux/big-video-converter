@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 """
 Big Video Converter - Nautilus Extension
 Adds a context menu option to convert video files using the
@@ -15,17 +12,15 @@ from urllib.parse import unquote
 # Import 'gi' and explicitly require GTK and Nautilus versions.
 # This is mandatory in modern PyGObject to prevent warnings and ensure API compatibility.
 import gi
+
 gi.require_version('Gtk', '4.0')
 
-from gi.repository import GObject, Nautilus
+from gi.repository import Gio, GLib, GObject, Nautilus
 
 # --- Internationalization (i18n) Setup ---
 APP_NAME = "big-video-converter"
 
-try:
-    gettext.bindtextdomain(APP_NAME, "/usr/share/locale")
-except Exception as e:
-    print(f"Big Video Converter Extension: Could not set up localization: {e}")
+gettext.bindtextdomain(APP_NAME, "/usr/share/locale")
 
 
 def _(message):
@@ -56,10 +51,12 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         }
 
         # Fallback for mimetype names that keep changing between
-        # shared-mime-info releases.
+        # shared-mime-info releases. Nautilus cannot import the application's
+        # modules: this must equal constants.VIDEO_FILE_EXTENSIONS (a test
+        # compares them).
         self.supported_extensions = {
             '.mp4', '.mkv', '.webm', '.mov', '.avi', '.wmv', '.mpeg', '.mpg',
-            '.m4v', '.ts', '.flv', '.3gp', '.ogv',
+            '.m4v', '.ts', '.m2ts', '.mts', '.flv', '.3gp', '.ogv',
         }
 
     def get_file_items(self, *args):
@@ -82,7 +79,9 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
             label = _('Convert Video')
             name = 'BigVideoConverter::Convert'
         else:
-            label = _('Convert {0} Videos').format(num_videos)
+            label = gettext.dngettext(
+                APP_NAME, 'Convert {0} Video', 'Convert {0} Videos', num_videos
+            ).format(num_videos)
             name = 'BigVideoConverter::ConvertMultiple'
 
         menu_item = Nautilus.MenuItem(name=name, label=label)
@@ -106,13 +105,11 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
 
     def _get_file_path(self, file_info: Nautilus.FileInfo) -> str | None:
         """
-        Gets the local file path from a Nautilus.FileInfo object by parsing its URI.
+        The local path of the file, or None when it has none. GIO keeps
+        non-UTF-8 names intact and maps network locations to their gvfs FUSE
+        path when that is available.
         """
-        uri = file_info.get_uri()
-        if not uri.startswith('file://'):
-            return None
-        # Decode URL-encoded characters (e.g., %20 -> space) and remove the prefix.
-        return unquote(uri[7:])
+        return file_info.get_location().get_path()
 
     def _launch_application(self, menu_item: Nautilus.MenuItem, files: list[Nautilus.FileInfo]):
         """
@@ -139,7 +136,7 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
                 stderr=subprocess.DEVNULL,
                 start_new_session=True
             )
-        except Exception as e:
+        except OSError as e:
             print(f"Error launching '{self.app_executable}': {e}")
             self._show_error_notification(
                 _("Application Launch Error"),
@@ -150,14 +147,16 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         """
         Displays a desktop error notification using 'notify-send'.
         """
+        # Nautilus must not wait for the notification daemon; GIO reaps the
+        # child from the main loop.
         try:
-            subprocess.run([
+            Gio.Subprocess.new([
                 'notify-send',
                 '--icon=dialog-error',
                 f'--app-name={APP_NAME}',
                 title,
                 message
-            ], check=False, timeout=5)
-        except FileNotFoundError:
+            ], Gio.SubprocessFlags.NONE)
+        except GLib.Error:
             # Fallback if 'notify-send' is not installed.
             print(f"ERROR: [{title}] {message}")

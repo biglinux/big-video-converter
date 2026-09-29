@@ -6,6 +6,7 @@ the user to drag edges/corners to adjust crop boundaries.
 
 import gi
 
+gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, Gtk
 
@@ -26,6 +27,39 @@ _BOTTOM_RIGHT = 8
 _MOVE = 9
 
 
+# Crop margins are stored for the source picture, as FFmpeg crops it before
+# the user's rotation and flips; the preview shows it after them. mpv turns
+# the picture clockwise (video-rotate) and the renderer then mirrors the
+# result on screen, so the displayed margins follow the same order.
+def source_to_display(margins, rotation, flip_h, flip_v):
+    """(left, right, top, bottom) of the source as shown on screen."""
+    left, right, top, bottom = margins
+    for _ in range(int(rotation) % 360 // 90):
+        # A clockwise quarter turn puts the source bottom on the left.
+        left, right, top, bottom = bottom, top, left, right
+    if flip_h:
+        left, right = right, left
+    if flip_v:
+        top, bottom = bottom, top
+    return left, right, top, bottom
+
+
+def display_to_source(margins, rotation, flip_h, flip_v):
+    """Inverse of source_to_display."""
+    left, right, top, bottom = margins
+    if flip_h:
+        left, right = right, left
+    if flip_v:
+        top, bottom = bottom, top
+    for _ in range(int(rotation) % 360 // 90):
+        left, right, top, bottom = top, bottom, right, left
+    return left, right, top, bottom
+
+
+def displayed_size(width, height, rotation):
+    return (height, width) if int(rotation) % 180 else (width, height)
+
+
 class CropOverlay(Gtk.DrawingArea):
     """Transparent overlay that visualizes and allows interactive crop editing."""
 
@@ -35,15 +69,18 @@ class CropOverlay(Gtk.DrawingArea):
         self.set_hexpand(True)
         self.set_vexpand(True)
 
-        # Crop values in video pixels
+        # Crop margins and video size as displayed, in video pixels
         self._crop_left = 0
         self._crop_right = 0
         self._crop_top = 0
         self._crop_bottom = 0
-
-        # Video dimensions (set externally)
         self._video_w = 0
         self._video_h = 0
+
+        # The source values they are displayed from (set externally)
+        self._source_crop = (0, 0, 0, 0)
+        self._source_size = (0, 0)
+        self._transform = (0, False, False)
 
         # Drag state
         self._drag_target = _NONE
@@ -69,22 +106,34 @@ class CropOverlay(Gtk.DrawingArea):
         self.add_controller(motion)
 
     def set_crop_values(self, left: int, right: int, top: int, bottom: int) -> None:
-        """Update crop values (video pixels) and redraw."""
-        self._crop_left = left
-        self._crop_right = right
-        self._crop_top = top
-        self._crop_bottom = bottom
-        self.queue_draw()
+        """Update the source crop margins (video pixels) and redraw."""
+        self._source_crop = (left, right, top, bottom)
+        self._update_display()
 
     def set_video_dimensions(self, width: int, height: int) -> None:
-        """Set the original video dimensions for coordinate mapping."""
-        self._video_w = width
-        self._video_h = height
-        self.queue_draw()
+        """Set the source video dimensions for coordinate mapping."""
+        self._source_size = (width, height)
+        self._update_display()
+
+    def set_transform(self, rotation: int, flip_h: bool, flip_v: bool) -> None:
+        """Set the rotation and flips the preview shows the picture with."""
+        self._transform = (rotation, flip_h, flip_v)
+        self._update_display()
 
     def set_on_crop_changed(self, callback) -> None:
-        """Set callback: callback(left, right, top, bottom) in video pixels."""
+        """Set callback: callback(left, right, top, bottom), source margins."""
         self._on_crop_changed = callback
+
+    def _update_display(self) -> None:
+        rotation = self._transform[0]
+        self._video_w, self._video_h = displayed_size(*self._source_size, rotation)
+        (
+            self._crop_left,
+            self._crop_right,
+            self._crop_top,
+            self._crop_bottom,
+        ) = source_to_display(self._source_crop, *self._transform)
+        self.queue_draw()
 
     # --- Coordinate mapping ---
 
@@ -119,15 +168,6 @@ class CropOverlay(Gtk.DrawingArea):
         wx = rx + (vx / self._video_w) * rw
         wy = ry + (vy / self._video_h) * rh
         return (wx, wy)
-
-    def _widget_to_video(self, wx: float, wy: float) -> tuple[float, float]:
-        """Convert widget coordinates to video pixel coordinates."""
-        rx, ry, rw, rh = self._get_video_rect()
-        if rw <= 0 or rh <= 0:
-            return (0, 0)
-        vx = ((wx - rx) / rw) * self._video_w
-        vy = ((wy - ry) / rh) * self._video_h
-        return (vx, vy)
 
     # --- Drawing ---
 
@@ -370,15 +410,12 @@ class CropOverlay(Gtk.DrawingArea):
                 new_b = max(0, int(sb - dy_video))
                 new_b = min(new_b, self._video_h - new_t - 2)
 
-        self._crop_left = new_l
-        self._crop_right = new_r
-        self._crop_top = new_t
-        self._crop_bottom = new_b
-
-        self.queue_draw()
+        self._source_crop = display_to_source(
+            (new_l, new_r, new_t, new_b), *self._transform)
+        self._update_display()
 
         if self._on_crop_changed:
-            self._on_crop_changed(new_l, new_r, new_t, new_b)
+            self._on_crop_changed(*self._source_crop)
 
     def _on_drag_end(self, gesture, offset_x, offset_y) -> None:
         """Finish dragging."""

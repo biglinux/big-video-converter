@@ -10,25 +10,19 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Gdk", "4.0")
 gi.require_version("Adw", "1")
+
 from constants import get_tooltips
 from gi.repository import Adw, Gdk, GLib, Gtk
-
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def _is_x11_backend() -> bool:
     """Check if we're running on X11 backend (not Wayland)."""
-    try:
-        display = Gdk.Display.get_default()
-        if display is None:
-            return False
-        # Check the display type name to determine backend
-        display_type = type(display).__name__
-        return "X11" in display_type
-    except Exception:
+    display = Gdk.Display.get_default()
+    if display is None:
         return False
+    # Check the display type name to determine backend
+    display_type = type(display).__name__
+    return "X11" in display_type
 
 
 class TooltipHelper:
@@ -134,7 +128,7 @@ class TooltipHelper:
         widget.tooltip_key = tooltip_key
         
         motion_controller = Gtk.EventControllerMotion.new()
-        motion_controller.connect("enter", self._on_enter, widget)
+        motion_controller.connect("enter", self._on_enter)
         motion_controller.connect("leave", self._on_leave)
         widget.add_controller(motion_controller)
 
@@ -143,7 +137,8 @@ class TooltipHelper:
             GLib.source_remove(self.show_timer_id)
             self.show_timer_id = None
 
-    def _on_enter(self, controller, x, y, widget):
+    def _on_enter(self, controller, x, y):
+        widget = controller.get_widget()
         if not self.is_enabled() or self.active_widget == widget:
             return
 
@@ -163,24 +158,21 @@ class TooltipHelper:
         if not self.active_widget or not self.popover:
             return GLib.SOURCE_REMOVE
 
-        # Safety check: ensure widget is still in valid state
-        try:
-            if not self.active_widget.get_mapped() or not self.active_widget.get_visible():
-                self.active_widget = None
-                return GLib.SOURCE_REMOVE
-            
-            # Check if widget has a valid parent and is in a toplevel
-            parent = self.active_widget.get_parent()
-            if parent is None:
-                self.active_widget = None
-                return GLib.SOURCE_REMOVE
-            
-            # Check if we can get a native ancestor
-            native = self.active_widget.get_native()
-            if native is None:
-                self.active_widget = None
-                return GLib.SOURCE_REMOVE
-        except Exception:
+        # Safety check: ensure widget is still in valid state. These GTK
+        # getters report no errors, so there is nothing to catch here.
+        if not self.active_widget.get_mapped() or not self.active_widget.get_visible():
+            self.active_widget = None
+            return GLib.SOURCE_REMOVE
+
+        # Check if widget has a valid parent and is in a toplevel
+        parent = self.active_widget.get_parent()
+        if parent is None:
+            self.active_widget = None
+            return GLib.SOURCE_REMOVE
+
+        # Check if we can get a native ancestor
+        native = self.active_widget.get_native()
+        if native is None:
             self.active_widget = None
             return GLib.SOURCE_REMOVE
 
@@ -193,25 +185,21 @@ class TooltipHelper:
         if not tooltip_text:
             return GLib.SOURCE_REMOVE
 
-        try:
-            # Configure and place on screen. The popover is initially transparent
-            # due to the .tooltip-popover class. The "map" signal will then
-            # trigger the animation by adding the .visible class.
-            self.label.set_text(tooltip_text)
-            
-            # Unparent first if already parented
-            if self.popover.get_parent() is not None:
-                self.popover.unparent()
-            
-            # Ensure clean CSS state before showing
-            self.popover.remove_css_class("visible")
-            
-            self.popover.set_parent(self.active_widget)
-            self.popover.popup()
-        except Exception as e:
-            logger.error(f"Tooltip error: {e}")
-            self.active_widget = None
-        
+        # Configure and place on screen. The popover is initially transparent
+        # due to the .tooltip-popover class. The "map" signal will then
+        # trigger the animation by adding the .visible class.
+        self.label.set_text(tooltip_text)
+
+        # Unparent first if already parented
+        if self.popover.get_parent() is not None:
+            self.popover.unparent()
+
+        # Ensure clean CSS state before showing
+        self.popover.remove_css_class("visible")
+
+        self.popover.set_parent(self.active_widget)
+        self.popover.popup()
+
         self.show_timer_id = None
         return GLib.SOURCE_REMOVE
 
@@ -219,30 +207,24 @@ class TooltipHelper:
         if not self.popover:
             return
             
-        try:
-            if not self.popover.is_visible():
-                return
+        if not self.popover.is_visible():
+            return
 
-            def do_cleanup():
-                try:
-                    if self.popover:
-                        self.popover.popdown()
-                        if self.popover.get_parent():
-                            self.popover.unparent()
-                except Exception:
-                    pass
-                return GLib.SOURCE_REMOVE
+        def do_cleanup():
+            if self.popover:
+                self.popover.popdown()
+                if self.popover.get_parent():
+                    self.popover.unparent()
+            return GLib.SOURCE_REMOVE
 
-            # This triggers the fade-out animation.
-            self.popover.remove_css_class("visible")
+        # This triggers the fade-out animation.
+        self.popover.remove_css_class("visible")
 
-            if animate:
-                # Wait for animation to finish before cleaning up.
-                GLib.timeout_add(200, do_cleanup)
-            else:
-                do_cleanup()
-        except Exception:
-            pass
+        if animate:
+            # Wait for animation to finish before cleaning up.
+            GLib.timeout_add(200, do_cleanup)
+        else:
+            do_cleanup()
 
     def update_colors(self) -> None:
         """Update tooltip colors based on current GTK/Adwaita theme."""
@@ -251,21 +233,14 @@ class TooltipHelper:
             return
         
         # Detect colors from GTK/Adwaita theme
-        try:
-            style_manager = Adw.StyleManager.get_default()
-            is_dark = style_manager.get_dark()
-            if is_dark:
-                # Dark theme colors - darker base to compensate for adjustment
-                bg_color = "#2a2a2a"
-                fg_color = "#ffffff"
-            else:
-                # Light theme colors
-                bg_color = "#fafafa"
-                fg_color = "#2e2e2e"
-        except Exception:
-            # Fallback to dark theme defaults
+        if Adw.StyleManager.get_default().get_dark():
+            # Dark theme colors - darker base to compensate for adjustment
             bg_color = "#2a2a2a"
             fg_color = "#ffffff"
+        else:
+            # Light theme colors
+            bg_color = "#fafafa"
+            fg_color = "#2e2e2e"
         
         # Adjust tooltip background for better contrast
         tooltip_bg = self._adjust_tooltip_background(bg_color)
@@ -307,26 +282,20 @@ class TooltipHelper:
         
         # Remove existing color provider if any
         if self._color_css_provider:
-            try:
-                Gtk.StyleContext.remove_provider_for_display(
-                    display, self._color_css_provider
-                )
-            except Exception:
-                pass
+            Gtk.StyleContext.remove_provider_for_display(
+                display, self._color_css_provider
+            )
             self._color_css_provider = None
         
         # Add new color provider with highest priority
         provider = Gtk.CssProvider()
         provider.load_from_data(css.encode("utf-8"))
-        try:
-            Gtk.StyleContext.add_provider_for_display(
-                display,
-                provider,
-                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 100,
-            )
-            self._color_css_provider = provider
-        except Exception:
-            pass
+        Gtk.StyleContext.add_provider_for_display(
+            display,
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 100,
+        )
+        self._color_css_provider = provider
 
     def _adjust_tooltip_background(self, bg_color: str) -> str:
         """Adjust tooltip background color for better contrast."""
@@ -362,8 +331,5 @@ class TooltipHelper:
         if not self.popover:
             return
             
-        try:
-            if self.popover.get_parent():
-                self.popover.unparent()
-        except Exception:
-            pass
+        if self.popover.get_parent():
+            self.popover.unparent()

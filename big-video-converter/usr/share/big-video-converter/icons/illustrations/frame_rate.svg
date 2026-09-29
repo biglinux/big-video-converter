@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 80">
+  <!-- Many frames per second -->
+  <rect x="5" y="16" width="44" height="24" rx="2" fill="none" stroke="#3584e4" stroke-width="1.5"/>
+  <line x1="16" y1="16" x2="16" y2="40" stroke="#3584e4" stroke-width="1"/>
+  <line x1="27" y1="16" x2="27" y2="40" stroke="#3584e4" stroke-width="1"/>
+  <line x1="38" y1="16" x2="38" y2="40" stroke="#3584e4" stroke-width="1"/>
+  <text x="27" y="52" font-family="sans-serif" font-size="6" fill="#3584e4" text-anchor="middle" font-weight="bold">60 fps</text>
+  <!-- Arrow -->
+  <line x1="54" y1="28" x2="68" y2="28" stroke="#999" stroke-width="1.5"/>
+  <polygon points="68,24 75,28 68,32" fill="#999"/>
+  <!-- Fewer frames per second -->
+  <rect x="78" y="16" width="30" height="24" rx="2" fill="none" stroke="#26a269" stroke-width="1.5"/>
+  <line x1="93" y1="16" x2="93" y2="40" stroke="#26a269" stroke-width="1"/>
+  <text x="93" y="52" font-family="sans-serif" font-size="6" fill="#26a269" text-anchor="middle" font-weight="bold">24 fps</text>
+  <!-- Label -->
+  <text x="60" y="72" font-family="sans-serif" font-size="5.5" fill="#999" text-anchor="middle">Change frames per second</text>
+</svg>

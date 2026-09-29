@@ -1,11 +1,11 @@
 """Verify that native callback errors cannot produce a green pytest result."""
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import textwrap
 import xml.etree.ElementTree as ET
+from pathlib import Path
 
 import pytest
 

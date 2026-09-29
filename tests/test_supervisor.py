@@ -1,19 +1,18 @@
 """Real subprocess supervision with lightweight UI test doubles and real GLib."""
-from collections import deque
 import logging
-from pathlib import Path
 import shutil
 import threading
 import time
+from collections import deque
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 gi = pytest.importorskip('gi')
 gi.require_version('Adw', '1')
-from gi.repository import GLib
-
 from conftest import CLI
+from gi.repository import GLib
 from queue_manager import QueueManagerMixin
 from utils import conversion
 from utils.media_validation import ConversionResult
@@ -56,8 +55,10 @@ class Row:
         self.progress=progress
     def mark_success(self):
         self.status='completed';self.owner.mark_conversion_complete(self.conversion_id,True)
-    def mark_failure(self):
-        self.status='failed';self.owner.mark_conversion_complete(self.conversion_id,False)
+    def mark_failure(self,reason=None,detail=None):
+        self.status='failed';self.failure_reason=reason
+        if detail:self.status_text=detail
+        self.owner.mark_conversion_complete(self.conversion_id,False)
     def mark_cancelled(self):self.status='cancelled'
     def was_cancelled(self):return self._cancelled
 
@@ -76,7 +77,7 @@ class App:
     def __init__(self):
         self.progress_page=Page();self.conversions_running=0
         self.notifications=[];self.errors=[];self.completed_conversions=[]
-        self.delete_original_after_conversion=False;self.system_notifications=[]
+        self.system_notifications=[]
         self.conversion_queue=deque()
     def conversion_completed(self,success,**kwargs):
         assert threading.current_thread() is threading.main_thread()
@@ -118,13 +119,14 @@ def test_finished_job_notifies_the_user(media,tmp_path,cli_env):
     assert not app.errors
 
 
-def test_failed_job_notifies_and_reports_only_outside_a_queue(media,tmp_path,cli_env):
-    for queued, dialogs in ((False,1), (True,0)):
+def test_failed_job_notifies_without_a_dialog_over_the_summary(media,tmp_path,cli_env):
+    # The progress page's summary explains the failure; a modal would repeat it.
+    for queued, dialogs in ((False,0), (True,0)):
         app=App();out=tmp_path/f'fail{queued}.mkv'
         if queued:app.conversion_queue.append('pending.mkv')
         conversion.run_with_progress_dialog(app,['/usr/bin/false'],'test',
             str(media['video']),False,{**cli_env,'output_file':str(out)},job_id='f')
-        pump_until(lambda:bool(app.notifications))
+        pump_until(lambda app=app:bool(app.notifications))
         assert app.notifications[0][0] is False
         assert len(app.system_notifications)==1 and len(app.errors)==dialogs
 
@@ -222,6 +224,20 @@ def test_start_failure_completes_row_once(tmp_path,cli_env):
     assert isinstance(result,ConversionResult) and not result.success
     assert app.notifications==[(False,{'file_path':None,'job_id':'start'})]
     assert app.conversions_running==0 and app.progress_page.rows[0].status=='failed'
+    row=app.progress_page.rows[0]
+    assert row.failure_reason=='The conversion could not start.' and not app.errors
+    assert 'no/such/executable' in row.status_text
+
+
+def test_friendly_reason_never_carries_the_path_or_code():
+    lines=['ERROR: Input file is corrupted or not a valid video file: /home/u/Vídeos/broken.mp4',
+           'The file container could not be read. It may be a corrupted download or an unsupported format.']
+    reason=conversion._failure_reason([],lines)
+    assert reason.startswith('The file container could not be read.')
+    assert '/home/u' not in reason and 'ERROR' not in reason
+    assert conversion._failure_reason(['frame=1 fps=2'],[])==''
+    message=conversion._failure_message(2,[],lines)
+    assert message.startswith(reason) and '/home/u/Vídeos/broken.mp4' in message
 
 
 def test_wait_on_main_thread_rejected():
@@ -244,7 +260,7 @@ class QueueApp(QueueManagerMixin):
         self.conversions_lock=threading.Lock();self._processing_completion=False
         self.active_conversions=[];self.gpu_slots=deque();self.conversion_queue=deque()
         self.is_cancellation_requested=False;self.currently_converting=True
-        self.progress_page=Page();self.next_calls=0
+        self.progress_page=Page();self.next_calls=0;self.claimed_outputs=set()
         self.header_bar=SimpleNamespace(set_buttons_sensitive=lambda value:None)
     def process_next_in_queue(self):self.next_calls+=1;return False
 
@@ -295,6 +311,11 @@ def test_real_segment_batch_has_one_parent_completion(media,tmp_path,cli_env,mod
     assert len(outputs)==(2 if mode=='split' else 1)
     assert all(Path(f).is_file() for f in outputs)
     assert not list(tmp_path.glob('.bvc-segments-*'))
+    if mode=='join':
+        # One encode of both cuts: no keyframe pre-roll or priming gap at the seam.
+        from utils.media_validation import media_duration, probe_media
+        data=probe_media(outputs[0])
+        assert abs(media_duration(data)-1.5)<.1 and abs(media_duration(data,'audio')-1.5)<.1
 
 
 def test_first_failed_segment_prevents_following_stages(media,tmp_path,cli_env,monkeypatch):
@@ -309,6 +330,22 @@ def test_first_failed_segment_prevents_following_stages(media,tmp_path,cli_env,m
     assert len(calls)==1
     assert app.notifications[0][0] is False
     assert not list(tmp_path.glob('*.mkv'))
+    row=app.progress_page.rows[0]
+    assert row.status=='failed' and row.status_text=='injected failure'
+    assert row.failure_reason is None  # unknown cause: the row's generic sentence
+
+
+def test_failed_segment_batch_shows_the_friendly_reason(media,tmp_path,cli_env,monkeypatch):
+    import utils.segment_batch as module
+    raw='ERROR: Input file is corrupted or not a valid video file: /x/broken.mp4'
+    monkeypatch.setattr(module,'run_with_progress_dialog',
+                        lambda *a,**k:ConversionResult(False,2,error=raw))
+    app=App();page=SimpleNamespace(app=app,_format_time_ffmpeg=str)
+    start_segment_batch(page,batch_context(media,tmp_path,cli_env,'join'))
+    pump_until(lambda:bool(app.notifications))
+    row=app.progress_page.rows[0]
+    assert row.failure_reason and 'ERROR' not in row.failure_reason and '/x/' not in row.failure_reason
+    assert row.status_text==raw
 
 
 def test_cancel_between_segments_stops_the_batch(media,tmp_path,cli_env,monkeypatch):
@@ -336,3 +373,129 @@ def test_subtitle_only_batch_never_converts_or_removes_video(media,tmp_path,cli_
     outputs=app.completed_conversions[-1]['output_files']
     assert len(outputs)==(4 if mode=='split' else 2)
     assert all(Path(path).suffix=='.srt' for path in outputs)
+
+
+def test_subtitle_pass_never_drives_the_bar_or_claims_software_encoding(tmp_path,cli_env):
+    """A user with a working GPU read "Software encoding" plus a racing bar
+    during the subtitle extraction and concluded the GPU was unused."""
+    app=App();history=[]
+    original_add=app.progress_page.add_conversion
+    def add_conversion(title,source,process):
+        row=original_add(title,source,process)
+        row.update_progress=lambda p:history.append(('progress',p))
+        row.update_status=lambda s:history.append(('status',s))
+        return row
+    app.progress_page.add_conversion=add_conversion
+    script=('echo "Checking GPU encoder h264_vaapi..."; echo "Extracting subtitles..."; '
+            'echo "  Duration: 00:01:00.00, start: 0.000000" >&2; '
+            'echo "size=0KiB time=00:00:48.00 bitrate=0.0kbits/s speed=200x" >&2; sleep 0.2; '
+            'echo "Encode mode: Decode GPU, encode GPU"; '
+            'echo "frame=  100 fps=50 time=00:00:06.00 bitrate=1kbits/s speed=2x" >&2; sleep 0.2; exit 3')
+    conversion.run_with_progress_dialog(app,['bash','-c',script],'test',
+        env_vars={**cli_env,'output_file':str(tmp_path/'out.mp4')},job_id='phases')
+    pump_until(lambda:bool(app.notifications),timeout=10)
+    statuses=[s for kind,s in history if kind=='status']
+    progress=[p for kind,p in history if kind=='progress']
+    first_encode=statuses.index(next(s for s in statuses if 'GPU acceleration' in s))
+    assert any('Extracting subtitles' in s for s in statuses[:first_encode])
+    assert not any('Software encoding' in s for s in statuses)
+    assert progress and all(p<0.5 for p in progress), progress  # only the encode's 6 s of 60 s
+
+
+def test_frozen_preset_survives_gpu_fallback(media, tmp_path, cli_env):
+    from test_presets import MINIMAL
+    from test_probe_and_driver_fallback import _fake_ffmpeg
+    from utils.conversion import run_with_progress_dialog
+    from utils.media_validation import probe_media
+
+    wrapper = _fake_ffmpeg(tmp_path, 'unavailable-gpu',
+        'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done')
+    output = tmp_path / 'fallback.mkv'
+    env = {**cli_env, 'gpu': 'amd', 'force_software': '', 'gpu_smoke_test': '0',
+           'ffmpeg_executable': str(wrapper), 'output_file': str(output),
+           'video_resolution': '64x36', 'video_fps': '10', 'audio_handling': 'reencode',
+           'audio_codec': 'aac', 'audio_channels': '1', 'audio_bitrate': '48k'}
+    app = App()
+    run_with_progress_dialog(app, [str(CLI), str(media['video'])], 'fallback',
+        str(media['video']), False, env, preset_source=MINIMAL, job_id='fallback')
+    pump_until(lambda: bool(app.notifications))
+    assert app.notifications[0][0], app.progress_page.rows[0].lines
+    log = '\n'.join(app.progress_page.rows[0].lines)
+    assert 'Encode mode: Decode GPU, encode GPU' in log
+    assert 'Encode mode: Decode Software, Encode Software' in log
+    streams = probe_media(str(output))['streams']
+    video = next(s for s in streams if s['codec_type'] == 'video')
+    audio = next(s for s in streams if s['codec_type'] == 'audio')
+    assert (video['width'], video['height'], video['r_frame_rate']) == (64, 36, '10/1')
+    assert audio['sample_rate'] == '22050' and audio['channels'] == 1
+
+
+def test_published_name_is_validated_reported_and_authorizes_deletion(media, tmp_path, cli_env):
+    """The script never replaces a file: the supervisor follows it to the name
+    it published instead of validating, or deleting against, someone else's."""
+    source = tmp_path / 'source.mp4'; shutil.copyfile(media['video'], source)
+    taken = tmp_path / 'converted.mkv'; taken.write_bytes(b'KEEP')
+    app = App()
+    conversion.run_with_progress_dialog(app, [str(CLI), str(source)], 'test', str(source),
+        True, {**cli_env, 'output_file': str(taken)}, job_id='taken')
+    pump_until(lambda: bool(app.notifications))
+    assert app.notifications[0][0] is True, app.progress_page.rows[0].lines
+    assert taken.read_bytes() == b'KEEP'
+    assert app.completed_conversions[-1]['output_file'] == str(tmp_path / 'converted_1.mkv')
+    assert (tmp_path / 'converted_1.mkv').exists() and not source.exists()
+
+
+def test_left_out_subtitle_track_keeps_the_original(tmp_path, cli_env):
+    from test_cli import pgs_source
+    source = pgs_source(tmp_path)
+    app = App()
+    conversion.run_with_progress_dialog(app, [str(CLI), str(source)], 'test', str(source),
+        True, {**cli_env, 'output_file': str(tmp_path / 'out.mp4')}, job_id='pgs')
+    pump_until(lambda: bool(app.notifications))
+    assert app.notifications[0][0] is True, app.progress_page.rows[0].lines
+    assert source.exists() and (tmp_path / 'out.mp4').exists()
+    assert any('every subtitle track' in line for line in app.progress_page.rows[0].lines)
+
+
+def test_two_pass_encode_fills_the_bar_once(tmp_path, cli_env):
+    """The analysis pass drove the bar to 99 % and the sized pass restarted it."""
+    app = App(); progress = []
+    original_add = app.progress_page.add_conversion
+    def add_conversion(title, source, process):
+        row = original_add(title, source, process)
+        row.update_progress = progress.append
+        return row
+    app.progress_page.add_conversion = add_conversion
+    script = ('echo "Encode mode: Decode Software, Encode Software"; '
+              'echo "Analysis pass: measuring the video before the sized encode"; '
+              'echo "Running command: ffmpeg -pass 1 -f null -"; '
+              'echo "  Duration: 00:01:00.00, start: 0.000000" >&2; '
+              'for t in 20 59; do echo "frame=1 fps=9 time=00:00:$t.00 speed=2x" >&2; sleep 0.15; done; '
+              'echo "Running command: ffmpeg -pass 2 out.mkv"; '
+              'for t in 10 30 59; do echo "frame=1 fps=9 time=00:00:$t.00 speed=2x" >&2; sleep 0.15; done; '
+              'exit 3')
+    conversion.run_with_progress_dialog(app, ['bash', '-c', script], 'test',
+        env_vars={**cli_env, 'output_file': str(tmp_path / 'out.mkv')}, job_id='two-pass')
+    pump_until(lambda: bool(app.notifications), timeout=10)
+    assert progress == sorted(progress), progress
+    assert max(progress) > 0.9 and min(progress) < 0.2
+
+
+def test_job_runs_in_a_private_directory_removed_with_it(media, tmp_path, cli_env, monkeypatch):
+    """A filter writing a relative file (vidstabdetect's result=.bashrc once
+    overwrote ~/.bashrc) writes into the job's own directory, not the caller's."""
+    caller = tmp_path / 'caller'
+    caller.mkdir()
+    monkeypatch.chdir(caller)
+    folder = tmp_path / 'out'
+    folder.mkdir()
+    env = {**cli_env, 'output_file': str(folder / 'out.mkv'),
+           'options': '-threads 1 -vf metadata=mode=print:file=frames.txt'}
+    app = App()
+    conversion.run_with_progress_dialog(app, [str(CLI), str(media['video'])], 'cwd',
+        str(media['video']), False, env, job_id='cwd')
+    pump_until(lambda: bool(app.notifications))
+    assert app.notifications[0][0], app.progress_page.rows[0].lines
+    assert 'metadata=mode=print:file=frames.txt' in app.progress_page.rows[0].cmd_text.value
+    assert list(caller.iterdir()) == []
+    assert [p.name for p in folder.iterdir()] == ['out.mkv']

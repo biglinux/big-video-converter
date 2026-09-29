@@ -1,0 +1,35 @@
+# Telegram sends files up to 4 GB from a Premium account. Full HD H.264 in MP4, which
+# always gets its index up front, so the chat plays it while it downloads.
+# A video too long for 4 GB at this quality gets a fitted bitrate instead.
+format = 1
+
+[preset]
+name = "Telegram Premium"
+description = "1080p H.264 with AAC stereo in MP4, kept under 4 GB so it plays in the chat while it downloads."
+tags = ["telegram", "chat", "upload", "1080p"]
+
+[video]
+codec = "h264"
+quality = "high"
+speed = "medium"
+resolution = "1920x1080"
+pixel_format = "yuv420p"
+
+[audio]
+mode = "reencode"
+codec = "aac"
+bitrate = "192k"
+channels = 2
+sample_rate = 48000
+
+[subtitles]
+mode = "none"
+
+[container]
+format = "mp4"
+
+[size]
+target = "telegram-premium"
+
+[encoder.libx264]
+args = ["-profile:v", "high"]

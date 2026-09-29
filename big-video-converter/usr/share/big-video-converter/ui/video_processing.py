@@ -1,5 +1,4 @@
 import os
-import subprocess
 import threading
 
 import gi
@@ -7,12 +6,10 @@ import gi
 gi.require_version("Gtk", "4.0")
 # Setup translation
 import gettext
+import logging
 
 from gi.repository import GLib
-
-from utils.file_info import get_video_file_info
-
-import logging
+from utils.file_info import display_size, get_video_file_info
 
 logger = logging.getLogger(__name__)
 
@@ -38,9 +35,6 @@ class VideoProcessor:
         self._generation += 1
         generation = self._generation
 
-        # Update the UI with the file path immediately
-        self.page.current_video_path = file_path
-
         # Start background thread to get info without blocking the UI
         info_thread = threading.Thread(
             target=self._get_video_info_thread, args=(file_path, generation)
@@ -59,10 +53,9 @@ class VideoProcessor:
                 raise ValueError(_("The video metadata could not be read"))
             # Post the successful result back to the main GTK thread
             GLib.idle_add(self._on_video_info_loaded, info, file_path, generation)
-        except (subprocess.SubprocessError, OSError, ValueError) as e:
-            error_message = f"Error getting video info: {e}"
-            logger.error(error_message)
-            # Post the error back to the main GTK thread and release the lock
+        except Exception as e:  # any failure must release the loading lock
+            logger.exception("Error getting video info for %s", file_path)
+            error_message = _("Error getting video info: {error}").format(error=e)
             GLib.idle_add(self._on_video_info_error, error_message, generation)
 
     def _on_video_info_error(self, error_message, generation):
@@ -71,31 +64,42 @@ class VideoProcessor:
             return False
         self.page.app.show_error_dialog(error_message)
         self.page.loading_video = False
+        return False
 
     def _on_video_info_loaded(self, info, file_path, generation):
         """Callback executed on the main thread after ffprobe finishes."""
         if generation != self._generation or file_path != self.page.requested_video_path:
             logger.debug("Ignoring stale video info for: %s", os.path.basename(file_path))
             return False
+        # Whatever the probe answered, the editor must not stay locked in
+        # "loading" with its controls inert.
+        try:
+            self._show_video(info, file_path)
+        except Exception as error:
+            logger.exception("Could not show video info for %s", file_path)
+            self.page.app.show_error_dialog(
+                _("Error getting video info: {error}").format(error=error))
+        finally:
+            self.page.loading_video = False
+        return False
 
+    def _show_video(self, info, file_path):
         video_stream = next(
             (s for s in info.get("streams", []) if s.get("codec_type") == "video"), None
         )
         if not video_stream:
-            self.page.app.show_error_dialog("Error: No video stream found")
-            self.page.loading_video = False
+            self.page.app.show_error_dialog(_("Error: No video stream found"))
             return
 
         # --- Update all video properties ---
-        self.page.video_width = int(video_stream.get("width", 0))
-        self.page.video_height = int(video_stream.get("height", 0))
+        self.page.video_width, self.page.video_height = display_size(video_stream)
 
         duration_str = video_stream.get("duration") or info.get("format", {}).get(
             "duration"
         )
-        if duration_str:
-            self.page.video_duration = float(duration_str)
-        else:
+        try:
+            self.page.video_duration = max(0.0, float(duration_str or 0))
+        except ValueError:  # "N/A" from a stream without a known length
             self.page.video_duration = 0
 
         self.page.ui.position_scale.set_range(0, self.page.video_duration)
@@ -108,7 +112,10 @@ class VideoProcessor:
         )
 
         # --- Update UI Labels ---
-        file_size_bytes = int(info.get("format", {}).get("size", 0))
+        try:
+            file_size_bytes = int(info.get("format", {}).get("size", 0))
+        except ValueError:
+            file_size_bytes = os.path.getsize(file_path)
         file_size_str = f"{file_size_bytes / (1024 * 1024):.2f} MB"
 
         hours, rem = divmod(self.page.video_duration, 3600)
@@ -124,15 +131,19 @@ class VideoProcessor:
         self.page.ui.info_duration_label.set_text(duration_formatted)
 
         # --- Load into video player and finalize ---
-        if hasattr(self.page, "mpv_player") and self.page.mpv_player:
-            if not self.page.mpv_player.load_video(file_path):
-                self.page.app.show_error_dialog(
-                    "Error: Failed to load video file. Please check the file format and try again."
-                )
-                self.page.loading_video = False
-                return
+        if (
+            hasattr(self.page, "mpv_player")
+            and self.page.mpv_player
+            and not self.page.mpv_player.load_video(file_path)
+        ):
+            self.page.app.show_error_dialog(
+                _("Error: Failed to load video file. Please check the file format and try again.")
+            )
+            return
 
-        # Load per-file editing metadata now that we have the context
+        # Load per-file editing metadata now that we have the context; from
+        # here on, edits belong to this video.
+        self.page.current_video_path = file_path
         self.page._load_file_metadata(file_path)
 
         # Update crop displays
@@ -158,6 +169,4 @@ class VideoProcessor:
                     100, self.page._update_position_callback
                 )
 
-        # Finally, release the loading lock
-        self.page.loading_video = False
         logger.debug(f"Successfully loaded video: {os.path.basename(file_path)}")

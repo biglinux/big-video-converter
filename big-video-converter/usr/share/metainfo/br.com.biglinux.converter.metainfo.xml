@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>br.com.biglinux.converter</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Big Video Converter</name>
+  <summary>Convert, trim and optimize video files</summary>
+  <description>
+    <p>
+      Big Video Converter is a GTK4 and libadwaita interface for FFmpeg. It
+      converts one or many videos, provides hardware-accelerated encoding when
+      available, and keeps common tasks understandable without hiding the
+      resulting format and quality choices.
+    </p>
+    <ul>
+      <li>Convert queues of videos to MP4, MKV, MOV or WebM</li>
+      <li>Trim segments and adjust crop, rotation, color and audio</li>
+      <li>Fit videos under a target size, or split them into parts that fit</li>
+      <li>Stabilize shaky footage, sharpen the picture and reduce noise</li>
+      <li>Apply color looks (.cube LUTs) or shaders and change the frame rate</li>
+      <li>Give any video its own settings while the rest of the queue keeps the general ones</li>
+      <li>Use NVIDIA, Intel or AMD acceleration with software fallback</li>
+      <li>Copy or re-encode audio and embed or extract subtitles</li>
+      <li>Apply reusable presets for common publishing and editing workflows</li>
+    </ul>
+  </description>
+  <screenshots>
+    <screenshot type="default">
+      <caption>Video queue with a thumbnail, individual options, general settings and output destination</caption>
+      <image>https://raw.githubusercontent.com/biglinux/big-video-converter/main/docs/screenshot.png</image>
+    </screenshot>
+  </screenshots>
+  <launchable type="desktop-id">br.com.biglinux.converter.desktop</launchable>
+  <translation type="gettext">big-video-converter</translation>
+  <provides>
+    <binary>big-video-converter-gui</binary>
+    <binary>big-video-converter</binary>
+  </provides>
+  <developer id="br.com.biglinux">
+    <name>BigLinux</name>
+  </developer>
+  <url type="homepage">https://www.biglinux.com.br</url>
+  <url type="bugtracker">https://github.com/biglinux/big-video-converter/issues</url>
+  <categories>
+    <category>AudioVideo</category>
+    <category>Video</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+</component>

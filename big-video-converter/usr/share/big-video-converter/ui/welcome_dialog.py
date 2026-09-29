@@ -3,11 +3,12 @@ Welcome dialog for Big Video Converter
 """
 
 import gettext
+
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw
+from gi.repository import Adw, Gtk
 
 _ = gettext.gettext
 
@@ -183,6 +184,7 @@ class WelcomeDialog:
 
         # Create Adwaita Dialog with responsive sizing
         self.dialog = Adw.Dialog()
+        self.dialog.connect("closed", lambda dialog: dialog.set_child(None))
         # Use larger defaults but allow dialog to adapt to screen size
         self.dialog.set_content_width(900)
         self.dialog.set_content_height(650)

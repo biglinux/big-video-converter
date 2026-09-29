@@ -1,16 +1,16 @@
 """Extract text subtitles once and clip cues to each selected interval."""
 
-from decimal import Decimal, ROUND_HALF_UP
 import logging
 import os
-from pathlib import Path
 import re
 import subprocess
 import tempfile
-import time
+from decimal import ROUND_HALF_UP, Decimal
+from pathlib import Path
 
+from utils.conversion import TEXT_SUBTITLE_CODECS
 from utils.ffmpeg_path import get_ffmpeg_executable
-from utils.media_validation import probe_media, terminate_process_group
+from utils.media_validation import probe_media, publish_output, run_cancellable
 
 logger = logging.getLogger(__name__)
 _TIMECODE = r"\d{2,}:\d{2}:\d{2},\d{3}"
@@ -101,10 +101,9 @@ class SubtitleProcessor:
                       or "(Forced)" in tags.get("title", ""))
             key = (language, forced)
             seen[key] = count = seen.get(key, 0) + 1
-            name = f"{language}{count if count > 1 else ''}{'.forced' if forced else ''}"
             content = self._merge_subtitle_stream(index, language)
             if content:
-                output = self._save_merged_subtitles(content, name)
+                output = self._save_merged_subtitles(content, language, count, forced)
                 self.created_files.append(output)
                 if self.subtitle_mode == "embedded":
                     embedded.append((output, language))
@@ -115,8 +114,10 @@ class SubtitleProcessor:
             raise InterruptedError("Subtitle processing cancelled")
 
     def _get_subtitle_streams(self):
+        # Cues are read as SRT: a bitmap track has no text to clip, and its
+        # extraction failing used to abort the whole segment job.
         return [s for s in probe_media(self.input_file)["streams"]
-                if s.get("codec_type") == "subtitle"]
+                if s.get("codec_type") == "subtitle" and s.get("codec_name") in TEXT_SUBTITLE_CODECS]
 
     def _merge_subtitle_stream(self, stream_index, language):
         # Private file; one extraction/parse per stream, not per segment.
@@ -137,60 +138,43 @@ class SubtitleProcessor:
             os.unlink(path)
 
     def _extract_segment_subtitle(self, output_file, stream_index):
-        process = None
         try:
             self._check_cancelled()
-            with tempfile.TemporaryFile() as error_log:
-                process = subprocess.Popen(
-                    [get_ffmpeg_executable(), "-nostdin", "-v", "error", "-y", "-i", self.input_file,
-                     "-map", f"0:{int(stream_index)}", "-c:s", "srt", output_file],
-                    stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                    stderr=error_log, start_new_session=True,
-                )
-                deadline = time.monotonic() + 60
-                while process.poll() is None:
-                    self._check_cancelled()
-                    if time.monotonic() > deadline:
-                        raise TimeoutError("Subtitle extraction timed out")
-                    time.sleep(0.05)
-                if process.returncode:
-                    error_log.seek(max(0, error_log.tell() - 2000))
-                    logger.error("Subtitle extraction failed: %s", error_log.read().decode("utf-8", "replace"))
-                return process.returncode == 0 and os.path.isfile(output_file)
+            process = run_cancellable(
+                [get_ffmpeg_executable(), "-nostdin", "-v", "error", "-y", "-i", self.input_file,
+                 "-map", f"0:{int(stream_index)}", "-c:s", "srt", output_file],
+                self.cancel_event, timeout=60, task="extracting subtitles")
+            if process.returncode:
+                logger.error("Subtitle extraction failed: %s", process.stderr[-2000:])
+            return process.returncode == 0 and os.path.isfile(output_file)
         except InterruptedError:
             raise
         except (subprocess.SubprocessError, OSError, ValueError):
             logger.exception("Subtitle extraction failed")
             return False
-        finally:
-            if process is not None and process.poll() is None:
-                terminate_process_group(process)
 
-    def _filter_subtitle_range(self, subtitle_file, start_time, end_time, time_offset):
-        return _serialize(_clip(_read_cues(subtitle_file), _milliseconds(start_time),
-                                _milliseconds(end_time), _milliseconds(time_offset)))
-
-    def _timecode_to_seconds(self, timecode):
-        return _parse_timecode(timecode) / 1000
-
-    def _seconds_to_timecode(self, seconds):
-        return _format_timecode(_milliseconds(seconds))
-
-    def _save_merged_subtitles(self, content, name):
+    def _save_merged_subtitles(self, content, language, count, forced):
         self._check_cancelled()
         folder = self.temp_dir if self.subtitle_mode == "embedded" else self.output_folder
         basename = "merged" if self.subtitle_mode == "embedded" else os.path.splitext(self.output_basename)[0]
-        destination = os.path.join(folder, f"{basename}.{name}.srt")
         fd, staged = tempfile.mkstemp(prefix=".bvc-subtitle-", suffix=".srt", dir=folder)
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as file:
                 file.write(content)
                 file.flush()
                 os.fsync(file.fileno())
-            # A finished file takes the name in one rename, so an interrupted
-            # run cannot leave a half-written sidecar where a good one was.
-            os.replace(staged, destination)
-            return destination
+            # An existing sidecar may hold manual corrections, and the video
+            # is already published: take the next number ("movie.eng2.srt")
+            # rather than replace it or fail the finished job.
+            for number in range(count, count + 10000):
+                name = f"{language}{number if number > 1 else ''}{'.forced' if forced else ''}"
+                destination = os.path.join(folder, f"{basename}.{name}.srt")
+                try:
+                    publish_output(staged, destination)
+                    return destination
+                except FileExistsError:
+                    continue
+            raise FileExistsError(f"No unused subtitle name next to {basename}")
         finally:
             if os.path.lexists(staged):
                 os.unlink(staged)

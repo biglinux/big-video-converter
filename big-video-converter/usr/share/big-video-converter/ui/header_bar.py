@@ -1,245 +1,202 @@
+"""Actions and queue status for the queue and editor views."""
+
+import gettext
+
 import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-# Setup translation
-import gettext
-
-from gi.repository import Adw, Gio, Gtk
+from gi.repository import Adw, Gio, GObject, Gtk
 
 _ = gettext.gettext
+ngettext = gettext.ngettext
+
+# Actions that change the queue or its settings; shortcuts reach them from
+# the progress view too, so they follow the buttons.
+QUEUE_ACTIONS = ("add_files", "add_folder", "add_network_file", "clear_queue",
+                 "start_conversion", "restore_settings")
 
 
 class HeaderBar(Gtk.Box):
-    """
-    Custom header bar with action buttons for file management and conversion.
-    """
+    """Header with the queue actions centered, as the BigLinux apps do."""
 
     def __init__(self, app, window_buttons_left=False):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
         self.app = app
         self.window_buttons_left = window_buttons_left
-
-        # Garantir que o Box ocupe toda a largura
         self.set_hexpand(True)
 
-        # Create the header bar
         self.header_bar = Adw.HeaderBar()
-        # Garantir que o HeaderBar ocupe toda a largura
         self.header_bar.set_hexpand(True)
-        # Configure decoration layout based on window button position
-        if window_buttons_left:
-            self.header_bar.set_decoration_layout("")
-        else:
-            self.header_bar.set_decoration_layout("menu:minimize,maximize,close")
+        self.header_bar.set_decoration_layout(
+            "" if window_buttons_left else "menu:minimize,maximize,close"
+        )
         self.append(self.header_bar)
 
-        # Add Back button at the start (hidden by default)
-        self.back_button = Gtk.Button()
-        # Create box for icon + label
-        back_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        back_icon = Gtk.Image.new_from_icon_name('go-previous-symbolic')
-        back_label = Gtk.Label(label=_("Back"))
-        back_box.append(back_icon)
-        back_box.append(back_label)
-        self.back_button.set_child(back_box)
+        # Only the editor, or a window too narrow for both panes, lets the
+        # sidebar go; a wide queue always shows its settings.
+        self.view_name = "queue"
+        self.sidebar_button = Gtk.ToggleButton(icon_name="sidebar-show-symbolic")
+        self.app.split_view.bind_property(
+            "show-sidebar", self.sidebar_button, "active",
+            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
+        )
+        self.app.split_view.connect("notify::collapsed", self._sync_sidebar_toggle)
+        self.header_bar.pack_start(self.sidebar_button)
+
+        # Labels ellipsize rather than push the header past a narrow window.
+        self.back_button = Gtk.Button(child=Adw.ButtonContent(
+            icon_name="go-previous-symbolic", label=_("Back"), can_shrink=True))
         self.back_button.connect("clicked", self._on_back_clicked)
-        self.back_button.set_visible(False)  # Hidden by default
+        self.back_button.set_visible(False)
         self.header_bar.pack_start(self.back_button)
 
-        # Create left controls box for queue info
         left_controls = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         left_controls.set_margin_start(14)
-        left_controls.set_halign(Gtk.Align.START)
-
-        # Clear queue icon button (left side)
-        self.clear_queue_button = Gtk.Button()
-        self.clear_queue_button.set_icon_name('trash-symbolic')
-        self.app.tooltip_helper.add_tooltip(
-            self.clear_queue_button, "clear_queue_button"
-        )
+        self.clear_queue_button = Gtk.Button(icon_name="trash-symbolic")
+        self.clear_queue_button.set_tooltip_text(_("Clear queue"))
         self.clear_queue_button.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Clear queue")],
+            [Gtk.AccessibleProperty.LABEL], [_("Clear queue")]
         )
         self.clear_queue_button.add_css_class("circular")
         self.clear_queue_button.add_css_class("destructive-action")
         self.clear_queue_button.connect("clicked", self._on_clear_queue_clicked)
-        self.clear_queue_button.set_visible(False)  # Initially hidden
+        self.clear_queue_button.set_visible(False)
         left_controls.append(self.clear_queue_button)
-
-        # Queue size label (left side)
-        self.queue_size_label = Gtk.Label(label=_("0 files"))
+        self.queue_size_label = Gtk.Label()
         self.queue_size_label.add_css_class("caption")
         self.queue_size_label.add_css_class("dim-label")
-        self.queue_size_label.set_visible(False)
         self.queue_size_label.set_margin_start(4)
         self.queue_size_label.set_margin_end(8)
-        self.queue_size_label.set_valign(Gtk.Align.CENTER)
+        self.queue_size_label.set_visible(False)
         left_controls.append(self.queue_size_label)
-
-        # Pack left controls at the start of the headerbar
         self.header_bar.pack_start(left_controls)
 
-        # Create action buttons container for title area
-        self.action_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.action_box.set_halign(Gtk.Align.CENTER)
-        self.action_box.set_spacing(6)
+        action_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        action_box.set_halign(Gtk.Align.CENTER)
 
-        # Add Files button (SplitButton for Add Files/Add Folder)
-        self.add_button = Adw.SplitButton(label=_("Add Files"))
+        # Neutral: "Convert All" is the one primary action, and an empty
+        # queue offers adding files as the primary action of its own page.
+        self.add_button = Adw.SplitButton(label=_("Add Files"), can_shrink=True)
         self.add_button.add_css_class("suggested-action")
         self.add_button.connect("clicked", self._on_add_files_clicked)
+        add_menu = Gio.Menu()
+        for label, action, icon in (
+            (_("Add Folder"), "app.add_folder", "folder-symbolic"),
+            (_("Add Network File"), "app.add_network_file", "network-server-symbolic"),
+        ):
+            item = Gio.MenuItem.new(label, action)
+            item.set_icon(Gio.ThemedIcon.new(icon))
+            add_menu.append_item(item)
+        self.add_button.set_menu_model(add_menu)
+        action_box.append(self.add_button)
 
-        # Create menu model for the dropdown
-        menu = Gio.Menu()
-        menu_item = Gio.MenuItem.new(_("Add Folder"), "app.add_folder")
-        icon = Gio.ThemedIcon.new('folder-symbolic')
-        menu_item.set_icon(icon)
-        menu.append_item(menu_item)
-        menu_item_net = Gio.MenuItem.new(_("Add Network File"), "app.add_network_file")
-        icon_net = Gio.ThemedIcon.new("network-server-symbolic")
-        menu_item_net.set_icon(icon_net)
-        menu.append_item(menu_item_net)
-        self.add_button.set_menu_model(menu)
-
-        self.action_box.append(self.add_button)
-
-        # Convert All button
-        self.convert_button = Gtk.Button(label=_("Convert All"))
+        self.convert_button = Gtk.Button(label=_("Convert All"), can_shrink=True)
         self.convert_button.add_css_class("suggested-action")
         self.convert_button.set_margin_start(12)
         self.convert_button.connect("clicked", self._on_convert_all_clicked)
-        self.convert_button.set_visible(
-            False
-        )  # Hidden by default, shown when files exist
-        self.action_box.append(self.convert_button)
+        self.convert_button.set_visible(False)
+        action_box.append(self.convert_button)
 
-        # Convert This File button (for editor view)
-        self.convert_current_button = Gtk.Button(label=_("Convert This File"))
+        self.convert_current_button = Gtk.Button(label=_("Convert This File"), can_shrink=True)
         self.convert_current_button.add_css_class("suggested-action")
-        self.convert_current_button.connect("clicked", self._on_convert_current_clicked)
-        self.convert_current_button.set_visible(False)  # Hidden by default
-        self.action_box.append(self.convert_current_button)
-
-        # Set action box as title widget
-        self.header_bar.set_title_widget(self.action_box)
-
-        # Add menu button (three dots) at the end
-        self.menu_button = Gtk.MenuButton()
-        self.menu_button.set_icon_name('open-menu-symbolic')
-        self.menu_button.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [_("Main menu")],
+        self.convert_current_button.connect(
+            "clicked", self._on_convert_current_clicked
         )
-        self.app.tooltip_helper.add_tooltip(self.menu_button, "menu_button")
+        self.convert_current_button.set_visible(False)
+        action_box.append(self.convert_current_button)
 
-        # Create menu model
-        menu = Gio.Menu.new()
+        self.header_bar.set_title_widget(action_box)
+
+        self.menu_button = Gtk.MenuButton(icon_name="open-menu-symbolic")
+        self.menu_button.set_tooltip_text(_("Main menu"))
+        self.menu_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Main menu")]
+        )
+        menu = Gio.Menu()
         menu.append(_("Welcome Screen"), "app.welcome")
         menu.append(_("Restore Settings"), "app.restore_settings")
         menu.append(_("About"), "app.about")
         menu.append(_("Quit"), "app.quit")
-
         self.menu_button.set_menu_model(menu)
 
-        # Add app icon to right headerbar if window buttons are on left
-        if self.window_buttons_left:
-            icon_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-            icon_box.set_halign(Gtk.Align.END)
+        if window_buttons_left:
+            icon_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
             icon_box.set_valign(Gtk.Align.CENTER)
             icon_box.append(self.menu_button)
             app_icon = Gtk.Image.new_from_icon_name("big-video-converter")
             app_icon.set_pixel_size(20)
-            app_icon.set_halign(Gtk.Align.END)
-            app_icon.set_valign(Gtk.Align.CENTER)
             app_icon.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
             icon_box.append(app_icon)
             self.header_bar.pack_end(icon_box)
         else:
             self.header_bar.pack_end(self.menu_button)
+        self._sync_sidebar_toggle()
 
-    def _on_add_files_clicked(self, button):
-        """Handle Add Files button click"""
-        if hasattr(self.app, "select_files_for_queue"):
-            self.app.select_files_for_queue()
+    def _on_add_files_clicked(self, _button):
+        self.app.select_files_for_queue()
 
-    def _on_back_clicked(self, button):
-        """Handle Back button click"""
-        if hasattr(self.app, "show_queue_view"):
-            self.app.show_queue_view()
+    def _on_back_clicked(self, _button):
+        self.app.show_queue_view()
 
-    def _on_clear_queue_clicked(self, button):
-        """Handle Clear Queue button click"""
-        if hasattr(self.app, "clear_queue"):
-            self.app.clear_queue()
+    def _on_clear_queue_clicked(self, _button):
+        self.app.clear_queue()
 
     def _on_convert_all_clicked(self, button):
-        """Handle Convert All button click"""
-        # Immediately disable button to prevent double-clicks
+        # Disabled at once so a double click cannot start the queue twice.
         button.set_sensitive(False)
-        if hasattr(self.app, "start_queue_processing"):
-            self.app.start_queue_processing()
+        self.app.start_queue_processing()
 
     def _on_convert_current_clicked(self, button):
-        """Handle Convert This File button click"""
-        # Immediately disable button to prevent double-clicks
         button.set_sensitive(False)
-        if hasattr(self.app, "convert_current_file"):
-            self.app.convert_current_file()
+        self.app.convert_current_file()
+
+    def _can_start_conversion(self) -> bool:
+        return not any(getattr(self.app, name, False) for name in (
+            "currently_converting", "active_conversions", "conversions_running",
+            "_pending_imports", "_quitting",
+        ))
 
     def set_buttons_sensitive(self, sensitive: bool) -> None:
-        """Enable or disable action buttons"""
+        sensitive = sensitive and self._can_start_conversion()
         self.add_button.set_sensitive(sensitive)
         self.clear_queue_button.set_sensitive(sensitive)
         self.convert_button.set_sensitive(sensitive)
+        self.convert_current_button.set_sensitive(sensitive)
+        for name in QUEUE_ACTIONS:
+            self.app.lookup_action(name).set_enabled(sensitive)
 
     def update_queue_size(self, count: int) -> None:
-        """Update queue size label and show/hide clear button based on file count"""
-        # Update label text
-        if count == 1:
-            text = _("1 file")
-        else:
-            text = _("{} files").format(count)
-        self.queue_size_label.set_text(text)
+        queue = self.add_button.get_visible()
+        # Count and clear only matter once there is more than one file.
+        self.queue_size_label.set_text(
+            ngettext("{count} file", "{count} files", count).format(count=count))
+        self.clear_queue_button.set_visible(queue and count > 1)
+        self.queue_size_label.set_visible(queue and count > 1)
+        self.convert_button.set_visible(queue and count > 0)
+        self.convert_button.set_sensitive(count > 0 and self._can_start_conversion())
 
-        # Show clear button and label only when there are 2+ files
-        has_multiple_files = count >= 2
-        self.clear_queue_button.set_visible(has_multiple_files)
-        self.queue_size_label.set_visible(has_multiple_files)
+    def _sync_sidebar_toggle(self, *_args) -> None:
+        queue = self.view_name == "queue"
+        available = not queue or self.app.split_view.get_collapsed()
+        self.sidebar_button.set_visible(available)
+        self.app.lookup_action("toggle_sidebar").set_enabled(available)
+        # Same msgids as the editor's own toggle (ui/video_edit_ui.py).
+        if queue:
+            label = _("Show conversion settings")
+            tooltip = _("Show conversion settings ({shortcut})").format(shortcut="F9")
+        else:
+            label = _("Show editing tools")
+            tooltip = _("Show editing tools ({shortcut})").format(shortcut="F9")
+        self.sidebar_button.set_tooltip_text(tooltip)
+        self.sidebar_button.update_property([Gtk.AccessibleProperty.LABEL], [label])
 
     def set_view(self, view_name) -> None:
-        """Set the header bar context based on current view
-        Args:
-            view_name: 'queue' or 'editor'
-        """
-        if view_name == "queue":
-            # Show file management buttons
-            self.add_button.set_visible(True)
-            self.convert_current_button.set_visible(False)
-            # Hide back button
-            self.back_button.set_visible(False)
-            # Restore button visibility based on queue size
-            if hasattr(self, 'app') and hasattr(self.app, 'conversion_queue'):
-                queue_count = len(self.app.conversion_queue)
-                has_multiple_files = queue_count >= 2
-                has_files = queue_count > 0
-                self.clear_queue_button.set_visible(has_multiple_files)
-                self.queue_size_label.set_visible(has_multiple_files)
-                self.convert_button.set_visible(has_files)
-                # Re-enable convert button when returning to queue view
-                self.convert_button.set_sensitive(True)
-            else:
-                # Fallback if queue not accessible
-                self.convert_button.set_visible(False)
-        elif view_name == "editor":
-            # Hide file management buttons
-            self.add_button.set_visible(False)
-            self.clear_queue_button.set_visible(False)
-            self.queue_size_label.set_visible(False)
-            self.convert_button.set_visible(False)
-            # Show editor buttons
-            self.convert_current_button.set_visible(True)
-            self.back_button.set_visible(True)
-            # Re-enable convert current button when entering editor view
-            self.convert_current_button.set_sensitive(True)
+        queue = view_name == "queue"
+        self.view_name = view_name
+        self._sync_sidebar_toggle()
+        self.back_button.set_visible(not queue)
+        self.add_button.set_visible(queue)
+        self.convert_current_button.set_visible(not queue)
+        self.convert_current_button.set_sensitive(self._can_start_conversion())
+        self.update_queue_size(len(getattr(self.app, "conversion_queue", ())))

@@ -1,0 +1,28 @@
+# YouTube upload in 1440p. Uploads above 1080p get YouTube's VP9/AV1 re-encode,
+# so 1440p looks sharper than 1080p even on a 1080p screen. H.265, like the 4K
+# preset: above 1920 px this tool never writes H.264 anyway.
+format = 1
+
+[preset]
+name = "YouTube 1440p (H.265)"
+description = "H.265 upload for 2560x1440 footage. Smaller files than H.264 at the same quality, and YouTube keeps a sharper stream than it does for 1080p uploads."
+tags = ["youtube", "upload", "1440p", "2k", "hevc"]
+
+[video]
+codec = "h265"
+quality = "veryhigh"
+speed = "slow"
+resolution = "2560x1440"
+
+[audio]
+mode = "reencode"
+codec = "aac"
+bitrate = "384k"
+channels = 2
+sample_rate = 48000
+
+[container]
+format = "mp4"
+
+[ffmpeg]
+output_options = "-g 30 -bf 2"

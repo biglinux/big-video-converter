@@ -3,9 +3,15 @@ import subprocess
 import threading
 
 import pytest
-
 from utils import media_validation as mv
-from utils.subtitle_processor import SubtitleProcessor, _clip, _read_cues, _serialize, _milliseconds, _format_timecode
+from utils.subtitle_processor import (
+    SubtitleProcessor,
+    _clip,
+    _format_timecode,
+    _milliseconds,
+    _read_cues,
+    _serialize,
+)
 
 
 @pytest.mark.parametrize('start,end,expected', [
@@ -62,7 +68,7 @@ def test_container_bound_subtitle_expectation(destination, expected):
 def test_output_checks_nonempty_not_sufficient(tmp_path):
     partial = tmp_path/'partial.mkv'
     partial.write_bytes(b'not media but nonempty')
-    with pytest.raises(Exception): mv.validate_output(str(partial))
+    with pytest.raises((ValueError, subprocess.CalledProcessError)): mv.validate_output(str(partial))
 
 
 def test_valid_output_checks_duration_identity_and_stream_inventory(media, tmp_path):
@@ -186,3 +192,95 @@ def test_extracted_subtitle_uses_same_trim_interval(media,tmp_path,run_cli):
     for path in outputs:
         text=path.read_text()
         assert '00:00:00,000 --> 00:00:01,000' in text and 'Segunda fala' not in text
+
+
+@pytest.mark.parametrize('failed_kind', ['file', 'directory'])
+def test_sync_failure_preserves_original(media, tmp_path, monkeypatch, failed_kind):
+    import os
+    import stat
+
+    source, output = tmp_path / 'source.mp4', tmp_path / 'output.mp4'
+    shutil.copyfile(media['video'], source)
+    shutil.copyfile(source, output)
+    sync = os.fsync
+    synced = []
+
+    def fail_sync(fd):
+        kind = 'directory' if stat.S_ISDIR(os.fstat(fd).st_mode) else 'file'
+        synced.append(kind)
+        if kind == failed_kind:
+            raise OSError('simulated sync failure')
+        sync(fd)
+
+    monkeypatch.setattr(mv.os, 'fsync', fail_sync)
+    with pytest.raises(OSError, match='simulated sync failure'):
+        mv.remove_original(str(source), mv.FileIdentity.capture(str(source)),
+                           [str(output)], threading.Event())
+    assert source.read_bytes() == media['video'].read_bytes()
+    assert failed_kind in synced
+
+
+def test_cancel_during_packet_count_reaps_probe(tmp_path, monkeypatch):
+    import sys
+    import time
+
+    cancel = threading.Event()
+    real_popen = subprocess.Popen
+    children = []
+
+    def slow_probe(*args, **kwargs):
+        process = real_popen([sys.executable, '-c', 'import time; time.sleep(30)'],
+                             **kwargs)
+        children.append(process)
+        cancel.set()
+        return process
+
+    monkeypatch.setattr(mv.subprocess, 'Popen', slow_probe)
+    started = time.monotonic()
+    try:
+        with pytest.raises(InterruptedError):
+            mv.verify_integrity(str(tmp_path / 'output.mp4'), cancel, timeout=2)
+        assert time.monotonic() - started < 5
+        assert children and all(child.poll() is not None for child in children)
+    finally:
+        for child in children:
+            if child.poll() is None:
+                child.kill()
+            child.wait()
+
+
+def test_existing_segment_sidecar_is_kept_and_the_track_numbered(media, tmp_path):
+    existing = tmp_path / 'joined.por.srt'
+    existing.write_text('Manually corrected subtitles', encoding='utf-8')
+    processor = SubtitleProcessor(str(media['multi']), str(tmp_path), 'joined.mkv',
+        [{'start': 0, 'end': 2}], str(tmp_path), 'extract')
+    processor.process()
+    assert existing.read_text() == 'Manually corrected subtitles'
+    assert sorted(path.rpartition("/")[2] for path in processor.created_files) == [
+        'joined.por.forced.srt', 'joined.por2.srt']
+    assert not list(tmp_path.glob('.bvc-subtitle-*'))
+
+
+def test_cancel_ends_a_helper_at_once():
+    import sys
+    import time
+
+    cancel = threading.Event()
+    threading.Timer(0.2, cancel.set).start()
+    started = time.monotonic()
+    with pytest.raises(InterruptedError):
+        mv.run_cancellable([sys.executable, '-c', 'import time; time.sleep(30)'], cancel,
+                           timeout=60, task='testing')
+    assert time.monotonic() - started < 3
+
+
+def test_left_out_picture_subtitles_block_the_batch_deletion(tmp_path):
+    from test_cli import pgs_source
+    from utils.segment_batch import _left_out_subtitles
+    source = str(pgs_source(tmp_path))
+    embedded, extract, none = ({'subtitle_extract': mode} for mode in ('embedded', 'extract', 'none'))
+    assert _left_out_subtitles(source, embedded, embedded, '.mp4') == 1
+    assert _left_out_subtitles(source, embedded, embedded, '.mkv') == 0
+    assert _left_out_subtitles(source, extract, extract, '.mkv') == 1
+    assert _left_out_subtitles(source, embedded, none, '.mkv') == 1
+    assert _left_out_subtitles(source, none, none, '.mp4') == 0

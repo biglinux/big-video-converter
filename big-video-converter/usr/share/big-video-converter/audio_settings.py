@@ -1,46 +1,13 @@
 """Audio settings mixin — noise reduction, gate, compressor, EQ, normalize handlers."""
 
-import gettext
-
-from gi.repository import GLib
-
-_ = gettext.gettext
-
 
 class AudioSettingsMixin:
     """Mixin providing audio processing toggle/settings handlers."""
 
     def _refresh_nr_preview(self) -> None:
-        """Refresh the mpv audio filter preview if NR is active."""
-        if hasattr(self, "video_edit_page") and self.video_edit_page:
-            if hasattr(self.video_edit_page, "_apply_audio_filters"):
-                self.video_edit_page._apply_audio_filters()
-
-    def build_nr_ladspa_filter(self) -> str:
-        """Build the LADSPA noise reduction filter string from current settings.
-
-        Returns an empty string if NR is disabled or the plugin is missing.
-        """
-        if not self.noise_reduction_switch.get_active():
-            return ""
-        import os
-        if not os.path.exists("/usr/lib/ladspa/libgtcrn_ladspa.so"):
-            return ""
-
-        sm = self.settings_manager
-        strength = sm.load_setting("noise-reduction-strength", 1.0)
-        model = sm.load_setting("noise-model", 0)
-        speech = sm.load_setting("noise-speech-strength", 1.0)
-        lookahead = sm.load_setting("noise-lookahead", 50)
-        blend = 1 if sm.load_setting("noise-model-blend", False) else 0
-        voice_recovery = sm.load_setting("noise-voice-recovery", 0.75)
-
-        return (
-            f"ladspa=file=libgtcrn_ladspa:plugin=gtcrn_mono:"
-            f"controls=c0=1|c1={strength}|c2={model}|"
-            f"c3={speech}|c4={lookahead}|c5={blend}|"
-            f"c6={voice_recovery}"
-        )
+        """Refresh the editor's audio filter preview once the editor exists."""
+        if getattr(self, "video_edit_page", None):
+            self.video_edit_page._apply_audio_filters()
 
     def _on_noise_reduction_toggled(self, switch, state):
         """Handle noise reduction toggle.

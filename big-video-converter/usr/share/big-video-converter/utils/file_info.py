@@ -10,16 +10,153 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 # For translations
 import gettext
+import logging
 
-from gi.repository import Adw, Gdk, GLib, Gtk
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 
 from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
-
-import logging
+from utils.signal_connections import SignalConnections
 
 logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
+
+
+# Probe answers the queue needs before launching a job, keyed by the file's
+# identity (path, size, mtime) so an edited file is never answered from stale
+# data. The queue warms these entries on a worker thread; the launch, which
+# has to run on the GTK main loop, then finds them ready instead of blocking
+# the interface on ffprobe for up to ten seconds per call.
+_PROBE_CACHE: dict = {}
+_PROBE_CACHE_LOCK = threading.Lock()
+_PROBE_CACHE_LIMIT = 64
+
+
+def _file_identity(file_path: str):
+    try:
+        st = os.stat(file_path)
+    except OSError:
+        return None
+    return (os.path.abspath(file_path), st.st_size, st.st_mtime_ns)
+
+
+class _ProbeFailed(Exception):
+    """Raised by a cached probe that could not answer: the caller gets the
+    probe's fallback `answer`, and the next call probes again."""
+
+    def __init__(self, answer):
+        super().__init__(answer)
+        self.answer = answer
+
+
+def _cached_probe(func):
+    """Memoize a probe by file identity; failures are not cached."""
+
+    def wrapper(file_path: str, *args, **kwargs):
+        identity = _file_identity(file_path)
+        key = (func.__name__, identity)
+        if identity is not None:
+            with _PROBE_CACHE_LOCK:
+                if key in _PROBE_CACHE:
+                    return _PROBE_CACHE[key]
+        try:
+            value = func(file_path, *args, **kwargs)
+        except _ProbeFailed as failure:
+            return failure.answer
+        if identity is not None:
+            with _PROBE_CACHE_LOCK:
+                if len(_PROBE_CACHE) >= _PROBE_CACHE_LIMIT:
+                    _PROBE_CACHE.pop(next(iter(_PROBE_CACHE)))
+                _PROBE_CACHE[key] = value
+        return value
+
+    wrapper.__name__ = func.__name__
+    wrapper.__doc__ = func.__doc__
+    wrapper.__wrapped__ = func
+    return wrapper
+
+
+def clear_probe_cache() -> None:
+    with _PROBE_CACHE_LOCK:
+        _PROBE_CACHE.clear()
+
+
+def warm_probe_cache(file_path: str) -> None:
+    """Run every launch-time probe once, off the main thread."""
+    has_audio_streams(file_path)
+    get_video_dimensions(file_path)
+    check_mp4_compatibility(file_path)
+
+
+def display_size(stream: dict):
+    """(width, height) of a probed video stream as FFmpeg's filters see it.
+
+    FFmpeg rotates phone videos by their display matrix before any filter,
+    so a crop computed from the stored size fails on a portrait recording.
+    """
+    width, height = int(stream.get("width", 0)), int(stream.get("height", 0))
+    rotation = next((side.get("rotation") for side in stream.get("side_data_list", [])
+                     if "rotation" in side), 0)
+    return (height, width) if round(float(rotation) / 90) % 2 else (width, height)
+
+
+@_cached_probe
+def get_video_dimensions(file_path: str):
+    """Displayed (width, height) of the first video stream, or (None, None)."""
+    command = [
+        get_ffprobe_executable(), "-v", "error", "-select_streams", "v:0",
+        "-show_entries", "stream=width,height:stream_side_data=rotation", "-of", "json", file_path,
+    ]
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10, check=False)
+    except (subprocess.SubprocessError, OSError) as error:
+        logger.error(f"Error getting video dimensions: {error}")
+        raise _ProbeFailed((None, None)) from error
+    if result.returncode != 0:
+        logger.error(f"ffprobe error: {result.stderr}")
+        raise _ProbeFailed((None, None))
+    try:
+        streams = json.loads(result.stdout).get("streams") or []
+        if streams:
+            return display_size(streams[0])
+    except (ValueError, TypeError) as error:
+        logger.error(f"Unreadable ffprobe output: {error}")
+        raise _ProbeFailed((None, None)) from error
+    logger.debug("No video streams found in file")
+    return None, None
+
+
+@_cached_probe
+def get_queue_summary(file_path: str):
+    """Duration, displayed size and codec of the first video stream.
+
+    One FFprobe call for the queue row; callers run it off the GTK thread.
+    Values the file does not report are None.
+    """
+    command = [
+        get_ffprobe_executable(), "-v", "error", "-select_streams", "v:0",
+        "-show_entries", ("format=duration:stream=codec_name,width,height,duration"
+                          ":stream_side_data=rotation"), "-of", "json", file_path,
+    ]
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10, check=False)
+        data = json.loads(result.stdout or "{}")
+    except (subprocess.SubprocessError, OSError, ValueError) as error:
+        raise _ProbeFailed(None) from error
+    if result.returncode != 0 or not isinstance(data, dict):
+        raise _ProbeFailed(None)
+    streams = data.get("streams") or [{}]
+    stream = streams[0] if isinstance(streams[0], dict) else {}
+    width, height = display_size(stream) if stream.get("width") else (None, None)
+    duration = None
+    for value in (stream.get("duration"), (data.get("format") or {}).get("duration")):
+        try:
+            duration = float(value)
+            break
+        except (TypeError, ValueError):
+            continue
+    return {"duration": duration, "width": width, "height": height,
+            "codec": stream.get("codec_name")}
 
 
 class VideoInfoDialog:
@@ -34,7 +171,7 @@ class VideoInfoDialog:
         self.dialog.set_default_size(780, 600)
         self.dialog.set_modal(True)
         self.dialog.set_transient_for(parent_window)
-        self.dialog.set_hide_on_close(True)
+        self._connections = SignalConnections(self.dialog, "close-request")
 
         # Main content box
         content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -119,6 +256,8 @@ class VideoInfoDialog:
 
     def _load_file_info(self):
         """Load file information using ffprobe"""
+        if not self.dialog.get_visible():
+            return False
         try:
             # Get file info in background thread to avoid blocking UI
             info_thread = threading.Thread(target=self._get_file_info_thread)
@@ -134,11 +273,14 @@ class VideoInfoDialog:
         try:
             info = get_video_file_info(self.file_path)
             GLib.idle_add(self._update_ui_with_info, info)
-        except (GLib.Error, OSError) as e:
+        except Exception as e:  # anything else would leave the spinner forever
+            logger.exception("Error reading file information")
             GLib.idle_add(self._show_error, str(e))
 
     def _update_ui_with_info(self, info):
         """Update the UI with the file information"""
+        if not self.dialog.get_visible():
+            return
         # Remove loading indicators
         self.info_box.remove(self.loading_box)
 
@@ -195,8 +337,8 @@ class VideoInfoDialog:
         open_button = Gtk.Button.new_from_icon_name('folder-open-symbolic')
         open_button.add_css_class("flat")
         open_button.set_tooltip_text(_("Open containing folder"))
-        open_button.connect(
-            "clicked", lambda btn: self._open_containing_folder(file_dir)
+        self._connections.connect(
+            open_button, "clicked", lambda btn: self._open_containing_folder(file_dir)
         )
         file_path_row.add_suffix(open_button)
         group.add(file_path_row)
@@ -264,14 +406,16 @@ class VideoInfoDialog:
         btn = Gtk.Button.new_from_icon_name("edit-copy-symbolic")
         btn.add_css_class("flat")
         btn.set_tooltip_text(tooltip)
-        btn.connect("clicked", lambda b, v=value: self._copy_to_clipboard(v))
+        self._connections.connect(btn, "clicked", lambda b, v=value: self._copy_to_clipboard(v))
         return btn
 
     def _open_containing_folder(self, folder_path):
         """Open the containing folder in the file manager"""
         try:
-            Gtk.show_uri(self.dialog, f"file://{folder_path}", Gdk.CURRENT_TIME)
-        except Exception as e:
+            # A literal file:// URI misreads "#", "%" and "?" in the path.
+            uri = Gio.File.new_for_path(folder_path).get_uri()
+            Gtk.show_uri(self.dialog, uri, Gdk.CURRENT_TIME)
+        except (TypeError, ValueError) as e:
             logger.error(f"Error opening folder: {e}")
             # Fallback method using subprocess
             try:
@@ -575,6 +719,8 @@ class VideoInfoDialog:
 
     def _show_error(self, message):
         """Show error message in the dialog"""
+        if not self.dialog.get_visible():
+            return
         # Remove loading indicators if they exist
         if hasattr(self, "loading_box") and self.loading_box in self.info_box:
             self.info_box.remove(self.loading_box)
@@ -604,7 +750,7 @@ class VideoInfoDialog:
         retry_button.add_css_class("suggested-action")
         retry_button.set_halign(Gtk.Align.CENTER)
         retry_button.set_margin_top(12)
-        retry_button.connect("clicked", self._on_retry_clicked)
+        self._connections.connect(retry_button, "clicked", self._on_retry_clicked)
         error_box.append(retry_button)
 
         self.info_box.append(error_box)
@@ -673,8 +819,11 @@ def _probe_with_ffmpeg(file_path: str):
                 "-",
             ],
             capture_output=True,
-            text=True,
+            # Tags are written in whatever encoding the muxer used.
+            encoding="utf-8",
+            errors="replace",
             timeout=30,
+            check=False,
         )
     except (subprocess.SubprocessError, OSError) as e:
         logger.error(f"ffmpeg fallback probe failed: {e}")
@@ -718,15 +867,27 @@ def _probe_with_ffmpeg(file_path: str):
                 rate = re.match(r"^(\d+) Hz$", field)
                 if rate:
                     stream["sample_rate"] = rate.group(1)
+                layout = field.split("(")[0].strip()
                 channels = {
                     "mono": 1,
                     "stereo": 2,
+                    "2.1": 3,
+                    "3.0": 3,
                     "quad": 4,
+                    "4.0": 4,
+                    "3.1": 4,
                     "5.0": 5,
                     "5.1": 6,
+                    "6.0": 6,
                     "6.1": 7,
+                    "7.0": 7,
                     "7.1": 8,
-                }.get(field.split("(")[0].strip())
+                }.get(layout)
+                if not channels:
+                    # "3 channels": ffmpeg's form for a layout without a name.
+                    generic = re.match(r"^(\d+) channels?$", layout)
+                    if generic:
+                        channels = int(generic.group(1))
                 if channels:
                     stream["channels"] = channels
 
@@ -744,7 +905,7 @@ def _probe_with_ffmpeg(file_path: str):
             int(hours) * 3600 + int(minutes) * 60 + float(seconds)
         )
 
-    container = re.search(r"^Input #0,\s*([^,]+(?:,[^,]+)*),\s*from", input_block, re.M)
+    container = re.search(r"^Input #0,\s*([^,]+(?:,[^,]+)*),\s*from", input_block, re.MULTILINE)
     if container:
         info["format"]["format_name"] = container.group(1).strip()
         info["format"]["format_long_name"] = container.group(1).strip()
@@ -791,7 +952,9 @@ def get_video_file_info(file_path: str):
         # Don't use check=True: ffprobe exits non-zero when it fails to open a
         # decoder for any stream (e.g. dvd_subtitle tracks on FFmpeg 9) even
         # though it already printed usable JSON for the rest of the file.
-        result = subprocess.run(command, capture_output=True, text=True, timeout=15)
+        # ffprobe copies tag bytes into its JSON as they are, Latin-1 too.
+        result = subprocess.run(command, capture_output=True, encoding="utf-8",
+                                errors="replace", timeout=15, check=False)
 
         # ffprobe may also stop halfway through, leaving truncated JSON behind.
         try:
@@ -810,14 +973,17 @@ def get_video_file_info(file_path: str):
                 return None
 
         # Calculate bitrate if not provided by ffprobe
-        if "format" in info:
-            if "bit_rate" not in info["format"] or info["format"]["bit_rate"] == "N/A":
-                if "duration" in info["format"] and "size" in info["format"]:
-                    duration = float(info["format"]["duration"])
-                    size = float(info["format"]["size"])
-                    if duration > 0:
-                        bitrate = (size * 8) / duration
-                        info["format"]["bit_rate"] = str(int(bitrate))
+        if (
+            "format" in info
+            and ("bit_rate" not in info["format"] or info["format"]["bit_rate"] == "N/A")
+            and "duration" in info["format"]
+            and "size" in info["format"]
+        ):
+            duration = float(info["format"]["duration"])
+            size = float(info["format"]["size"])
+            if duration > 0:
+                bitrate = (size * 8) / duration
+                info["format"]["bit_rate"] = str(int(bitrate))
 
         return info
 
@@ -837,6 +1003,7 @@ def format_file_size(size_bytes):
         return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
 
 
+@_cached_probe
 def has_audio_streams(file_path: str):
     """
     Check if a video file has audio streams.
@@ -866,7 +1033,7 @@ def has_audio_streams(file_path: str):
             file_path,
         ]
 
-        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10, check=False)
 
         if result.stdout.strip():
             return True
@@ -886,9 +1053,10 @@ def has_audio_streams(file_path: str):
     except (subprocess.SubprocessError, OSError) as e:
         logger.error(f"Error checking audio streams: {e}")
         # On error, assume there might be audio to avoid accidentally removing it
-        return True
+        raise _ProbeFailed(True) from e
 
 
+@_cached_probe
 def check_mp4_compatibility(file_path: str):
     """
     Check if video/audio codecs are compatible with MP4 container when copying without reencoding.
@@ -911,7 +1079,8 @@ def check_mp4_compatibility(file_path: str):
         # Get file info
         info = get_video_file_info(file_path)
         if not info or "streams" not in info:
-            return True, []  # Can't determine, assume compatible
+            # Can't determine, assume compatible
+            raise _ProbeFailed((True, []))
 
         # MP4 compatible codecs
         mp4_video_codecs = ["h264", "hevc", "mpeg4", "h263", "mjpeg", "vp9", "av1"]
@@ -961,4 +1130,5 @@ def check_mp4_compatibility(file_path: str):
 
     except OSError as e:
         logger.error(f"Error checking MP4 compatibility: {e}")
-        return True, []  # On error, assume compatible to avoid blocking conversion
+        # On error, assume compatible to avoid blocking conversion
+        raise _ProbeFailed((True, [])) from e
