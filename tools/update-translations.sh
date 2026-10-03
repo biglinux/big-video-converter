@@ -27,7 +27,8 @@ sed -i '/^"POT-Creation-Date:/d' "$pot"
 for po in "$locale"/*.po; do
     lang=$(basename "$po" .po)
     if [[ $lang == en ]]; then
-        msgen --no-wrap -o "$po" "$pot"
+        msgmerge --update --no-wrap --backup=none --no-fuzzy-matching \
+            --compendium <(msgen --no-wrap "$pot") "$po" "$pot"
         sed -i -e 's/nplurals=INTEGER; plural=EXPRESSION;/nplurals=2; plural=(n != 1);/' \
             -e 's/Language: \\n/Language: en\\n/' \
             -e 's/FULL NAME <EMAIL@ADDRESS>/BigLinux/' \

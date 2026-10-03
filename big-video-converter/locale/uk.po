@@ -7,20 +7,20 @@ msgid ""
 msgstr ""
 "Project-Id-Version: big-video-converter\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-28 01:08+0000\n"
+"PO-Revision-Date: 2026-10-03 10:36+0000\n"
 "Last-Translator: BigLinux\n"
 "Language-Team: BigLinux\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+"Plural-Forms: nplurals=4; plural=n==1 ? 3 : n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
 "X-Generator: LangForge\n"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 59
 msgid "Auto-detect"
-msgstr "Авто-визначення"
+msgstr "Автовизначення"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 60
@@ -40,54 +40,54 @@ msgstr "QSV (Intel)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 63
 msgid "Vulkan"
-msgstr "Вулкан"
+msgstr "Vulkan"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 64
 msgid "Software (CPU)"
-msgstr "Програмне забезпечення (ЦП)"
+msgstr "Програмне (CPU)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 77
 msgid "Good (recommended)"
-msgstr "Добре (рекомендується)"
+msgstr "Добра (рекомендується)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 73
 msgid "Very High"
-msgstr "Дуже високо"
+msgstr "Дуже висока"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 74
 msgid "High"
-msgstr "Високий"
+msgstr "Висока"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 75
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 109
 msgid "Medium"
-msgstr "Середній"
+msgstr "Середня"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 76
 msgid "Low"
-msgstr "Низький"
+msgstr "Низька"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 77
 msgid "Very Low"
-msgstr "Дуже низький"
+msgstr "Дуже низька"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 78
 msgid "Super Low"
-msgstr "Супер низький"
+msgstr "Надзвичайно низька"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 103
 msgid "Copy — No re-encoding"
-msgstr "Копіювати — Без повторного кодування"
+msgstr "Копіювання — без перекодування"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 104
@@ -117,7 +117,7 @@ msgstr "ProRes — Професійне редагування"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 120
 msgid "Balanced (recommended)"
-msgstr "Збалансований (рекомендується)"
+msgstr "Збалансоване (рекомендується)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 121
@@ -137,7 +137,7 @@ msgstr "Трохи швидше"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 125
 msgid "Slow (smaller file)"
-msgstr "Повільний (менший файл)"
+msgstr "Повільно (менший файл)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 126
@@ -147,12 +147,12 @@ msgstr "Дуже повільно (найменший файл)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 145
 msgid "Extract as separate file"
-msgstr "Витягти як окремий файл"
+msgstr "Видобути в окремий файл"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 145
 msgid "Keep inside the video"
-msgstr "Залишайтеся всередині відео"
+msgstr "Зберегти всередині відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 126
@@ -250,27 +250,27 @@ msgstr "SD (854×480)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 155
 msgid "4K UHD Vertical (2160×3840)"
-msgstr "4K UHD Вертикальний (2160×3840)"
+msgstr "Вертикальне 4K UHD (2160×3840)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 156
 msgid "2K QHD Vertical (1440×2560)"
-msgstr "2K QHD Вертикальний (1440×2560)"
+msgstr "Вертикальне 2K QHD (1440×2560)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 157
 msgid "Full HD Vertical (1080×1920)"
-msgstr "Повний HD Вертикальний (1080×1920)"
+msgstr "Вертикальне Full HD (1080×1920)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 158
 msgid "HD Vertical (720×1280)"
-msgstr "HD Вертикальний (720×1280)"
+msgstr "Вертикальне HD (720×1280)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 159
 msgid "SD Vertical (480×854)"
-msgstr "SD Вертикальний (480×854)"
+msgstr "Вертикальне SD (480×854)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 152
@@ -282,7 +282,7 @@ msgid "Custom"
 msgstr "Користувацький"
 
 msgid "24 fps (cinema)"
-msgstr ""
+msgstr "24 кадри/с (кіно)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 217
@@ -294,14 +294,7 @@ msgid ""
 "Software mode is slower but compatible with more formats.\n"
 "\n"
 "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back to Software mode if needed."
-msgstr ""
-"Якщо ваш графічний процесор підтримує відео кодування, конвертація буде значно швидшою.\n"
-"\n"
-"Автоматичне виявлення зазвичай є найкращим вибором, але ви також можете вибрати його вручну.\n"
-"\n"
-"Програмний режим повільніший, але сумісний з більшою кількістю форматів.\n"
-"\n"
-"Якщо графічний процесор не підтримується, система спробує часткову обробку графічного процесора і автоматично перейде на програмний режим, якщо це буде потрібно."
+msgstr "Якщо ваш графічний процесор підтримує кодування відео, перетворення буде значно швидшим.\n\nЗазвичай найкращий вибір — автоматичне визначення, але ви також можете вибрати режим вручну.\n\nПрограмний режим повільніший, але сумісний із більшою кількістю форматів.\n\nЯкщо графічний процесор не підтримується, система спробує часткову обробку на ньому й за потреби автоматично перейде в програмний режим."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 223
@@ -309,10 +302,7 @@ msgid ""
 "Higher quality means a larger file.\n"
 "\n"
 "The default option is a good balance between image quality and file size."
-msgstr ""
-"Вища якість означає більший файл.\n"
-"\n"
-"За замовчуванням обрана опція є хорошим балансом між якістю зображення та розміром файлу."
+msgstr "Вища якість означає більший файл.\n\nТиповий варіант забезпечує добрий баланс між якістю зображення та розміром файла."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 232
@@ -326,16 +316,7 @@ msgid ""
 "AV1: The most modern format. It offers the best compression (creating smaller files), but the conversion can also be slow if the graphics card isn't compatible.\n"
 "\n"
 "ProRes: Professional editing codec (Apple). Preserves maximum quality for video editing workflows. CPU-only, outputs .mov format."
-msgstr ""
-"H.264: Старіший формат, який працює практично на всіх пристроях. Він займає більше місця для зберігання, але є найшвидшим для конвертації.\n"
-"\n"
-"H.265: Новіша версія H.264. Не працює на старих пристроях і стискає файли більш ефективно.\n"
-"\n"
-"VP9: Широко використовується YouTube. Якщо у вашому комп'ютері немає сумісної графічної карти, конвертація може бути дуже повільною.\n"
-"\n"
-"AV1: Найсучасніший формат. Пропонує найкраще стиснення (створюючи менші файли), але конвертація також може бути повільною, якщо графічна карта не сумісна.\n"
-"\n"
-"ProRes: Професійний кодек для редагування (Apple). Зберігає максимальну якість для робочих процесів редагування відео. Тільки для ЦП, виводить формат .mov."
+msgstr "H.264: Старіший формат, який працює практично на всіх пристроях. Він займає більше місця для зберігання, але є найшвидшим для перетворення.\n\nH.265: Новіша версія H.264. Не працює на старих пристроях і стискає файли більш ефективно.\n\nVP9: Широко використовується YouTube. Якщо у вашому комп'ютері немає сумісної графічної карти, перетворення може бути дуже повільною.\n\nAV1: Найсучасніший формат. Пропонує найкраще стиснення (створюючи менші файли), але перетворення також може бути повільною, якщо графічна карта не сумісна.\n\nProRes: Професійний кодек для редагування (Apple). Зберігає максимальну якість для робочих процесів редагування відео. Тільки для ЦП, виводить формат .mov."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 230
@@ -343,10 +324,7 @@ msgid ""
 "Copy is usually best, fast and preserves full quality.\n"
 "\n"
 "Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
-msgstr ""
-"Копіювання зазвичай є найкращим, швидким і зберігає повну якість.\n"
-"\n"
-"Перекодування трохи знижує якість, але покращує сумісність і може зменшити розмір файлу."
+msgstr "Зазвичай краще копіювати: це швидко й зберігає повну якість.\n\nПерекодування трохи знижує якість, але поліпшує сумісність і може зменшити розмір файла."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 234
@@ -376,10 +354,7 @@ msgid ""
 "Slower conversion produces smaller files.\n"
 "\n"
 "Faster presets create larger files but convert in less time."
-msgstr ""
-"Повільніша конверсія створює менші файли.\n"
-"\n"
-"Швидші пресети створюють більші файли, але конвертують за менший час."
+msgstr "Повільніше перетворення створює менші файли.\n\nШвидші набори налаштувань створюють більші файли, але перетворюють їх за менший час."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 247
@@ -389,12 +364,7 @@ msgid ""
 "• AAC: Most compatible, good quality\n"
 "• Opus: Excellent quality at small sizes\n"
 "• AC3 (Dolby Digital): Good for home theater"
-msgstr ""
-"Аудіоформат (під час конвертації):\n"
-"\n"
-"• AAC: Найбільш сумісний, хороша якість\n"
-"• Opus: Відмінна якість при малих розмірах\n"
-"• AC3 (Dolby Digital): Добре для домашнього кінотеатру"
+msgstr "Аудіоформат (під час перетворення):\n\n• AAC: Найбільш сумісний, добра якість\n• Opus: Чудова якість за малого розміру\n• AC3 (Dolby Digital): Добрий для домашнього кінотеатру"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 253
@@ -405,35 +375,29 @@ msgid ""
 "• Standard: 4K, Full HD, HD (TVs and monitors)\n"
 "• Vertical: For phones and social media\n"
 "• Custom: Set your own dimensions"
-msgstr ""
-"Розмір виходу:\n"
-"\n"
-"• Оригінал: Залишити ту ж роздільну здатність\n"
-"• Стандарт: 4K, Full HD, HD (телевізори та монітори)\n"
-"• Вертикальний: Для телефонів та соціальних мереж\n"
-"• Користувацький: Встановіть свої власні розміри"
+msgstr "Розмір результату:\n\n• Оригінал: Зберегти початкову роздільну здатність\n• Стандартний: 4K, Full HD, HD (телевізори й монітори)\n• Вертикальний: Для телефонів і соціальних мереж\n• Власний: Задати свої розміри"
 
 msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
 "• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
-msgstr ""
+msgstr "Кількість кадрів за секунду в перетвореному відео:\n\n• Менше кадрів: менший файл. За однакової якості перехід із 30 на 24 кадри/с зменшив розмір на 10–17%, із 30 на 15 кадрів/с — на 28–42%\n• Більше кадрів: проміжні кадри змішуються із сусідніх, тому рух виглядає плавнішим, але швидкий рух залишає слабкий шлейф"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
-msgstr ""
+msgstr "Прибирає зернистість і цятки у відео, знятому за слабкого освітлення. Сильніший вплив також пом'якшує дрібні деталі. Чистіше відео стискається в трохи менший файл."
 
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
-msgstr ""
+msgstr "Робить контури й дрібні деталі чіткішими (адаптивне підвищення різкості AMD з урахуванням контрасту). Різкіше відео створює трохи більший файл."
 
 msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
-msgstr ""
+msgstr "Стабілізує відео, зняте камерою, що тремтить. Спочатку відео аналізується, тому перетворення триває приблизно вдвічі довше; зображення трохи збільшується, щоб приховати рух на краях."
 
 msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
-msgstr ""
+msgstr "Як закодовано кольори цього відео. Залиште опис із файла, якщо лише під час попереднього перегляду зображення не виглядає сірим і тьмяним: у такому разі файл містить HDR без відповідної позначки — зазвичай HDR10 (PQ), а для деяких трансляцій HLG. Під час перетворення відео інтерпретується так само."
 
 msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
-msgstr ""
+msgstr "Застосовує колірний стиль із файла LUT (.cube, .3dl) або шейдера mpv (.hook, .glsl) до всього відео."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 265
@@ -454,16 +418,13 @@ msgid ""
 "• Move right: Brighter\n"
 "• Move left: Darker\n"
 "• Default: 0 (no change)"
-msgstr ""
-"• Move right: Brighter\n"
-"• Move left: Darker\n"
-"• Default: 0 (no change)"
+msgstr "• Праворуч: Світліше\n• Ліворуч: Темніше\n• Типово: 0 (без змін)"
 
 msgid ""
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 0% (no change)"
-msgstr ""
+msgstr "• Праворуч: Насиченіше\n• Ліворуч: Приглушеніше\n• Типово: 0% (без змін)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 270
@@ -471,10 +432,7 @@ msgid ""
 "• Positive: More red/yellow\n"
 "• Negative: More blue/green\n"
 "• Default: 0 (no change)"
-msgstr ""
-"• Позитивний: Більше червоного/жовтого\n"
-"• Негативний: Більше синього/зеленого\n"
-"• За замовчуванням: 0 (без змін)"
+msgstr "• Додатне значення: Більше червоного/жовтого\n• Від'ємне значення: Більше синього/зеленого\n• Типово: 0 (без змін)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 255
@@ -490,12 +448,7 @@ msgid ""
 "\n"
 "You can export selected parts as one file or as multiple clips\n"
 " ideal for creating short videos for social media."
-msgstr ""
-"Виберіть частини відео, які потрібно зберегти.\n"
-"\n"
-"Додайте секції за допомогою кнопки + або безпосередньо у відео, використовуючи кнопку маркерів над відео.\n"
-"\n"
-"Ви можете експортувати вибрані частини як один файл або як кілька кліпів, що ідеально підходить для створення коротких відео для соціальних мереж."
+msgstr "Виберіть частини відео, які потрібно зберегти.\n\nДодавайте сегменти кнопкою + або безпосередньо у відео кнопкою позначок над ним.\n\nВибрані частини можна експортувати як один файл або кілька кліпів\n — ідеально для коротких відео в соціальних мережах."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 282
@@ -503,10 +456,7 @@ msgid ""
 "Run decode on the CPU and encode on the GPU.\n"
 "\n"
 "Usually best left disabled, but can help with certain compatibility issues."
-msgstr ""
-"Запустіть декодування на ЦП та кодування на ГП. \n"
-"\n"
-"Зазвичай краще залишити вимкненим, але може допомогти з певними проблемами сумісності."
+msgstr "Декодувати на CPU й кодувати на GPU.\n\nЗазвичай краще залишити вимкненим, але це може допомогти за деяких проблем сумісності."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 286
@@ -518,14 +468,7 @@ msgid ""
 "• 192k: High quality\n"
 "• 256k+: Professional use\n"
 "• Default: Auto (encoder decides)"
-msgstr ""
-"Якість аудіо:\n"
-"\n"
-"• Вища = краща якість, більший файл\n"
-"• 128k: Добре для більшості контенту\n"
-"• 192k: Висока якість\n"
-"• 256k+: Професійне використання\n"
-"• За замовчуванням: Авто (кодек вирішує)"
+msgstr "Якість аудіо:\n\n• Вища = краща якість, більший файл\n• 128k: Добре для більшості матеріалів\n• 192k: Висока якість\n• 256k+: Професійне використання\n• Типово: Авто (вирішує кодувальник)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 294
@@ -564,7 +507,7 @@ msgstr ""
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 273
 msgid "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
-msgstr "Пропускає всі залишкові процеси та просто експортує вбудовані субтитри у файл SRT."
+msgstr "Пропускає всі інші дії й лише експортує вбудовані субтитри у файл SRT."
 
 msgid ""
 "Reduces background noise from speech with a neural network.\n"
@@ -614,12 +557,12 @@ msgstr ""
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 325
 msgid "Cancel conversion of this file"
-msgstr "Скасувати конвертацію цього файлу"
+msgstr "Скасувати перетворення цього файла"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 326
 msgid "Skip this file and do not convert it"
-msgstr "Пропустіть цей файл і не конвертуйте його."
+msgstr "Пропустити цей файл і не перетворювати його"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 362
@@ -664,7 +607,7 @@ msgstr "Відеофайли"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 864
 msgid "Select Folder with Video Files"
-msgstr "Виберіть папку з відеофайлами"
+msgstr "Виберіть теку з відеофайлами"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 915
@@ -675,7 +618,7 @@ msgstr "Файли додано"
 # converter/main.py, line: 911
 #, python-brace-format
 msgid "{} video files have been added to the queue."
-msgstr "{} відеофайлів було додано до черги."
+msgstr "До черги додано відеофайлів: {}."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
@@ -685,7 +628,7 @@ msgstr "Файли не знайдено"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 924
 msgid "No valid video files were found in the selected folder."
-msgstr "У вибраній папці не знайдено дійсних відеофайлів."
+msgstr "У вибраній теці не знайдено придатних відеофайлів."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -701,9 +644,7 @@ msgstr "Додати мережевий файл"
 msgid ""
 "Connect to a remote server to browse and add video files.\n"
 "Files are accessed directly from the network without downloading."
-msgstr ""
-"Підключіться до віддаленого сервера, щоб переглядати та додавати відеофайли. \n"
-"Файли отримуються безпосередньо з мережі без завантаження."
+msgstr "Підключіться до віддаленого сервера для перегляду й додавання відеофайлів.\nДоступ до файлів здійснюється безпосередньо через мережу без завантаження."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 244
@@ -740,7 +681,7 @@ msgstr "Віддалений шлях"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 295
 msgid "Connect and Browse"
-msgstr "Підключитися та переглядати"
+msgstr "Підключитися й переглянути"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 308
@@ -776,24 +717,24 @@ msgstr "Виберіть мережеві відеофайли"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 203
 msgid "Main"
-msgstr "Головний"
+msgstr "Основне"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 348
 msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Активний режим лише для вилучення субтитрів — відео НЕ буде конвертовано"
+msgstr "⚠ Увімкнено режим лише видобування субтитрів — відео НЕ буде перетворено"
 
 msgid "Stop converting and close?"
-msgstr ""
+msgstr "Зупинити перетворення й закрити?"
 
 msgid "Conversions are still running. Closing stops unfinished work and keeps its originals."
-msgstr ""
+msgstr "Перетворення ще тривають. Закриття зупинить незавершену роботу й збереже оригінали."
 
 msgid "Keep converting"
-msgstr ""
+msgstr "Продовжити перетворення"
 
 msgid "Stop and close"
-msgstr ""
+msgstr "Зупинити й закрити"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 587
@@ -816,10 +757,10 @@ msgid "File not found"
 msgstr "Файл не знайдено"
 
 msgid "Edit video"
-msgstr ""
+msgstr "Редагувати відео"
 
 msgid "Changes apply only to the selected video"
-msgstr ""
+msgstr "Зміни застосовуються лише до вибраного відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
@@ -827,16 +768,17 @@ msgid "Could not load video file"
 msgstr "Не вдалося завантажити відеофайл."
 
 msgid "Conversion in progress"
-msgstr ""
+msgstr "Триває перетворення"
 
 msgid "New videos can be added when the current conversions finish."
-msgstr ""
+msgstr "Нові відео можна додати після завершення поточних перетворень."
 
 msgid "This file cannot be opened"
 msgid_plural "These files cannot be opened"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Неможливо відкрити ці файли"
+msgstr[1] "Неможливо відкрити ці файли"
+msgstr[2] "Неможливо відкрити ці файли"
+msgstr[3] "Неможливо відкрити цей файл"
 
 #, python-brace-format
 msgid ""
@@ -845,12 +787,13 @@ msgid ""
 msgid_plural ""
 "They are not on a local or mounted drive. Open their network share in the file manager, or use “Add Network File”, then add them again:\n"
 "{files}"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Вони розташовані не на локальному або змонтованому диску. Відкрийте їхній мережевий ресурс у файловому менеджері або скористайтеся дією «Додати мережевий файл», а потім додайте їх знову:\n{files}"
+msgstr[1] "Вони розташовані не на локальному або змонтованому диску. Відкрийте їхній мережевий ресурс у файловому менеджері або скористайтеся дією «Додати мережевий файл», а потім додайте їх знову:\n{files}"
+msgstr[2] "Вони розташовані не на локальному або змонтованому диску. Відкрийте їхній мережевий ресурс у файловому менеджері або скористайтеся дією «Додати мережевий файл», а потім додайте їх знову:\n{files}"
+msgstr[3] "Він розташований не на локальному або змонтованому диску. Відкрийте його мережевий ресурс у файловому менеджері або скористайтеся дією «Додати мережевий файл», а потім додайте його знову:\n{files}"
 
 msgid "The settings sent by the player could not be used"
-msgstr ""
+msgstr "Не вдалося використати налаштування, передані програвачем"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1677
@@ -862,7 +805,7 @@ msgstr "Залежності не знайдено"
 msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
-msgstr "FFmpeg та/або MPV не встановлені, і ми не змогли визначити, як їх встановити для вашої системи. Будь ласка, встановіть їх вручну, використовуючи менеджер пакетів вашого дистрибутива."
+msgstr "FFmpeg та/або MPV не встановлено, і не вдалося визначити спосіб їх установлення у вашій системі.\nУстановіть їх вручну через менеджер пакетів вашого дистрибутива."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1692
@@ -872,7 +815,7 @@ msgstr "Встановлення успішне"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1693
 msgid "Dependencies have been installed. The application will now restart."
-msgstr "Залежності були встановлені. Додаток зараз перезапуститься."
+msgstr "Залежності встановлено. Програму буде перезапущено."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1700
@@ -1037,7 +980,7 @@ msgstr "2160p"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 140
 msgid "Low disk space"
-msgstr "Низький обсяг дискового простору"
+msgstr "Мало місця на диску"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 142
@@ -1046,10 +989,7 @@ msgid ""
 "The destination has {free:.1f} GB free but approximately {needed:.1f} GB may be needed.\n"
 "\n"
 "Do you want to continue anyway?"
-msgstr ""
-"Місце призначення має {free:.1f} ГБ вільного місця, але приблизно може знадобитися {needed:.1f} ГБ.\n"
-"\n"
-"Ви все ж хочете продовжити?"
+msgstr "У місці призначення вільно {free:.1f} ГБ, але може знадобитися приблизно {needed:.1f} ГБ.\n\nУсе одно продовжити?"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 318
@@ -1060,7 +1000,7 @@ msgid "Continue"
 msgstr "Продовжити"
 
 msgid "The additional FFmpeg options cannot be used"
-msgstr ""
+msgstr "Неможливо використати додаткові параметри FFmpeg"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 335
@@ -1087,7 +1027,7 @@ msgid "Editing"
 msgstr "Редагування"
 
 msgid "Resize sidebar"
-msgstr ""
+msgstr "Змінити ширину бічної панелі"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 468
@@ -1106,12 +1046,12 @@ msgstr "Якість зображення"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 110
 msgid "GPU"
-msgstr "ГПУ"
+msgstr "GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 148
 msgid "Speeds up conversion if supported"
-msgstr "Прискорює конвертацію, якщо підтримується"
+msgstr "Прискорює перетворення, якщо підтримується"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1145,7 +1085,7 @@ msgstr "Формат контейнера для вихідного файлу"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 171
 msgid "Copy without re-encoding"
-msgstr "Копіювати без повторного кодування"
+msgstr "Копіювати без перекодування"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 482
@@ -1170,7 +1110,7 @@ msgstr "Видалити фоновий шум"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 193
 msgid "Enable noise reduction"
-msgstr "Увімкнути зменшення шуму"
+msgstr "Увімкнути шумозаглушення"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1280,7 +1220,7 @@ msgstr "Увімкнути компресор"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 361
 msgid "Remove Low Rumble"
-msgstr "Видалити низький гуркіт"
+msgstr "Видалити низькочастотний гул"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 362
@@ -1309,12 +1249,12 @@ msgstr "Увімкнути еквалайзер"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 415
 msgid "Default Voice"
-msgstr "Голос за замовчуванням"
+msgstr "Типовий голос"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 415
 msgid "Natural (No Effects)"
-msgstr "Природний (Без ефектів)"
+msgstr "Природний (без ефектів)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 415
@@ -1329,7 +1269,7 @@ msgstr "Радіоведучий"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
 msgid "Velvet Voice"
-msgstr "Velvet Voice"
+msgstr "Оксамитовий голос"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
@@ -1339,17 +1279,17 @@ msgstr "Додаткова яскравість"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Soften 'S' (De-esser)"
-msgstr "Згладити 'S' (Де-есер)"
+msgstr "Пом'якшити «С» (де-есер)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Remove Rumble"
-msgstr "Видалити Rumble"
+msgstr "Видалити гул"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Present Voice"
-msgstr "Презентаційний голос"
+msgstr "Виразний голос"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1358,7 +1298,7 @@ msgstr "Презентаційний голос"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 420
 msgid "Preset"
-msgstr "Налаштування"
+msgstr "Набір налаштувань"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1367,22 +1307,22 @@ msgstr "Налаштування"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 429
 msgid "Uniform Volume"
-msgstr "Уніфікований об'єм"
+msgstr "Рівномірна гучність"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 430
 msgid "Normalizes volume to TV/streaming standard"
-msgstr "Нормалізує гучність до стандарту телевізора/стрімінгу"
+msgstr "Нормалізує гучність за стандартами телебачення й стримінгу"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 447
 msgid "Fast Copy"
-msgstr "Швидке Копіювання"
+msgstr "Швидке копіювання"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 448
 msgid "No re-encoding, fastest"
-msgstr "Без повторного кодування, найшвидше"
+msgstr "Без перекодування, найшвидше"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 454
@@ -1425,12 +1365,12 @@ msgid "Customize encoding..."
 msgstr "Налаштувати кодування..."
 
 msgid "Presets"
-msgstr "Пресети"
+msgstr "Набори налаштувань"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 502
 msgid "Audio Encoding"
-msgstr "Аудіо кодування"
+msgstr "Кодування аудіо"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 197
@@ -1452,7 +1392,7 @@ msgstr "Додатково"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 882
 msgid "SW Decode"
-msgstr "SW Декодування"
+msgstr "Програмне декодування"
 
 msgid "Ready-made recipes: YouTube, Instagram, editing…"
 msgstr "Готові рецепти: YouTube, Instagram, монтаж…"
@@ -1460,7 +1400,7 @@ msgstr "Готові рецепти: YouTube, Instagram, монтаж…"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
-msgstr "Потрібно налаштувати аудіо для повторного кодування"
+msgstr "Потребує перекодування аудіо"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 945
@@ -1470,7 +1410,7 @@ msgstr "Видалення шуму за допомогою ШІ"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 947
 msgid "gate"
-msgstr "ворота"
+msgstr "гейт"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 949
@@ -1480,7 +1420,7 @@ msgstr "компресор"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 951
 msgid "low cut"
-msgstr "низький зріз"
+msgstr "зріз низьких частот"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 953
@@ -1490,7 +1430,7 @@ msgstr "еквалайзер"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 955
 msgid "normalize"
-msgstr "нормалізувати"
+msgstr "нормалізація"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 851
@@ -1505,22 +1445,22 @@ msgstr "Користувацькі прапори FFmpeg"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 986
 msgid "No customizations"
-msgstr "Немає налаштувань."
+msgstr "Без змін"
 
 msgid "Keep original audio"
-msgstr ""
+msgstr "Зберегти початкове аудіо"
 
 msgid "Convert audio"
-msgstr ""
+msgstr "Перетворити аудіо"
 
 msgid "Choose what the converted video should contain."
-msgstr ""
+msgstr "Виберіть, що має містити перетворене відео."
 
 msgid "Audio operation"
-msgstr ""
+msgstr "Дія з аудіо"
 
 msgid "Audio conversion"
-msgstr ""
+msgstr "Перетворення аудіо"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 156
@@ -1530,7 +1470,7 @@ msgstr "Аудіокодек"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 173
 msgid "Audio Bitrate"
-msgstr "Аудіо бітрейт"
+msgstr "Бітрейт аудіо"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 228
@@ -1540,62 +1480,62 @@ msgstr "Аудіоканали"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 221
 msgid "Custom bitrate"
-msgstr "Користувацька бітрейт"
+msgstr "Власний бітрейт"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 251
 msgid "Custom channels"
-msgstr "Користувацькі канали"
+msgstr "Власна кількість каналів"
 
 msgid "Changes are saved automatically for future conversions."
-msgstr ""
+msgstr "Зміни автоматично зберігаються для майбутніх перетворень."
 
 msgid "Original audio is kept. Codec, bitrate and channel settings do not apply."
-msgstr ""
+msgstr "Початкове аудіо зберігається. Налаштування кодека, бітрейту й каналів не застосовуються."
 
 msgid "Audio will be converted using the settings below."
-msgstr ""
+msgstr "Аудіо буде перетворено з наведеними нижче налаштуваннями."
 
 msgid "The converted video will have no audio."
-msgstr ""
+msgstr "У перетвореному відео не буде аудіо."
 
 msgid "Select an audio operation."
-msgstr ""
+msgstr "Виберіть дію з аудіо."
 
 msgid "Open this video in the editor"
-msgstr ""
+msgstr "Відкрити це відео в редакторі"
 
 msgid "Options"
-msgstr ""
+msgstr "Параметри"
 
 msgid "Choose a preset or resolution for this video"
-msgstr ""
+msgstr "Вибрати набір налаштувань або роздільну здатність для цього відео"
 
 #, python-brace-format
 msgid "Options for “{name}”"
-msgstr ""
+msgstr "Параметри для «{name}»"
 
 #, python-brace-format
 msgid "Edit “{name}”"
-msgstr ""
+msgstr "Редагувати «{name}»"
 
 msgid "More actions"
-msgstr ""
+msgstr "Інші дії"
 
 #, python-brace-format
 msgid "More actions for “{name}”"
-msgstr ""
+msgstr "Інші дії для «{name}»"
 
 msgid "Play video"
-msgstr ""
+msgstr "Відтворити відео"
 
 msgid "Video information"
-msgstr ""
+msgstr "Відомості про відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 194
 msgid "Open containing folder"
-msgstr "Відкрити вміст папки"
+msgstr "Відкрити теку з файлом"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 95
@@ -1603,31 +1543,31 @@ msgid "Remove from queue"
 msgstr "Видалити з черги"
 
 msgid "Delete from disk…"
-msgstr ""
+msgstr "Видалити з диска…"
 
 msgid "Video preview"
-msgstr ""
+msgstr "Попередній перегляд відео"
 
 #, python-brace-format
 msgid "Own: {recipe}"
-msgstr ""
+msgstr "Власний: {recipe}"
 
 msgid "Delete this video permanently?"
-msgstr ""
+msgstr "Назавжди видалити це відео?"
 
 #, python-brace-format
 msgid "“{}” will be removed from disk. This cannot be undone."
-msgstr ""
+msgstr "«{}» буде видалено з диска. Цю дію неможливо скасувати."
 
 msgid "Keep video"
-msgstr ""
+msgstr "Зберегти відео"
 
 msgid "Delete permanently"
-msgstr ""
+msgstr "Видалити назавжди"
 
 #, python-brace-format
 msgid "Could not delete the video: {} "
-msgstr ""
+msgstr "Не вдалося видалити відео: {} "
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1664,41 +1604,41 @@ msgstr "Перетягніть файли сюди або використайт
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 270
 msgid "Save in the same folder as the original file"
-msgstr "Зберегти в тій же папці, що й оригінальний файл"
+msgstr "Зберігати в тій самій теці, що й оригінал"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 271
 msgid "Folder to save"
-msgstr "Папка для збереження"
+msgstr "Тека для збереження"
 
 msgid "Save converted videos"
-msgstr ""
+msgstr "Зберігати перетворені відео"
 
 msgid "Output folder"
-msgstr ""
+msgstr "Вихідна тека"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 288
 msgid "Select folder"
-msgstr "Виберіть папку"
+msgstr "Вибрати теку"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 349
 msgid "Choose output folder"
-msgstr "Виберіть папку виводу"
+msgstr "Вибрати вихідну теку"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
-msgstr "Видалити оригінальні файли"
+msgstr "Видаляти початкові файли"
 
 msgid "Originals are kept unless every converted result passes validation"
-msgstr ""
+msgstr "Оригінали зберігаються, доки всі результати перетворення не пройдуть перевірку"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
 msgid "Select the output folder"
-msgstr "Виберіть папку виводу"
+msgstr "Виберіть вихідну теку"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 654
@@ -1718,11 +1658,11 @@ msgid "Could not find this video file"
 msgstr "Не вдалося знайти цей відеофайл."
 
 msgid "The crop cannot be applied"
-msgstr ""
+msgstr "Неможливо застосувати обрізання"
 
 #, python-brace-format
 msgid "“{name}” was not converted: its picture size could not be read, or the crop removes the whole picture. Check the crop in the editor and try again."
-msgstr ""
+msgstr "«{name}» не перетворено: не вдалося прочитати розмір зображення або обрізання видаляє все зображення. Перевірте обрізання в редакторі та спробуйте знову."
 
 msgid "These tracks can't be copied into MP4"
 msgstr "Ці доріжки не можна скопіювати в MP4"
@@ -1760,10 +1700,10 @@ msgid "This video cannot be made to fit the size"
 msgstr "Це відео не вдається вмістити в заданий розмір"
 
 msgid "General settings"
-msgstr ""
+msgstr "Загальні налаштування"
 
 msgid "Original resolution"
-msgstr ""
+msgstr "Початкова роздільна здатність"
 
 #, python-brace-format
 msgid "up to {size}"
@@ -1771,55 +1711,55 @@ msgstr "до {size}"
 
 #, python-brace-format
 msgid "{profile} · {resolution}"
-msgstr ""
+msgstr "{profile} · {resolution}"
 
 msgid "Options for this video"
-msgstr ""
+msgstr "Параметри цього відео"
 
 msgid "Override the general recipe only when this video needs a different destination profile or size."
-msgstr ""
+msgstr "Замінюйте загальний набір налаштувань лише тоді, коли цьому відео потрібен інший профіль призначення або розмір."
 
 msgid "Effective result"
-msgstr ""
+msgstr "Результат із цими налаштуваннями"
 
 msgid "General settings remain the default for every other video."
-msgstr ""
+msgstr "Загальні налаштування залишаються типовими для всіх інших відео."
 
 msgid "Use the general recipe"
-msgstr ""
+msgstr "Використовувати загальний набір налаштувань"
 
 msgid "Profile"
-msgstr ""
+msgstr "Профіль"
 
 msgid "Target a platform or workflow"
-msgstr ""
+msgstr "Вибрати платформу або спосіб роботи"
 
 msgid "Use the general resolution"
-msgstr ""
+msgstr "Використовувати загальну роздільну здатність"
 
 msgid "Use the profile resolution"
-msgstr ""
+msgstr "Використовувати роздільну здатність профілю"
 
 msgid "Keep the original resolution"
-msgstr ""
+msgstr "Зберегти початкову роздільну здатність"
 
 msgid "Vertical 4K · 2160×3840"
-msgstr ""
+msgstr "Вертикальне 4K · 2160×3840"
 
 msgid "Vertical QHD · 1440×2560"
-msgstr ""
+msgstr "Вертикальне QHD · 1440×2560"
 
 msgid "Vertical Full HD · 1080×1920"
-msgstr ""
+msgstr "Вертикальне Full HD · 1080×1920"
 
 msgid "Vertical HD · 720×1280"
-msgstr ""
+msgstr "Вертикальне HD · 720×1280"
 
 msgid "Vertical SD · 480×854"
-msgstr ""
+msgstr "Вертикальне SD · 480×854"
 
 msgid "Custom size"
-msgstr ""
+msgstr "Власний розмір"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1831,16 +1771,16 @@ msgid "Resolution"
 msgstr "Роздільна здатність"
 
 msgid "Controls image dimensions and file size"
-msgstr ""
+msgstr "Визначає розміри зображення й файла"
 
 msgid "Width"
-msgstr ""
+msgstr "Ширина"
 
 msgid "Even pixels"
-msgstr ""
+msgstr "Парна кількість пікселів"
 
 msgid "Height"
-msgstr ""
+msgstr "Висота"
 
 msgid "Use the general size"
 msgstr "Використати загальний розмір"
@@ -1858,7 +1798,7 @@ msgid "Size in megabytes"
 msgstr "Розмір у мегабайтах"
 
 msgid "This video will use"
-msgstr ""
+msgstr "Це відео використовуватиме"
 
 msgid "To fit the size"
 msgstr "Щоб вмістити в розмір"
@@ -1867,7 +1807,7 @@ msgid "Checking the video…"
 msgstr "Перевірка відео…"
 
 msgid "Apply to this video"
-msgstr ""
+msgstr "Застосувати до цього відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 25
@@ -1877,7 +1817,7 @@ msgstr "Необхідні залежності"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 48
 msgid "Installation Required"
-msgstr "Необхідна установка"
+msgstr "Потрібне встановлення"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 52
@@ -1887,7 +1827,7 @@ msgstr "FFmpeg та MPV потрібні для роботи цього заст
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 53
 msgid "FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, they are not bundled."
-msgstr "Для конвертації потрібен FFmpeg, а для попереднього перегляду відеоредактора - MPV. Через юридичні обмеження вони не входять до складу."
+msgstr "FFmpeg потрібен для перетворення, а MPV — для попереднього перегляду у відеоредакторі. Через правові обмеження вони не входять до комплекту."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 57
@@ -1895,7 +1835,7 @@ msgid "Command to be executed"
 msgstr "Команда, що має бути виконана"
 
 msgid "Before installing"
-msgstr ""
+msgstr "Перед установленням"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 72
@@ -1909,7 +1849,7 @@ msgstr ""
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 81
 msgid "Installation Output"
-msgstr "Вихід установки"
+msgstr "Вивід установлення"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 112
@@ -1962,7 +1902,7 @@ msgstr "Будь ласка, перевірте помилки вище та с�
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 119
 msgid "Additional options for advanced users. The defaults work well for most cases."
-msgstr "Додаткові параметри для просунутих користувачів. Значення за замовчуванням добре працюють у більшості випадків."
+msgstr "Додаткові параметри для досвідчених користувачів. Типові налаштування підходять у більшості випадків."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 133
@@ -1977,17 +1917,17 @@ msgstr "Додаткові параметри FFmpeg"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 179
 msgid "Custom flags passed directly to FFmpeg. Example: '-ss 60 -t 30' to convert only 30 seconds starting at 1 minute."
-msgstr "Користувацькі прапори, передані безпосередньо до FFmpeg. Приклад: '-ss 60 -t 30' для конвертації лише 30 секунд, починаючи з 1 хвилини."
+msgstr "Користувацькі прапори, передані безпосередньо до FFmpeg. Приклад: '-ss 60 -t 30' для перетворення лише 30 секунд, починаючи з 1 хвилини."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 205
 msgid "Video Preview Rendering"
-msgstr "Попередній перегляд відео рендеринг"
+msgstr "Відмальовування попереднього перегляду відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 207
 msgid "How the video editor preview is rendered. 'Automatic' works best for most systems. Try 'Software' if you see display issues. Requires restart."
-msgstr "Як рендериться попередній перегляд відеоредактора. 'Автоматичний' працює найкраще для більшості систем. Спробуйте 'Програмне забезпечення', якщо ви бачите проблеми з відображенням. Потрібен перезапуск."
+msgstr "Спосіб відмальовування попереднього перегляду у відеоредакторі. «Автоматично» найкраще підходить для більшості систем. Спробуйте «Програмне», якщо виникають проблеми із зображенням. Потрібен перезапуск."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py (export/import profile)
@@ -2009,7 +1949,7 @@ msgstr "Експорт / Імпорт профілю"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 247
 msgid "Save your current conversion settings to a file or load settings from a previously exported profile."
-msgstr "Збережіть поточні налаштування конвертації у файл або завантажте налаштування з раніше експортованого профілю."
+msgstr "Збережіть поточні налаштування перетворення у файл або завантажте налаштування з раніше експортованого профілю."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 91
@@ -2054,7 +1994,7 @@ msgid "Could not save the profile file."
 msgstr "Не вдалося зберегти файл профілю."
 
 msgid "This profile can read or write files"
-msgstr ""
+msgstr "Цей профіль може читати або записувати файли"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 346
@@ -2099,7 +2039,7 @@ msgstr "Додати файли"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 230
 msgid "Add Folder"
-msgstr "Додати папку"
+msgstr "Додати теку"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 242
@@ -2109,7 +2049,7 @@ msgstr "Перетворити все"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 114
 msgid "Convert This File"
-msgstr "Конвертувати цей файл"
+msgstr "Перетворити цей файл"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 133
@@ -2134,32 +2074,33 @@ msgstr "Про програму"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 70
 msgid "Quit"
-msgstr "Вихід"
+msgstr "Вийти"
 
 #, python-brace-format
 msgid "{count} file"
 msgid_plural "{count} files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} файл"
+msgstr[1] "{count} файли"
+msgstr[2] "{count} файлів"
+msgstr[3] "{count} файл"
 
 msgid "Show conversion settings"
-msgstr ""
+msgstr "Показати налаштування перетворення"
 
 #, python-brace-format
 msgid "Show conversion settings ({shortcut})"
-msgstr ""
+msgstr "Показати налаштування перетворення ({shortcut})"
 
 msgid "Show editing tools"
-msgstr ""
+msgstr "Показати інструменти редагування"
 
 #, python-brace-format
 msgid "Show editing tools ({shortcut})"
-msgstr ""
+msgstr "Показати інструменти редагування ({shortcut})"
 
 #, python-brace-format
 msgid "Track {number}"
-msgstr ""
+msgstr "Доріжка {number}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 173
@@ -2169,7 +2110,7 @@ msgstr "Покращте своє аудіо, видаляючи шум, кон�
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 184
 msgid "AI Noise Cleaning"
-msgstr "Очищення шуму ШІ"
+msgstr "Шумозаглушення з ШІ"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 194
@@ -2199,17 +2140,17 @@ msgstr "Заглушити тихі звуки"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 350
 msgid "Mutes audio below a threshold — great for removing faint hum or room noise between speech."
-msgstr "Заглушає аудіо нижче порогу — чудово підходить для видалення слабкого гудіння або шуму в кімнаті між промовами."
+msgstr "Заглушає аудіо нижче порога — добре видаляє слабкий гул або шум кімнати в паузах між словами."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 392
 msgid "Audio Enhancement"
-msgstr "Аудіо покращення"
+msgstr "Поліпшення аудіо"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 404
 msgid "Cuts low-frequency noise like wind, air conditioning or handling vibrations."
-msgstr "Зменшує низькочастотний шум, такий як вітер, кондиціонування повітря або вібрації при обробці."
+msgstr "Прибирає низькочастотний шум: вітер, гул кондиціонера або вібрації від руху камери."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 416
@@ -2219,17 +2160,17 @@ msgstr "Частота (Гц)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 456
 msgid "Adjusts the volume so the entire video sounds consistent, following TV and streaming standards."
-msgstr "Регулює гучність так, щоб усе відео звучало узгоджено, відповідно до стандартів телебачення та потокового відео."
+msgstr "Регулює гучність, щоб усе відео звучало рівномірно, відповідно до стандартів телебачення й стримінгу."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 486
 msgid "Reduces loud peaks and raises quiet parts, making the overall volume more consistent."
-msgstr "Зменшує гучні піки та підвищує тихі частини, роблячи загальний об'єм більш стабільним."
+msgstr "Зменшує гучні піки й підсилює тихі частини, роблячи загальну гучність рівномірнішою."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 537
 msgid "Shape the sound spectrum: boost clarity, cut rumble or apply ready-made presets like Podcast or De-esser."
-msgstr "Формуйте звуковий спектр: підвищуйте чіткість, зменшуйте гул або застосовуйте готові пресети, такі як Подкаст або Де-есер."
+msgstr "Налаштуйте звуковий спектр: підвищте чіткість, приберіть гул або застосуйте готові набори налаштувань, наприклад «Подкаст» або «Де-есер»."
 
 msgid "Copy"
 msgstr "Копіювати"
@@ -2241,10 +2182,10 @@ msgid "Bundled"
 msgstr "Вбудований"
 
 msgid "Yours"
-msgstr "Ваш"
+msgstr "Ваші"
 
 msgid "Click to use this preset"
-msgstr "Натисніть, щоб застосувати цей пресет"
+msgstr "Натисніть, щоб застосувати цей набір налаштувань"
 
 #, python-brace-format
 msgid ""
@@ -2253,13 +2194,13 @@ msgid ""
 "{settings}\n"
 "\n"
 "Import it only if you trust where it came from."
-msgstr ""
+msgstr "Він містить налаштування FFmpeg, які можуть відкривати, створювати або перезаписувати файли на цьому комп'ютері чи звертатися до мережі:\n\n{settings}\n\nІмпортуйте його лише з джерела, якому довіряєте."
 
 msgid "Import anyway"
-msgstr ""
+msgstr "Усе одно імпортувати"
 
 msgid "This preset can read or write files"
-msgstr ""
+msgstr "Цей набір налаштувань може читати або записувати файли"
 
 msgid "Create with AI…"
 msgstr "Створити за допомогою ШІ…"
@@ -2271,34 +2212,34 @@ msgid "Paste from clipboard"
 msgstr "Вставити з буфера обміну"
 
 msgid "Open presets folder"
-msgstr "Відкрити теку пресетів"
+msgstr "Відкрити теку наборів налаштувань"
 
 msgid "Add a preset"
-msgstr "Додати пресет"
+msgstr "Додати набір налаштувань"
 
 msgid "Search by name, tag or codec…"
 msgstr "Пошук за назвою, тегом або кодеком…"
 
 msgid "No presets"
-msgstr "Немає пресетів"
+msgstr "Немає наборів налаштувань"
 
 msgid "Import a file, paste one from the clipboard or create one with AI."
 msgstr "Імпортуйте файл, вставте його з буфера обміну або створіть за допомогою ШІ."
 
 #, python-brace-format
 msgid "Ignored invalid preset file(s): {0}"
-msgstr "Пропущено недійсні файли пресетів: {0}"
+msgstr "Пропущено недійсні файли наборів налаштувань: {0}"
 
 msgid "Details"
 msgstr "Подробиці"
 
 #, python-brace-format
 msgid "Could not apply the preset: {0}"
-msgstr "Не вдалося застосувати пресет: {0}"
+msgstr "Не вдалося застосувати набір налаштувань: {0}"
 
 #, python-brace-format
 msgid "Preset “{0}” is now in use."
-msgstr "Пресет «{0}» тепер використовується."
+msgstr "Набір налаштувань «{0}» тепер використовується."
 
 msgid "Duplicate for editing"
 msgstr "Дублювати для редагування"
@@ -2320,49 +2261,49 @@ msgstr "Збережено як «{0}». Редагуйте у {1}"
 
 #, python-brace-format
 msgid "Preset “{0}” deleted."
-msgstr "Пресет «{0}» видалено."
+msgstr "Набір налаштувань «{0}» видалено."
 
 msgid "Export Preset"
-msgstr "Експортувати пресет"
+msgstr "Експортувати набір налаштувань"
 
 msgid "Choose a folder on this computer to export the preset."
-msgstr ""
+msgstr "Виберіть теку на цьому комп'ютері для експорту набору налаштувань."
 
 #, python-brace-format
 msgid "Preset exported to {0}"
-msgstr "Пресет експортовано до {0}"
+msgstr "Набір налаштувань експортовано до {0}"
 
 msgid "Import Preset"
-msgstr "Імпортувати пресет"
+msgstr "Імпортувати набір налаштувань"
 
 msgid "Preset files (*.toml)"
-msgstr "Файли пресетів (*.toml)"
+msgstr "Файли наборів налаштувань (*.toml)"
 
 msgid "Choose a preset file on this computer to import."
-msgstr ""
+msgstr "Виберіть файл набору налаштувань на цьому комп'ютері для імпорту."
 
 #, python-brace-format
 msgid "The preset was not imported: {0}"
-msgstr "Пресет не імпортовано: {0}"
+msgstr "Набір налаштувань не імпортовано: {0}"
 
 #, python-brace-format
 msgid "Preset “{0}” imported."
-msgstr "Пресет «{0}» імпортовано."
+msgstr "Набір налаштувань «{0}» імпортовано."
 
 msgid "Invalid preset files"
-msgstr "Недійсні файли пресетів"
+msgstr "Недійсні файли наборів налаштувань"
 
 msgid "OK"
 msgstr "OK"
 
 msgid "Create a preset with AI"
-msgstr "Створити пресет за допомогою ШІ"
+msgstr "Створити набір налаштувань за допомогою ШІ"
 
 msgid "Describe what you need in your own words. The program turns it into a prompt that any online AI assistant understands, with the exact preset format and the encoders available on this computer. Paste the assistant's answer back here."
-msgstr "Опишіть своїми словами, що вам потрібно. Програма перетворює це на запит, зрозумілий будь-якому онлайн-асистенту ШІ, із точним форматом пресету та кодерами, доступними на цьому комп'ютері. Вставте відповідь асистента сюди."
+msgstr "Опишіть своїми словами, що вам потрібно. Програма перетворює це на запит, зрозумілий будь-якому онлайн-асистенту ШІ, із точним форматом набору налаштувань та кодерами, доступними на цьому комп'ютері. Вставте відповідь асистента сюди."
 
 msgid "1. What should the preset do?"
-msgstr "1. Що має робити пресет?"
+msgstr "1. Що має робити набір налаштувань?"
 
 msgid "Example: “Vertical videos for TikTok, under 50 MB per minute, loud clear voice.”"
 msgstr "Приклад: «Вертикальні відео для TikTok, менш ніж 50 МБ за хвилину, гучний чіткий голос»."
@@ -2377,14 +2318,14 @@ msgid "2. Paste the assistant's answer"
 msgstr "2. Вставте відповідь асистента"
 
 msgid "Save preset"
-msgstr "Зберегти пресет"
+msgstr "Зберегти набір налаштувань"
 
 msgid "Prompt copied. Paste it into your AI assistant."
 msgstr "Запит скопійовано. Вставте його у свого асистента ШІ."
 
 #, python-brace-format
 msgid "The preset was not saved: {0}"
-msgstr "Пресет не збережено: {0}"
+msgstr "Набір налаштувань не збережено: {0}"
 
 #, python-brace-format
 msgid "Saved as “{0}” in {1}"
@@ -2392,166 +2333,179 @@ msgstr "Збережено як «{0}» у {1}"
 
 #, python-brace-format
 msgid "{percent}%"
-msgstr ""
+msgstr "{percent}%"
 
 #, python-brace-format
 msgid "≈ {seconds} s left"
 msgid_plural "≈ {seconds} s left"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "≈ залишилася {seconds} с"
+msgstr[1] "≈ залишилося {seconds} с"
+msgstr[2] "≈ залишилося {seconds} с"
+msgstr[3] "≈ залишилася {seconds} с"
 
 #, python-brace-format
 msgid "≈ {minutes} min left"
 msgid_plural "≈ {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "≈ залишилася {minutes} хв"
+msgstr[1] "≈ залишилося {minutes} хв"
+msgstr[2] "≈ залишилося {minutes} хв"
+msgstr[3] "≈ залишилася {minutes} хв"
 
 #, python-brace-format
 msgid "≈ {hours} h {minutes} min left"
 msgid_plural "≈ {hours} h {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "≈ залишилося {hours} год {minutes} хв"
+msgstr[1] "≈ залишилося {hours} год {minutes} хв"
+msgstr[2] "≈ залишилося {hours} год {minutes} хв"
+msgstr[3] "≈ залишилося {hours} год {minutes} хв"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 737
 #, python-brace-format
 msgid "{mins}m {secs}s"
-msgstr "{mins}хв {secs}с"
+msgstr "{mins} хв {secs} с"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 737
 #, python-brace-format
 msgid "{secs}s"
-msgstr "{secs}с"
+msgstr "{secs} с"
 
 #, python-brace-format
 msgid "Could not open “{name}”: {error}"
-msgstr ""
+msgstr "Не вдалося відкрити «{name}»: {error}"
 
 msgid "Back to the queue"
-msgstr ""
+msgstr "Назад до черги"
 
 msgid "Conversion progress"
-msgstr ""
+msgstr "Хід перетворення"
 
 msgid "Cancel all"
-msgstr ""
+msgstr "Скасувати все"
 
 msgid "Overall conversion progress"
-msgstr ""
+msgstr "Загальний хід перетворення"
 
 msgid "Convert more videos"
-msgstr ""
+msgstr "Перетворити ще відео"
 
 msgid "Open video"
-msgstr ""
+msgstr "Відкрити відео"
 
 msgid "Show in folder"
-msgstr ""
+msgstr "Показати в теці"
 
 #, python-brace-format
 msgid "{count} video converted"
 msgid_plural "{count} videos converted"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Перетворено {count} відео"
+msgstr[1] "Перетворено {count} відео"
+msgstr[2] "Перетворено {count} відео"
+msgstr[3] "Перетворено {count} відео"
 
 #, python-brace-format
 msgid "{count} conversion failed"
 msgid_plural "{count} conversions failed"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Не вдалося виконати {count} перетворення"
+msgstr[1] "Не вдалося виконати {count} перетворення"
+msgstr[2] "Не вдалося виконати {count} перетворень"
+msgstr[3] "Не вдалося виконати {count} перетворення"
 
 #, python-brace-format
 msgid "{count} conversion cancelled"
 msgid_plural "{count} conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Скасовано {count} перетворення"
+msgstr[1] "Скасовано {count} перетворення"
+msgstr[2] "Скасовано {count} перетворень"
+msgstr[3] "Скасовано {count} перетворення"
 
 msgid "Conversion complete"
 msgid_plural "Conversions complete"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Перетворення завершено"
+msgstr[1] "Перетворення завершено"
+msgstr[2] "Перетворення завершено"
+msgstr[3] "Перетворення завершено"
 
 #, python-brace-format
 msgid "{count} video converted successfully"
 msgid_plural "{count} videos converted successfully"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Успішно перетворено {count} відео"
+msgstr[1] "Успішно перетворено {count} відео"
+msgstr[2] "Успішно перетворено {count} відео"
+msgstr[3] "Успішно перетворено {count} відео"
 
 msgid "Conversion failed"
 msgid_plural "Conversions failed"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Не вдалося перетворити"
+msgstr[1] "Не вдалося перетворити"
+msgstr[2] "Не вдалося перетворити"
+msgstr[3] "Не вдалося перетворити"
 
 msgid "Conversion cancelled"
 msgid_plural "Conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Перетворення скасовано"
+msgstr[1] "Перетворення скасовано"
+msgstr[2] "Перетворення скасовано"
+msgstr[3] "Перетворення скасовано"
 
 msgid "Queue finished with issues"
-msgstr ""
+msgstr "Чергу завершено з проблемами"
 
 msgid "No conversion results are available"
-msgstr ""
+msgstr "Немає результатів перетворення"
 
 #, python-brace-format
 msgid "{finished} of {total} finished · {percent}"
 msgid_plural "{finished} of {total} finished · {percent}"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Завершено {finished} із {total} · {percent}"
+msgstr[1] "Завершено {finished} із {total} · {percent}"
+msgstr[2] "Завершено {finished} із {total} · {percent}"
+msgstr[3] "Завершено {finished} із {total} · {percent}"
 
 msgid "Converting video"
 msgid_plural "Converting videos"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Перетворення відео"
+msgstr[1] "Перетворення відео"
+msgstr[2] "Перетворення відео"
+msgstr[3] "Перетворення відео"
 
 #, python-brace-format
 msgid "{results} · {duration}"
-msgstr ""
+msgstr "{results} · {duration}"
 
 #, python-brace-format
 msgid "{before} → {after} ({change}%)"
-msgstr ""
+msgstr "{before} → {after} ({change}%)"
 
 #, python-brace-format
 msgid "“{name}”: {reason}"
-msgstr ""
+msgstr "“{name}”: {reason}"
 
 #, python-brace-format
 msgid "+{count} more"
 msgid_plural "+{count} more"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "ще +{count}"
+msgstr[1] "ще +{count}"
+msgstr[2] "ще +{count}"
+msgstr[3] "ще +{count}"
 
 msgid "Back to queue"
-msgstr ""
+msgstr "Назад до черги"
 
 msgid "Open folder"
-msgstr ""
+msgstr "Відкрити теку"
 
 msgid "Cancel all conversions?"
-msgstr ""
+msgstr "Скасувати всі перетворення?"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 321
 msgid "This will stop all active conversions and skip all pending items. This action cannot be undone."
-msgstr "Це зупинить усі активні конверсії та пропустить усі очікуючі елементи. Цю дію не можна скасувати."
+msgstr "Це зупинить усі поточні перетворення й пропустить усі завдання в черзі. Цю дію неможливо скасувати."
 
 msgid "Unknown video"
-msgstr ""
+msgstr "Невідоме відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 447
@@ -2560,54 +2514,55 @@ msgstr "Очікування в черзі"
 
 #, python-brace-format
 msgid "Conversion progress for “{}”"
-msgstr ""
+msgstr "Хід перетворення для «{}»"
 
 msgid "FFmpeg output"
-msgstr ""
+msgstr "Вивід FFmpeg"
 
 #, python-brace-format
 msgid "FFmpeg output for “{name}”"
-msgstr ""
+msgstr "Вивід FFmpeg для «{name}»"
 
 msgid "Command"
-msgstr ""
+msgstr "Команда"
 
 msgid "Process output"
-msgstr ""
+msgstr "Вивід процесу"
 
 #, python-brace-format
 msgid "{count} output file"
 msgid_plural "{count} output files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} вихідний файл"
+msgstr[1] "{count} вихідні файли"
+msgstr[2] "{count} вихідних файлів"
+msgstr[3] "{count} вихідний файл"
 
 #, python-brace-format
 msgid "Open “{name}”"
-msgstr ""
+msgstr "Відкрити «{name}»"
 
 msgid "Skip this video"
-msgstr ""
+msgstr "Пропустити це відео"
 
 #, python-brace-format
 msgid "Skip “{}”"
-msgstr ""
+msgstr "Пропустити «{}»"
 
 msgid "Skip"
-msgstr ""
+msgstr "Пропустити"
 
 msgid "Cancel this conversion"
-msgstr ""
+msgstr "Скасувати це перетворення"
 
 #, python-brace-format
 msgid "Cancel “{}”"
-msgstr ""
+msgstr "Скасувати «{}»"
 
 msgid "Hide technical details"
-msgstr ""
+msgstr "Приховати технічні подробиці"
 
 msgid "Show technical details"
-msgstr ""
+msgstr "Показати технічні подробиці"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 246
@@ -2616,15 +2571,15 @@ msgstr "Початок процесу..."
 
 #, python-brace-format
 msgid "{codec} · {status}"
-msgstr ""
+msgstr "{codec} · {status}"
 
 #, python-brace-format
 msgid "{percent}, {remaining}"
-msgstr ""
+msgstr "{percent}, {remaining}"
 
 #, python-brace-format
 msgid "{fps} · {elapsed}"
-msgstr ""
+msgstr "{fps} · {elapsed}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 699
@@ -2642,7 +2597,7 @@ msgid "Cancelled"
 msgstr "Скасовано"
 
 msgid "The conversion failed. The details are in “FFmpeg output”."
-msgstr ""
+msgstr "Не вдалося перетворити. Подробиці — у «Виводі FFmpeg»."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 104
@@ -2657,17 +2612,17 @@ msgstr "Режим часткового використання GPU"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 118
 msgid "Decode using CPU, encode using GPU"
-msgstr "Декодувати за допомогою ЦП, кодувати за допомогою ГП."
+msgstr "Декодувати на CPU, кодувати на GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 179
 msgid "Compression preset"
-msgstr "Пресет стиснення"
+msgstr "Набір налаштувань стиснення"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 149
 msgid "Speed vs compression ratio"
-msgstr "Швидкість проти коефіцієнта стиснення"
+msgstr "Швидкість і ступінь стиснення"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 157
@@ -2690,10 +2645,10 @@ msgid "Ex: 1280x720, 1920x1080"
 msgstr "1280x720, 1920x1080"
 
 msgid "Frame rate"
-msgstr ""
+msgstr "Частота кадрів"
 
 msgid "Frames per second of the converted video"
-msgstr ""
+msgstr "Кількість кадрів за секунду в перетвореному відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 146
@@ -2712,7 +2667,7 @@ msgstr "Аудіобітрейт"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 215
 msgid "Select common bitrate or enter custom value"
-msgstr "Виберіть загальний бітрейт або введіть власне значення"
+msgstr "Виберіть стандартний бітрейт або введіть власне значення"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 222
@@ -2727,12 +2682,12 @@ msgstr "Аудіоканали"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 246
 msgid "Select common channel configuration"
-msgstr "Виберіть загальну конфігурацію каналу"
+msgstr "Виберіть стандартну конфігурацію каналів"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 252
 msgid "Ex: 2 (stereo), 6 (5.1)"
-msgstr "Ex: 2 (стерео), 6 (5.1)"
+msgstr "Наприклад: 2 (стерео), 6 (5.1)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 269
@@ -2762,17 +2717,17 @@ msgstr "-ss 60 -t 30"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 289
 msgid "Only extract subtitles"
-msgstr "Лише витягти субтитри"
+msgstr "Лише видобути субтитри"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 292
 msgid "Extract subtitles to .srt files"
-msgstr "Екстрактувати субтитри у файли .srt"
+msgstr "Видобути субтитри у файли .srt"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 284
 msgid "Automatic"
-msgstr "Автоматичний"
+msgstr "Автоматично"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 285
@@ -2782,22 +2737,22 @@ msgstr "OpenGL (апаратне прискорення)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 286
 msgid "Software (compatible mode)"
-msgstr "Програмне забезпечення (сумісний режим)"
+msgstr "Програмне (режим сумісності)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 291
 msgid "Video preview rendering"
-msgstr "Рендеринг попереднього перегляду відео"
+msgstr "Відмальовування попереднього перегляду відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 293
 msgid "Rendering mode for video editor preview. Restart required to apply."
-msgstr "Режим рендерингу для попереднього перегляду відеоредактора. Потрібен перезапуск для застосування."
+msgstr "Режим відмальовування попереднього перегляду у відеоредакторі. Для застосування потрібен перезапуск."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 483
 msgid "Restart Required"
-msgstr "Перезавантаження необхідне"
+msgstr "Потрібен перезапуск"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 485
@@ -2805,10 +2760,7 @@ msgid ""
 "The video preview rendering mode has been changed.\n"
 "\n"
 "Please close and reopen the application for the change to take effect."
-msgstr ""
-"Режим рендерингу попереднього перегляду відео було змінено.\n"
-"\n"
-"Будь ласка, закрийте та знову відкрийте програму, щоб зміни набрали чинності."
+msgstr "Режим відмальовування попереднього перегляду відео змінено.\n\nЗакрийте й знову відкрийте програму, щоб застосувати зміну."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -2914,11 +2866,11 @@ msgid "Reset"
 msgstr "Скинути"
 
 msgid "Settings Could Not Be Reset"
-msgstr ""
+msgstr "Не вдалося скинути налаштування"
 
 #, python-brace-format
 msgid "The settings file could not be saved: {0}"
-msgstr ""
+msgstr "Не вдалося зберегти файл налаштувань: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 705
@@ -2953,7 +2905,7 @@ msgid "Where the video is going"
 msgstr "Куди надсилається відео"
 
 msgid "Every converted video comes out no bigger than this."
-msgstr "Кожне сконвертоване відео буде не більшим за цей розмір."
+msgstr "Кожне перетворене відео буде не більшим за цей розмір."
 
 msgid "The size follows the quality"
 msgstr "Розмір залежить від якості"
@@ -2967,7 +2919,7 @@ msgstr "Як вмістити"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 132
 msgid "Configure how subtitles are handled during conversion."
-msgstr "Налаштуйте, як обробляються субтитри під час конвертації."
+msgstr "Налаштуйте обробку субтитрів під час перетворення."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 148
@@ -2977,25 +2929,25 @@ msgstr "Обробка субтитрів"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 150
 msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Виберіть, як субтитри будуть включені в вихідний файл. 'Вбудовані' зберігає їх всередині відеофайлу. 'Екстракт до .srt' створює окремі файли субтитрів."
+msgstr "Виберіть, як додавати субтитри до результату. «Вбудовані» зберігає їх у відеофайлі. «Видобути у .srt» створює окремі файли субтитрів."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
-msgstr "Тільки витягти субтитри"
+msgstr "Лише видобути субтитри"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 169
 msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Пропустіть конвертацію відео повністю та просто витягніть дорожки субтитрів у файли .srt."
+msgstr "Повністю пропустити перетворення відео й лише видобути доріжки субтитрів у файли .srt."
 
 #, python-brace-format
 msgid "Segment {num}"
-msgstr ""
+msgstr "Сегмент {num}"
 
 #, python-brace-format
 msgid "{start} → {end} ({duration})"
-msgstr ""
+msgstr "{start} → {end} ({duration})"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -3687,7 +3639,7 @@ msgstr "Перейти до початку сегмента"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 304
 msgid "Edit segment times"
-msgstr "Редагувати часи сегментів"
+msgstr "Редагувати час сегмента"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 311
@@ -3695,16 +3647,16 @@ msgid "Remove segment"
 msgstr "Видалити сегмент"
 
 msgid "Hours"
-msgstr ""
+msgstr "Години"
 
 msgid "Minutes"
-msgstr ""
+msgstr "Хвилини"
 
 msgid "Seconds"
-msgstr ""
+msgstr "Секунди"
 
 msgid "Centiseconds"
-msgstr ""
+msgstr "Соті частки секунди"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
@@ -3758,7 +3710,7 @@ msgstr "Недійсний діапазон часу"
 
 #, python-brace-format
 msgid "Start time must be before the end of the video ({duration})"
-msgstr ""
+msgstr "Час початку має бути раніше за кінець відео ({duration})"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 454
@@ -3981,13 +3933,13 @@ msgstr "Додати сегмент"
 # converter/ui/video_edit_page.py, line: 906
 #, python-brace-format
 msgid "Frame: {current}/{total}"
-msgstr "Рамка: {current}/{total}"
+msgstr "Кадр: {current}/{total}"
 
 msgid "Video position"
-msgstr ""
+msgstr "Позиція у відео"
 
 msgid "Drag to seek or adjust segment edges"
-msgstr ""
+msgstr "Перетягніть, щоб перейти або змінити межі сегмента"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 97
@@ -4002,7 +3954,7 @@ msgstr "Скасувати поточну позначку"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 164
 msgid "Back 1 second (Left)"
-msgstr "Назад на 1 секунду (Зліва)"
+msgstr "Назад на 1 секунду (стрілка ліворуч)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 256
@@ -4042,7 +3994,7 @@ msgstr "Наступний кадр"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 217
 msgid "Forward 1 second (Right)"
-msgstr "Перемотати вперед на 1 секунду (праворуч)"
+msgstr "Уперед на 1 секунду (стрілка праворуч)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 284
@@ -4051,12 +4003,12 @@ msgstr "Перемотати вперед на 1 секунду"
 
 #, python-brace-format
 msgid "Playback speed: {speed}x"
-msgstr ""
+msgstr "Швидкість відтворення: {speed}x"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 173
 msgid "Audio Track"
-msgstr "Аудіотрек"
+msgstr "Аудіодоріжка"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 194
@@ -4067,7 +4019,7 @@ msgstr "Переключити на повноекранний режим"
 # converter/ui/video_edit_ui.py, line: 308
 #, python-brace-format
 msgid "Frame: {current} / {total}"
-msgstr "Рамка: {current} / {total}"
+msgstr "Кадр: {current} / {total}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
@@ -4075,31 +4027,31 @@ msgid "Left"
 msgstr "Зліва"
 
 msgid "Crop from left"
-msgstr ""
+msgstr "Обрізати зліва"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Right"
-msgstr "Правильно"
+msgstr "Справа"
 
 msgid "Crop from right"
-msgstr ""
+msgstr "Обрізати справа"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Top"
-msgstr "Верхній"
+msgstr "Зверху"
 
 msgid "Crop from top"
-msgstr ""
+msgstr "Обрізати зверху"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Bottom"
-msgstr "Низ"
+msgstr "Знизу"
 
 msgid "Crop from bottom"
-msgstr ""
+msgstr "Обрізати знизу"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 363
@@ -4109,13 +4061,13 @@ msgid "Visual crop editor"
 msgstr "Візуальний редактор обрізки"
 
 msgid "Free"
-msgstr ""
+msgstr "Довільні"
 
 msgid "Original"
-msgstr ""
+msgstr "Початкові"
 
 msgid "Crop aspect ratio"
-msgstr ""
+msgstr "Співвідношення сторін обрізання"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 273
@@ -4143,13 +4095,13 @@ msgid "Volume"
 msgstr "Гучність"
 
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
-msgstr ""
+msgstr "Відео копіюється без перекодування. Обрізання, налаштування, поворот або додавання ефектів до зображення спричинить перекодування цього відео."
 
 msgid "Image"
-msgstr ""
+msgstr "Зображення"
 
 msgid "Reset image adjustments"
-msgstr ""
+msgstr "Скинути налаштування зображення"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
@@ -4157,7 +4109,7 @@ msgid "Brightness"
 msgstr "Яскравість"
 
 msgid "Contrast"
-msgstr ""
+msgstr "Контраст"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 347
@@ -4170,32 +4122,32 @@ msgid "Hue"
 msgstr "Відтінок"
 
 msgid "Source colours"
-msgstr ""
+msgstr "Початкові кольори"
 
 msgid "As the file says"
-msgstr ""
+msgstr "Згідно з файлом"
 
 msgid "HDR10 (PQ)"
-msgstr ""
+msgstr "HDR10 (PQ)"
 
 msgid "HDR (HLG)"
-msgstr ""
+msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
-msgstr ""
+msgstr "Стандартні (SDR)"
 
 msgid "Orientation"
-msgstr ""
+msgstr "Орієнтація"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 605
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 609
 msgid "Reset Transform"
-msgstr "Скинути трансформацію"
+msgstr "Скинути перетворення"
 
 msgid "Rotation"
-msgstr ""
+msgstr "Поворот"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 554
@@ -4219,19 +4171,19 @@ msgstr "Повернути на 90° вправо"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 585
 msgid "Flip Horizontal"
-msgstr "Перевернути горизонтально"
+msgstr "Віддзеркалити горизонтально"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 593
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 597
 msgid "Flip Vertical"
-msgstr "Перевернути вертикально"
+msgstr "Віддзеркалити вертикально"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 374
 msgid "Trim Segments"
-msgstr "Обрізати сегменти"
+msgstr "Сегменти обрізання"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 406
@@ -4256,19 +4208,19 @@ msgstr "Об'єднати сегменти в один файл"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 430
 msgid "Save each segment as a separate file"
-msgstr "Збережіть кожен сегмент як окремий файл"
+msgstr "Зберегти кожен сегмент в окремий файл"
 
 msgid "Segment output"
-msgstr ""
+msgstr "Збереження сегментів"
 
 msgid "Choose how marked segments are saved"
-msgstr ""
+msgstr "Виберіть, як зберігати позначені сегменти"
 
 msgid "Effects"
-msgstr ""
+msgstr "Ефекти"
 
 msgid "Reset effects"
-msgstr ""
+msgstr "Скинути ефекти"
 
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
@@ -4276,44 +4228,44 @@ msgid "Off"
 msgstr "Вимкнено"
 
 msgid "Light"
-msgstr ""
+msgstr "Слабке"
 
 msgid "Strong"
-msgstr ""
+msgstr "Сильне"
 
 msgid "Noise reduction"
-msgstr ""
+msgstr "Шумозаглушення"
 
 msgid "Sharpening"
-msgstr ""
+msgstr "Підвищення різкості"
 
 msgid "Stabilization"
-msgstr ""
+msgstr "Стабілізація"
 
 msgid "Applied when converting, not in the preview"
-msgstr ""
+msgstr "Застосовується під час перетворення, а не попереднього перегляду"
 
 msgid "Look or shader"
-msgstr ""
+msgstr "Колірний стиль або шейдер"
 
 msgid "None"
-msgstr ""
+msgstr "Немає"
 
 msgid "Choose a colour look (.cube) or shader (.hook)"
-msgstr ""
+msgstr "Вибрати колірний стиль (.cube) або шейдер (.hook)"
 
 msgid "Remove the look or shader"
-msgstr ""
+msgstr "Видалити колірний стиль або шейдер"
 
 msgid "Choose a Look or Shader"
-msgstr ""
+msgstr "Вибір колірного стилю або шейдера"
 
 msgid "Looks and shaders"
-msgstr ""
+msgstr "Колірні стилі та шейдери"
 
 #, python-brace-format
 msgid "Reset {setting} to default"
-msgstr ""
+msgstr "Відновити типове значення: {setting}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4338,7 +4290,7 @@ msgstr "Виберіть формат стиснення. H.264 є найбіл�
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 196
 msgid "Higher quality keeps more detail but creates larger files. 'Good' is a balanced choice for most videos."
-msgstr "Вища якість зберігає більше деталей, але створює більші файли. 'Добре' є збалансованим вибором для більшості відео."
+msgstr "Вища якість зберігає більше деталей, але створює більші файли. «Добра» — збалансований вибір для більшості відео."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4366,7 +4318,7 @@ msgid "Frame Rate"
 msgstr "Частота кадрів"
 
 msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
-msgstr ""
+msgstr "Менше кадрів за секунду — менший файл. Додаткові кадри змішуються із сусідніх: рух плавніший, але швидкий рух залишає слабкий шлейф."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4377,7 +4329,7 @@ msgstr ""
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 263
 msgid "Conversion Speed"
-msgstr "Швидкість конвертації"
+msgstr "Швидкість перетворення"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4386,7 +4338,7 @@ msgstr "Швидкість конвертації"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 265
 msgid "Slower conversion produces smaller files. Faster presets create larger files but finish sooner."
-msgstr "Повільніша конверсія створює менші файли. Швидші налаштування створюють більші файли, але закінчують швидше."
+msgstr "Повільніше перетворення створює менші файли. Швидші набори налаштувань створюють більші файли, але завершуються раніше."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 279
@@ -4418,13 +4370,13 @@ msgstr "Не вдалося прочитати метадані відео"
 
 #, python-brace-format
 msgid "Error getting video info: {error}"
-msgstr ""
+msgstr "Помилка отримання відомостей про відео: {error}"
 
 msgid "Error: No video stream found"
-msgstr ""
+msgstr "Помилка: відеопотік не знайдено"
 
 msgid "Error: Failed to load video file. Please check the file format and try again."
-msgstr ""
+msgstr "Помилка: не вдалося завантажити відеофайл. Перевірте формат файла та спробуйте знову."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 53
@@ -4441,7 +4393,7 @@ msgstr "Конвертувати відеоформати"
 msgid ""
 "MP4, MKV, AVI, WebM and many more\n"
 "with hardware acceleration support"
-msgstr "MP4, MKV, AVI, WebM та багато інших з підтримкою апаратного прискорення"
+msgstr "MP4, MKV, AVI, WebM та багато інших\nіз підтримкою апаратного прискорення"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 76
@@ -4453,7 +4405,7 @@ msgstr "Обрізати та вирізати відео"
 msgid ""
 "Select specific segments to keep\n"
 "and create new videos with only those parts"
-msgstr "Виберіть конкретні сегменти для збереження та створіть нові відео лише з цих частин."
+msgstr "Виберіть потрібні сегменти\nй створіть нові відео лише з цих частин"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 83
@@ -4465,7 +4417,7 @@ msgstr "Налаштування кольору відео"
 msgid ""
 "Control brightness, saturation, and hue\n"
 "to enhance your videos"
-msgstr "Керуйте яскравістю, насиченістю та відтінком, щоб покращити свої відео."
+msgstr "Керуйте яскравістю, насиченістю й відтінком,\nщоб поліпшити свої відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 90
@@ -4477,7 +4429,7 @@ msgstr "Швидкий режим копіювання"
 msgid ""
 "Change container format without re-encoding\n"
 "for ultra-fast processing with no quality loss"
-msgstr "Змінити формат контейнера без повторного кодування для ультра-швидкої обробки без втрати якості"
+msgstr "Змінюйте формат контейнера без перекодування\nдля надшвидкої обробки без втрати якості"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 109
@@ -4489,19 +4441,19 @@ msgstr "Обрізати відео"
 msgid ""
 "Remove unwanted areas from edges\n"
 "to focus on what matters"
-msgstr "Видалити небажані області з країв, щоб зосередитися на важливому."
+msgstr "Видаліть непотрібні ділянки на краях,\nщоб зосередитися на головному"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 113
 msgid "Audio Control"
-msgstr "Аудіо керування"
+msgstr "Керування аудіо"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 115
 msgid ""
 "Extract, copy, or re-encode audio\n"
 "with multiple codec options"
-msgstr "Витягніть, скопіюйте або повторно кодуйте аудіо з кількома варіантами кодеків."
+msgstr "Видобувайте, копіюйте або перекодовуйте аудіо\nз вибором різних кодеків"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 120
@@ -4513,7 +4465,7 @@ msgstr "Управління субтитрами"
 msgid ""
 "Extract subtitles to SRT files\n"
 "or keep them embedded in video"
-msgstr "Екстрактувати субтитри у файли SRT або зберегти їх вбудованими у відео"
+msgstr "Видобувайте субтитри у файли SRT\nабо залишайте їх вбудованими у відео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 127
@@ -4525,12 +4477,12 @@ msgstr "Пакетна обробка"
 msgid ""
 "Convert multiple videos at once\n"
 "with queue management"
-msgstr "Конвертуйте кілька відео одночасно з управлінням чергою"
+msgstr "Перетворюйте кілька відео одночасно\nз керуванням чергою"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 465
 msgid "Show dialog on startup"
-msgstr "Показати діалог під час запуску"
+msgstr "Показувати діалог під час запуску"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 172
@@ -4538,17 +4490,17 @@ msgid "Let's Start"
 msgstr "Давайте почнемо"
 
 msgid "The file container could not be read. It may be a corrupted download or an unsupported format."
-msgstr ""
+msgstr "Не вдалося прочитати контейнер файла. Можливо, файл пошкоджено під час завантаження або він має непідтримуваний формат."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 22
 msgid "File or folder not found."
-msgstr "Файл або папку не знайдено."
+msgstr "Файл або теку не знайдено."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 21
 msgid "Permission denied — check file/folder permissions."
-msgstr "Доступ заборонено — перевірте дозволи файлу/папки."
+msgstr "Доступ заборонено — перевірте дозволи файлу/теки."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 20
@@ -4571,17 +4523,17 @@ msgstr "Цей кодек не підтримується на вашій сис
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 25
 msgid "A required decoder is not installed."
-msgstr "Вимога декодера не встановлена."
+msgstr "Не встановлено потрібного декодувальника."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 26
 msgid "A required encoder is not installed."
-msgstr "Необхідний кодер не встановлено."
+msgstr "Не встановлено потрібного кодувальника."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 27
 msgid "Failed to initialize the encoder — the selected settings may be incompatible."
-msgstr "Не вдалося ініціалізувати кодер — вибрані налаштування можуть бути несумісними."
+msgstr "Не вдалося ініціалізувати кодувальник — вибрані налаштування можуть бути несумісними."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 28
@@ -4591,12 +4543,12 @@ msgstr "Не вдалося активувати апаратне прискор
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 29
 msgid "Not enough memory to complete the conversion."
-msgstr "Недостатньо пам'яті для завершення конвертації."
+msgstr "Недостатньо пам'яті для завершення перетворення."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 30
 msgid "The file does not contain a valid media stream."
-msgstr "Файл не містить дійсного медіа-потоку."
+msgstr "Файл не містить придатного медіапотоку."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 31
@@ -4609,44 +4561,44 @@ msgid "Could not decode the file — it may be corrupted."
 msgstr "Не вдалося декодувати файл — він може бути пошкоджений."
 
 msgid "The conversion command was built incorrectly. Please report this problem."
-msgstr "Команду конвертації сформовано неправильно. Будь ласка, повідомте про цю проблему."
+msgstr "Команду перетворення сформовано неправильно. Будь ласка, повідомте про цю проблему."
 
 msgid "FFmpeg rejected the conversion command. Check the additional options."
-msgstr "FFmpeg відхилив команду конвертації. Перевірте додаткові параметри."
+msgstr "FFmpeg відхилив команду перетворення. Перевірте додаткові параметри."
 
 msgid "The GPU could not be opened. Try disabling GPU encoding."
 msgstr "Не вдалося відкрити GPU. Спробуйте вимкнути кодування на GPU."
 
 msgid "The encoder stopped making progress and was terminated."
-msgstr "Кодер припинив прогрес і був завершений."
+msgstr "Кодувальник перестав просуватися, і його було зупинено."
 
 msgid "WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. Choose one of those codecs, or MKV to keep the original ones."
-msgstr ""
+msgstr "WebM містить лише відео VP8, VP9 або AV1 та аудіо Vorbis або Opus. Виберіть один із цих кодеків або MKV, щоб зберегти початкові."
 
 msgid "The conversion finished without producing a file."
-msgstr "Конвертація завершилася без створення файлу."
+msgstr "Перетворення завершилося без створення файлу."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 968
 #, python-brace-format
 msgid "Conversion failed with code {0}"
-msgstr "Конвертація не вдалася з кодом {0}"
+msgstr "Не вдалося перетворити: код {0}"
 
 #, python-brace-format
 msgid "Video stream: codec={codec}, pixel format={pixel_format}"
-msgstr ""
+msgstr "Відеопотік: кодек={codec}, формат пікселів={pixel_format}"
 
 msgid "Could not analyze the video stream with ffprobe"
-msgstr ""
+msgstr "Не вдалося проаналізувати відеопотік за допомогою ffprobe"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 185
 #, python-brace-format
 msgid "Error starting conversion: {0}"
-msgstr "Помилка при запуску конвертації: {0}"
+msgstr "Помилка при запуску перетворення: {0}"
 
 msgid "The conversion could not start."
-msgstr ""
+msgstr "Не вдалося почати перетворення."
 
 msgid "Preparing…"
 msgstr "Підготовка…"
@@ -4655,7 +4607,7 @@ msgid "Extracting subtitles…"
 msgstr "Видобування субтитрів…"
 
 msgid "Measuring camera shake…"
-msgstr ""
+msgstr "Вимірювання тремтіння камери…"
 
 msgid "Checking the GPU encoder…"
 msgstr "Перевірка кодувальника GPU…"
@@ -4664,7 +4616,7 @@ msgid "GPU unavailable, using the processor"
 msgstr "GPU недоступний, використовується процесор"
 
 msgid "Adding subtitles…"
-msgstr ""
+msgstr "Додавання субтитрів…"
 
 msgid "Copying without re-encoding"
 msgstr "Копіювання без перекодування"
@@ -4674,7 +4626,7 @@ msgstr "Копіювання без перекодування"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 262
 msgid "Full GPU acceleration"
-msgstr "Повна апаратна прискорення GPU"
+msgstr "Повне прискорення на GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 215
@@ -4686,14 +4638,14 @@ msgstr "Програмне декодування та кодування за �
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 216
 msgid "Software encoding"
-msgstr "Кодування програмного забезпечення"
+msgstr "Програмне кодування"
 
 msgid "Analyzing the video for the target size…"
-msgstr ""
+msgstr "Аналіз відео для заданого розміру…"
 
 #, python-brace-format
 msgid "Input probe unavailable: {0}"
-msgstr ""
+msgstr "Аналіз вхідного файла недоступний: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 325
@@ -4702,23 +4654,23 @@ msgstr "Не виявлено прогресу. Процес може бути �
 
 #, python-brace-format
 msgid "Output duration not verified: {0}"
-msgstr ""
+msgstr "Тривалість результату не перевірено: {0}"
 
 msgid "The output could not be verified against the input"
-msgstr ""
+msgstr "Не вдалося перевірити відповідність результату початковому файлу"
 
 msgid "The output does not carry every subtitle track of the original"
-msgstr ""
+msgstr "Результат містить не всі доріжки субтитрів оригіналу"
 
 msgid "Checking output file..."
 msgstr "Перевірка вихідного файлу..."
 
 msgid "Original deleted after output validation"
-msgstr ""
+msgstr "Оригінал видалено після перевірки результату"
 
 #, python-brace-format
 msgid "Original preserved: {0}"
-msgstr ""
+msgstr "Оригінал збережено: {0}"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4729,7 +4681,7 @@ msgstr ""
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1466
 msgid "Conversion Complete"
-msgstr "Конверсія завершена"
+msgstr "Перетворення завершено"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
@@ -4738,10 +4690,10 @@ msgstr "Конверсія завершена"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 942
 msgid "Conversion completed successfully!"
-msgstr "Конверсія успішно завершена!"
+msgstr "Перетворення успішно завершено!"
 
 msgid "The full FFmpeg comes from the RPM Fusion repository, which must be enabled first. The command replaces the limited ffmpeg-free package."
-msgstr ""
+msgstr "Повна версія FFmpeg постачається з репозиторію RPM Fusion, який спочатку потрібно ввімкнути. Команда замінює обмежений пакет ffmpeg-free."
 
 #, python-brace-format
 msgid "Additional options could not be parsed: {0}"
@@ -4782,7 +4734,7 @@ msgstr "Відеопотоки"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 160
 msgid "Audio Streams"
-msgstr "Аудіо потоки"
+msgstr "Аудіопотоки"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 171
@@ -4902,7 +4854,7 @@ msgstr "Піксельний формат"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 388
 msgid "Copy pixel format"
-msgstr "Копіювати формат пікселя"
+msgstr "Копіювати формат пікселів"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 419
@@ -5016,7 +4968,7 @@ msgstr "Копіювати частоту дискретизації"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 524
 msgid "CD Quality"
-msgstr "CD Якість"
+msgstr "Якість CD"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 526
@@ -5036,12 +4988,12 @@ msgstr "(Стерео)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 543
 msgid "(5.1 Surround)"
-msgstr "(5.1 Долбі)"
+msgstr "(Об'ємний звук 5.1)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 545
 msgid "(7.1 Surround)"
-msgstr "(7.1 Долбі)"
+msgstr "(Об'ємний звук 7.1)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 548
@@ -5061,7 +5013,7 @@ msgstr "Скопіювати значення"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 653
 msgid "Format Details"
-msgstr "Формат деталей"
+msgstr "Подробиці формату"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 658
@@ -5086,27 +5038,27 @@ msgstr "Помилка отримання інформації про файл"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 716
 msgid "Retry"
-msgstr "Спробуйте ще раз"
+msgstr "Повторити"
 
 #, python-brace-format
 msgid "The segment {0} starts before the previous one ends; list the segments in order without overlaps."
-msgstr ""
+msgstr "Сегмент {0} починається раніше, ніж закінчується попередній; перелічіть сегменти за порядком без перекриттів."
 
 msgid "Copy video"
 msgstr "Копіювати відео"
 
 msgid "The preset text is empty or too large."
-msgstr "Текст пресету порожній або надто великий."
+msgstr "Текст набору налаштувань порожній або надто великий."
 
 #, python-brace-format
 msgid "The preset is not valid TOML: {0}"
-msgstr "Пресет не є коректним TOML: {0}"
+msgstr "Набір налаштувань не є коректним TOML: {0}"
 
 msgid "The preset is not valid TOML: its tables are nested too deeply."
-msgstr ""
+msgstr "Набір налаштувань має некоректний формат TOML: його таблиці вкладено надто глибоко."
 
 msgid "The preset must be a TOML table."
-msgstr "Пресет має бути таблицею TOML."
+msgstr "Набір налаштувань має бути таблицею TOML."
 
 #, python-brace-format
 msgid "[{0}] must be a table."
@@ -5154,7 +5106,7 @@ msgstr "[encoder.{0}]: {1}"
 
 #, python-brace-format
 msgid "Unsupported preset format {0}; this version reads format {1}."
-msgstr "Формат пресету {0} не підтримується; ця версія читає формат {1}."
+msgstr "Формат набору налаштувань {0} не підтримується; ця версія читає формат {1}."
 
 #, python-brace-format
 msgid "Unknown section(s): {0}"
@@ -5170,7 +5122,7 @@ msgid "[video] resolution must look like 1920x1080."
 msgstr "[video] resolution має мати вигляд 1920x1080."
 
 msgid "[video] fps must be a number between 1 and 240."
-msgstr ""
+msgstr "[video] fps має бути числом від 1 до 240."
 
 msgid "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
 msgstr "[video] pixel_format має бути назвою формату пікселів FFmpeg, наприклад yuv420p."
@@ -5204,96 +5156,103 @@ msgstr "У [size] є невідомі ключі: {0}"
 
 #, python-brace-format
 msgid "[encoder.{0}] is not an encoder name."
-msgstr "[encoder.{0}] не є назвою кодера."
+msgstr "[encoder.{0}] не є назвою кодувальника."
 
 msgid "A preset that copies the video cannot carry encoder arguments."
-msgstr "Пресет, який копіює відео, не може містити аргументи кодера."
+msgstr "Набір налаштувань для копіювання відео не може містити аргументів кодувальника."
 
 #, python-brace-format
 msgid "Invalid preset identifier: {0}"
-msgstr "Недійсний ідентифікатор пресету: {0}"
+msgstr "Недійсний ідентифікатор набору налаштувань: {0}"
 
 #, python-brace-format
 msgid "Could not read the preset: {0}"
-msgstr "Не вдалося прочитати пресет: {0}"
+msgstr "Не вдалося прочитати набір налаштувань: {0}"
 
 msgid "The preset is not UTF-8 text."
-msgstr "Пресет не є текстом у кодуванні UTF-8."
+msgstr "Набір налаштувань не є текстом у кодуванні UTF-8."
 
 msgid "Bundled presets cannot be deleted; duplicate one to edit it."
-msgstr "Вбудовані пресети не можна видалити; продублюйте один із них, щоб редагувати."
+msgstr "Вбудовані набори налаштувань не можна видалити; продублюйте один із них, щоб редагувати."
 
 #, python-brace-format
 msgid "{0} (copy)"
 msgstr "{0} (копія)"
 
 msgid "The keyframes of the video are too far apart to split it into parts under the size limit."
-msgstr ""
+msgstr "Ключові кадри відео надто далеко один від одного, щоб розділити його на частини в межах розміру."
 
 msgid "The video could not be split into parts under the size limit."
-msgstr ""
+msgstr "Не вдалося розділити відео на частини в межах розміру."
 
 #, python-brace-format
 msgid "{0} cannot hold picture subtitles (PGS, DVD): {1} track left out. Choose MKV to keep it."
 msgid_plural "{0} cannot hold picture subtitles (PGS, DVD): {1} tracks left out. Choose MKV to keep them."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{0} не підтримує графічні субтитри (PGS, DVD): пропущено {1} доріжку. Виберіть MKV, щоб зберегти субтитри."
+msgstr[1] "{0} не підтримує графічні субтитри (PGS, DVD): пропущено {1} доріжки. Виберіть MKV, щоб зберегти субтитри."
+msgstr[2] "{0} не підтримує графічні субтитри (PGS, DVD): пропущено {1} доріжок. Виберіть MKV, щоб зберегти субтитри."
+msgstr[3] "{0} не підтримує графічні субтитри (PGS, DVD): пропущено {1} доріжку. Виберіть MKV, щоб зберегти субтитри."
 
 #, python-brace-format
 msgid "Part {0} starts {1:.3f} s after a keyframe, where a stream copy would have to begin. Re-encoding the video instead, so every part starts exactly where it was cut; this takes longer."
-msgstr ""
+msgstr "Частина {0} починається через {1:.3f} с після ключового кадру, з якого мало б початися копіювання потоку. Натомість відео перекодовується, щоб кожна частина починалася точно в місці розрізу; це триває довше."
 
 msgid "Splitting into parts…"
 msgstr "Поділ на частини…"
 
 msgid "Completed — re-encoded: a cut was not on a keyframe"
-msgstr ""
+msgstr "Завершено — перекодовано: розріз був не на ключовому кадрі"
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit. The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "Split into {0} parts that fit the size limit. The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Розділено на {0} частину в межах розміру. Відео перекодовано, бо розріз починався не на ключовому кадрі."
+msgstr[1] "Розділено на {0} частини в межах розміру. Відео перекодовано, бо розріз починався не на ключовому кадрі."
+msgstr[2] "Розділено на {0} частин у межах розміру. Відео перекодовано, бо розріз починався не на ключовому кадрі."
+msgstr[3] "Розділено на {0} частину в межах розміру. Відео перекодовано, бо розріз починався не на ключовому кадрі."
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit."
 msgid_plural "Split into {0} parts that fit the size limit."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Розділено на {0} частину в межах розміру."
+msgstr[1] "Розділено на {0} частини в межах розміру."
+msgstr[2] "Розділено на {0} частин у межах розміру."
+msgstr[3] "Розділено на {0} частину в межах розміру."
 
 msgid "Conversion completed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr ""
+msgstr "Перетворення успішно завершено! Відео перекодовано, бо розріз починався не на ключовому кадрі."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Успішно об'єднано {0} сегмент! Відео перекодовано, бо розріз починався не на ключовому кадрі."
+msgstr[1] "Успішно об'єднано {0} сегменти! Відео перекодовано, бо розріз починався не на ключовому кадрі."
+msgstr[2] "Успішно об'єднано {0} сегментів! Відео перекодовано, бо розріз починався не на ключовому кадрі."
+msgstr[3] "Успішно об'єднано {0} сегмент! Відео перекодовано, бо розріз починався не на ключовому кадрі."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully!"
 msgid_plural "All {0} segments have been joined successfully!"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Успішно об'єднано {0} сегмент!"
+msgstr[1] "Успішно об'єднано {0} сегменти!"
+msgstr[2] "Успішно об'єднано {0} сегментів!"
+msgstr[3] "Успішно об'єднано {0} сегмент!"
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Успішно оброблено {0} сегмент! Відео перекодовано, бо розріз починався не на ключовому кадрі."
+msgstr[1] "Успішно оброблено {0} сегменти! Відео перекодовано, бо розріз починався не на ключовому кадрі."
+msgstr[2] "Успішно оброблено {0} сегментів! Відео перекодовано, бо розріз починався не на ключовому кадрі."
+msgstr[3] "Успішно оброблено {0} сегмент! Відео перекодовано, бо розріз починався не на ключовому кадрі."
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully!"
 msgid_plural "All {0} segments have been processed successfully!"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Успішно оброблено {0} сегмент!"
+msgstr[1] "Успішно оброблено {0} сегменти!"
+msgstr[2] "Успішно оброблено {0} сегментів!"
+msgstr[3] "Успішно оброблено {0} сегмент!"
 
 msgid "WhatsApp video"
 msgstr "Відео для WhatsApp"
@@ -5320,7 +5279,7 @@ msgid "Copied as it is: it already fits"
 msgstr "Скопійовано як є: вже вміщується"
 
 msgid "Converted at the chosen quality: it already fits"
-msgstr "Сконвертовано у вибраній якості: вже вміщується"
+msgstr "Перетворено з вибраною якістю: вже вміщується"
 
 #, python-brace-format
 msgid "Split without re-encoding into {0} part"
@@ -5328,9 +5287,10 @@ msgid_plural "Split without re-encoding into {0} parts"
 msgstr[0] "Розділено без перекодування на {0} частину"
 msgstr[1] "Розділено без перекодування на {0} частини"
 msgstr[2] "Розділено без перекодування на {0} частин"
+msgstr[3] "Розділено без перекодування на {0} частину"
 
 msgid "Converted at the chosen quality, then split into even parts"
-msgstr "Сконвертовано у вибраній якості, потім розділено на рівні частини"
+msgstr "Перетворено з вибраною якістю, потім розділено на рівні частини"
 
 msgid "original resolution"
 msgstr "початкова роздільна здатність"
@@ -5346,19 +5306,20 @@ msgstr "звук при {rate} kbit/s"
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 67
 msgid "Convert Video"
-msgstr "Конвертувати відео"
+msgstr "Перетворити відео"
 
 #, python-brace-format
 msgid "Convert {0} Video"
 msgid_plural "Convert {0} Videos"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Перетворити {0} відео"
+msgstr[1] "Перетворити {0} відео"
+msgstr[2] "Перетворити {0} відео"
+msgstr[3] "Перетворити {0} відео"
 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 108
 msgid "No valid local files selected"
-msgstr "Не вибрано жодних дійсних локальних файлів."
+msgstr "Не вибрано придатних локальних файлів"
 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 109

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: big-video-converter\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-28 01:08+0000\n"
+"PO-Revision-Date: 2026-10-03 10:36+0000\n"
 "Last-Translator: BigLinux\n"
 "Language-Team: BigLinux\n"
 "Language: fi\n"
@@ -67,7 +67,7 @@ msgstr "Korkea"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 109
 msgid "Medium"
-msgstr "Keskikokoinen"
+msgstr "Keskitaso"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 76
@@ -82,12 +82,12 @@ msgstr "Erittäin matala"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 78
 msgid "Super Low"
-msgstr "Erittäin matala"
+msgstr "Erittäin heikko"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 103
 msgid "Copy — No re-encoding"
-msgstr "Kopio — Ei uudelleenkoodattua"
+msgstr "Kopioi — ei uudelleenkoodausta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 104
@@ -102,7 +102,7 @@ msgstr "H.265 — Tehokkaampi"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 106
 msgid "AV1 — Best compression"
-msgstr "AV1 — Paras puristus"
+msgstr "AV1 — paras pakkaus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 107
@@ -132,7 +132,7 @@ msgstr "Nopea (suurempi tiedosto)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 123
 msgid "Slightly fast"
-msgstr "Hieman nopeampi"
+msgstr "Hieman nopea"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 125
@@ -147,12 +147,12 @@ msgstr "Erittäin hidas (pienin tiedosto)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 145
 msgid "Extract as separate file"
-msgstr "Poista erilliseen tiedostoon"
+msgstr "Pura erilliseksi tiedostoksi"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 145
 msgid "Keep inside the video"
-msgstr "Pidä video sisällä"
+msgstr "Säilytä videossa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 126
@@ -502,7 +502,7 @@ msgstr "2K QHD (2560×1440)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 152
 msgid "Full HD (1920×1080)"
-msgstr "Täysi HD (1920×1080)"
+msgstr "Full HD (1920×1080)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 153
@@ -527,7 +527,7 @@ msgstr "2K QHD Pystysuunnassa (1440×2560)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 157
 msgid "Full HD Vertical (1080×1920)"
-msgstr "Koko HD Pystysuora (1080×1920)"
+msgstr "Full HD pysty (1080×1920)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 158
@@ -549,7 +549,7 @@ msgid "Custom"
 msgstr "Mukautettu"
 
 msgid "24 fps (cinema)"
-msgstr ""
+msgstr "24 fps (elokuva)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 217
@@ -610,10 +610,7 @@ msgid ""
 "Copy is usually best, fast and preserves full quality.\n"
 "\n"
 "Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
-msgstr ""
-"Kopio on yleensä paras, nopea ja säilyttää täyden laadun.\n"
-"\n"
-"Uudenkoodaus vähentää hieman laatua, mutta parantaa yhteensopivuutta ja voi pienentää tiedostokokoa."
+msgstr "Kopiointi on yleensä paras vaihtoehto: nopea ja säilyttää täyden laadun.\n\nUudelleenkoodaus heikentää laatua hieman mutta parantaa yhteensopivuutta ja voi pienentää tiedostokokoa."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 234
@@ -656,12 +653,7 @@ msgid ""
 "• AAC: Most compatible, good quality\n"
 "• Opus: Excellent quality at small sizes\n"
 "• AC3 (Dolby Digital): Good for home theater"
-msgstr ""
-"Ääniformaatti (muuntamisen yhteydessä):\n"
-"\n"
-"• AAC: Yhteensopivin, hyvä laatu\n"
-"• Opus: Erinomainen laatu pienissä ko'oissa\n"
-"• AC3 (Dolby Digital): Hyvä kotiteatterille"
+msgstr "Äänimuoto (muunnettaessa):\n\n• AAC: paras yhteensopivuus, hyvä laatu\n• Opus: erinomainen laatu pienellä tiedostokoolla\n• AC3 (Dolby Digital): sopii kotiteatteriin"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 253
@@ -685,22 +677,22 @@ msgid ""
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
 "• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
-msgstr ""
+msgstr "Muunnetun videon kuvataajuus:\n\n• Vähemmän kuvia: pienempi tiedosto. Samalla laadulla mitattuna 30 → 24 fps säästi 10–17 % ja 30 → 15 fps säästi 28–42 %\n• Enemmän kuvia: välikuvat muodostetaan yhdistämällä viereisiä kuvia, jolloin liike näyttää sulavammalta mutta nopeasta liikkeestä jää hento jälki"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
-msgstr ""
+msgstr "Poistaa rakeisuutta ja heikossa valossa kuvatun videon kohinaa. Voimakkaampi asetus pehmentää myös pieniä yksityiskohtia. Puhtaampi video pakkautuu hieman pienemmäksi tiedostoksi."
 
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
-msgstr ""
+msgstr "Terävöittää reunoja ja pieniä yksityiskohtia (AMD:n kontrastiin mukautuva terävöitys). Terävämpi video tuottaa hieman suuremman tiedoston."
 
 msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
-msgstr ""
+msgstr "Vakauttaa tärisevällä kameralla kuvattua videota. Video analysoidaan ensin, joten muunnos kestää noin kaksinkertaisen ajan. Kuvaa lähennetään hieman reunoilta liikkeen peittämiseksi."
 
 msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
-msgstr ""
+msgstr "Videon värien koodaustapa. Säilytä tiedoston oma määritys, ellei esikatselu näytä harmaalta ja haalistuneelta. Tällöin tiedosto on HDR-videota ilman asianmukaista merkintää, yleensä HDR10 (PQ) tai joidenkin lähetysten tapauksessa HLG. Muunnos käyttää samaa tulkintaa."
 
 msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
-msgstr ""
+msgstr "Käyttää LUT-tiedoston (.cube, .3dl) tai mpv-varjostimen (.hook, .glsl) värityyliä koko videoon."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 265
@@ -730,7 +722,7 @@ msgid ""
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 0% (no change)"
-msgstr ""
+msgstr "• Siirrä oikealle: eloisammat värit\n• Siirrä vasemmalle: hillitymmät värit\n• Oletus: 0 % (ei muutosta)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 270
@@ -757,12 +749,7 @@ msgid ""
 "\n"
 "You can export selected parts as one file or as multiple clips\n"
 " ideal for creating short videos for social media."
-msgstr ""
-"Valitse videosta säilytettävät osat.\n"
-"\n"
-"Lisää osioita + -painikkeella tai suoraan videossa käyttämällä videon yläpuolella olevaa merkkipainiketta.\n"
-"\n"
-"Voit viedä valitut osat yhtenä tiedostona tai useina klippeinä, mikä on ihanteellista lyhyiden videoiden luomiseen sosiaaliseen mediaan."
+msgstr "Valitse videosta säilytettävät osat.\n\nLisää osia +-painikkeella tai suoraan videosta sen yläpuolella olevalla merkkipainikkeella.\n\nVoit viedä valitut osat yhtenä tiedostona tai erillisinä leikkeinä\n mikä sopii lyhyiden somevideoiden tekemiseen."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 282
@@ -870,13 +857,7 @@ msgid ""
 "residual noise during pauses between speech.\n"
 "\n"
 "Adjust intensity from low to maximum."
-msgstr ""
-"Meluportti vaimentaa ääntä, joka on alle äänenvoimakkuuden rajan.\n"
-"\n"
-"Hyödyllinen yhdessä melun vähentämisen kanssa, jotta voidaan poistaa\n"
-"jäännösmelu puheenväleillä.\n"
-"\n"
-"Säädä intensiivisyyttä matalasta maksimiin."
+msgstr "Kohinaportti vaientaa kynnysarvoa hiljaisemmat äänet\n\nYhdessä kohinanpoiston kanssa se auttaa poistamaan\njäännöskohinaa puheen tauoista.\n\nSäädä voimakkuutta vähäisestä maksimiin."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 325
@@ -886,7 +867,7 @@ msgstr "Peruuta tämän tiedoston muunnos"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 326
 msgid "Skip this file and do not convert it"
-msgstr "Ohita tämä tiedosto eikä muunna sitä."
+msgstr "Ohita tämä tiedosto muuntamatta sitä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 362
@@ -896,12 +877,7 @@ msgid ""
 "Audio can still be re-encoded, cleaned or adjusted independently.\n"
 "\n"
 "Does not allow changing video codec, resolution or applying video filters."
-msgstr ""
-"Kopioi videovirran ilman uudelleenkoodauksen — välitön ja häviötön.\n"
-"\n"
-"Ääntä voidaan silti uudelleenkoodata, puhdistaa tai säätää itsenäisesti.\n"
-"\n"
-"Ei salli videokoodekin, resoluution muuttamista tai videosuodattimien soveltamista."
+msgstr "Kopioi videovirran ilman uudelleenkoodausta — heti ja häviöttömästi.\n\nÄäni voidaan silti koodata uudelleen, puhdistaa tai säätää erikseen.\n\nVideokoodekkia tai resoluutiota ei voi muuttaa eikä videosuodattimia käyttää."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 367
@@ -916,7 +892,7 @@ msgstr "Käyttää H.265 (HEVC), joka tarjoaa paremman pakkaussuhteen kuin H.264
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 377
 msgid "Uses AV1, the latest generation codec with the best compression available. Produces the smallest files but encoding is slower. Ideal for archiving or uploading where size matters most."
-msgstr "Käyttää AV1:stä, uusinta sukupolven koodekkia, jossa on paras saatavilla oleva pakkaus. Tuottaa pienimmät tiedostot, mutta koodaus on hitaampaa. Ihanteellinen arkistointiin tai lataamiseen, jossa koko on tärkein."
+msgstr "Käyttää AV1:tä, uusimman sukupolven koodekkia, jolla on paras saatavilla oleva pakkaussuhde. Tuottaa pienimmät tiedostot, mutta koodaus on hitaampaa. Sopii arkistointiin tai lähettämiseen, kun koko on tärkein."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 837
@@ -947,12 +923,12 @@ msgstr "{} videotiedostoa on lisätty jonoon."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
-msgstr "Ei tiedostoja löytynyt"
+msgstr "Tiedostoja ei löytynyt"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 924
 msgid "No valid video files were found in the selected folder."
-msgstr "Valittavasta kansiosta ei löytynyt voimassa olevia videotiedostoja."
+msgstr "Valitusta kansiosta ei löytynyt kelvollisia videotiedostoja."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -968,7 +944,7 @@ msgstr "Lisää verkkotiedosto"
 msgid ""
 "Connect to a remote server to browse and add video files.\n"
 "Files are accessed directly from the network without downloading."
-msgstr "Yhdistä etäpalvelimeen selataksesi ja lisätäksesi videotiedostoja. Tiedostoihin pääsee suoraan verkosta ilman lataamista."
+msgstr "Yhdistä etäpalvelimeen videotiedostojen selaamista ja lisäämistä varten.\nTiedostoja käytetään suoraan verkosta lataamatta niitä."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 244
@@ -1005,7 +981,7 @@ msgstr "Etäpolku"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 295
 msgid "Connect and Browse"
-msgstr "Yhdistä ja Selaa"
+msgstr "Yhdistä ja selaa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 308
@@ -1046,29 +1022,29 @@ msgstr "Päävalikko"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 348
 msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Tekstityksen poiminta vain -tila on aktiivinen — videota EI muunneta"
+msgstr "⚠ Pelkkä tekstitysten purku on käytössä — videota EI muunneta"
 
 msgid "Stop converting and close?"
-msgstr ""
+msgstr "Lopetetaanko muunnokset ja suljetaanko sovellus?"
 
 msgid "Conversions are still running. Closing stops unfinished work and keeps its originals."
-msgstr ""
+msgstr "Muunnoksia on yhä käynnissä. Sulkeminen keskeyttää keskeneräiset muunnokset ja säilyttää alkuperäiset tiedostot."
 
 msgid "Keep converting"
-msgstr ""
+msgstr "Jatka muunnoksia"
 
 msgid "Stop and close"
-msgstr ""
+msgstr "Lopeta ja sulje"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 587
 msgid "Queue"
-msgstr "Jonosarja"
+msgstr "Jono"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 592
 msgid "Editor"
-msgstr "Muokkaaja"
+msgstr "Editori"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 290
@@ -1081,10 +1057,10 @@ msgid "File not found"
 msgstr "Tiedostoa ei löytynyt"
 
 msgid "Edit video"
-msgstr ""
+msgstr "Muokkaa videota"
 
 msgid "Changes apply only to the selected video"
-msgstr ""
+msgstr "Muutokset koskevat vain valittua videota"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
@@ -1092,15 +1068,15 @@ msgid "Could not load video file"
 msgstr "Videotiedostoa ei voitu ladata."
 
 msgid "Conversion in progress"
-msgstr ""
+msgstr "Muunnos käynnissä"
 
 msgid "New videos can be added when the current conversions finish."
-msgstr ""
+msgstr "Uusia videoita voi lisätä, kun nykyiset muunnokset valmistuvat."
 
 msgid "This file cannot be opened"
 msgid_plural "These files cannot be opened"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Tätä tiedostoa ei voi avata"
+msgstr[1] "Näitä tiedostoja ei voi avata"
 
 #, python-brace-format
 msgid ""
@@ -1109,11 +1085,11 @@ msgid ""
 msgid_plural ""
 "They are not on a local or mounted drive. Open their network share in the file manager, or use “Add Network File”, then add them again:\n"
 "{files}"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Tiedosto ei ole paikallisella tai liitetyllä asemalla. Avaa sen verkkojako tiedostonhallinnassa tai käytä toimintoa ”Lisää verkkotiedosto” ja lisää tiedosto uudelleen:\n{files}"
+msgstr[1] "Tiedostot eivät ole paikallisella tai liitetyllä asemalla. Avaa niiden verkkojako tiedostonhallinnassa tai käytä toimintoa ”Lisää verkkotiedosto” ja lisää tiedostot uudelleen:\n{files}"
 
 msgid "The settings sent by the player could not be used"
-msgstr ""
+msgstr "Soittimen lähettämiä asetuksia ei voitu käyttää"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1677
@@ -1125,7 +1101,7 @@ msgstr "Riippuvuuksia ei löytynyt"
 msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
-msgstr "FFmpeg ja/tai MPV eivät ole asennettuina, emmekä pysty määrittämään, miten ne asennetaan järjestelmällesi. Asenna ne manuaalisesti jakelusi pakettienhallinnan avulla."
+msgstr "FFmpeg ja/tai MPV eivät ole asennettuina, eikä niiden asennustapaa järjestelmääsi voitu määrittää.\nAsenna ne käsin jakelusi paketinhallinnalla."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1692
@@ -1289,7 +1265,7 @@ msgid "YouTube 4K (H.265)"
 msgstr "YouTube 4K (H.265)"
 
 msgid "H.265 10-bit friendly upload for 2160p footage. Smaller files than H.264 at the same quality; YouTube re-encodes on its side."
-msgstr "10-bittiseen H.265-lataukseen sopiva 2160p-materiaalille. Pienemmät tiedostot kuin H.264:llä samalla laadulla; YouTube koodaa uudelleen omalla puolellaan."
+msgstr "H.265-lataus 2160p-materiaalille, sopii 10-bittiselle videolle. Pienemmät tiedostot kuin H.264:llä samalla laadulla; YouTube koodaa videon uudelleen palvelussaan."
 
 msgid "4k"
 msgstr "4k"
@@ -1300,7 +1276,7 @@ msgstr "2160p"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 140
 msgid "Low disk space"
-msgstr "Alhainen levytila"
+msgstr "Vähän levytilaa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 142
@@ -1323,7 +1299,7 @@ msgid "Continue"
 msgstr "Jatka"
 
 msgid "The additional FFmpeg options cannot be used"
-msgstr ""
+msgstr "FFmpegin lisäasetuksia ei voi käyttää"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 335
@@ -1342,7 +1318,7 @@ msgstr "Kaikki jonossa olevat tiedostot on käsitelty."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 37
 msgid "Conversion"
-msgstr "Muunna"
+msgstr "Muunnos"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 417
@@ -1350,12 +1326,12 @@ msgid "Editing"
 msgstr "Muokkaaminen"
 
 msgid "Resize sidebar"
-msgstr ""
+msgstr "Muuta sivupalkin kokoa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 468
 msgid "Video Codec"
-msgstr "Videokoodek"
+msgstr "Videokoodekki"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1393,17 +1369,17 @@ msgstr "Valitse käytettävä GPU."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 156
 msgid "Auto"
-msgstr "Auto"
+msgstr "Automaattinen"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 159
 msgid "Output Format"
-msgstr "Tulostusmuoto"
+msgstr "Tulostiedoston muoto"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 159
 msgid "Container format for output file"
-msgstr "Tulostustiedoston säiliömuoto"
+msgstr "Tulostiedoston säiliömuoto"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 171
@@ -1423,7 +1399,7 @@ msgstr "Tekstitykset"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 189
 msgid "Noise Cleaning (AI)"
-msgstr "Meluhälyn puhdistus (AI)"
+msgstr "Kohinanpoisto (tekoäly)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 190
@@ -1433,7 +1409,7 @@ msgstr "Poista taustamelu"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 193
 msgid "Enable noise reduction"
-msgstr "Ota käyttöön melunvaimennus"
+msgstr "Ota kohinanpoisto käyttöön"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1496,7 +1472,7 @@ msgstr "Parempi laatu — DPDFNet-2 48 kHz"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 230
 msgid "AI Model"
-msgstr "AI-malli"
+msgstr "Tekoälymalli"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1507,7 +1483,7 @@ msgstr "AI-malli"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 297
 msgid "Noise Gate"
-msgstr "Meluportti"
+msgstr "Kohinaportti"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1529,7 +1505,7 @@ msgstr "Intensiteetti"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 328
 msgid "Compressor"
-msgstr "Puristin"
+msgstr "Kompressori"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 331
@@ -1567,7 +1543,7 @@ msgstr "Taajuuskorjain"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 391
 msgid "Enable equalizer"
-msgstr "Ota tasapainotin käyttöön"
+msgstr "Ota taajuuskorjain käyttöön"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 415
@@ -1577,12 +1553,12 @@ msgstr "Oletusääni"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 415
 msgid "Natural (No Effects)"
-msgstr "Luonnollinen (Ei Efektejä)"
+msgstr "Luonnollinen (ei tehosteita)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 415
 msgid "Crystal Voice"
-msgstr "Kristallikieli"
+msgstr "Kirkas puheääni"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
@@ -1597,7 +1573,7 @@ msgstr "Samettinen ääni"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
 msgid "Extra Brightness"
-msgstr "Lisävalovoima"
+msgstr "Lisää kirkkautta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
@@ -1607,12 +1583,12 @@ msgstr "Pehmennä 'S' (De-esser)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Remove Rumble"
-msgstr "Poista Rumble"
+msgstr "Poista matala jyrinä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Present Voice"
-msgstr "Esitä ääni"
+msgstr "Erottuva puheääni"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1710,15 +1686,15 @@ msgstr "Enimmäiskoko"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 537
 msgid "Extra"
-msgstr "Lisäosa"
+msgstr "Lisäasetukset"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 882
 msgid "SW Decode"
-msgstr "SW Purku"
+msgstr "Ohjelmistodekoodaus"
 
 msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Valmiit reseptit: YouTube, Instagram, editointi…"
+msgstr "Valmiit muunnosasetukset: YouTube, Instagram, editointi…"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
@@ -1728,7 +1704,7 @@ msgstr "Vaatii äänen uudelleenkoodauksen."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 945
 msgid "AI noise removal"
-msgstr "AI-meluhäiriön poisto"
+msgstr "Kohinanpoisto tekoälyllä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 947
@@ -1738,12 +1714,12 @@ msgstr "portti"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 949
 msgid "compressor"
-msgstr "puristin"
+msgstr "kompressori"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 951
 msgid "low cut"
-msgstr "alhaalla leikkaus"
+msgstr "matalien taajuuksien leikkaus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 953
@@ -1771,29 +1747,29 @@ msgid "No customizations"
 msgstr "Ei mukautuksia"
 
 msgid "Keep original audio"
-msgstr ""
+msgstr "Säilytä alkuperäinen ääni"
 
 msgid "Convert audio"
-msgstr ""
+msgstr "Muunna ääni"
 
 msgid "Choose what the converted video should contain."
-msgstr ""
+msgstr "Valitse muunnetun videon sisältö."
 
 msgid "Audio operation"
-msgstr ""
+msgstr "Äänen käsittely"
 
 msgid "Audio conversion"
-msgstr ""
+msgstr "Äänen muunnos"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 156
 msgid "Audio Codec"
-msgstr "Äänikooderi"
+msgstr "Äänikoodekki"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 173
 msgid "Audio Bitrate"
-msgstr "Äänibitnopeus"
+msgstr "Äänen bittinopeus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 228
@@ -1811,49 +1787,49 @@ msgid "Custom channels"
 msgstr "Mukautetut kanavat"
 
 msgid "Changes are saved automatically for future conversions."
-msgstr ""
+msgstr "Muutokset tallennetaan automaattisesti tulevia muunnoksia varten."
 
 msgid "Original audio is kept. Codec, bitrate and channel settings do not apply."
-msgstr ""
+msgstr "Alkuperäinen ääni säilytetään. Koodekki-, bittinopeus- ja kanava-asetuksia ei käytetä."
 
 msgid "Audio will be converted using the settings below."
-msgstr ""
+msgstr "Ääni muunnetaan alla olevilla asetuksilla."
 
 msgid "The converted video will have no audio."
-msgstr ""
+msgstr "Muunnetussa videossa ei ole ääntä."
 
 msgid "Select an audio operation."
-msgstr ""
+msgstr "Valitse äänen käsittelytapa."
 
 msgid "Open this video in the editor"
-msgstr ""
+msgstr "Avaa tämä video editorissa"
 
 msgid "Options"
-msgstr ""
+msgstr "Valinnat"
 
 msgid "Choose a preset or resolution for this video"
-msgstr ""
+msgstr "Valitse tämän videon esiasetus tai resoluutio"
 
 #, python-brace-format
 msgid "Options for “{name}”"
-msgstr ""
+msgstr "Videon ”{name}” valinnat"
 
 #, python-brace-format
 msgid "Edit “{name}”"
-msgstr ""
+msgstr "Muokkaa videota ”{name}”"
 
 msgid "More actions"
-msgstr ""
+msgstr "Lisää toimintoja"
 
 #, python-brace-format
 msgid "More actions for “{name}”"
-msgstr ""
+msgstr "Lisää toimintoja videolle ”{name}”"
 
 msgid "Play video"
-msgstr ""
+msgstr "Toista video"
 
 msgid "Video information"
-msgstr ""
+msgstr "Videon tiedot"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 194
@@ -1866,31 +1842,31 @@ msgid "Remove from queue"
 msgstr "Poista jonosta"
 
 msgid "Delete from disk…"
-msgstr ""
+msgstr "Poista levyltä…"
 
 msgid "Video preview"
-msgstr ""
+msgstr "Videon esikatselu"
 
 #, python-brace-format
 msgid "Own: {recipe}"
-msgstr ""
+msgstr "Oma: {recipe}"
 
 msgid "Delete this video permanently?"
-msgstr ""
+msgstr "Poistetaanko tämä video pysyvästi?"
 
 #, python-brace-format
 msgid "“{}” will be removed from disk. This cannot be undone."
-msgstr ""
+msgstr "”{}” poistetaan levyltä. Tätä ei voi perua."
 
 msgid "Keep video"
-msgstr ""
+msgstr "Säilytä video"
 
 msgid "Delete permanently"
-msgstr ""
+msgstr "Poista pysyvästi"
 
 #, python-brace-format
 msgid "Could not delete the video: {} "
-msgstr ""
+msgstr "Videota ei voitu poistaa: {} "
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1935,10 +1911,10 @@ msgid "Folder to save"
 msgstr "Kansio tallentamista varten"
 
 msgid "Save converted videos"
-msgstr ""
+msgstr "Tallenna muunnetut videot"
 
 msgid "Output folder"
-msgstr ""
+msgstr "Kohdekansio"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 288
@@ -1956,7 +1932,7 @@ msgid "Delete original files"
 msgstr "Poista alkuperäiset tiedostot"
 
 msgid "Originals are kept unless every converted result passes validation"
-msgstr ""
+msgstr "Alkuperäiset säilytetään, elleivät kaikki muunnetut tulokset läpäise tarkistusta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -1981,11 +1957,11 @@ msgid "Could not find this video file"
 msgstr "Videotiedostoa ei löytynyt."
 
 msgid "The crop cannot be applied"
-msgstr ""
+msgstr "Rajausta ei voi käyttää"
 
 #, python-brace-format
 msgid "“{name}” was not converted: its picture size could not be read, or the crop removes the whole picture. Check the crop in the editor and try again."
-msgstr ""
+msgstr "Videota ”{name}” ei muunnettu: sen kuvakokoa ei voitu lukea tai rajaus poistaa koko kuvan. Tarkista rajaus editorissa ja yritä uudelleen."
 
 msgid "These tracks can't be copied into MP4"
 msgstr "Näitä raitoja ei voi kopioida MP4:ään"
@@ -2017,16 +1993,16 @@ msgid "not supported by MP4"
 msgstr "ei tuettu MP4:ssä"
 
 msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
-msgstr "Uudelleenkoodaus muuntaa nämä raidat, jotta MP4 toistuu kaikkialla. Silti kopioiminen on nopeampaa, mutta lopputuloksessa ei voi olla ääntä tai se ei voi toistaa ollenkaan — valitse MKV tulostusmuodoksi säilyttääksesi alkuperäiset raidat ennallaan."
+msgstr "Uudelleenkoodaus muuntaa nämä raidat niin, että MP4 toistuu kaikilla laitteilla. Kopiointi on nopeampaa, mutta tuloksesta voi puuttua ääni tai se ei ehkä toistu lainkaan. Valitse tulostiedoston muodoksi MKV, jos haluat säilyttää alkuperäiset raidat ennallaan."
 
 msgid "This video cannot be made to fit the size"
 msgstr "Tätä videota ei saada mahtumaan kokoon"
 
 msgid "General settings"
-msgstr ""
+msgstr "Yleiset asetukset"
 
 msgid "Original resolution"
-msgstr ""
+msgstr "Alkuperäinen resoluutio"
 
 #, python-brace-format
 msgid "up to {size}"
@@ -2034,55 +2010,55 @@ msgstr "enintään {size}"
 
 #, python-brace-format
 msgid "{profile} · {resolution}"
-msgstr ""
+msgstr "{profile} · {resolution}"
 
 msgid "Options for this video"
-msgstr ""
+msgstr "Tämän videon valinnat"
 
 msgid "Override the general recipe only when this video needs a different destination profile or size."
-msgstr ""
+msgstr "Ohita yleiset muunnosasetukset vain, jos tämä video tarvitsee eri kohdeprofiilin tai koon."
 
 msgid "Effective result"
-msgstr ""
+msgstr "Käytettävä tulos"
 
 msgid "General settings remain the default for every other video."
-msgstr ""
+msgstr "Yleiset asetukset pysyvät kaikkien muiden videoiden oletuksena."
 
 msgid "Use the general recipe"
-msgstr ""
+msgstr "Käytä yleisiä muunnosasetuksia"
 
 msgid "Profile"
-msgstr ""
+msgstr "Profiili"
 
 msgid "Target a platform or workflow"
-msgstr ""
+msgstr "Valitse kohdealusta tai työnkulku"
 
 msgid "Use the general resolution"
-msgstr ""
+msgstr "Käytä yleistä resoluutiota"
 
 msgid "Use the profile resolution"
-msgstr ""
+msgstr "Käytä profiilin resoluutiota"
 
 msgid "Keep the original resolution"
-msgstr ""
+msgstr "Säilytä alkuperäinen resoluutio"
 
 msgid "Vertical 4K · 2160×3840"
-msgstr ""
+msgstr "Pysty 4K · 2160×3840"
 
 msgid "Vertical QHD · 1440×2560"
-msgstr ""
+msgstr "Pysty QHD · 1440×2560"
 
 msgid "Vertical Full HD · 1080×1920"
-msgstr ""
+msgstr "Pysty Full HD · 1080×1920"
 
 msgid "Vertical HD · 720×1280"
-msgstr ""
+msgstr "Pysty HD · 720×1280"
 
 msgid "Vertical SD · 480×854"
-msgstr ""
+msgstr "Pysty SD · 480×854"
 
 msgid "Custom size"
-msgstr ""
+msgstr "Mukautettu koko"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -2094,16 +2070,16 @@ msgid "Resolution"
 msgstr "Resoluutio"
 
 msgid "Controls image dimensions and file size"
-msgstr ""
+msgstr "Määrittää kuvan mitat ja tiedostokoon"
 
 msgid "Width"
-msgstr ""
+msgstr "Leveys"
 
 msgid "Even pixels"
-msgstr ""
+msgstr "Parillinen pikselimäärä"
 
 msgid "Height"
-msgstr ""
+msgstr "Korkeus"
 
 msgid "Use the general size"
 msgstr "Käytä yleistä kokoa"
@@ -2121,7 +2097,7 @@ msgid "Size in megabytes"
 msgstr "Koko megatavuina"
 
 msgid "This video will use"
-msgstr ""
+msgstr "Tässä videossa käytetään"
 
 msgid "To fit the size"
 msgstr "Kokoon mahtumiseksi"
@@ -2130,7 +2106,7 @@ msgid "Checking the video…"
 msgstr "Tarkistetaan videota…"
 
 msgid "Apply to this video"
-msgstr ""
+msgstr "Käytä tähän videoon"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 25
@@ -2150,7 +2126,7 @@ msgstr "FFmpeg ja MPV ovat vaadittuja tämän sovelluksen toimimiseksi."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 53
 msgid "FFmpeg is needed for conversion, and MPV for the video editor preview. Due to legal restrictions, they are not bundled."
-msgstr "FFmpeg on tarpeen muuntamiseen, ja MPV videon muokkausennakon esikatseluun. Laillisten rajoitusten vuoksi niitä ei ole pakattu yhteen."
+msgstr "FFmpeg tarvitaan muunnoksiin ja MPV videoeditorin esikatseluun. Niitä ei toimiteta sovelluksen mukana oikeudellisten rajoitusten vuoksi."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 57
@@ -2158,7 +2134,7 @@ msgid "Command to be executed"
 msgstr "Suorituskomento"
 
 msgid "Before installing"
-msgstr ""
+msgstr "Ennen asennusta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 72
@@ -2250,7 +2226,7 @@ msgstr "Videon esikatselun renderöinti"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 207
 msgid "How the video editor preview is rendered. 'Automatic' works best for most systems. Try 'Software' if you see display issues. Requires restart."
-msgstr "Kuinka videonmuokkausennakko renderöidään. 'Automaattinen' toimii parhaiten useimmissa järjestelmissä. Kokeile 'Ohjelmistoa', jos näet näyttöhäiriöitä. Vaatii uudelleenkäynnistyksen."
+msgstr "Videoeditorin esikatselun piirtotapa. ”Automaattinen” toimii parhaiten useimmissa järjestelmissä. Kokeile ”Ohjelmisto”-vaihtoehtoa, jos kuvassa on ongelmia. Vaatii uudelleenkäynnistyksen."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py (export/import profile)
@@ -2272,7 +2248,7 @@ msgstr "Vie / Tuo profiili"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 247
 msgid "Save your current conversion settings to a file or load settings from a previously exported profile."
-msgstr "Tallenna nykyiset muunnosasekukset tiedostoon tai lataa asetukset aiemmin viedystä profiilista."
+msgstr "Tallenna nykyiset muunnosasetukset tiedostoon tai lataa asetukset aiemmin viedystä profiilista."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 91
@@ -2317,7 +2293,7 @@ msgid "Could not save the profile file."
 msgstr "Profiilitiedostoa ei voitu tallentaa."
 
 msgid "This profile can read or write files"
-msgstr ""
+msgstr "Tämä profiili voi lukea tai kirjoittaa tiedostoja"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 346
@@ -2352,7 +2328,7 @@ msgstr "Takaisin"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 63
 msgid "Clear queue"
-msgstr "Tyhjennä jonot"
+msgstr "Tyhjennä jono"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 196
@@ -2367,12 +2343,12 @@ msgstr "Lisää kansio"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 242
 msgid "Convert All"
-msgstr "Muuta kaikki"
+msgstr "Muunna kaikki"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 114
 msgid "Convert This File"
-msgstr "Muuta tämä tiedosto"
+msgstr "Muunna tämä tiedosto"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 133
@@ -2402,26 +2378,26 @@ msgstr "Lopeta"
 #, python-brace-format
 msgid "{count} file"
 msgid_plural "{count} files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} tiedosto"
+msgstr[1] "{count} tiedostoa"
 
 msgid "Show conversion settings"
-msgstr ""
+msgstr "Näytä muunnosasetukset"
 
 #, python-brace-format
 msgid "Show conversion settings ({shortcut})"
-msgstr ""
+msgstr "Näytä muunnosasetukset ({shortcut})"
 
 msgid "Show editing tools"
-msgstr ""
+msgstr "Näytä muokkaustyökalut"
 
 #, python-brace-format
 msgid "Show editing tools ({shortcut})"
-msgstr ""
+msgstr "Näytä muokkaustyökalut ({shortcut})"
 
 #, python-brace-format
 msgid "Track {number}"
-msgstr ""
+msgstr "Raita {number}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 173
@@ -2431,7 +2407,7 @@ msgstr "Paranna ääntäsi poistamalla hälyä, säätämällä äänenvoimakkuu
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 184
 msgid "AI Noise Cleaning"
-msgstr "AI-meluhälyn puhdistus"
+msgstr "Kohinanpoisto tekoälyllä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 194
@@ -2456,12 +2432,12 @@ msgstr "Puheelle. Parempi laatu, enemmän laskentaa."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 348
 msgid "Silence Low Sounds"
-msgstr "Vaimenta matalat äänet"
+msgstr "Vaienna hiljaiset äänet"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 350
 msgid "Mutes audio below a threshold — great for removing faint hum or room noise between speech."
-msgstr "Vaimentaa ääntä kynnysarvon alapuolella — loistava heikkojen humin tai huoneen melun poistamiseen puheen välissä."
+msgstr "Vaimentaa kynnysarvoa hiljaisemman äänen — sopii heikon huminan tai huonemelun poistamiseen puheen tauoista."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 392
@@ -2515,13 +2491,13 @@ msgid ""
 "{settings}\n"
 "\n"
 "Import it only if you trust where it came from."
-msgstr ""
+msgstr "Se sisältää FFmpeg-asetuksia, jotka voivat avata, luoda tai korvata tiedostoja tällä tietokoneella tai käyttää verkkoa:\n\n{settings}\n\nTuo se vain, jos luotat sen alkuperään."
 
 msgid "Import anyway"
-msgstr ""
+msgstr "Tuo silti"
 
 msgid "This preset can read or write files"
-msgstr ""
+msgstr "Tämä esiasetus voi lukea tai kirjoittaa tiedostoja"
 
 msgid "Create with AI…"
 msgstr "Luo tekoälyllä…"
@@ -2588,7 +2564,7 @@ msgid "Export Preset"
 msgstr "Vie esiasetus"
 
 msgid "Choose a folder on this computer to export the preset."
-msgstr ""
+msgstr "Valitse tältä tietokoneelta kansio esiasetuksen vientiin."
 
 #, python-brace-format
 msgid "Preset exported to {0}"
@@ -2601,7 +2577,7 @@ msgid "Preset files (*.toml)"
 msgstr "Esiasetustiedostot (*.toml)"
 
 msgid "Choose a preset file on this computer to import."
-msgstr ""
+msgstr "Valitse tältä tietokoneelta tuotava esiasetustiedosto."
 
 #, python-brace-format
 msgid "The preset was not imported: {0}"
@@ -2654,25 +2630,25 @@ msgstr "Tallennettu nimellä ”{0}” kohteeseen {1}"
 
 #, python-brace-format
 msgid "{percent}%"
-msgstr ""
+msgstr "{percent}%"
 
 #, python-brace-format
 msgid "≈ {seconds} s left"
 msgid_plural "≈ {seconds} s left"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "≈ {seconds} s jäljellä"
+msgstr[1] "≈ {seconds} s jäljellä"
 
 #, python-brace-format
 msgid "≈ {minutes} min left"
 msgid_plural "≈ {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "≈ {minutes} min jäljellä"
+msgstr[1] "≈ {minutes} min jäljellä"
 
 #, python-brace-format
 msgid "≈ {hours} h {minutes} min left"
 msgid_plural "≈ {hours} h {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "≈ {hours} h {minutes} min jäljellä"
+msgstr[1] "≈ {hours} h {minutes} min jäljellä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 737
@@ -2688,111 +2664,111 @@ msgstr "{secs}s"
 
 #, python-brace-format
 msgid "Could not open “{name}”: {error}"
-msgstr ""
+msgstr "Videota ”{name}” ei voitu avata: {error}"
 
 msgid "Back to the queue"
-msgstr ""
+msgstr "Takaisin jonoon"
 
 msgid "Conversion progress"
-msgstr ""
+msgstr "Muunnoksen edistyminen"
 
 msgid "Cancel all"
-msgstr ""
+msgstr "Peruuta kaikki"
 
 msgid "Overall conversion progress"
-msgstr ""
+msgstr "Kaikkien muunnosten edistyminen"
 
 msgid "Convert more videos"
-msgstr ""
+msgstr "Muunna lisää videoita"
 
 msgid "Open video"
-msgstr ""
+msgstr "Avaa video"
 
 msgid "Show in folder"
-msgstr ""
+msgstr "Näytä kansiossa"
 
 #, python-brace-format
 msgid "{count} video converted"
 msgid_plural "{count} videos converted"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} video muunnettu"
+msgstr[1] "{count} videota muunnettu"
 
 #, python-brace-format
 msgid "{count} conversion failed"
 msgid_plural "{count} conversions failed"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} muunnos epäonnistui"
+msgstr[1] "{count} muunnosta epäonnistui"
 
 #, python-brace-format
 msgid "{count} conversion cancelled"
 msgid_plural "{count} conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} muunnos peruutettu"
+msgstr[1] "{count} muunnosta peruutettu"
 
 msgid "Conversion complete"
 msgid_plural "Conversions complete"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Muunnos valmis"
+msgstr[1] "Muunnokset valmiit"
 
 #, python-brace-format
 msgid "{count} video converted successfully"
 msgid_plural "{count} videos converted successfully"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} video muunnettu onnistuneesti"
+msgstr[1] "{count} videota muunnettu onnistuneesti"
 
 msgid "Conversion failed"
 msgid_plural "Conversions failed"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Muunnos epäonnistui"
+msgstr[1] "Muunnokset epäonnistuivat"
 
 msgid "Conversion cancelled"
 msgid_plural "Conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Muunnos peruutettu"
+msgstr[1] "Muunnokset peruutettu"
 
 msgid "Queue finished with issues"
-msgstr ""
+msgstr "Jono valmistui virheineen"
 
 msgid "No conversion results are available"
-msgstr ""
+msgstr "Muunnostuloksia ei ole saatavilla"
 
 #, python-brace-format
 msgid "{finished} of {total} finished · {percent}"
 msgid_plural "{finished} of {total} finished · {percent}"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{finished}/{total} valmiina · {percent}"
+msgstr[1] "{finished}/{total} valmiina · {percent}"
 
 msgid "Converting video"
 msgid_plural "Converting videos"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Muunnetaan videota"
+msgstr[1] "Muunnetaan videoita"
 
 #, python-brace-format
 msgid "{results} · {duration}"
-msgstr ""
+msgstr "{results} · {duration}"
 
 #, python-brace-format
 msgid "{before} → {after} ({change}%)"
-msgstr ""
+msgstr "{before} → {after} ({change}%)"
 
 #, python-brace-format
 msgid "“{name}”: {reason}"
-msgstr ""
+msgstr "“{name}”: {reason}"
 
 #, python-brace-format
 msgid "+{count} more"
 msgid_plural "+{count} more"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "+{count} muuta"
+msgstr[1] "+{count} muuta"
 
 msgid "Back to queue"
-msgstr ""
+msgstr "Takaisin jonoon"
 
 msgid "Open folder"
-msgstr ""
+msgstr "Avaa kansio"
 
 msgid "Cancel all conversions?"
-msgstr ""
+msgstr "Peruutetaanko kaikki muunnokset?"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 321
@@ -2800,7 +2776,7 @@ msgid "This will stop all active conversions and skip all pending items. This ac
 msgstr "Tämä pysäyttää kaikki aktiiviset muunnokset ja ohittaa kaikki odottavat kohteet. Tätä toimintoa ei voida peruuttaa."
 
 msgid "Unknown video"
-msgstr ""
+msgstr "Tuntematon video"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 447
@@ -2809,53 +2785,53 @@ msgstr "Odotetaan jonossa"
 
 #, python-brace-format
 msgid "Conversion progress for “{}”"
-msgstr ""
+msgstr "Videon ”{}” muunnoksen edistyminen"
 
 msgid "FFmpeg output"
-msgstr ""
+msgstr "FFmpegin tuloste"
 
 #, python-brace-format
 msgid "FFmpeg output for “{name}”"
-msgstr ""
+msgstr "Videon ”{name}” FFmpeg-tuloste"
 
 msgid "Command"
-msgstr ""
+msgstr "Komento"
 
 msgid "Process output"
-msgstr ""
+msgstr "Prosessin tuloste"
 
 #, python-brace-format
 msgid "{count} output file"
 msgid_plural "{count} output files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} tulostiedosto"
+msgstr[1] "{count} tulostiedostoa"
 
 #, python-brace-format
 msgid "Open “{name}”"
-msgstr ""
+msgstr "Avaa ”{name}”"
 
 msgid "Skip this video"
-msgstr ""
+msgstr "Ohita tämä video"
 
 #, python-brace-format
 msgid "Skip “{}”"
-msgstr ""
+msgstr "Ohita ”{}”"
 
 msgid "Skip"
-msgstr ""
+msgstr "Ohita"
 
 msgid "Cancel this conversion"
-msgstr ""
+msgstr "Peruuta tämä muunnos"
 
 #, python-brace-format
 msgid "Cancel “{}”"
-msgstr ""
+msgstr "Peruuta ”{}”"
 
 msgid "Hide technical details"
-msgstr ""
+msgstr "Piilota tekniset tiedot"
 
 msgid "Show technical details"
-msgstr ""
+msgstr "Näytä tekniset tiedot"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 246
@@ -2864,15 +2840,15 @@ msgstr "Aloitetaan prosessi..."
 
 #, python-brace-format
 msgid "{codec} · {status}"
-msgstr ""
+msgstr "{codec} · {status}"
 
 #, python-brace-format
 msgid "{percent}, {remaining}"
-msgstr ""
+msgstr "{percent}, {remaining}"
 
 #, python-brace-format
 msgid "{fps} · {elapsed}"
-msgstr ""
+msgstr "{fps} · {elapsed}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 699
@@ -2890,7 +2866,7 @@ msgid "Cancelled"
 msgstr "Peruutettu"
 
 msgid "The conversion failed. The details are in “FFmpeg output”."
-msgstr ""
+msgstr "Muunnos epäonnistui. Lisätiedot ovat kohdassa ”FFmpegin tuloste”."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 104
@@ -2910,12 +2886,12 @@ msgstr "Purkaa CPU:lla, koodaa GPU:lla"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 179
 msgid "Compression preset"
-msgstr "Pakkaus esiasetus"
+msgstr "Pakkauksen esiasetus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 149
 msgid "Speed vs compression ratio"
-msgstr "Nope."
+msgstr "Nopeuden ja pakkaussuhteen tasapaino"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 157
@@ -2938,10 +2914,10 @@ msgid "Ex: 1280x720, 1920x1080"
 msgstr "1280x720, 1920x1080"
 
 msgid "Frame rate"
-msgstr ""
+msgstr "Kuvataajuus"
 
 msgid "Frames per second of the converted video"
-msgstr ""
+msgstr "Muunnetun videon kuvien määrä sekunnissa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 146
@@ -2985,12 +2961,12 @@ msgstr "Esim: 2 (stereo), 6 (5.1)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 269
 msgid "Audio codec"
-msgstr "Äänikooderi"
+msgstr "Äänikoodekki"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 270
 msgid "Codec to use when re-encoding audio"
-msgstr "Kooderi, jota käytetään äänen uudelleenkoodauksessa."
+msgstr "Äänen uudelleenkoodauksessa käytettävä koodekki"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 275
@@ -3040,7 +3016,7 @@ msgstr "Videon esikatselun renderöinti"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 293
 msgid "Rendering mode for video editor preview. Restart required to apply."
-msgstr "Renderointitila videonmuokkausennakkonäytölle. Uudelleenkäynnistys vaaditaan soveltamiseksi."
+msgstr "Videoeditorin esikatselun piirto. Muutos edellyttää uudelleenkäynnistystä."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 483
@@ -3162,11 +3138,11 @@ msgid "Reset"
 msgstr "Nollaa"
 
 msgid "Settings Could Not Be Reset"
-msgstr ""
+msgstr "Asetuksia ei voitu palauttaa"
 
 #, python-brace-format
 msgid "The settings file could not be saved: {0}"
-msgstr ""
+msgstr "Asetustiedostoa ei voitu tallentaa: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 705
@@ -3191,7 +3167,7 @@ msgid "Split into parts"
 msgstr "Jaa osiin"
 
 msgid "Keeps the quality and makes several files, each under the size"
-msgstr "Säilyttää laadun ja tekee useita tiedostoja, jokainen koon alle"
+msgstr "Säilyttää laadun ja luo useita kokorajan alittavia tiedostoja"
 
 #, python-brace-format
 msgid "Up to {size}"
@@ -3239,11 +3215,11 @@ msgstr "Ohita videomuunnos kokonaan ja vie vain tekstitysradat .srt-tiedostoiksi
 
 #, python-brace-format
 msgid "Segment {num}"
-msgstr ""
+msgstr "Osa {num}"
 
 #, python-brace-format
 msgid "{start} → {end} ({duration})"
-msgstr ""
+msgstr "{start} → {end} ({duration})"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -3943,16 +3919,16 @@ msgid "Remove segment"
 msgstr "Poista segmentti"
 
 msgid "Hours"
-msgstr ""
+msgstr "Tunnit"
 
 msgid "Minutes"
-msgstr ""
+msgstr "Minuutit"
 
 msgid "Seconds"
-msgstr ""
+msgstr "Sekunnit"
 
 msgid "Centiseconds"
-msgstr ""
+msgstr "Sekunnin sadasosat"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
@@ -3962,7 +3938,7 @@ msgstr "Muokkaa segmenttiä"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 396
 msgid "Edit start and end times for this segment"
-msgstr "Muokkaa tämän segmentin aloitus- ja lopputietoja."
+msgstr "Muokkaa tämän osan alku- ja loppuaikaa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 406
@@ -4006,7 +3982,7 @@ msgstr "Virheellinen aikaväli"
 
 #, python-brace-format
 msgid "Start time must be before the end of the video ({duration})"
-msgstr ""
+msgstr "Alkuajan on oltava ennen videon loppua ({duration})"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 454
@@ -4232,10 +4208,10 @@ msgid "Frame: {current}/{total}"
 msgstr "Kehys: {current}/{total}"
 
 msgid "Video position"
-msgstr ""
+msgstr "Videon toistokohta"
 
 msgid "Drag to seek or adjust segment edges"
-msgstr ""
+msgstr "Siirry toiseen kohtaan tai säädä osien rajoja vetämällä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 97
@@ -4299,7 +4275,7 @@ msgstr "Siirrä eteenpäin 1 sekunti"
 
 #, python-brace-format
 msgid "Playback speed: {speed}x"
-msgstr ""
+msgstr "Toistonopeus: {speed}x"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 173
@@ -4323,15 +4299,15 @@ msgid "Left"
 msgstr "Vasen"
 
 msgid "Crop from left"
-msgstr ""
+msgstr "Rajaa vasemmalta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Right"
-msgstr "Oikein"
+msgstr "Oikea"
 
 msgid "Crop from right"
-msgstr ""
+msgstr "Rajaa oikealta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
@@ -4339,7 +4315,7 @@ msgid "Top"
 msgstr "Ylhäällä"
 
 msgid "Crop from top"
-msgstr ""
+msgstr "Rajaa ylhäältä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
@@ -4347,7 +4323,7 @@ msgid "Bottom"
 msgstr "Alareuna"
 
 msgid "Crop from bottom"
-msgstr ""
+msgstr "Rajaa alhaalta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 363
@@ -4357,13 +4333,13 @@ msgid "Visual crop editor"
 msgstr "Visuaalinen rajauseditori"
 
 msgid "Free"
-msgstr ""
+msgstr "Vapaa"
 
 msgid "Original"
-msgstr ""
+msgstr "Alkuperäinen"
 
 msgid "Crop aspect ratio"
-msgstr ""
+msgstr "Rajauksen kuvasuhde"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 273
@@ -4388,16 +4364,16 @@ msgstr "Kesto:"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 295
 msgid "Volume"
-msgstr "Ääni"
+msgstr "Äänenvoimakkuus"
 
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
-msgstr ""
+msgstr "Video kopioidaan ilman uudelleenkoodausta. Kuvan rajaaminen, säätäminen, kääntäminen tai tehosteiden lisääminen koodaa videon uudelleen."
 
 msgid "Image"
-msgstr ""
+msgstr "Kuva"
 
 msgid "Reset image adjustments"
-msgstr ""
+msgstr "Palauta kuvan säädöt"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
@@ -4405,35 +4381,35 @@ msgid "Brightness"
 msgstr "Kirkkaus"
 
 msgid "Contrast"
-msgstr ""
+msgstr "Kontrasti"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 347
 msgid "Saturation"
-msgstr "Saturaatio"
+msgstr "Värikylläisyys"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 360
 msgid "Hue"
-msgstr "Väri"
+msgstr "Värisävy"
 
 msgid "Source colours"
-msgstr ""
+msgstr "Lähteen värit"
 
 msgid "As the file says"
-msgstr ""
+msgstr "Tiedoston määrityksen mukaan"
 
 msgid "HDR10 (PQ)"
-msgstr ""
+msgstr "HDR10 (PQ)"
 
 msgid "HDR (HLG)"
-msgstr ""
+msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
-msgstr ""
+msgstr "Tavallinen (SDR)"
 
 msgid "Orientation"
-msgstr ""
+msgstr "Suunta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 605
@@ -4443,7 +4419,7 @@ msgid "Reset Transform"
 msgstr "Nollaa muunnos"
 
 msgid "Rotation"
-msgstr ""
+msgstr "Kierto"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 558
@@ -4504,16 +4480,16 @@ msgid "Save each segment as a separate file"
 msgstr "Tallenna jokainen segmentti erilliseen tiedostoon."
 
 msgid "Segment output"
-msgstr ""
+msgstr "Osien tallennus"
 
 msgid "Choose how marked segments are saved"
-msgstr ""
+msgstr "Valitse merkittyjen osien tallennustapa"
 
 msgid "Effects"
-msgstr ""
+msgstr "Tehosteet"
 
 msgid "Reset effects"
-msgstr ""
+msgstr "Palauta tehosteet"
 
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
@@ -4521,44 +4497,44 @@ msgid "Off"
 msgstr "Pois päältä"
 
 msgid "Light"
-msgstr ""
+msgstr "Kevyt"
 
 msgid "Strong"
-msgstr ""
+msgstr "Voimakas"
 
 msgid "Noise reduction"
-msgstr ""
+msgstr "Kohinanpoisto"
 
 msgid "Sharpening"
-msgstr ""
+msgstr "Terävöitys"
 
 msgid "Stabilization"
-msgstr ""
+msgstr "Vakautus"
 
 msgid "Applied when converting, not in the preview"
-msgstr ""
+msgstr "Käytetään muunnoksessa, ei esikatselussa"
 
 msgid "Look or shader"
-msgstr ""
+msgstr "Värityyli tai varjostin"
 
 msgid "None"
-msgstr ""
+msgstr "Ei mitään"
 
 msgid "Choose a colour look (.cube) or shader (.hook)"
-msgstr ""
+msgstr "Valitse värityyli (.cube) tai varjostin (.hook)"
 
 msgid "Remove the look or shader"
-msgstr ""
+msgstr "Poista värityyli tai varjostin"
 
 msgid "Choose a Look or Shader"
-msgstr ""
+msgstr "Valitse värityyli tai varjostin"
 
 msgid "Looks and shaders"
-msgstr ""
+msgstr "Värityylit ja varjostimet"
 
 #, python-brace-format
 msgid "Reset {setting} to default"
-msgstr ""
+msgstr "Palauta {setting} oletusarvoon"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4573,7 +4549,7 @@ msgstr "Määritä, miten videosi koodataan. Oletusasetukset toimivat hyvin usei
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 164
 msgid "The container that holds audio and video. MP4 is the most compatible. MKV supports all codecs."
-msgstr "Astia, joka sisältää ääntä ja videota. MP4 on yhteensopivin. MKV tukee kaikkia koodekkeja."
+msgstr "Äänen ja videon sisältävä säiliömuoto. MP4 on yhteensopivin. MKV tukee kaikkia koodekkeja."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 180
@@ -4608,10 +4584,10 @@ msgstr "Alkuperäisen resoluution ylittäminen ei paranna laatua. Resoluutioiden
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 764
 msgid "Frame Rate"
-msgstr "Kehysnopeus"
+msgstr "Kuvataajuus"
 
 msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
-msgstr ""
+msgstr "Vähemmän kuvia sekunnissa tuottaa pienemmän tiedoston. Lisäkuvat muodostetaan viereisistä kuvista: liike on sulavampaa, mutta nopeasta liikkeestä jää hento jälki."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4622,7 +4598,7 @@ msgstr ""
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 263
 msgid "Conversion Speed"
-msgstr "Muunna Nopeus"
+msgstr "Muunnosnopeus"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4663,13 +4639,13 @@ msgstr "Videotietoja ei voitu lukea"
 
 #, python-brace-format
 msgid "Error getting video info: {error}"
-msgstr ""
+msgstr "Virhe videon tietojen lukemisessa: {error}"
 
 msgid "Error: No video stream found"
-msgstr ""
+msgstr "Virhe: videovirtaa ei löytynyt"
 
 msgid "Error: Failed to load video file. Please check the file format and try again."
-msgstr ""
+msgstr "Virhe: videotiedoston lataaminen epäonnistui. Tarkista tiedostomuoto ja yritä uudelleen."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 53
@@ -4686,9 +4662,7 @@ msgstr "Muuta videomuotoja"
 msgid ""
 "MP4, MKV, AVI, WebM and many more\n"
 "with hardware acceleration support"
-msgstr ""
-"MP4, MKV, AVI, WebM ja monia muita\n"
-"laitekiihdytyksen tuella"
+msgstr "MP4, MKV, AVI, WebM ja paljon muuta\nlaitteistokiihdytyksen tuella"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 76
@@ -4700,7 +4674,7 @@ msgstr "Leikkaa ja rajaa videoita"
 msgid ""
 "Select specific segments to keep\n"
 "and create new videos with only those parts"
-msgstr "Valitse tietyt osat säilytettäväksi ja luo uusia videoita vain niistä osista."
+msgstr "Valitse säilytettävät osat\nja luo uusia videoita vain niistä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 83
@@ -4712,9 +4686,7 @@ msgstr "Videon väriasetukset"
 msgid ""
 "Control brightness, saturation, and hue\n"
 "to enhance your videos"
-msgstr ""
-"Säädä kirkkautta, kylläisyyttä ja sävyä\n"
-"parantaaksesi videoitasi"
+msgstr "Säädä kirkkautta, värikylläisyyttä ja värisävyä\nparantaaksesi videoiden ulkoasua"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 90
@@ -4726,7 +4698,7 @@ msgstr "Nopea kopiointitila"
 msgid ""
 "Change container format without re-encoding\n"
 "for ultra-fast processing with no quality loss"
-msgstr "Muuta säiliömuotoa ilman uudelleenkoodauksen tarvetta erittäin nopeaa käsittelyä varten ilman laadun heikkenemistä."
+msgstr "Muuta säiliömuotoa ilman uudelleenkoodausta\nerittäin nopeasti ja ilman laadun heikkenemistä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 109
@@ -4738,7 +4710,7 @@ msgstr "Rajaa videoita"
 msgid ""
 "Remove unwanted areas from edges\n"
 "to focus on what matters"
-msgstr "Poista ei-toivotut alueet reunoilta keskittyäksesi olennaiseen."
+msgstr "Poista reunoilta tarpeettomat alueet\nja keskity olennaiseen"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 113
@@ -4750,7 +4722,7 @@ msgstr "Ääniohjaus"
 msgid ""
 "Extract, copy, or re-encode audio\n"
 "with multiple codec options"
-msgstr "Poimi, kopioi tai koodaa ääntä useilla koodekki vaihtoehdoilla."
+msgstr "Pura, kopioi tai koodaa ääni uudelleen\nuseilla koodekkivaihtoehdoilla"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 120
@@ -4762,7 +4734,7 @@ msgstr "Tekstityksen hallinta"
 msgid ""
 "Extract subtitles to SRT files\n"
 "or keep them embedded in video"
-msgstr "Poimi tekstitykset SRT-tiedostoihin tai pidä ne upotettuina videoon."
+msgstr "Pura tekstitykset SRT-tiedostoihin\ntai säilytä ne videotiedoston sisällä"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 127
@@ -4774,7 +4746,7 @@ msgstr "Eräprosessi"
 msgid ""
 "Convert multiple videos at once\n"
 "with queue management"
-msgstr "Muunnat useita videoita kerralla jonohallinnan avulla"
+msgstr "Muunna useita videoita kerralla\njononhallinnan avulla"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 465
@@ -4787,7 +4759,7 @@ msgid "Let's Start"
 msgstr "Aloitetaan"
 
 msgid "The file container could not be read. It may be a corrupted download or an unsupported format."
-msgstr ""
+msgstr "Tiedoston säiliömuotoa ei voitu lukea. Lataus voi olla vioittunut tai muotoa ei tueta."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 22
@@ -4802,7 +4774,7 @@ msgstr "Käyttöoikeus evätty — tarkista tiedoston/kansion käyttöoikeudet."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 20
 msgid "There is no space left on the disk."
-msgstr "Levylle ei jäänyt tilaa."
+msgstr "Levyllä ei ole vapaata tilaa."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 23
@@ -4845,7 +4817,7 @@ msgstr "Ei tarpeeksi muistia muunnoksen suorittamiseen."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 30
 msgid "The file does not contain a valid media stream."
-msgstr "Tiedosto ei sisällä voimassa olevaa mediasyötettä."
+msgstr "Tiedosto ei sisällä kelvollista mediavirtaa."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 31
@@ -4870,7 +4842,7 @@ msgid "The encoder stopped making progress and was terminated."
 msgstr "Koodain lakkasi etenemästä ja se lopetettiin."
 
 msgid "WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. Choose one of those codecs, or MKV to keep the original ones."
-msgstr ""
+msgstr "WebM tukee vain VP8-, VP9- tai AV1-videota sekä Vorbis- tai Opus-ääntä. Valitse jokin näistä koodekeista tai MKV säilyttääksesi alkuperäiset koodekit."
 
 msgid "The conversion finished without producing a file."
 msgstr "Muunnos päättyi tuottamatta tiedostoa."
@@ -4879,14 +4851,14 @@ msgstr "Muunnos päättyi tuottamatta tiedostoa."
 # converter/utils/conversion.py, line: 968
 #, python-brace-format
 msgid "Conversion failed with code {0}"
-msgstr "Muuntaus epäonnistui koodilla {0}"
+msgstr "Muunnos epäonnistui koodilla {0}"
 
 #, python-brace-format
 msgid "Video stream: codec={codec}, pixel format={pixel_format}"
-msgstr ""
+msgstr "Videovirta: koodekki={codec}, pikselimuoto={pixel_format}"
 
 msgid "Could not analyze the video stream with ffprobe"
-msgstr ""
+msgstr "Videovirtaa ei voitu analysoida ffprobella"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 185
@@ -4895,7 +4867,7 @@ msgid "Error starting conversion: {0}"
 msgstr "Virhe muunnoksen aloittamisessa: {0}"
 
 msgid "The conversion could not start."
-msgstr ""
+msgstr "Muunnosta ei voitu aloittaa."
 
 msgid "Preparing…"
 msgstr "Valmistellaan…"
@@ -4904,7 +4876,7 @@ msgid "Extracting subtitles…"
 msgstr "Puretaan tekstityksiä…"
 
 msgid "Measuring camera shake…"
-msgstr ""
+msgstr "Mitataan kameran tärinää…"
 
 msgid "Checking the GPU encoder…"
 msgstr "Tarkistetaan GPU-enkooderia…"
@@ -4913,7 +4885,7 @@ msgid "GPU unavailable, using the processor"
 msgstr "GPU ei ole käytettävissä, käytetään suoritinta"
 
 msgid "Adding subtitles…"
-msgstr ""
+msgstr "Lisätään tekstityksiä…"
 
 msgid "Copying without re-encoding"
 msgstr "Kopioidaan uudelleenkoodaamatta"
@@ -4938,11 +4910,11 @@ msgid "Software encoding"
 msgstr "Ohjelmistokoodaus"
 
 msgid "Analyzing the video for the target size…"
-msgstr ""
+msgstr "Analysoidaan videota tavoitekoon määrittämiseksi…"
 
 #, python-brace-format
 msgid "Input probe unavailable: {0}"
-msgstr ""
+msgstr "Lähdetiedoston analyysi ei ole saatavilla: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 325
@@ -4951,23 +4923,23 @@ msgstr "Ei edistystä havaittu. Prosessi saattaa olla jumissa."
 
 #, python-brace-format
 msgid "Output duration not verified: {0}"
-msgstr ""
+msgstr "Tuloksen kestoa ei tarkistettu: {0}"
 
 msgid "The output could not be verified against the input"
-msgstr ""
+msgstr "Tulosta ei voitu verrata lähdetiedostoon"
 
 msgid "The output does not carry every subtitle track of the original"
-msgstr ""
+msgstr "Tulos ei sisällä kaikkia alkuperäisen tekstitysraitoja"
 
 msgid "Checking output file..."
 msgstr "Tarkistetaan tulostiedostoa..."
 
 msgid "Original deleted after output validation"
-msgstr ""
+msgstr "Alkuperäinen poistettu tuloksen tarkistamisen jälkeen"
 
 #, python-brace-format
 msgid "Original preserved: {0}"
-msgstr ""
+msgstr "Alkuperäinen säilytetty: {0}"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4978,7 +4950,7 @@ msgstr ""
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1466
 msgid "Conversion Complete"
-msgstr "Muuntaus valmis"
+msgstr "Muunnos valmis"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
@@ -4987,10 +4959,10 @@ msgstr "Muuntaus valmis"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 942
 msgid "Conversion completed successfully!"
-msgstr "Muuntaus valmis onnistuneesti!"
+msgstr "Muunnos onnistui!"
 
 msgid "The full FFmpeg comes from the RPM Fusion repository, which must be enabled first. The command replaces the limited ffmpeg-free package."
-msgstr ""
+msgstr "Täysi FFmpeg on saatavilla RPM Fusion -pakettivarastosta, joka on ensin otettava käyttöön. Komento korvaa rajoitetun ffmpeg-free-paketin."
 
 #, python-brace-format
 msgid "Additional options could not be parsed: {0}"
@@ -5090,7 +5062,7 @@ msgstr "Kopioi kesto"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 746
 msgid "Format"
-msgstr "Muotoilu"
+msgstr "Muoto"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 250
@@ -5122,7 +5094,7 @@ msgstr "Kopioi muoto"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 569
 msgid "Bitrate"
-msgstr "Bitrate"
+msgstr "Bittinopeus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 268
@@ -5154,7 +5126,7 @@ msgstr "Kopioi koodekki"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 345
 msgid "Copy resolution"
-msgstr "Kopioresoluutio"
+msgstr "Kopioi resoluutio"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 368
@@ -5238,12 +5210,12 @@ msgstr "(Stereo)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 543
 msgid "(5.1 Surround)"
-msgstr "(5.1 Ympäristö)"
+msgstr "(5.1-tilaääni)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 545
 msgid "(7.1 Surround)"
-msgstr "(7.1 Ympäristö)"
+msgstr "(7.1-tilaääni)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 548
@@ -5263,12 +5235,12 @@ msgstr "Kopioi arvo"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 653
 msgid "Format Details"
-msgstr "Muotoilutiedot"
+msgstr "Muodon tiedot"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 658
 msgid "Bitrate (bps)"
-msgstr "Bitrate (bps)"
+msgstr "Bittinopeus (bps)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 659
@@ -5292,7 +5264,7 @@ msgstr "Yritä uudelleen"
 
 #, python-brace-format
 msgid "The segment {0} starts before the previous one ends; list the segments in order without overlaps."
-msgstr ""
+msgstr "Osa {0} alkaa ennen edellisen loppua. Luettele osat järjestyksessä ilman päällekkäisyyksiä."
 
 msgid "Copy video"
 msgstr "Kopioi video"
@@ -5305,7 +5277,7 @@ msgid "The preset is not valid TOML: {0}"
 msgstr "Esiasetus ei ole kelvollista TOML-muotoa: {0}"
 
 msgid "The preset is not valid TOML: its tables are nested too deeply."
-msgstr ""
+msgstr "Esiasetus ei ole kelvollista TOML-muotoa: taulukot ovat liian syvällä sisäkkäin."
 
 msgid "The preset must be a TOML table."
 msgstr "Esiasetuksen on oltava TOML-taulukko."
@@ -5372,7 +5344,7 @@ msgid "[video] resolution must look like 1920x1080."
 msgstr "[video] resolution on oltava muotoa 1920x1080."
 
 msgid "[video] fps must be a number between 1 and 240."
-msgstr ""
+msgstr "[video] fps on oltava luku väliltä 1–240."
 
 msgid "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
 msgstr "[video] pixel_format on oltava FFmpegin pikseliformaatin nimi, kuten yuv420p."
@@ -5430,65 +5402,65 @@ msgid "{0} (copy)"
 msgstr "{0} (kopio)"
 
 msgid "The keyframes of the video are too far apart to split it into parts under the size limit."
-msgstr ""
+msgstr "Videon avainkuvat ovat liian kaukana toisistaan, jotta se voitaisiin jakaa kokorajan alittaviin osiin."
 
 msgid "The video could not be split into parts under the size limit."
-msgstr ""
+msgstr "Videota ei voitu jakaa kokorajan alittaviin osiin."
 
 #, python-brace-format
 msgid "{0} cannot hold picture subtitles (PGS, DVD): {1} track left out. Choose MKV to keep it."
 msgid_plural "{0} cannot hold picture subtitles (PGS, DVD): {1} tracks left out. Choose MKV to keep them."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{0} ei tue kuvamuotoisia tekstityksiä (PGS, DVD): {1} raita jätettiin pois. Valitse MKV säilyttääksesi sen."
+msgstr[1] "{0} ei tue kuvamuotoisia tekstityksiä (PGS, DVD): {1} raitaa jätettiin pois. Valitse MKV säilyttääksesi ne."
 
 #, python-brace-format
 msgid "Part {0} starts {1:.3f} s after a keyframe, where a stream copy would have to begin. Re-encoding the video instead, so every part starts exactly where it was cut; this takes longer."
-msgstr ""
+msgstr "Osa {0} alkaa {1:.3f} s avainkuvan jälkeen, vaikka suoran kopioinnin pitäisi alkaa avainkuvasta. Video koodataan uudelleen, jotta jokainen osa alkaa täsmälleen leikkauskohdasta. Tämä kestää pidempään."
 
 msgid "Splitting into parts…"
 msgstr "Jaetaan osiin…"
 
 msgid "Completed — re-encoded: a cut was not on a keyframe"
-msgstr ""
+msgstr "Valmis — koodattu uudelleen: leikkauskohta ei osunut avainkuvaan"
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit. The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "Split into {0} parts that fit the size limit. The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Jaettu {0} kokorajan alittavaan osaan. Video koodattiin uudelleen, koska leikkauskohta ei osunut avainkuvaan."
+msgstr[1] "Jaettu {0} kokorajan alittavaan osaan. Video koodattiin uudelleen, koska leikkauskohta ei osunut avainkuvaan."
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit."
 msgid_plural "Split into {0} parts that fit the size limit."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Jaettu {0} kokorajan alittavaan osaan."
+msgstr[1] "Jaettu {0} kokorajan alittavaan osaan."
 
 msgid "Conversion completed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr ""
+msgstr "Muunnos onnistui! Video koodattiin uudelleen, koska leikkauskohta ei osunut avainkuvaan."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Kaikki {0} osaa yhdistettiin onnistuneesti! Video koodattiin uudelleen, koska leikkauskohta ei osunut avainkuvaan."
+msgstr[1] "Kaikki {0} osaa yhdistettiin onnistuneesti! Video koodattiin uudelleen, koska leikkauskohta ei osunut avainkuvaan."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully!"
 msgid_plural "All {0} segments have been joined successfully!"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Kaikki {0} osaa yhdistettiin onnistuneesti!"
+msgstr[1] "Kaikki {0} osaa yhdistettiin onnistuneesti!"
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Kaikki {0} osaa käsiteltiin onnistuneesti! Video koodattiin uudelleen, koska leikkauskohta ei osunut avainkuvaan."
+msgstr[1] "Kaikki {0} osaa käsiteltiin onnistuneesti! Video koodattiin uudelleen, koska leikkauskohta ei osunut avainkuvaan."
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully!"
 msgid_plural "All {0} segments have been processed successfully!"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Kaikki {0} osaa käsiteltiin onnistuneesti!"
+msgstr[1] "Kaikki {0} osaa käsiteltiin onnistuneesti!"
 
 msgid "WhatsApp video"
 msgstr "WhatsApp-video"
@@ -5540,18 +5512,18 @@ msgstr "ääni nopeudella {rate} kbit/s"
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 67
 msgid "Convert Video"
-msgstr "Muokkaa videota"
+msgstr "Muunna video"
 
 #, python-brace-format
 msgid "Convert {0} Video"
 msgid_plural "Convert {0} Videos"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Muunna {0} video"
+msgstr[1] "Muunna {0} videota"
 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 108
 msgid "No valid local files selected"
-msgstr "Ei voimassa olevia paikallisia tiedostoja valittu."
+msgstr "Kelvollisia paikallisia tiedostoja ei valittu"
 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 109

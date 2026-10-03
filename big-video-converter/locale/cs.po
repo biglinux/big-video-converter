@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: big-video-converter\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-28 01:08+0000\n"
+"PO-Revision-Date: 2026-10-03 10:36+0000\n"
 "Last-Translator: BigLinux\n"
 "Language-Team: BigLinux\n"
 "Language: cs\n"
@@ -50,7 +50,7 @@ msgstr "Software (CPU)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 77
 msgid "Good (recommended)"
-msgstr "Dobré (doporučeno)"
+msgstr "Dobrá (doporučeno)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 73
@@ -60,7 +60,7 @@ msgstr "Velmi vysoká"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 74
 msgid "High"
-msgstr "Vysoký"
+msgstr "Vysoká"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 75
@@ -72,7 +72,7 @@ msgstr "Střední"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 76
 msgid "Low"
-msgstr "Nízký"
+msgstr "Nízká"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 77
@@ -82,12 +82,12 @@ msgstr "Velmi nízká"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 78
 msgid "Super Low"
-msgstr "Super nízký"
+msgstr "Mimořádně nízká"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 103
 msgid "Copy — No re-encoding"
-msgstr "Kopírovat — Žádné pře kódování"
+msgstr "Kopírovat — bez překódování"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 104
@@ -117,7 +117,7 @@ msgstr "ProRes — Profesionální úpravy"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 120
 msgid "Balanced (recommended)"
-msgstr "Vyvážený (doporučeno)"
+msgstr "Vyvážené (doporučeno)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 121
@@ -127,22 +127,22 @@ msgstr "Velmi rychlé (větší soubor)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 122
 msgid "Fast (larger file)"
-msgstr "Rychlý (větší soubor)"
+msgstr "Rychlé (větší soubor)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 123
 msgid "Slightly fast"
-msgstr "Trochu rychlejší"
+msgstr "Mírně rychlé"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 125
 msgid "Slow (smaller file)"
-msgstr "Pomalý (menší soubor)"
+msgstr "Pomalé (menší soubor)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 126
 msgid "Very slow (smallest file)"
-msgstr "Velmi pomalý (nejmenší soubor)"
+msgstr "Velmi pomalé (nejmenší soubor)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 145
@@ -152,7 +152,7 @@ msgstr "Extrahovat jako samostatný soubor"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 145
 msgid "Keep inside the video"
-msgstr "Udržujte uvnitř videa"
+msgstr "Zachovat ve videu"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 126
@@ -167,7 +167,7 @@ msgstr "Kopírovat bez změn (nejrychlejší)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 157
 msgid "Re-encode audio"
-msgstr "Znovu zakódujte zvuk."
+msgstr "Překódovat zvuk"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 158
@@ -282,7 +282,7 @@ msgid "Custom"
 msgstr "Vlastní"
 
 msgid "24 fps (cinema)"
-msgstr ""
+msgstr "24 fps (kino)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 217
@@ -294,14 +294,7 @@ msgid ""
 "Software mode is slower but compatible with more formats.\n"
 "\n"
 "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back to Software mode if needed."
-msgstr ""
-"Pokud vaše GPU podporuje kódování videa, převod bude mnohem rychlejší.\n"
-"\n"
-"Automatické detekce je obvykle nejlepší volba, ale můžete ji také vybrat ručně.\n"
-"\n"
-"Režim softwaru je pomalejší, ale kompatibilní s více formáty.\n"
-"\n"
-"Pokud GPU není podporováno, systém se pokusí o částečné zpracování GPU a v případě potřeby se automaticky vrátí k režimu softwaru."
+msgstr "Pokud vaše GPU podporuje kódování videa, převod bude mnohem rychlejší.\n\nAutomatické rozpoznání je obvykle nejlepší volba, ale můžete GPU vybrat i ručně.\n\nSoftwarový režim je pomalejší, ale podporuje více formátů.\n\nPokud GPU není podporováno, systém se pokusí o částečné zpracování na GPU a v případě potřeby automaticky přejde na softwarový režim."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 223
@@ -326,16 +319,7 @@ msgid ""
 "AV1: The most modern format. It offers the best compression (creating smaller files), but the conversion can also be slow if the graphics card isn't compatible.\n"
 "\n"
 "ProRes: Professional editing codec (Apple). Preserves maximum quality for video editing workflows. CPU-only, outputs .mov format."
-msgstr ""
-"H.264: Starší formát, který funguje na téměř všech zařízeních. Zabírá více úložného prostoru, ale je nejrychlejší na převod.\n"
-"\n"
-"H.265: Novější verze H.264. Nepracuje na starších zařízeních a komprimuje soubory efektivněji.\n"
-"\n"
-"VP9: Široce používaný YouTube. Pokud váš počítač nemá kompatibilní grafickou kartu, může být převod velmi pomalý.\n"
-"\n"
-"AV1: Nejpokročilejší formát. Nabízí nejlepší kompresi (vytváří menší soubory), ale převod může být také pomalý, pokud grafická karta není kompatibilní.\n"
-"\n"
-"ProRes: Profesionální editační kodek (Apple). Zachovává maximální kvalitu pro pracovní postupy video editace. Pouze CPU, výstup ve formátu .mov."
+msgstr "H.264: Starší formát, který funguje téměř na všech zařízeních. Zabírá více místa, ale převádí se nejrychleji.\n\nH.265: Novější verze H.264. Nefunguje na starších zařízeních a komprimuje soubory účinněji.\n\nVP9: Hojně používaný službou YouTube. Pokud počítač nemá kompatibilní grafickou kartu, může být převod velmi pomalý.\n\nAV1: Nejmodernější formát. Nabízí nejlepší kompresi (menší soubory), ale bez kompatibilní grafické karty může být převod pomalý.\n\nProRes: Profesionální kodek pro střih (Apple). Zachovává maximální kvalitu při úpravách videa. Používá pouze CPU, výstupem je formát .mov."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 230
@@ -343,10 +327,7 @@ msgid ""
 "Copy is usually best, fast and preserves full quality.\n"
 "\n"
 "Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
-msgstr ""
-"Kopie je obvykle nejlepší, rychlá a zachovává plnou kvalitu.\n"
-"\n"
-"Pře kódování mírně snižuje kvalitu, ale zlepšuje kompatibilitu a může snížit velikost souboru."
+msgstr "Kopírování je obvykle nejlepší volba: je rychlé a zachovává plnou kvalitu.\n\nPřekódování mírně snižuje kvalitu, ale zlepšuje kompatibilitu a může zmenšit soubor."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 234
@@ -405,35 +386,29 @@ msgid ""
 "• Standard: 4K, Full HD, HD (TVs and monitors)\n"
 "• Vertical: For phones and social media\n"
 "• Custom: Set your own dimensions"
-msgstr ""
-"Velikost výstupu:\n"
-"\n"
-"• Původní: Zachovat stejnou rozlišení\n"
-"• Standardní: 4K, Full HD, HD (TV a monitory)\n"
-"• Vertikální: Pro telefony a sociální média\n"
-"• Vlastní: Nastavte své vlastní rozměry"
+msgstr "Výstupní velikost:\n\n• Původní: Zachovat stejné rozlišení\n• Standardní: 4K, Full HD, HD (televizory a monitory)\n• Svislá: Pro telefony a sociální sítě\n• Vlastní: Nastavit vlastní rozměry"
 
 msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
 "• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
-msgstr ""
+msgstr "Počet snímků za sekundu v převedeném videu:\n\n• Méně snímků: menší soubor. Při stejné kvalitě ušetřil převod z 30 na 24 fps 10–17 %, z 30 na 15 fps 28–42 %\n• Více snímků: mezisnímky vznikají smícháním sousedních snímků, takže pohyb vypadá plynuleji, ale při rychlém pohybu zůstává slabá stopa"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
-msgstr ""
+msgstr "Odstraňuje zrno a skvrnky z videa natočeného za slabého osvětlení. Silnější úrovně také vyhlazují jemné detaily. Čistší video se komprimuje do o něco menšího souboru."
 
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
-msgstr ""
+msgstr "Zvýrazňuje hrany a jemné detaily (adaptivní doostření podle kontrastu od AMD). Ostřejší video vytváří o něco větší soubor."
 
 msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
-msgstr ""
+msgstr "Stabilizuje roztřesené záběry. Video se nejprve analyzuje, takže převod trvá přibližně dvakrát déle; obraz se mírně přiblíží, aby se skryl pohyb okrajů."
 
 msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
-msgstr ""
+msgstr "Způsob kódování barev v tomto videu. Ponechte popis ze souboru, pokud náhled nevypadá šedě a vybledle: v takovém případě je soubor HDR, ale neuvádí to — obvykle HDR10 (PQ), u některých vysílání HLG. Stejným způsobem se bude číst i při převodu."
 
 msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
-msgstr ""
+msgstr "Použije barevný vzhled ze souboru LUT (.cube, .3dl) nebo shader mpv (.hook, .glsl) na celé video."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 265
@@ -463,7 +438,7 @@ msgid ""
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 0% (no change)"
-msgstr ""
+msgstr "• Posun doprava: Živější barvy\n• Posun doleva: Tlumenější barvy\n• Výchozí: 0 % (beze změny)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 270
@@ -471,10 +446,7 @@ msgid ""
 "• Positive: More red/yellow\n"
 "• Negative: More blue/green\n"
 "• Default: 0 (no change)"
-msgstr ""
-"• Pozitivní: Více červené/žluté\n"
-"• Negativní: Více modré/zelené\n"
-"• Výchozí: 0 (žádná změna)"
+msgstr "• Kladné hodnoty: Více červené/žluté\n• Záporné hodnoty: Více modré/zelené\n• Výchozí: 0 (beze změny)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 255
@@ -603,13 +575,7 @@ msgid ""
 "residual noise during pauses between speech.\n"
 "\n"
 "Adjust intensity from low to maximum."
-msgstr ""
-"Šumová brána ztišuje zvuk pod prahovou hodnotou hlasitosti\n"
-"\n"
-"Užitečné v kombinaci s redukcí šumu k eliminaci\n"
-"zbytkového šumu během pauz mezi řečí.\n"
-"\n"
-"Upravte intenzitu od nízké po maximální."
+msgstr "Šumová brána ztišuje zvuk pod prahem hlasitosti.\n\nV kombinaci s potlačením šumu pomáhá odstranit\nzbytkový šum během přestávek v řeči.\n\nNastavte intenzitu od nízké po maximální."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 325
@@ -619,7 +585,7 @@ msgstr "Zrušit převod tohoto souboru"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 326
 msgid "Skip this file and do not convert it"
-msgstr "Přeskočte tento soubor a nepřevádějte ho."
+msgstr "Přeskočit tento soubor a nepřevádět jej"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 362
@@ -629,17 +595,12 @@ msgid ""
 "Audio can still be re-encoded, cleaned or adjusted independently.\n"
 "\n"
 "Does not allow changing video codec, resolution or applying video filters."
-msgstr ""
-"Kopíruje video stream bez opětovného kódování — okamžitě a bezztrátově.\n"
-"\n"
-"Zvuk může být stále znovu kódován, čištěn nebo upravován nezávisle.\n"
-"\n"
-"Nedovoluje změnu video kodeku, rozlišení nebo aplikaci video filtrů."
+msgstr "Kopíruje obrazovou stopu bez překódování — okamžitě a bezztrátově.\n\nZvuk lze nezávisle překódovat, vyčistit nebo upravit.\n\nNeumožňuje změnu kodeku videa, rozlišení ani použití obrazových filtrů."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 367
 msgid "Uses H.264, the most widely supported codec. Works on virtually every device, browser and player. A great default choice when compatibility matters most."
-msgstr "Používá H.264, nejširší podporovaný kodek. Funguje téměř na každém zařízení, prohlížeči a přehrávači. Skvělá výchozí volba, když je kompatibilita nejdůležitější."
+msgstr "Používá H.264, nejrozšířenější podporovaný kodek. Funguje téměř na každém zařízení, v prohlížeči i přehrávači. Vhodná výchozí volba, pokud je nejdůležitější kompatibilita."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 372
@@ -675,7 +636,7 @@ msgstr "Přidané soubory"
 # converter/main.py, line: 911
 #, python-brace-format
 msgid "{} video files have been added to the queue."
-msgstr "{} video soubory byly přidány do fronty."
+msgstr "Do fronty byly přidány videosoubory: {}."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
@@ -685,7 +646,7 @@ msgstr "Žádné soubory nenalezeny"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 924
 msgid "No valid video files were found in the selected folder."
-msgstr "V vybraném složce nebyly nalezeny žádné platné video soubory."
+msgstr "Ve vybrané složce nebyly nalezeny žádné platné videosoubory."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -701,9 +662,7 @@ msgstr "Přidat síťový soubor"
 msgid ""
 "Connect to a remote server to browse and add video files.\n"
 "Files are accessed directly from the network without downloading."
-msgstr ""
-"Připojte se k vzdálenému serveru pro procházení a přidávání video souborů. \n"
-"Soubory jsou přístupné přímo z sítě bez stahování."
+msgstr "Připojte se ke vzdálenému serveru a procházejte nebo přidávejte videosoubory.\nSoubory jsou přístupné přímo ze sítě bez stahování."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 244
@@ -784,16 +743,16 @@ msgid "⚠ Subtitle extraction only mode is active — video will NOT be convert
 msgstr "⚠ Režim extrakce titulků je aktivní — video NEBUDE převedeno"
 
 msgid "Stop converting and close?"
-msgstr ""
+msgstr "Zastavit převod a zavřít?"
 
 msgid "Conversions are still running. Closing stops unfinished work and keeps its originals."
-msgstr ""
+msgstr "Převody stále probíhají. Zavření zastaví nedokončenou práci a zachová původní soubory."
 
 msgid "Keep converting"
-msgstr ""
+msgstr "Pokračovat v převodu"
 
 msgid "Stop and close"
-msgstr ""
+msgstr "Zastavit a zavřít"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 587
@@ -808,7 +767,7 @@ msgstr "Editor"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 290
 msgid "Progress"
-msgstr "Pokrok"
+msgstr "Průběh"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1225
@@ -816,10 +775,10 @@ msgid "File not found"
 msgstr "Soubor nebyl nalezen"
 
 msgid "Edit video"
-msgstr ""
+msgstr "Upravit video"
 
 msgid "Changes apply only to the selected video"
-msgstr ""
+msgstr "Změny se použijí pouze na vybrané video"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
@@ -827,16 +786,16 @@ msgid "Could not load video file"
 msgstr "Nepodařilo se načíst video soubor."
 
 msgid "Conversion in progress"
-msgstr ""
+msgstr "Probíhá převod"
 
 msgid "New videos can be added when the current conversions finish."
-msgstr ""
+msgstr "Nová videa lze přidat po dokončení aktuálních převodů."
 
 msgid "This file cannot be opened"
 msgid_plural "These files cannot be opened"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Tento soubor nelze otevřít"
+msgstr[1] "Tyto soubory nelze otevřít"
+msgstr[2] "Tyto soubory nelze otevřít"
 
 #, python-brace-format
 msgid ""
@@ -845,12 +804,12 @@ msgid ""
 msgid_plural ""
 "They are not on a local or mounted drive. Open their network share in the file manager, or use “Add Network File”, then add them again:\n"
 "{files}"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Není na místním ani připojeném disku. Otevřete jeho síťové sdílení ve správci souborů nebo použijte „Přidat síťový soubor“ a pak jej znovu přidejte:\n{files}"
+msgstr[1] "Nejsou na místním ani připojeném disku. Otevřete jejich síťové sdílení ve správci souborů nebo použijte „Přidat síťový soubor“ a pak je znovu přidejte:\n{files}"
+msgstr[2] "Nejsou na místním ani připojeném disku. Otevřete jejich síťové sdílení ve správci souborů nebo použijte „Přidat síťový soubor“ a pak je znovu přidejte:\n{files}"
 
 msgid "The settings sent by the player could not be used"
-msgstr ""
+msgstr "Nastavení odeslané přehrávačem nelze použít"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1677
@@ -1060,7 +1019,7 @@ msgid "Continue"
 msgstr "Pokračovat"
 
 msgid "The additional FFmpeg options cannot be used"
-msgstr ""
+msgstr "Dodatečné volby FFmpeg nelze použít"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 335
@@ -1087,12 +1046,12 @@ msgid "Editing"
 msgstr "Úpravy"
 
 msgid "Resize sidebar"
-msgstr ""
+msgstr "Změnit šířku postranního panelu"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 468
 msgid "Video Codec"
-msgstr "Video kodek"
+msgstr "Kodek videa"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1120,7 +1079,7 @@ msgstr "Zrychluje převod, pokud je podporován."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 153
 msgid "GPU Device"
-msgstr "GPU zařízení"
+msgstr "Zařízení GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 154
@@ -1145,7 +1104,7 @@ msgstr "Formát kontejneru pro výstupní soubor"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 171
 msgid "Copy without re-encoding"
-msgstr "Kopírovat bez znovu kódování"
+msgstr "Kopírovat bez překódování"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 482
@@ -1244,7 +1203,7 @@ msgstr "AI model"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 297
 msgid "Noise Gate"
-msgstr "Hluková brána"
+msgstr "Šumová brána"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1266,7 +1225,7 @@ msgstr "Intenzita"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 328
 msgid "Compressor"
-msgstr "Komprimátor"
+msgstr "Kompresor"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 331
@@ -1280,7 +1239,7 @@ msgstr "Povolit kompresor"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 361
 msgid "Remove Low Rumble"
-msgstr "Odstranit nízké dunění"
+msgstr "Odstranit nízkofrekvenční dunění"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 362
@@ -1324,7 +1283,7 @@ msgstr "Křišťálový hlas"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
 msgid "Radio Host"
-msgstr "Rádio moderátor"
+msgstr "Rozhlasový moderátor"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
@@ -1334,7 +1293,7 @@ msgstr "Sametový hlas"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
 msgid "Extra Brightness"
-msgstr "Extra jasnost"
+msgstr "Výraznější výšky"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
@@ -1344,12 +1303,12 @@ msgstr "Zjemnit 'S' (De-esser)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Remove Rumble"
-msgstr "Odstranit Rumble"
+msgstr "Odstranit dunění"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Present Voice"
-msgstr "Přítomný hlas"
+msgstr "Výrazný hlas"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1367,7 +1326,7 @@ msgstr "Předvolba"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 429
 msgid "Uniform Volume"
-msgstr "Jednotný objem"
+msgstr "Vyrovnaná hlasitost"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 430
@@ -1382,7 +1341,7 @@ msgstr "Rychlé kopírování"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 448
 msgid "No re-encoding, fastest"
-msgstr "Žádné pře kódování, nejrychlejší"
+msgstr "Bez překódování, nejrychlejší"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 454
@@ -1460,7 +1419,7 @@ msgstr "Hotové recepty: YouTube, Instagram, střih…"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
-msgstr "Vyžaduje audio nastavené pro znovu kódování"
+msgstr "Vyžaduje nastavení zvuku na překódování"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 945
@@ -1480,7 +1439,7 @@ msgstr "kompresor"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 951
 msgid "low cut"
-msgstr "nízký střih"
+msgstr "Ořez nízkých frekvencí"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 953
@@ -1500,7 +1459,7 @@ msgstr "Zakázáno"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 985
 msgid "Custom FFmpeg flags"
-msgstr "Vlastní FFmpeg příznaky"
+msgstr "Vlastní přepínače FFmpeg"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 986
@@ -1508,29 +1467,29 @@ msgid "No customizations"
 msgstr "Žádné přizpůsobení"
 
 msgid "Keep original audio"
-msgstr ""
+msgstr "Zachovat původní zvuk"
 
 msgid "Convert audio"
-msgstr ""
+msgstr "Převést zvuk"
 
 msgid "Choose what the converted video should contain."
-msgstr ""
+msgstr "Vyberte, co má převedené video obsahovat."
 
 msgid "Audio operation"
-msgstr ""
+msgstr "Zpracování zvuku"
 
 msgid "Audio conversion"
-msgstr ""
+msgstr "Převod zvuku"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 156
 msgid "Audio Codec"
-msgstr "Audio kodek"
+msgstr "Kodek zvuku"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 173
 msgid "Audio Bitrate"
-msgstr "Bitrate zvuku"
+msgstr "Datový tok zvuku"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 228
@@ -1540,7 +1499,7 @@ msgstr "Zvukové kanály"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 221
 msgid "Custom bitrate"
-msgstr "Vlastní bitrate"
+msgstr "Vlastní datový tok"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 251
@@ -1548,54 +1507,54 @@ msgid "Custom channels"
 msgstr "Vlastní kanály"
 
 msgid "Changes are saved automatically for future conversions."
-msgstr ""
+msgstr "Změny se automaticky ukládají pro budoucí převody."
 
 msgid "Original audio is kept. Codec, bitrate and channel settings do not apply."
-msgstr ""
+msgstr "Původní zvuk se zachová. Nastavení kodeku, datového toku a kanálů se nepoužije."
 
 msgid "Audio will be converted using the settings below."
-msgstr ""
+msgstr "Zvuk se převede podle níže uvedeného nastavení."
 
 msgid "The converted video will have no audio."
-msgstr ""
+msgstr "Převedené video nebude obsahovat zvuk."
 
 msgid "Select an audio operation."
-msgstr ""
+msgstr "Vyberte způsob zpracování zvuku."
 
 msgid "Open this video in the editor"
-msgstr ""
+msgstr "Otevřít toto video v editoru"
 
 msgid "Options"
-msgstr ""
+msgstr "Možnosti"
 
 msgid "Choose a preset or resolution for this video"
-msgstr ""
+msgstr "Vybrat předvolbu nebo rozlišení pro toto video"
 
 #, python-brace-format
 msgid "Options for “{name}”"
-msgstr ""
+msgstr "Možnosti pro „{name}“"
 
 #, python-brace-format
 msgid "Edit “{name}”"
-msgstr ""
+msgstr "Upravit „{name}“"
 
 msgid "More actions"
-msgstr ""
+msgstr "Další akce"
 
 #, python-brace-format
 msgid "More actions for “{name}”"
-msgstr ""
+msgstr "Další akce pro „{name}“"
 
 msgid "Play video"
-msgstr ""
+msgstr "Přehrát video"
 
 msgid "Video information"
-msgstr ""
+msgstr "Informace o videu"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 194
 msgid "Open containing folder"
-msgstr "Otevřít obsahující složku"
+msgstr "Otevřít složku se souborem"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 95
@@ -1603,31 +1562,31 @@ msgid "Remove from queue"
 msgstr "Odstranit z fronty"
 
 msgid "Delete from disk…"
-msgstr ""
+msgstr "Smazat z disku…"
 
 msgid "Video preview"
-msgstr ""
+msgstr "Náhled videa"
 
 #, python-brace-format
 msgid "Own: {recipe}"
-msgstr ""
+msgstr "Vlastní: {recipe}"
 
 msgid "Delete this video permanently?"
-msgstr ""
+msgstr "Trvale smazat toto video?"
 
 #, python-brace-format
 msgid "“{}” will be removed from disk. This cannot be undone."
-msgstr ""
+msgstr "„{}“ bude smazáno z disku. Tuto akci nelze vrátit zpět."
 
 msgid "Keep video"
-msgstr ""
+msgstr "Zachovat video"
 
 msgid "Delete permanently"
-msgstr ""
+msgstr "Trvale smazat"
 
 #, python-brace-format
 msgid "Could not delete the video: {} "
-msgstr ""
+msgstr "Video se nepodařilo smazat: {} "
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 282
@@ -1650,10 +1609,10 @@ msgid "Folder to save"
 msgstr "Složka pro uložení"
 
 msgid "Save converted videos"
-msgstr ""
+msgstr "Ukládání převedených videí"
 
 msgid "Output folder"
-msgstr ""
+msgstr "Výstupní složka"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 288
@@ -1671,7 +1630,7 @@ msgid "Delete original files"
 msgstr "Smazat původní soubory"
 
 msgid "Originals are kept unless every converted result passes validation"
-msgstr ""
+msgstr "Originály se zachovají, dokud všechny převedené výsledky neprojdou ověřením"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -1696,11 +1655,11 @@ msgid "Could not find this video file"
 msgstr "Nelze najít tento video soubor."
 
 msgid "The crop cannot be applied"
-msgstr ""
+msgstr "Ořez nelze použít"
 
 #, python-brace-format
 msgid "“{name}” was not converted: its picture size could not be read, or the crop removes the whole picture. Check the crop in the editor and try again."
-msgstr ""
+msgstr "„{name}“ nebylo převedeno: nepodařilo se zjistit rozměry obrazu nebo ořez odstraní celý obraz. Zkontrolujte ořez v editoru a zkuste to znovu."
 
 msgid "These tracks can't be copied into MP4"
 msgstr "Tyto stopy nelze zkopírovat do MP4"
@@ -1722,26 +1681,26 @@ msgstr "Neznámý kodek"
 
 #, python-brace-format
 msgid "Video track {0}"
-msgstr "Video stopa {0}"
+msgstr "Obrazová stopa {0}"
 
 #, python-brace-format
 msgid "Audio track {0}"
-msgstr "Audio stopa {0}"
+msgstr "Zvuková stopa {0}"
 
 msgid "not supported by MP4"
 msgstr "není podporována formátem MP4"
 
 msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
-msgstr "Překódováním se tyto stopy upraví tak, aby MP4 přehrál kdekoli. Kopírování je sice rychlejší, ale výsledek může být bez zvuku nebo se nemusí přehrát vůbec — zvolte MKV jako výstupní formát, pokud chcete původní stopy ponechat beze změny."
+msgstr "Překódováním se tyto stopy převedou tak, aby bylo MP4 možné přehrát kdekoli. Kopírování je rychlejší, ale výsledek může být bez zvuku nebo se nemusí přehrát vůbec — pro zachování původních stop beze změny zvolte výstupní formát MKV."
 
 msgid "This video cannot be made to fit the size"
 msgstr "Toto video nelze vměstnat do velikosti"
 
 msgid "General settings"
-msgstr ""
+msgstr "Obecné nastavení"
 
 msgid "Original resolution"
-msgstr ""
+msgstr "Původní rozlišení"
 
 #, python-brace-format
 msgid "up to {size}"
@@ -1749,55 +1708,55 @@ msgstr "až {size}"
 
 #, python-brace-format
 msgid "{profile} · {resolution}"
-msgstr ""
+msgstr "{profile} · {resolution}"
 
 msgid "Options for this video"
-msgstr ""
+msgstr "Možnosti pro toto video"
 
 msgid "Override the general recipe only when this video needs a different destination profile or size."
-msgstr ""
+msgstr "Obecné nastavení převodu změňte pouze tehdy, pokud toto video potřebuje jiný cílový profil nebo velikost."
 
 msgid "Effective result"
-msgstr ""
+msgstr "Výsledné nastavení"
 
 msgid "General settings remain the default for every other video."
-msgstr ""
+msgstr "Obecné nastavení zůstane výchozí pro všechna ostatní videa."
 
 msgid "Use the general recipe"
-msgstr ""
+msgstr "Použít obecné nastavení převodu"
 
 msgid "Profile"
-msgstr ""
+msgstr "Profil"
 
 msgid "Target a platform or workflow"
-msgstr ""
+msgstr "Zvolit cílovou platformu nebo pracovní postup"
 
 msgid "Use the general resolution"
-msgstr ""
+msgstr "Použít obecné rozlišení"
 
 msgid "Use the profile resolution"
-msgstr ""
+msgstr "Použít rozlišení profilu"
 
 msgid "Keep the original resolution"
-msgstr ""
+msgstr "Zachovat původní rozlišení"
 
 msgid "Vertical 4K · 2160×3840"
-msgstr ""
+msgstr "Svislé 4K · 2160×3840"
 
 msgid "Vertical QHD · 1440×2560"
-msgstr ""
+msgstr "Svislé QHD · 1440×2560"
 
 msgid "Vertical Full HD · 1080×1920"
-msgstr ""
+msgstr "Svislé Full HD · 1080×1920"
 
 msgid "Vertical HD · 720×1280"
-msgstr ""
+msgstr "Svislé HD · 720×1280"
 
 msgid "Vertical SD · 480×854"
-msgstr ""
+msgstr "Svislé SD · 480×854"
 
 msgid "Custom size"
-msgstr ""
+msgstr "Vlastní velikost"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1809,16 +1768,16 @@ msgid "Resolution"
 msgstr "Rozlišení"
 
 msgid "Controls image dimensions and file size"
-msgstr ""
+msgstr "Určuje rozměry obrazu a velikost souboru"
 
 msgid "Width"
-msgstr ""
+msgstr "Šířka"
 
 msgid "Even pixels"
-msgstr ""
+msgstr "Sudý počet pixelů"
 
 msgid "Height"
-msgstr ""
+msgstr "Výška"
 
 msgid "Use the general size"
 msgstr "Použít obecnou velikost"
@@ -1830,22 +1789,22 @@ msgid "Another size"
 msgstr "Jiná velikost"
 
 msgid "Fits this video under a size, whatever the general setting"
-msgstr "Vměstná toto video do velikosti bez ohledu na obecné nastavení"
+msgstr "Přizpůsobí toto video limitu velikosti bez ohledu na obecné nastavení"
 
 msgid "Size in megabytes"
 msgstr "Velikost v megabajtech"
 
 msgid "This video will use"
-msgstr ""
+msgstr "Pro toto video se použije"
 
 msgid "To fit the size"
-msgstr "Aby se vešlo do velikosti"
+msgstr "Pro splnění limitu velikosti"
 
 msgid "Checking the video…"
 msgstr "Kontrola videa…"
 
 msgid "Apply to this video"
-msgstr ""
+msgstr "Použít na toto video"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 25
@@ -1873,7 +1832,7 @@ msgid "Command to be executed"
 msgstr "Příkaz k provedení"
 
 msgid "Before installing"
-msgstr ""
+msgstr "Před instalací"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 72
@@ -1955,12 +1914,12 @@ msgstr "Další možnosti FFmpeg"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 179
 msgid "Custom flags passed directly to FFmpeg. Example: '-ss 60 -t 30' to convert only 30 seconds starting at 1 minute."
-msgstr "Vlastní příznaky předané přímo do FFmpeg. Příklad: '-ss 60 -t 30' pro převod pouze 30 sekund začínajících na 1 minutě."
+msgstr "Vlastní přepínače předané přímo FFmpeg. Příklad: „-ss 60 -t 30“ převede pouze 30 sekund od času 1 minuta."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 205
 msgid "Video Preview Rendering"
-msgstr "Náhled videa se renderuje"
+msgstr "Vykreslování náhledu videa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 207
@@ -2032,7 +1991,7 @@ msgid "Could not save the profile file."
 msgstr "Soubor profilu se nepodařilo uložit."
 
 msgid "This profile can read or write files"
-msgstr ""
+msgstr "Tento profil může číst nebo zapisovat soubory"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 346
@@ -2117,27 +2076,27 @@ msgstr "Ukončit"
 #, python-brace-format
 msgid "{count} file"
 msgid_plural "{count} files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} soubor"
+msgstr[1] "{count} soubory"
+msgstr[2] "{count} souborů"
 
 msgid "Show conversion settings"
-msgstr ""
+msgstr "Zobrazit nastavení převodu"
 
 #, python-brace-format
 msgid "Show conversion settings ({shortcut})"
-msgstr ""
+msgstr "Zobrazit nastavení převodu ({shortcut})"
 
 msgid "Show editing tools"
-msgstr ""
+msgstr "Zobrazit nástroje pro úpravy"
 
 #, python-brace-format
 msgid "Show editing tools ({shortcut})"
-msgstr ""
+msgstr "Zobrazit nástroje pro úpravy ({shortcut})"
 
 #, python-brace-format
 msgid "Track {number}"
-msgstr ""
+msgstr "Stopa {number}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 173
@@ -2207,7 +2166,7 @@ msgstr "Snižuje hlasité vrcholy a zvyšuje tiché části, čímž činí celk
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 537
 msgid "Shape the sound spectrum: boost clarity, cut rumble or apply ready-made presets like Podcast or De-esser."
-msgstr "Upravte zvukový spektrum: zvýrazněte jasnost, odstraňte šum nebo použijte hotové předvolby jako Podcast nebo De-esser."
+msgstr "Upravte zvukové spektrum: zvýrazněte srozumitelnost, potlačte dunění nebo použijte hotové předvolby, například Podcast nebo De-esser."
 
 msgid "Copy"
 msgstr "Kopírovat"
@@ -2231,13 +2190,13 @@ msgid ""
 "{settings}\n"
 "\n"
 "Import it only if you trust where it came from."
-msgstr ""
+msgstr "Obsahuje nastavení FFmpeg, které může otevírat, vytvářet nebo přepisovat soubory na tomto počítači či přistupovat k síti:\n\n{settings}\n\nImportujte nastavení pouze tehdy, pokud důvěřujete jejich původu."
 
 msgid "Import anyway"
-msgstr ""
+msgstr "Přesto importovat"
 
 msgid "This preset can read or write files"
-msgstr ""
+msgstr "Tato předvolba může číst nebo zapisovat soubory"
 
 msgid "Create with AI…"
 msgstr "Vytvořit pomocí AI…"
@@ -2304,7 +2263,7 @@ msgid "Export Preset"
 msgstr "Exportovat předvolbu"
 
 msgid "Choose a folder on this computer to export the preset."
-msgstr ""
+msgstr "Vyberte složku na tomto počítači pro export předvolby."
 
 #, python-brace-format
 msgid "Preset exported to {0}"
@@ -2317,7 +2276,7 @@ msgid "Preset files (*.toml)"
 msgstr "Soubory předvoleb (*.toml)"
 
 msgid "Choose a preset file on this computer to import."
-msgstr ""
+msgstr "Vyberte soubor předvolby na tomto počítači pro import."
 
 #, python-brace-format
 msgid "The preset was not imported: {0}"
@@ -2376,28 +2335,28 @@ msgstr "Uloženo jako „{0}“ do {1}"
 
 #, python-brace-format
 msgid "{percent}%"
-msgstr ""
+msgstr "{percent}%"
 
 #, python-brace-format
 msgid "≈ {seconds} s left"
 msgid_plural "≈ {seconds} s left"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Zbývá ≈ {seconds} s"
+msgstr[1] "Zbývá ≈ {seconds} s"
+msgstr[2] "Zbývá ≈ {seconds} s"
 
 #, python-brace-format
 msgid "≈ {minutes} min left"
 msgid_plural "≈ {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Zbývá ≈ {minutes} min"
+msgstr[1] "Zbývá ≈ {minutes} min"
+msgstr[2] "Zbývá ≈ {minutes} min"
 
 #, python-brace-format
 msgid "≈ {hours} h {minutes} min left"
 msgid_plural "≈ {hours} h {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Zbývá ≈ {hours} h {minutes} min"
+msgstr[1] "Zbývá ≈ {hours} h {minutes} min"
+msgstr[2] "Zbývá ≈ {hours} h {minutes} min"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 737
@@ -2413,121 +2372,121 @@ msgstr "{secs}s"
 
 #, python-brace-format
 msgid "Could not open “{name}”: {error}"
-msgstr ""
+msgstr "Nelze otevřít „{name}“: {error}"
 
 msgid "Back to the queue"
-msgstr ""
+msgstr "Zpět do fronty"
 
 msgid "Conversion progress"
-msgstr ""
+msgstr "Průběh převodu"
 
 msgid "Cancel all"
-msgstr ""
+msgstr "Zrušit vše"
 
 msgid "Overall conversion progress"
-msgstr ""
+msgstr "Celkový průběh převodu"
 
 msgid "Convert more videos"
-msgstr ""
+msgstr "Převést další videa"
 
 msgid "Open video"
-msgstr ""
+msgstr "Otevřít video"
 
 msgid "Show in folder"
-msgstr ""
+msgstr "Zobrazit ve složce"
 
 #, python-brace-format
 msgid "{count} video converted"
 msgid_plural "{count} videos converted"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} video převedeno"
+msgstr[1] "{count} videa převedena"
+msgstr[2] "{count} videí převedeno"
 
 #, python-brace-format
 msgid "{count} conversion failed"
 msgid_plural "{count} conversions failed"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} převod se nezdařil"
+msgstr[1] "{count} převody se nezdařily"
+msgstr[2] "{count} převodů se nezdařilo"
 
 #, python-brace-format
 msgid "{count} conversion cancelled"
 msgid_plural "{count} conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} převod zrušen"
+msgstr[1] "{count} převody zrušeny"
+msgstr[2] "{count} převodů zrušeno"
 
 msgid "Conversion complete"
 msgid_plural "Conversions complete"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Převod dokončen"
+msgstr[1] "Převody dokončeny"
+msgstr[2] "Převody dokončeny"
 
 #, python-brace-format
 msgid "{count} video converted successfully"
 msgid_plural "{count} videos converted successfully"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} video úspěšně převedeno"
+msgstr[1] "{count} videa úspěšně převedena"
+msgstr[2] "{count} videí úspěšně převedeno"
 
 msgid "Conversion failed"
 msgid_plural "Conversions failed"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Převod se nezdařil"
+msgstr[1] "Převody se nezdařily"
+msgstr[2] "Převody se nezdařily"
 
 msgid "Conversion cancelled"
 msgid_plural "Conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Převod zrušen"
+msgstr[1] "Převody zrušeny"
+msgstr[2] "Převody zrušeny"
 
 msgid "Queue finished with issues"
-msgstr ""
+msgstr "Fronta dokončena s problémy"
 
 msgid "No conversion results are available"
-msgstr ""
+msgstr "Nejsou k dispozici žádné výsledky převodu"
 
 #, python-brace-format
 msgid "{finished} of {total} finished · {percent}"
 msgid_plural "{finished} of {total} finished · {percent}"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Dokončeno {finished} z {total} · {percent}"
+msgstr[1] "Dokončeno {finished} z {total} · {percent}"
+msgstr[2] "Dokončeno {finished} z {total} · {percent}"
 
 msgid "Converting video"
 msgid_plural "Converting videos"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Převádí se video"
+msgstr[1] "Převádějí se videa"
+msgstr[2] "Převádějí se videa"
 
 #, python-brace-format
 msgid "{results} · {duration}"
-msgstr ""
+msgstr "{results} · {duration}"
 
 #, python-brace-format
 msgid "{before} → {after} ({change}%)"
-msgstr ""
+msgstr "{before} → {after} ({change}%)"
 
 #, python-brace-format
 msgid "“{name}”: {reason}"
-msgstr ""
+msgstr "“{name}”: {reason}"
 
 #, python-brace-format
 msgid "+{count} more"
 msgid_plural "+{count} more"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "+{count} další"
+msgstr[1] "+{count} další"
+msgstr[2] "+{count} dalších"
 
 msgid "Back to queue"
-msgstr ""
+msgstr "Zpět do fronty"
 
 msgid "Open folder"
-msgstr ""
+msgstr "Otevřít složku"
 
 msgid "Cancel all conversions?"
-msgstr ""
+msgstr "Zrušit všechny převody?"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 321
@@ -2535,7 +2494,7 @@ msgid "This will stop all active conversions and skip all pending items. This ac
 msgstr "Tím se zastaví všechny aktivní převody a přeskočí se všechny čekající položky. Tuto akci nelze vrátit zpět."
 
 msgid "Unknown video"
-msgstr ""
+msgstr "Neznámé video"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 447
@@ -2544,54 +2503,54 @@ msgstr "Čekání ve frontě"
 
 #, python-brace-format
 msgid "Conversion progress for “{}”"
-msgstr ""
+msgstr "Průběh převodu „{}“"
 
 msgid "FFmpeg output"
-msgstr ""
+msgstr "Výstup FFmpeg"
 
 #, python-brace-format
 msgid "FFmpeg output for “{name}”"
-msgstr ""
+msgstr "Výstup FFmpeg pro „{name}“"
 
 msgid "Command"
-msgstr ""
+msgstr "Příkaz"
 
 msgid "Process output"
-msgstr ""
+msgstr "Výstup procesu"
 
 #, python-brace-format
 msgid "{count} output file"
 msgid_plural "{count} output files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} výstupní soubor"
+msgstr[1] "{count} výstupní soubory"
+msgstr[2] "{count} výstupních souborů"
 
 #, python-brace-format
 msgid "Open “{name}”"
-msgstr ""
+msgstr "Otevřít „{name}“"
 
 msgid "Skip this video"
-msgstr ""
+msgstr "Přeskočit toto video"
 
 #, python-brace-format
 msgid "Skip “{}”"
-msgstr ""
+msgstr "Přeskočit „{}“"
 
 msgid "Skip"
-msgstr ""
+msgstr "Přeskočit"
 
 msgid "Cancel this conversion"
-msgstr ""
+msgstr "Zrušit tento převod"
 
 #, python-brace-format
 msgid "Cancel “{}”"
-msgstr ""
+msgstr "Zrušit „{}“"
 
 msgid "Hide technical details"
-msgstr ""
+msgstr "Skrýt technické podrobnosti"
 
 msgid "Show technical details"
-msgstr ""
+msgstr "Zobrazit technické podrobnosti"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 246
@@ -2600,15 +2559,15 @@ msgstr "Zahájení procesu..."
 
 #, python-brace-format
 msgid "{codec} · {status}"
-msgstr ""
+msgstr "{codec} · {status}"
 
 #, python-brace-format
 msgid "{percent}, {remaining}"
-msgstr ""
+msgstr "{percent}, {remaining}"
 
 #, python-brace-format
 msgid "{fps} · {elapsed}"
-msgstr ""
+msgstr "{fps} · {elapsed}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 699
@@ -2626,7 +2585,7 @@ msgid "Cancelled"
 msgstr "Zrušeno"
 
 msgid "The conversion failed. The details are in “FFmpeg output”."
-msgstr ""
+msgstr "Převod se nezdařil. Podrobnosti najdete ve „Výstupu FFmpeg“."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 104
@@ -2656,7 +2615,7 @@ msgstr "Rychlost vs poměr komprese"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 157
 msgid "Video resolution"
-msgstr "Video rozlišení"
+msgstr "Rozlišení videa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 158
@@ -2674,10 +2633,10 @@ msgid "Ex: 1280x720, 1920x1080"
 msgstr "1280x720, 1920x1080"
 
 msgid "Frame rate"
-msgstr ""
+msgstr "Snímková frekvence"
 
 msgid "Frames per second of the converted video"
-msgstr ""
+msgstr "Počet snímků za sekundu v převedeném videu"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 146
@@ -2691,12 +2650,12 @@ msgstr "Výchozí"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 213
 msgid "Audio bitrate"
-msgstr "Bitrate zvuku"
+msgstr "Datový tok zvuku"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 215
 msgid "Select common bitrate or enter custom value"
-msgstr "Vyberte běžnou bitrate nebo zadejte vlastní hodnotu."
+msgstr "Vyberte běžný datový tok nebo zadejte vlastní hodnotu"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 222
@@ -2711,7 +2670,7 @@ msgstr "Zvukové kanály"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 246
 msgid "Select common channel configuration"
-msgstr "Vyberte běžnou konfiguraci kanálu"
+msgstr "Vyberte běžné uspořádání kanálů"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 252
@@ -2726,7 +2685,7 @@ msgstr "Audio kodek"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 270
 msgid "Codec to use when re-encoding audio"
-msgstr "Kodek, který se má použít při znovu kódování zvuku"
+msgstr "Kodek použitý při překódování zvuku"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 275
@@ -2771,7 +2730,7 @@ msgstr "Software (kompatibilní režim)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 291
 msgid "Video preview rendering"
-msgstr "Náhled videa se renderuje"
+msgstr "Vykreslování náhledu videa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 293
@@ -2802,7 +2761,7 @@ msgstr "Obnovit všechna nastavení?"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 686
 msgid "This will reset all settings to their default values. This action cannot be undone."
-msgstr "Tímto se všechny nastavení vrátí na výchozí hodnoty. Tuto akci nelze vrátit zpět."
+msgstr "Tím se všechna nastavení vrátí na výchozí hodnoty. Tuto akci nelze vrátit zpět."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 268
@@ -2810,16 +2769,16 @@ msgid "Reset"
 msgstr "Obnovit"
 
 msgid "Settings Could Not Be Reset"
-msgstr ""
+msgstr "Nastavení nelze obnovit"
 
 #, python-brace-format
 msgid "The settings file could not be saved: {0}"
-msgstr ""
+msgstr "Soubor nastavení nelze uložit: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 705
 msgid "Settings Reset"
-msgstr "Nastavení obnovení"
+msgstr "Nastavení obnoveno"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 706
@@ -2887,11 +2846,11 @@ msgstr "Přeskočte převod videa úplně a pouze extrahujte titulkové stopy do
 
 #, python-brace-format
 msgid "Segment {num}"
-msgstr ""
+msgstr "Úsek {num}"
 
 #, python-brace-format
 msgid "{start} → {end} ({duration})"
-msgstr ""
+msgstr "{start} → {end} ({duration})"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 295
@@ -2909,16 +2868,16 @@ msgid "Remove segment"
 msgstr "Odstranit segment"
 
 msgid "Hours"
-msgstr ""
+msgstr "Hodiny"
 
 msgid "Minutes"
-msgstr ""
+msgstr "Minuty"
 
 msgid "Seconds"
-msgstr ""
+msgstr "Sekundy"
 
 msgid "Centiseconds"
-msgstr ""
+msgstr "Setiny sekundy"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
@@ -2972,7 +2931,7 @@ msgstr "Neplatný časový rozsah"
 
 #, python-brace-format
 msgid "Start time must be before the end of the video ({duration})"
-msgstr ""
+msgstr "Čas začátku musí být před koncem videa ({duration})"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 454
@@ -3022,13 +2981,13 @@ msgstr "Přidat segment"
 # converter/ui/video_edit_page.py, line: 906
 #, python-brace-format
 msgid "Frame: {current}/{total}"
-msgstr "Rámec: {current}/{total}"
+msgstr "Snímek: {current}/{total}"
 
 msgid "Video position"
-msgstr ""
+msgstr "Pozice ve videu"
 
 msgid "Drag to seek or adjust segment edges"
-msgstr ""
+msgstr "Přetažením změňte pozici nebo hranice úseků"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 97
@@ -3092,7 +3051,7 @@ msgstr "Přeskočit o 1 sekundu"
 
 #, python-brace-format
 msgid "Playback speed: {speed}x"
-msgstr ""
+msgstr "Rychlost přehrávání: {speed}×"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 173
@@ -3108,55 +3067,55 @@ msgstr "Přepnout na celoobrazovkový režim"
 # converter/ui/video_edit_ui.py, line: 308
 #, python-brace-format
 msgid "Frame: {current} / {total}"
-msgstr "Rámec: {current} / {total}"
+msgstr "Snímek: {current} / {total}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Left"
-msgstr "Doleva"
+msgstr "Vlevo"
 
 msgid "Crop from left"
-msgstr ""
+msgstr "Oříznout zleva"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Right"
-msgstr "Pravda"
+msgstr "Vpravo"
 
 msgid "Crop from right"
-msgstr ""
+msgstr "Oříznout zprava"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Top"
-msgstr "Vrchol"
+msgstr "Nahoře"
 
 msgid "Crop from top"
-msgstr ""
+msgstr "Oříznout shora"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Bottom"
-msgstr "Spodní"
+msgstr "Dole"
 
 msgid "Crop from bottom"
-msgstr ""
+msgstr "Oříznout zdola"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 363
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 366
 msgid "Visual crop editor"
-msgstr "Vizualní editor ořezu"
+msgstr "Vizuální editor ořezu"
 
 msgid "Free"
-msgstr ""
+msgstr "Volný"
 
 msgid "Original"
-msgstr ""
+msgstr "Původní"
 
 msgid "Crop aspect ratio"
-msgstr ""
+msgstr "Poměr stran ořezu"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 273
@@ -3184,26 +3143,26 @@ msgid "Volume"
 msgstr "Hlasitost"
 
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
-msgstr ""
+msgstr "Video se kopíruje bez překódování. Ořez, úpravy, otočení nebo přidání obrazových efektů toto video překódují."
 
 msgid "Image"
-msgstr ""
+msgstr "Obraz"
 
 msgid "Reset image adjustments"
-msgstr ""
+msgstr "Obnovit úpravy obrazu"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
-msgstr "Jasnost"
+msgstr "Jas"
 
 msgid "Contrast"
-msgstr ""
+msgstr "Kontrast"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 347
 msgid "Saturation"
-msgstr "Nasycení"
+msgstr "Sytost"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 360
@@ -3211,22 +3170,22 @@ msgid "Hue"
 msgstr "Odstín"
 
 msgid "Source colours"
-msgstr ""
+msgstr "Barvy zdroje"
 
 msgid "As the file says"
-msgstr ""
+msgstr "Podle údajů v souboru"
 
 msgid "HDR10 (PQ)"
-msgstr ""
+msgstr "HDR10 (PQ)"
 
 msgid "HDR (HLG)"
-msgstr ""
+msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
-msgstr ""
+msgstr "Standardní (SDR)"
 
 msgid "Orientation"
-msgstr ""
+msgstr "Orientace"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 605
@@ -3236,21 +3195,21 @@ msgid "Reset Transform"
 msgstr "Obnovit transformaci"
 
 msgid "Rotation"
-msgstr ""
+msgstr "Otočení"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 558
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 562
 msgid "Rotate 90° Left"
-msgstr "Otočte o 90° doleva"
+msgstr "Otočit o 90° doleva"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 569
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 573
 msgid "Rotate 90° Right"
-msgstr "Otočte o 90° doprava"
+msgstr "Otočit o 90° doprava"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 581
@@ -3297,16 +3256,16 @@ msgid "Save each segment as a separate file"
 msgstr "Uložte každý segment jako samostatný soubor."
 
 msgid "Segment output"
-msgstr ""
+msgstr "Ukládání úseků"
 
 msgid "Choose how marked segments are saved"
-msgstr ""
+msgstr "Vyberte způsob uložení označených úseků"
 
 msgid "Effects"
-msgstr ""
+msgstr "Efekty"
 
 msgid "Reset effects"
-msgstr ""
+msgstr "Obnovit efekty"
 
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
@@ -3314,44 +3273,44 @@ msgid "Off"
 msgstr "Vypnuto"
 
 msgid "Light"
-msgstr ""
+msgstr "Mírné"
 
 msgid "Strong"
-msgstr ""
+msgstr "Silné"
 
 msgid "Noise reduction"
-msgstr ""
+msgstr "Potlačení šumu"
 
 msgid "Sharpening"
-msgstr ""
+msgstr "Doostření"
 
 msgid "Stabilization"
-msgstr ""
+msgstr "Stabilizace"
 
 msgid "Applied when converting, not in the preview"
-msgstr ""
+msgstr "Použije se při převodu, nikoli v náhledu"
 
 msgid "Look or shader"
-msgstr ""
+msgstr "Barevný vzhled nebo shader"
 
 msgid "None"
-msgstr ""
+msgstr "Žádný"
 
 msgid "Choose a colour look (.cube) or shader (.hook)"
-msgstr ""
+msgstr "Vybrat barevný vzhled (.cube) nebo shader (.hook)"
 
 msgid "Remove the look or shader"
-msgstr ""
+msgstr "Odstranit barevný vzhled nebo shader"
 
 msgid "Choose a Look or Shader"
-msgstr ""
+msgstr "Vybrat barevný vzhled nebo shader"
 
 msgid "Looks and shaders"
-msgstr ""
+msgstr "Barevné vzhledy a shadery"
 
 #, python-brace-format
 msgid "Reset {setting} to default"
-msgstr ""
+msgstr "Obnovit výchozí nastavení: {setting}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -3401,10 +3360,10 @@ msgstr "Zvyšování nad původní rozlišení nezlepšuje kvalitu. Snížení r
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 764
 msgid "Frame Rate"
-msgstr "Snímků za sekundu"
+msgstr "Snímková frekvence"
 
 msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
-msgstr ""
+msgstr "Méně snímků za sekundu vytváří menší soubor. Více snímků vzniká smícháním sousedních snímků: pohyb je plynulejší, ale při rychlém pohybu zůstává slabá stopa."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -3434,7 +3393,7 @@ msgstr "GPU akcelerace"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 281
 msgid "Use your graphics card to speed up encoding. 'Auto' detects the best option. Disable if you experience issues."
-msgstr "Použijte svou grafickou kartu k urychlení kódování. 'Auto' detekuje nejlepší možnost. Zakázat, pokud narazíte na problémy."
+msgstr "Použijte grafickou kartu k urychlení kódování. Volba „Auto“ rozpozná nejlepší možnost. Pokud narazíte na problémy, tuto funkci vypněte."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 298
@@ -3456,13 +3415,13 @@ msgstr "Metadata videa nebylo možné přečíst"
 
 #, python-brace-format
 msgid "Error getting video info: {error}"
-msgstr ""
+msgstr "Chyba při získávání informací o videu: {error}"
 
 msgid "Error: No video stream found"
-msgstr ""
+msgstr "Chyba: Nenalezena žádná obrazová stopa"
 
 msgid "Error: Failed to load video file. Please check the file format and try again."
-msgstr ""
+msgstr "Chyba: Video se nepodařilo načíst. Zkontrolujte formát souboru a zkuste to znovu."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 53
@@ -3493,7 +3452,7 @@ msgstr "Oříznout a upravit videa"
 msgid ""
 "Select specific segments to keep\n"
 "and create new videos with only those parts"
-msgstr "Vyberte konkrétní segmenty, které chcete zachovat, a vytvořte nové videa pouze s těmito částmi."
+msgstr "Vyberte úseky, které chcete zachovat,\na vytvořte nová videa pouze z těchto částí"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 83
@@ -3505,7 +3464,7 @@ msgstr "Úpravy barev videa"
 msgid ""
 "Control brightness, saturation, and hue\n"
 "to enhance your videos"
-msgstr "Ovládejte jas, saturaci a odstín pro vylepšení svých videí"
+msgstr "Upravte jas, sytost a odstín\na vylepšete svá videa"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 90
@@ -3517,7 +3476,7 @@ msgstr "Rychlý režim kopírování"
 msgid ""
 "Change container format without re-encoding\n"
 "for ultra-fast processing with no quality loss"
-msgstr "Změňte formát kontejneru bez opětovného kódování pro ultra rychlé zpracování bez ztráty kvality."
+msgstr "Změňte formát kontejneru bez překódování\npro velmi rychlé zpracování bez ztráty kvality"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 109
@@ -3529,7 +3488,7 @@ msgstr "Oříznout videa"
 msgid ""
 "Remove unwanted areas from edges\n"
 "to focus on what matters"
-msgstr "Odstraňte nežádoucí oblasti z okrajů, abyste se zaměřili na to, co je důležité."
+msgstr "Odstraňte nežádoucí oblasti na okrajích\na zaměřte se na to podstatné"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 113
@@ -3541,7 +3500,7 @@ msgstr "Ovládání zvuku"
 msgid ""
 "Extract, copy, or re-encode audio\n"
 "with multiple codec options"
-msgstr "Extrahujte, kopírujte nebo znovu kódujte audio s více možnostmi kodeků."
+msgstr "Extrahujte, kopírujte nebo překódujte zvuk\ns výběrem z více kodeků"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 120
@@ -3553,7 +3512,7 @@ msgstr "Správa titulků"
 msgid ""
 "Extract subtitles to SRT files\n"
 "or keep them embedded in video"
-msgstr "Extrahujte titulky do SRT souborů nebo je ponechte vložené ve videu."
+msgstr "Extrahujte titulky do souborů SRT\nnebo je zachovejte vložené ve videu"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 127
@@ -3565,7 +3524,7 @@ msgstr "Hromadné zpracování"
 msgid ""
 "Convert multiple videos at once\n"
 "with queue management"
-msgstr "Převeďte více videí najednou s řízením fronty"
+msgstr "Převádějte více videí najednou\nse správou fronty"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 465
@@ -3578,7 +3537,7 @@ msgid "Let's Start"
 msgstr "Začněme"
 
 msgid "The file container could not be read. It may be a corrupted download or an unsupported format."
-msgstr ""
+msgstr "Kontejner souboru se nepodařilo přečíst. Příčinou může být poškozené stažení nebo nepodporovaný formát."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 22
@@ -3588,7 +3547,7 @@ msgstr "Soubor nebo složka nebyly nalezeny."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 21
 msgid "Permission denied — check file/folder permissions."
-msgstr "Odmítnuto — zkontrolujte oprávnění souboru/složky."
+msgstr "Přístup odepřen — zkontrolujte oprávnění souboru či složky."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 20
@@ -3616,7 +3575,7 @@ msgstr "Požadovaný dekodér není nainstalován."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 26
 msgid "A required encoder is not installed."
-msgstr "Požadovaný enkodér není nainstalován."
+msgstr "Požadovaný kodér není nainstalován."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 27
@@ -3661,7 +3620,7 @@ msgid "The encoder stopped making progress and was terminated."
 msgstr "Kodér přestal postupovat a byl ukončen."
 
 msgid "WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. Choose one of those codecs, or MKV to keep the original ones."
-msgstr ""
+msgstr "WebM podporuje pouze video VP8, VP9 nebo AV1 a zvuk Vorbis nebo Opus. Vyberte některý z těchto kodeků, nebo MKV pro zachování původních."
 
 msgid "The conversion finished without producing a file."
 msgstr "Konverze skončila bez vytvoření souboru."
@@ -3674,10 +3633,10 @@ msgstr "Konverze selhala s kódem {0}"
 
 #, python-brace-format
 msgid "Video stream: codec={codec}, pixel format={pixel_format}"
-msgstr ""
+msgstr "Obrazová stopa: kodek={codec}, formát pixelů={pixel_format}"
 
 msgid "Could not analyze the video stream with ffprobe"
-msgstr ""
+msgstr "Obrazovou stopu se nepodařilo analyzovat pomocí ffprobe"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 185
@@ -3686,7 +3645,7 @@ msgid "Error starting conversion: {0}"
 msgstr "Chyba při spuštění konverze: {0}"
 
 msgid "The conversion could not start."
-msgstr ""
+msgstr "Převod se nepodařilo spustit."
 
 msgid "Preparing…"
 msgstr "Připravuje se…"
@@ -3695,7 +3654,7 @@ msgid "Extracting subtitles…"
 msgstr "Extrahování titulků…"
 
 msgid "Measuring camera shake…"
-msgstr ""
+msgstr "Měření chvění kamery…"
 
 msgid "Checking the GPU encoder…"
 msgstr "Kontrola kodéru GPU…"
@@ -3704,7 +3663,7 @@ msgid "GPU unavailable, using the processor"
 msgstr "GPU není k dispozici, používá se procesor"
 
 msgid "Adding subtitles…"
-msgstr ""
+msgstr "Přidávání titulků…"
 
 msgid "Copying without re-encoding"
 msgstr "Kopírování bez překódování"
@@ -3719,21 +3678,21 @@ msgstr "Úplné zrychlení GPU"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 215
 msgid "Software Decoding and GPU encoding"
-msgstr "Dekódování software a kódování GPU"
+msgstr "Softwarové dekódování a kódování na GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 213
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 216
 msgid "Software encoding"
-msgstr "Kódování softwaru"
+msgstr "Softwarové kódování"
 
 msgid "Analyzing the video for the target size…"
-msgstr ""
+msgstr "Analýza videa pro cílovou velikost…"
 
 #, python-brace-format
 msgid "Input probe unavailable: {0}"
-msgstr ""
+msgstr "Analýza vstupu není dostupná: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 325
@@ -3742,23 +3701,23 @@ msgstr "Žádný pokrok nebyl detekován. Proces může být zaseknutý."
 
 #, python-brace-format
 msgid "Output duration not verified: {0}"
-msgstr ""
+msgstr "Délka výstupu nebyla ověřena: {0}"
 
 msgid "The output could not be verified against the input"
-msgstr ""
+msgstr "Výstup se nepodařilo ověřit oproti vstupu"
 
 msgid "The output does not carry every subtitle track of the original"
-msgstr ""
+msgstr "Výstup neobsahuje všechny titulkové stopy originálu"
 
 msgid "Checking output file..."
 msgstr "Kontroluje se výstupní soubor…"
 
 msgid "Original deleted after output validation"
-msgstr ""
+msgstr "Originál smazán po ověření výstupu"
 
 #, python-brace-format
 msgid "Original preserved: {0}"
-msgstr ""
+msgstr "Originál zachován: {0}"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -3781,7 +3740,7 @@ msgid "Conversion completed successfully!"
 msgstr "Konverze byla úspěšně dokončena!"
 
 msgid "The full FFmpeg comes from the RPM Fusion repository, which must be enabled first. The command replaces the limited ffmpeg-free package."
-msgstr ""
+msgstr "Plná verze FFmpeg pochází z repozitáře RPM Fusion, který je nutné nejprve povolit. Příkaz nahradí omezený balíček ffmpeg-free."
 
 #, python-brace-format
 msgid "Additional options could not be parsed: {0}"
@@ -3817,12 +3776,12 @@ msgstr "Nelze načíst informace o souboru."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 300
 msgid "Video Streams"
-msgstr "Video streamy"
+msgstr "Obrazové stopy"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 160
 msgid "Audio Streams"
-msgstr "Audio proudy"
+msgstr "Zvukové stopy"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 171
@@ -3870,7 +3829,7 @@ msgstr "Doba trvání"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 233
 msgid "Copy duration"
-msgstr "Doba kopírování"
+msgstr "Kopírovat dobu trvání"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -3895,7 +3854,7 @@ msgstr "Kopírovat formát"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 569
 msgid "Bitrate"
-msgstr "Bitrate"
+msgstr "Datový tok"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 268
@@ -3904,7 +3863,7 @@ msgstr "Bitrate"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 576
 msgid "Copy bitrate"
-msgstr "Zkopírovat bitrate"
+msgstr "Kopírovat datový tok"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -3927,7 +3886,7 @@ msgstr "Kopírovat kodek"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 345
 msgid "Copy resolution"
-msgstr "Kopírovací rozlišení"
+msgstr "Kopírovat rozlišení"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 368
@@ -5009,12 +4968,12 @@ msgstr "Kopírovat hodnotu"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 653
 msgid "Format Details"
-msgstr "Formátovat podrobnosti"
+msgstr "Podrobnosti formátu"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 658
 msgid "Bitrate (bps)"
-msgstr "Bitrate (bps)"
+msgstr "Datový tok (bps)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 659
@@ -5038,7 +4997,7 @@ msgstr "Zkuste znovu"
 
 #, python-brace-format
 msgid "The segment {0} starts before the previous one ends; list the segments in order without overlaps."
-msgstr ""
+msgstr "Úsek {0} začíná před koncem předchozího úseku; seřaďte úseky tak, aby se nepřekrývaly."
 
 msgid "Copy video"
 msgstr "Kopírovat video"
@@ -5051,7 +5010,7 @@ msgid "The preset is not valid TOML: {0}"
 msgstr "Předvolba není platný TOML: {0}"
 
 msgid "The preset is not valid TOML: its tables are nested too deeply."
-msgstr ""
+msgstr "Předvolba není platný TOML: tabulky jsou vnořené příliš hluboko."
 
 msgid "The preset must be a TOML table."
 msgstr "Předvolba musí být tabulka TOML."
@@ -5118,7 +5077,7 @@ msgid "[video] resolution must look like 1920x1080."
 msgstr "[video] resolution musí vypadat jako 1920x1080."
 
 msgid "[video] fps must be a number between 1 and 240."
-msgstr ""
+msgstr "[video] fps musí být číslo mezi 1 a 240."
 
 msgid "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
 msgstr "[video] pixel_format musí být název pixelového formátu FFmpeg, například yuv420p."
@@ -5176,72 +5135,72 @@ msgid "{0} (copy)"
 msgstr "{0} (kopie)"
 
 msgid "The keyframes of the video are too far apart to split it into parts under the size limit."
-msgstr ""
+msgstr "Klíčové snímky videa jsou příliš daleko od sebe, aby je bylo možné rozdělit na části pod limitem velikosti."
 
 msgid "The video could not be split into parts under the size limit."
-msgstr ""
+msgstr "Video se nepodařilo rozdělit na části pod limitem velikosti."
 
 #, python-brace-format
 msgid "{0} cannot hold picture subtitles (PGS, DVD): {1} track left out. Choose MKV to keep it."
 msgid_plural "{0} cannot hold picture subtitles (PGS, DVD): {1} tracks left out. Choose MKV to keep them."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{0} nepodporuje obrazové titulky (PGS, DVD): vynechána {1} stopa. Pro její zachování zvolte MKV."
+msgstr[1] "{0} nepodporuje obrazové titulky (PGS, DVD): vynechány {1} stopy. Pro jejich zachování zvolte MKV."
+msgstr[2] "{0} nepodporuje obrazové titulky (PGS, DVD): vynecháno {1} stop. Pro jejich zachování zvolte MKV."
 
 #, python-brace-format
 msgid "Part {0} starts {1:.3f} s after a keyframe, where a stream copy would have to begin. Re-encoding the video instead, so every part starts exactly where it was cut; this takes longer."
-msgstr ""
+msgstr "Část {0} začíná {1:.3f} s za klíčovým snímkem, od kterého by muselo začít kopírování stopy. Video se místo toho překóduje, aby každá část začínala přesně v místě střihu; to trvá déle."
 
 msgid "Splitting into parts…"
 msgstr "Rozdělování na části…"
 
 msgid "Completed — re-encoded: a cut was not on a keyframe"
-msgstr ""
+msgstr "Dokončeno — překódováno: střih nebyl na klíčovém snímku"
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit. The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "Split into {0} parts that fit the size limit. The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Rozděleno na {0} část, která splňuje limit velikosti. Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
+msgstr[1] "Rozděleno na {0} části, které splňují limit velikosti. Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
+msgstr[2] "Rozděleno na {0} částí, které splňují limit velikosti. Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit."
 msgid_plural "Split into {0} parts that fit the size limit."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Rozděleno na {0} část, která splňuje limit velikosti."
+msgstr[1] "Rozděleno na {0} části, které splňují limit velikosti."
+msgstr[2] "Rozděleno na {0} částí, které splňují limit velikosti."
 
 msgid "Conversion completed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr ""
+msgstr "Převod byl úspěšně dokončen! Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Úspěšně spojen {0} úsek! Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
+msgstr[1] "Úspěšně spojeny všechny {0} úseky! Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
+msgstr[2] "Úspěšně spojeno všech {0} úseků! Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully!"
 msgid_plural "All {0} segments have been joined successfully!"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Úspěšně spojen {0} úsek!"
+msgstr[1] "Úspěšně spojeny všechny {0} úseky!"
+msgstr[2] "Úspěšně spojeno všech {0} úseků!"
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Úspěšně zpracován {0} úsek! Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
+msgstr[1] "Úspěšně zpracovány všechny {0} úseky! Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
+msgstr[2] "Úspěšně zpracováno všech {0} úseků! Video bylo překódováno, protože střih nezačínal na klíčovém snímku."
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully!"
 msgid_plural "All {0} segments have been processed successfully!"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Úspěšně zpracován {0} úsek!"
+msgstr[1] "Úspěšně zpracovány všechny {0} úseky!"
+msgstr[2] "Úspěšně zpracováno všech {0} úseků!"
 
 msgid "WhatsApp video"
 msgstr "Video pro WhatsApp"
@@ -5299,9 +5258,9 @@ msgstr "Převést video"
 #, python-brace-format
 msgid "Convert {0} Video"
 msgid_plural "Convert {0} Videos"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Převést {0} video"
+msgstr[1] "Převést {0} videa"
+msgstr[2] "Převést {0} videí"
 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 108
