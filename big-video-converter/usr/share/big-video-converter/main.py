@@ -17,6 +17,8 @@ gi.require_version("Adw", "1")
 
 import gettext
 
+import big_gtk_kit
+
 # The *Mixin classes were extracted from this file to reduce its size.
 from audio_settings import AudioSettingsMixin
 from constants import APP_ID
@@ -116,6 +118,7 @@ class VideoConverterApp(
         )
 
         GLib.set_prgname("big-video-converter")
+        self.connect("startup", lambda _app: big_gtk_kit.install())
         self.connect("activate", self.on_activate)
 
         # Initialize settings
@@ -536,9 +539,7 @@ class VideoConverterApp(
         new_state = not current
         action.set_state(GLib.Variant.new_boolean(new_state))
         self.settings_manager.save_setting("show-tooltips", new_state)
-        # Re-apply tooltips when re-enabled (they check is_enabled() before showing)
-        if new_state:
-            self.video_edit_page.ui.apply_tooltips()
+        self.tooltip_helper.refresh()
 
     # UI Navigation
     def show_queue_view(self) -> None:

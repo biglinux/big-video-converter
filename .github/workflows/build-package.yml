@@ -22,7 +22,15 @@ jobs:
         run: |
           pacman -Syu --noconfirm git python python-gobject gtk4 ffmpeg \
             python-cairo python-mpv libadwaita libva-utils python-opengl vte4 \
-            namcap desktop-file-utils gettext appstream
+            namcap desktop-file-utils gettext appstream \
+            python-build python-installer python-uv-build
+          useradd -m builder
+      - name: Install the shared GTK kit
+        run: |
+          git clone --depth 1 https://github.com/biglinux/big-gtk-kit.git /home/builder/big-gtk-kit
+          chown -R builder:builder /home/builder/big-gtk-kit
+          runuser -u builder -- bash -c 'cd ~/big-gtk-kit/pkgbuild && makepkg --noconfirm'
+          pacman -U --noconfirm /home/builder/big-gtk-kit/pkgbuild/python-big-gtk-kit-*.pkg.tar.zst
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -37,7 +45,6 @@ jobs:
           printf '\nsource=(source.tar.gz)\n' >> package-build/PKGBUILD
           printf "sha256sums=('%s')\n" "$(sha256sum package-build/source.tar.gz | cut -d ' ' -f 1)" \
             >> package-build/PKGBUILD
-          useradd -m builder
           chown -R builder:builder package-build
           runuser -u builder -- bash -c 'cd package-build && makepkg --cleanbuild --noconfirm'
       - name: Validate the built package
