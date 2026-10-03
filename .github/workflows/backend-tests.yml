@@ -49,6 +49,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Fetch the shared GTK kit
+        run: |
+          git clone --depth 1 https://github.com/biglinux/big-gtk-kit.git "$RUNNER_TEMP/big-gtk-kit"
+          echo "PYTHONPATH=$RUNNER_TEMP/big-gtk-kit/python" >> "$GITHUB_ENV"
       - name: Record the tested revision and installed versions
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"

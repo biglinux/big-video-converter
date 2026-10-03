@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: big-video-converter\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-28 12:12+0000\n"
+"PO-Revision-Date: 2026-10-03 10:36+0000\n"
 "Last-Translator: BigLinux\n"
 "Language-Team: English\n"
 "Language: en\n"
@@ -208,10 +208,7 @@ msgid ""
 "Copy is usually best, fast and preserves full quality.\n"
 "\n"
 "Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
-msgstr ""
-"Copy is usually best, fast and preserves full quality.\n"
-"\n"
-"Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
+msgstr "Copying is usually the best choice: it is fast and preserves full quality.\n\nRe-encoding slightly reduces quality but improves compatibility and can reduce file size."
 
 msgid ""
 "If subtitles are embedded, keeping them is usually best.\n"
@@ -273,11 +270,7 @@ msgid ""
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
 "• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
-msgstr ""
-"Frames per second of the converted video:\n"
-"\n"
-"• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+msgstr "Frames per second of the converted video:\n\n• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
 msgstr "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -286,13 +279,13 @@ msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). S
 msgstr "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 
 msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
-msgstr "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgstr "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 
 msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
-msgstr "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgstr "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 
 msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
-msgstr "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgstr "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 
 msgid ""
 "• MP4: Most compatible\n"
@@ -560,7 +553,7 @@ msgid "Stop converting and close?"
 msgstr "Stop converting and close?"
 
 msgid "Conversions are still running. Closing stops unfinished work and keeps its originals."
-msgstr "Conversions are still running. Closing stops unfinished work and keeps its originals."
+msgstr "Conversions are still running. Closing the application stops unfinished conversions and preserves their original files."
 
 msgid "Keep converting"
 msgstr "Keep converting"
@@ -1125,7 +1118,7 @@ msgstr "Video preview"
 
 #, python-brace-format
 msgid "Own: {recipe}"
-msgstr "Own: {recipe}"
+msgstr "Custom: {recipe}"
 
 msgid "Delete this video permanently?"
 msgstr "Delete this video permanently?"
@@ -1154,7 +1147,7 @@ msgid "Save in the same folder as the original file"
 msgstr "Save in the same folder as the original file"
 
 msgid "Folder to save"
-msgstr "Folder to save"
+msgstr "Save folder"
 
 msgid "Save converted videos"
 msgstr "Save converted videos"
@@ -1197,7 +1190,7 @@ msgid "These tracks can't be copied into MP4"
 msgstr "These tracks can't be copied into MP4"
 
 msgid "“Copy video without reencoding” keeps the original streams as they are, and the MP4 container does not accept the ones listed below."
-msgstr "“Copy video without reencoding” keeps the original streams as they are, and the MP4 container does not accept the ones listed below."
+msgstr "“Copy video without reencoding” preserves the original streams, but the MP4 container does not support the tracks listed below."
 
 msgid "Reencode (recommended)"
 msgstr "Reencode (recommended)"
@@ -1226,7 +1219,7 @@ msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway 
 msgstr "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
 
 msgid "This video cannot be made to fit the size"
-msgstr "This video cannot be made to fit the size"
+msgstr "This video cannot fit within the size limit"
 
 msgid "General settings"
 msgstr "General settings"
@@ -1300,7 +1293,7 @@ msgid "Width"
 msgstr "Width"
 
 msgid "Even pixels"
-msgstr "Even pixels"
+msgstr "Even number of pixels"
 
 msgid "Height"
 msgstr "Height"
@@ -1315,7 +1308,7 @@ msgid "Another size"
 msgstr "Another size"
 
 msgid "Fits this video under a size, whatever the general setting"
-msgstr "Fits this video under a size, whatever the general setting"
+msgstr "Sets a size limit for this video, overriding the general setting"
 
 msgid "Size in megabytes"
 msgstr "Size in megabytes"
@@ -1324,7 +1317,7 @@ msgid "This video will use"
 msgstr "This video will use"
 
 msgid "To fit the size"
-msgstr "To fit the size"
+msgstr "To fit the size limit"
 
 msgid "Checking the video…"
 msgstr "Checking the video…"
@@ -1805,8 +1798,8 @@ msgstr[1] "{count} conversions failed"
 #, python-brace-format
 msgid "{count} conversion cancelled"
 msgid_plural "{count} conversions cancelled"
-msgstr[0] "{count} conversion cancelled"
-msgstr[1] "{count} conversions cancelled"
+msgstr[0] "{count} conversion canceled"
+msgstr[1] "{count} conversions canceled"
 
 msgid "Conversion complete"
 msgid_plural "Conversions complete"
@@ -1826,8 +1819,8 @@ msgstr[1] "Conversions failed"
 
 msgid "Conversion cancelled"
 msgid_plural "Conversions cancelled"
-msgstr[0] "Conversion cancelled"
-msgstr[1] "Conversions cancelled"
+msgstr[0] "Conversion canceled"
+msgstr[1] "Conversions canceled"
 
 msgid "Queue finished with issues"
 msgstr "Queue finished with issues"
@@ -1954,7 +1947,7 @@ msgid "Failed"
 msgstr "Failed"
 
 msgid "Cancelled"
-msgstr "Cancelled"
+msgstr "Canceled"
 
 msgid "The conversion failed. The details are in “FFmpeg output”."
 msgstr "The conversion failed. The details are in “FFmpeg output”."
@@ -2090,13 +2083,13 @@ msgid "Keep the resolution"
 msgstr "Keep the resolution"
 
 msgid "Only the bitrate goes down; refuses a video that would need a smaller picture"
-msgstr "Only the bitrate goes down; refuses a video that would need a smaller picture"
+msgstr "Reduces only the bitrate; rejects videos that would also need a lower resolution"
 
 msgid "Split into parts"
 msgstr "Split into parts"
 
 msgid "Keeps the quality and makes several files, each under the size"
-msgstr "Keeps the quality and makes several files, each under the size"
+msgstr "Preserves quality and creates several files, each within the size limit"
 
 #, python-brace-format
 msgid "Up to {size}"
@@ -2106,10 +2099,10 @@ msgid "Where the video is going"
 msgstr "Where the video is going"
 
 msgid "Every converted video comes out no bigger than this."
-msgstr "Every converted video comes out no bigger than this."
+msgstr "Every converted video will fit within this size limit."
 
 msgid "The size follows the quality"
-msgstr "The size follows the quality"
+msgstr "Size depends on quality"
 
 msgid "In megabytes"
 msgstr "In megabytes"
@@ -2343,7 +2336,7 @@ msgid "Hue"
 msgstr "Hue"
 
 msgid "Source colours"
-msgstr "Source colours"
+msgstr "Source colors"
 
 msgid "As the file says"
 msgstr "As the file says"
@@ -2436,7 +2429,7 @@ msgid "None"
 msgstr "None"
 
 msgid "Choose a colour look (.cube) or shader (.hook)"
-msgstr "Choose a colour look (.cube) or shader (.hook)"
+msgstr "Choose a color look (.cube) or shader (.hook)"
 
 msgid "Remove the look or shader"
 msgstr "Remove the look or shader"
@@ -2476,7 +2469,7 @@ msgid "Frame Rate"
 msgstr "Frame Rate"
 
 msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
-msgstr "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgstr "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 
 msgid "Conversion Speed"
 msgstr "Conversion Speed"
@@ -2707,7 +2700,7 @@ msgid "Full GPU acceleration"
 msgstr "Full GPU acceleration"
 
 msgid "Software Decoding and GPU encoding"
-msgstr "Software Decoding and GPU encoding"
+msgstr "Software decoding and GPU encoding"
 
 msgid "Software encoding"
 msgstr "Software encoding"
@@ -2730,7 +2723,7 @@ msgid "The output could not be verified against the input"
 msgstr "The output could not be verified against the input"
 
 msgid "The output does not carry every subtitle track of the original"
-msgstr "The output does not carry every subtitle track of the original"
+msgstr "The output does not include every subtitle track from the original"
 
 msgid "Checking output file..."
 msgstr "Checking output file..."
@@ -3068,25 +3061,25 @@ msgstr "Conversion completed successfully! The video was re-encoded because a cu
 #, python-brace-format
 msgid "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgstr[0] "{0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgstr[1] "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully!"
 msgid_plural "All {0} segments have been joined successfully!"
-msgstr[0] "All {0} segment has been joined successfully!"
+msgstr[0] "{0} segment has been joined successfully!"
 msgstr[1] "All {0} segments have been joined successfully!"
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] "All {0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
+msgstr[0] "{0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgstr[1] "All {0} segments have been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully!"
 msgid_plural "All {0} segments have been processed successfully!"
-msgstr[0] "All {0} segment has been processed successfully!"
+msgstr[0] "{0} segment has been processed successfully!"
 msgstr[1] "All {0} segments have been processed successfully!"
 
 msgid "WhatsApp video"
