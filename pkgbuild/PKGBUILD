@@ -15,8 +15,19 @@ pkgrel=$(date +%H%M)
 arch=('any')
 license=('MIT')
 url="https://github.com/biglinux/$pkgname"
-source=("git+${url}.git")
-sha256sums=('SKIP')
+# Inside a checkout this recipe builds its working tree, uncommitted changes
+# included. GitLab's chroot receives only this directory and fetches from
+# GitHub instead; keep that line literal, the builder appends #branch= to it.
+_recipe_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P)
+_checkout=${_recipe_dir%/*}
+if [ -e "${_checkout}/.git" ] && [ -d "${_checkout}/${pkgname}/usr" ]; then
+    source=()
+    sha256sums=()
+else
+    _checkout=
+    source=("git+${url}.git")
+    sha256sums=('SKIP')
+fi
 
 # Automatically detect and use the correct install file
 if [ -e "${pkgname}.install" ]; then
@@ -24,6 +35,18 @@ if [ -e "${pkgname}.install" ]; then
 elif [ -e "pkgbuild.install" ]; then
     install=pkgbuild.install
 fi
+
+prepare() {
+    [ -n "${_checkout}" ] || return 0
+    # The files git sees: tracked and new ones, without ignored output or this
+    # recipe's own src/ and pkg/.
+    rm -rf "${srcdir:?}/${pkgname}"
+    mkdir "${srcdir}/${pkgname}"
+    git -C "${_checkout}" ls-files -z --cached --others --exclude-standard \
+        -- ":!:${_recipe_dir#"${_checkout}"/}" |
+        tar -C "${_checkout}" --null --files-from=- --ignore-failed-read -cf - |
+        tar -C "${srcdir}/${pkgname}" -xf -
+}
 
 build() {
     cd "${srcdir}/${pkgname}"
@@ -40,6 +63,8 @@ package() {
     cd "${srcdir}/${pkgname}"
 
     cp -a big-video-converter/usr "${pkgdir}/"
+    install -Dm644 big-video-converter/usr/share/big-video-converter/big_gtk_kit/LICENSE \
+        "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.big-gtk-kit"
     printf '%s\n' "${pkgver}-${pkgrel}" > "${pkgdir}/usr/share/big-video-converter/VERSION"
 
     # Install license file if present

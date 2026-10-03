@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: big-video-converter\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-28 01:08+0000\n"
+"PO-Revision-Date: 2026-10-03 10:36+0000\n"
 "Last-Translator: BigLinux\n"
 "Language-Team: BigLinux\n"
 "Language: el\n"
@@ -40,7 +40,7 @@ msgstr "QSV (Intel)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 63
 msgid "Vulkan"
-msgstr "Βούλκαν"
+msgstr "Vulkan"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 64
@@ -50,39 +50,39 @@ msgstr "Λογισμικό (CPU)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 77
 msgid "Good (recommended)"
-msgstr "Καλό (συνιστώμενο)"
+msgstr "Καλή (συνιστάται)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 73
 msgid "Very High"
-msgstr "Πολύ Υψηλό"
+msgstr "Πολύ υψηλή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 74
 msgid "High"
-msgstr "Υψηλός"
+msgstr "Υψηλή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 75
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 109
 msgid "Medium"
-msgstr "Μεσαίο"
+msgstr "Μέτρια"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 76
 msgid "Low"
-msgstr "Χαμηλό"
+msgstr "Χαμηλή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 77
 msgid "Very Low"
-msgstr "Πολύ Χαμηλό"
+msgstr "Πολύ χαμηλή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 78
 msgid "Super Low"
-msgstr "Πολύ Χαμηλό"
+msgstr "Εξαιρετικά χαμηλή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 103
@@ -152,7 +152,7 @@ msgstr "Εξαγωγή ως ξεχωριστό αρχείο"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 145
 msgid "Keep inside the video"
-msgstr "Κρατήστε μέσα στο βίντεο"
+msgstr "Διατήρηση μέσα στο βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 126
@@ -285,7 +285,7 @@ msgid "Custom"
 msgstr "Προσαρμοσμένο"
 
 msgid "24 fps (cinema)"
-msgstr ""
+msgstr "24 fps (κινηματογράφος)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 217
@@ -421,22 +421,22 @@ msgid ""
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
 "• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
-msgstr ""
+msgstr "Καρέ ανά δευτερόλεπτο του βίντεο μετά τη μετατροπή:\n\n• Λιγότερα καρέ: μικρότερο αρχείο. Με την ίδια ποιότητα, η αλλαγή από 30 σε 24 fps μείωσε το μέγεθος κατά 10–17%, και από 30 σε 15 fps κατά 28–42%\n• Περισσότερα καρέ: τα ενδιάμεσα καρέ δημιουργούνται με ανάμειξη των γειτονικών τους, οπότε η κίνηση φαίνεται πιο ομαλή, αλλά η γρήγορη κίνηση αφήνει ένα αχνό ίχνος"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
-msgstr ""
+msgstr "Αφαιρεί τον κόκκο και τις κηλίδες από βίντεο με χαμηλό φωτισμό. Οι ισχυρότερες ρυθμίσεις απαλύνουν και τις λεπτές λεπτομέρειες. Το καθαρότερο βίντεο συμπιέζεται σε ελαφρώς μικρότερο αρχείο."
 
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
-msgstr ""
+msgstr "Κάνει τις ακμές και τις λεπτές λεπτομέρειες πιο ευκρινείς (προσαρμοστική όξυνση αντίθεσης AMD). Το ευκρινέστερο βίντεο δημιουργεί ελαφρώς μεγαλύτερο αρχείο."
 
 msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
-msgstr ""
+msgstr "Σταθεροποιεί το βίντεο από κάμερα που κουνιέται. Το βίντεο αναλύεται πρώτα, οπότε η μετατροπή διαρκεί περίπου διπλάσιο χρόνο· η εικόνα μεγεθύνεται ελαφρώς ώστε να κρυφτεί η κίνηση στις άκρες."
 
 msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
-msgstr ""
+msgstr "Ο τρόπος κωδικοποίησης των χρωμάτων αυτού του βίντεο. Διατηρήστε την περιγραφή του αρχείου, εκτός αν η προεπισκόπηση φαίνεται γκρίζα και ξεθωριασμένη: τότε το αρχείο είναι HDR χωρίς να το δηλώνει, συνήθως HDR10 (PQ) ή HLG για ορισμένες εκπομπές. Η μετατροπή το διαβάζει με τον ίδιο τρόπο."
 
 msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
-msgstr ""
+msgstr "Εφαρμόζει ένα χρωματικό ύφος από αρχείο LUT (.cube, .3dl) ή ένα shader mpv (.hook, .glsl) σε ολόκληρο το βίντεο."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 265
@@ -466,7 +466,7 @@ msgid ""
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 0% (no change)"
-msgstr ""
+msgstr "• Προς τα δεξιά: Πιο ζωηρά χρώματα\n• Προς τα αριστερά: Πιο απαλά χρώματα\n• Προεπιλογή: 0% (χωρίς αλλαγή)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 270
@@ -521,14 +521,7 @@ msgid ""
 "• 192k: High quality\n"
 "• 256k+: Professional use\n"
 "• Default: Auto (encoder decides)"
-msgstr ""
-"Ποιότητα ήχου:\n"
-"\n"
-"• Υψηλότερη = καλύτερη ποιότητα, μεγαλύτερο αρχείο\n"
-"• 128k: Καλή για τις περισσότερες περιεχόμενα\n"
-"• 192k: Υψηλή ποιότητα\n"
-"• 256k+: Επαγγελματική χρήση\n"
-"• Προεπιλογή: Αυτόματα (ο κωδικοποιητής αποφασίζει)"
+msgstr "Ποιότητα ήχου:\n\n• Υψηλότερη = καλύτερη ποιότητα, μεγαλύτερο αρχείο\n• 128k: Κατάλληλο για το μεγαλύτερο μέρος του περιεχομένου\n• 192k: Υψηλή ποιότητα\n• 256k+: Επαγγελματική χρήση\n• Προεπιλογή: Αυτόματα (αποφασίζει ο κωδικοποιητής)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 294
@@ -590,12 +583,7 @@ msgid ""
 "• 1.0: Maximum reduction (default)\n"
 "• 0.5: Moderate reduction\n"
 "• Lower values preserve more original audio"
-msgstr ""
-"Ρυθμίστε την ένταση της μείωσης θορύβου\n"
-"\n"
-"• 1.0: Μέγιστη μείωση (προεπιλογή)\n"
-"• 0.5: Μέτρια μείωση\n"
-"• Χαμηλότερες τιμές διατηρούν περισσότερη αυθεντική ήχο"
+msgstr "Ρυθμίστε την ισχύ της μείωσης θορύβου\n\n• 1.0: Μέγιστη μείωση (προεπιλογή)\n• 0.5: Μέτρια μείωση\n• Οι χαμηλότερες τιμές διατηρούν περισσότερο από τον αρχικό ήχο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 333
@@ -606,13 +594,7 @@ msgid ""
 "residual noise during pauses between speech.\n"
 "\n"
 "Adjust intensity from low to maximum."
-msgstr ""
-"Η πύλη θορύβου σιωπά τον ήχο κάτω από ένα κατώφλι έντασης\n"
-"\n"
-"Χρήσιμο σε συνδυασμό με τη μείωση θορύβου για την εξάλειψη\n"
-"υπολειμματικού θορύβου κατά τις παύσεις μεταξύ ομιλίας.\n"
-"\n"
-"Ρυθμίστε την ένταση από χαμηλή σε μέγιστη."
+msgstr "Η πύλη θορύβου σιγεί τον ήχο κάτω από ένα όριο έντασης.\n\nΣε συνδυασμό με τη μείωση θορύβου βοηθά στην αφαίρεση\nτου υπολειπόμενου θορύβου στις παύσεις της ομιλίας.\n\nΡυθμίστε την ισχύ από χαμηλή έως μέγιστη."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 325
@@ -652,7 +634,7 @@ msgstr "Χρησιμοποιεί H.265 (HEVC), το οποίο παρέχει κ
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 377
 msgid "Uses AV1, the latest generation codec with the best compression available. Produces the smallest files but encoding is slower. Ideal for archiving or uploading where size matters most."
-msgstr "Χρησιμοποιεί τον AV1, τον τελευταίο γενεαλογικό κωδικοποιητή με την καλύτερη διαθέσιμη συμπίεση. Παράγει τα μικρότερα αρχεία αλλά η κωδικοποίηση είναι πιο αργή. Ιδανικό για αρχειοθέτηση ή ανέβασμα όπου το μέγεθος έχει τη μεγαλύτερη σημασία."
+msgstr "Χρησιμοποιεί τον AV1, κωδικοποιητή τελευταίας γενιάς με την καλύτερη διαθέσιμη συμπίεση. Παράγει τα μικρότερα αρχεία, αλλά η κωδικοποίηση είναι πιο αργή. Ιδανικό για αρχειοθέτηση ή μεταφόρτωση όταν το μέγεθος έχει τη μεγαλύτερη σημασία."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 837
@@ -697,7 +679,7 @@ msgstr "Δεν βρέθηκαν έγκυρα αρχεία βίντεο στον 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 216
 msgid "Add Network File"
-msgstr "Προσθήκη Δικτυακού Αρχείου"
+msgstr "Προσθήκη αρχείου δικτύου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 233
@@ -774,7 +756,7 @@ msgstr "Συνδεδεμένο αλλά δεν μπόρεσε να επιλύσ�
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 408
 msgid "Select Network Video Files"
-msgstr "Επιλέξτε Αρχεία Δικτυακής Βίντεο"
+msgstr "Επιλογή αρχείων βίντεο δικτύου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 203
@@ -787,16 +769,16 @@ msgid "⚠ Subtitle extraction only mode is active — video will NOT be convert
 msgstr "⚠ Η λειτουργία εξαγωγής υποτίτλων είναι ενεργή — το βίντεο ΔΕΝ θα μετατραπεί"
 
 msgid "Stop converting and close?"
-msgstr ""
+msgstr "Διακοπή της μετατροπής και κλείσιμο;"
 
 msgid "Conversions are still running. Closing stops unfinished work and keeps its originals."
-msgstr ""
+msgstr "Οι μετατροπές εκτελούνται ακόμα. Το κλείσιμο διακόπτει τις ημιτελείς εργασίες και διατηρεί τα αρχικά αρχεία τους."
 
 msgid "Keep converting"
-msgstr ""
+msgstr "Συνέχιση μετατροπής"
 
 msgid "Stop and close"
-msgstr ""
+msgstr "Διακοπή και κλείσιμο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 587
@@ -819,10 +801,10 @@ msgid "File not found"
 msgstr "Το αρχείο δεν βρέθηκε"
 
 msgid "Edit video"
-msgstr ""
+msgstr "Επεξεργασία βίντεο"
 
 msgid "Changes apply only to the selected video"
-msgstr ""
+msgstr "Οι αλλαγές εφαρμόζονται μόνο στο επιλεγμένο βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
@@ -830,15 +812,15 @@ msgid "Could not load video file"
 msgstr "Δεν ήταν δυνατή η φόρτωση του αρχείου βίντεο."
 
 msgid "Conversion in progress"
-msgstr ""
+msgstr "Μετατροπή σε εξέλιξη"
 
 msgid "New videos can be added when the current conversions finish."
-msgstr ""
+msgstr "Μπορείτε να προσθέσετε νέα βίντεο όταν ολοκληρωθούν οι τρέχουσες μετατροπές."
 
 msgid "This file cannot be opened"
 msgid_plural "These files cannot be opened"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Δεν είναι δυνατό το άνοιγμα αυτού του αρχείου"
+msgstr[1] "Δεν είναι δυνατό το άνοιγμα αυτών των αρχείων"
 
 #, python-brace-format
 msgid ""
@@ -847,11 +829,11 @@ msgid ""
 msgid_plural ""
 "They are not on a local or mounted drive. Open their network share in the file manager, or use “Add Network File”, then add them again:\n"
 "{files}"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Δεν βρίσκεται σε τοπική ή προσαρτημένη μονάδα. Ανοίξτε τον κοινόχρηστο φάκελό του στον διαχειριστή αρχείων ή χρησιμοποιήστε την «Προσθήκη αρχείου δικτύου» και προσθέστε το ξανά:\n{files}"
+msgstr[1] "Δεν βρίσκονται σε τοπική ή προσαρτημένη μονάδα. Ανοίξτε τον κοινόχρηστο φάκελό τους στον διαχειριστή αρχείων ή χρησιμοποιήστε την «Προσθήκη αρχείου δικτύου» και προσθέστε τα ξανά:\n{files}"
 
 msgid "The settings sent by the player could not be used"
-msgstr ""
+msgstr "Δεν ήταν δυνατή η χρήση των ρυθμίσεων που έστειλε το πρόγραμμα αναπαραγωγής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1677
@@ -1061,7 +1043,7 @@ msgid "Continue"
 msgstr "Συνέχεια"
 
 msgid "The additional FFmpeg options cannot be used"
-msgstr ""
+msgstr "Δεν είναι δυνατή η χρήση των πρόσθετων επιλογών FFmpeg"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 335
@@ -1071,7 +1053,7 @@ msgstr "Η μαζική μετατροπή ολοκληρώθηκε"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 336
 msgid "All queued files have been processed."
-msgstr "Όλα τα αρχεία στη σειρά έχουν επεξεργαστεί."
+msgstr "Όλα τα αρχεία στην ουρά έχουν υποστεί επεξεργασία."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1088,7 +1070,7 @@ msgid "Editing"
 msgstr "Επεξεργασία"
 
 msgid "Resize sidebar"
-msgstr ""
+msgstr "Αλλαγή πλάτους πλευρικής στήλης"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 468
@@ -1180,7 +1162,7 @@ msgstr "Ενεργοποίηση μείωσης θορύβου"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 201
 msgid "Strength"
-msgstr "Δύναμη"
+msgstr "Ισχύς"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 208
@@ -1245,7 +1227,7 @@ msgstr "Μοντέλο Τεχνητής Νοημοσύνης"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 297
 msgid "Noise Gate"
-msgstr "Πύλη Θορύβου"
+msgstr "Πύλη θορύβου"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1281,7 +1263,7 @@ msgstr "Ενεργοποιήστε τον συμπιεστή"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 361
 msgid "Remove Low Rumble"
-msgstr "Αφαίρεση Χαμηλού Θορύβου"
+msgstr "Αφαίρεση βόμβου χαμηλών συχνοτήτων"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 362
@@ -1335,7 +1317,7 @@ msgstr "Βελούδινη Φωνή"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
 msgid "Extra Brightness"
-msgstr "Επιπλέον Φωτεινότητα"
+msgstr "Ενίσχυση υψηλών συχνοτήτων"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
@@ -1345,12 +1327,12 @@ msgstr "Μαλάκωμα 'S' (De-esser)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Remove Rumble"
-msgstr "Αφαίρεση Rumble"
+msgstr "Αφαίρεση βόμβου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Present Voice"
-msgstr "Παρουσίαση Φωνής"
+msgstr "Ευδιάκριτη φωνή"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1359,7 +1341,7 @@ msgstr "Παρουσίαση Φωνής"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 420
 msgid "Preset"
-msgstr "Προκαθορισμένο"
+msgstr "Προρύθμιση"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1368,7 +1350,7 @@ msgstr "Προκαθορισμένο"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 429
 msgid "Uniform Volume"
-msgstr "Ομοιόμορφος Όγκος"
+msgstr "Ομοιόμορφη ένταση"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 430
@@ -1426,7 +1408,7 @@ msgid "Customize encoding..."
 msgstr "Προσαρμογή κωδικοποίησης..."
 
 msgid "Presets"
-msgstr "Προεπιλογές"
+msgstr "Προρυθμίσεις"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 502
@@ -1461,7 +1443,7 @@ msgstr "Έτοιμες συνταγές: YouTube, Instagram, επεξεργασ�
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
-msgstr "Απαιτείται ήχος για επανακωδικοποίηση"
+msgstr "Απαιτεί ρύθμιση του ήχου σε επανακωδικοποίηση"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 945
@@ -1481,7 +1463,7 @@ msgstr "συμπιεστής"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 951
 msgid "low cut"
-msgstr "χαμηλή κοπή"
+msgstr "αποκοπή χαμηλών συχνοτήτων"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 953
@@ -1509,19 +1491,19 @@ msgid "No customizations"
 msgstr "Καμία προσαρμογή"
 
 msgid "Keep original audio"
-msgstr ""
+msgstr "Διατήρηση αρχικού ήχου"
 
 msgid "Convert audio"
-msgstr ""
+msgstr "Μετατροπή ήχου"
 
 msgid "Choose what the converted video should contain."
-msgstr ""
+msgstr "Επιλέξτε τι θα περιέχει το βίντεο μετά τη μετατροπή."
 
 msgid "Audio operation"
-msgstr ""
+msgstr "Ενέργεια ήχου"
 
 msgid "Audio conversion"
-msgstr ""
+msgstr "Μετατροπή ήχου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 156
@@ -1531,7 +1513,7 @@ msgstr "Κωδικοποιητής Ήχου"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 173
 msgid "Audio Bitrate"
-msgstr "Αναλογία Bitrate Ήχου"
+msgstr "Ρυθμός bit ήχου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 228
@@ -1541,7 +1523,7 @@ msgstr "Κανάλια Ήχου"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 221
 msgid "Custom bitrate"
-msgstr "Προσαρμοσμένος ρυθμός μετάδοσης"
+msgstr "Προσαρμοσμένος ρυθμός bit"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 251
@@ -1549,54 +1531,54 @@ msgid "Custom channels"
 msgstr "Προσαρμοσμένα κανάλια"
 
 msgid "Changes are saved automatically for future conversions."
-msgstr ""
+msgstr "Οι αλλαγές αποθηκεύονται αυτόματα για μελλοντικές μετατροπές."
 
 msgid "Original audio is kept. Codec, bitrate and channel settings do not apply."
-msgstr ""
+msgstr "Ο αρχικός ήχος διατηρείται. Οι ρυθμίσεις κωδικοποιητή, ρυθμού bit και καναλιών δεν εφαρμόζονται."
 
 msgid "Audio will be converted using the settings below."
-msgstr ""
+msgstr "Ο ήχος θα μετατραπεί με τις παρακάτω ρυθμίσεις."
 
 msgid "The converted video will have no audio."
-msgstr ""
+msgstr "Το βίντεο μετά τη μετατροπή δεν θα έχει ήχο."
 
 msgid "Select an audio operation."
-msgstr ""
+msgstr "Επιλέξτε μια ενέργεια ήχου."
 
 msgid "Open this video in the editor"
-msgstr ""
+msgstr "Άνοιγμα αυτού του βίντεο στον επεξεργαστή"
 
 msgid "Options"
-msgstr ""
+msgstr "Επιλογές"
 
 msgid "Choose a preset or resolution for this video"
-msgstr ""
+msgstr "Επιλογή προρύθμισης ή ανάλυσης για αυτό το βίντεο"
 
 #, python-brace-format
 msgid "Options for “{name}”"
-msgstr ""
+msgstr "Επιλογές για το «{name}»"
 
 #, python-brace-format
 msgid "Edit “{name}”"
-msgstr ""
+msgstr "Επεξεργασία του «{name}»"
 
 msgid "More actions"
-msgstr ""
+msgstr "Περισσότερες ενέργειες"
 
 #, python-brace-format
 msgid "More actions for “{name}”"
-msgstr ""
+msgstr "Περισσότερες ενέργειες για το «{name}»"
 
 msgid "Play video"
-msgstr ""
+msgstr "Αναπαραγωγή βίντεο"
 
 msgid "Video information"
-msgstr ""
+msgstr "Πληροφορίες βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 194
 msgid "Open containing folder"
-msgstr "Άνοιγμα φακέλου που περιέχει"
+msgstr "Άνοιγμα φακέλου που περιέχει το αρχείο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 95
@@ -1604,31 +1586,31 @@ msgid "Remove from queue"
 msgstr "Αφαίρεση από την ουρά"
 
 msgid "Delete from disk…"
-msgstr ""
+msgstr "Διαγραφή από τον δίσκο…"
 
 msgid "Video preview"
-msgstr ""
+msgstr "Προεπισκόπηση βίντεο"
 
 #, python-brace-format
 msgid "Own: {recipe}"
-msgstr ""
+msgstr "Προσαρμοσμένη: {recipe}"
 
 msgid "Delete this video permanently?"
-msgstr ""
+msgstr "Οριστική διαγραφή αυτού του βίντεο;"
 
 #, python-brace-format
 msgid "“{}” will be removed from disk. This cannot be undone."
-msgstr ""
+msgstr "Το «{}» θα διαγραφεί από τον δίσκο. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
 
 msgid "Keep video"
-msgstr ""
+msgstr "Διατήρηση βίντεο"
 
 msgid "Delete permanently"
-msgstr ""
+msgstr "Οριστική διαγραφή"
 
 #, python-brace-format
 msgid "Could not delete the video: {} "
-msgstr ""
+msgstr "Δεν ήταν δυνατή η διαγραφή του βίντεο: {} "
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1673,10 +1655,10 @@ msgid "Folder to save"
 msgstr "Φάκελος αποθήκευσης"
 
 msgid "Save converted videos"
-msgstr ""
+msgstr "Αποθήκευση μετατραπέντων βίντεο"
 
 msgid "Output folder"
-msgstr ""
+msgstr "Φάκελος εξόδου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 288
@@ -1694,7 +1676,7 @@ msgid "Delete original files"
 msgstr "Διαγραφή αρχικών αρχείων"
 
 msgid "Originals are kept unless every converted result passes validation"
-msgstr ""
+msgstr "Τα αρχικά αρχεία διατηρούνται μέχρι να επαληθευτούν όλα τα αποτελέσματα της μετατροπής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -1704,32 +1686,32 @@ msgstr "Επιλέξτε τον φάκελο εξόδου"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 654
 msgid "Could not open this video file"
-msgstr "Δεν ήταν δυνατή η ανοίγμα αυτού του αρχείου βίντεο."
+msgstr "Δεν ήταν δυνατό το άνοιγμα αυτού του αρχείου βίντεο."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 979
 msgid "Could not open the video file with the default player"
-msgstr "Δεν ήταν δυνατή η ανοίγμα του αρχείου βίντεο με τον προεπιλεγμένο αναπαραγωγέα."
+msgstr "Δεν ήταν δυνατό το άνοιγμα του αρχείου βίντεο με το προεπιλεγμένο πρόγραμμα αναπαραγωγής."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
 msgid "Could not find this video file"
-msgstr "Δεν μπόρεσα να βρω αυτό το αρχείο βίντεο."
+msgstr "Δεν ήταν δυνατή η εύρεση αυτού του αρχείου βίντεο."
 
 msgid "The crop cannot be applied"
-msgstr ""
+msgstr "Δεν είναι δυνατή η εφαρμογή της περικοπής"
 
 #, python-brace-format
 msgid "“{name}” was not converted: its picture size could not be read, or the crop removes the whole picture. Check the crop in the editor and try again."
-msgstr ""
+msgstr "Το «{name}» δεν μετατράπηκε: δεν ήταν δυνατή η ανάγνωση των διαστάσεων της εικόνας ή η περικοπή αφαιρεί όλη την εικόνα. Ελέγξτε την περικοπή στον επεξεργαστή και δοκιμάστε ξανά."
 
 msgid "These tracks can't be copied into MP4"
 msgstr "Αυτά τα κομμάτια δεν μπορούν να αντιγραφούν σε MP4"
 
 msgid "“Copy video without reencoding” keeps the original streams as they are, and the MP4 container does not accept the ones listed below."
-msgstr "Η «Αντιγραφή βίντεο χωρίς επανακωδικοποίηση» διατηρεί τα αρχικά ρεύματα ως έχουν, και το δοχείο MP4 δεν δέχεται αυτά που αναφέρονται παρακάτω."
+msgstr "Η «Αντιγραφή βίντεο χωρίς επανακωδικοποίηση» διατηρεί τις αρχικές ροές ως έχουν και ο περιέκτης MP4 δεν υποστηρίζει τις παρακάτω."
 
 msgid "Reencode (recommended)"
 msgstr "Επανακωδικοποίηση (προτείνεται)"
@@ -1761,10 +1743,10 @@ msgid "This video cannot be made to fit the size"
 msgstr "Αυτό το βίντεο δεν μπορεί να χωρέσει στο μέγεθος"
 
 msgid "General settings"
-msgstr ""
+msgstr "Γενικές ρυθμίσεις"
 
 msgid "Original resolution"
-msgstr ""
+msgstr "Αρχική ανάλυση"
 
 #, python-brace-format
 msgid "up to {size}"
@@ -1772,55 +1754,55 @@ msgstr "έως {size}"
 
 #, python-brace-format
 msgid "{profile} · {resolution}"
-msgstr ""
+msgstr "{profile} · {resolution}"
 
 msgid "Options for this video"
-msgstr ""
+msgstr "Επιλογές για αυτό το βίντεο"
 
 msgid "Override the general recipe only when this video needs a different destination profile or size."
-msgstr ""
+msgstr "Παρακάμψτε τις γενικές ρυθμίσεις μετατροπής μόνο αν αυτό το βίντεο χρειάζεται διαφορετικό προφίλ προορισμού ή μέγεθος."
 
 msgid "Effective result"
-msgstr ""
+msgstr "Τελικό αποτέλεσμα"
 
 msgid "General settings remain the default for every other video."
-msgstr ""
+msgstr "Οι γενικές ρυθμίσεις παραμένουν οι προεπιλεγμένες για όλα τα άλλα βίντεο."
 
 msgid "Use the general recipe"
-msgstr ""
+msgstr "Χρήση γενικών ρυθμίσεων μετατροπής"
 
 msgid "Profile"
-msgstr ""
+msgstr "Προφίλ"
 
 msgid "Target a platform or workflow"
-msgstr ""
+msgstr "Επιλογή πλατφόρμας ή ροής εργασίας"
 
 msgid "Use the general resolution"
-msgstr ""
+msgstr "Χρήση γενικής ανάλυσης"
 
 msgid "Use the profile resolution"
-msgstr ""
+msgstr "Χρήση ανάλυσης προφίλ"
 
 msgid "Keep the original resolution"
-msgstr ""
+msgstr "Διατήρηση αρχικής ανάλυσης"
 
 msgid "Vertical 4K · 2160×3840"
-msgstr ""
+msgstr "Κατακόρυφο 4K · 2160×3840"
 
 msgid "Vertical QHD · 1440×2560"
-msgstr ""
+msgstr "Κατακόρυφο QHD · 1440×2560"
 
 msgid "Vertical Full HD · 1080×1920"
-msgstr ""
+msgstr "Κατακόρυφο Full HD · 1080×1920"
 
 msgid "Vertical HD · 720×1280"
-msgstr ""
+msgstr "Κατακόρυφο HD · 720×1280"
 
 msgid "Vertical SD · 480×854"
-msgstr ""
+msgstr "Κατακόρυφο SD · 480×854"
 
 msgid "Custom size"
-msgstr ""
+msgstr "Προσαρμοσμένο μέγεθος"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1832,16 +1814,16 @@ msgid "Resolution"
 msgstr "Ανάλυση"
 
 msgid "Controls image dimensions and file size"
-msgstr ""
+msgstr "Καθορίζει τις διαστάσεις της εικόνας και το μέγεθος του αρχείου"
 
 msgid "Width"
-msgstr ""
+msgstr "Πλάτος"
 
 msgid "Even pixels"
-msgstr ""
+msgstr "Άρτιος αριθμός εικονοστοιχείων"
 
 msgid "Height"
-msgstr ""
+msgstr "Ύψος"
 
 msgid "Use the general size"
 msgstr "Χρήση του γενικού μεγέθους"
@@ -1859,7 +1841,7 @@ msgid "Size in megabytes"
 msgstr "Μέγεθος σε megabyte"
 
 msgid "This video will use"
-msgstr ""
+msgstr "Αυτό το βίντεο θα χρησιμοποιήσει"
 
 msgid "To fit the size"
 msgstr "Για να χωρέσει στο μέγεθος"
@@ -1868,7 +1850,7 @@ msgid "Checking the video…"
 msgstr "Έλεγχος του βίντεο…"
 
 msgid "Apply to this video"
-msgstr ""
+msgstr "Εφαρμογή σε αυτό το βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 25
@@ -1896,7 +1878,7 @@ msgid "Command to be executed"
 msgstr "Εντολή προς εκτέλεση"
 
 msgid "Before installing"
-msgstr ""
+msgstr "Πριν από την εγκατάσταση"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 72
@@ -2055,7 +2037,7 @@ msgid "Could not save the profile file."
 msgstr "Δεν ήταν δυνατή η αποθήκευση του αρχείου προφίλ."
 
 msgid "This profile can read or write files"
-msgstr ""
+msgstr "Αυτό το προφίλ μπορεί να διαβάζει ή να γράφει αρχεία"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 346
@@ -2140,26 +2122,26 @@ msgstr "Έξοδος"
 #, python-brace-format
 msgid "{count} file"
 msgid_plural "{count} files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} αρχείο"
+msgstr[1] "{count} αρχεία"
 
 msgid "Show conversion settings"
-msgstr ""
+msgstr "Εμφάνιση ρυθμίσεων μετατροπής"
 
 #, python-brace-format
 msgid "Show conversion settings ({shortcut})"
-msgstr ""
+msgstr "Εμφάνιση ρυθμίσεων μετατροπής ({shortcut})"
 
 msgid "Show editing tools"
-msgstr ""
+msgstr "Εμφάνιση εργαλείων επεξεργασίας"
 
 #, python-brace-format
 msgid "Show editing tools ({shortcut})"
-msgstr ""
+msgstr "Εμφάνιση εργαλείων επεξεργασίας ({shortcut})"
 
 #, python-brace-format
 msgid "Track {number}"
-msgstr ""
+msgstr "Κομμάτι {number}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 173
@@ -2194,12 +2176,12 @@ msgstr "Για ομιλία. Υψηλότερη ποιότητα, περισσό
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 348
 msgid "Silence Low Sounds"
-msgstr "Σίγαση Χαμηλών Ήχων"
+msgstr "Σίγαση σιγανών ήχων"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 350
 msgid "Mutes audio below a threshold — great for removing faint hum or room noise between speech."
-msgstr "Αθόρυβο ήχο κάτω από ένα κατώφλι — εξαιρετικό για την αφαίρεση αχνών θορύβων ή θορύβου δωματίου μεταξύ ομιλιών."
+msgstr "Σιγεί τον ήχο κάτω από ένα όριο — χρήσιμο για την αφαίρεση αχνού βόμβου ή θορύβου δωματίου στις παύσεις της ομιλίας."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 392
@@ -2244,7 +2226,7 @@ msgid "Yours"
 msgstr "Δικές σας"
 
 msgid "Click to use this preset"
-msgstr "Κάντε κλικ για χρήση αυτής της προεπιλογής"
+msgstr "Κάντε κλικ για χρήση αυτής της προρύθμισης"
 
 #, python-brace-format
 msgid ""
@@ -2253,13 +2235,13 @@ msgid ""
 "{settings}\n"
 "\n"
 "Import it only if you trust where it came from."
-msgstr ""
+msgstr "Περιέχει ρυθμίσεις FFmpeg που μπορούν να ανοίγουν, να δημιουργούν ή να αντικαθιστούν αρχεία σε αυτόν τον υπολογιστή ή να έχουν πρόσβαση στο δίκτυο:\n\n{settings}\n\nΕισαγάγετε αυτές τις ρυθμίσεις μόνο αν εμπιστεύεστε την προέλευσή τους."
 
 msgid "Import anyway"
-msgstr ""
+msgstr "Εισαγωγή ούτως ή άλλως"
 
 msgid "This preset can read or write files"
-msgstr ""
+msgstr "Αυτή η προρύθμιση μπορεί να διαβάζει ή να γράφει αρχεία"
 
 msgid "Create with AI…"
 msgstr "Δημιουργία με AI…"
@@ -2271,34 +2253,34 @@ msgid "Paste from clipboard"
 msgstr "Επικόλληση από το πρόχειρο"
 
 msgid "Open presets folder"
-msgstr "Άνοιγμα φακέλου προεπιλογών"
+msgstr "Άνοιγμα φακέλου προρυθμίσεων"
 
 msgid "Add a preset"
-msgstr "Προσθήκη προεπιλογής"
+msgstr "Προσθήκη προρύθμισης"
 
 msgid "Search by name, tag or codec…"
 msgstr "Αναζήτηση κατά όνομα, ετικέτα ή codec…"
 
 msgid "No presets"
-msgstr "Καμία προεπιλογή"
+msgstr "Καμία προρύθμιση"
 
 msgid "Import a file, paste one from the clipboard or create one with AI."
 msgstr "Εισαγάγετε ένα αρχείο, επικολλήστε ένα από το πρόχειρο ή δημιουργήστε ένα με AI."
 
 #, python-brace-format
 msgid "Ignored invalid preset file(s): {0}"
-msgstr "Παραβλέφθηκαν μη έγκυρα αρχεία προεπιλογών: {0}"
+msgstr "Παραβλέφθηκαν μη έγκυρα αρχεία προρυθμίσεων: {0}"
 
 msgid "Details"
 msgstr "Λεπτομέρειες"
 
 #, python-brace-format
 msgid "Could not apply the preset: {0}"
-msgstr "Δεν ήταν δυνατή η εφαρμογή της προεπιλογής: {0}"
+msgstr "Δεν ήταν δυνατή η εφαρμογή της προρύθμισης: {0}"
 
 #, python-brace-format
 msgid "Preset “{0}” is now in use."
-msgstr "Η προεπιλογή “{0}” είναι πλέον σε χρήση."
+msgstr "Η προρύθμιση “{0}” είναι πλέον σε χρήση."
 
 msgid "Duplicate for editing"
 msgstr "Αντίγραφο για επεξεργασία"
@@ -2320,49 +2302,49 @@ msgstr "Αποθηκεύτηκε ως “{0}”. Επεξεργαστείτε τ
 
 #, python-brace-format
 msgid "Preset “{0}” deleted."
-msgstr "Η προεπιλογή “{0}” διαγράφηκε."
+msgstr "Η προρύθμιση “{0}” διαγράφηκε."
 
 msgid "Export Preset"
-msgstr "Εξαγωγή προεπιλογής"
+msgstr "Εξαγωγή προρύθμισης"
 
 msgid "Choose a folder on this computer to export the preset."
-msgstr ""
+msgstr "Επιλέξτε έναν φάκελο σε αυτόν τον υπολογιστή για εξαγωγή της προρύθμισης."
 
 #, python-brace-format
 msgid "Preset exported to {0}"
-msgstr "Η προεπιλογή εξήχθη στο {0}"
+msgstr "Η προρύθμιση εξήχθη στο {0}"
 
 msgid "Import Preset"
-msgstr "Εισαγωγή προεπιλογής"
+msgstr "Εισαγωγή προρύθμισης"
 
 msgid "Preset files (*.toml)"
-msgstr "Αρχεία προεπιλογών (*.toml)"
+msgstr "Αρχεία προρυθμίσεων (*.toml)"
 
 msgid "Choose a preset file on this computer to import."
-msgstr ""
+msgstr "Επιλέξτε ένα αρχείο προρύθμισης σε αυτόν τον υπολογιστή για εισαγωγή."
 
 #, python-brace-format
 msgid "The preset was not imported: {0}"
-msgstr "Η προεπιλογή δεν εισήχθη: {0}"
+msgstr "Η προρύθμιση δεν εισήχθη: {0}"
 
 #, python-brace-format
 msgid "Preset “{0}” imported."
-msgstr "Η προεπιλογή “{0}” εισήχθη."
+msgstr "Η προρύθμιση “{0}” εισήχθη."
 
 msgid "Invalid preset files"
-msgstr "Μη έγκυρα αρχεία προεπιλογών"
+msgstr "Μη έγκυρα αρχεία προρυθμίσεων"
 
 msgid "OK"
 msgstr "ΟΚ"
 
 msgid "Create a preset with AI"
-msgstr "Δημιουργία προεπιλογής με AI"
+msgstr "Δημιουργία προρύθμισης με AI"
 
 msgid "Describe what you need in your own words. The program turns it into a prompt that any online AI assistant understands, with the exact preset format and the encoders available on this computer. Paste the assistant's answer back here."
-msgstr "Περιγράψτε με δικά σας λόγια τι χρειάζεστε. Το πρόγραμμα το μετατρέπει σε προτροπή που κατανοεί κάθε online βοηθός AI, με την ακριβή μορφή προεπιλογής και τους κωδικοποιητές που είναι διαθέσιμοι σε αυτόν τον υπολογιστή. Επικολλήστε εδώ την απάντηση του βοηθού."
+msgstr "Περιγράψτε με δικά σας λόγια τι χρειάζεστε. Το πρόγραμμα το μετατρέπει σε προτροπή που κατανοεί κάθε online βοηθός AI, με την ακριβή μορφή προρύθμισης και τους κωδικοποιητές που είναι διαθέσιμοι σε αυτόν τον υπολογιστή. Επικολλήστε εδώ την απάντηση του βοηθού."
 
 msgid "1. What should the preset do?"
-msgstr "1. Τι πρέπει να κάνει η προεπιλογή;"
+msgstr "1. Τι πρέπει να κάνει η προρύθμιση;"
 
 msgid "Example: “Vertical videos for TikTok, under 50 MB per minute, loud clear voice.”"
 msgstr "Παράδειγμα: “Κατακόρυφα βίντεο για TikTok, κάτω από 50 MB ανά λεπτό, δυνατή και καθαρή φωνή.”"
@@ -2377,14 +2359,14 @@ msgid "2. Paste the assistant's answer"
 msgstr "2. Επικολλήστε την απάντηση του βοηθού"
 
 msgid "Save preset"
-msgstr "Αποθήκευση προεπιλογής"
+msgstr "Αποθήκευση προρύθμισης"
 
 msgid "Prompt copied. Paste it into your AI assistant."
 msgstr "Η προτροπή αντιγράφηκε. Επικολλήστε την στον βοηθό AI σας."
 
 #, python-brace-format
 msgid "The preset was not saved: {0}"
-msgstr "Η προεπιλογή δεν αποθηκεύτηκε: {0}"
+msgstr "Η προρύθμιση δεν αποθηκεύτηκε: {0}"
 
 #, python-brace-format
 msgid "Saved as “{0}” in {1}"
@@ -2392,25 +2374,25 @@ msgstr "Αποθηκεύτηκε ως “{0}” στο {1}"
 
 #, python-brace-format
 msgid "{percent}%"
-msgstr ""
+msgstr "{percent}%"
 
 #, python-brace-format
 msgid "≈ {seconds} s left"
 msgid_plural "≈ {seconds} s left"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Απομένει ≈ {seconds} δευτ."
+msgstr[1] "Απομένουν ≈ {seconds} δευτ."
 
 #, python-brace-format
 msgid "≈ {minutes} min left"
 msgid_plural "≈ {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Απομένει ≈ {minutes} λεπ."
+msgstr[1] "Απομένουν ≈ {minutes} λεπ."
 
 #, python-brace-format
 msgid "≈ {hours} h {minutes} min left"
 msgid_plural "≈ {hours} h {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Απομένουν ≈ {hours} ώρ. {minutes} λεπ."
+msgstr[1] "Απομένουν ≈ {hours} ώρ. {minutes} λεπ."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 737
@@ -2426,111 +2408,111 @@ msgstr "{secs}s"
 
 #, python-brace-format
 msgid "Could not open “{name}”: {error}"
-msgstr ""
+msgstr "Δεν ήταν δυνατό το άνοιγμα του «{name}»: {error}"
 
 msgid "Back to the queue"
-msgstr ""
+msgstr "Επιστροφή στην ουρά"
 
 msgid "Conversion progress"
-msgstr ""
+msgstr "Πρόοδος μετατροπής"
 
 msgid "Cancel all"
-msgstr ""
+msgstr "Ακύρωση όλων"
 
 msgid "Overall conversion progress"
-msgstr ""
+msgstr "Συνολική πρόοδος μετατροπής"
 
 msgid "Convert more videos"
-msgstr ""
+msgstr "Μετατροπή περισσότερων βίντεο"
 
 msgid "Open video"
-msgstr ""
+msgstr "Άνοιγμα βίντεο"
 
 msgid "Show in folder"
-msgstr ""
+msgstr "Εμφάνιση στον φάκελο"
 
 #, python-brace-format
 msgid "{count} video converted"
 msgid_plural "{count} videos converted"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Μετατράπηκε {count} βίντεο"
+msgstr[1] "Μετατράπηκαν {count} βίντεο"
 
 #, python-brace-format
 msgid "{count} conversion failed"
 msgid_plural "{count} conversions failed"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Απέτυχε {count} μετατροπή"
+msgstr[1] "Απέτυχαν {count} μετατροπές"
 
 #, python-brace-format
 msgid "{count} conversion cancelled"
 msgid_plural "{count} conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Ακυρώθηκε {count} μετατροπή"
+msgstr[1] "Ακυρώθηκαν {count} μετατροπές"
 
 msgid "Conversion complete"
 msgid_plural "Conversions complete"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Η μετατροπή ολοκληρώθηκε"
+msgstr[1] "Οι μετατροπές ολοκληρώθηκαν"
 
 #, python-brace-format
 msgid "{count} video converted successfully"
 msgid_plural "{count} videos converted successfully"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Μετατράπηκε επιτυχώς {count} βίντεο"
+msgstr[1] "Μετατράπηκαν επιτυχώς {count} βίντεο"
 
 msgid "Conversion failed"
 msgid_plural "Conversions failed"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Η μετατροπή απέτυχε"
+msgstr[1] "Οι μετατροπές απέτυχαν"
 
 msgid "Conversion cancelled"
 msgid_plural "Conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Η μετατροπή ακυρώθηκε"
+msgstr[1] "Οι μετατροπές ακυρώθηκαν"
 
 msgid "Queue finished with issues"
-msgstr ""
+msgstr "Η ουρά ολοκληρώθηκε με προβλήματα"
 
 msgid "No conversion results are available"
-msgstr ""
+msgstr "Δεν υπάρχουν διαθέσιμα αποτελέσματα μετατροπής"
 
 #, python-brace-format
 msgid "{finished} of {total} finished · {percent}"
 msgid_plural "{finished} of {total} finished · {percent}"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Ολοκληρωμένα: {finished} από {total} · {percent}"
+msgstr[1] "Ολοκληρωμένα: {finished} από {total} · {percent}"
 
 msgid "Converting video"
 msgid_plural "Converting videos"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Μετατροπή βίντεο"
+msgstr[1] "Μετατροπή βίντεο"
 
 #, python-brace-format
 msgid "{results} · {duration}"
-msgstr ""
+msgstr "{results} · {duration}"
 
 #, python-brace-format
 msgid "{before} → {after} ({change}%)"
-msgstr ""
+msgstr "{before} → {after} ({change}%)"
 
 #, python-brace-format
 msgid "“{name}”: {reason}"
-msgstr ""
+msgstr "“{name}”: {reason}"
 
 #, python-brace-format
 msgid "+{count} more"
 msgid_plural "+{count} more"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "+{count} ακόμα"
+msgstr[1] "+{count} ακόμα"
 
 msgid "Back to queue"
-msgstr ""
+msgstr "Επιστροφή στην ουρά"
 
 msgid "Open folder"
-msgstr ""
+msgstr "Άνοιγμα φακέλου"
 
 msgid "Cancel all conversions?"
-msgstr ""
+msgstr "Ακύρωση όλων των μετατροπών;"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 321
@@ -2538,7 +2520,7 @@ msgid "This will stop all active conversions and skip all pending items. This ac
 msgstr "Αυτή η ενέργεια θα σταματήσει όλες τις ενεργές μετατροπές και θα παραλείψει όλα τα εκκρεμή στοιχεία. Αυτή η ενέργεια δεν μπορεί να αναιρεθεί."
 
 msgid "Unknown video"
-msgstr ""
+msgstr "Άγνωστο βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 447
@@ -2547,53 +2529,53 @@ msgstr "Αναμονή στην ουρά"
 
 #, python-brace-format
 msgid "Conversion progress for “{}”"
-msgstr ""
+msgstr "Πρόοδος μετατροπής του «{}»"
 
 msgid "FFmpeg output"
-msgstr ""
+msgstr "Έξοδος FFmpeg"
 
 #, python-brace-format
 msgid "FFmpeg output for “{name}”"
-msgstr ""
+msgstr "Έξοδος FFmpeg για το «{name}»"
 
 msgid "Command"
-msgstr ""
+msgstr "Εντολή"
 
 msgid "Process output"
-msgstr ""
+msgstr "Έξοδος διεργασίας"
 
 #, python-brace-format
 msgid "{count} output file"
 msgid_plural "{count} output files"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "{count} αρχείο εξόδου"
+msgstr[1] "{count} αρχεία εξόδου"
 
 #, python-brace-format
 msgid "Open “{name}”"
-msgstr ""
+msgstr "Άνοιγμα του «{name}»"
 
 msgid "Skip this video"
-msgstr ""
+msgstr "Παράλειψη αυτού του βίντεο"
 
 #, python-brace-format
 msgid "Skip “{}”"
-msgstr ""
+msgstr "Παράλειψη του «{}»"
 
 msgid "Skip"
-msgstr ""
+msgstr "Παράλειψη"
 
 msgid "Cancel this conversion"
-msgstr ""
+msgstr "Ακύρωση αυτής της μετατροπής"
 
 #, python-brace-format
 msgid "Cancel “{}”"
-msgstr ""
+msgstr "Ακύρωση του «{}»"
 
 msgid "Hide technical details"
-msgstr ""
+msgstr "Απόκρυψη τεχνικών λεπτομερειών"
 
 msgid "Show technical details"
-msgstr ""
+msgstr "Εμφάνιση τεχνικών λεπτομερειών"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 246
@@ -2602,15 +2584,15 @@ msgstr "Ξεκινώντας τη διαδικασία..."
 
 #, python-brace-format
 msgid "{codec} · {status}"
-msgstr ""
+msgstr "{codec} · {status}"
 
 #, python-brace-format
 msgid "{percent}, {remaining}"
-msgstr ""
+msgstr "{percent}, {remaining}"
 
 #, python-brace-format
 msgid "{fps} · {elapsed}"
-msgstr ""
+msgstr "{fps} · {elapsed}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 699
@@ -2628,7 +2610,7 @@ msgid "Cancelled"
 msgstr "Ακυρώθηκε"
 
 msgid "The conversion failed. The details are in “FFmpeg output”."
-msgstr ""
+msgstr "Η μετατροπή απέτυχε. Οι λεπτομέρειες βρίσκονται στην «Έξοδο FFmpeg»."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 104
@@ -2676,10 +2658,10 @@ msgid "Ex: 1280x720, 1920x1080"
 msgstr "1280x720, 1920x1080"
 
 msgid "Frame rate"
-msgstr ""
+msgstr "Ρυθμός καρέ"
 
 msgid "Frames per second of the converted video"
-msgstr ""
+msgstr "Καρέ ανά δευτερόλεπτο του βίντεο μετά τη μετατροπή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 146
@@ -2693,12 +2675,12 @@ msgstr "Προεπιλογή"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 213
 msgid "Audio bitrate"
-msgstr "Αναλογία bit ήχου"
+msgstr "Ρυθμός bit ήχου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 215
 msgid "Select common bitrate or enter custom value"
-msgstr "Επιλέξτε κοινό bitrate ή εισάγετε προσαρμοσμένη τιμή"
+msgstr "Επιλέξτε έναν συνήθη ρυθμό bit ή εισαγάγετε προσαρμοσμένη τιμή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 222
@@ -2713,7 +2695,7 @@ msgstr "Κανάλια ήχου"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 246
 msgid "Select common channel configuration"
-msgstr "Επιλέξτε κοινή διαμόρφωση καναλιού"
+msgstr "Επιλέξτε μια συνήθη διάταξη καναλιών"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 252
@@ -2763,7 +2745,7 @@ msgstr "Αυτόματος"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 285
 msgid "OpenGL (hardware accelerated)"
-msgstr "OpenGL (υποστηριζόμενο από υλικό)"
+msgstr "OpenGL (με επιτάχυνση υλικού)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 286
@@ -2900,11 +2882,11 @@ msgid "Reset"
 msgstr "Επαναφορά"
 
 msgid "Settings Could Not Be Reset"
-msgstr ""
+msgstr "Δεν ήταν δυνατή η επαναφορά των ρυθμίσεων"
 
 #, python-brace-format
 msgid "The settings file could not be saved: {0}"
-msgstr ""
+msgstr "Δεν ήταν δυνατή η αποθήκευση του αρχείου ρυθμίσεων: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 705
@@ -2973,15 +2955,15 @@ msgstr "Μόνο Εξαγωγή Υποτίτλων"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 169
 msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Παραλείψτε εντελώς τη μετατροπή βίντεο και εξάγετε μόνο τις υποτίτλους σε αρχεία .srt."
+msgstr "Παραλείπει εντελώς τη μετατροπή βίντεο και εξάγει μόνο τα κομμάτια υποτίτλων σε αρχεία .srt."
 
 #, python-brace-format
 msgid "Segment {num}"
-msgstr ""
+msgstr "Τμήμα {num}"
 
 #, python-brace-format
 msgid "{start} → {end} ({duration})"
-msgstr ""
+msgstr "{start} → {end} ({duration})"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -3681,16 +3663,16 @@ msgid "Remove segment"
 msgstr "Αφαίρεση τμήματος"
 
 msgid "Hours"
-msgstr ""
+msgstr "Ώρες"
 
 msgid "Minutes"
-msgstr ""
+msgstr "Λεπτά"
 
 msgid "Seconds"
-msgstr ""
+msgstr "Δευτερόλεπτα"
 
 msgid "Centiseconds"
-msgstr ""
+msgstr "Εκατοστά του δευτερολέπτου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
@@ -3744,7 +3726,7 @@ msgstr "Μη έγκυρη χρονική περίοδος"
 
 #, python-brace-format
 msgid "Start time must be before the end of the video ({duration})"
-msgstr ""
+msgstr "Ο χρόνος έναρξης πρέπει να προηγείται του τέλους του βίντεο ({duration})"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 454
@@ -3967,13 +3949,13 @@ msgstr "Προσθήκη Τμήματος"
 # converter/ui/video_edit_page.py, line: 906
 #, python-brace-format
 msgid "Frame: {current}/{total}"
-msgstr "Πλαίσιο: {current}/{total}"
+msgstr "Καρέ: {current}/{total}"
 
 msgid "Video position"
-msgstr ""
+msgstr "Θέση στο βίντεο"
 
 msgid "Drag to seek or adjust segment edges"
-msgstr ""
+msgstr "Σύρετε για αναζήτηση ή προσαρμογή των ορίων των τμημάτων"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 97
@@ -4008,7 +3990,7 @@ msgstr "Προηγούμενο καρέ"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 192
 msgid "Play/Pause (Space)"
-msgstr "Αναπαραγωγή/Παύση (Διαστήμα)"
+msgstr "Αναπαραγωγή/Παύση (Διάστημα)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 141
@@ -4037,12 +4019,12 @@ msgstr "Προώθηση 1 δευτερολέπτου"
 
 #, python-brace-format
 msgid "Playback speed: {speed}x"
-msgstr ""
+msgstr "Ταχύτητα αναπαραγωγής: {speed}×"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 173
 msgid "Audio Track"
-msgstr "Ήχος κομμάτι"
+msgstr "Κομμάτι ήχου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 194
@@ -4053,7 +4035,7 @@ msgstr "Εναλλαγή Πλήρους Οθόνης"
 # converter/ui/video_edit_ui.py, line: 308
 #, python-brace-format
 msgid "Frame: {current} / {total}"
-msgstr "Πλαίσιο: {current} / {total}"
+msgstr "Καρέ: {current} / {total}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
@@ -4061,23 +4043,23 @@ msgid "Left"
 msgstr "Αριστερά"
 
 msgid "Crop from left"
-msgstr ""
+msgstr "Περικοπή από αριστερά"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Right"
-msgstr "Δεξί"
+msgstr "Δεξιά"
 
 msgid "Crop from right"
-msgstr ""
+msgstr "Περικοπή από δεξιά"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Top"
-msgstr "Κορυφή"
+msgstr "Πάνω"
 
 msgid "Crop from top"
-msgstr ""
+msgstr "Περικοπή από πάνω"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
@@ -4085,7 +4067,7 @@ msgid "Bottom"
 msgstr "Κάτω"
 
 msgid "Crop from bottom"
-msgstr ""
+msgstr "Περικοπή από κάτω"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 363
@@ -4095,13 +4077,13 @@ msgid "Visual crop editor"
 msgstr "Οπτικός επεξεργαστής περικοπής"
 
 msgid "Free"
-msgstr ""
+msgstr "Ελεύθερη"
 
 msgid "Original"
-msgstr ""
+msgstr "Αρχική"
 
 msgid "Crop aspect ratio"
-msgstr ""
+msgstr "Αναλογία διαστάσεων περικοπής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 273
@@ -4129,13 +4111,13 @@ msgid "Volume"
 msgstr "Ένταση"
 
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
-msgstr ""
+msgstr "Το βίντεο αντιγράφεται χωρίς επανακωδικοποίηση. Η περικοπή, η προσαρμογή, η περιστροφή ή η προσθήκη εφέ στην εικόνα προκαλούν επανακωδικοποίηση αυτού του βίντεο."
 
 msgid "Image"
-msgstr ""
+msgstr "Εικόνα"
 
 msgid "Reset image adjustments"
-msgstr ""
+msgstr "Επαναφορά προσαρμογών εικόνας"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
@@ -4143,7 +4125,7 @@ msgid "Brightness"
 msgstr "Φωτεινότητα"
 
 msgid "Contrast"
-msgstr ""
+msgstr "Αντίθεση"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 347
@@ -4153,25 +4135,25 @@ msgstr "Κορεσμός"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 360
 msgid "Hue"
-msgstr "Χρώμα"
+msgstr "Απόχρωση"
 
 msgid "Source colours"
-msgstr ""
+msgstr "Χρώματα πηγής"
 
 msgid "As the file says"
-msgstr ""
+msgstr "Σύμφωνα με το αρχείο"
 
 msgid "HDR10 (PQ)"
-msgstr ""
+msgstr "HDR10 (PQ)"
 
 msgid "HDR (HLG)"
-msgstr ""
+msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
-msgstr ""
+msgstr "Τυπικά (SDR)"
 
 msgid "Orientation"
-msgstr ""
+msgstr "Προσανατολισμός"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 605
@@ -4181,7 +4163,7 @@ msgid "Reset Transform"
 msgstr "Επαναφορά Μετασχηματισμού"
 
 msgid "Rotation"
-msgstr ""
+msgstr "Περιστροφή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 558
@@ -4242,16 +4224,16 @@ msgid "Save each segment as a separate file"
 msgstr "Αποθηκεύστε κάθε τμήμα ως ξεχωριστό αρχείο."
 
 msgid "Segment output"
-msgstr ""
+msgstr "Έξοδος τμημάτων"
 
 msgid "Choose how marked segments are saved"
-msgstr ""
+msgstr "Επιλέξτε πώς θα αποθηκευτούν τα επισημασμένα τμήματα"
 
 msgid "Effects"
-msgstr ""
+msgstr "Εφέ"
 
 msgid "Reset effects"
-msgstr ""
+msgstr "Επαναφορά εφέ"
 
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
@@ -4259,44 +4241,44 @@ msgid "Off"
 msgstr "Απενεργοποιημένο"
 
 msgid "Light"
-msgstr ""
+msgstr "Ήπιο"
 
 msgid "Strong"
-msgstr ""
+msgstr "Ισχυρό"
 
 msgid "Noise reduction"
-msgstr ""
+msgstr "Μείωση θορύβου"
 
 msgid "Sharpening"
-msgstr ""
+msgstr "Όξυνση"
 
 msgid "Stabilization"
-msgstr ""
+msgstr "Σταθεροποίηση"
 
 msgid "Applied when converting, not in the preview"
-msgstr ""
+msgstr "Εφαρμόζεται στη μετατροπή, όχι στην προεπισκόπηση"
 
 msgid "Look or shader"
-msgstr ""
+msgstr "Χρωματικό ύφος ή shader"
 
 msgid "None"
-msgstr ""
+msgstr "Κανένα"
 
 msgid "Choose a colour look (.cube) or shader (.hook)"
-msgstr ""
+msgstr "Επιλογή χρωματικού ύφους (.cube) ή shader (.hook)"
 
 msgid "Remove the look or shader"
-msgstr ""
+msgstr "Αφαίρεση χρωματικού ύφους ή shader"
 
 msgid "Choose a Look or Shader"
-msgstr ""
+msgstr "Επιλογή χρωματικού ύφους ή shader"
 
 msgid "Looks and shaders"
-msgstr ""
+msgstr "Χρωματικά ύφη και shader"
 
 #, python-brace-format
 msgid "Reset {setting} to default"
-msgstr ""
+msgstr "Επαναφορά της ρύθμισης {setting} στην προεπιλογή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4321,7 +4303,7 @@ msgstr "Επιλέξτε τη μορφή συμπίεσης. Το H.264 είνα
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 196
 msgid "Higher quality keeps more detail but creates larger files. 'Good' is a balanced choice for most videos."
-msgstr "Η υψηλότερη ποιότητα διατηρεί περισσότερες λεπτομέρειες αλλά δημιουργεί μεγαλύτερα αρχεία. Το 'Καλή' είναι μια ισορροπημένη επιλογή για τα περισσότερα βίντεο."
+msgstr "Η υψηλότερη ποιότητα διατηρεί περισσότερες λεπτομέρειες, αλλά δημιουργεί μεγαλύτερα αρχεία. Η επιλογή «Καλή» προσφέρει ισορροπία για τα περισσότερα βίντεο."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4349,7 +4331,7 @@ msgid "Frame Rate"
 msgstr "Ρυθμός καρέ"
 
 msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
-msgstr ""
+msgstr "Λιγότερα καρέ ανά δευτερόλεπτο δημιουργούν μικρότερο αρχείο. Τα πρόσθετα καρέ δημιουργούνται με ανάμειξη των γειτονικών τους: πιο ομαλή κίνηση, με αχνό ίχνος στις γρήγορες κινήσεις."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4394,20 +4376,20 @@ msgstr "Αποκωδικοποίηση με χρήση λογισμικού"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 314
 msgid "Decode on CPU and only encode on GPU. Enable this if GPU decoding causes errors or artifacts."
-msgstr "Αποκωδικοποιήστε στη CPU και κωδικοποιήστε μόνο στη GPU. Ενεργοποιήστε το αυτό αν η αποκωδικοποίηση GPU προκαλεί σφάλματα ή αρθρώματα."
+msgstr "Αποκωδικοποιήστε στη CPU και κωδικοποιήστε μόνο στη GPU. Ενεργοποιήστε αυτή την επιλογή αν η αποκωδικοποίηση στη GPU προκαλεί σφάλματα ή αλλοιώσεις εικόνας."
 
 msgid "The video metadata could not be read"
 msgstr "Δεν ήταν δυνατή η ανάγνωση των μεταδεδομένων του βίντεο"
 
 #, python-brace-format
 msgid "Error getting video info: {error}"
-msgstr ""
+msgstr "Σφάλμα κατά τη λήψη πληροφοριών βίντεο: {error}"
 
 msgid "Error: No video stream found"
-msgstr ""
+msgstr "Σφάλμα: Δεν βρέθηκε ροή βίντεο"
 
 msgid "Error: Failed to load video file. Please check the file format and try again."
-msgstr ""
+msgstr "Σφάλμα: Δεν ήταν δυνατή η φόρτωση του αρχείου βίντεο. Ελέγξτε τη μορφή του αρχείου και δοκιμάστε ξανά."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 53
@@ -4424,7 +4406,7 @@ msgstr "Μετατροπή Μορφών Βίντεο"
 msgid ""
 "MP4, MKV, AVI, WebM and many more\n"
 "with hardware acceleration support"
-msgstr "MP4, MKV, AVI, WebM και πολλά άλλα με υποστήριξη υλικού επιτάχυνσης"
+msgstr "MP4, MKV, AVI, WebM και πολλά άλλα\nμε υποστήριξη επιτάχυνσης υλικού"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 76
@@ -4436,7 +4418,7 @@ msgstr "Αποκοπή και Κοπή Βίντεο"
 msgid ""
 "Select specific segments to keep\n"
 "and create new videos with only those parts"
-msgstr "Επιλέξτε συγκεκριμένα τμήματα για να διατηρήσετε και δημιουργήστε νέα βίντεο μόνο με αυτά τα μέρη."
+msgstr "Επιλέξτε τα τμήματα που θέλετε να διατηρήσετε\nκαι δημιουργήστε νέα βίντεο μόνο με αυτά τα μέρη"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 83
@@ -4448,7 +4430,7 @@ msgstr "Ρυθμίσεις Χρώματος Βίντεο"
 msgid ""
 "Control brightness, saturation, and hue\n"
 "to enhance your videos"
-msgstr "Ελέγξτε τη φωτεινότητα, τον κορεσμό και την απόχρωση για να βελτιώσετε τα βίντεό σας."
+msgstr "Ρυθμίστε τη φωτεινότητα, τον κορεσμό και την απόχρωση\nγια να βελτιώσετε τα βίντεό σας"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 90
@@ -4460,19 +4442,19 @@ msgstr "Γρήγορη Λειτουργία Αντιγραφής"
 msgid ""
 "Change container format without re-encoding\n"
 "for ultra-fast processing with no quality loss"
-msgstr "Αλλαγή μορφής κοντέινερ χωρίς επανακωδικοποίηση για υπερ-γρήγορη επεξεργασία χωρίς απώλεια ποιότητας"
+msgstr "Αλλάξτε τη μορφή περιέκτη χωρίς επανακωδικοποίηση\nγια πολύ γρήγορη επεξεργασία χωρίς απώλεια ποιότητας"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 109
 msgid "Crop Videos"
-msgstr "Επεξεργασία Βίντεο"
+msgstr "Περικοπή βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 110
 msgid ""
 "Remove unwanted areas from edges\n"
 "to focus on what matters"
-msgstr "Αφαιρέστε τις ανεπιθύμητες περιοχές από τις άκρες για να εστιάσετε σε αυτό που έχει σημασία."
+msgstr "Αφαιρέστε τις ανεπιθύμητες περιοχές από τις άκρες\nγια να εστιάσετε σε αυτό που έχει σημασία"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 113
@@ -4484,7 +4466,7 @@ msgstr "Έλεγχος Ήχου"
 msgid ""
 "Extract, copy, or re-encode audio\n"
 "with multiple codec options"
-msgstr "Εξαγωγή, αντιγραφή ή επανακωδικοποίηση ήχου με πολλές επιλογές κωδικοποιητή."
+msgstr "Εξαγάγετε, αντιγράψτε ή επανακωδικοποιήστε τον ήχο\nμε επιλογή ανάμεσα σε πολλούς κωδικοποιητές"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 120
@@ -4496,7 +4478,7 @@ msgstr "Διαχείριση Υποτίτλων"
 msgid ""
 "Extract subtitles to SRT files\n"
 "or keep them embedded in video"
-msgstr "Εξαγωγή υποτίτλων σε αρχεία SRT ή διατήρηση τους ενσωματωμένους στο βίντεο"
+msgstr "Εξαγάγετε υπότιτλους σε αρχεία SRT\nή διατηρήστε τους ενσωματωμένους στο βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 127
@@ -4508,7 +4490,7 @@ msgstr "Μαζική Επεξεργασία"
 msgid ""
 "Convert multiple videos at once\n"
 "with queue management"
-msgstr "Μετατροπή πολλαπλών βίντεο ταυτόχρονα με διαχείριση ουράς"
+msgstr "Μετατρέψτε πολλά βίντεο ταυτόχρονα\nμε διαχείριση ουράς"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 465
@@ -4521,7 +4503,7 @@ msgid "Let's Start"
 msgstr "Ας ξεκινήσουμε"
 
 msgid "The file container could not be read. It may be a corrupted download or an unsupported format."
-msgstr ""
+msgstr "Δεν ήταν δυνατή η ανάγνωση του περιέκτη του αρχείου. Μπορεί να πρόκειται για κατεστραμμένη λήψη ή μη υποστηριζόμενη μορφή."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 22
@@ -4531,7 +4513,7 @@ msgstr "Το αρχείο ή ο φάκελος δεν βρέθηκε."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 21
 msgid "Permission denied — check file/folder permissions."
-msgstr "Άδεια απορρίφθηκε — ελέγξτε τις άδειες αρχείου/φακέλου."
+msgstr "Δεν επιτρέπεται η πρόσβαση — ελέγξτε τα δικαιώματα αρχείου/φακέλου."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 20
@@ -4544,7 +4526,7 @@ msgid "The file appears to be corrupted or in an unsupported format."
 msgstr "Το αρχείο φαίνεται να είναι κατεστραμμένο ή σε μη υποστηριζόμενη μορφή."
 
 msgid "A track of this file cannot be stored in the chosen container. Try MKV."
-msgstr "Ένα κομμάτι αυτού του αρχείου δεν μπορεί να αποθηκευτεί στο επιλεγμένο container. Δοκιμάστε MKV."
+msgstr "Ένα κομμάτι αυτού του αρχείου δεν μπορεί να αποθηκευτεί στον επιλεγμένο περιέκτη. Δοκιμάστε MKV."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 24
@@ -4604,7 +4586,7 @@ msgid "The encoder stopped making progress and was terminated."
 msgstr "Ο κωδικοποιητής σταμάτησε να προχωρά και τερματίστηκε."
 
 msgid "WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. Choose one of those codecs, or MKV to keep the original ones."
-msgstr ""
+msgstr "Το WebM υποστηρίζει μόνο βίντεο VP8, VP9 ή AV1 και ήχο Vorbis ή Opus. Επιλέξτε έναν από αυτούς τους κωδικοποιητές ή MKV για να διατηρήσετε τους αρχικούς."
 
 msgid "The conversion finished without producing a file."
 msgstr "Η μετατροπή ολοκληρώθηκε χωρίς να παραχθεί αρχείο."
@@ -4617,10 +4599,10 @@ msgstr "Η μετατροπή απέτυχε με κωδικό {0}"
 
 #, python-brace-format
 msgid "Video stream: codec={codec}, pixel format={pixel_format}"
-msgstr ""
+msgstr "Ροή βίντεο: κωδικοποιητής={codec}, μορφή εικονοστοιχείων={pixel_format}"
 
 msgid "Could not analyze the video stream with ffprobe"
-msgstr ""
+msgstr "Δεν ήταν δυνατή η ανάλυση της ροής βίντεο με το ffprobe"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 185
@@ -4629,7 +4611,7 @@ msgid "Error starting conversion: {0}"
 msgstr "Σφάλμα κατά την εκκίνηση της μετατροπής: {0}"
 
 msgid "The conversion could not start."
-msgstr ""
+msgstr "Δεν ήταν δυνατή η έναρξη της μετατροπής."
 
 msgid "Preparing…"
 msgstr "Προετοιμασία…"
@@ -4638,7 +4620,7 @@ msgid "Extracting subtitles…"
 msgstr "Εξαγωγή υποτίτλων…"
 
 msgid "Measuring camera shake…"
-msgstr ""
+msgstr "Μέτρηση κουνήματος κάμερας…"
 
 msgid "Checking the GPU encoder…"
 msgstr "Έλεγχος του κωδικοποιητή GPU…"
@@ -4647,7 +4629,7 @@ msgid "GPU unavailable, using the processor"
 msgstr "Η GPU δεν είναι διαθέσιμη, χρήση επεξεργαστή"
 
 msgid "Adding subtitles…"
-msgstr ""
+msgstr "Προσθήκη υποτίτλων…"
 
 msgid "Copying without re-encoding"
 msgstr "Αντιγραφή χωρίς επανακωδικοποίηση"
@@ -4662,21 +4644,21 @@ msgstr "Πλήρης επιτάχυνση GPU"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 215
 msgid "Software Decoding and GPU encoding"
-msgstr "Αποκωδικοποίηση λογισμικού και κωδικοποίηση GPU"
+msgstr "Αποκωδικοποίηση μέσω λογισμικού και κωδικοποίηση μέσω GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 213
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 216
 msgid "Software encoding"
-msgstr "Κωδικοποίηση λογισμικού"
+msgstr "Κωδικοποίηση μέσω λογισμικού"
 
 msgid "Analyzing the video for the target size…"
-msgstr ""
+msgstr "Ανάλυση βίντεο για το επιθυμητό μέγεθος…"
 
 #, python-brace-format
 msgid "Input probe unavailable: {0}"
-msgstr ""
+msgstr "Η ανάλυση εισόδου δεν είναι διαθέσιμη: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 325
@@ -4685,23 +4667,23 @@ msgstr "Δεν ανιχνεύθηκε πρόοδος. Η διαδικασία μ
 
 #, python-brace-format
 msgid "Output duration not verified: {0}"
-msgstr ""
+msgstr "Η διάρκεια εξόδου δεν επαληθεύτηκε: {0}"
 
 msgid "The output could not be verified against the input"
-msgstr ""
+msgstr "Δεν ήταν δυνατή η επαλήθευση της εξόδου σε σχέση με την είσοδο"
 
 msgid "The output does not carry every subtitle track of the original"
-msgstr ""
+msgstr "Η έξοδος δεν περιέχει όλα τα κομμάτια υποτίτλων του αρχικού αρχείου"
 
 msgid "Checking output file..."
 msgstr "Έλεγχος αρχείου εξόδου..."
 
 msgid "Original deleted after output validation"
-msgstr ""
+msgstr "Το αρχικό αρχείο διαγράφηκε μετά την επαλήθευση της εξόδου"
 
 #, python-brace-format
 msgid "Original preserved: {0}"
-msgstr ""
+msgstr "Το αρχικό αρχείο διατηρήθηκε: {0}"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4724,7 +4706,7 @@ msgid "Conversion completed successfully!"
 msgstr "Η μετατροπή ολοκληρώθηκε με επιτυχία!"
 
 msgid "The full FFmpeg comes from the RPM Fusion repository, which must be enabled first. The command replaces the limited ffmpeg-free package."
-msgstr ""
+msgstr "Το πλήρες FFmpeg προέρχεται από το αποθετήριο RPM Fusion, το οποίο πρέπει πρώτα να ενεργοποιηθεί. Η εντολή αντικαθιστά το περιορισμένο πακέτο ffmpeg-free."
 
 #, python-brace-format
 msgid "Additional options could not be parsed: {0}"
@@ -4813,7 +4795,7 @@ msgstr "Διάρκεια"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 233
 msgid "Copy duration"
-msgstr "Διάρκεια αντιγραφής"
+msgstr "Αντιγραφή διάρκειας"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4841,7 +4823,7 @@ msgstr "Αντιγραφή μορφής"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 569
 msgid "Bitrate"
-msgstr "Ρυθμός μετάδοσης"
+msgstr "Ρυθμός bit"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 268
@@ -4850,7 +4832,7 @@ msgstr "Ρυθμός μετάδοσης"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 576
 msgid "Copy bitrate"
-msgstr "Αντιγραφή ρυθμού μετάδοσης"
+msgstr "Αντιγραφή ρυθμού bit"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4873,7 +4855,7 @@ msgstr "Αντιγραφή κωδικοποιητή"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 345
 msgid "Copy resolution"
-msgstr "Ανάλυση αντιγραφής"
+msgstr "Αντιγραφή ανάλυσης"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 368
@@ -4907,12 +4889,12 @@ msgstr "Αντιγράψτε τον κωδικό γλώσσας"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 507
 msgid "Sample Rate"
-msgstr "Δείγμα Ρυθμού"
+msgstr "Ρυθμός δειγματοληψίας"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 514
 msgid "Copy sample rate"
-msgstr "Αντιγράψτε το δείγμα ρυθμού"
+msgstr "Αντιγραφή ρυθμού δειγματοληψίας"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 524
@@ -4962,12 +4944,12 @@ msgstr "Αντιγραφή τιμής"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 653
 msgid "Format Details"
-msgstr "Λεπτομέρειες Μορφοποίησης"
+msgstr "Λεπτομέρειες μορφής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 658
 msgid "Bitrate (bps)"
-msgstr "Ρυθμός μετάδοσης (bps)"
+msgstr "Ρυθμός bit (bps)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 659
@@ -4991,23 +4973,23 @@ msgstr "Δοκιμάστε ξανά"
 
 #, python-brace-format
 msgid "The segment {0} starts before the previous one ends; list the segments in order without overlaps."
-msgstr ""
+msgstr "Το τμήμα {0} αρχίζει πριν τελειώσει το προηγούμενο· παραθέστε τα τμήματα με τη σειρά, χωρίς επικαλύψεις."
 
 msgid "Copy video"
 msgstr "Αντιγραφή βίντεο"
 
 msgid "The preset text is empty or too large."
-msgstr "Το κείμενο της προεπιλογής είναι κενό ή πολύ μεγάλο."
+msgstr "Το κείμενο της προρύθμισης είναι κενό ή πολύ μεγάλο."
 
 #, python-brace-format
 msgid "The preset is not valid TOML: {0}"
-msgstr "Η προεπιλογή δεν είναι έγκυρο TOML: {0}"
+msgstr "Η προρύθμιση δεν είναι έγκυρο TOML: {0}"
 
 msgid "The preset is not valid TOML: its tables are nested too deeply."
-msgstr ""
+msgstr "Η προρύθμιση δεν είναι έγκυρο TOML: οι πίνακες είναι εμφωλευμένοι σε υπερβολικό βάθος."
 
 msgid "The preset must be a TOML table."
-msgstr "Η προεπιλογή πρέπει να είναι πίνακας TOML."
+msgstr "Η προρύθμιση πρέπει να είναι πίνακας TOML."
 
 #, python-brace-format
 msgid "[{0}] must be a table."
@@ -5055,7 +5037,7 @@ msgstr "[encoder.{0}]: {1}"
 
 #, python-brace-format
 msgid "Unsupported preset format {0}; this version reads format {1}."
-msgstr "Μη υποστηριζόμενη μορφή προεπιλογής {0}· αυτή η έκδοση διαβάζει τη μορφή {1}."
+msgstr "Μη υποστηριζόμενη μορφή προρύθμισης {0}· αυτή η έκδοση διαβάζει τη μορφή {1}."
 
 #, python-brace-format
 msgid "Unknown section(s): {0}"
@@ -5071,7 +5053,7 @@ msgid "[video] resolution must look like 1920x1080."
 msgstr "Το [video] resolution πρέπει να μοιάζει με 1920x1080."
 
 msgid "[video] fps must be a number between 1 and 240."
-msgstr ""
+msgstr "Το [video] fps πρέπει να είναι αριθμός μεταξύ 1 και 240."
 
 msgid "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
 msgstr "Το [video] pixel_format πρέπει να είναι όνομα μορφής pixel του FFmpeg, όπως yuv420p."
@@ -5108,86 +5090,86 @@ msgid "[encoder.{0}] is not an encoder name."
 msgstr "Το [encoder.{0}] δεν είναι όνομα κωδικοποιητή."
 
 msgid "A preset that copies the video cannot carry encoder arguments."
-msgstr "Μια προεπιλογή που αντιγράφει το βίντεο δεν μπορεί να έχει ορίσματα κωδικοποιητή."
+msgstr "Μια προρύθμιση που αντιγράφει το βίντεο δεν μπορεί να έχει ορίσματα κωδικοποιητή."
 
 #, python-brace-format
 msgid "Invalid preset identifier: {0}"
-msgstr "Μη έγκυρο αναγνωριστικό προεπιλογής: {0}"
+msgstr "Μη έγκυρο αναγνωριστικό προρύθμισης: {0}"
 
 #, python-brace-format
 msgid "Could not read the preset: {0}"
-msgstr "Δεν ήταν δυνατή η ανάγνωση της προεπιλογής: {0}"
+msgstr "Δεν ήταν δυνατή η ανάγνωση της προρύθμισης: {0}"
 
 msgid "The preset is not UTF-8 text."
-msgstr "Η προεπιλογή δεν είναι κείμενο UTF-8."
+msgstr "Η προρύθμιση δεν είναι κείμενο UTF-8."
 
 msgid "Bundled presets cannot be deleted; duplicate one to edit it."
-msgstr "Οι ενσωματωμένες προεπιλογές δεν μπορούν να διαγραφούν· δημιουργήστε αντίγραφο για να το επεξεργαστείτε."
+msgstr "Οι ενσωματωμένες προρυθμίσεις δεν μπορούν να διαγραφούν· δημιουργήστε αντίγραφο για να το επεξεργαστείτε."
 
 #, python-brace-format
 msgid "{0} (copy)"
 msgstr "{0} (αντίγραφο)"
 
 msgid "The keyframes of the video are too far apart to split it into parts under the size limit."
-msgstr ""
+msgstr "Τα καρέ-κλειδιά του βίντεο απέχουν πολύ μεταξύ τους για να χωριστεί σε μέρη κάτω από το όριο μεγέθους."
 
 msgid "The video could not be split into parts under the size limit."
-msgstr ""
+msgstr "Δεν ήταν δυνατός ο χωρισμός του βίντεο σε μέρη κάτω από το όριο μεγέθους."
 
 #, python-brace-format
 msgid "{0} cannot hold picture subtitles (PGS, DVD): {1} track left out. Choose MKV to keep it."
 msgid_plural "{0} cannot hold picture subtitles (PGS, DVD): {1} tracks left out. Choose MKV to keep them."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Το {0} δεν υποστηρίζει υπότιτλους εικόνας (PGS, DVD): παραλείφθηκε {1} κομμάτι. Επιλέξτε MKV για να το διατηρήσετε."
+msgstr[1] "Το {0} δεν υποστηρίζει υπότιτλους εικόνας (PGS, DVD): παραλείφθηκαν {1} κομμάτια. Επιλέξτε MKV για να τα διατηρήσετε."
 
 #, python-brace-format
 msgid "Part {0} starts {1:.3f} s after a keyframe, where a stream copy would have to begin. Re-encoding the video instead, so every part starts exactly where it was cut; this takes longer."
-msgstr ""
+msgstr "Το μέρος {0} αρχίζει {1:.3f} δευτ. μετά από ένα καρέ-κλειδί, από όπου θα έπρεπε να αρχίσει η αντιγραφή της ροής. Αντί γι' αυτό, το βίντεο επανακωδικοποιείται ώστε κάθε μέρος να αρχίζει ακριβώς στην τομή· αυτό διαρκεί περισσότερο."
 
 msgid "Splitting into parts…"
 msgstr "Διαίρεση σε τμήματα…"
 
 msgid "Completed — re-encoded: a cut was not on a keyframe"
-msgstr ""
+msgstr "Ολοκληρώθηκε — επανακωδικοποίηση: μια τομή δεν ήταν σε καρέ-κλειδί"
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit. The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "Split into {0} parts that fit the size limit. The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Χωρίστηκε σε {0} μέρος εντός του ορίου μεγέθους. Το βίντεο επανακωδικοποιήθηκε επειδή μια τομή δεν άρχιζε σε καρέ-κλειδί."
+msgstr[1] "Χωρίστηκε σε {0} μέρη εντός του ορίου μεγέθους. Το βίντεο επανακωδικοποιήθηκε επειδή μια τομή δεν άρχιζε σε καρέ-κλειδί."
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit."
 msgid_plural "Split into {0} parts that fit the size limit."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Χωρίστηκε σε {0} μέρος εντός του ορίου μεγέθους."
+msgstr[1] "Χωρίστηκε σε {0} μέρη εντός του ορίου μεγέθους."
 
 msgid "Conversion completed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr ""
+msgstr "Η μετατροπή ολοκληρώθηκε επιτυχώς! Το βίντεο επανακωδικοποιήθηκε επειδή μια τομή δεν άρχιζε σε καρέ-κλειδί."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Ενώθηκε επιτυχώς {0} τμήμα! Το βίντεο επανακωδικοποιήθηκε επειδή μια τομή δεν άρχιζε σε καρέ-κλειδί."
+msgstr[1] "Ενώθηκαν επιτυχώς και τα {0} τμήματα! Το βίντεο επανακωδικοποιήθηκε επειδή μια τομή δεν άρχιζε σε καρέ-κλειδί."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully!"
 msgid_plural "All {0} segments have been joined successfully!"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Ενώθηκε επιτυχώς {0} τμήμα!"
+msgstr[1] "Ενώθηκαν επιτυχώς και τα {0} τμήματα!"
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Επεξεργάστηκε επιτυχώς {0} τμήμα! Το βίντεο επανακωδικοποιήθηκε επειδή μια τομή δεν άρχιζε σε καρέ-κλειδί."
+msgstr[1] "Επεξεργάστηκαν επιτυχώς και τα {0} τμήματα! Το βίντεο επανακωδικοποιήθηκε επειδή μια τομή δεν άρχιζε σε καρέ-κλειδί."
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully!"
 msgid_plural "All {0} segments have been processed successfully!"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Επεξεργάστηκε επιτυχώς {0} τμήμα!"
+msgstr[1] "Επεξεργάστηκαν επιτυχώς και τα {0} τμήματα!"
 
 msgid "WhatsApp video"
 msgstr "Βίντεο WhatsApp"
@@ -5244,8 +5226,8 @@ msgstr "Μετατροπή Βίντεο"
 #, python-brace-format
 msgid "Convert {0} Video"
 msgid_plural "Convert {0} Videos"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "Μετατροπή {0} βίντεο"
+msgstr[1] "Μετατροπή {0} βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 108
