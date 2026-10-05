@@ -293,6 +293,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Televisions play 4K video only in H.265 (or VP9/AV1), never in H.264.\n"
+"\n"
+"When enabled, an H.264 conversion whose output is wider than 1920 px is encoded as H.265 instead. Other codecs and smaller outputs are not changed."
+msgstr ""
+
+msgid ""
 "Audio quality:\n"
 "\n"
 "• Higher = better quality, larger file\n"
@@ -1837,6 +1843,12 @@ msgstr ""
 msgid "Decode using CPU, encode using GPU"
 msgstr ""
 
+msgid "H.265 for 4K videos"
+msgstr ""
+
+msgid "Encode H.264 videos wider than 1920 px as H.265, so televisions can play them"
+msgstr ""
+
 msgid "Compression preset"
 msgstr ""
 
@@ -2327,6 +2339,12 @@ msgid "The container that holds audio and video. MP4 is the most compatible. MKV
 msgstr ""
 
 msgid "Choose the compression format. H.264 is the most compatible. H.265 and AV1 produce smaller files but need more processing power."
+msgstr ""
+
+msgid "H.265 for 4K Videos"
+msgstr ""
+
+msgid "Televisions do not play 4K video in H.264. When enabled, H.264 videos wider than 1920 px are converted to H.265 instead."
 msgstr ""
 
 msgid "Higher quality keeps more detail but creates larger files. 'Good' is a balanced choice for most videos."
