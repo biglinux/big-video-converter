@@ -112,6 +112,7 @@ if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
 	echo -e "${COLOR_BLUE}13. Specifying Video Encoder:${COLOR_RESET}"
 	echo -e "   ${COLOR_CYAN}You can specify the video encoder. Options include:${COLOR_GREEN} h264, h265, av1, vp9${COLOR_RESET} Default is h264"
 	echo -e "   ${COLOR_CYAN}Example to use h265 encoder:${COLOR_RESET} ${COLOR_YELLOW}video_encoder=h265${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}With ${COLOR_YELLOW}uhd_h265=1${COLOR_CYAN}, an H.264 output wider than 1920 px (4K) is encoded as H.265, which televisions can play${COLOR_RESET}"
 	echo ""
 	echo -e "${COLOR_BLUE}14. Force Gpu partial mode, decode using CPU and encode using GPU:${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}gpu_partial=1${COLOR_RESET}"
@@ -629,12 +630,13 @@ if [[ ${output_file,,} == *.webm ]]; then
 fi
 
 # Above 1080p, H.264 is a PC-only format: televisions decode UHD in HEVC (or
-# VP9/AV1), never in H.264. H.264 is this tool's default, so a 4K source
-# converted with defaults used to produce a file no TV would open. Switch to
-# H.265 unless the caller insists (video_encoder_strict=1).
-if [[ ($video_encoder == "h264" || -z "$video_encoder") && $output_width =~ ^[0-9]+$ && $output_width -gt 1920 && $video_encoder_strict != 1 ]]; then
+# VP9/AV1), never in H.264. With uhd_h265=1 (opt-in, the GUI's "H.265 for 4K
+# videos" switch) an H.264 encode whose output is wider than 1920 px becomes
+# H.265, so the file opens on a TV. Off by default: the codec the user picked
+# is the codec they get.
+if [[ $uhd_h265 == 1 && $force_copy_video != 1 && ($video_encoder == "h264" || -z "$video_encoder") && $output_width =~ ^[0-9]+$ && $output_width -gt 1920 ]]; then
 	video_encoder=h265
-	echo "Output is wider than 1920 px: switching from H.264 to H.265 (televisions do not decode H.264 above 1080p; set video_encoder_strict=1 to keep H.264)"
+	echo "Output is wider than 1920 px: switching from H.264 to H.265 (televisions do not decode H.264 above 1080p)"
 fi
 
 # The smallest H.264 level whose macroblock budget fits the picture and frame

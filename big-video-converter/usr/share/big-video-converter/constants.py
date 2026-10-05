@@ -376,6 +376,11 @@ def get_tooltips():
             "Run decode on the CPU and encode on the GPU.\n\n"
             "Usually best left disabled, but can help with certain compatibility issues."
         ),
+        "uhd_h265": _(
+            "Televisions play 4K video only in H.265 (or VP9/AV1), never in H.264.\n\n"
+            "When enabled, an H.264 conversion whose output is wider than 1920 px "
+            "is encoded as H.265 instead. Other codecs and smaller outputs are not changed."
+        ),
         "audio_bitrate": _(
             "Audio quality:\n\n"
             "• Higher = better quality, larger file\n"

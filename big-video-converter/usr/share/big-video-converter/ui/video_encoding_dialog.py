@@ -186,6 +186,22 @@ def show_video_encoding_dialog(parent_window, app) -> None:
         )
     )
 
+    # --- H.265 for 4K ---
+    uhd_toggle = Gtk.Switch()
+    uhd_toggle.set_active(app.settings_page.uhd_h265_check.get_active())
+    _make_switch_sync(app.settings_page.uhd_h265_check, uhd_toggle, connections)
+    content.append(
+        _make_card(
+            "codec_h264.svg",
+            _("H.265 for 4K Videos"),
+            _(
+                "Televisions do not play 4K video in H.264. When enabled, H.264 "
+                "videos wider than 1920 px are converted to H.265 instead."
+            ),
+            uhd_toggle,
+        )
+    )
+
     # --- Image Quality ---
     quality_dd = Gtk.DropDown(model=_clone_model(app.video_quality_combo))
     quality_dd.set_selected(app.video_quality_combo.get_selected())

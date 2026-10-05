@@ -1032,6 +1032,8 @@ class ConversionPage:
             # Set flags
             if settings.get_boolean("gpu-partial", False):
                 env_vars["gpu_partial"] = "1"
+            if settings.get_boolean("uhd-h265", False):
+                env_vars["uhd_h265"] = "1"
             if force_copy_video_enabled:
                 env_vars["force_copy_video"] = "1"
             if settings.get_boolean(
@@ -1541,7 +1543,7 @@ class ConversionPage:
         for key in ("gpu", "video_quality", "video_encoder", "preset", "subtitle_extract",
                     "audio_handling", "audio_bitrate", "audio_channels", "video_resolution",
                     "video_fps", "video_stabilize", "source_hdr",
-                    "options", "gpu_partial", "force_copy_video", "only_extract_subtitles",
+                    "options", "gpu_partial", "uhd_h265", "force_copy_video", "only_extract_subtitles",
                     "video_filter", "video_width", "video_height"):
             if key in env_vars:
                 logger.debug(f"{key}={env_vars[key]}")
