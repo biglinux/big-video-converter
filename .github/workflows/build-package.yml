@@ -23,6 +23,7 @@ jobs:
           pacman -Syu --noconfirm git python python-gobject gtk4 ffmpeg \
             python-cairo python-mpv libadwaita libva-utils python-opengl vte4 \
             namcap desktop-file-utils gettext appstream
+          useradd -m builder
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -34,10 +35,9 @@ jobs:
             -T - -czf package-build/source.tar.gz
           cp pkgbuild/PKGBUILD package-build/PKGBUILD
           # Keep the release recipe, but test this checkout rather than main.
-          printf '\nsource=(source.tar.gz)\n' >> package-build/PKGBUILD
-          printf "sha256sums=('%s')\n" "$(sha256sum package-build/source.tar.gz | cut -d ' ' -f 1)" \
+          printf '\nsource=(source.tar.gz "${source[1]}")\n' >> package-build/PKGBUILD
+          printf "sha256sums=('%s' 'SKIP')\n" "$(sha256sum package-build/source.tar.gz | cut -d ' ' -f 1)" \
             >> package-build/PKGBUILD
-          useradd -m builder
           chown -R builder:builder package-build
           runuser -u builder -- bash -c 'cd package-build && makepkg --cleanbuild --noconfirm'
       - name: Validate the built package
@@ -50,6 +50,7 @@ jobs:
           tar -xf "$package" -C package-build/installed
           desktop-file-validate package-build/installed/usr/share/applications/*.desktop
           python -m compileall -q package-build/installed/usr/share/big-video-converter
+          test -f package-build/installed/usr/share/big-video-converter/big_gtk_kit/__init__.py
           test -x package-build/installed/usr/bin/big-video-converter
           test -x package-build/installed/usr/bin/big-video-converter-gui
           test -s package-build/installed/usr/share/licenses/big-video-converter/LICENSE

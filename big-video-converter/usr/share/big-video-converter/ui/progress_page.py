@@ -1259,7 +1259,6 @@ class QueueItemRow(Gtk.ListBoxRow):
             label = _("Skip “{}”").format(self.display_name)
             visible_label = _("Skip")
             icon_name = "media-skip-forward-symbolic"
-            self.cancel_button.tooltip_key = "progress_skip_file"
             # Skipping destroys nothing: a neutral action.
             self.cancel_button.remove_css_class("bvc-cancel-job")
         else:
@@ -1267,7 +1266,6 @@ class QueueItemRow(Gtk.ListBoxRow):
             label = _("Cancel “{}”").format(self.display_name)
             visible_label = _("Cancel")
             icon_name = "process-stop-symbolic"
-            self.cancel_button.tooltip_key = "progress_cancel_file"
             self.cancel_button.add_css_class("bvc-cancel-job")
         self.cancel_label.set_label(visible_label)
         self.cancel_icon.set_from_icon_name(icon_name)

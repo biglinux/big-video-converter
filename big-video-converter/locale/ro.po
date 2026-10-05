@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: big-video-converter\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-09-28 01:08+0000\n"
+"PO-Revision-Date: 2026-10-03 10:36+0000\n"
 "Last-Translator: BigLinux\n"
 "Language-Team: BigLinux\n"
 "Language: ro\n"
@@ -50,44 +50,44 @@ msgstr "Software (CPU)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 77
 msgid "Good (recommended)"
-msgstr "Bun (recomandat)"
+msgstr "Bună (recomandată)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 73
 msgid "Very High"
-msgstr "Foarte ridicat"
+msgstr "Foarte ridicată"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 74
 msgid "High"
-msgstr "Înalt"
+msgstr "Ridicată"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 75
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 109
 msgid "Medium"
-msgstr "Mediu"
+msgstr "Medie"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 76
 msgid "Low"
-msgstr "Scăzut"
+msgstr "Scăzută"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 77
 msgid "Very Low"
-msgstr "Foarte scăzut"
+msgstr "Foarte scăzută"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 78
 msgid "Super Low"
-msgstr "Super Scăzut"
+msgstr "Extrem de scăzută"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 103
 msgid "Copy — No re-encoding"
-msgstr "Copiere — Fără re-encodare"
+msgstr "Copiere — Fără recodificare"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 104
@@ -152,7 +152,7 @@ msgstr "Extrage ca fișier separat"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 145
 msgid "Keep inside the video"
-msgstr "Păstrează în interiorul videoclipului"
+msgstr "Păstrați în videoclip"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 126
@@ -167,12 +167,12 @@ msgstr "Copiați fără modificări (cel mai rapid)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 157
 msgid "Re-encode audio"
-msgstr "Re-encodare audio"
+msgstr "Recodificați sunetul"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 158
 msgid "Remove audio"
-msgstr "Elimină audio"
+msgstr "Eliminați sunetul"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 170
@@ -282,7 +282,7 @@ msgid "Custom"
 msgstr "Personalizat"
 
 msgid "24 fps (cinema)"
-msgstr ""
+msgstr "24 fps (cinema)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 217
@@ -294,14 +294,7 @@ msgid ""
 "Software mode is slower but compatible with more formats.\n"
 "\n"
 "If the GPU isn’t supported, the system will try partial GPU processing and automatically fall back to Software mode if needed."
-msgstr ""
-"Dacă GPU-ul tău suportă codarea video, conversia va fi mult mai rapidă.\n"
-"\n"
-"Detectarea automată este de obicei cea mai bună alegere, dar poți să o selectezi și manual.\n"
-"\n"
-"Modul software este mai lent, dar compatibil cu mai multe formate.\n"
-"\n"
-"Dacă GPU-ul nu este suportat, sistemul va încerca procesarea parțială a GPU-ului și va reveni automat la modul software, dacă este necesar."
+msgstr "Dacă GPU-ul acceptă codificarea video, conversia va fi mult mai rapidă.\n\nDetectarea automată este de obicei cea mai bună alegere, dar puteți selecta GPU-ul și manual.\n\nModul software este mai lent, dar acceptă mai multe formate.\n\nDacă GPU-ul nu este acceptat, sistemul va încerca procesarea parțială pe GPU și va reveni automat la modul software, dacă este necesar."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 223
@@ -343,10 +336,7 @@ msgid ""
 "Copy is usually best, fast and preserves full quality.\n"
 "\n"
 "Re-encoding slightly reduces quality but improves compatibility and can reduce file size."
-msgstr ""
-"Copierea este de obicei cea mai bună, rapidă și păstrează calitatea completă.\n"
-"\n"
-"Re-encodarea reduce ușor calitatea, dar îmbunătățește compatibilitatea și poate reduce dimensiunea fișierului."
+msgstr "Copierea este de obicei cea mai bună opțiune: este rapidă și păstrează întreaga calitate.\n\nRecodificarea reduce ușor calitatea, dar îmbunătățește compatibilitatea și poate reduce dimensiunea fișierului."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 234
@@ -376,10 +366,7 @@ msgid ""
 "Slower conversion produces smaller files.\n"
 "\n"
 "Faster presets create larger files but convert in less time."
-msgstr ""
-"Conversia mai lentă produce fișiere mai mici.\n"
-"\n"
-"Presetările mai rapide creează fișiere mai mari, dar se convertește în mai puțin timp."
+msgstr "Conversia mai lentă produce fișiere mai mici.\n\nPresetările mai rapide creează fișiere mai mari, dar conversia durează mai puțin."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 247
@@ -418,22 +405,22 @@ msgid ""
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
 "• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
-msgstr ""
+msgstr "Cadre pe secundă ale videoclipului convertit:\n\n• Mai puține cadre: un fișier mai mic. La aceeași calitate, trecerea de la 30 la 24 fps a redus dimensiunea cu 10–17%, iar de la 30 la 15 fps cu 28–42%\n• Mai multe cadre: cadrele intermediare sunt obținute prin amestecarea celor vecine, astfel încât mișcarea pare mai fluidă, dar mișcarea rapidă lasă o urmă discretă"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
-msgstr ""
+msgstr "Elimină granulația și punctele de zgomot din videoclipurile filmate în lumină slabă. Nivelurile mai puternice estompează și detaliile fine. Un videoclip mai curat se comprimă într-un fișier puțin mai mic."
 
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
-msgstr ""
+msgstr "Accentuează marginile și detaliile fine (accentuare adaptivă a clarității în funcție de contrast, de la AMD). Un videoclip mai clar produce un fișier puțin mai mare."
 
 msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
-msgstr ""
+msgstr "Stabilizează filmările cu camera tremurândă. Videoclipul este analizat mai întâi, astfel încât conversia durează aproximativ de două ori mai mult; imaginea este mărită ușor pentru a ascunde mișcarea marginilor."
 
 msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
-msgstr ""
+msgstr "Modul în care sunt codificate culorile acestui videoclip. Păstrați descrierea din fișier, cu excepția cazului în care previzualizarea pare cenușie și decolorată: atunci fișierul este HDR fără să fie etichetat astfel, de obicei HDR10 (PQ) sau HLG pentru unele transmisiuni. Conversia îl interpretează în același mod."
 
 msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
-msgstr ""
+msgstr "Aplică un aspect cromatic dintr-un fișier LUT (.cube, .3dl) sau un shader mpv (.hook, .glsl) întregului videoclip."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 265
@@ -463,7 +450,7 @@ msgid ""
 "• Move right: More vivid\n"
 "• Move left: More muted\n"
 "• Default: 0% (no change)"
-msgstr ""
+msgstr "• Spre dreapta: Culori mai vii\n• Spre stânga: Culori mai estompate\n• Implicit: 0% (fără modificări)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 270
@@ -503,10 +490,7 @@ msgid ""
 "Run decode on the CPU and encode on the GPU.\n"
 "\n"
 "Usually best left disabled, but can help with certain compatibility issues."
-msgstr ""
-"Rula decodarea pe CPU și encodează pe GPU.\n"
-"\n"
-"De obicei, este mai bine să fie dezactivat, dar poate ajuta cu anumite probleme de compatibilitate."
+msgstr "Efectuați decodificarea pe CPU și codificarea pe GPU.\n\nDe obicei, este mai bine să lăsați opțiunea dezactivată, dar poate ajuta la rezolvarea unor probleme de compatibilitate."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 286
@@ -564,7 +548,7 @@ msgstr ""
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 273
 msgid "Skips all remaining processes and just exports the embedded subtitles as an SRT file."
-msgstr "Sari toate procesele rămase și exportă doar subtitrările încorporate ca fișier SRT."
+msgstr "Omite toate operațiile rămase și exportă doar subtitrările încorporate ca fișier SRT."
 
 msgid ""
 "Reduces background noise from speech with a neural network.\n"
@@ -572,12 +556,7 @@ msgid ""
 "• Requires audio re-encoding\n"
 "• Works best for constant background noise\n"
 "• Automatically re-encodes audio if set to copy"
-msgstr ""
-"Reduce zgomotul de fond din vorbire cu ajutorul unei rețele neurale.\n"
-"\n"
-"• Necesită re-encodare audio\n"
-"• Funcționează cel mai bine pentru zgomot de fond constant\n"
-"• Re-encodează automat audio dacă este setat pe copiere"
+msgstr "Reduce zgomotul de fond din vorbire cu ajutorul unei rețele neuronale.\n\n• Necesită recodificarea sunetului\n• Funcționează cel mai bine pentru zgomot de fond constant\n• Recodifică automat sunetul dacă este setat pe copiere"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 327
@@ -603,13 +582,7 @@ msgid ""
 "residual noise during pauses between speech.\n"
 "\n"
 "Adjust intensity from low to maximum."
-msgstr ""
-"Poarta de zgomot face tăcere audio sub un prag de volum\n"
-"\n"
-"Utilă combinată cu reducerea zgomotului pentru a elimina\n"
-"zgomotul rezidual în timpul pauzelor dintre vorbire.\n"
-"\n"
-"Ajustați intensitatea de la minim la maxim."
+msgstr "Poarta de zgomot dezactivează sunetul sub un prag de volum.\n\nÎn combinație cu reducerea zgomotului, ajută la eliminarea\nzgomotului rezidual în pauzele de vorbire.\n\nReglați intensitatea de la minim la maxim."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 325
@@ -619,7 +592,7 @@ msgstr "Anulează conversia acestui fișier"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 326
 msgid "Skip this file and do not convert it"
-msgstr "Sari acest fișier și nu-l convertește."
+msgstr "Omiteți acest fișier fără a-l converti"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 362
@@ -629,17 +602,12 @@ msgid ""
 "Audio can still be re-encoded, cleaned or adjusted independently.\n"
 "\n"
 "Does not allow changing video codec, resolution or applying video filters."
-msgstr ""
-"Copiază fluxul video fără re-encodare — instantaneu și fără pierderi.\n"
-"\n"
-"Audio poate fi în continuare re-encodat, curățat sau ajustat independent.\n"
-"\n"
-"Nu permite schimbarea codec-ului video, a rezoluției sau aplicarea filtrelor video."
+msgstr "Copiază fluxul video fără recodificare — instantaneu și fără pierderi.\n\nSunetul poate fi recodificat, curățat sau ajustat independent.\n\nNu permite schimbarea codecului video, a rezoluției sau aplicarea filtrelor video."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 367
 msgid "Uses H.264, the most widely supported codec. Works on virtually every device, browser and player. A great default choice when compatibility matters most."
-msgstr "Utilizează H.264, cel mai susținut codec. Funcționează pe practic fiecare dispozitiv, browser și player. O alegere excelentă implicită atunci când compatibilitatea contează cel mai mult."
+msgstr "Utilizează H.264, codecul cu cea mai largă compatibilitate. Funcționează pe aproape orice dispozitiv, browser și player. O alegere implicită excelentă când compatibilitatea este cea mai importantă."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 372
@@ -649,7 +617,7 @@ msgstr "Utilizează H.265 (HEVC), care oferă o compresie mai bună decât H.264
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/constants.py, line: 377
 msgid "Uses AV1, the latest generation codec with the best compression available. Produces the smallest files but encoding is slower. Ideal for archiving or uploading where size matters most."
-msgstr "Utilizează AV1, cel mai recent codec de generație cu cea mai bună compresie disponibilă. Produce cele mai mici fișiere, dar codificarea este mai lentă. Ideal pentru arhivare sau încărcare unde dimensiunea contează cel mai mult."
+msgstr "Utilizează AV1, un codec de ultimă generație cu cea mai bună compresie disponibilă. Produce cele mai mici fișiere, dar codificarea este mai lentă. Ideal pentru arhivare sau încărcare când dimensiunea este cea mai importantă."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 837
@@ -675,7 +643,7 @@ msgstr "Fișiere adăugate"
 # converter/main.py, line: 911
 #, python-brace-format
 msgid "{} video files have been added to the queue."
-msgstr "{} fișiere video au fost adăugate în coadă."
+msgstr "Au fost adăugate fișiere video în coadă: {}."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
@@ -694,7 +662,7 @@ msgstr "Nu au fost găsite fișiere video valide în folderul selectat."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 216
 msgid "Add Network File"
-msgstr "Adaugă fișier de rețea"
+msgstr "Adăugați un fișier de rețea"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 233
@@ -731,14 +699,14 @@ msgstr "Nume de utilizator"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 275
 msgid "Remote Path"
-msgstr "Cale Remote"
+msgstr "Cale la distanță"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 289
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 295
 msgid "Connect and Browse"
-msgstr "Conectează-te și Răsfoiește"
+msgstr "Conectați-vă și răsfoiți"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/file_handler.py, line: 308
@@ -782,21 +750,21 @@ msgid "⚠ Subtitle extraction only mode is active — video will NOT be convert
 msgstr "⚠ Modul de extragere a subtitrărilor este activ — videoclipul NU va fi convertit"
 
 msgid "Stop converting and close?"
-msgstr ""
+msgstr "Opriți conversia și închideți?"
 
 msgid "Conversions are still running. Closing stops unfinished work and keeps its originals."
-msgstr ""
+msgstr "Conversiile sunt încă în curs. Închiderea oprește lucrările neterminate și păstrează originalele."
 
 msgid "Keep converting"
-msgstr ""
+msgstr "Continuați conversia"
 
 msgid "Stop and close"
-msgstr ""
+msgstr "Opriți și închideți"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 587
 msgid "Queue"
-msgstr "Coada"
+msgstr "Coadă"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 592
@@ -814,10 +782,10 @@ msgid "File not found"
 msgstr "Fișierul nu a fost găsit"
 
 msgid "Edit video"
-msgstr ""
+msgstr "Editați videoclipul"
 
 msgid "Changes apply only to the selected video"
-msgstr ""
+msgstr "Modificările se aplică doar videoclipului selectat"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
@@ -825,16 +793,16 @@ msgid "Could not load video file"
 msgstr "Nu s-a putut încărca fișierul video."
 
 msgid "Conversion in progress"
-msgstr ""
+msgstr "Conversie în curs"
 
 msgid "New videos can be added when the current conversions finish."
-msgstr ""
+msgstr "Puteți adăuga videoclipuri noi după încheierea conversiilor curente."
 
 msgid "This file cannot be opened"
 msgid_plural "These files cannot be opened"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Acest fișier nu poate fi deschis"
+msgstr[1] "Aceste fișiere nu pot fi deschise"
+msgstr[2] "Aceste fișiere nu pot fi deschise"
 
 #, python-brace-format
 msgid ""
@@ -843,12 +811,12 @@ msgid ""
 msgid_plural ""
 "They are not on a local or mounted drive. Open their network share in the file manager, or use “Add Network File”, then add them again:\n"
 "{files}"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Nu se află pe o unitate locală sau montată. Deschideți partajarea sa de rețea în managerul de fișiere sau folosiți „Adăugați un fișier de rețea”, apoi adăugați-l din nou:\n{files}"
+msgstr[1] "Nu se află pe o unitate locală sau montată. Deschideți partajarea lor de rețea în managerul de fișiere sau folosiți „Adăugați un fișier de rețea”, apoi adăugați-le din nou:\n{files}"
+msgstr[2] "Nu se află pe o unitate locală sau montată. Deschideți partajarea lor de rețea în managerul de fișiere sau folosiți „Adăugați un fișier de rețea”, apoi adăugați-le din nou:\n{files}"
 
 msgid "The settings sent by the player could not be used"
-msgstr ""
+msgstr "Setările trimise de player nu au putut fi folosite"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1677
@@ -1058,7 +1026,7 @@ msgid "Continue"
 msgstr "Continuă"
 
 msgid "The additional FFmpeg options cannot be used"
-msgstr ""
+msgstr "Opțiunile suplimentare FFmpeg nu pot fi folosite"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/queue_manager.py, line: 335
@@ -1085,7 +1053,7 @@ msgid "Editing"
 msgstr "Editare"
 
 msgid "Resize sidebar"
-msgstr ""
+msgstr "Modificați lățimea panoului lateral"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 468
@@ -1143,7 +1111,7 @@ msgstr "Format de container pentru fișierul de ieșire"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 171
 msgid "Copy without re-encoding"
-msgstr "Copiați fără re-încodare"
+msgstr "Copiere fără recodificare"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 482
@@ -1177,7 +1145,7 @@ msgstr "Activare reducerea zgomotului"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 201
 msgid "Strength"
-msgstr "Forță"
+msgstr "Intensitate"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 208
@@ -1278,12 +1246,12 @@ msgstr "Activează compresorul"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 361
 msgid "Remove Low Rumble"
-msgstr "Eliminare Rumble-ul Scăzut"
+msgstr "Eliminați zgomotul de joasă frecvență"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 362
 msgid "Cuts low-frequency noise like wind or AC hum"
-msgstr "Reducează zgomotul de frecvență joasă, cum ar fi vântul sau zgomotul de la aerul condiționat."
+msgstr "Elimină zgomotul de joasă frecvență, precum vântul sau zumzetul aerului condiționat"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 366
@@ -1322,17 +1290,17 @@ msgstr "Voce Cristalină"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
 msgid "Radio Host"
-msgstr "Gazdă de radio"
+msgstr "Prezentator radio"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
 msgid "Velvet Voice"
-msgstr "Vocea Velvet"
+msgstr "Voce catifelată"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 416
 msgid "Extra Brightness"
-msgstr "Luminozitate Extra"
+msgstr "Frecvențe înalte accentuate"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
@@ -1342,12 +1310,12 @@ msgstr "Îndulcește 'S' (De-esser)"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Remove Rumble"
-msgstr "Elimină Rumble"
+msgstr "Eliminați huruitul"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 417
 msgid "Present Voice"
-msgstr "Voce prezentă"
+msgstr "Voce bine conturată"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1356,7 +1324,7 @@ msgstr "Voce prezentă"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 420
 msgid "Preset"
-msgstr "Preset"
+msgstr "Presetare"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1380,7 +1348,7 @@ msgstr "Copiere Rapidă"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 448
 msgid "No re-encoding, fastest"
-msgstr "Fără re-encodare, cel mai rapid"
+msgstr "Fără recodificare, cel mai rapid"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 454
@@ -1458,7 +1426,7 @@ msgstr "Rețete gata făcute: YouTube, Instagram, editare…"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
-msgstr "Necesită audio setat pentru a re-encoda."
+msgstr "Necesită setarea sunetului pentru recodificare"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 945
@@ -1478,7 +1446,7 @@ msgstr "compresor"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 951
 msgid "low cut"
-msgstr "tăiere joasă"
+msgstr "filtru de tăiere a frecvențelor joase"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 953
@@ -1498,7 +1466,7 @@ msgstr "Dezactivat"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 985
 msgid "Custom FFmpeg flags"
-msgstr "Flagi personalizate FFmpeg"
+msgstr "Parametri FFmpeg personalizați"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 986
@@ -1506,19 +1474,19 @@ msgid "No customizations"
 msgstr "Fără personalizări"
 
 msgid "Keep original audio"
-msgstr ""
+msgstr "Păstrați sunetul original"
 
 msgid "Convert audio"
-msgstr ""
+msgstr "Convertiți sunetul"
 
 msgid "Choose what the converted video should contain."
-msgstr ""
+msgstr "Alegeți ce va conține videoclipul convertit."
 
 msgid "Audio operation"
-msgstr ""
+msgstr "Operație audio"
 
 msgid "Audio conversion"
-msgstr ""
+msgstr "Conversie audio"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 156
@@ -1528,7 +1496,7 @@ msgstr "Codec audio"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 173
 msgid "Audio Bitrate"
-msgstr "Bitrate audio"
+msgstr "Rata de biți audio"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/audio_dialog.py, line: 228
@@ -1538,7 +1506,7 @@ msgstr "Canale audio"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 221
 msgid "Custom bitrate"
-msgstr "Bitrate personalizat"
+msgstr "Rată de biți personalizată"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 251
@@ -1546,54 +1514,54 @@ msgid "Custom channels"
 msgstr "Canale personalizate"
 
 msgid "Changes are saved automatically for future conversions."
-msgstr ""
+msgstr "Modificările se salvează automat pentru conversiile viitoare."
 
 msgid "Original audio is kept. Codec, bitrate and channel settings do not apply."
-msgstr ""
+msgstr "Sunetul original este păstrat. Setările pentru codec, rata de biți și canale nu se aplică."
 
 msgid "Audio will be converted using the settings below."
-msgstr ""
+msgstr "Sunetul va fi convertit folosind setările de mai jos."
 
 msgid "The converted video will have no audio."
-msgstr ""
+msgstr "Videoclipul convertit nu va avea sunet."
 
 msgid "Select an audio operation."
-msgstr ""
+msgstr "Selectați o operație audio."
 
 msgid "Open this video in the editor"
-msgstr ""
+msgstr "Deschideți acest videoclip în editor"
 
 msgid "Options"
-msgstr ""
+msgstr "Opțiuni"
 
 msgid "Choose a preset or resolution for this video"
-msgstr ""
+msgstr "Alegeți o presetare sau rezoluție pentru acest videoclip"
 
 #, python-brace-format
 msgid "Options for “{name}”"
-msgstr ""
+msgstr "Opțiuni pentru „{name}”"
 
 #, python-brace-format
 msgid "Edit “{name}”"
-msgstr ""
+msgstr "Editați „{name}”"
 
 msgid "More actions"
-msgstr ""
+msgstr "Mai multe acțiuni"
 
 #, python-brace-format
 msgid "More actions for “{name}”"
-msgstr ""
+msgstr "Mai multe acțiuni pentru „{name}”"
 
 msgid "Play video"
-msgstr ""
+msgstr "Redați videoclipul"
 
 msgid "Video information"
-msgstr ""
+msgstr "Informații despre videoclip"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 194
 msgid "Open containing folder"
-msgstr "Deschide folderul conținător"
+msgstr "Deschideți dosarul care conține fișierul"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 95
@@ -1601,31 +1569,31 @@ msgid "Remove from queue"
 msgstr "Elimină din coadă"
 
 msgid "Delete from disk…"
-msgstr ""
+msgstr "Ștergeți de pe disc…"
 
 msgid "Video preview"
-msgstr ""
+msgstr "Previzualizare video"
 
 #, python-brace-format
 msgid "Own: {recipe}"
-msgstr ""
+msgstr "Personalizat: {recipe}"
 
 msgid "Delete this video permanently?"
-msgstr ""
+msgstr "Ștergeți definitiv acest videoclip?"
 
 #, python-brace-format
 msgid "“{}” will be removed from disk. This cannot be undone."
-msgstr ""
+msgstr "„{}” va fi șters de pe disc. Această acțiune nu poate fi anulată."
 
 msgid "Keep video"
-msgstr ""
+msgstr "Păstrați videoclipul"
 
 msgid "Delete permanently"
-msgstr ""
+msgstr "Ștergeți definitiv"
 
 #, python-brace-format
 msgid "Could not delete the video: {} "
-msgstr ""
+msgstr "Videoclipul nu a putut fi șters: {} "
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1662,7 +1630,7 @@ msgstr "Trageți fișierele aici sau folosiți butonul Adăugați fișiere."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 270
 msgid "Save in the same folder as the original file"
-msgstr "Salvează în aceeași folder ca fișierul original."
+msgstr "Salvați în același dosar ca fișierul original"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 271
@@ -1670,10 +1638,10 @@ msgid "Folder to save"
 msgstr "Folder de salvare"
 
 msgid "Save converted videos"
-msgstr ""
+msgstr "Salvați videoclipurile convertite"
 
 msgid "Output folder"
-msgstr ""
+msgstr "Dosar de ieșire"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 288
@@ -1691,7 +1659,7 @@ msgid "Delete original files"
 msgstr "Șterge fișierele originale"
 
 msgid "Originals are kept unless every converted result passes validation"
-msgstr ""
+msgstr "Originalele sunt păstrate până când toate rezultatele conversiei trec verificarea"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -1716,20 +1684,20 @@ msgid "Could not find this video file"
 msgstr "Nu s-a putut găsi acest fișier video."
 
 msgid "The crop cannot be applied"
-msgstr ""
+msgstr "Decuparea nu poate fi aplicată"
 
 #, python-brace-format
 msgid "“{name}” was not converted: its picture size could not be read, or the crop removes the whole picture. Check the crop in the editor and try again."
-msgstr ""
+msgstr "„{name}” nu a fost convertit: dimensiunea imaginii nu a putut fi citită sau decuparea elimină întreaga imagine. Verificați decuparea în editor și încercați din nou."
 
 msgid "These tracks can't be copied into MP4"
 msgstr "Aceste piste nu pot fi copiate în MP4"
 
 msgid "“Copy video without reencoding” keeps the original streams as they are, and the MP4 container does not accept the ones listed below."
-msgstr "„Copiere video fără re-encodare” păstrează stream-urile originale așa cum sunt, iar containerul MP4 nu acceptă cele listate mai jos."
+msgstr "„Copiere video fără recodificare” păstrează stream-urile originale așa cum sunt, iar containerul MP4 nu acceptă cele listate mai jos."
 
 msgid "Reencode (recommended)"
-msgstr "Re-encodează (recomandat)"
+msgstr "Recodificați (recomandat)"
 
 msgid "Copy anyway"
 msgstr "Copiază oricum"
@@ -1752,16 +1720,16 @@ msgid "not supported by MP4"
 msgstr "nu este acceptat de MP4"
 
 msgid "Reencode converts these tracks so the MP4 plays anywhere. Copying anyway is faster, but the result may have no sound or may not play at all — choose MKV as the output format to keep the original tracks untouched."
-msgstr "Re-encodarea convertește aceste piste, astfel încât MP4-ul să fie redat oriunde. Copierea oricum este mai rapidă, dar rezultatul poate să nu aibă sunet sau poate să nu fie redat deloc — alege MKV ca format de ieșire pentru a păstra pistele originale nemodificate."
+msgstr "Recodificarea convertește aceste piste, astfel încât MP4-ul să fie redat oriunde. Copierea oricum este mai rapidă, dar rezultatul poate să nu aibă sunet sau poate să nu fie redat deloc — alege MKV ca format de ieșire pentru a păstra pistele originale nemodificate."
 
 msgid "This video cannot be made to fit the size"
 msgstr "Acest videoclip nu poate fi încadrat în dimensiune"
 
 msgid "General settings"
-msgstr ""
+msgstr "Setări generale"
 
 msgid "Original resolution"
-msgstr ""
+msgstr "Rezoluție originală"
 
 #, python-brace-format
 msgid "up to {size}"
@@ -1769,55 +1737,55 @@ msgstr "până la {size}"
 
 #, python-brace-format
 msgid "{profile} · {resolution}"
-msgstr ""
+msgstr "{profile} · {resolution}"
 
 msgid "Options for this video"
-msgstr ""
+msgstr "Opțiuni pentru acest videoclip"
 
 msgid "Override the general recipe only when this video needs a different destination profile or size."
-msgstr ""
+msgstr "Înlocuiți setările generale de conversie doar dacă acest videoclip necesită alt profil de destinație sau altă dimensiune."
 
 msgid "Effective result"
-msgstr ""
+msgstr "Rezultat efectiv"
 
 msgid "General settings remain the default for every other video."
-msgstr ""
+msgstr "Setările generale rămân implicite pentru toate celelalte videoclipuri."
 
 msgid "Use the general recipe"
-msgstr ""
+msgstr "Folosiți setările generale de conversie"
 
 msgid "Profile"
-msgstr ""
+msgstr "Profil"
 
 msgid "Target a platform or workflow"
-msgstr ""
+msgstr "Alegeți platforma sau fluxul de lucru țintă"
 
 msgid "Use the general resolution"
-msgstr ""
+msgstr "Folosiți rezoluția generală"
 
 msgid "Use the profile resolution"
-msgstr ""
+msgstr "Folosiți rezoluția profilului"
 
 msgid "Keep the original resolution"
-msgstr ""
+msgstr "Păstrați rezoluția originală"
 
 msgid "Vertical 4K · 2160×3840"
-msgstr ""
+msgstr "4K vertical · 2160×3840"
 
 msgid "Vertical QHD · 1440×2560"
-msgstr ""
+msgstr "QHD vertical · 1440×2560"
 
 msgid "Vertical Full HD · 1080×1920"
-msgstr ""
+msgstr "Full HD vertical · 1080×1920"
 
 msgid "Vertical HD · 720×1280"
-msgstr ""
+msgstr "HD vertical · 720×1280"
 
 msgid "Vertical SD · 480×854"
-msgstr ""
+msgstr "SD vertical · 480×854"
 
 msgid "Custom size"
-msgstr ""
+msgstr "Dimensiune personalizată"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -1829,16 +1797,16 @@ msgid "Resolution"
 msgstr "Rezoluție"
 
 msgid "Controls image dimensions and file size"
-msgstr ""
+msgstr "Controlează dimensiunile imaginii și mărimea fișierului"
 
 msgid "Width"
-msgstr ""
+msgstr "Lățime"
 
 msgid "Even pixels"
-msgstr ""
+msgstr "Număr par de pixeli"
 
 msgid "Height"
-msgstr ""
+msgstr "Înălțime"
 
 msgid "Use the general size"
 msgstr "Folosește dimensiunea generală"
@@ -1856,7 +1824,7 @@ msgid "Size in megabytes"
 msgstr "Dimensiune în megaocteți"
 
 msgid "This video will use"
-msgstr ""
+msgstr "Acest videoclip va folosi"
 
 msgid "To fit the size"
 msgstr "Pentru a se încadra în dimensiune"
@@ -1865,7 +1833,7 @@ msgid "Checking the video…"
 msgstr "Se verifică videoclipul…"
 
 msgid "Apply to this video"
-msgstr ""
+msgstr "Aplicați acestui videoclip"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 25
@@ -1893,7 +1861,7 @@ msgid "Command to be executed"
 msgstr "Comandă de executat"
 
 msgid "Before installing"
-msgstr ""
+msgstr "Înainte de instalare"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 72
@@ -1975,7 +1943,7 @@ msgstr "Opțiuni suplimentare FFmpeg"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 179
 msgid "Custom flags passed directly to FFmpeg. Example: '-ss 60 -t 30' to convert only 30 seconds starting at 1 minute."
-msgstr "Flagi personalizate transmise direct către FFmpeg. Exemplu: '-ss 60 -t 30' pentru a converti doar 30 de secunde începând de la 1 minut."
+msgstr "Parametri personalizați transmiși direct către FFmpeg. Exemplu: „-ss 60 -t 30” convertește doar 30 de secunde, începând de la minutul 1."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 205
@@ -1985,7 +1953,7 @@ msgstr "Redare previzualizare video"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 207
 msgid "How the video editor preview is rendered. 'Automatic' works best for most systems. Try 'Software' if you see display issues. Requires restart."
-msgstr "Cum este redat previzualizarea editorului video. 'Automat' funcționează cel mai bine pentru cele mai multe sisteme. Încercați 'Software' dacă observați probleme de afișare. Necesită repornire."
+msgstr "Modul de redare a previzualizării în editorul video. „Automat” funcționează cel mai bine pe majoritatea sistemelor. Încercați „Software” dacă întâmpinați probleme de afișare. Necesită repornire."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py (export/import profile)
@@ -2052,7 +2020,7 @@ msgid "Could not save the profile file."
 msgstr "Fișierul de profil nu a putut fi salvat."
 
 msgid "This profile can read or write files"
-msgstr ""
+msgstr "Acest profil poate citi sau scrie fișiere"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/extra_dialog.py, line: 346
@@ -2102,12 +2070,12 @@ msgstr "Adaugă folder"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 242
 msgid "Convert All"
-msgstr "Converti totul"
+msgstr "Convertiți tot"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 114
 msgid "Convert This File"
-msgstr "Converteți acest fișier"
+msgstr "Convertiți acest fișier"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 133
@@ -2122,7 +2090,7 @@ msgstr "Ecran de bun venit"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 140
 msgid "Restore Settings"
-msgstr "Restaurare setările"
+msgstr "Restabiliți setările"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 68
@@ -2137,27 +2105,27 @@ msgstr "Ieșire"
 #, python-brace-format
 msgid "{count} file"
 msgid_plural "{count} files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} fișier"
+msgstr[1] "{count} fișiere"
+msgstr[2] "{count} de fișiere"
 
 msgid "Show conversion settings"
-msgstr ""
+msgstr "Afișați setările de conversie"
 
 #, python-brace-format
 msgid "Show conversion settings ({shortcut})"
-msgstr ""
+msgstr "Afișați setările de conversie ({shortcut})"
 
 msgid "Show editing tools"
-msgstr ""
+msgstr "Afișați instrumentele de editare"
 
 #, python-brace-format
 msgid "Show editing tools ({shortcut})"
-msgstr ""
+msgstr "Afișați instrumentele de editare ({shortcut})"
 
 #, python-brace-format
 msgid "Track {number}"
-msgstr ""
+msgstr "Pista {number}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 173
@@ -2172,7 +2140,7 @@ msgstr "Curățare a zgomotului AI"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 194
 msgid "Remove Background Noise"
-msgstr "Eliminare zgomotul de fundal"
+msgstr "Eliminați zgomotul de fond"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 196
@@ -2197,7 +2165,7 @@ msgstr "Silencează sunetele slabe"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 350
 msgid "Mutes audio below a threshold — great for removing faint hum or room noise between speech."
-msgstr "Reducează audio-ul sub un prag — excelent pentru eliminarea zgomotului slab sau a zgomotului de fundal între discursuri."
+msgstr "Dezactivează sunetul sub un prag — util pentru eliminarea zumzetului slab sau a zgomotului din cameră în pauzele de vorbire."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 392
@@ -2251,13 +2219,13 @@ msgid ""
 "{settings}\n"
 "\n"
 "Import it only if you trust where it came from."
-msgstr ""
+msgstr "Conține setări FFmpeg care pot deschide, crea sau suprascrie fișiere pe acest computer ori accesa rețeaua:\n\n{settings}\n\nImportați aceste setări doar dacă aveți încredere în sursa lor."
 
 msgid "Import anyway"
-msgstr ""
+msgstr "Importați oricum"
 
 msgid "This preset can read or write files"
-msgstr ""
+msgstr "Această presetare poate citi sau scrie fișiere"
 
 msgid "Create with AI…"
 msgstr "Creare cu AI…"
@@ -2324,7 +2292,7 @@ msgid "Export Preset"
 msgstr "Export presetare"
 
 msgid "Choose a folder on this computer to export the preset."
-msgstr ""
+msgstr "Alegeți un dosar de pe acest computer pentru a exporta presetarea."
 
 #, python-brace-format
 msgid "Preset exported to {0}"
@@ -2337,7 +2305,7 @@ msgid "Preset files (*.toml)"
 msgstr "Fișiere de presetare (*.toml)"
 
 msgid "Choose a preset file on this computer to import."
-msgstr ""
+msgstr "Alegeți un fișier de presetare de pe acest computer pentru import."
 
 #, python-brace-format
 msgid "The preset was not imported: {0}"
@@ -2390,28 +2358,28 @@ msgstr "Salvat ca „{0}” în {1}"
 
 #, python-brace-format
 msgid "{percent}%"
-msgstr ""
+msgstr "{percent}%"
 
 #, python-brace-format
 msgid "≈ {seconds} s left"
 msgid_plural "≈ {seconds} s left"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Timp rămas: ≈ {seconds} s"
+msgstr[1] "Timp rămas: ≈ {seconds} s"
+msgstr[2] "Timp rămas: ≈ {seconds} s"
 
 #, python-brace-format
 msgid "≈ {minutes} min left"
 msgid_plural "≈ {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Timp rămas: ≈ {minutes} min"
+msgstr[1] "Timp rămas: ≈ {minutes} min"
+msgstr[2] "Timp rămas: ≈ {minutes} min"
 
 #, python-brace-format
 msgid "≈ {hours} h {minutes} min left"
 msgid_plural "≈ {hours} h {minutes} min left"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Timp rămas: ≈ {hours} h {minutes} min"
+msgstr[1] "Timp rămas: ≈ {hours} h {minutes} min"
+msgstr[2] "Timp rămas: ≈ {hours} h {minutes} min"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 737
@@ -2427,121 +2395,121 @@ msgstr "{secs}s"
 
 #, python-brace-format
 msgid "Could not open “{name}”: {error}"
-msgstr ""
+msgstr "„{name}” nu a putut fi deschis: {error}"
 
 msgid "Back to the queue"
-msgstr ""
+msgstr "Înapoi la coadă"
 
 msgid "Conversion progress"
-msgstr ""
+msgstr "Progresul conversiei"
 
 msgid "Cancel all"
-msgstr ""
+msgstr "Anulați tot"
 
 msgid "Overall conversion progress"
-msgstr ""
+msgstr "Progresul total al conversiei"
 
 msgid "Convert more videos"
-msgstr ""
+msgstr "Convertiți mai multe videoclipuri"
 
 msgid "Open video"
-msgstr ""
+msgstr "Deschideți videoclipul"
 
 msgid "Show in folder"
-msgstr ""
+msgstr "Afișați în dosar"
 
 #, python-brace-format
 msgid "{count} video converted"
 msgid_plural "{count} videos converted"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} videoclip convertit"
+msgstr[1] "{count} videoclipuri convertite"
+msgstr[2] "{count} de videoclipuri convertite"
 
 #, python-brace-format
 msgid "{count} conversion failed"
 msgid_plural "{count} conversions failed"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} conversie eșuată"
+msgstr[1] "{count} conversii eșuate"
+msgstr[2] "{count} de conversii eșuate"
 
 #, python-brace-format
 msgid "{count} conversion cancelled"
 msgid_plural "{count} conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} conversie anulată"
+msgstr[1] "{count} conversii anulate"
+msgstr[2] "{count} de conversii anulate"
 
 msgid "Conversion complete"
 msgid_plural "Conversions complete"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Conversie încheiată"
+msgstr[1] "Conversii încheiate"
+msgstr[2] "Conversii încheiate"
 
 #, python-brace-format
 msgid "{count} video converted successfully"
 msgid_plural "{count} videos converted successfully"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} videoclip convertit cu succes"
+msgstr[1] "{count} videoclipuri convertite cu succes"
+msgstr[2] "{count} de videoclipuri convertite cu succes"
 
 msgid "Conversion failed"
 msgid_plural "Conversions failed"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Conversia a eșuat"
+msgstr[1] "Conversiile au eșuat"
+msgstr[2] "Conversiile au eșuat"
 
 msgid "Conversion cancelled"
 msgid_plural "Conversions cancelled"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Conversie anulată"
+msgstr[1] "Conversii anulate"
+msgstr[2] "Conversii anulate"
 
 msgid "Queue finished with issues"
-msgstr ""
+msgstr "Coada s-a încheiat cu probleme"
 
 msgid "No conversion results are available"
-msgstr ""
+msgstr "Nu sunt disponibile rezultate ale conversiei"
 
 #, python-brace-format
 msgid "{finished} of {total} finished · {percent}"
 msgid_plural "{finished} of {total} finished · {percent}"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Finalizate: {finished} din {total} · {percent}"
+msgstr[1] "Finalizate: {finished} din {total} · {percent}"
+msgstr[2] "Finalizate: {finished} din {total} · {percent}"
 
 msgid "Converting video"
 msgid_plural "Converting videos"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Se convertește videoclipul"
+msgstr[1] "Se convertesc videoclipurile"
+msgstr[2] "Se convertesc videoclipurile"
 
 #, python-brace-format
 msgid "{results} · {duration}"
-msgstr ""
+msgstr "{results} · {duration}"
 
 #, python-brace-format
 msgid "{before} → {after} ({change}%)"
-msgstr ""
+msgstr "{before} → {after} ({change}%)"
 
 #, python-brace-format
 msgid "“{name}”: {reason}"
-msgstr ""
+msgstr "“{name}”: {reason}"
 
 #, python-brace-format
 msgid "+{count} more"
 msgid_plural "+{count} more"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "+{count} în plus"
+msgstr[1] "+{count} în plus"
+msgstr[2] "+{count} în plus"
 
 msgid "Back to queue"
-msgstr ""
+msgstr "Înapoi la coadă"
 
 msgid "Open folder"
-msgstr ""
+msgstr "Deschideți dosarul"
 
 msgid "Cancel all conversions?"
-msgstr ""
+msgstr "Anulați toate conversiile?"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 321
@@ -2549,7 +2517,7 @@ msgid "This will stop all active conversions and skip all pending items. This ac
 msgstr "Aceasta va opri toate conversiile active și va sări peste toate elementele în așteptare. Această acțiune nu poate fi anulată."
 
 msgid "Unknown video"
-msgstr ""
+msgstr "Videoclip necunoscut"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 447
@@ -2558,54 +2526,54 @@ msgstr "Așteptând în coadă"
 
 #, python-brace-format
 msgid "Conversion progress for “{}”"
-msgstr ""
+msgstr "Progresul conversiei pentru „{}”"
 
 msgid "FFmpeg output"
-msgstr ""
+msgstr "Ieșire FFmpeg"
 
 #, python-brace-format
 msgid "FFmpeg output for “{name}”"
-msgstr ""
+msgstr "Ieșire FFmpeg pentru „{name}”"
 
 msgid "Command"
-msgstr ""
+msgstr "Comandă"
 
 msgid "Process output"
-msgstr ""
+msgstr "Ieșirea procesului"
 
 #, python-brace-format
 msgid "{count} output file"
 msgid_plural "{count} output files"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{count} fișier de ieșire"
+msgstr[1] "{count} fișiere de ieșire"
+msgstr[2] "{count} de fișiere de ieșire"
 
 #, python-brace-format
 msgid "Open “{name}”"
-msgstr ""
+msgstr "Deschideți „{name}”"
 
 msgid "Skip this video"
-msgstr ""
+msgstr "Omiteți acest videoclip"
 
 #, python-brace-format
 msgid "Skip “{}”"
-msgstr ""
+msgstr "Omiteți „{}”"
 
 msgid "Skip"
-msgstr ""
+msgstr "Omiteți"
 
 msgid "Cancel this conversion"
-msgstr ""
+msgstr "Anulați această conversie"
 
 #, python-brace-format
 msgid "Cancel “{}”"
-msgstr ""
+msgstr "Anulați „{}”"
 
 msgid "Hide technical details"
-msgstr ""
+msgstr "Ascundeți detaliile tehnice"
 
 msgid "Show technical details"
-msgstr ""
+msgstr "Afișați detaliile tehnice"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 246
@@ -2614,15 +2582,15 @@ msgstr "Pornirea procesului..."
 
 #, python-brace-format
 msgid "{codec} · {status}"
-msgstr ""
+msgstr "{codec} · {status}"
 
 #, python-brace-format
 msgid "{percent}, {remaining}"
-msgstr ""
+msgstr "{percent}, {remaining}"
 
 #, python-brace-format
 msgid "{fps} · {elapsed}"
-msgstr ""
+msgstr "{fps} · {elapsed}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/progress_page.py, line: 699
@@ -2640,7 +2608,7 @@ msgid "Cancelled"
 msgstr "Anulat"
 
 msgid "The conversion failed. The details are in “FFmpeg output”."
-msgstr ""
+msgstr "Conversia a eșuat. Detaliile sunt în „Ieșire FFmpeg”."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 104
@@ -2688,10 +2656,10 @@ msgid "Ex: 1280x720, 1920x1080"
 msgstr "1280x720, 1920x1080"
 
 msgid "Frame rate"
-msgstr ""
+msgstr "Rată de cadre"
 
 msgid "Frames per second of the converted video"
-msgstr ""
+msgstr "Cadre pe secundă ale videoclipului convertit"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 146
@@ -2705,12 +2673,12 @@ msgstr "Implicit"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 213
 msgid "Audio bitrate"
-msgstr "Bitrate audio"
+msgstr "Rata de biți audio"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 215
 msgid "Select common bitrate or enter custom value"
-msgstr "Selectați bitrate-ul comun sau introduceți o valoare personalizată."
+msgstr "Selectați o rată de biți uzuală sau introduceți o valoare personalizată"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 222
@@ -2725,7 +2693,7 @@ msgstr "Canale audio"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 246
 msgid "Select common channel configuration"
-msgstr "Selectați configurația canalului comun"
+msgstr "Selectați o configurație uzuală a canalelor"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 252
@@ -2740,7 +2708,7 @@ msgstr "Codec audio"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 270
 msgid "Codec to use when re-encoding audio"
-msgstr "Codec de utilizat atunci când reencodificați audio"
+msgstr "Codecul folosit la recodificarea sunetului"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 275
@@ -2770,7 +2738,7 @@ msgstr "Extrage subtitrările în fișiere .srt"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 284
 msgid "Automatic"
-msgstr "Automatizat"
+msgstr "Automat"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 285
@@ -2912,11 +2880,11 @@ msgid "Reset"
 msgstr "Resetare"
 
 msgid "Settings Could Not Be Reset"
-msgstr ""
+msgstr "Setările nu au putut fi resetate"
 
 #, python-brace-format
 msgid "The settings file could not be saved: {0}"
-msgstr ""
+msgstr "Fișierul de setări nu a putut fi salvat: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/settings_page.py, line: 705
@@ -2989,11 +2957,11 @@ msgstr "Sariți complet conversia video și extrageți doar pistele de subtitrar
 
 #, python-brace-format
 msgid "Segment {num}"
-msgstr ""
+msgstr "Segmentul {num}"
 
 #, python-brace-format
 msgid "{start} → {end} ({duration})"
-msgstr ""
+msgstr "{start} → {end} ({duration})"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -3693,16 +3661,16 @@ msgid "Remove segment"
 msgstr "Elimină segmentul"
 
 msgid "Hours"
-msgstr ""
+msgstr "Ore"
 
 msgid "Minutes"
-msgstr ""
+msgstr "Minute"
 
 msgid "Seconds"
-msgstr ""
+msgstr "Secunde"
 
 msgid "Centiseconds"
-msgstr ""
+msgstr "Sutimi de secundă"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
@@ -3756,7 +3724,7 @@ msgstr "Interval de timp invalid"
 
 #, python-brace-format
 msgid "Start time must be before the end of the video ({duration})"
-msgstr ""
+msgstr "Ora de început trebuie să fie înainte de sfârșitul videoclipului ({duration})"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 454
@@ -3982,10 +3950,10 @@ msgid "Frame: {current}/{total}"
 msgstr "Cadru: {current}/{total}"
 
 msgid "Video position"
-msgstr ""
+msgstr "Poziție în videoclip"
 
 msgid "Drag to seek or adjust segment edges"
-msgstr ""
+msgstr "Trageți pentru a naviga sau a ajusta limitele segmentelor"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 97
@@ -4049,7 +4017,7 @@ msgstr "Avansează cu 1 secundă"
 
 #, python-brace-format
 msgid "Playback speed: {speed}x"
-msgstr ""
+msgstr "Viteză de redare: {speed}×"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 173
@@ -4073,31 +4041,31 @@ msgid "Left"
 msgstr "Stânga"
 
 msgid "Crop from left"
-msgstr ""
+msgstr "Decupați din stânga"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Right"
-msgstr "Drept."
+msgstr "Dreapta"
 
 msgid "Crop from right"
-msgstr ""
+msgstr "Decupați din dreapta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Top"
-msgstr "Vârf"
+msgstr "Sus"
 
 msgid "Crop from top"
-msgstr ""
+msgstr "Decupați de sus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 238
 msgid "Bottom"
-msgstr "Fundal"
+msgstr "Jos"
 
 msgid "Crop from bottom"
-msgstr ""
+msgstr "Decupați de jos"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 363
@@ -4107,13 +4075,13 @@ msgid "Visual crop editor"
 msgstr "Editor vizual de decupare"
 
 msgid "Free"
-msgstr ""
+msgstr "Liber"
 
 msgid "Original"
-msgstr ""
+msgstr "Original"
 
 msgid "Crop aspect ratio"
-msgstr ""
+msgstr "Raport de aspect pentru decupare"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 273
@@ -4141,13 +4109,13 @@ msgid "Volume"
 msgstr "Volum"
 
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
-msgstr ""
+msgstr "Videoclipul este copiat fără recodificare. Decuparea, ajustarea, rotirea sau adăugarea de efecte imaginii recodifică acest videoclip."
 
 msgid "Image"
-msgstr ""
+msgstr "Imagine"
 
 msgid "Reset image adjustments"
-msgstr ""
+msgstr "Resetați ajustările imaginii"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
@@ -4155,7 +4123,7 @@ msgid "Brightness"
 msgstr "Luminozitate"
 
 msgid "Contrast"
-msgstr ""
+msgstr "Contrast"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 347
@@ -4165,25 +4133,25 @@ msgstr "Saturație"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 360
 msgid "Hue"
-msgstr "Nu există o traducere pentru acest termen."
+msgstr "Nuanță"
 
 msgid "Source colours"
-msgstr ""
+msgstr "Culorile sursei"
 
 msgid "As the file says"
-msgstr ""
+msgstr "Conform datelor din fișier"
 
 msgid "HDR10 (PQ)"
-msgstr ""
+msgstr "HDR10 (PQ)"
 
 msgid "HDR (HLG)"
-msgstr ""
+msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
-msgstr ""
+msgstr "Standard (SDR)"
 
 msgid "Orientation"
-msgstr ""
+msgstr "Orientare"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 605
@@ -4193,7 +4161,7 @@ msgid "Reset Transform"
 msgstr "Resetare Transformare"
 
 msgid "Rotation"
-msgstr ""
+msgstr "Rotire"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 558
@@ -4254,16 +4222,16 @@ msgid "Save each segment as a separate file"
 msgstr "Salvează fiecare segment ca fișier separat."
 
 msgid "Segment output"
-msgstr ""
+msgstr "Ieșirea segmentelor"
 
 msgid "Choose how marked segments are saved"
-msgstr ""
+msgstr "Alegeți cum se salvează segmentele marcate"
 
 msgid "Effects"
-msgstr ""
+msgstr "Efecte"
 
 msgid "Reset effects"
-msgstr ""
+msgstr "Resetați efectele"
 
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
@@ -4271,44 +4239,44 @@ msgid "Off"
 msgstr "Oprit"
 
 msgid "Light"
-msgstr ""
+msgstr "Ușor"
 
 msgid "Strong"
-msgstr ""
+msgstr "Puternic"
 
 msgid "Noise reduction"
-msgstr ""
+msgstr "Reducerea zgomotului"
 
 msgid "Sharpening"
-msgstr ""
+msgstr "Accentuarea clarității"
 
 msgid "Stabilization"
-msgstr ""
+msgstr "Stabilizare"
 
 msgid "Applied when converting, not in the preview"
-msgstr ""
+msgstr "Se aplică la conversie, nu în previzualizare"
 
 msgid "Look or shader"
-msgstr ""
+msgstr "Aspect cromatic sau shader"
 
 msgid "None"
-msgstr ""
+msgstr "Niciunul"
 
 msgid "Choose a colour look (.cube) or shader (.hook)"
-msgstr ""
+msgstr "Alegeți un aspect cromatic (.cube) sau un shader (.hook)"
 
 msgid "Remove the look or shader"
-msgstr ""
+msgstr "Eliminați aspectul cromatic sau shaderul"
 
 msgid "Choose a Look or Shader"
-msgstr ""
+msgstr "Alegeți un aspect cromatic sau un shader"
 
 msgid "Looks and shaders"
-msgstr ""
+msgstr "Aspecte cromatice și shadere"
 
 #, python-brace-format
 msgid "Reset {setting} to default"
-msgstr ""
+msgstr "Resetați {setting} la valoarea implicită"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4333,7 +4301,7 @@ msgstr "Alegeți formatul de compresie. H.264 este cel mai compatibil. H.265 și
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 196
 msgid "Higher quality keeps more detail but creates larger files. 'Good' is a balanced choice for most videos."
-msgstr "Calitate mai mare păstrează mai multe detalii, dar creează fișiere mai mari. 'Bun' este o alegere echilibrată pentru cele mai multe videoclipuri."
+msgstr "O calitate mai ridicată păstrează mai multe detalii, dar creează fișiere mai mari. „Bună” este o alegere echilibrată pentru majoritatea videoclipurilor."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4361,7 +4329,7 @@ msgid "Frame Rate"
 msgstr "Rata de cadre"
 
 msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
-msgstr ""
+msgstr "Mai puține cadre pe secundă produc un fișier mai mic. Cadrele suplimentare sunt obținute prin amestecarea celor vecine: mișcare mai fluidă, dar cu o urmă discretă la mișcările rapide."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4413,13 +4381,13 @@ msgstr "Metadatele videoclipului nu au putut fi citite"
 
 #, python-brace-format
 msgid "Error getting video info: {error}"
-msgstr ""
+msgstr "Eroare la obținerea informațiilor despre videoclip: {error}"
 
 msgid "Error: No video stream found"
-msgstr ""
+msgstr "Eroare: Nu a fost găsit niciun flux video"
 
 msgid "Error: Failed to load video file. Please check the file format and try again."
-msgstr ""
+msgstr "Eroare: Fișierul video nu a putut fi încărcat. Verificați formatul fișierului și încercați din nou."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 53
@@ -4450,7 +4418,7 @@ msgstr "Decupați și tăiați videoclipuri"
 msgid ""
 "Select specific segments to keep\n"
 "and create new videos with only those parts"
-msgstr "Selectați segmente specifice de păstrat și creați videoclipuri noi doar cu acele părți."
+msgstr "Selectați segmentele pe care doriți să le păstrați\nși creați videoclipuri noi doar din acele părți"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 83
@@ -4462,7 +4430,7 @@ msgstr "Ajustări de culoare video"
 msgid ""
 "Control brightness, saturation, and hue\n"
 "to enhance your videos"
-msgstr "Controlează luminozitatea, saturația și nuanța pentru a îmbunătăți videoclipurile tale."
+msgstr "Reglați luminozitatea, saturația și nuanța\npentru a îmbunătăți videoclipurile"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 90
@@ -4474,7 +4442,7 @@ msgstr "Mod de copiere rapidă"
 msgid ""
 "Change container format without re-encoding\n"
 "for ultra-fast processing with no quality loss"
-msgstr "Schimbă formatul containerului fără re-encodare pentru procesare ultra-rapidă fără pierderi de calitate."
+msgstr "Schimbați formatul containerului fără recodificare\npentru procesare foarte rapidă fără pierderi de calitate"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 109
@@ -4486,7 +4454,7 @@ msgstr "Decupează videoclipuri"
 msgid ""
 "Remove unwanted areas from edges\n"
 "to focus on what matters"
-msgstr "Elimină zonele nedorite de la margini pentru a te concentra pe ceea ce contează."
+msgstr "Eliminați zonele nedorite de la margini\npentru a vă concentra pe ceea ce contează"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 113
@@ -4498,7 +4466,7 @@ msgstr "Control audio"
 msgid ""
 "Extract, copy, or re-encode audio\n"
 "with multiple codec options"
-msgstr "Extrageți, copiați sau re-encodați audio cu multiple opțiuni de codec."
+msgstr "Extrageți, copiați sau recodificați sunetul\nalegând dintre mai multe codecuri"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 120
@@ -4510,7 +4478,7 @@ msgstr "Gestionarea subtitrărilor"
 msgid ""
 "Extract subtitles to SRT files\n"
 "or keep them embedded in video"
-msgstr "Extrage subtitrările în fișiere SRT sau păstrează-le încorporate în video."
+msgstr "Extrageți subtitrările în fișiere SRT\nsau păstrați-le încorporate în videoclip"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/welcome_dialog.py, line: 127
@@ -4522,7 +4490,7 @@ msgstr "Procesare în loturi"
 msgid ""
 "Convert multiple videos at once\n"
 "with queue management"
-msgstr "Convertiți mai multe videoclipuri simultan cu gestionarea cozii."
+msgstr "Convertiți mai multe videoclipuri simultan\ncu gestionarea cozii"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 465
@@ -4535,7 +4503,7 @@ msgid "Let's Start"
 msgstr "Să începem"
 
 msgid "The file container could not be read. It may be a corrupted download or an unsupported format."
-msgstr ""
+msgstr "Containerul fișierului nu a putut fi citit. Poate fi vorba despre o descărcare coruptă sau un format neacceptat."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 22
@@ -4573,12 +4541,12 @@ msgstr "Un decodor necesar nu este instalat."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 26
 msgid "A required encoder is not installed."
-msgstr "Un encoder necesar nu este instalat."
+msgstr "Un codor necesar nu este instalat."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 27
 msgid "Failed to initialize the encoder — the selected settings may be incompatible."
-msgstr "Inițializarea encoder-ului a eșuat — setările selectate pot fi incompatibile."
+msgstr "Inițializarea codorului a eșuat — setările selectate pot fi incompatibile."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 28
@@ -4618,7 +4586,7 @@ msgid "The encoder stopped making progress and was terminated."
 msgstr "Codorul a încetat să mai progreseze și a fost oprit."
 
 msgid "WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. Choose one of those codecs, or MKV to keep the original ones."
-msgstr ""
+msgstr "WebM acceptă doar video VP8, VP9 sau AV1 și audio Vorbis sau Opus. Alegeți unul dintre aceste codecuri sau MKV pentru a le păstra pe cele originale."
 
 msgid "The conversion finished without producing a file."
 msgstr "Conversia s-a încheiat fără a produce un fișier."
@@ -4631,10 +4599,10 @@ msgstr "Conversia a eșuat cu codul {0}"
 
 #, python-brace-format
 msgid "Video stream: codec={codec}, pixel format={pixel_format}"
-msgstr ""
+msgstr "Flux video: codec={codec}, format de pixeli={pixel_format}"
 
 msgid "Could not analyze the video stream with ffprobe"
-msgstr ""
+msgstr "Fluxul video nu a putut fi analizat cu ffprobe"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 185
@@ -4643,7 +4611,7 @@ msgid "Error starting conversion: {0}"
 msgstr "Eroare la începutul conversiei: {0}"
 
 msgid "The conversion could not start."
-msgstr ""
+msgstr "Conversia nu a putut fi pornită."
 
 msgid "Preparing…"
 msgstr "Se pregătește…"
@@ -4652,7 +4620,7 @@ msgid "Extracting subtitles…"
 msgstr "Se extrag subtitrările…"
 
 msgid "Measuring camera shake…"
-msgstr ""
+msgstr "Se măsoară tremurul camerei…"
 
 msgid "Checking the GPU encoder…"
 msgstr "Se verifică encoderul GPU…"
@@ -4661,7 +4629,7 @@ msgid "GPU unavailable, using the processor"
 msgstr "GPU indisponibil, se utilizează procesorul"
 
 msgid "Adding subtitles…"
-msgstr ""
+msgstr "Se adaugă subtitrările…"
 
 msgid "Copying without re-encoding"
 msgstr "Copiere fără recodare"
@@ -4686,11 +4654,11 @@ msgid "Software encoding"
 msgstr "Codare software"
 
 msgid "Analyzing the video for the target size…"
-msgstr ""
+msgstr "Se analizează videoclipul pentru dimensiunea țintă…"
 
 #, python-brace-format
 msgid "Input probe unavailable: {0}"
-msgstr ""
+msgstr "Analiza intrării nu este disponibilă: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 325
@@ -4699,23 +4667,23 @@ msgstr "Nu s-a detectat niciun progres. Procesul poate fi blocat."
 
 #, python-brace-format
 msgid "Output duration not verified: {0}"
-msgstr ""
+msgstr "Durata ieșirii nu a fost verificată: {0}"
 
 msgid "The output could not be verified against the input"
-msgstr ""
+msgstr "Ieșirea nu a putut fi verificată în raport cu intrarea"
 
 msgid "The output does not carry every subtitle track of the original"
-msgstr ""
+msgstr "Ieșirea nu conține toate pistele de subtitrare ale originalului"
 
 msgid "Checking output file..."
 msgstr "Se verifică fișierul de ieșire..."
 
 msgid "Original deleted after output validation"
-msgstr ""
+msgstr "Originalul a fost șters după verificarea ieșirii"
 
 #, python-brace-format
 msgid "Original preserved: {0}"
-msgstr ""
+msgstr "Originalul a fost păstrat: {0}"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4738,7 +4706,7 @@ msgid "Conversion completed successfully!"
 msgstr "Conversia a fost finalizată cu succes!"
 
 msgid "The full FFmpeg comes from the RPM Fusion repository, which must be enabled first. The command replaces the limited ffmpeg-free package."
-msgstr ""
+msgstr "Versiunea completă FFmpeg provine din depozitul RPM Fusion, care trebuie activat mai întâi. Comanda înlocuiește pachetul limitat ffmpeg-free."
 
 #, python-brace-format
 msgid "Additional options could not be parsed: {0}"
@@ -4767,7 +4735,7 @@ msgstr "Analizând fișierul video..."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 138
 msgid "Could not retrieve file information."
-msgstr "Nu s-a putut recupera informațiile fișierului."
+msgstr "Informațiile despre fișier nu au putut fi obținute."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 157
@@ -4827,7 +4795,7 @@ msgstr "Durată"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 233
 msgid "Copy duration"
-msgstr "Durata copiere"
+msgstr "Copiați durata"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4861,7 +4829,7 @@ msgstr "Rată de biți"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 576
 msgid "Copy bitrate"
-msgstr "Copiază bitrate-ul"
+msgstr "Copiați rata de biți"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
@@ -4879,12 +4847,12 @@ msgstr "Codec"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 483
 msgid "Copy codec"
-msgstr "Copiază codec"
+msgstr "Copiați codecul"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 345
 msgid "Copy resolution"
-msgstr "Rezoluție de copiere"
+msgstr "Copiați rezoluția"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 368
@@ -4978,7 +4946,7 @@ msgstr "Detalii format"
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 658
 msgid "Bitrate (bps)"
-msgstr "Bitrate (bps)"
+msgstr "Rată de biți (bps)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/file_info.py, line: 659
@@ -5002,7 +4970,7 @@ msgstr "Încercați din nou"
 
 #, python-brace-format
 msgid "The segment {0} starts before the previous one ends; list the segments in order without overlaps."
-msgstr ""
+msgstr "Segmentul {0} începe înainte de sfârșitul celui precedent; ordonați segmentele fără suprapuneri."
 
 msgid "Copy video"
 msgstr "Copiere video"
@@ -5015,7 +4983,7 @@ msgid "The preset is not valid TOML: {0}"
 msgstr "Presetarea nu este un TOML valid: {0}"
 
 msgid "The preset is not valid TOML: its tables are nested too deeply."
-msgstr ""
+msgstr "Presetarea nu este un TOML valid: tabelele sunt imbricate prea adânc."
 
 msgid "The preset must be a TOML table."
 msgstr "Presetarea trebuie să fie un tabel TOML."
@@ -5082,7 +5050,7 @@ msgid "[video] resolution must look like 1920x1080."
 msgstr "[video] resolution trebuie să arate ca 1920x1080."
 
 msgid "[video] fps must be a number between 1 and 240."
-msgstr ""
+msgstr "[video] fps trebuie să fie un număr între 1 și 240."
 
 msgid "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
 msgstr "[video] pixel_format trebuie să fie un nume de format de pixeli FFmpeg, precum yuv420p."
@@ -5140,72 +5108,72 @@ msgid "{0} (copy)"
 msgstr "{0} (copie)"
 
 msgid "The keyframes of the video are too far apart to split it into parts under the size limit."
-msgstr ""
+msgstr "Cadrele-cheie ale videoclipului sunt prea depărtate pentru a-l împărți în părți sub limita de dimensiune."
 
 msgid "The video could not be split into parts under the size limit."
-msgstr ""
+msgstr "Videoclipul nu a putut fi împărțit în părți sub limita de dimensiune."
 
 #, python-brace-format
 msgid "{0} cannot hold picture subtitles (PGS, DVD): {1} track left out. Choose MKV to keep it."
 msgid_plural "{0} cannot hold picture subtitles (PGS, DVD): {1} tracks left out. Choose MKV to keep them."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{0} nu poate conține subtitrări grafice (PGS, DVD): {1} pistă omisă. Alegeți MKV pentru a o păstra."
+msgstr[1] "{0} nu poate conține subtitrări grafice (PGS, DVD): {1} piste omise. Alegeți MKV pentru a le păstra."
+msgstr[2] "{0} nu poate conține subtitrări grafice (PGS, DVD): {1} de piste omise. Alegeți MKV pentru a le păstra."
 
 #, python-brace-format
 msgid "Part {0} starts {1:.3f} s after a keyframe, where a stream copy would have to begin. Re-encoding the video instead, so every part starts exactly where it was cut; this takes longer."
-msgstr ""
+msgstr "Partea {0} începe la {1:.3f} s după un cadru-cheie, de unde ar trebui să înceapă copierea fluxului. În schimb, videoclipul este recodificat, astfel încât fiecare parte să înceapă exact la tăietură; acest lucru durează mai mult."
 
 msgid "Splitting into parts…"
 msgstr "Se împarte în părți…"
 
 msgid "Completed — re-encoded: a cut was not on a keyframe"
-msgstr ""
+msgstr "Finalizat — recodificat: o tăietură nu era pe un cadru-cheie"
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit. The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "Split into {0} parts that fit the size limit. The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Împărțit în {0} parte care respectă limita de dimensiune. Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
+msgstr[1] "Împărțit în {0} părți care respectă limita de dimensiune. Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
+msgstr[2] "Împărțit în {0} de părți care respectă limita de dimensiune. Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
 
 #, python-brace-format
 msgid "Split into {0} part that fits the size limit."
 msgid_plural "Split into {0} parts that fit the size limit."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Împărțit în {0} parte care respectă limita de dimensiune."
+msgstr[1] "Împărțit în {0} părți care respectă limita de dimensiune."
+msgstr[2] "Împărțit în {0} de părți care respectă limita de dimensiune."
 
 msgid "Conversion completed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr ""
+msgstr "Conversia s-a încheiat cu succes! Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{0} segment a fost unit cu succes! Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
+msgstr[1] "Toate cele {0} segmente au fost unite cu succes! Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
+msgstr[2] "Toate cele {0} de segmente au fost unite cu succes! Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
 
 #, python-brace-format
 msgid "All {0} segment has been joined successfully!"
 msgid_plural "All {0} segments have been joined successfully!"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{0} segment a fost unit cu succes!"
+msgstr[1] "Toate cele {0} segmente au fost unite cu succes!"
+msgstr[2] "Toate cele {0} de segmente au fost unite cu succes!"
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been processed successfully! The video was re-encoded because a cut did not start on a keyframe."
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{0} segment a fost procesat cu succes! Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
+msgstr[1] "Toate cele {0} segmente au fost procesate cu succes! Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
+msgstr[2] "Toate cele {0} de segmente au fost procesate cu succes! Videoclipul a fost recodificat deoarece o tăietură nu începea pe un cadru-cheie."
 
 #, python-brace-format
 msgid "All {0} segment has been processed successfully!"
 msgid_plural "All {0} segments have been processed successfully!"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "{0} segment a fost procesat cu succes!"
+msgstr[1] "Toate cele {0} segmente au fost procesate cu succes!"
+msgstr[2] "Toate cele {0} de segmente au fost procesate cu succes!"
 
 msgid "WhatsApp video"
 msgstr "Videoclip WhatsApp"
@@ -5263,9 +5231,9 @@ msgstr "Converti videoclipul"
 #, python-brace-format
 msgid "Convert {0} Video"
 msgid_plural "Convert {0} Videos"
-msgstr[0] ""
-msgstr[1] ""
-msgstr[2] ""
+msgstr[0] "Convertiți {0} videoclip"
+msgstr[1] "Convertiți {0} videoclipuri"
+msgstr[2] "Convertiți {0} de videoclipuri"
 
 # File: big-video-converter/big-video-converter/usr/share/nautilus-
 # python/extensions/big_video_converter_extension.py, line: 108
