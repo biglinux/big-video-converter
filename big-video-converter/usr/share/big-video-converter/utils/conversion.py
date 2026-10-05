@@ -470,6 +470,9 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             error_hints.append(text.strip())
         if text.startswith("Running command:"):
             updates.push(command=text.partition(":")[2].strip())
+        if text.startswith("Output is wider than 1920 px: switching from H.264 to H.265"):
+            # uhd_h265=1: the card announced the H.264 the job asked for.
+            GLib.idle_add(progress_item.set_video_codec, "h265")
         if text.startswith("Extracting subtitles"):
             stage_mode = _("Extracting subtitles…")
             updates.push(status=stage_mode)

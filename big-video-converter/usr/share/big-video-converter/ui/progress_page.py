@@ -1321,6 +1321,13 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.details_revealer.set_reveal_child(is_active)
         self._set_details_action(is_active)
 
+    def set_video_codec(self, codec: str) -> bool:
+        """The encoder the script really chose (it may replace the requested one)."""
+        self.video_codec = codec
+        if self.status == "active":
+            self._show_stage()
+        return False
+
     def _show_stage(self) -> None:
         codec = CODEC_NAMES.get(self.video_codec, "")
         text = self._stage or _("Starting process...")

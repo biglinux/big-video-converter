@@ -193,7 +193,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     content.append(
         _make_card(
             "codec_h264.svg",
-            _("H.265 for 4K Videos"),
+            _("Switch 4K H.264 output to H.265 automatically"),
             _(
                 "Televisions do not play 4K video in H.264. When enabled, H.264 "
                 "videos wider than 1920 px are converted to H.265 instead."

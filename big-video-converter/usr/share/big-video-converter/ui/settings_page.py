@@ -121,7 +121,9 @@ class SettingsPage:
         encoding_group.add(self.gpu_partial_check)
         self.app.tooltip_helper.add_tooltip(self.gpu_partial_check, "gpu_partial")
 
-        self.uhd_h265_check = Adw.SwitchRow(title=_("H.265 for 4K videos"))
+        self.uhd_h265_check = Adw.SwitchRow(
+            title=_("Switch 4K H.264 output to H.265 automatically")
+        )
         self.uhd_h265_check.set_subtitle(
             _("Encode H.264 videos wider than 1920 px as H.265, so televisions can play them")
         )
