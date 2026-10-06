@@ -3,10 +3,11 @@
 set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 app="$root/big-video-converter"
-for po in "$app"/locale/*.po; do
+catalogs=("$app"/locale/*.po)
+for po in "${catalogs[@]}"; do
     lang=$(basename "$po" .po)
     target="$app/usr/share/locale/$lang/LC_MESSAGES"
     mkdir -p "$target"
     msgfmt --check --check-header -o "$target/big-video-converter.mo" "$po"
 done
-echo "compiled $(ls "$app"/locale/*.po | wc -l) catalogues"
+echo "compiled ${#catalogs[@]} catalogues"

@@ -3,7 +3,7 @@ name: Backend and GTK regression tests
 on:
   pull_request:
   push:
-    branches: [main, dev-bigbruno]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -35,7 +35,7 @@ jobs:
       - name: Install test dependencies
         run: |
           if ! { apt-get update && apt-get install -y --no-install-recommends \
-            git ca-certificates bash shellcheck ffmpeg python3 python3-pytest \
+            git ca-certificates bash shellcheck shfmt ffmpeg python3 python3-pytest ruff \
             python3-gi python3-gi-cairo python3-cairo python3-mpv \
             python3-opengl python3-numpy python3-polib \
             gsettings-desktop-schemas at-spi2-core \
@@ -63,10 +63,13 @@ jobs:
       - name: Check shell syntax and safety
         run: |
           bash -n big-video-converter/usr/bin/big-video-converter
-          shellcheck -S warning big-video-converter/usr/bin/big-video-converter
-      - name: Check Python syntax
+          shellcheck -S style big-video-converter/usr/bin/big-video-converter
+          shfmt -ln bash -d big-video-converter/usr/bin/big-video-converter big-video-converter/usr/bin/big-video-converter-gui
+      - name: Check Python syntax, lint and formatting
         run: |
           python3 -m compileall -q big-video-converter/usr/share/big-video-converter tests
+          ruff check .
+          ruff format --check .
       - name: Check native desktop prerequisites
         run: |
           python3 - <<'PY'
@@ -113,10 +116,16 @@ jobs:
               f.write('### Backend / GTK regression results\n\n```json\n'
                       + json.dumps(counts, indent=2) + '\n```\n')
           # A skip is the failure worth guarding: the native GTK tests skip
-          # silently without a display, which used to make an empty run look
-          # green. A fixed expected total only breaks when tests are renamed.
-          if not counts['tests'] or any(counts[k] for k in ('failures', 'errors', 'skipped')):
-              raise SystemExit('Expected passing regressions with no skipped tests.')
+          # silently without a display and would make an empty run look green.
+          # Only what this runner cannot have may be skipped: optional plugins
+          # and packages, the Wayland-only surface fix, the pt_BR locale.
+          import re
+          expected = re.compile(r'not installed|needs dpdfnet-enhance|covers Wayland only|pt_BR locale')
+          unexpected = [f"{case.get('classname')}.{case.get('name')}: {skip.get('message')}"
+                        for case in root.iter('testcase') for skip in case.iter('skipped')
+                        if not expected.search(skip.get('message') or '')]
+          if not counts['tests'] or counts['failures'] or counts['errors'] or unexpected:
+              raise SystemExit('Failing or unexpectedly skipped tests:\n' + '\n'.join(unexpected))
           PY
       - name: Preserve regression diagnostics
         if: ${{ !cancelled() }}

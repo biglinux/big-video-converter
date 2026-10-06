@@ -5,7 +5,8 @@ pkgdesc="Video converter and editor with GTK4 and FFmpeg"
 depends=('python>=3.11' 'python-gobject' 'gtk4' 'ffmpeg' 'python-cairo' 'python-mpv' 'libadwaita>=1.5' 'libva-utils' 'python-opengl' 'vte4')
 makedepends=('git' 'gettext' 'desktop-file-utils' 'appstream')
 optdepends=('deepfilternet3-native: light AI noise reduction for speech (DeepFilterNet3)'
-            'dpdfnet-native: higher-quality AI noise reduction for speech (DPDFNet-2 48 kHz)'
+            'dpdfnet-native: higher-quality AI noise reduction and pause removal for speech (DPDFNet-2 48 kHz)'
+            'render-menu-options: the software rendering launcher action'
             'nautilus-python: Load the Nautilus context menu extension'
             'libnautilus-extension: Nautilus API used by the context menu extension')
 conflicts=('comm-video-converter')
@@ -27,13 +28,6 @@ else
     _checkout=
     source=("git+${url}.git")
     sha256sums=('SKIP')
-fi
-
-# Automatically detect and use the correct install file
-if [ -e "${pkgname}.install" ]; then
-    install=${pkgname}.install
-elif [ -e "pkgbuild.install" ]; then
-    install=pkgbuild.install
 fi
 
 prepare() {
@@ -66,15 +60,12 @@ package() {
     install -Dm644 big-video-converter/usr/share/big-video-converter/big_gtk_kit/LICENSE \
         "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.big-gtk-kit"
     printf '%s\n' "${pkgver}-${pkgrel}" > "${pkgdir}/usr/share/big-video-converter/VERSION"
+    # The release AppStream lists is this package's version.
+    local metainfo="${pkgdir}/usr/share/metainfo/br.com.biglinux.converter.metainfo.xml"
+    sed -i "s|^</component>|  <releases>\n    <release version=\"${pkgver}-${pkgrel}\" date=\"$(date -u +%F)\"/>\n  </releases>\n</component>|" "$metainfo"
+    appstreamcli validate --no-net "$metainfo"
 
-    # Install license file if present
-    if [ -f "LICENSE" ]; then
-        install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
-    fi
-
-    # Install documentation if present
-    if [ -f "README.md" ]; then
-        install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
-        install -Dm644 docs/screenshot.png "${pkgdir}/usr/share/doc/${pkgname}/docs/screenshot.png"
-    fi
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+    install -Dm644 docs/screenshot.png "${pkgdir}/usr/share/doc/${pkgname}/docs/screenshot.png"
 }

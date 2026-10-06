@@ -45,7 +45,7 @@ Originals are kept by default. The optional deletion setting applies only after 
 
 **Queue and profiles.** Each row has a video thumbnail, a settings summary and actions to play, inspect, edit or remove the video. Individual resolution choices include general, preset, original, landscape, portrait and custom dimensions. A conversion takes a snapshot of its settings when it starts, so later changes do not alter the active job.
 
-**Editing.** Adjust brightness, contrast, saturation and hue; crop freely or to a selected aspect ratio; rotate or mirror the picture. Select time segments and export them separately or together. Editing metadata belongs to the selected video; source files remain unchanged until an explicitly requested deletion after conversion.
+**Editing.** Adjust brightness, contrast, saturation and hue; crop freely or to a selected aspect ratio; rotate or mirror the picture. Select time segments and export them separately or together. **Remove pauses** finds the pauses in speech, in the audio cleaned by DPDFNet (package `dpdfnet-native`), and keeps the parts between them as segments joined into one video; every audio track gets the same cuts. Editing metadata belongs to the selected video; source files remain unchanged until an explicitly requested deletion after conversion.
 
 **Encoding and streams.** Select video codecs and quality, copy or re-encode audio, configure noise reduction and normalization, and embed or extract subtitles. Available hardware paths depend on the local FFmpeg and driver capabilities; software fallback handles supported hardware failures.
 
@@ -84,14 +84,14 @@ The first command extracts Python and shell messages and merges all catalogs. Th
 
 ## Packaging and release
 
-The [PKGBUILD](pkgbuild/PKGBUILD) fetches upstream Git sources, compiles translations and validates the desktop and AppStream files. It writes the package version into the installed `VERSION` file used by About. A source checkout without that generated file reports a development version.
+The [PKGBUILD](pkgbuild/PKGBUILD) compiles translations and validates the desktop and AppStream files. It writes the package version into the installed `VERSION` file used by About and into the AppStream release list. A source checkout without that generated file reports a development version.
 
 ```sh
 cd pkgbuild
 makepkg
 ```
 
-This recipe builds its fetched source, not uncommitted changes in your checkout. The [package workflow](.github/workflows/build-package.yml) instead archives the checked-out revision, builds that exact source, runs Namcap and metadata checks, and retains the package and checksum as artifacts. Installation and upgrade testing must use the resulting package in an isolated environment.
+Inside a checkout the recipe builds the working tree: tracked files and new, unignored ones, uncommitted changes included. Commit new files before relying on a build from Git, which only the repository's history reaches. Outside a checkout it fetches the GitHub repository. The [package workflow](.github/workflows/build-package.yml) instead archives the checked-out revision, builds that exact source, runs Namcap and metadata checks, and retains the package and checksum as artifacts. Installation and upgrade testing must use the resulting package in an isolated environment.
 
 The desktop and AppStream identifier is `br.com.biglinux.converter`. Keep these files, the icon, launcher and application identifier consistent.
 
