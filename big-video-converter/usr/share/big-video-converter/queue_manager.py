@@ -7,8 +7,10 @@ import shutil
 import threading
 import uuid
 from collections import deque
+from copy import deepcopy
 
 from gi.repository import Adw, GLib
+from utils.job_options import DEFAULT_METADATA
 
 _ = gettext.gettext
 logger = logging.getLogger(__name__)
@@ -20,7 +22,7 @@ class QueueManagerMixin:
     def add_file_to_queue(self, file_path: str) -> bool:
         """Add a file to the conversion queue"""
         # A running queue already has one progress row per file; a file added
-        # now would have none.
+        # while it runs would have none.
         if (
             getattr(self, "_quitting", False)
             or self.currently_converting
@@ -28,36 +30,18 @@ class QueueManagerMixin:
         ):
             return False
         if file_path and os.path.isfile(file_path):
-            # Update last accessed directory
             input_dir = os.path.dirname(file_path)
             self.last_accessed_directory = input_dir
             self.settings_manager.save_setting("last-accessed-directory", input_dir)
 
             self.conversion_queue.append(file_path)
-            self.logger.debug(
-                f"Added file to queue: {os.path.basename(file_path)}, Queue size: {len(self.conversion_queue)}"
-            )
 
             # Initialize new files without discarding edits when a file is added again
             if hasattr(self, "conversion_page"):
                 self.conversion_page.file_metadata.setdefault(
-                    file_path,
-                    {
-                        "trim_segments": [],
-                        "crop_left": 0,
-                        "crop_right": 0,
-                        "crop_top": 0,
-                        "crop_bottom": 0,
-                        "brightness": 0.0,
-                        "saturation": 1.0,
-                        "hue": 0.0,
-                    },
-                )
-                self.logger.debug(
-                    f"Initialized clean metadata for: {os.path.basename(file_path)}"
+                    file_path, deepcopy(DEFAULT_METADATA)
                 )
 
-            # Update UI
             if (
                 hasattr(self, "conversion_page")
                 and getattr(self, "_queue_refresh_id", None) is None
@@ -82,7 +66,6 @@ class QueueManagerMixin:
         if hasattr(self, "conversion_page"):
             self.conversion_page.file_metadata.clear()
             self.conversion_page.update_queue_display()
-        self.logger.debug("Conversion queue cleared")
 
     def remove_from_queue(self, file_path: str) -> bool:
         """Remove a specific file from the queue"""
@@ -95,9 +78,6 @@ class QueueManagerMixin:
                 and file_path in self.conversion_page.file_metadata
             ):
                 del self.conversion_page.file_metadata[file_path]
-                self.logger.debug(
-                    f"Cleared metadata for removed file: {os.path.basename(file_path)}"
-                )
 
             # If this file is currently loaded in the editor, clear it to force fresh reload
             if (
@@ -105,14 +85,9 @@ class QueueManagerMixin:
                 and self.video_edit_page.current_video_path == file_path
             ):
                 self.video_edit_page.current_video_path = None
-                self.logger.debug(
-                    f"Cleared editor state for removed file: {os.path.basename(file_path)}"
-                )
 
             if hasattr(self, "conversion_page"):
                 self.conversion_page.update_queue_display()
-            if os.environ.get("BVC_DEBUG"):
-                self.logger.debug(f"Removed {os.path.basename(file_path)} from queue")
             return True
         return False
 
@@ -201,7 +176,6 @@ class QueueManagerMixin:
             self._restore_queue_after_single_file(False)
             return
         if not self.conversion_queue:
-            self.logger.debug("Queue is empty, nothing to process")
             GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
             return
 
@@ -225,7 +199,6 @@ class QueueManagerMixin:
 
     def _do_start_queue_processing(self):
         """Internal: actually start queue processing after checks pass."""
-        self.logger.debug("Starting queue processing")
         self.is_cancellation_requested = False
         self.completed_conversions = []
         # True for the whole generation, between jobs too: the header, the
@@ -259,24 +232,24 @@ class QueueManagerMixin:
                 notification = notification_getter()
 
         self._queue_completion_presented = True
-        if getattr(self, "is_minimized", False):
-            if notification is None:
-                notification = (
+        self.send_system_notification(
+            *(
+                notification
+                or (
                     _("Batch Conversion Complete"),
                     _("All queued files have been processed."),
                 )
-            self.send_system_notification(*notification)
+            )
+        )
         return True
 
     def convert_current_file(self) -> None:
         """Convert the currently opened file in the editor"""
         if not hasattr(self, "video_edit_page") or not self.video_edit_page:
-            self.logger.debug("No video edit page available")
             GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
             return
 
         if self.video_edit_page.is_playing:
-            self.logger.debug("Stopping video playback before conversion")
             if self.video_edit_page.mpv_player:
                 self.video_edit_page.mpv_player.pause()
             self.video_edit_page.is_playing = False
@@ -292,11 +265,8 @@ class QueueManagerMixin:
 
         current_file = self.video_edit_page.current_video_path
         if not current_file or not os.path.exists(current_file):
-            self.logger.debug("No valid file currently loaded in editor")
             GLib.idle_add(self.header_bar.set_buttons_sensitive, True)
             return
-
-        self.logger.debug(f"Converting current file: {os.path.basename(current_file)}")
 
         self._original_queue_before_single_conversion = list(self.conversion_queue)
         self._single_file_conversion = True
@@ -332,7 +302,6 @@ class QueueManagerMixin:
 
         # If cancellation was requested, don't start new conversions
         if self.is_cancellation_requested or getattr(self, "_quitting", False):
-            self.logger.debug("Cancellation requested, stopping queue processing")
             if not self.active_conversions:
                 self._finish_queue_generation(False)
             return False
@@ -350,36 +319,20 @@ class QueueManagerMixin:
             and len(self.detected_gpus) > 1
             and not force_copy
         ):
-            max_concurrent = min(
-                len(self.detected_gpus), 2
-            )  # Limit to 2 for now as per requirement
+            # Two encoders at once already saturate disk and CPU on these machines.
+            max_concurrent = min(len(self.detected_gpus), 2)
 
             # Initialize GPU slots if empty and we haven't started yet
             if not self.gpu_slots and not self.active_conversions:
-                self.logger.info(
-                    f"Initializing {max_concurrent} GPU slots for parallel processing"
-                )
-                # Build slot list from detected GPUs
-                slots: list[dict] = []
-                for i in range(max_concurrent):
-                    gpu_info = self.detected_gpus[i]
-                    slot = {
+                slots = [
+                    {
                         "id": i,
-                        "type": "auto",
-                        "device": gpu_info["device"],
-                        "name": gpu_info.get("name", "Unknown GPU"),
+                        "type": gpu["type"] if gpu["type"] != "unknown" else "auto",
+                        "device": gpu["device"],
+                        "name": gpu["name"],
                     }
-
-                    # Refine type based on name
-                    name_lower = slot["name"].lower()
-                    if "intel" in name_lower:
-                        slot["type"] = "intel"
-                    elif "nvidia" in name_lower:
-                        slot["type"] = "nvidia"
-                    elif "amd" in name_lower:
-                        slot["type"] = "amd"
-
-                    slots.append(slot)
+                    for i, gpu in enumerate(self.detected_gpus[:max_concurrent])
+                ]
 
                 # Reorder slots so the best GPU for the target codec comes first
                 try:
@@ -398,12 +351,8 @@ class QueueManagerMixin:
                                 else 1
                             )
                         )
-                        self.logger.info(
-                            f"GPU slot order optimized: best={best_type} "
-                            f"for codec={codec}"
-                        )
-                except (ImportError, OSError, ValueError) as e:
-                    self.logger.debug(f"GPU selection fallback: {e}")
+                except (OSError, ValueError) as error:
+                    self.logger.warning("Could not rank the GPUs: %s", error)
 
                 for slot in slots:
                     self.gpu_slots.append(slot)
@@ -417,17 +366,14 @@ class QueueManagerMixin:
         if not self.conversion_queue:
             # Only finish if no active conversions remain
             if not self.active_conversions:
-                self.logger.debug("Queue processing complete")
                 # A single file only reaches here when it never ran.
                 self._finish_queue_generation(False)
             return False
 
-        # Get next file
         next_file = self.conversion_queue.popleft()
 
         # Verify file exists
         if not os.path.exists(next_file):
-            self.logger.debug(f"Skipping missing file: {next_file}")
             self.progress_page.finish_pending(
                 next_file, success=False, reason=_("File not found")
             )
@@ -440,10 +386,11 @@ class QueueManagerMixin:
         if max_concurrent > 1 and self.gpu_slots:
             gpu_slot = self.gpu_slots.popleft()
             self.logger.info(
-                f"Allocated GPU slot for {os.path.basename(next_file)}: {gpu_slot['name']}"
+                "Allocated GPU slot for %s: %s",
+                os.path.basename(next_file),
+                gpu_slot["name"],
             )
 
-        # Add to active conversions tracking with lock
         conversion_info = {
             "file_path": next_file,
             "gpu_slot": gpu_slot,
@@ -455,13 +402,14 @@ class QueueManagerMixin:
         with self.conversions_lock:
             self.active_conversions.append(conversion_info)
 
-        # Update UI queue display
         GLib.idle_add(self.conversion_page.update_queue_display)
 
         # Preparing a job asks ffprobe about the file (audio tracks, size,
         # MP4 compatibility), each call up to ten seconds on slow storage.
         # Those answers are collected on a worker thread first, so the
         # main loop never blocks; the launch itself stays on the main loop.
+        probes = {}
+
         def launch() -> bool:
             # A row skipped during the pre-flight probe set its job's event.
             if (
@@ -478,7 +426,7 @@ class QueueManagerMixin:
             self.conversion_page.current_file_path = next_file
             try:
                 result = self.conversion_page.force_start_conversion(
-                    gpu_override=gpu_slot
+                    gpu_override=gpu_slot, probes=probes
                 )
             except Exception:
                 self.logger.exception("Failed to prepare conversion")
@@ -489,11 +437,17 @@ class QueueManagerMixin:
                 )
             return False
 
+        gpus = getattr(self, "detected_gpus", [])
+        codec = self.settings_manager.load_setting("video-codec", "h264")
+
         def warm_then_launch() -> None:
             try:
-                from utils.file_info import warm_probe_cache
+                from utils.file_info import launch_probes
+                from utils.gpu_selector import select_best_gpu
 
-                warm_probe_cache(next_file)
+                probes.update(launch_probes(next_file))
+                # Fills the encoder and vainfo caches the launch reads.
+                select_best_gpu(gpus, codec)
             except Exception:
                 self.logger.exception("Pre-flight probe failed; launching anyway")
             GLib.idle_add(launch)
@@ -517,66 +471,48 @@ class QueueManagerMixin:
         file_path: str | None = None,
         job_id: str | None = None,
     ) -> None:
-        """Called when a conversion is completed.
+        """Release the finished job's slot and move the queue on.
 
-        file_path identifies which conversion finished, so the right GPU slot
-        is released when several conversions run in parallel.
+        Runs on the main loop. file_path or job_id identify the job, so the
+        right GPU slot is released when several conversions run in parallel.
         """
-        with self.completion_lock:
-            if self._processing_completion:
-                self.logger.warning(
-                    "WARNING: conversion_completed is already being processed, ignoring duplicate call"
+        # A completion must match an active job. A late/duplicate event
+        # never releases the oldest (or any unrelated) GPU slot.
+        with self.conversions_lock:
+            matches = [
+                i
+                for i, info in enumerate(self.active_conversions)
+                if (
+                    info.get("job_id") == job_id
+                    if job_id
+                    else file_path is not None and info.get("file_path") == file_path
+                )
+            ]
+            if len(matches) != 1:
+                self.logger.debug(
+                    "Ignoring stale or unidentified completion: %s", job_id or file_path
                 )
                 return
-            self._processing_completion = True
+            finished = self.active_conversions.pop(matches[0])
+            if finished.get("gpu_slot"):
+                self.gpu_slots.append(finished["gpu_slot"])
+            self.claimed_outputs.discard(finished.get("output_path"))
 
-        try:
-            self.logger.info(f"conversion_completed called with success={success}")
-
-            # A completion must match an active job. A late/duplicate event
-            # never releases the oldest (or any unrelated) GPU slot.
-            with self.conversions_lock:
-                matches = [
-                    i
-                    for i, info in enumerate(self.active_conversions)
-                    if (
-                        info.get("job_id") == job_id
-                        if job_id
-                        else file_path is not None
-                        and info.get("file_path") == file_path
-                    )
-                ]
-                if len(matches) != 1:
-                    self.logger.debug(
-                        "Ignoring stale or unidentified completion: %s",
-                        job_id or file_path,
-                    )
-                    return
-                finished = self.active_conversions.pop(matches[0])
-                if finished.get("gpu_slot"):
-                    self.gpu_slots.append(finished["gpu_slot"])
-                self.claimed_outputs.discard(finished.get("output_path"))
-
-            self.progress_page.finish_pending(
-                finished["file_path"],
-                success=success,
-                cancelled=bool(
-                    finished.get("cancel_event") and finished["cancel_event"].is_set()
-                ),
-            )
-            if self.is_cancellation_requested:
-                if not self.active_conversions:
-                    self._finish_queue_generation(success)
-                return
-
-            # A "Convert this file" run ends with its one job.
-            if getattr(self, "_single_file_conversion", False):
+        self.progress_page.finish_pending(
+            finished["file_path"],
+            success=success,
+            cancelled=bool(
+                finished.get("cancel_event") and finished["cancel_event"].is_set()
+            ),
+        )
+        if self.is_cancellation_requested:
+            if not self.active_conversions:
                 self._finish_queue_generation(success)
-                return
+            return
 
-            # Continue queue processing
-            GLib.idle_add(self.process_next_in_queue)
+        # A "Convert this file" run ends with its one job.
+        if getattr(self, "_single_file_conversion", False):
+            self._finish_queue_generation(success)
+            return
 
-        finally:
-            with self.completion_lock:
-                self._processing_completion = False
+        GLib.idle_add(self.process_next_in_queue)

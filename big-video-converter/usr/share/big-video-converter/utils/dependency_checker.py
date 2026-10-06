@@ -1,5 +1,5 @@
-# Setup translation
 import gettext
+import importlib
 import logging
 import os
 import shlex
@@ -42,8 +42,17 @@ def get_distro_info():
     return distro_info
 
 
+def _loads(module: str) -> bool:
+    """python-mpv raises OSError when libmpv itself is missing."""
+    try:
+        importlib.import_module(module)
+    except (ImportError, OSError):
+        return False
+    return True
+
+
 class DependencyChecker:
-    """Checks for ffmpeg and provides installation commands."""
+    """FFmpeg for conversions and the preview's python-mpv and PyOpenGL."""
 
     def __init__(self):
         from utils.ffmpeg_path import get_ffmpeg_executable
@@ -55,14 +64,11 @@ class DependencyChecker:
         self.ffmpeg_path = (
             ffmpeg if os.access(ffmpeg, os.X_OK) else shutil.which(ffmpeg)
         )
-        self.mpv_path = shutil.which("mpv")
+        self.preview_available = _loads("mpv") and _loads("OpenGL.GL")
 
     def are_dependencies_available(self) -> bool:
-        """Check if ffmpeg and mpv executables are in PATH and are the correct versions."""
-        # First, a basic check if the executables exist at all.
-        if not self.ffmpeg_path or not self.mpv_path:
+        if not self.ffmpeg_path or not self.preview_available:
             return False
-
         # On RPM systems the limited 'ffmpeg-free' package lacks most encoders.
         # A build no package owns (AppImage, /usr/local, jellyfin) is usable,
         # and so is one whose owner cannot be determined.
@@ -82,27 +88,22 @@ class DependencyChecker:
                 logger.warning("Could not verify the ffmpeg package provider: %s", e)
             else:
                 if result.returncode == 0 and "ffmpeg-free" in result.stdout.split():
-                    logger.debug(
-                        "Found 'ffmpeg-free' package. Triggering installation of the full version."
-                    )
                     return False
-
-        # If we passed all checks, the dependencies are considered available.
         return True
 
     def get_install_command(self):
         """Let the native package manager present and confirm its transaction."""
         base = self.distro.get("base")
         if base == "arch":
-            packages = ["ffmpeg", "mpv"]
+            packages = ["ffmpeg", "python-mpv", "python-opengl"]
             command = ["pkexec", "pacman", "-S", *packages]
         elif base == "debian":
-            packages = ["ffmpeg", "mpv", _debian_libmpv()]
+            packages = ["ffmpeg", "python3-mpv", "python3-opengl"]
             command = ["pkexec", "apt", "install", *packages]
         elif base == "rpm":
             # The full ffmpeg (RPM Fusion) conflicts with ffmpeg-free; dnf only
             # swaps them when it may erase the installed package.
-            packages = ["ffmpeg", "mpv"]
+            packages = ["ffmpeg", "python3-mpv", "python3-pyopengl"]
             command = ["pkexec", "dnf", "install", "--allowerasing", *packages]
             note = _(
                 "The full FFmpeg comes from the RPM Fusion repository, which must be "
@@ -121,21 +122,3 @@ class DependencyChecker:
             "display": shlex.join(command),
             "packages": packages,
         }
-
-
-def _debian_libmpv():
-    """libmpv2 on Debian 12 and Ubuntu 24.04, libmpv1 on Ubuntu 22.04."""
-    for name in ("libmpv2", "libmpv1"):
-        try:
-            result = subprocess.run(
-                ["apt-cache", "show", "--no-all-versions", name],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                timeout=5,
-                check=False,
-            )
-        except (subprocess.SubprocessError, OSError):
-            break
-        if result.returncode == 0:
-            return name
-    return "libmpv2"

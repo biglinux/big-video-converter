@@ -58,6 +58,27 @@ SUBTITLE_MODES = ("extract", "embedded", "none")
 CONTAINERS = ("mp4", "mkv", "mov", "webm")
 CONTAINER_INDEX = {"mp4": 0, "mkv": 1, "mov": 2, "webm": 3}
 
+# Codec names as people know them, for ffprobe's and the presets' identifiers.
+CODEC_NAMES = {
+    "h264": "H.264",
+    "h265": "H.265",
+    "hevc": "H.265",
+    "av1": "AV1",
+    "vp8": "VP8",
+    "vp9": "VP9",
+    "mpeg4": "MPEG-4",
+    "mpeg2video": "MPEG-2",
+    "prores": "ProRes",
+}
+
+
+def output_container(index) -> str:
+    """The container of the "output-format-index" setting; mp4 when unknown."""
+    return next(
+        (name for name, number in CONTAINER_INDEX.items() if number == index), "mp4"
+    )
+
+
 # Encoders the script can select. A preset may carry arguments for any of
 # them; the ones for the encoder actually chosen at run time are applied.
 KNOWN_ENCODERS = (
@@ -139,15 +160,7 @@ class Preset:
         if codec == "copy":
             parts.append(_("Copy video"))
         elif codec:
-            parts.append(
-                {
-                    "h264": "H.264",
-                    "h265": "H.265",
-                    "av1": "AV1",
-                    "vp9": "VP9",
-                    "prores": "ProRes",
-                }.get(codec, codec)
-            )
+            parts.append(CODEC_NAMES.get(codec, codec))
         if self.video.get("resolution"):
             parts.append(self.video["resolution"])
         if self.container.get("format"):
@@ -167,9 +180,7 @@ class Preset:
         )
 
 
-# --------------------------------------------------------------------------
 # Locations
-# --------------------------------------------------------------------------
 
 
 def bundled_dir() -> str:
@@ -180,15 +191,15 @@ def bundled_dir() -> str:
 
 
 def user_dir() -> str:
-    base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(
-        os.path.expanduser("~"), ".config"
-    )
-    return os.path.join(base, "big-video-converter", USER_DIR_NAME)
+    # The same rule as settings_manager.config_dir; this module also runs as
+    # the script's helper, outside the application's package.
+    home = os.environ.get("XDG_CONFIG_HOME", "")
+    if not os.path.isabs(home):
+        home = os.path.expanduser("~/.config")
+    return os.path.join(home, "big-video-converter", USER_DIR_NAME)
 
 
-# --------------------------------------------------------------------------
 # Parsing and validation
-# --------------------------------------------------------------------------
 
 
 def parse_preset_text(text: str) -> dict:
@@ -535,7 +546,26 @@ def slugify(name: str) -> str:
     return slug or "preset"
 
 
+# Parsed presets by path, valid while the file's mtime and size are unchanged:
+# the sidebar looks up the active preset on every codec or quality change.
+_parsed: dict[tuple[str, bool], tuple[tuple[int, int], Preset]] = {}
+
+
 def load_preset(path: str, *, bundled: bool = False) -> Preset:
+    try:
+        stat = os.stat(path)
+    except OSError as error:
+        raise PresetError(_("Could not read the preset: {0}").format(error)) from error
+    stamp = (stat.st_mtime_ns, stat.st_size)
+    cached = _parsed.get((path, bundled))
+    if cached and cached[0] == stamp:
+        return cached[1]
+    preset = _read_preset(path, bundled)
+    _parsed[(path, bundled)] = (stamp, preset)
+    return preset
+
+
+def _read_preset(path: str, bundled: bool) -> Preset:
     try:
         with open(path, "rb") as handle:
             raw = handle.read(_MAX_TEXT + 1)
@@ -607,9 +637,7 @@ def _toml_files(directory: str) -> list[str]:
     ]
 
 
-# --------------------------------------------------------------------------
 # Saving
-# --------------------------------------------------------------------------
 
 
 def save_user_preset(
@@ -700,9 +728,7 @@ def _atomic_write(path: str, text: str) -> None:
         raise
 
 
-# --------------------------------------------------------------------------
 # Applying a preset
-# --------------------------------------------------------------------------
 
 
 def preset_fps(preset: Preset) -> str:
@@ -828,9 +854,7 @@ def encoder_args(preset: Preset, encoder: str) -> list[str]:
     return args
 
 
-# --------------------------------------------------------------------------
 # The prompt for a chat assistant
-# --------------------------------------------------------------------------
 
 _LANGUAGE_NAMES = {
     "pt": "Portuguese",
@@ -976,9 +1000,7 @@ def build_ai_prompt(
     )
 
 
-# --------------------------------------------------------------------------
 # Command line used by the bash script
-# --------------------------------------------------------------------------
 
 
 def bundled_strings_source() -> str:

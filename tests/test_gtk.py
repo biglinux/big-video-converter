@@ -6,7 +6,6 @@ claim physical-GPU, screen-reader usability or AI noise-reduction audio-quality 
 
 import importlib
 import os
-import time
 from types import SimpleNamespace
 
 import pytest
@@ -18,29 +17,9 @@ pytestmark = pytest.mark.skipif(
 gi = pytest.importorskip("gi")
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from conftest import CLI
+from conftest import CLI, pump, pump_until
 from gi.repository import Adw, GLib, Gtk
 from utils.signal_connections import SignalConnections
-
-
-def pump(seconds=0.1):
-    context = GLib.MainContext.default()
-    end = time.monotonic() + seconds
-    while time.monotonic() < end:
-        for _ in range(100):
-            if not context.pending():
-                break
-            context.iteration(False)
-        time.sleep(0.005)
-
-
-def until(predicate, timeout=10):
-    end = time.monotonic() + timeout
-    while time.monotonic() < end:
-        pump(0.02)
-        if predicate():
-            return
-    raise AssertionError("GTK condition timed out")
 
 
 def widgets(parent):
@@ -423,7 +402,9 @@ def test_individual_recipe_reaches_real_conversion(
                 app=supervisor, _format_time_ffmpeg=page._format_time_ffmpeg
             )
             assert start_segment_batch(batch_page, context)
-        until(lambda supervisor=supervisor: bool(supervisor.notifications), timeout=40)
+        pump_until(
+            lambda supervisor=supervisor: bool(supervisor.notifications), timeout=40
+        )
         assert supervisor.notifications[0][0], supervisor.progress_page.rows[0].lines
         outputs = (
             [context["full_output_path"]]
@@ -501,7 +482,7 @@ def test_dialog_disconnects_all_long_lived_subscriptions(
         saved = list(tracker._handlers)
         assert saved and all(emitter.handler_is_connected(i) for emitter, i in saved)
         dialog.force_close()
-        until(lambda tracker=tracker: tracker._closed)
+        pump_until(lambda tracker=tracker: tracker._closed)
         assert not tracker._handlers
         assert all(not emitter.handler_is_connected(i) for emitter, i in saved)
 
@@ -573,12 +554,7 @@ def test_stale_editor_metadata_and_error_are_ignored(app, monkeypatch):
 def test_mpv_colors_are_sent_coalesced_and_cached_only_after_success():
     from ui.mpv_player import MPVPlayer
 
-    player = MPVPlayer.__new__(MPVPlayer)
-    player.cached_hue = 0
-    player.cached_saturation = 0
-    player.cached_brightness = 0
-    player._pending_colors = {}
-    player._color_flush_id = None
+    player = MPVPlayer(Gtk.GLArea())
     sent = []
     player.mpv_instance = SimpleNamespace(command_async=lambda *args: sent.append(args))
     # A drag: many values, one write of the last one when the timer fires.
@@ -587,7 +563,7 @@ def test_mpv_colors_are_sent_coalesced_and_cached_only_after_success():
     assert sent == [] and player._color_flush_id is not None
     GLib.source_remove(player._color_flush_id)
     player._flush_colors()
-    assert sent == [("set", "hue", "100")] and player.cached_hue == 100
+    assert sent == [("set", "hue", "100")] and player._applied_colors["hue"] == 100
 
     def refuse(*_args):
         raise RuntimeError("injected property failure")
@@ -596,7 +572,7 @@ def test_mpv_colors_are_sent_coalesced_and_cached_only_after_success():
     player.set_hue(-0.5)
     GLib.source_remove(player._color_flush_id)
     player._flush_colors()
-    assert player.cached_hue == 100
+    assert player._applied_colors["hue"] == 100
 
 
 def test_seek_waits_for_a_file_and_position_reads_playback_time():
@@ -638,7 +614,7 @@ def test_crop_is_reapplied_after_preview_filter_clear():
     player.set_crop(10, 10, 2, 2)
     assert player.mpv_instance["video-crop"] == "108x68+10+2"
     assert player._crop_applied
-    until(lambda: bool(rendered))
+    pump_until(lambda: bool(rendered))
     pump(0.12)
     assert rendered == [True]
 
@@ -660,7 +636,7 @@ def test_native_progress_row_updates_and_completes(app, media, tmp_path, cli_env
             {**cli_env, "output_file": str(out)},
             job_id="native",
         )
-        until(lambda: bool(completed), timeout=15)
+        pump_until(lambda: bool(completed), timeout=15)
         assert completed == [
             (True, {"file_path": str(media["video"]), "job_id": "native"})
         ]
@@ -679,13 +655,13 @@ def test_queue_probes_off_the_main_thread_and_converts(
     from utils import file_info
 
     probe_threads = []
-    original = file_info.warm_probe_cache
+    original = file_info.launch_probes
 
     def record(path):
         probe_threads.append(threading.current_thread().name)
-        original(path)
+        return original(path)
 
-    monkeypatch.setattr(file_info, "warm_probe_cache", record)
+    monkeypatch.setattr(file_info, "launch_probes", record)
     source = tmp_path / "queued.mkv"
     shutil.copyfile(media["silent"], source)
     app.settings_manager.save_setting("gpu", "software")
@@ -694,16 +670,16 @@ def test_queue_probes_off_the_main_thread_and_converts(
     import gc
 
     gc.collect()
-    until(
+    pump_until(
         lambda: (
             app.conversion_page.queue_rows[0].thumbnail_stack.get_visible_child_name()
             == "picture"
         )
     )
     app.start_queue_processing()
-    until(lambda: probe_threads, timeout=10)
+    pump_until(lambda: probe_threads, timeout=10)
     assert probe_threads and "MainThread" not in probe_threads
-    until(
+    pump_until(
         lambda: (
             not app.active_conversions
             and not app.conversion_queue
@@ -815,7 +791,7 @@ def test_folder_import_is_async_and_redraws_once(app, tmp_path, monkeypatch):
     monkeypatch.setattr(file_handler.os, "walk", record_walk)
     monkeypatch.setattr(app.conversion_page, "update_queue_display", record_update)
     app.add_paths_to_queue([str(tmp_path)])
-    until(lambda: len(app.conversion_queue) == 100 and not app._pending_imports)
+    pump_until(lambda: len(app.conversion_queue) == 100 and not app._pending_imports)
     pump()
     assert scanned_on == ["bvc-file-scan"]
     assert redraws == [100]
@@ -871,7 +847,7 @@ def test_selected_file_survives_unusual_suffix_and_settings_write_failure(
         open_multiple_finish=lambda result: [Gio.File.new_for_path(str(source))]
     )
     app._on_files_selected(dialog, None)
-    until(lambda: not app._pending_imports)
+    pump_until(lambda: not app._pending_imports)
     pump()
     assert list(app.conversion_queue) == [str(source)]
     assert len(errors) == 1
@@ -1073,7 +1049,7 @@ def test_vanished_single_file_restores_the_queue_and_says_why(
     app.progress_page.initialize_queue([missing])
     try:
         app.process_next_in_queue()
-        until(lambda: not app._single_file_conversion)
+        pump_until(lambda: not app._single_file_conversion)
         assert (
             list(app.conversion_queue) == [other, missing]
             and not app.currently_converting
@@ -1101,6 +1077,48 @@ def test_vanished_queued_file_stays_listed_as_not_found(app, monkeypatch, tmp_pa
     )
 
 
+def test_launch_uses_the_answers_probed_on_the_worker(app, media, monkeypatch):
+    """The queue probes on a worker; the launch on the main loop runs no ffprobe."""
+    from utils import file_info
+
+    source = str(media["video"])
+    page = app.conversion_page
+    monkeypatch.setattr(
+        app.settings_manager,
+        "settings",
+        {
+            "video-codec": "h264",
+            "gpu": "software",
+            "force-copy-video": True,
+            "output-format-index": 0,
+            "audio-handling": "copy",
+        },
+    )
+    monkeypatch.setattr(app, "active_preset", lambda: None)
+    monkeypatch.setattr(page, "current_file_path", source, raising=False)
+    monkeypatch.setattr(
+        page, "file_metadata", {source: {"crop_left": 8, "crop_right": 8}}
+    )
+
+    def forbidden(*_args, **_kwargs):
+        raise AssertionError("probed on the main loop")
+
+    for name in (
+        "has_audio_streams",
+        "get_video_dimensions",
+        "check_mp4_compatibility",
+    ):
+        monkeypatch.setattr(file_info, name, forbidden)
+    contexts = []
+    monkeypatch.setattr(
+        page, "_continue_conversion", lambda context: contexts.append(context) or True
+    )
+    assert page.force_start_conversion(
+        probes={"audio": False, "size": (128, 72), "mp4": (True, [])}
+    )
+    assert contexts[-1]["env_vars"]["audio_handling"] == "none"
+
+
 def test_skipped_reserved_job_never_launches(app, media, monkeypatch, tmp_path):
     import shutil
     import threading
@@ -1111,7 +1129,7 @@ def test_skipped_reserved_job_never_launches(app, media, monkeypatch, tmp_path):
     source = str(tmp_path / "reserved.mp4")
     shutil.copyfile(media["video"], source)
     probing = threading.Event()
-    monkeypatch.setattr(file_info, "warm_probe_cache", lambda path: probing.wait(5))
+    monkeypatch.setattr(file_info, "launch_probes", lambda path: probing.wait(5) and {})
     launched = []
     monkeypatch.setattr(
         app.conversion_page,
@@ -1128,7 +1146,7 @@ def test_skipped_reserved_job_never_launches(app, media, monkeypatch, tmp_path):
         assert app.active_conversions
         app.progress_page.queue_items[source].cancel()
         probing.set()
-        until(lambda: not app.currently_converting)
+        pump_until(lambda: not app.currently_converting)
         assert not launched and not app.active_conversions
         assert app.progress_page.queue_items[source].status == "cancelled"
     finally:
@@ -1219,7 +1237,7 @@ def test_closing_the_mp4_question_completes_its_job(app, media, monkeypatch):
         app, "conversion_completed", lambda ok, **kwargs: completed.append((ok, kwargs))
     )
     assert page.force_start_conversion()
-    until(lambda: bool(page._decision_dialogs))
+    pump_until(lambda: bool(page._decision_dialogs))
     # What quit() does: the job it waits for must settle.
     page.close_decision_dialogs()
     pump(0.3)
@@ -1433,7 +1451,7 @@ def test_queue_rows_show_facts_and_own_settings_only_where_set(
     page = app.conversion_page
     monkeypatch.setitem(page.file_metadata, custom, {"resolution_mode": "1280x720"})
     page.update_queue_display()
-    until(
+    pump_until(
         lambda: (
             len(page.queue_rows) == 2
             and all(r.duration_badge.get_visible() for r in page.queue_rows)
@@ -1478,3 +1496,42 @@ def test_empty_queue_is_a_quiet_hint_under_the_header_action(app, monkeypatch):
     assert not [w for w in widgets(empty) if isinstance(w, Gtk.Button)]
     assert app.header_bar.add_button.get_visible()
     assert app.header_bar.add_button.has_css_class("suggested-action")
+
+
+def test_reset_all_also_resets_the_queue_footer(app):
+    """Conversions read the footer switches, so a reset must reach them too."""
+    page = app.conversion_page
+    page.delete_original_check.set_active(True)
+    page.folder_combo.set_selected(1)
+    app.tooltip_action.activate(None)
+    assert app.settings_manager.load_setting("delete-original", False)
+    app.settings_page._reset_all_settings()
+    assert not page.delete_original_check.get_active()
+    assert page.folder_combo.get_selected() == 0
+    assert app.tooltip_action.get_state().get_boolean()
+
+
+def test_only_a_window_out_of_sight_gets_the_queue_notification(app, monkeypatch):
+    sent = []
+    monkeypatch.setattr(
+        app, "send_notification", lambda _id, notification: sent.append(notification)
+    )
+    monkeypatch.setattr(app.window, "is_active", lambda: True)
+    app.send_system_notification("Done", "All queued files have been processed.")
+    assert sent == []
+    monkeypatch.setattr(app.window, "is_active", lambda: False)
+    app.send_system_notification("Done", "All queued files have been processed.")
+    assert len(sent) == 1
+
+
+def test_cancelling_the_folder_chooser_changes_nothing(app):
+    from gi.repository import Gio, GLib
+
+    class Cancelled:
+        def select_folder_finish(self, _result):
+            raise GLib.Error.new_literal(Gio.io_error_quark(), "Dismissed by user", 0)
+
+    page = app.conversion_page
+    before = page.output_folder_entry.get_text()
+    page._on_folder_chosen(Cancelled(), None)
+    assert page.output_folder_entry.get_text() == before

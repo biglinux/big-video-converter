@@ -9,6 +9,31 @@ from gi.repository import Gdk, Gio, GLib, Gtk
 from utils.signal_connections import SignalConnections
 
 _ = gettext.gettext
+ngettext = gettext.ngettext
+
+
+def network_uri(
+    scheme: str, server: str, user: str = "", port: str = "", path: str = ""
+) -> str:
+    """The URI of a file share, every part escaped; ValueError for a bad port."""
+    number = -1
+    if port:
+        number = int(port)
+        if not 0 < number < 65536:
+            raise ValueError(f"port {port} out of range")
+    path = path if path.startswith("/") else "/" + path
+    return GLib.Uri.build_with_user(
+        GLib.UriFlags.NONE,
+        scheme,
+        user or None,
+        None,
+        None,
+        server,
+        number,
+        path,
+        None,
+        None,
+    ).to_string()
 
 
 class FileHandlerMixin:
@@ -127,7 +152,7 @@ class FileHandlerMixin:
                 initial_folder = Gio.File.new_for_path(self.last_accessed_directory)
                 dialog.set_initial_folder(initial_folder)
             except (GLib.Error, OSError) as e:
-                self.logger.error(f"Error setting initial folder: {e}")
+                self.logger.error("Error setting initial folder: %s", e)
 
         filter = Gtk.FileFilter()
         filter.set_name(_("Video Files"))
@@ -151,7 +176,7 @@ class FileHandlerMixin:
                 initial_folder = Gio.File.new_for_path(self.last_accessed_directory)
                 dialog.set_initial_folder(initial_folder)
             except (GLib.Error, OSError) as e:
-                self.logger.error(f"Error setting initial folder: {e}")
+                self.logger.error("Error setting initial folder: %s", e)
 
         dialog.select_folder(self.window, None, self._on_folder_selected)
 
@@ -164,9 +189,11 @@ class FileHandlerMixin:
                     if count:
                         self.show_info_dialog(
                             _("Files Added"),
-                            _("{} video files have been added to the queue.").format(
-                                count
-                            ),
+                            ngettext(
+                                "{count} video file has been added to the queue.",
+                                "{count} video files have been added to the queue.",
+                                count,
+                            ).format(count=count),
                         )
                     else:
                         self.show_info_dialog(
@@ -269,7 +296,6 @@ class FileHandlerMixin:
         status_label.set_visible(False)
         content.append(status_label)
 
-        # Connect button
         connect_button = Gtk.Button(label=_("Connect and Browse"))
         connect_button.add_css_class("suggested-action")
         connect_button.add_css_class("pill")
@@ -295,29 +321,23 @@ class FileHandlerMixin:
                 status_label.set_visible(True)
                 return
 
-            # Build URI from fields
             protocol_idx = protocol_row.get_selected()
             schemes = ["sftp", "smb", "ftp"]
             scheme = schemes[protocol_idx]
 
-            user = user_row.get_text().strip()
-            port = port_row.get_text().strip()
-            remote_path = path_row.get_text().strip() or "/"
-
-            # Build URI
-            if user:
-                authority = f"{user}@{server}"
-            else:
-                authority = server
-            if port:
-                authority += f":{port}"
-
-            # SMB uses smb://server/share format
-            if scheme == "smb" and not remote_path.startswith("/"):
-                remote_path = "/" + remote_path
-
-            uri = f"{scheme}://{authority}{remote_path}"
-            self.logger.debug(f"Mounting network location: {uri}")
+            try:
+                uri = network_uri(
+                    scheme,
+                    server,
+                    user_row.get_text().strip(),
+                    port_row.get_text().strip(),
+                    path_row.get_text().strip(),
+                )
+            except ValueError:
+                status_label.set_text(_("The port must be a number from 1 to 65535."))
+                status_label.add_css_class("error")
+                status_label.set_visible(True)
+                return
 
             status_label.remove_css_class("error")
             status_label.add_css_class("dim-label")
@@ -333,21 +353,15 @@ class FileHandlerMixin:
                 try:
                     gfile.mount_enclosing_volume_finish(result)
                 except GLib.Error as e:
-                    # Already mounted is not an error
                     if not e.matches(
                         Gio.io_error_quark(), Gio.IOErrorEnum.ALREADY_MOUNTED
                     ):
-                        error_msg = str(e)
-                        self.logger.error(f"Mount error: {e}")
-                        GLib.idle_add(
-                            lambda: self._handle_mount_error(
-                                status_label, button, error_msg
-                            )
-                        )
+                        if not connections.closed:
+                            self._handle_mount_error(status_label, button, str(e))
                         return
-
-                self.logger.debug(f"Mount successful for {uri}")
-                GLib.idle_add(lambda: self._open_network_file_browser(dialog, gfile))
+                # The person may have closed the dialog while it connected.
+                if not connections.closed:
+                    self._open_network_file_browser(dialog, gfile)
 
             gfile.mount_enclosing_volume(
                 Gio.MountMountFlags.NONE, mount_op, None, on_mount_finished
@@ -380,7 +394,7 @@ class FileHandlerMixin:
                 # None when gvfs-fuse does not expose the mount as a path.
                 local_path = root.get_path()
             except (GLib.Error, OSError) as e:
-                self.logger.error(f"Could not resolve GVFS path: {e}")
+                self.logger.error("Could not resolve GVFS path: %s", e)
         if not local_path:
             self.show_error_dialog(
                 _("Error"),
@@ -390,7 +404,7 @@ class FileHandlerMixin:
             )
             return
 
-        self.logger.debug(f"Browsing network files at: {local_path}")
+        self.logger.debug("Browsing network files at: %s", local_path)
 
         # Open file dialog at the mounted location
         dialog = Gtk.FileDialog()
@@ -401,7 +415,7 @@ class FileHandlerMixin:
             initial_folder = Gio.File.new_for_path(local_path)
             dialog.set_initial_folder(initial_folder)
         except (GLib.Error, OSError) as e:
-            self.logger.error(f"Error setting initial folder: {e}")
+            self.logger.error("Error setting initial folder: %s", e)
 
         filter = Gtk.FileFilter()
         filter.set_name(_("Video Files"))

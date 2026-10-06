@@ -2,7 +2,6 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-# Setup translation
 import gettext
 import logging
 
@@ -24,13 +23,10 @@ class SettingsPage:
         self.app = app
         self.settings_manager = app.settings_manager
 
-        # Create the settings page
         self.page = self._create_page()
 
-        # Connect settings signals
         self._connect_setting_signals()
 
-        # Load initial values
         self._load_settings()
 
     def get_page(self):
@@ -53,7 +49,6 @@ class SettingsPage:
         # still apply to a stream copy, so they stay enabled.
 
     def _create_page(self):
-        # Create page for settings
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
         # Add ScrolledWindow to enable scrolling when window is small
@@ -83,7 +78,6 @@ class SettingsPage:
         main_content.set_margin_bottom(24)
         clamp.set_child(main_content)
 
-        # Create settings groups
         self._create_encoding_settings(main_content)
         self._create_audio_settings(main_content)
         self._create_general_options(main_content)
@@ -91,13 +85,11 @@ class SettingsPage:
         # Group for reset button
         reset_group = Adw.PreferencesGroup()
 
-        # Create a box for centering the button
         reset_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         reset_box.set_halign(Gtk.Align.CENTER)
         reset_box.set_margin_top(24)
         reset_box.set_margin_bottom(24)
 
-        # Create the reset button with warning style
         reset_button = Gtk.Button(label=_("Reset All Settings"))
         reset_button.add_css_class(
             "destructive-action"
@@ -162,7 +154,6 @@ class SettingsPage:
         self.custom_resolution_row.set_tooltip_text(_("Ex: 1280x720, 1920x1080"))
         self.custom_resolution_row.set_visible(False)  # Initially hidden
 
-        # Connect to changed signal for the custom entry
         self.custom_resolution_row.connect(
             "changed", self._on_custom_resolution_changed
         )
@@ -208,7 +199,6 @@ class SettingsPage:
         self.custom_bitrate_row.set_tooltip_text(_("Ex: 128k, 192k, 256k"))
         self.custom_bitrate_row.set_visible(False)  # Initially hidden
 
-        # Connect combo box to show/hide custom entry
         self.audio_bitrate_combo.connect(
             "notify::selected", self._on_bitrate_combo_changed
         )
@@ -239,7 +229,6 @@ class SettingsPage:
         self.custom_channels_row.set_tooltip_text(_("Ex: 2 (stereo), 6 (5.1)"))
         self.custom_channels_row.set_visible(False)  # Initially hidden
 
-        # Connect combo box to show/hide custom entry
         self.audio_channels_combo.connect(
             "notify::selected", self._on_channels_combo_changed
         )
@@ -310,7 +299,6 @@ class SettingsPage:
         )  # Check if "Custom" is selected
         self.custom_bitrate_row.set_visible(is_custom)
 
-        # Update the setting unless it's custom
         if not is_custom and selected > 0:  # Not default and not custom
             self.settings_manager.save_setting(
                 "audio-bitrate", self.bitrate_values[selected]
@@ -325,7 +313,6 @@ class SettingsPage:
         )  # Check if "Custom" is selected
         self.custom_channels_row.set_visible(is_custom)
 
-        # Update the setting unless it's custom
         if not is_custom and selected > 0:  # Not default and not custom
             self.settings_manager.save_setting(
                 "audio-channels", self.channels_values[selected]
@@ -387,10 +374,8 @@ class SettingsPage:
             ),
         )
 
-        # Connect preset combo change
         self.preset_combo.connect("notify::selected", self._save_preset_setting)
 
-        # Connect output format combo change
         self.output_format_combo.connect(
             "notify::selected",
             lambda w, p: self.settings_manager.save_setting(
@@ -403,7 +388,6 @@ class SettingsPage:
             self._on_extract_subtitles_toggled,
         )
 
-        # Connect resolution combo change
         self.video_resolution_combo.connect(
             "notify::selected", self._on_resolution_combo_changed
         )
@@ -414,12 +398,10 @@ class SettingsPage:
             ),
         )
 
-        # Connect audio codec combo change
         self.audio_codec_combo.connect(
             "notify::selected", self._save_audio_codec_setting
         )
 
-        # Connect render mode combo change
         self.render_mode_combo.connect(
             "notify::selected", self._save_render_mode_setting
         )
@@ -444,10 +426,9 @@ class SettingsPage:
         """Save preset setting"""
         selected = combo_box.get_selected()
         if selected < len(constants.PRESET_VALUES):
-            # Get the internal value from the mapping
             internal_value = constants.PRESET_VALUES[selected]
             self.app.settings_manager.save_setting("preset", internal_value)
-            logger.debug(f"Saved preset: {internal_value}")
+            logger.debug("Saved preset: %s", internal_value)
 
     def _on_extract_subtitles_toggled(self, widget, _param):
         """Handle extract subtitles toggle, update banner and sidebar state."""
@@ -462,10 +443,9 @@ class SettingsPage:
         """Save audio codec setting"""
         selected = combo_box.get_selected()
         if selected < len(constants.AUDIO_CODEC_VALUES):
-            # Get the internal value from the mapping
             internal_value = constants.AUDIO_CODEC_VALUES[selected]
             self.app.settings_manager.save_setting("audio-codec", internal_value)
-            logger.debug(f"Saved audio codec: {internal_value}")
+            logger.debug("Saved audio codec: %s", internal_value)
 
     def _save_render_mode_setting(self, combo_box, _param=None):
         """Save video preview render mode setting"""
@@ -478,15 +458,13 @@ class SettingsPage:
                 "video-preview-render-mode", "auto"
             )
             if internal_value != current_value:
-                # Save the new value
                 self.app.settings_manager.save_setting(
                     "video-preview-render-mode", internal_value
                 )
                 logger.debug(
-                    f"Saved render mode: {internal_value} (restart required to apply)"
+                    "Saved render mode: %s (restart required to apply)", internal_value
                 )
 
-                # Show dialog informing user that restart is required
                 dialog = Gtk.AlertDialog()
                 dialog.set_message(_("Restart Required"))
                 dialog.set_detail(
@@ -529,7 +507,6 @@ class SettingsPage:
             self.video_fps_combo.set_model(Gtk.StringList.new(labels))
         self.video_fps_combo.set_selected(values.index(saved_fps))
 
-        # Load video resolution setting
         saved_resolution = self.settings_manager.load_setting("video-resolution", "")
 
         if saved_resolution:
@@ -608,20 +585,16 @@ class SettingsPage:
             self.audio_channels_combo.set_selected(0)
             self.custom_channels_row.set_visible(False)
 
-        # Load boolean switch settings
         gpu_partial_active = self.settings_manager.load_setting("gpu-partial", False)
         self.gpu_partial_check.set_active(gpu_partial_active)
 
-        # Load preset
         preset_value = self.settings_manager.load_setting("preset", "default")
         preset_index = self._find_preset_index(preset_value)
         self.preset_combo.set_selected(preset_index)
 
-        # Load output format
         format_index = self.settings_manager.load_setting("output-format-index", 0)
         self.output_format_combo.set_selected(format_index)
 
-        # Load audio codec
         audio_codec_value = self.settings_manager.load_setting("audio-codec", "aac")
         audio_codec_index = self._find_audio_codec_index(audio_codec_value)
         self.audio_codec_combo.set_selected(audio_codec_index)
@@ -631,7 +604,6 @@ class SettingsPage:
         )
         self.only_extract_subtitles_check.set_active(only_extract_subtitles_active)
 
-        # Load render mode
         render_mode_value = self.settings_manager.load_setting(
             "video-preview-render-mode", "auto"
         )
@@ -651,8 +623,7 @@ class SettingsPage:
             if internal_value == value:
                 return index
 
-        # Default to Medium (index 3)
-        return 3
+        return 0  # "default": the encoder's own preset
 
     def _find_audio_codec_index(self, value):
         """Find index of audio codec value using reverse mapping"""
@@ -668,7 +639,6 @@ class SettingsPage:
 
     def _on_reset_button_clicked(self, button):
         """Handle reset settings button click"""
-        # Show a confirmation dialog before resetting
         dialog = Gtk.AlertDialog()
         dialog.set_message(_("Reset All Settings?"))
         dialog.set_detail(
@@ -710,32 +680,17 @@ class SettingsPage:
         success_dialog.show(self.app.window)
 
     def _reset_all_settings(self):
-        """Reset all settings to their default values"""
-        # Get all default values from settings manager
-        default_values = self.settings_manager.DEFAULT_VALUES
-
-        # Batch all resets into a single disk write
+        # One write for the whole reset.
         with self.settings_manager.batch_update():
-            for key, value in default_values.items():
-                logger.debug(f"Resetting {key} to {value}")
+            for key, value in self.settings_manager.DEFAULT_VALUES.items():
+                self.settings_manager.set_value(key, value)
 
-                if isinstance(value, bool):
-                    self.settings_manager.set_boolean(key, value)
-                elif isinstance(value, int):
-                    self.settings_manager.set_int(key, value)
-                elif isinstance(value, float):
-                    self.settings_manager.set_double(key, value)
-                else:
-                    self.settings_manager.set_string(
-                        key, str(value) if value is not None else ""
-                    )
-
-        # Reload settings to update Advanced Settings UI
         self._load_settings()
-
-        # Also reload sidebar settings in main window
-        if hasattr(self.app, "_load_left_pane_settings"):
-            self.app._load_left_pane_settings()
+        self.app._load_left_pane_settings()
+        self.app.conversion_page.show_output_settings()
+        show_tooltips = self.settings_manager.load_setting("show-tooltips", True)
+        self.app.tooltip_action.set_state(GLib.Variant.new_boolean(show_tooltips))
+        self.app.tooltip_helper.refresh()
 
         # Update encoding options state based on reset force copy value
         force_copy = self.settings_manager.load_setting("force-copy-video", False)

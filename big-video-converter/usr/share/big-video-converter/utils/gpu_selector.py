@@ -1,9 +1,9 @@
-"""Intelligent GPU selection based on codec support and performance."""
+"""Which GPU encodes the chosen codec, and which of several does it fastest."""
 
 import logging
 import os
 import subprocess
-from functools import lru_cache
+from functools import cache, lru_cache
 
 from utils.ffmpeg_path import get_ffmpeg_executable
 
@@ -59,7 +59,7 @@ def _available_ffmpeg_encoders() -> frozenset[str]:
                 encoders.add(parts[1])
         return frozenset(encoders)
     except (subprocess.SubprocessError, OSError) as e:
-        logger.warning(f"Failed to query ffmpeg encoders: {e}")
+        logger.warning("Failed to query ffmpeg encoders: %s", e)
         return frozenset()
 
 
@@ -132,22 +132,12 @@ def detect_render_devices(
     return gpus
 
 
-def _classify_gpu(name: str) -> str:
-    """Classify a GPU name string into nvidia/amd/intel."""
-    low = name.lower()
-    if "nvidia" in low:
-        return "nvidia"
-    if "intel" in low:
-        return "intel"
-    if "amd" in low or " ati " in low or "advanced micro devices" in low:
-        return "amd"
-    return "unknown"
+@cache
+def _vainfo_profiles(device_path: str) -> frozenset[str]:
+    """Lowercase encode profiles of one VAAPI device, e.g. 'vaprofilehevcmain'.
 
-
-def _vainfo_profiles(device_path: str) -> set[str]:
-    """Query vainfo for supported encode profiles on a specific device.
-
-    Returns set of lowercase profile names (e.g. 'vaprofilehevcmain').
+    Cached for the session: each vainfo call can take seconds, and a device's
+    encoders do not change while the application runs.
     """
     try:
         env = os.environ.copy()
@@ -160,15 +150,14 @@ def _vainfo_profiles(device_path: str) -> set[str]:
             env=env,
             check=False,
         )
-    except (subprocess.SubprocessError, OSError, FileNotFoundError):
-        return set()
-    else:
-        profiles: set[str] = set()
-        for line in result.stdout.splitlines():
-            low = line.strip().lower()
-            if "vaprofile" in low and "entrypoint" in low and "encslice" in low:
-                profiles.add(low.split()[0])
-        return profiles
+    except (subprocess.SubprocessError, OSError):
+        return frozenset()
+    profiles = set()
+    for line in result.stdout.splitlines():
+        low = line.strip().lower()
+        if "vaprofile" in low and "entrypoint" in low and "encslice" in low:
+            profiles.add(low.split()[0])
+    return frozenset(profiles)
 
 
 def _vainfo_supports_codec(device_path: str, codec: str) -> bool:
@@ -190,15 +179,10 @@ def select_best_gpu(
     detected_gpus: list[dict],
     codec: str,
 ) -> dict | None:
-    """Select the best GPU for the given codec.
+    """The fastest of ``detect_render_devices()`` that encodes ``codec``.
 
-    Args:
-        detected_gpus: List of dicts with 'name' and 'device' keys.
-        codec: Target codec (h264, h265, av1, vp9).
-
-    Returns:
-        Dict with 'type' and 'device' keys for the best GPU, or None
-        to let the bash script handle auto-detection.
+    Returns {"type", "device"}, or None to leave the choice to the script.
+    The first call runs ffmpeg and vainfo; call it from a worker first.
     """
     if not detected_gpus or len(detected_gpus) < 2:
         return None
@@ -210,7 +194,7 @@ def select_best_gpu(
     candidates: list[tuple[int, str, str, str]] = []  # (score, type, device, name)
 
     for gpu in detected_gpus:
-        gpu_type = gpu.get("type") or _classify_gpu(gpu.get("name", ""))
+        gpu_type = gpu["type"]
         if gpu_type == "unknown":
             continue
 
@@ -220,33 +204,23 @@ def select_best_gpu(
 
         # Check if ffmpeg has this encoder compiled in
         if encoder_name not in available_encoders:
-            logger.debug(f"GPU {gpu['name']}: encoder {encoder_name} not in ffmpeg")
             continue
 
         # For VAAPI/QSV GPUs, verify hardware actually supports the codec
         if gpu_type in ("amd", "intel"):
             device = gpu.get("device", "")
             if device and not _vainfo_supports_codec(device, codec):
-                logger.debug(
-                    f"GPU {gpu['name']}: vainfo says no {codec} encode support on {device}"
-                )
                 continue
 
         score = perf.get(gpu_type, 0)
         candidates.append((score, gpu_type, gpu.get("device", ""), gpu.get("name", "")))
-        logger.debug(
-            f"GPU candidate: {gpu['name']} type={gpu_type} encoder={encoder_name} score={score}"
-        )
 
     if not candidates:
-        logger.debug("No GPU candidates found, falling back to bash auto-detect")
         return None
 
     # Sort by score descending
     candidates.sort(key=lambda c: c[0], reverse=True)
     best = candidates[0]
 
-    logger.info(
-        f"Selected GPU for {codec}: {best[3]} (type={best[1]}, score={best[0]})"
-    )
+    logger.info("Selected GPU for %s: %s", codec, best[3])
     return {"type": best[1], "device": best[2]}

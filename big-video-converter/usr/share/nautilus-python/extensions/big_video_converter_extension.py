@@ -5,6 +5,7 @@ Big Video Converter application.
 """
 
 import gettext
+import logging
 import subprocess
 from pathlib import Path
 from urllib.parse import unquote
@@ -17,7 +18,6 @@ gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gio, GLib, GObject, Nautilus
 
-# --- Internationalization (i18n) Setup ---
 APP_NAME = "big-video-converter"
 
 gettext.bindtextdomain(APP_NAME, "/usr/share/locale")
@@ -164,7 +164,6 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
                 start_new_session=True,
             )
         except OSError as e:
-            print(f"Error launching '{self.app_executable}': {e}")
             self._show_error_notification(
                 _("Application Launch Error"),
                 _("Failed to start Big Video Converter: {0}").format(str(e)),
@@ -188,5 +187,5 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
                 Gio.SubprocessFlags.NONE,
             )
         except GLib.Error:
-            # Fallback if 'notify-send' is not installed.
-            print(f"ERROR: [{title}] {message}")
+            # Without notify-send the message only reaches Nautilus' log.
+            logging.getLogger(__name__).error("%s: %s", title, message)

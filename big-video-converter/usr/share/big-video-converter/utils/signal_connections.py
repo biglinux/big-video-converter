@@ -7,6 +7,10 @@ class SignalConnections:
         self._closed = False
         self._closed_id = dialog.connect(close_signal, self._on_closed)
 
+    @property
+    def closed(self):
+        return self._closed
+
     def connect(self, emitter, signal, callback, *args):
         if self._closed:
             raise RuntimeError("Cannot subscribe a closed dialog")

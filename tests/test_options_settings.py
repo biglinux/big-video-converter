@@ -178,7 +178,7 @@ def test_ordinary_options_do_not_ask(text):
 @pytest.fixture
 def settings(tmp_path):
     return SettingsManager(
-        "test", dev_mode=True, dev_settings_file=str(tmp_path / "settings.json")
+        dev_mode=True, dev_settings_file=str(tmp_path / "settings.json")
     )
 
 
@@ -206,7 +206,7 @@ def test_export_import_roundtrip_without_local_or_destructive_options(
     data = json.loads(path.read_text())
     for key in ["delete-original", "gpu-device-index", "preview-hue"]:
         assert key not in data
-    other = SettingsManager("test", True, str(tmp_path / "other.json"))
+    other = SettingsManager(True, str(tmp_path / "other.json"))
     assert other.import_profile(str(path))
     assert other.get_string("video-codec") == "h265"
     assert not other.get_boolean("delete-original")
@@ -256,7 +256,7 @@ def test_filters_refused_by_older_builds_are_accepted_again(tmp_path):
     options = "-vf subtitles=subs.srt,lut3d=file=/abs/x.cube -af ass=a.ass"
     path = tmp_path / "settings.json"
     path.write_text(json.dumps({"additional-options": options}))
-    settings = SettingsManager("test", True, str(path))
+    settings = SettingsManager(True, str(path))
     assert settings.get_string("additional-options") == options
     assert validate_additional_options(options)[0]
 
@@ -313,7 +313,7 @@ def test_corrupt_primary_does_not_destroy_known_good_backup(tmp_path):
     path.write_text("{invalid")
     backup = path.with_suffix(".json.bak")
     backup.write_text('{"video-codec":"h265"}')
-    settings = SettingsManager("test", True, str(path))
+    settings = SettingsManager(True, str(path))
     assert settings.get_string("video-codec") == "h265"
     assert json.loads(backup.read_text()) == {"video-codec": "h265"}
     assert json.loads(path.read_text()) == {"video-codec": "h265"}
@@ -350,7 +350,7 @@ def test_old_vsync_option_is_read_as_fps_mode(tmp_path, old, new):
     """FFmpeg 7 removed -vsync, so the options grammar refuses it."""
     path = tmp_path / "settings.json"
     path.write_text(json.dumps({"additional-options": old}))
-    settings = SettingsManager("test", True, str(path))
+    settings = SettingsManager(True, str(path))
     assert settings.get_string("additional-options") == new
     parse_additional_options(new)
 
@@ -358,11 +358,11 @@ def test_old_vsync_option_is_read_as_fps_mode(tmp_path, old, new):
 def test_out_of_range_number_falls_back_to_the_default(tmp_path):
     path = tmp_path / "settings.json"
     path.write_text('{"window-width": 1e400}')
-    settings = SettingsManager("test", True, str(path))
+    settings = SettingsManager(True, str(path))
     assert settings.get_value("window-width") == 1200
 
 
 def test_xdg_config_home(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
-    settings = SettingsManager("test")
+    settings = SettingsManager()
     assert settings.settings_file == str(tmp_path / "big-video-converter/settings.json")

@@ -5,7 +5,7 @@ import shlex
 import subprocess
 
 import pytest
-from conftest import APP
+from conftest import APP, pump
 from utils import presets
 from utils.media_validation import probe_media
 
@@ -90,13 +90,22 @@ class TestContract:
         with pytest.raises(presets.PresetError, match=fragment):
             presets.validate_preset(presets.parse_preset_text(text))
 
-    def test_frame_rate_limit_matches_the_script(self):
+    def test_frame_rate_limit_matches_the_script(self, media, tmp_path, run_cli):
         from utils.settings_manager import SettingsManager
 
         preset = presets.validate_preset(
             presets.parse_preset_text('[preset]\nname="x"\n[video]\nfps=240')
         )
         SettingsManager._validate_profile_value("video-fps", presets.preset_fps(preset))
+        top = run_cli(
+            media["silent"],
+            tmp_path / "top.mkv",
+            video_fps="240",
+            options="-t 0.2 -threads 1",
+        )
+        assert top.returncode == 0, top.stdout + top.stderr
+        over = run_cli(media["silent"], tmp_path / "over.mkv", video_fps="241")
+        assert over.returncode == 2 and "Invalid frame rate" in over.stderr
 
     def test_deeply_nested_toml_is_a_preset_error(self, user_presets):
         deep = "a = " + "[" * 5000 + "]" * 5000
@@ -182,7 +191,7 @@ RISKY = MINIMAL.replace(
 
 
 class TestFileAccess:
-    def test_filters_older_builds_refused_now_validate_and_are_reported(self):
+    def test_file_reading_filters_validate_and_are_reported(self):
         preset = presets.validate_preset(
             presets.parse_preset_text(
                 '[preset]\nname="x"\n[ffmpeg]\ninput_options="-hwaccel vaapi"\n'
@@ -228,27 +237,14 @@ def presets_window(user_presets, tmp_path):
     window = Adw.Window()
     window.present()
     app = SimpleNamespace(
-        settings_manager=SettingsManager("test", True, str(tmp_path / "s.json"))
+        settings_manager=SettingsManager(True, str(tmp_path / "s.json"))
     )
     dialog = PresetsDialog(window, app)
     dialog.present()
     yield window, dialog
     dialog.dialog.force_close()
     window.destroy()
-    _pump(0.1)
-
-
-def _pump(seconds):
-    import time
-
-    from gi.repository import GLib
-
-    context = GLib.MainContext.default()
-    end = time.monotonic() + seconds
-    while time.monotonic() < end:
-        while context.pending():
-            context.iteration(False)
-        time.sleep(0.005)
+    pump(0.1)
 
 
 def _answer(window, label):
@@ -262,7 +258,7 @@ def _answer(window, label):
         widget = stack.pop()
         if isinstance(widget, Gtk.Button) and widget.get_label() == label:
             widget.emit("clicked")
-            _pump(0.5)
+            pump(0.5)
             return alert
         child = widget.get_first_child()
         while child is not None:
@@ -277,7 +273,7 @@ class TestImportConfirmation:
     ):
         window, dialog = presets_window
         assert dialog.import_text(RISKY) is None
-        _pump(0.3)
+        pump(0.3)
         alert = window.get_visible_dialog()
         assert alert.get_heading() == "This preset can read or write files"
         assert "vidstabdetect=result=.bashrc" in alert.get_body()
@@ -286,7 +282,7 @@ class TestImportConfirmation:
         assert window.get_visible_dialog() is dialog.dialog
         assert not list(user_presets.glob("*.toml"))
         dialog.import_text(RISKY)
-        _pump(0.3)
+        pump(0.3)
         _answer(window, "Import anyway")
         assert [p.name for p in user_presets.glob("*.toml")] == ["tiny-test.toml"]
         assert "tiny-test" in {p.id for p in dialog.presets}
@@ -294,7 +290,7 @@ class TestImportConfirmation:
     def test_plain_preset_imports_without_asking(self, presets_window, user_presets):
         window, dialog = presets_window
         preset = dialog.import_text(MINIMAL)
-        _pump(0.2)
+        pump(0.2)
         assert preset is not None and preset.id == "tiny-test"
         assert window.get_visible_dialog() is dialog.dialog
 
@@ -334,6 +330,14 @@ class TestUserFiles:
         second = presets.save_user_preset(MINIMAL)
         assert first.id == "tiny-test" and second.id == "tiny-test-2"
         assert "[encoder.libx264]" in (user_presets / "tiny-test.toml").read_text()
+
+    def test_an_edited_file_is_read_again(self, user_presets):
+        preset = presets.save_user_preset(MINIMAL)
+        assert presets.find_preset(preset.id).name == "Tiny test"
+        path = user_presets / "tiny-test.toml"
+        path.write_text(path.read_text().replace("Tiny test", "Renamed test"))
+        os.utime(path, ns=(0, 10**9))
+        assert presets.find_preset(preset.id).name == "Renamed test"
 
     def test_fence_is_stripped_before_saving(self, user_presets):
         preset = presets.save_user_preset("```toml\n" + MINIMAL + "\n```")

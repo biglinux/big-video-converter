@@ -26,14 +26,7 @@ logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
 
-_CODEC_LABELS = {
-    "copy": _("Copy"),
-    "h264": "H.264",
-    "h265": "H.265",
-    "av1": "AV1",
-    "vp9": "VP9",
-    "prores": "ProRes",
-}
+_CODEC_LABELS = {"copy": _("Copy"), **preset_store.CODEC_NAMES}
 
 
 def _matches(preset, query: str) -> bool:
@@ -286,7 +279,7 @@ class PresetsDialog:
         self.dialog.set_child(toolbar)
         self.refresh()
 
-    # ── grid ──
+    # grid
 
     def refresh(self):
         child = self.flowbox.get_first_child()
@@ -329,7 +322,7 @@ class PresetsDialog:
         self.refresh()
         self._toast(_("Preset “{0}” is now in use.").format(preset.display_name))
 
-    # ── per-card menu ──
+    # per-card menu
 
     def _card_menu(self, preset):
         menu = Gio.Menu()
@@ -418,7 +411,7 @@ class PresetsDialog:
 
         file_dialog.save(self.parent_window, None, done)
 
-    # ── adding presets ──
+    # adding presets
 
     def _import_file(self):
         file_dialog = Gtk.FileDialog()
@@ -530,7 +523,7 @@ def show_presets_dialog(parent_window, app) -> PresetsDialog:
     return dialog
 
 
-# ── AI-assisted creation ─────────────────────────────────────────────────────
+# AI-assisted creation
 
 
 def _ffmpeg_version() -> str:
@@ -691,7 +684,7 @@ class AiPresetDialog:
 
         def publish(prompt, error):
             owner = owner_ref()
-            if owner is None or owner.connections._closed:
+            if owner is None or owner.connections.closed:
                 return GLib.SOURCE_REMOVE
             owner.copy_button.set_sensitive(True)
             if error is not None:

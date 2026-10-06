@@ -12,6 +12,14 @@ from typing import ClassVar
 logger = logging.getLogger(__name__)
 
 
+def config_dir() -> str:
+    """The application's configuration directory; a relative XDG path is ignored."""
+    home = os.environ.get("XDG_CONFIG_HOME", "")
+    if not os.path.isabs(home):
+        home = os.path.expanduser("~/.config")
+    return os.path.join(home, "big-video-converter")
+
+
 class SettingsManager:
     """Simple settings manager using JSON file."""
 
@@ -79,31 +87,24 @@ class SettingsManager:
         "show-welcome-dialog": True,
         # Multi-segment output mode
         "multi-segment-output-mode": "join",  # Options: "join", "split"
+        # Shortest pause the editor offers to remove, in seconds
+        "pause-length": 1.0,
         # Video preview rendering mode
         "video-preview-render-mode": "auto",  # Options: "auto", "opengl", "software"
     }
 
-    def __init__(self, app_id, dev_mode=False, dev_settings_file=None):
-        self.app_id = app_id
+    def __init__(self, dev_mode=False, dev_settings_file=None):
         self.settings = {}
         self._batch_mode = False  # When True, defer disk writes
         self._suspended = False  # When True, writes are ignored (UI loading)
-
-        # Simplified path handling
-        config_home = os.environ.get("XDG_CONFIG_HOME", "")
-        if not config_home or not os.path.isabs(config_home):
-            config_home = os.path.expanduser("~/.config")
-        config_dir = os.path.join(config_home, "big-video-converter")
-
+        # Whether settings.json holds a file this process read or wrote; only
+        # such a file may become the backup.
+        self._primary_valid = False
         if dev_mode and dev_settings_file:
             self.settings_file = os.path.abspath(dev_settings_file)
         else:
-            self.settings_file = os.path.join(config_dir, "settings.json")
-
-        # Create directory if needed
+            self.settings_file = os.path.join(config_dir(), "settings.json")
         os.makedirs(os.path.dirname(self.settings_file), exist_ok=True)
-
-        # Load settings
         self.load_from_disk()
 
     def _read_file(self, path: str):
@@ -139,9 +140,7 @@ class SettingsManager:
         """Load settings, falling back to the backup copy when needed.
 
         A truncated settings.json (process killed while writing, power loss,
-        full disk) used to silently reset every preference: the file failed to
-        parse, settings became empty, and the next write replaced the file with
-        that single key. The backup written by save_to_disk covers that case.
+        full disk) would otherwise reset every preference with the next write.
         """
         data = self._read_file(self.settings_file)
 
@@ -155,32 +154,30 @@ class SettingsManager:
                 self.save_to_disk()
                 return
 
-            logger.debug("No usable settings file, will use defaults")
             self.settings = {}
             return
 
         self.settings = data
-        logger.debug(f"Loaded settings from: {self.settings_file}")
+        self._primary_valid = True
 
     def save_to_disk(self) -> bool:
-        """Atomically replace settings; preserve only a known-good backup.
+        """Atomically replace settings; keep the last good file as the backup.
 
         This runs on the GTK thread for every keystroke in the output-folder
-        entry, so the backup is a rename of the file that is being replaced
-        anyway — copying and syncing it a second time doubled the cost of
-        typing. A rename leaves `.bak` as exactly the last published file, and
-        load_from_disk already falls back to it.
+        entry, so the backup is a rename of the file being replaced, nothing
+        is read back, and nothing is synced: settings are program state.
         """
         try:
             data = json.dumps(
                 self.settings, indent=2, ensure_ascii=False, allow_nan=False
             )
-            if self._read_file(self.settings_file) is not None:
+            if self._primary_valid:
                 try:
                     os.replace(self.settings_file, self.settings_file + ".bak")
                 except OSError as error:
                     logger.warning("Could not refresh settings backup: %s", error)
             self._atomic_write(self.settings_file, data)
+            self._primary_valid = True
             return True
         except (OSError, ValueError, TypeError, RecursionError) as error:
             logger.error("Error saving settings: %s", error)
@@ -264,32 +261,11 @@ class SettingsManager:
         finally:
             self._batch_mode = previous
 
-    # Legacy methods for compatibility
     def get_string(self, key: str, default=None):
         return self.get_value(key, default)
 
     def get_boolean(self, key: str, default=None):
         return self.get_value(key, default if default is not None else False)
-
-    def set_string(self, key: str, value: str):
-        return self.set_value(key, str(value) if value is not None else "")
-
-    def set_boolean(self, key: str, value: str):
-        return self.set_value(key, bool(value))
-
-    def set_int(self, key: str, value: str):
-        try:
-            return self.set_value(key, int(value))
-        except (ValueError, TypeError):
-            logger.error(f"Error: Could not convert {value} to integer")
-            return False
-
-    def set_double(self, key: str, value: str):
-        try:
-            return self.set_value(key, float(value))
-        except (ValueError, TypeError):
-            logger.error(f"Error: Could not convert {value} to float")
-            return False
 
     # Keys excluded from profile export (UI state, not conversion settings)
     _PROFILE_EXCLUDE_KEYS: ClassVar[set[str]] = {
@@ -422,8 +398,6 @@ class SettingsManager:
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as file:
                 file.write(text)
-                file.flush()
-                os.fsync(file.fileno())
             os.replace(temporary, path)
         finally:
             try:
@@ -491,6 +465,7 @@ class SettingsManager:
             "compressor-intensity": (0, 10),
             "hpf-frequency": (20, 20000),
             "size-target-mb": (1, 1_000_000),
+            "pause-length": (0.5, 2),
         }
         if key in ranges and not ranges[key][0] <= value <= ranges[key][1]:
             raise ValueError("Out-of-range value for " + key)

@@ -9,7 +9,6 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 gi.require_version("Vte", "3.91")
 
-# Setup translation
 import gettext
 
 from gi.repository import Adw, GLib, Gtk, Pango, Vte
@@ -34,7 +33,6 @@ class InstallDependencyDialog(Adw.Window):
 
         self.install_info = install_info
         self.installation_success = False
-        self.current_command_is_pre = False
 
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.set_content(main_box)
@@ -152,13 +150,9 @@ class InstallDependencyDialog(Adw.Window):
         self.cancel_button.set_sensitive(False)
         self._write_to_terminal(_("Starting installation...\n\n"))
 
-        if "pre_command" in self.install_info:
-            self._run_command(self.install_info["pre_command"], is_pre_command=True)
-        else:
-            self._run_main_command()
+        self._run_command(self.install_info["command"])
 
-    def _run_command(self, command, is_pre_command=False):
-        self.current_command_is_pre = is_pre_command
+    def _run_command(self, command):
         command_str = " ".join(command)
         self._write_to_terminal(f"$ {command_str}\n")
 
@@ -189,24 +183,12 @@ class InstallDependencyDialog(Adw.Window):
         self._write_to_terminal("\n")
 
         if exit_status == 0:
-            if self.current_command_is_pre:
-                self._write_to_terminal(
-                    f"{_('Pre-command completed successfully.')}\n\n"
-                )
-                self._run_main_command()
-            else:
-                self._write_to_terminal(
-                    f"{_('Installation completed successfully!')}\n"
-                )
-                self._finish_installation(True)
+            self._finish_installation(True)
         else:
             self._write_to_terminal(
                 f"{_('Command failed with exit code')}: {exit_status}\n"
             )
             self._finish_installation(False)
-
-    def _run_main_command(self):
-        self._run_command(self.install_info["command"], is_pre_command=False)
 
     def _write_to_terminal(self, text):
         self.terminal.feed(text.encode("utf-8"))

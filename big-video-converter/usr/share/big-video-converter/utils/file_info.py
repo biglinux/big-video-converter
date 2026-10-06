@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import re
 import subprocess
@@ -12,7 +13,8 @@ gi.require_version("Adw", "1")
 import gettext
 import logging
 
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk
+from gi.repository import Adw, Gdk, GLib, Gtk
+from ui.progress_page import format_size, launch_file
 
 from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
 from utils.signal_connections import SignalConnections
@@ -81,11 +83,13 @@ def clear_probe_cache() -> None:
         _PROBE_CACHE.clear()
 
 
-def warm_probe_cache(file_path: str) -> None:
-    """Run every launch-time probe once, off the main thread."""
-    has_audio_streams(file_path)
-    get_video_dimensions(file_path)
-    check_mp4_compatibility(file_path)
+def launch_probes(file_path: str) -> dict:
+    """Every answer a launch needs, probed on a worker thread for the main loop."""
+    return {
+        "audio": has_audio_streams(file_path),
+        "size": get_video_dimensions(file_path),
+        "mp4": check_mp4_compatibility(file_path),
+    }
 
 
 def display_size(stream: dict):
@@ -126,17 +130,17 @@ def get_video_dimensions(file_path: str):
             command, capture_output=True, text=True, timeout=10, check=False
         )
     except (subprocess.SubprocessError, OSError) as error:
-        logger.error(f"Error getting video dimensions: {error}")
+        logger.error("Error getting video dimensions: %s", error)
         raise _ProbeFailed((None, None)) from error
     if result.returncode != 0:
-        logger.error(f"ffprobe error: {result.stderr}")
+        logger.error("ffprobe error: %s", result.stderr)
         raise _ProbeFailed((None, None))
     try:
         streams = json.loads(result.stdout).get("streams") or []
         if streams:
             return display_size(streams[0])
     except (ValueError, TypeError) as error:
-        logger.error(f"Unreadable ffprobe output: {error}")
+        logger.error("Unreadable ffprobe output: %s", error)
         raise _ProbeFailed((None, None)) from error
     logger.debug("No video streams found in file")
     return None, None
@@ -198,7 +202,6 @@ class VideoInfoDialog:
         self.parent_window = parent_window
         self.file_path = file_path
 
-        # Create the dialog window
         self.dialog = Adw.Window()
         self.dialog.set_default_size(780, 600)
         self.dialog.set_modal(True)
@@ -208,7 +211,6 @@ class VideoInfoDialog:
         # Main content box
         content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-        # Add header bar with proper title
         header_bar = Adw.HeaderBar()
         title_label = Gtk.Label(label=_("File Information"))
         title_label.add_css_class("title")
@@ -247,17 +249,14 @@ class VideoInfoDialog:
         clamp.set_tightening_threshold(600)
         clamp.set_hexpand(True)
 
-        # Create info box for actual content
         self.info_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=24)
         self.info_box.set_hexpand(True)
 
-        # Set up the widget hierarchy
         clamp.set_child(self.info_box)
         content_container.append(clamp)
         scrolled.set_child(content_container)
         main_box.append(scrolled)
 
-        # Add loading state with spinner
         self.loading_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.loading_box.set_margin_top(48)
         self.loading_box.set_margin_bottom(48)
@@ -276,14 +275,12 @@ class VideoInfoDialog:
 
         content_box.append(main_box)
 
-        # Set dialog content
         self.dialog.set_content(content_box)
 
     def show(self) -> None:
         """Show the dialog and start loading file information"""
         self.dialog.present()
 
-        # Start loading file information in background
         GLib.idle_add(self._load_file_info)
 
     def _load_file_info(self):
@@ -313,14 +310,12 @@ class VideoInfoDialog:
         """Update the UI with the file information"""
         if not self.dialog.get_visible():
             return
-        # Remove loading indicators
         self.info_box.remove(self.loading_box)
 
         if not info:
             self._show_error(_("Could not retrieve file information."))
             return
 
-        # Add file information groups
         self._add_general_info(info)
 
         if "streams" in info:
@@ -336,15 +331,14 @@ class VideoInfoDialog:
             ]
 
             if video_streams:
-                self._add_stream_group(_("Video Streams"), video_streams)
+                self._add_stream_group(_("Video Streams"), "video", video_streams)
 
             if audio_streams:
-                self._add_stream_group(_("Audio Streams"), audio_streams)
+                self._add_stream_group(_("Audio Streams"), "audio", audio_streams)
 
             if subtitle_streams:
-                self._add_stream_group(_("Subtitles"), subtitle_streams)
+                self._add_stream_group(_("Subtitles"), "subtitle", subtitle_streams)
 
-        # Add format information
         if "format" in info:
             self._add_format_info(info["format"])
 
@@ -365,12 +359,13 @@ class VideoInfoDialog:
         file_path_row = Adw.ActionRow(title=file_dir)
         file_path_row.set_subtitle(_("Location"))
 
-        # Add open folder button
         open_button = Gtk.Button.new_from_icon_name("folder-open-symbolic")
         open_button.add_css_class("flat")
         open_button.set_tooltip_text(_("Open containing folder"))
         self._connections.connect(
-            open_button, "clicked", lambda btn: self._open_containing_folder(file_dir)
+            open_button,
+            "clicked",
+            lambda button: launch_file(None, button, self.file_path, containing=True),
         )
         file_path_row.add_suffix(open_button)
         group.add(file_path_row)
@@ -378,7 +373,7 @@ class VideoInfoDialog:
         # File size - show the size value first, "File Size" as subtitle
         if "format" in info and "size" in info["format"]:
             size_bytes = int(info["format"]["size"])
-            size_str = format_file_size(size_bytes)
+            size_str = format_size(size_bytes)
             size_row = Adw.ActionRow(title=size_str)
             size_row.set_subtitle(_("File Size"))
 
@@ -443,28 +438,12 @@ class VideoInfoDialog:
         )
         return btn
 
-    def _open_containing_folder(self, folder_path):
-        """Open the containing folder in the file manager"""
-        try:
-            # A literal file:// URI misreads "#", "%" and "?" in the path.
-            uri = Gio.File.new_for_path(folder_path).get_uri()
-            Gtk.show_uri(self.dialog, uri, Gdk.CURRENT_TIME)
-        except (TypeError, ValueError) as e:
-            logger.error(f"Error opening folder: {e}")
-            # Fallback method using subprocess
-            try:
-                subprocess.Popen(["xdg-open", folder_path])
-            except (subprocess.SubprocessError, OSError) as e2:
-                logger.error(f"Fallback error opening folder: {e2}")
-
-    def _add_stream_group(self, title, streams):
-        """Add a group of streams (video, audio, subtitles)"""
+    def _add_stream_group(self, title, kind, streams):
+        """Streams of one kind: "video" shown directly, others in expanders."""
         group = Adw.PreferencesGroup(title=title)
 
-        # Special handling for video streams - display directly without expanders
-        if title == _("Video Streams"):
+        if kind == "video":
             for idx, stream in enumerate(streams):
-                # Add important video info directly in the group
                 if "codec_name" in stream:
                     codec_name = stream["codec_name"]
                     if "profile" in stream:
@@ -484,7 +463,6 @@ class VideoInfoDialog:
                     res_row = Adw.ActionRow(title=res_value)
                     res_row.set_subtitle(_("Resolution"))
 
-                    # Add standard resolution label if applicable
                     if stream["height"] in [480, 720, 1080, 2160, 4320]:
                         resolution_labels = {
                             480: "SD (480p)",
@@ -546,7 +524,6 @@ class VideoInfoDialog:
 
                     group.add(bitrate_row)
 
-                # Add language info if available
                 if "tags" in stream and "language" in stream["tags"]:
                     lang_code = stream["tags"]["language"].upper()
                     lang_row = Adw.ActionRow(title=lang_code)
@@ -567,11 +544,13 @@ class VideoInfoDialog:
         else:
             # For audio and subtitle streams, keep using expanders
             for idx, stream in enumerate(streams):
-                # ...existing code for audio and subtitle streams...
-                stream_title = f"{title.rstrip('s')} {idx + 1}"
+                stream_title = (
+                    _("Audio track {number}")
+                    if kind == "audio"
+                    else _("Subtitle {number}")
+                ).format(number=idx + 1)
                 stream_icon = None
 
-                # Add appropriate stream icon based on type
                 if stream.get("codec_type") == "video":
                     stream_icon = "video-x-generic-symbolic"
                 elif stream.get("codec_type") == "audio":
@@ -579,7 +558,6 @@ class VideoInfoDialog:
                 elif stream.get("codec_type") == "subtitle":
                     stream_icon = "text-x-generic-symbolic"
 
-                # Add language info to title
                 if "tags" in stream:
                     if "title" in stream["tags"]:
                         stream_title += f" - {stream['tags']['title']}"
@@ -589,7 +567,6 @@ class VideoInfoDialog:
 
                 expander = Adw.ExpanderRow(title=stream_title)
 
-                # Add icon suffix if we have one
                 if stream_icon:
                     icon = Gtk.Image.new_from_icon_name(stream_icon)
                     icon.add_css_class("dim-label")
@@ -607,7 +584,6 @@ class VideoInfoDialog:
                         self._make_copy_button(_("Copy codec"), codec_name)
                     )
 
-                    # Add codec icon suffix
                     codec_icon = Gtk.Image.new_from_icon_name(
                         "application-x-executable-symbolic"
                     )
@@ -618,7 +594,6 @@ class VideoInfoDialog:
 
                 # Audio-specific information
                 if stream.get("codec_type") == "audio":
-                    # ...existing code for audio...
                     # Sample rate - show sample rate value first, "Sample Rate" as subtitle
                     if "sample_rate" in stream:
                         sample_rate = int(stream["sample_rate"])
@@ -630,7 +605,6 @@ class VideoInfoDialog:
                             self._make_copy_button(_("Copy sample rate"), sample_value)
                         )
 
-                        # Add suffix for quality indicator
                         if sample_rate >= 44100:
                             quality_label = Gtk.Label(
                                 label=_("CD Quality")
@@ -677,8 +651,6 @@ class VideoInfoDialog:
                         )
 
                         expander.add_row(bitrate_row)
-
-                # ...existing code for the rest of the audio and subtitle stream info...
 
                 # Language and other tags
                 if "tags" in stream:
@@ -730,7 +702,6 @@ class VideoInfoDialog:
                 row.set_subtitle(title)
                 group.add(row)
 
-        # Add metadata
         if "tags" in format_data:
             metadata_expander = Adw.ExpanderRow(title=_("Metadata"))
 
@@ -755,11 +726,9 @@ class VideoInfoDialog:
         """Show error message in the dialog"""
         if not self.dialog.get_visible():
             return
-        # Remove loading indicators if they exist
         if hasattr(self, "loading_box") and self.loading_box in self.info_box:
             self.info_box.remove(self.loading_box)
 
-        # Add error message
         error_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         error_box.set_margin_top(48)
         error_box.set_margin_bottom(48)
@@ -778,7 +747,6 @@ class VideoInfoDialog:
         error_details.set_wrap(True)
         error_box.append(error_details)
 
-        # Add a retry button
         retry_button = Gtk.Button(label=_("Retry"))
         retry_button.add_css_class("pill")
         retry_button.add_css_class("suggested-action")
@@ -791,7 +759,6 @@ class VideoInfoDialog:
 
     def _on_retry_clicked(self, button):
         """Handle retry button click"""
-        # Clear the content box
         while True:
             child = self.info_box.get_first_child()
             if child:
@@ -799,7 +766,6 @@ class VideoInfoDialog:
             else:
                 break
 
-        # Add loading indicator back
         self.loading_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         self.loading_box.set_margin_top(48)
         self.loading_box.set_margin_bottom(48)
@@ -858,7 +824,7 @@ def _probe_with_ffmpeg(file_path: str):
             check=False,
         )
     except (subprocess.SubprocessError, OSError) as e:
-        logger.error(f"ffmpeg fallback probe failed: {e}")
+        logger.error("ffmpeg fallback probe failed: %s", e)
         return None
 
     output = result.stderr or ""
@@ -950,7 +916,9 @@ def _probe_with_ffmpeg(file_path: str):
         pass
 
     logger.debug(
-        f"ffmpeg fallback probe found {len(streams)} streams in {os.path.basename(file_path)}"
+        "ffmpeg fallback probe found %s streams in %s",
+        len(streams),
+        os.path.basename(file_path),
     )
     return info
 
@@ -1005,8 +973,8 @@ def get_video_file_info(file_path: str):
         if not info or not info.get("streams"):
             # ffprobe gave up on this file — read the metadata from ffmpeg.
             logger.debug(
-                f"ffprobe returned no usable data for {os.path.basename(file_path)}; "
-                "falling back to ffmpeg"
+                "ffprobe returned no usable data for %s; falling back to ffmpeg",
+                os.path.basename(file_path),
             )
             info = _probe_with_ffmpeg(file_path)
             if not info:
@@ -1027,23 +995,61 @@ def get_video_file_info(file_path: str):
                 bitrate = (size * 8) / duration
                 info["format"]["bit_rate"] = str(int(bitrate))
 
-        return info
+        return normalize_probe(info)
 
     except (subprocess.SubprocessError, OSError) as e:
-        logger.error(f"Error getting file info: {e}")
+        logger.error("Error getting file info: %s", e)
         return None
 
 
-def format_file_size(size_bytes):
-    """Format file size in bytes to a human-readable string"""
-    if size_bytes < 1024:
-        return f"{size_bytes} B"
-    elif size_bytes < 1024 * 1024:
-        return f"{size_bytes / 1024:.1f} KB"
-    elif size_bytes < 1024 * 1024 * 1024:
-        return f"{size_bytes / (1024 * 1024):.2f} MB"
-    else:
-        return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+_INTEGER_FIELDS = ("size", "bit_rate", "sample_rate", "channels", "width", "height")
+
+
+def _number(value, kind):
+    try:
+        number = kind(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    return number if math.isfinite(number) else None
+
+
+def normalize_probe(info: dict) -> dict:
+    """ffprobe's answer with every field the information dialog reads usable.
+
+    Runs on the worker: "N/A", NaN or a missing block would otherwise raise in
+    the dialog's main-loop callback and leave it empty. Unusable fields are left out.
+    """
+
+    def clean(block):
+        result = {}
+        for key, value in block.items():
+            if key in _INTEGER_FIELDS:
+                value = _number(value, lambda v: int(float(v)))
+            elif key == "duration":
+                value = _number(value, float)
+            elif key == "r_frame_rate":
+                num, _sep, den = str(value).partition("/")
+                if not (num.isdigit() and den.isdigit() and int(den)):
+                    value = None
+            elif key == "tags":
+                value = (
+                    {str(k): str(v) for k, v in value.items()}
+                    if isinstance(value, dict)
+                    else None
+                )
+            if value is not None:
+                result[key] = value
+        return result
+
+    format_block = info.get("format")
+    streams = info.get("streams")
+    return {
+        **info,
+        "format": clean(format_block) if isinstance(format_block, dict) else {},
+        "streams": [clean(stream) for stream in streams if isinstance(stream, dict)]
+        if isinstance(streams, list)
+        else [],
+    }
 
 
 @_cached_probe
@@ -1096,7 +1102,7 @@ def has_audio_streams(file_path: str):
         return False
 
     except (subprocess.SubprocessError, OSError) as e:
-        logger.error(f"Error checking audio streams: {e}")
+        logger.error("Error checking audio streams: %s", e)
         # On error, assume there might be audio to avoid accidentally removing it
         raise _ProbeFailed(True) from e
 
@@ -1121,7 +1127,6 @@ def check_mp4_compatibility(file_path: str):
         if not os.path.exists(file_path):
             return False, []
 
-        # Get file info
         info = get_video_file_info(file_path)
         if not info or "streams" not in info:
             # Can't determine, assume compatible
@@ -1172,6 +1177,6 @@ def check_mp4_compatibility(file_path: str):
         return len(incompatible) == 0, incompatible
 
     except OSError as e:
-        logger.error(f"Error checking MP4 compatibility: {e}")
+        logger.error("Error checking MP4 compatibility: %s", e)
         # On error, assume compatible to avoid blocking conversion
         raise _ProbeFailed((True, [])) from e

@@ -18,7 +18,6 @@ class AudioSettingsMixin:
         self.settings_manager.save_setting("noise-reduction", state)
         self._update_audio_cleaning_subtitle()
 
-        # Update audio filter preview in edit page
         if hasattr(self, "video_edit_page") and self.video_edit_page:
             self.video_edit_page.update_nr_button_visibility()
 

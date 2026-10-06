@@ -17,6 +17,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
+from conftest import pump, pump_until
 from gi.repository import Adw, GLib, Gtk, Pango
 from queue_manager import QueueManagerMixin
 from ui.progress_page import ProgressPage, TimeLeft, format_clock, format_time_left
@@ -103,7 +104,7 @@ class ProgressPageTests(unittest.TestCase):
         window.set_content(self.page.get_page())
         try:
             window.present()
-            pump()
+            pump(0.2)
             labels = (
                 self.page.strip_label,
                 self.page.queue_items["/tmp/pending.mp4"].status_label,
@@ -275,9 +276,9 @@ class ProgressPageTests(unittest.TestCase):
         window.set_content(self.page.get_page())
         try:
             window.present()
-            pump()
+            pump(0.2)
             self.settle(["completed", "completed"])
-            pump()
+            pump(0.2)
             self.assertIs(window.get_focus(), self.page.primary_button)
             self.assertTrue(self.page.back_button.get_visible())
             self.page.primary_button.emit("clicked")
@@ -510,9 +511,9 @@ class ProgressPageTests(unittest.TestCase):
         self.assertTrue(all(request.cancelled for request in manager.requests))
         for request in manager.requests:
             request.callback("/nonexistent.png")  # a worker finishing late
-        pump()
+        pump(0.2)
         gc.collect()
-        pump()
+        pump(0.2)
         self.assertEqual(len(finalized), 2)
 
 
@@ -532,24 +533,6 @@ class FakeThumbnails:
     def request(self, path, callback):
         self.requests.append(FakeRequest(callback))
         return self.requests[-1]
-
-
-def pump(seconds=0.2):
-    context = GLib.MainContext.default()
-    deadline = time.monotonic() + seconds
-    while time.monotonic() < deadline:
-        context.iteration(False)
-        time.sleep(0.005)
-
-
-def pump_until(predicate, timeout=5):
-    context = GLib.MainContext.default()
-    deadline = time.monotonic() + timeout
-    while not predicate():
-        if time.monotonic() > deadline:
-            raise AssertionError("condition not reached")
-        context.iteration(False)
-        time.sleep(0.005)
 
 
 def visible_bars(root):
@@ -586,7 +569,6 @@ class FakeProgressSummary:
 class QueueCompletionHarness(QueueManagerMixin):
     def __init__(self, shown=True):
         self.progress_page = FakeProgressSummary(shown)
-        self.is_minimized = True
         self.notifications = []
 
     def send_system_notification(self, title, body):

@@ -134,8 +134,8 @@ class SubtitleProcessor:
             raise InterruptedError("Subtitle processing cancelled")
 
     def _get_subtitle_streams(self):
-        # Cues are read as SRT: a bitmap track has no text to clip, and its
-        # extraction failing used to abort the whole segment job.
+        # Cues are read as SRT: a bitmap track has no text to clip, and a
+        # failed extraction must not abort the whole segment job.
         return [
             s
             for s in probe_media(self.input_file)["streams"]

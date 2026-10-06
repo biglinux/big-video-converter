@@ -18,8 +18,6 @@ gi.require_version("Adw", "1")
 import gettext
 
 import big_gtk_kit
-
-# The *Mixin classes were extracted from this file to reduce its size.
 from audio_settings import AudioSettingsMixin
 from constants import APP_ID
 from file_handler import FileHandlerMixin
@@ -94,7 +92,6 @@ class VideoConverterApp(
         return False
 
     def __init__(self):
-        # Initialize with proper single-instance flags
         super().__init__(
             application_id=APP_ID,
             flags=Gio.ApplicationFlags.HANDLES_OPEN
@@ -124,17 +121,14 @@ class VideoConverterApp(
         self.connect("startup", lambda _app: big_gtk_kit.install())
         self.connect("activate", self.on_activate)
 
-        # Initialize settings
-        self.settings_manager = SettingsManager(APP_ID)
+        self.settings_manager = SettingsManager()
         self.dependency_checker = DependencyChecker()
         self.last_accessed_directory = self.settings_manager.load_setting(
             "last-accessed-directory", os.path.expanduser("~")
         )
 
-        # Initialize tooltip helper
         self.tooltip_helper = TooltipHelper(self.settings_manager)
 
-        # Initialize logger
         self.logger = logging.getLogger(__name__)
 
         # Make sure that the selected format is one of the available options
@@ -143,7 +137,6 @@ class VideoConverterApp(
         if current_format > 3:
             self.settings_manager.save_setting("output-format-index", 0)  # Reset to MP4
 
-        # Initialize state variables
         self.conversions_running = 0
         self.conversion_queue = deque()
         # Track active conversions for parallel processing
@@ -159,14 +152,8 @@ class VideoConverterApp(
         # Track completed conversions for completion screen
         self.completed_conversions = []
 
-        # Thread safety locks
         self.conversions_lock = threading.Lock()
-        self.completion_lock = threading.Lock()
 
-        self._processing_completion = False
-        self.is_minimized = False
-
-        # Setup application actions
         self._setup_actions()
 
     def _setup_actions(self):
@@ -212,61 +199,30 @@ class VideoConverterApp(
         self.lookup_action("toggle_sidebar").set_enabled(False)
 
     def _setup_icon_theme(self):
-        """Setup custom icon theme path for bundled icons with PRIORITY"""
-        try:
-            # Get the application's directory
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            icons_dir = os.path.join(script_dir, "icons")
-
-            # Check if icons directory exists
-            if os.path.exists(icons_dir):
-                # Get default icon theme
-                icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
-
-                # Prepend our icons directory so bundled icons win, once:
-                # every activation runs this.
-                current_paths = icon_theme.get_search_path()
-                if icons_dir in current_paths:
-                    return
-                new_paths = [icons_dir] + current_paths
-                icon_theme.set_search_path(new_paths)
-
-                if os.environ.get("BVC_DEBUG"):
-                    self.logger.debug(
-                        f"Custom icon theme path added with PRIORITY: {icons_dir}"
-                    )
-                    self.logger.debug(
-                        f"Search paths order: {new_paths[:3]}..."
-                    )  # Show first 3
-
-        except OSError as e:
-            if os.environ.get("BVC_DEBUG"):
-                self.logger.error(
-                    f"Error setting up icon theme: {type(e).__name__}: {e}"
-                )
+        """Put the bundled icons first in the search path, once per process."""
+        icons_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "icons")
+        icon_theme = Gtk.IconTheme.get_for_display(Gdk.Display.get_default())
+        paths = icon_theme.get_search_path()
+        if os.path.isdir(icons_dir) and icons_dir not in paths:
+            icon_theme.set_search_path([icons_dir, *paths])
 
     def on_activate(self, app) -> None:
-        # Setup custom icon theme for bundled icons
         self._setup_icon_theme()
 
         # Check if this is the first activation
         is_first_activation = not hasattr(self, "window") or self.window is None
 
-        # Create window if it doesn't exist
         if is_first_activation:
             self._create_window()
 
         # Present the window early so dialogs can be transient for it
         self.window.present()
 
-        # --- FFmpeg Dependency Check ---
         if not self.dependency_checker.are_dependencies_available():
             self._show_dependency_install_dialog()
             # Don't proceed with normal activation until ffmpeg is handled
             return
-        # --- End of Check ---
 
-        # Show welcome dialog only on first activation
         if is_first_activation and WelcomeDialog.should_show_welcome(
             self.settings_manager
         ):
@@ -280,7 +236,6 @@ class VideoConverterApp(
 
     def _create_window(self):
         """Create the main application window and UI components"""
-        # Create main window
         install_style()
         self.window = Adw.ApplicationWindow(application=self)
         self.window.add_css_class("big-video-converter")
@@ -311,10 +266,8 @@ class VideoConverterApp(
 
         self.window.set_icon_name("big-video-converter")
 
-        # Setup drag and drop
         self._setup_drag_and_drop()
 
-        # Create main content structure with ToastOverlay
         self.toast_overlay = Adw.ToastOverlay()
 
         # Create master ViewStack for main view and progress view
@@ -331,7 +284,6 @@ class VideoConverterApp(
         compact.add_setter(self.split_view, "max-sidebar-width", 360)
         self.window.add_breakpoint(compact)
 
-        # Create CSS for sidebar styling
         css_provider = Gtk.CssProvider()
         css_provider.load_from_string(
             """
@@ -355,7 +307,6 @@ class VideoConverterApp(
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
-        # Create left and right panes with ToolbarViews
         self._create_left_pane()
         self._create_right_pane()
 
@@ -371,7 +322,7 @@ class VideoConverterApp(
         # Subtitle-only alert banner
         self.subtitle_banner = Adw.Banner()
         self.subtitle_banner.set_title(
-            _("⚠ Subtitle extraction only mode is active — video will NOT be converted")
+            _("Only subtitles will be extracted; videos will not be converted")
         )
         self.subtitle_banner.add_css_class("warning-banner")
         self.subtitle_banner.set_revealed(
@@ -385,7 +336,6 @@ class VideoConverterApp(
         self.toast_overlay.set_vexpand(True)
         self.window.set_content(content_box)
 
-        # Create pages (including progress page)
         self._create_pages()
 
     def _on_window_close_request(self, window):
@@ -447,7 +397,6 @@ class VideoConverterApp(
 
     def _save_window_state(self):
         """Save current window size, position and maximized state"""
-        # Save maximized state
         is_maximized = self.window.is_maximized()
         self.settings_manager.save_setting("window-maximized", is_maximized)
 
@@ -458,7 +407,6 @@ class VideoConverterApp(
             self.settings_manager.save_setting("window-width", width)
             self.settings_manager.save_setting("window-height", height)
 
-        # Save sidebar position
         if self.split_view.get_show_sidebar():
             self.settings_manager.save_setting(
                 "sidebar-position", self.split_view.get_sidebar().get_width()
@@ -478,17 +426,14 @@ class VideoConverterApp(
 
     def _create_right_pane(self):
         """Create right pane with stack for queue and editor views using ToolbarView"""
-        # Create ToolbarView for right pane
         self.right_toolbar_view = Adw.ToolbarView()
 
         # Detect window button layout
         window_buttons_left = self._window_buttons_on_left()
 
-        # Create HeaderBar for right pane
         self.header_bar = HeaderBar(self, window_buttons_left)
         self.right_toolbar_view.add_top_bar(self.header_bar)
 
-        # Create ViewStack for queue and editor
         self.right_stack = Adw.ViewStack()
         self.right_stack.set_hhomogeneous(False)
         # The queue needs less height than the editor; do not make it pay.
@@ -496,7 +441,6 @@ class VideoConverterApp(
         self.right_stack.set_vexpand(True)
         self.right_stack.set_hexpand(True)
 
-        # Connect to stack change signal
         self.right_stack.connect(
             "notify::visible-child-name", self.on_visible_child_changed
         )
@@ -506,7 +450,6 @@ class VideoConverterApp(
 
         self.right_toolbar_view.set_content(self.right_stack)
 
-        # Set minimum width for right content area
         self.right_toolbar_view.set_size_request(620, -1)
 
         content = Gtk.Overlay(child=self.right_toolbar_view)
@@ -515,20 +458,18 @@ class VideoConverterApp(
 
     def _create_pages(self):
         """Create and add all application pages"""
-        # Initialize pages
         self.conversion_page = ConversionPage(self)
 
         self.video_edit_page = VideoEditPage(self, self.conversion_page)
         self.progress_page = ProgressPage(self)
 
-        # Populate the sidebar now that video_edit_page is initialized
+        # The editing tools need the editor page, created above.
         self.video_edit_page.ui.populate_sidebar(self.editing_tools_box)
         # The left pane loaded its settings before the editor existed.
         self.video_edit_page.ui.update_for_force_copy_state(
             self.settings_manager.get_boolean("force-copy-video", False)
         )
 
-        # Add queue view to right stack
         self.right_stack.add_titled(
             self.conversion_page.get_page(), "queue_view", _("Queue")
         )
@@ -541,7 +482,6 @@ class VideoConverterApp(
         )
         self.right_stack.add_titled(editor_scroller, "editor_view", _("Editor"))
 
-        # Add progress page to main_stack
         self.main_stack.add_titled(
             self.progress_page.get_page(), "progress_view", _("Progress")
         )
@@ -574,7 +514,7 @@ class VideoConverterApp(
             self.show_error_dialog(_("File not found"))
             return
 
-        self.logger.debug(f"Opening file in editor: {os.path.basename(file_path)}")
+        self.logger.debug("Opening file in editor: %s", os.path.basename(file_path))
 
         self.right_stack.set_visible_child_name("editor_view")
         self.header_bar.set_view("editor")
@@ -654,7 +594,9 @@ class VideoConverterApp(
         dialog.show(self.window)
 
     def send_system_notification(self, title: str, body) -> None:
-        """Send a system notification"""
+        """Tell someone who is looking elsewhere; an active window shows it already."""
+        if self.window.is_active():
+            return
         notification = Gio.Notification.new(title)
         notification.set_body(body)
         self.send_notification(None, notification)
@@ -792,30 +734,11 @@ class VideoConverterApp(
         dialog = InstallDependencyDialog(self.window, install_info)
 
         def on_dialog_close(widget) -> None:
-            if dialog.installation_success:
-                # Re-check for dependencies
-                self.dependency_checker = DependencyChecker()
-                if self.dependency_checker.are_dependencies_available():
-                    self.show_info_dialog(
-                        _("Installation Successful"),
-                        _(
-                            "Dependencies have been installed. The application will now restart."
-                        ),
-                    )
-                    # Restart the application
-                    self.quit()
-                    subprocess.Popen([sys.executable] + sys.argv)
-                else:
-                    self.show_error_dialog(
-                        _("Installation Failed"),
-                        _(
-                            "Dependencies were not found after installation. Please restart the application manually."
-                        ),
-                    )
-                    self.quit()
-            else:
-                # User cancelled or installation failed, quit the app
-                self.quit()
+            # The preview modules load when the application starts, so a
+            # successful installation still needs a fresh start; the dialog's
+            # own text asks for it. A cancelled or failed one leaves nothing
+            # usable either.
+            self.quit()
 
         dialog.connect("close-request", on_dialog_close)
 

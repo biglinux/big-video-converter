@@ -2,6 +2,7 @@
 
 import gettext
 import logging
+import threading
 
 from constants import (
     AUDIO_VALUES,
@@ -11,7 +12,7 @@ from constants import (
     VIDEO_QUALITY_VALUES,
 )
 from gi.repository import Adw, Gdk, Gtk
-from utils.gpu_selector import detect_render_devices
+from utils.gpu_selector import detect_render_devices, select_best_gpu
 
 _ = gettext.gettext
 
@@ -30,7 +31,6 @@ class SidebarBuilderMixin:
         # Detect window button layout
         window_buttons_left = self._window_buttons_on_left()
 
-        # Create a HeaderBar for the left pane
         left_header = Adw.HeaderBar()
         left_header.add_css_class("sidebar")
         left_header.set_show_title(True)
@@ -55,13 +55,11 @@ class SidebarBuilderMixin:
             left_header.set_title_widget(title_box)
         left_toolbar_view.add_top_bar(left_header)
 
-        # Create scrolled window for content
         left_scroll = Gtk.ScrolledWindow()
         left_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         left_scroll.set_min_content_width(300)
         left_scroll.set_max_content_width(400)
 
-        # Create ViewStack for contextual content
         self.left_stack = Adw.ViewStack()
         self.left_stack.set_hhomogeneous(False)
         # Each page scrolls by its own height: the taller editing page would
@@ -74,7 +72,7 @@ class SidebarBuilderMixin:
             conversion_settings, "conversion_settings", _("Conversion")
         )
 
-        # Page 2: Editing Tools (This is now a container to be populated later)
+        # Page 2: the editing tools, filled by the editor page once it exists.
         self.editing_tools_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
             spacing=12,
@@ -90,7 +88,6 @@ class SidebarBuilderMixin:
         left_scroll.set_child(self.left_stack)
         left_toolbar_view.set_content(left_scroll)
 
-        # Set minimum width for left sidebar
         left_toolbar_view.set_size_request(300, -1)
 
         self.split_view.set_sidebar(left_toolbar_view)
@@ -202,7 +199,7 @@ class SidebarBuilderMixin:
         settings_box.set_margin_top(12)
         settings_box.set_margin_bottom(24)
 
-        # ── Create all data-holder widgets (not added to sidebar) ──
+        # Create all data-holder widgets (not added to sidebar)
 
         # Video Codec
         codec_model = Gtk.StringList()
@@ -228,6 +225,14 @@ class SidebarBuilderMixin:
 
         # GPU Device
         self.detected_gpus = detect_render_devices()
+        if len(self.detected_gpus) > 1:
+            # Ranking the GPUs runs ffmpeg and vainfo; their answers are cached.
+            threading.Thread(
+                target=select_best_gpu,
+                args=(self.detected_gpus, "h264"),
+                name="bvc-gpu-probe",
+                daemon=True,
+            ).start()
         self.gpu_device_combo = Adw.ComboRow(title=_("GPU Device"))
         self.gpu_device_combo.set_subtitle(_("Select which GPU to use"))
         gpu_device_model = Gtk.StringList()
@@ -298,7 +303,7 @@ class SidebarBuilderMixin:
         self.noise_strength_adj.connect(
             "notify::value",
             lambda a, _: self._noise_strength_label.set_text(
-                f"{a.get_value() * 100:.0f}%"
+                _("{percent}%").format(percent=f"{a.get_value() * 100:.0f}")
             ),
         )
         self.noise_strength_row.add_suffix(self.noise_strength_scale)
@@ -355,7 +360,7 @@ class SidebarBuilderMixin:
         self.gate_intensity_adj.connect(
             "notify::value",
             lambda a, _: self._gate_intensity_label.set_text(
-                f"{a.get_value() * 100:.0f}%"
+                _("{percent}%").format(percent=f"{a.get_value() * 100:.0f}")
             ),
         )
         self.gate_intensity_row.add_suffix(self.gate_intensity_scale)
@@ -400,7 +405,9 @@ class SidebarBuilderMixin:
         self._compressor_label.add_css_class("caption")
         self.compressor_intensity_adj.connect(
             "notify::value",
-            lambda a, _: self._compressor_label.set_text(f"{a.get_value() * 100:.0f}%"),
+            lambda a, _: self._compressor_label.set_text(
+                _("{percent}%").format(percent=f"{a.get_value() * 100:.0f}")
+            ),
         )
         self.compressor_intensity_row.add_suffix(self.compressor_intensity_scale)
         self.compressor_intensity_row.add_suffix(self._compressor_label)
@@ -506,7 +513,7 @@ class SidebarBuilderMixin:
         self.normalize_row.connect("notify::active", self._on_normalize_toggled)
         self.noise_reduction_expander.add_row(self.normalize_row)
 
-        # ── Group 1: Video Mode Profiles ──
+        # Group 1: Video Mode Profiles
         video_group = Adw.PreferencesGroup()
 
         self._radio_copy = Gtk.CheckButton()
@@ -578,7 +585,7 @@ class SidebarBuilderMixin:
 
         settings_box.append(video_group)
 
-        # ── Group 2: Audio / Subtitles / Extra ──
+        # Group 2: Audio / Subtitles / Extra
         other_group = Adw.PreferencesGroup()
 
         self._audio_row = Adw.ActionRow(title=_("Audio Encoding"))
@@ -630,13 +637,11 @@ class SidebarBuilderMixin:
 
         settings_box.append(other_group)
 
-        # Initialize settings page (data holder for advanced widgets)
         from ui.settings_page import SettingsPage
 
         self.settings_page = SettingsPage(self)
         self._update_sidebar_for_extract_mode()
 
-        # Connect signals and load settings
         self._connect_left_pane_signals()
         self._load_left_pane_settings()
 
@@ -765,8 +770,6 @@ class SidebarBuilderMixin:
                 self._refresh_nr_preview(),
             ),
         )
-
-        # Show tooltips — now managed via hamburger menu action
 
         # Resolution change → update customize subtitle
         self.settings_page.video_resolution_combo.connect(
@@ -908,7 +911,6 @@ class SidebarBuilderMixin:
 
         # Show tooltips — state loaded via tooltip_action in _setup_actions
 
-        # Update all sidebar subtitles
         self._select_profile_radio(self._detect_current_profile())
         self._update_customize_subtitle()
         self._update_presets_subtitle()
@@ -964,25 +966,25 @@ class SidebarBuilderMixin:
             self.conversion_page.refresh_recipe_summaries()
 
     def _on_video_encoding_activated(self, _row):
-        """Open the educational video encoding dialog."""
+        """Open the video encoding dialog."""
         from ui.video_encoding_dialog import show_video_encoding_dialog
 
         show_video_encoding_dialog(self.window, self)
 
     def _on_audio_activated(self, _row):
-        """Open the educational audio dialog."""
+        """Open the audio dialog."""
         from ui.audio_dialog import show_audio_dialog
 
         show_audio_dialog(self.window, self)
 
     def _on_noise_options_activated(self, _row):
-        """Open the educational audio cleaning dialog."""
+        """Open the audio cleaning dialog."""
         from ui.noise_dialog import show_noise_dialog
 
         show_noise_dialog(self.window, self)
 
     def _on_subtitles_activated(self, _row):
-        """Open the educational subtitles dialog."""
+        """Open the subtitles dialog."""
         from ui.subtitles_dialog import show_subtitles_dialog
 
         show_subtitles_dialog(self.window, self)
@@ -1011,7 +1013,7 @@ class SidebarBuilderMixin:
 
         show_extra_dialog(self.window, self)
 
-    # ── Sidebar subtitle update methods ──
+    # Sidebar subtitle update methods
 
     def _update_audio_subtitle(self):
         """Update the Audio ActionRow subtitle with current settings."""
@@ -1145,7 +1147,7 @@ class SidebarBuilderMixin:
         """Find index of quality value"""
         value = value.lower()
         reverse_map = {v: k for k, v in VIDEO_QUALITY_VALUES.items()}
-        return reverse_map.get(value, 3)
+        return reverse_map.get(value, 0)
 
     def _find_codec_index(self, value):
         """Find index of codec value (default: 1 = H.264)"""
@@ -1174,7 +1176,6 @@ class SidebarBuilderMixin:
         self._audio_cleaning_row.set_sensitive(audio_will_reencode)
         self._update_audio_subtitle()
         self._update_audio_cleaning_subtitle()
-        # Update NR preview button visibility in edit page
         if hasattr(self, "video_edit_page") and self.video_edit_page:
             self.video_edit_page.update_nr_button_visibility()
 
@@ -1189,7 +1190,6 @@ class SidebarBuilderMixin:
         # Disable customize row when copy is active
         self._customize_row.set_sensitive(enable)
 
-        # Update video edit page if it exists
         if (
             hasattr(self, "video_edit_page")
             and self.video_edit_page

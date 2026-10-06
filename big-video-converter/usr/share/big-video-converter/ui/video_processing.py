@@ -4,12 +4,13 @@ import threading
 import gi
 
 gi.require_version("Gtk", "4.0")
-# Setup translation
 import gettext
 import logging
 
 from gi.repository import GLib
 from utils.file_info import display_size, get_video_file_info
+
+from ui.progress_page import format_size
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class VideoProcessor:
     def load_video(self, file_path: str) -> bool:
         """Starts the asynchronous process of loading video metadata."""
         if not file_path or not os.path.exists(file_path):
-            logger.error(f"Cannot load video - invalid path: {file_path}")
+            logger.error("Cannot load video - invalid path: %s", file_path)
             self.page.loading_video = False
             return False
 
@@ -97,7 +98,6 @@ class VideoProcessor:
             self.page.app.show_error_dialog(_("Error: No video stream found"))
             return
 
-        # --- Update all video properties ---
         self.page.video_width, self.page.video_height = display_size(video_stream)
 
         duration_str = video_stream.get("duration") or info.get("format", {}).get(
@@ -117,18 +117,19 @@ class VideoProcessor:
             else 30
         )
 
-        # --- Update UI Labels ---
         try:
-            file_size_bytes = int(info.get("format", {}).get("size", 0))
-        except ValueError:
-            file_size_bytes = os.path.getsize(file_path)
-        file_size_str = f"{file_size_bytes / (1024 * 1024):.2f} MB"
+            size = int(info.get("format", {}).get("size"))
+        except (TypeError, ValueError):  # "N/A": the file itself knows
+            try:
+                size = os.path.getsize(file_path)
+            except OSError:
+                size = None
+        file_size_str = format_size(size) if size is not None else ""
 
         hours, rem = divmod(self.page.video_duration, 3600)
         minutes, seconds = divmod(rem, 60)
         duration_formatted = f"{int(hours):02d}:{int(minutes):02d}:{seconds:06.3f}"
 
-        # CORRECTION: Update only the labels that exist in the new UI
         self.page.ui.info_dimensions_label.set_text(
             f"{self.page.video_width}×{self.page.video_height}"
         )
@@ -136,7 +137,6 @@ class VideoProcessor:
         self.page.ui.info_filesize_label.set_text(file_size_str)
         self.page.ui.info_duration_label.set_text(duration_formatted)
 
-        # --- Load into video player and finalize ---
         if (
             hasattr(self.page, "mpv_player")
             and self.page.mpv_player
@@ -149,34 +149,28 @@ class VideoProcessor:
             )
             return
 
-        # Load per-file editing metadata now that we have the context; from
-        # here on, edits belong to this video.
+        # From here on, edits belong to this video.
         self.page.current_video_path = file_path
         self.page._load_file_metadata(file_path)
 
-        # Update crop displays
         self.page.update_crop_spinbuttons()
 
-        # Set initial position and update displays
         self.page.current_position = 0
         self.page.ui.position_scale.set_value(0)
         self.page.update_position_display(0)
         self.page.update_frame_counter(0)
 
-        # Update audio and subtitle track controls
         self.page.update_audio_subtitle_controls()
 
-        # Start playback automatically and update UI state
         if hasattr(self.page, "mpv_player") and self.page.mpv_player:
             self.page.mpv_player.play()
             self.page.is_playing = True
             self.page.ui.play_pause_button.set_icon_name(
                 "media-playback-pause-symbolic"
             )
-            # Start position update timer
             if not self.page.position_update_id:
                 self.page.position_update_id = GLib.timeout_add(
                     100, self.page._update_position_callback
                 )
 
-        logger.debug(f"Successfully loaded video: {os.path.basename(file_path)}")
+        logger.debug("Successfully loaded video: %s", os.path.basename(file_path))

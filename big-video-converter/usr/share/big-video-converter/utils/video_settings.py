@@ -226,10 +226,14 @@ def get_ffmpeg_filter_string(
     crop_bottom = get_adjustment_value(settings, "crop_bottom")
 
     logger.debug(
-        f"Video filters: crop_left={crop_left}, crop_right={crop_right}, crop_top={crop_top}, crop_bottom={crop_bottom}"
+        "Video filters: crop_left=%s, crop_right=%s, crop_top=%s, crop_bottom=%s",
+        crop_left,
+        crop_right,
+        crop_top,
+        crop_bottom,
     )
     logger.debug(
-        f"Video filters: video_width={video_width}, video_height={video_height}"
+        "Video filters: video_width=%s, video_height=%s", video_width, video_height
     )
 
     if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:

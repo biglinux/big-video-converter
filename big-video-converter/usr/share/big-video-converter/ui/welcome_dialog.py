@@ -27,11 +27,9 @@ class WelcomeDialog:
 
     def setup_ui(self) -> None:
         """Set up the UI components"""
-        # Create scrolled window for content
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scrolled.set_vexpand(True)
-        # Removed fixed min sizes to allow adaptation to screen size
 
         # Content container
         content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -70,24 +68,24 @@ class WelcomeDialog:
 
         features = [
             (
-                "🎬 " + _("Convert Video Formats"),
+                _("Convert Video Formats"),
                 _(
                     "MP4, MKV, AVI, WebM and many more\nwith hardware acceleration support"
                 ),
             ),
             (
-                "✂️ " + _("Trim and Cut Videos"),
+                _("Trim and Cut Videos"),
                 _(
                     "Select specific segments to keep\n"
                     "and create new videos with only those parts"
                 ),
             ),
             (
-                "🎨 " + _("Video Color Adjustments"),
+                _("Video Color Adjustments"),
                 _("Control brightness, saturation, and hue\nto enhance your videos"),
             ),
             (
-                "⚡ " + _("Fast Copy Mode"),
+                _("Fast Copy Mode"),
                 _(
                     "Change container format without re-encoding\n"
                     "for ultra-fast processing with no quality loss"
@@ -106,19 +104,19 @@ class WelcomeDialog:
 
         more_features = [
             (
-                "🔲 " + _("Crop Videos"),
+                _("Crop Videos"),
                 _("Remove unwanted areas from edges\nto focus on what matters"),
             ),
             (
-                "🎙️ " + _("Audio Control"),
+                _("Audio Control"),
                 _("Extract, copy, or re-encode audio\nwith multiple codec options"),
             ),
             (
-                "📝 " + _("Subtitle Management"),
+                _("Subtitle Management"),
                 _("Extract subtitles to SRT files\nor keep them embedded in video"),
             ),
             (
-                "⚙️ " + _("Batch Processing"),
+                _("Batch Processing"),
                 _("Convert multiple videos at once\nwith queue management"),
             ),
         ]
@@ -149,7 +147,6 @@ class WelcomeDialog:
         switch_box.append(switch_label)
         switch_box.append(self.show_switch)
 
-        # Set initial state based on saved preference
         current_pref = self.settings_manager.load_setting("show-welcome-dialog", True)
         self.show_switch.set_active(current_pref)
 
@@ -169,17 +166,14 @@ class WelcomeDialog:
         button_box.append(close_button)
         content_box.append(button_box)
 
-        # Add content box to scrolled window
         scrolled.set_child(content_box)
 
-        # Create Adwaita Dialog with responsive sizing
         self.dialog = Adw.Dialog()
         self.dialog.connect("closed", lambda dialog: dialog.set_child(None))
         # Use larger defaults but allow dialog to adapt to screen size
         self.dialog.set_content_width(900)
         self.dialog.set_content_height(650)
 
-        # Set the scrolled window as the child
         self.dialog.set_child(scrolled)
 
     def present(self) -> None:
@@ -191,8 +185,7 @@ class WelcomeDialog:
         """Create a feature box with title and description"""
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
 
-        title_label = Gtk.Label()
-        title_label.set_markup(title)
+        title_label = Gtk.Label(label=title, css_classes=["heading"])
         title_label.set_halign(Gtk.Align.START)
         title_label.set_wrap(True)
 
@@ -210,7 +203,6 @@ class WelcomeDialog:
 
     def on_close_clicked(self, button) -> None:
         """Handle close button click"""
-        # Get the switch state and save preference
         if self.show_switch:
             show_on_startup = self.show_switch.get_active()
             self.settings_manager.save_setting("show-welcome-dialog", show_on_startup)

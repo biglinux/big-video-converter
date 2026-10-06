@@ -129,7 +129,7 @@ def show_extra_dialog(parent_window, app) -> None:
     intro.add_css_class("dim-label")
     content.append(intro)
 
-    # --- FFmpeg Custom Flags ---
+    # FFmpeg Custom Flags
     ffmpeg_entry = Gtk.Entry()
     ffmpeg_entry.set_hexpand(True)
     ffmpeg_entry.set_text(app.settings_page.options_entry.get_text())
@@ -152,7 +152,6 @@ def show_extra_dialog(parent_window, app) -> None:
         app.settings_page.options_entry, "changed", lambda w: _on_source_changed(w)
     )
 
-    # Build card manually with entry below the header
     ffmpeg_card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     ffmpeg_card.add_css_class("card")
     ffmpeg_card.set_margin_bottom(12)
@@ -198,7 +197,7 @@ def show_extra_dialog(parent_window, app) -> None:
 
     content.append(ffmpeg_card)
 
-    # --- Video Preview Rendering ---
+    # Video Preview Rendering
     render_dd = Gtk.DropDown(model=_clone_model(app.settings_page.render_mode_combo))
     render_dd.set_selected(app.settings_page.render_mode_combo.get_selected())
     _make_combo_sync(app.settings_page.render_mode_combo, render_dd, connections)
@@ -215,7 +214,7 @@ def show_extra_dialog(parent_window, app) -> None:
         )
     )
 
-    # --- Export / Import Profile ---
+    # Export / Import Profile
     profile_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
 
     export_btn = Gtk.Button(label=_("Export Profile"))
@@ -251,7 +250,6 @@ def show_extra_dialog(parent_window, app) -> None:
         )
     )
 
-    # --- Reset All Settings ---
     reset_btn = Gtk.Button(label=_("Reset All Settings"))
     reset_btn.add_css_class("destructive-action")
     reset_btn.add_css_class("pill")

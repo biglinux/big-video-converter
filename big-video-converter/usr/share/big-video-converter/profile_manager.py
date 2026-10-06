@@ -101,7 +101,7 @@ class ProfileManagerMixin:
             return "quality"
         return "custom"
 
-    # ── Presets ──
+    # Presets
 
     def active_preset(self):
         """The Preset selected in the sidebar, or None."""

@@ -647,8 +647,8 @@ def monitor_progress(
             bar_start, bar_share = encode_start, encode_share
             updates.push(status=stage_mode)
         if text.startswith("Analysis pass"):
-            # The first pass of a sized encode, which takes about 40 % of its
-            # time; the bar used to fill for it and drop to zero for the second.
+            # The first pass of a sized encode takes about 40 % of its time;
+            # the bar covers both passes instead of filling twice.
             stage_mode = _("Analyzing the video for the target size…")
             bar_start, bar_share = encode_start, encode_share * 0.4
             updates.push(status=stage_mode)
@@ -855,8 +855,6 @@ def monitor_progress(
             else:
                 progress_item.mark_failure(failure_reason, result.error or _("Failed"))
             progress_item.cancel_button.set_sensitive(False)
-            if not result.cancelled:
-                notify_completion(app, result)
             if not hasattr(app, "completed_conversions"):
                 app.completed_conversions = []
             app.completed_conversions.append(
@@ -873,18 +871,3 @@ def monitor_progress(
             )
 
         call_on_main(finish)
-
-
-def notify_completion(app, result, *, body=None) -> None:
-    """Announce the end of a job with a system notification.
-
-    It is the point of an hour-long conversion the user minimized. Every job
-    has a row on the progress page, whose summary explains a failure, so no
-    dialog is stacked over it.
-    """
-    if result.success:
-        app.send_system_notification(
-            _("Conversion Complete"), body or _("Conversion completed successfully!")
-        )
-        return
-    app.send_system_notification(_("Error"), result.error or _("Failed"))

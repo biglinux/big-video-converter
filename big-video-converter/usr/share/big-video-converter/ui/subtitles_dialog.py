@@ -106,7 +106,7 @@ def _clone_model(source_combo):
 
 
 def show_subtitles_dialog(parent_window, app) -> None:
-    """Present the educational subtitles dialog."""
+    """Present the subtitles dialog."""
     dialog = Adw.Dialog()
     connections = SignalConnections(dialog)
     dialog.set_title(_("Subtitles"))
@@ -134,7 +134,7 @@ def show_subtitles_dialog(parent_window, app) -> None:
     intro.add_css_class("dim-label")
     content.append(intro)
 
-    # --- Subtitle Handling ---
+    # Subtitle Handling
     sub_dd = Gtk.DropDown(model=_clone_model(app.subtitle_combo))
     sub_dd.set_selected(app.subtitle_combo.get_selected())
     _make_combo_sync(app.subtitle_combo, sub_dd, connections)
@@ -151,7 +151,7 @@ def show_subtitles_dialog(parent_window, app) -> None:
         )
     )
 
-    # --- Extract Subtitles Only ---
+    # Extract Subtitles Only
     extract_toggle = Gtk.Switch()
     extract_toggle.set_active(
         app.settings_page.only_extract_subtitles_check.get_active()

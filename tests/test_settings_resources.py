@@ -7,7 +7,7 @@ from utils.settings_manager import SettingsManager
 @pytest.mark.parametrize("repeats", [0, 5, 25])
 def test_unchanged_preference_does_not_write(tmp_path, repeats):
     path = tmp_path / "settings.json"
-    settings = SettingsManager("test", dev_mode=True, dev_settings_file=str(path))
+    settings = SettingsManager(dev_mode=True, dev_settings_file=str(path))
     assert settings.save_setting("output-folder", "/videos")
     before = path.stat()
     for _ in range(repeats):

@@ -74,7 +74,7 @@ class TestProbeCache:
     def test_warm_cache_answers_without_running_ffprobe(self, media, monkeypatch):
         file_info.clear_probe_cache()
         path = str(media["video"])
-        file_info.warm_probe_cache(path)
+        assert file_info.launch_probes(path)["audio"] is True
 
         def forbidden(*args, **kwargs):
             raise AssertionError(
@@ -161,3 +161,32 @@ class TestDiskSpaceDialog:
         queue = self._queue()
         QueueManagerMixin._on_disk_space_response(queue, "continue")
         assert queue.started == [True] and not queue.calls
+
+
+def test_unusable_probe_values_never_reach_the_information_dialog():
+    """ffprobe writes "N/A" or leaves fields out; the dialog renders on the main loop."""
+    info = file_info.normalize_probe(
+        {
+            "format": {"size": "N/A", "duration": "nan", "bit_rate": "128000"},
+            "streams": [
+                {
+                    "codec_type": "audio",
+                    "sample_rate": "N/A",
+                    "channels": 2,
+                    "tags": {"language": "por"},
+                },
+                {
+                    "codec_type": "video",
+                    "width": "640",
+                    "height": "x",
+                    "r_frame_rate": "30/0",
+                },
+                "garbage",
+            ],
+        }
+    )
+    assert info["format"] == {"bit_rate": 128000}
+    audio, video = info["streams"]
+    assert audio == {"codec_type": "audio", "channels": 2, "tags": {"language": "por"}}
+    assert video == {"codec_type": "video", "width": 640}
+    assert file_info.normalize_probe({"streams": []})["format"] == {}

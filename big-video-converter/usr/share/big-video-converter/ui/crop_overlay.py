@@ -135,7 +135,7 @@ class CropOverlay(Gtk.DrawingArea):
         ) = source_to_display(self._source_crop, *self._transform)
         self.queue_draw()
 
-    # --- Coordinate mapping ---
+    # Coordinate mapping
 
     def _get_video_rect(self) -> tuple[float, float, float, float]:
         """Return (x, y, w, h) of the video area within this widget."""
@@ -169,7 +169,7 @@ class CropOverlay(Gtk.DrawingArea):
         wy = ry + (vy / self._video_h) * rh
         return (wx, wy)
 
-    # --- Drawing ---
+    # Drawing
 
     def _draw(self, area, cr, width, height) -> None:
         """Draw the crop overlay."""
@@ -263,7 +263,7 @@ class CropOverlay(Gtk.DrawingArea):
             cr.line_to(cx, cy + hl * dy)
         cr.stroke()
 
-    # --- Hit detection ---
+    # Hit detection
 
     def _hit_test(self, wx: float, wy: float) -> int:
         """Determine which crop edge/corner is under the pointer."""
@@ -322,7 +322,7 @@ class CropOverlay(Gtk.DrawingArea):
         }
         return cursors.get(target, "default")
 
-    # --- Gesture handlers ---
+    # Gesture handlers
 
     def _on_motion(self, controller, x, y) -> None:
         """Update cursor based on what's under the pointer."""

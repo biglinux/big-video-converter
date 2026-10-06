@@ -119,7 +119,7 @@ def _clone_model(source_combo):
 
 
 def show_video_encoding_dialog(parent_window, app) -> None:
-    """Present the educational video encoding dialog."""
+    """Present the video encoding dialog."""
     dialog = Adw.Dialog()
     connections = SignalConnections(dialog)
     dialog.set_title(_("Video Encoding"))
@@ -152,7 +152,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     intro.add_css_class("dim-label")
     content.append(intro)
 
-    # --- Output Format ---
+    # Output Format
     fmt_dd = Gtk.DropDown(model=_clone_model(app.output_format_combo))
     fmt_dd.set_selected(app.output_format_combo.get_selected())
     _make_combo_sync(app.output_format_combo, fmt_dd, connections)
@@ -168,7 +168,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
         )
     )
 
-    # --- Video Codec ---
+    # Video Codec
     codec_dd = Gtk.DropDown(model=_clone_model(app.video_codec_combo))
     codec_dd.set_selected(app.video_codec_combo.get_selected())
     _make_combo_sync(app.video_codec_combo, codec_dd, connections)
@@ -184,7 +184,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
         )
     )
 
-    # --- Image Quality ---
+    # Image Quality
     quality_dd = Gtk.DropDown(model=_clone_model(app.video_quality_combo))
     quality_dd.set_selected(app.video_quality_combo.get_selected())
     _make_combo_sync(app.video_quality_combo, quality_dd, connections)
@@ -200,7 +200,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
         )
     )
 
-    # --- Output Resolution ---
+    # Output Resolution
     res_dd = Gtk.DropDown(model=_clone_model(app.settings_page.video_resolution_combo))
     res_dd.set_selected(app.settings_page.video_resolution_combo.get_selected())
     _make_combo_sync(app.settings_page.video_resolution_combo, res_dd, connections)
@@ -251,7 +251,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
 
     res_dd.connect("notify::selected", _on_res_changed)
 
-    # --- Frame Rate ---
+    # Frame Rate
     fps_dd = Gtk.DropDown(model=_clone_model(app.settings_page.video_fps_combo))
     fps_dd.set_selected(app.settings_page.video_fps_combo.get_selected())
     _make_combo_sync(app.settings_page.video_fps_combo, fps_dd, connections)
@@ -268,7 +268,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
         )
     )
 
-    # --- Conversion Speed (Preset) ---
+    # Conversion Speed (Preset)
     preset_dd = Gtk.DropDown(model=_clone_model(app.settings_page.preset_combo))
     preset_dd.set_selected(app.settings_page.preset_combo.get_selected())
     _make_combo_sync(app.settings_page.preset_combo, preset_dd, connections)
@@ -284,7 +284,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
         )
     )
 
-    # --- GPU Acceleration ---
+    # GPU Acceleration
     gpu_dd = Gtk.DropDown(model=_clone_model(app.gpu_combo))
     gpu_dd.set_selected(app.gpu_combo.get_selected())
     _make_combo_sync(app.gpu_combo, gpu_dd, connections)
@@ -300,7 +300,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
         )
     )
 
-    # --- GPU Device (only when multiple GPUs) ---
+    # GPU Device (only when multiple GPUs)
     if len(app.detected_gpus) > 1:
         gpu_dev_dd = Gtk.DropDown(model=_clone_model(app.gpu_device_combo))
         gpu_dev_dd.set_selected(app.gpu_device_combo.get_selected())
@@ -317,7 +317,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
             )
         )
 
-    # --- Software Decode ---
+    # Software Decode
     sw_decode_toggle = Gtk.Switch()
     sw_decode_toggle.set_active(app.settings_page.gpu_partial_check.get_active())
     _make_switch_sync(

@@ -22,6 +22,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
+from utils.presets import CODEC_NAMES
 
 logger = logging.getLogger(__name__)
 
@@ -30,17 +31,6 @@ ngettext = gettext.ngettext
 
 TERMINAL_STATES = frozenset({"completed", "failed", "cancelled"})
 # Encoder identifiers of the job environment, as people know them.
-CODEC_NAMES = {
-    "h264": "H.264",
-    "h265": "H.265",
-    "hevc": "H.265",
-    "av1": "AV1",
-    "vp8": "VP8",
-    "vp9": "VP9",
-    "mpeg4": "MPEG-4",
-    "mpeg2video": "MPEG-2",
-    "prores": "ProRes",
-}
 _RESULT_ICONS = {
     "success": "object-select-symbolic",
     "failed": "dialog-error-symbolic",
@@ -201,7 +191,7 @@ def _stat_size_async(owner, paths, apply):
     threading.Thread(target=work, name="bvc-progress-stat", daemon=True).start()
 
 
-def _launch_file(app, widget, path: str, *, containing: bool = False) -> None:
+def launch_file(app, widget, path: str, *, containing: bool = False) -> None:
     """Open a file in its default application, or show it in its folder.
 
     Opening goes straight to the default handler: Gtk.FileLauncher routes
@@ -843,14 +833,14 @@ class ProgressPage:
     def _on_open_result(self, button):
         outputs = self._result_outputs()
         if outputs:
-            _launch_file(self.app, button, outputs[0])
+            launch_file(self.app, button, outputs[0])
 
     def _on_open_result_folder(self, button):
         outputs = self._result_outputs()
         if len(outputs) == 1:
-            _launch_file(self.app, button, outputs[0], containing=True)
+            launch_file(self.app, button, outputs[0], containing=True)
         elif outputs:
-            _launch_file(self.app, button, os.path.dirname(outputs[0]))
+            launch_file(self.app, button, os.path.dirname(outputs[0]))
 
     def _on_cancel_all_clicked(self, button):
         """Show confirmation dialog before cancelling all"""
@@ -1283,9 +1273,9 @@ class QueueItemRow(Gtk.ListBoxRow):
         if not self.output_paths:
             return
         if len(self.output_paths) == 1:
-            _launch_file(self.app, button, self.output_paths[0])
+            launch_file(self.app, button, self.output_paths[0])
         else:
-            _launch_file(self.app, button, self.output_paths[0], containing=True)
+            launch_file(self.app, button, self.output_paths[0], containing=True)
 
     # State -----------------------------------------------------------------
 
@@ -1535,7 +1525,7 @@ class QueueItemRow(Gtk.ListBoxRow):
                 else:
                     self.process.terminate()
             except OSError as e:
-                logger.error(f"Error cancelling: {e}")
+                logger.error("Error cancelling: %s", e)
 
         # For pending items, also remove from the conversion queue
         if (
@@ -1545,15 +1535,15 @@ class QueueItemRow(Gtk.ListBoxRow):
             and self.file_path in self.app.conversion_queue
         ):
             self.app.conversion_queue.remove(self.file_path)
-            logger.debug(f"Removed {os.path.basename(self.file_path)} from queue")
+            logger.debug("Removed %s from queue", os.path.basename(self.file_path))
 
         if was_pending and self.progress_page:
             self.progress_page.finish_pending(self.file_path, cancelled=True)
         else:
             self.mark_cancelled()
 
-        # The supervisor alone completes active jobs after reaping the child.
-        # A timer here used to release another job's slot after cancellation.
+        # The supervisor alone completes active jobs, after reaping the child:
+        # completing here could release another job's GPU slot.
 
     def mark_success(self) -> None:
         self.mark_complete(success=True)

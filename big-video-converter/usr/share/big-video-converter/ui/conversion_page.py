@@ -9,7 +9,6 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-# Setup translation
 import gettext
 import logging
 import re
@@ -25,7 +24,7 @@ from utils.job_options import (
     normalize_metadata,
     snapshot_preset,
 )
-from utils.presets import PresetError
+from utils.presets import CODEC_NAMES, PresetError, output_container
 from utils.segment_batch import start_segment_batch
 from utils.signal_connections import SignalConnections
 from utils.size_target import (
@@ -38,7 +37,7 @@ from utils.size_target import (
 from utils.thumbnail_cache import ThumbnailManager
 from utils.video_settings import CropError, SettingsOverride, get_ffmpeg_filter_string
 
-from ui.progress_page import CODEC_NAMES, format_clock, format_size
+from ui.progress_page import format_clock, format_size, launch_file
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +49,7 @@ _PROXY_VARIABLES = frozenset({"http_proxy", "https_proxy", "no_proxy", "all_prox
 
 
 class FileQueueRow(Gtk.ListBoxRow):
-    """Premium queue card with preview, effective settings and focused actions."""
+    """A queued video: preview, the settings it will use, and its actions."""
 
     def __init__(
         self,
@@ -64,7 +63,7 @@ class FileQueueRow(Gtk.ListBoxRow):
         metadata,
         thumbnail_manager,
         summary_text,
-        app=None,
+        app,
         custom_settings=False,
         summary_pool=None,
     ):
@@ -363,15 +362,8 @@ class FileQueueRow(Gtk.ListBoxRow):
         self.thumbnail_picture.set_paintable(None)
 
     def _on_open_folder(self):
-        if not os.path.isfile(self.file_path):
-            return
-        try:
-            Gio.AppInfo.launch_default_for_uri(
-                Gio.File.new_for_path(os.path.dirname(self.file_path)).get_uri(),
-                None,
-            )
-        except GLib.Error as error:
-            logger.error("Could not open containing folder: %s", error)
+        if os.path.isfile(self.file_path):
+            launch_file(self.app, self.app.window, self.file_path, containing=True)
 
     def _on_delete_from_disk(self):
         if not os.path.isfile(self.file_path):
@@ -466,7 +458,6 @@ class ConversionPage:
 
         self.page = self._create_page()
 
-        # Connect settings after UI is created
         self._connect_settings()
 
     def get_page(self):
@@ -598,10 +589,20 @@ class ConversionPage:
         return page
 
     def _connect_settings(self):
-        """Connect UI elements to settings"""
-        settings = self.app.settings_manager
+        self.show_output_settings()
+        self.output_folder_entry.connect(
+            "changed", self._on_output_folder_entry_changed
+        )
+        self.delete_original_check.connect(
+            "notify::active",
+            lambda w, p: self.app.settings_manager.save_setting(
+                "delete-original", w.get_active()
+            ),
+        )
 
-        # Load settings and update UI
+    def show_output_settings(self):
+        """Show the saved destination and delete-original choice."""
+        settings = self.app.settings_manager
         output_folder = settings.load_setting("output-folder", "")
         delete_original = settings.load_setting("delete-original", False)
         # Check the stored dict directly: a missing key must be told apart from
@@ -614,28 +615,10 @@ class ConversionPage:
             # back to "same folder as the original file".
             use_custom_folder = bool(output_folder and os.path.isdir(output_folder))
             settings.save_setting("use-custom-output-folder", use_custom_folder)
-            logger.debug(
-                f"Inferred output folder mode from the saved path: custom={use_custom_folder}"
-            )
-
-        # Set folder combo selection and visibility
         self.folder_combo.set_selected(1 if use_custom_folder else 0)
         self.folder_entry_box.set_visible(use_custom_folder)
-
-        # Set output folder path if using custom folder
         self.output_folder_entry.set_text(output_folder)
-
-        self.output_folder_entry.connect(
-            "changed", self._on_output_folder_entry_changed
-        )
-
-        # Set delete original switch
         self.delete_original_check.set_active(delete_original)
-
-        self.delete_original_check.connect(
-            "notify::active",
-            lambda w, p: settings.save_setting("delete-original", w.get_active()),
-        )
 
     def on_folder_button_clicked(self, button) -> None:
         """Open folder chooser dialog to select output folder"""
@@ -647,16 +630,13 @@ class ConversionPage:
         dialog.select_folder(self.app.window, None, self._on_folder_chosen)
 
     def _on_folder_chosen(self, dialog, result):
-        """Handle selected folder from folder chooser"""
         try:
             folder = dialog.select_folder_finish(result)
-            if folder:
-                folder_path = folder.get_path()
-                self.output_folder_entry.set_text(folder_path)
-                # Save output folder to settings
-                self.app.settings_manager.save_setting("output-folder", folder_path)
-        except (ValueError, KeyError, OSError) as e:
-            logger.error(f"Error selecting folder: {e}")
+        except GLib.Error:
+            return  # dismissed
+        if folder and folder.get_path():
+            self.output_folder_entry.set_text(folder.get_path())
+            self.app.settings_manager.save_setting("output-folder", folder.get_path())
 
     def on_queue_item_activated(self, listbox, row) -> None:
         """Open the selected video without conflating row and button actions."""
@@ -664,15 +644,11 @@ class ConversionPage:
 
     def update_queue_display(self) -> None:
         """Update the queue display with current items"""
-        logger.debug(
-            f"DEBUG: update_queue_display called, queue length: {len(self.app.conversion_queue)}"
-        )
 
         if self._queue_render_id is not None:
             GLib.source_remove(self._queue_render_id)
             self._queue_render_id = None
 
-        # Clear existing items
         while True:
             row = self.queue_listbox.get_first_child()
             if row:
@@ -728,13 +704,11 @@ class ConversionPage:
 
         # Setup drag and drop on the listbox if we have items to reorder
         if len(self.app.conversion_queue) > 1 and not self.queue_dragging_enabled:
-            # Remove any existing controllers to avoid duplication
             if hasattr(self, "drag_source") and self.drag_source:
                 self.queue_listbox.remove_controller(self.drag_source)
             if hasattr(self, "drop_target") and self.drop_target:
                 self.queue_listbox.remove_controller(self.drop_target)
 
-            # Create new drag source controller
             self.drag_source = Gtk.DragSource.new()
             self.drag_source.set_actions(Gdk.DragAction.MOVE)
             self.drag_source.connect("prepare", self.on_drag_prepare_listbox)
@@ -742,7 +716,6 @@ class ConversionPage:
             self.drag_source.connect("drag-end", self.on_drag_end_listbox)
             self.queue_listbox.add_controller(self.drag_source)
 
-            # Create new drop target controller
             self.drop_target = Gtk.DropTarget.new(
                 GObject.TYPE_STRING, Gdk.DragAction.MOVE
             )
@@ -767,34 +740,28 @@ class ConversionPage:
         """Prepare data for drag operation from the listbox"""
         row = self.queue_listbox.get_row_at_y(y)
         if row and hasattr(row, "index"):
-            # Store the row being dragged for visual feedback
             self.dragged_row = row
 
-            # Return content provider with row index as string
             return Gdk.ContentProvider.new_for_value(str(row.index))
         return None
 
     def on_drag_begin_listbox(self, drag_source, drag) -> None:
         """Handle start of drag operation"""
         if self.dragged_row:
-            # Add visual styling
             self.dragged_row.add_css_class("dragging")
 
     def on_drag_end_listbox(self, drag_source, drag, delete_data) -> None:
         """Clean up after drag operation"""
-        # Clear dragging state from all rows
         for i in range(len(self.app.conversion_queue)):
             row = self.queue_listbox.get_row_at_index(i)
             if row:
                 row.remove_css_class("dragging")
                 row.remove_css_class("drag-hover")
 
-        # Clear reference to dragged row
         self.dragged_row = None
 
     def on_drag_motion_listbox(self, drop_target, x, y):
         """Handle drag motion to show drop target position"""
-        # Clear all previous hover highlights
         for i in range(len(self.app.conversion_queue)):
             row = self.queue_listbox.get_row_at_index(i)
             if row:
@@ -810,7 +777,6 @@ class ConversionPage:
     def on_drop_listbox(self, drop_target, value: str, x, y) -> bool:
         """Handle dropping to reorder queue items"""
         try:
-            # Get source index from drag data
             source_index = int(value)
             # Only a row dragged from this list reorders it; text dropped
             # from elsewhere ("5") is not an index into the queue.
@@ -819,7 +785,6 @@ class ConversionPage:
             ):
                 return False
 
-            # Get target row
             target_row = self.queue_listbox.get_row_at_y(y)
             if not target_row:
                 # Dropped below the last row: move it to the end.
@@ -831,7 +796,6 @@ class ConversionPage:
                 if source_index == target_index:
                     return False
 
-            # Clear drag styling
             for i in range(len(self.app.conversion_queue)):
                 row = self.queue_listbox.get_row_at_index(i)
                 if row:
@@ -850,19 +814,14 @@ class ConversionPage:
                 item_to_move,
             )
 
-            # Clear and refill the deque
             self.app.conversion_queue.clear()
             self.app.conversion_queue.extend(queue_list)
 
-            # Update the UI
             self.update_queue_display()
 
             return True
-        except (ValueError, TypeError) as e:
-            logger.error(f"Error during drag and drop: {e}")
-            import traceback
-
-            traceback.print_exc()
+        except (ValueError, TypeError):
+            logger.exception("Could not reorder the queue")
             return False
 
     def on_edit_file_by_path(self, file_path: str) -> None:
@@ -870,7 +829,7 @@ class ConversionPage:
         if file_path and os.path.exists(file_path):
             self.app.show_editor_for_file(file_path)
         else:
-            logger.error(f"Error: Invalid file path for edit: {file_path}")
+            logger.error("Invalid file path for edit: %s", file_path)
             self.app.show_error_dialog(_("Could not open this video file"))
 
     def on_remove_from_queue_by_path(self, file_path: str) -> None:
@@ -879,30 +838,10 @@ class ConversionPage:
         self.update_queue_display()
 
     def on_play_file_by_path(self, file_path: str) -> None:
-        """Play file in the default system video player"""
+        """Play the video in the default player."""
         if file_path and os.path.exists(file_path):
-            logger.debug(f"Opening file in default video player: {file_path}")
-            try:
-                # Create a GFile for the file path
-                gfile = Gio.File.new_for_path(file_path)
-
-                # Create an AppInfo for the default handler for this file type
-                file_type = Gio.content_type_guess(file_path, None)[0]
-                app_info = Gio.AppInfo.get_default_for_type(file_type, False)
-
-                if app_info:
-                    # Launch the application with the file
-                    app_info.launch([gfile], None)
-                else:
-                    # Fallback using gtk_show
-                    Gtk.show_uri(self.app.window, gfile.get_uri(), Gdk.CURRENT_TIME)
-            except (GLib.Error, OSError) as e:
-                logger.error(f"Error opening file: {e}")
-                self.app.show_error_dialog(
-                    _("Could not open the video file with the default player")
-                )
+            launch_file(self.app, self.app.window, file_path)
         else:
-            logger.error(f"Error: Invalid file path: {file_path}")
             self.app.show_error_dialog(_("Could not find this video file"))
 
     def _encoding_environment(self, gpu_override=None, settings=None):
@@ -921,7 +860,6 @@ class ConversionPage:
                 env["gpu"] = gpu_override["type"]
             if "device" in gpu_override:
                 env["gpu_device"] = gpu_override["device"]
-            logger.debug(f"Using GPU override: {gpu_override}")
         else:
             gpu_setting = settings.load_setting("gpu", "auto")
             env["gpu"] = gpu_setting
@@ -929,29 +867,14 @@ class ConversionPage:
             # GPU device selection (render device path)
             gpu_device_index = settings.load_setting("gpu-device-index", 0)
 
-            # Auto-detect architecture from device if GPU is Auto but Device is
-            # specific. This fixes selecting an "Intel" device with "Auto" mode.
+            # A chosen device in Auto mode also names the vendor's encoders.
             if gpu_device_index > 0 and hasattr(self.app, "detected_gpus"):
                 idx = gpu_device_index - 1  # 0 = Auto
                 if idx < len(self.app.detected_gpus):
                     device_info = self.app.detected_gpus[idx]
                     env["gpu_device"] = device_info["device"]
-
-                    if gpu_setting == "auto":
-                        device_name = device_info.get("name", "").lower()
-                        if "intel" in device_name:
-                            env["gpu"] = "intel"
-                        elif "nvidia" in device_name:
-                            env["gpu"] = "nvidia"
-                        elif (
-                            "amd" in device_name
-                            or "advanced micro devices" in device_name
-                        ):
-                            env["gpu"] = "amd"
-                        logger.debug(
-                            f"Auto-detected {env['gpu']} GPU from device selection: "
-                            f"{device_name}"
-                        )
+                    if gpu_setting == "auto" and device_info["type"] != "unknown":
+                        env["gpu"] = device_info["type"]
 
             # Smart GPU selection: when auto mode + auto device + multiple GPUs,
             # pick the best GPU for the selected codec
@@ -969,18 +892,19 @@ class ConversionPage:
                     env["gpu"] = best["type"]
                     if best.get("device"):
                         env["gpu_device"] = best["device"]
-                    logger.info(
-                        f"Smart GPU selection: {best['type']} "
-                        f"(device={best.get('device', 'default')}) for {codec}"
-                    )
 
         env["video_quality"] = settings.load_setting("video-quality", "default")
         env["video_encoder"] = settings.load_setting("video-codec", "h264")
         env["preset"] = settings.load_setting("preset", "default")
         return env
 
-    def force_start_conversion(self, gpu_override=None):
-        """Start conversion process with the currently selected file"""
+    def force_start_conversion(self, gpu_override=None, probes=None):
+        """Start converting current_file_path.
+
+        ``probes`` holds the answers of ``file_info.launch_probes``, taken off
+        the main loop; without them each one is probed (or read from cache) here.
+        """
+        probes = probes or {}
         # Check if we have a file to convert
         if not hasattr(self, "current_file_path") or not os.path.exists(
             self.current_file_path
@@ -988,9 +912,7 @@ class ConversionPage:
             logger.error("Cannot start conversion: No valid file selected")
             return False
 
-        # Get the file to convert
         input_file = self.current_file_path
-        logger.debug(f"Starting conversion for: {input_file}")
 
         try:
             file_metadata = deepcopy(self.file_metadata.get(input_file, {}))
@@ -1009,7 +931,6 @@ class ConversionPage:
             self.app.show_error_dialog(str(error))
             return False
 
-        # Load app settings for conversion
         try:
             # The script reads its settings from lowercase variables. An
             # inherited one (an exported "options" or "size_limit") would
@@ -1027,10 +948,6 @@ class ConversionPage:
             if force_copy_video_enabled:
                 # When copying without reencoding, hardware acceleration is not needed
                 env_vars["gpu"] = "software"
-                logger.debug(
-                    "Force copy video enabled: disabling hardware acceleration "
-                    "and skipping video_quality, video_encoder, preset"
-                )
             else:
                 env_vars.update(self._encoding_environment(gpu_override, settings))
 
@@ -1060,15 +977,13 @@ class ConversionPage:
             # Audio handling - Check if video has audio streams
             audio_handling = settings.load_setting("audio-handling", "copy")
 
-            # Import audio detection function
             from utils.file_info import has_audio_streams
 
-            if not has_audio_streams(input_file):
-                # Video has no audio streams, force audio_handling to "none"
+            has_audio = (
+                probes["audio"] if "audio" in probes else has_audio_streams(input_file)
+            )
+            if not has_audio:
                 audio_handling = "none"
-                logger.debug(
-                    f"No audio streams detected in {os.path.basename(input_file)}, setting audio_handling to 'none'"
-                )
 
             env_vars["audio_handling"] = audio_handling
 
@@ -1082,10 +997,7 @@ class ConversionPage:
                     env_vars["video_stabilize"] = "1"
                 if file_metadata.get("source_hdr", "auto") != "auto":
                     env_vars["source_hdr"] = file_metadata["source_hdr"]
-            else:
-                logger.debug("Copy mode enabled - skipping video_resolution")
 
-            # Set flags
             if settings.get_boolean("gpu-partial", False):
                 env_vars["gpu_partial"] = "1"
             if force_copy_video_enabled:
@@ -1147,9 +1059,7 @@ class ConversionPage:
                 env_vars["audio_codec"] = audio_codec
 
             # Get per-file metadata for this file
-            logger.debug(f"Using per-file metadata for {os.path.basename(input_file)}")
 
-            # Get trim segments from per-file metadata
             trim_segments = deepcopy(file_metadata.get("trim_segments", []))
 
             # Get output mode from per-file metadata (not global settings)
@@ -1184,16 +1094,13 @@ class ConversionPage:
                 },
             )
 
-            # Cropping needs the frame size. Answered from the probe cache
-            # the queue warmed off the main thread; a cache miss still
-            # probes synchronously.
+            # Cropping needs the frame size.
             video_width = video_height = None
             if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:
                 from utils.file_info import get_video_dimensions
 
-                video_width, video_height = get_video_dimensions(input_file)
-                logger.debug(
-                    f"Using crop values: left={crop_left}, right={crop_right}, top={crop_top}, bottom={crop_bottom}"
+                video_width, video_height = probes.get("size") or get_video_dimensions(
+                    input_file
                 )
 
             # The unified video filter string from the per-file values, also
@@ -1207,7 +1114,7 @@ class ConversionPage:
             except CropError as error:
                 # Converting without the crop the user asked for is a wrong
                 # result, not a fallback.
-                logger.error(f"Crop not applicable: {error}")
+                logger.error("Crop not applicable: %s", error)
                 self.app.show_error_dialog(
                     _("The crop cannot be applied"),
                     _(
@@ -1218,20 +1125,8 @@ class ConversionPage:
                 )
                 return False
 
-            # Skip video filters when in copy mode since filters require re-encoding
-            env_vars["video_filter"] = ""
-            if not force_copy_video_enabled:
-                env_vars["video_filter"] = video_filter
-                if video_filter:
-                    logger.debug(f"Using video_filter: {env_vars['video_filter']}")
-                else:
-                    logger.debug(
-                        "No video filters applied (may be handled by optimized GPU conversion)"
-                    )
-            else:
-                logger.debug(
-                    "Copy mode enabled - skipping video_filter (filters require re-encoding)"
-                )
+            # Filters need re-encoding; a copy job has none.
+            env_vars["video_filter"] = "" if force_copy_video_enabled else video_filter
 
             # Validate the option grammar shared with the backend. The
             # transport text is parsed into argv, never executed as shell.
@@ -1241,30 +1136,25 @@ class ConversionPage:
             )
             if not options_ok:
                 error_message = additional_options
-                logger.error(f"Rejected additional options: {error_message}")
+                logger.error("Rejected additional options: %s", error_message)
                 GLib.idle_add(lambda msg=error_message: self.app.show_error_dialog(msg))
                 return False
 
             env_vars["options"] = additional_options
-            if additional_options:
-                logger.debug(f"Setting options={additional_options}")
 
             if video_width is not None and video_height is not None:
                 env_vars["video_width"] = str(video_width)
                 env_vars["video_height"] = str(video_height)
 
-        except (subprocess.SubprocessError, OSError) as e:
-            logger.error(f"Error setting up conversion environment: {e}")
-            import traceback
-
-            traceback.print_exc()
+        except (OSError, ValueError) as error:
+            logger.exception("Could not prepare the conversion")
+            self.app.show_error_dialog(str(error))
             return False
 
-        # Get the extension of the selected output format
-        output_ext = {0: ".mp4", 1: ".mkv", 2: ".mov", 3: ".webm"}.get(
-            settings.load_setting("output-format-index", 0), ".mp4"
+        output_format = output_container(
+            settings.load_setting("output-format-index", 0)
         )
-        output_format = output_ext.lstrip(".")
+        output_ext = "." + output_format
 
         # Check if input file has the same extension as the selected output format
         input_ext = os.path.splitext(input_file)[1].lower()
@@ -1278,7 +1168,6 @@ class ConversionPage:
             # If format is different, just change the extension
             output_basename = f"{input_basename}{output_ext}"
 
-        # Set output folder based on selection
         use_same_folder = (
             self.folder_combo.get_selected() == 0
         )  # 0 = "Same folder as original file"
@@ -1321,9 +1210,6 @@ class ConversionPage:
                     not os.path.exists(full_output_path)
                     and full_output_path not in claimed
                 ):
-                    logger.debug(
-                        f"Output file exists, using alternative name: {output_basename}"
-                    )
                     break
                 counter += 1
 
@@ -1331,12 +1217,8 @@ class ConversionPage:
         if job_info:
             job_info["output_path"] = full_output_path
             claimed.add(full_output_path)
-        # Set the full path as output_file
         env_vars["output_file"] = full_output_path
 
-        logger.debug(f"Full output path: {full_output_path}")
-
-        # Set the output format
         env_vars["output_format"] = output_format
 
         cmd = [CONVERT_SCRIPT_PATH, input_file]
@@ -1396,7 +1278,9 @@ class ConversionPage:
         if force_copy_video and output_format == "mp4":
             from utils.file_info import check_mp4_compatibility
 
-            is_compatible, incompatible_streams = check_mp4_compatibility(input_file)
+            is_compatible, incompatible_streams = probes.get(
+                "mp4"
+            ) or check_mp4_compatibility(input_file)
             if not is_compatible:
                 # Package all needed variables
                 def show_compatibility_warning() -> None:
@@ -1460,7 +1344,6 @@ class ConversionPage:
                     dialog.connect("closed", self._decision_dialogs.discard)
                     dialog.present(self.app.window)
 
-                # Show dialog in main thread
                 GLib.idle_add(show_compatibility_warning)
                 return (
                     True  # The active job remains reserved while awaiting a decision.
@@ -1608,30 +1491,7 @@ class ConversionPage:
         input_file = context["input_file"]
         trim_segments = context["trim_segments"]
 
-        logger.debug(f"Conversion command: {' '.join(cmd)}")
-        for key in (
-            "gpu",
-            "video_quality",
-            "video_encoder",
-            "preset",
-            "subtitle_extract",
-            "audio_handling",
-            "audio_bitrate",
-            "audio_channels",
-            "video_resolution",
-            "video_fps",
-            "video_stabilize",
-            "source_hdr",
-            "options",
-            "gpu_partial",
-            "force_copy_video",
-            "only_extract_subtitles",
-            "video_filter",
-            "video_width",
-            "video_height",
-        ):
-            if key in env_vars:
-                logger.debug(f"{key}={env_vars[key]}")
+        logger.debug("Conversion command: %s", " ".join(cmd))
 
         if context.get("cancel_event") is not None and context["cancel_event"].is_set():
             self.app.conversion_completed(
@@ -1661,7 +1521,6 @@ class ConversionPage:
                     filter(None, [env_vars.get("options", "").strip(), trim])
                 ),
             }
-            logger.debug(f"Single segment trim: {trim}")
 
         # Create and display progress dialog
         # Always pass input_file for proper queue tracking
@@ -1702,10 +1561,8 @@ class ConversionPage:
         selected = combo.get_selected()
         use_custom_folder = selected == 1  # "Custom folder" option is selected
 
-        # Show/hide folder entry when selection changes
         self.folder_entry_box.set_visible(use_custom_folder)
 
-        # Save setting
         self.app.settings_manager.save_setting(
             "use-custom-output-folder", use_custom_folder
         )
@@ -1723,7 +1580,7 @@ class ConversionPage:
             info_dialog = VideoInfoDialog(self.app.window, file_path)
             info_dialog.show()
         else:
-            logger.error(f"Error: Invalid file path: {file_path}")
+            logger.error("Invalid file path: %s", file_path)
             self.app.show_error_dialog(_("Could not find this video file"))
 
     def refresh_recipe_summaries(self) -> None:
@@ -1890,7 +1747,7 @@ class ConversionPage:
         size_result.add_css_class("property")
         group.add(size_result)
         size_generation = [0]
-        # Each spin step used to start its own ffprobe; wait for a pause.
+        # Probe once the spin buttons pause, not on every step.
         size_timer = [None]
         dialog_closed = [False]
 
@@ -1924,9 +1781,7 @@ class ConversionPage:
                 return
             size_result.set_visible(True)
             size_result.set_subtitle(_("Checking the video…"))
-            output_ext = {0: ".mp4", 1: ".mkv", 2: ".mov", 3: ".webm"}.get(
-                settings.get("output-format-index", 0), ".mp4"
-            )
+            output_ext = "." + output_container(settings.get("output-format-index", 0))
             context = {
                 "size_target": self._size_target(
                     SettingsOverride(self.app.settings_manager, settings)

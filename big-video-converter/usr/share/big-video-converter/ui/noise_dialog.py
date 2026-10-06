@@ -139,10 +139,8 @@ def _slider_row(label: str, adj: Gtk.Adjustment, format_func=None) -> Gtk.Box:
     else:
         scale.set_digits(2 if adj.get_upper() <= 1.0 else 0)
 
-    # Set initial value
     val_label.set_text(format_func(adj.get_value()))
 
-    # Update label when value changes
     def _on_value_changed(adj, _pspec, fmt=format_func):
         val_label.set_text(fmt(adj.get_value()))
 
@@ -155,13 +153,8 @@ def _slider_row(label: str, adj: Gtk.Adjustment, format_func=None) -> Gtk.Box:
     return row
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
-
-
 def show_noise_dialog(parent_window, app) -> bool:
-    """Present the educational noise-cleaning dialog."""
+    """Present the noise-cleaning dialog."""
     dialog = Adw.Dialog()
     connections = SignalConnections(dialog)
     dialog.set_title(_("Audio Settings"))
@@ -194,7 +187,7 @@ def show_noise_dialog(parent_window, app) -> bool:
     intro.add_css_class("dim-label")
     content.append(intro)
 
-    # ===== Section 1: AI Noise Cleaning =====
+    # Section 1: AI Noise Cleaning
     content.append(_section_header(_("AI Noise Cleaning")))
 
     # Main switch card
@@ -322,7 +315,7 @@ def show_noise_dialog(parent_window, app) -> bool:
         app.noise_reduction_switch, "notify::active", _sync_nr_from_sidebar
     )
 
-    # ===== Section 2: Noise Gate =====
+    # Section 2: Noise Gate
     content.append(_section_header(_("Noise Gate"), margin_top=16))
 
     gate_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
@@ -377,7 +370,7 @@ def show_noise_dialog(parent_window, app) -> bool:
 
     content.append(card2)
 
-    # ===== Section 3: Audio Enhancement =====
+    # Section 3: Audio Enhancement
     content.append(_section_header(_("Audio Enhancement"), margin_top=16))
 
     # HPF card
@@ -562,11 +555,10 @@ def show_noise_dialog(parent_window, app) -> bool:
     eq_box.append(eq_dd)
     eq_content.append(eq_box)
 
-    # ── EQ Band Sliders (10 bands) ──
+    # EQ Band Sliders (10 bands)
     EQ_FREQS = [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
     _eq_slider_guard = {"active": False}
 
-    # Load saved band values
     saved_bands_str = app.settings_manager.load_setting(
         "eq-bands", "0,0,0,0,0,0,0,0,0,0"
     )
@@ -599,7 +591,6 @@ def show_noise_dialog(parent_window, app) -> bool:
             eq_dd.set_selected(9)
             app.eq_preset_row.set_selected(9)
             _eq_slider_guard["active"] = False
-        # Save all band values
         bands = [s.get_value() for s in eq_scales]
         app.settings_manager.save_setting("eq-bands", ",".join(str(b) for b in bands))
         # Refresh mpv preview
@@ -655,7 +646,7 @@ def show_noise_dialog(parent_window, app) -> bool:
     eq_content.append(bands_container)
     card7.append(eq_content)
 
-    # ── Sync logic ──
+    # Sync logic
     def _update_sliders_from_preset() -> None:
         """Set sliders only when the user actually selected a preset."""
         if _eq_slider_guard["active"]:

@@ -9,7 +9,6 @@ import locale
 import logging
 import math
 import os
-import subprocess
 from typing import ClassVar
 
 import gi
@@ -19,98 +18,54 @@ _ = gettext.gettext
 
 
 def is_running_in_vm() -> bool:
-    """Detect if running inside a virtual machine (VirtualBox, VMware, QEMU, etc.)"""
+    """Whether a hypervisor runs this machine, from files the kernel exposes."""
     try:
-        # Check systemd-detect-virt (most reliable on modern Linux)
-        result = subprocess.run(
-            ["systemd-detect-virt", "--vm"],
-            capture_output=True,
-            text=True,
-            timeout=2,
-            check=False,
-        )
-        if result.returncode == 0 and result.stdout.strip() != "none":
-            vm_type = result.stdout.strip()
-            logger.debug(f"MPV: Detected virtual machine: {vm_type}")
+        with open("/sys/class/dmi/id/product_name", encoding="utf-8") as file:
+            product = file.read().lower()
+        if any(
+            name in product
+            for name in ("virtualbox", "vmware", "qemu", "kvm", "virtual")
+        ):
             return True
-    except (FileNotFoundError, subprocess.TimeoutExpired):
+    except OSError:
         pass
-
     try:
-        # Fallback: check DMI info
-        with open("/sys/class/dmi/id/product_name", "r") as f:
-            product = f.read().lower()
-            if any(
-                vm in product
-                for vm in ["virtualbox", "vmware", "qemu", "kvm", "virtual"]
-            ):
-                logger.debug(
-                    f"MPV: Detected virtual machine from DMI: {product.strip()}"
-                )
-                return True
-    except (FileNotFoundError, PermissionError):
-        pass
-
-    try:
-        # Fallback: check for hypervisor in cpuinfo
-        with open("/proc/cpuinfo", "r") as f:
-            cpuinfo = f.read().lower()
-            if "hypervisor" in cpuinfo:
-                logger.debug("MPV: Detected hypervisor flag in CPU")
-                return True
-    except (FileNotFoundError, PermissionError):
-        pass
-
-    return False
+        with open("/proc/cpuinfo", encoding="utf-8") as file:
+            return any(
+                line.startswith("flags") and " hypervisor" in line for line in file
+            )
+    except OSError:
+        return False
 
 
 def get_render_mode_setting():
-    """Read render mode setting directly from settings JSON file.
-    Returns: 'auto', 'opengl', or 'software'
+    """The preview renderer the person chose: 'auto', 'opengl' or 'software'.
+
+    Read straight from the settings file: the choice must be known before the
+    first window exists, which is earlier than the SettingsManager.
     """
     import json
 
-    config_home = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
-    settings_file = os.path.join(config_home, "big-video-converter", "settings.json")
+    from utils.settings_manager import config_dir
+
     try:
-        if os.path.exists(settings_file):
-            with open(settings_file, "r") as f:
-                settings = json.load(f)
-                mode = settings.get("video-preview-render-mode", "auto")
-                logger.debug(f"MPV: Loaded render mode setting: '{mode}'")
-                return mode
-    except (OSError, ValueError, AttributeError) as e:
-        logger.error(f"MPV: Could not read settings file: {e}")
-    return "auto"
+        with open(
+            os.path.join(config_dir(), "settings.json"), encoding="utf-8"
+        ) as file:
+            mode = json.load(file).get("video-preview-render-mode", "auto")
+    except FileNotFoundError:
+        return "auto"
+    except (OSError, ValueError, AttributeError) as error:
+        logger.warning("Could not read the preview renderer setting: %s", error)
+        return "auto"
+    return mode if mode in ("auto", "opengl", "software") else "auto"
 
 
-# Cache detection results at module load
-_IS_VIRTUAL_MACHINE = is_running_in_vm()
-
-# Read user's render mode preference
 _RENDER_MODE_SETTING = get_render_mode_setting()
-
-logger.debug(f"MPV: Detection results - VM: {_IS_VIRTUAL_MACHINE}")
-logger.debug(f"MPV: User render mode preference: '{_RENDER_MODE_SETTING}'")
-
-# Determine rendering mode based on user setting or auto-detection
-if _RENDER_MODE_SETTING == "opengl":
-    # User explicitly chose OpenGL
-    _USE_SOFTWARE_MODE = False
-    logger.debug("MPV: Will use OpenGL mode (user preference)")
-elif _RENDER_MODE_SETTING == "software":
-    # User explicitly chose Software mode
-    _USE_SOFTWARE_MODE = True
-    logger.debug("MPV: Will use software rendering mode (user preference)")
-else:
-    # Auto mode: let GTK auto-detect the best renderer
-    # Do NOT force GSK_RENDERER - it causes issues on some GPUs (e.g. NVIDIA)
-    _USE_SOFTWARE_MODE = _IS_VIRTUAL_MACHINE
-
-    if _USE_SOFTWARE_MODE:
-        logger.debug("MPV: Will use software rendering mode (auto: VM detected)")
-    else:
-        logger.debug("MPV: Will use auto-detected renderer (no GSK_RENDERER override)")
+_IS_VIRTUAL_MACHINE = _RENDER_MODE_SETTING == "auto" and is_running_in_vm()
+# In a VM, auto means the software path; otherwise GTK picks its renderer,
+# because forcing GSK_RENDERER breaks some GPUs (NVIDIA among them).
+_USE_SOFTWARE_MODE = _RENDER_MODE_SETTING == "software" or _IS_VIRTUAL_MACHINE
 
 # GTK's default Vulkan renderer runs on lavapipe in a VM without 3D, and there it
 # composites the GLArea preview late: frames from before a seek, rotate or flip
@@ -130,7 +85,7 @@ try:
     import mpv
     from mpv import MpvGlGetProcAddressFn, MpvRenderContext
 except (ImportError, OSError) as e:
-    logger.warning(f"Warning: MPV library not found: {e}")
+    logger.warning("libmpv could not be loaded; the editor has no preview: %s", e)
     mpv = None
     MpvGlGetProcAddressFn = None
     MpvRenderContext = None
@@ -150,7 +105,7 @@ _MPV_ERRORS = (
 try:
     from OpenGL import GL
 except ImportError:
-    logger.warning("Warning: PyOpenGL not found. Install with: pip install PyOpenGL")
+    logger.warning("PyOpenGL is not installed; the OpenGL preview is unavailable")
     GL = None
 
 
@@ -214,7 +169,6 @@ class MPVPlayer:
 
         # State
         self.is_playing = False
-        self.duration = 0
         self.current_file = None
 
         # Track current crop values
@@ -223,11 +177,10 @@ class MPVPlayer:
         self.crop_top = 0
         self.crop_bottom = 0
 
-        # Cache current adjustment values to avoid redundant updates
-        self.cached_brightness = 0
-        self.cached_contrast = 0
-        self.cached_saturation = 0
-        self.cached_hue = 0
+        # Color values mpv has, and changes waiting for the next flush.
+        self._applied_colors = dict.fromkeys(
+            ("brightness", "contrast", "saturation", "hue"), 0
+        )
         self._pending_colors = {}
         self._color_flush_id = None
 
@@ -245,14 +198,13 @@ class MPVPlayer:
         self.on_tracks_changed = None
 
         if mpv is None:
-            logger.error("ERROR: MPV library not available")
+            logger.error("libmpv is not available")
             return
 
         if GL is None:
-            logger.error("ERROR: OpenGL library not available for OpenGL mode")
+            logger.error("PyOpenGL is not available")
             return
 
-        # Connect signals for widget lifecycle
         self.video_widget.connect("realize", self._on_realize)
         self.video_widget.connect("render", self._on_render)
 
@@ -262,7 +214,6 @@ class MPVPlayer:
             return
 
         try:
-            # Set locale for MPV (required on some systems)
             try:
                 locale.setlocale(locale.LC_NUMERIC, "C")
             except locale.Error:
@@ -273,17 +224,15 @@ class MPVPlayer:
             else:
                 self._init_opengl_mode()
 
-        except Exception:  # noqa: BLE001 - realize handler: a GL, ctypes or libmpv failure is logged and must not escape into GTK
-            logger.error("ERROR: Failed to initialize MPV")
-            import traceback
-
-            traceback.print_exc()
+        except (
+            Exception
+        ):  # a GL, ctypes or libmpv failure must not escape the realize handler
+            logger.exception("Could not start the preview player")
             self.mpv_instance = None
             self.render_context = None
 
     def _init_software_mode(self):
         """Initialize MPV with pure software rendering (for VMs without 3D)."""
-        logger.debug("MPV: Initializing in software rendering mode...")
 
         try:
             # Use libmpv with aggressive software rendering settings
@@ -304,7 +253,6 @@ class MPVPlayer:
                 dscale="bilinear",  # Fast downscaling
                 cscale="bilinear",  # Fast chroma scaling
             )
-            logger.debug("MPV Software: Instance created successfully")
 
             # For software mode, we still need the OpenGL render context
             # but with reduced expectations
@@ -320,33 +268,24 @@ class MPVPlayer:
                 self.render_context = MpvRenderContext(
                     self.mpv_instance, "opengl", opengl_init_params=opengl_init_params
                 )
-                logger.debug("MPV Software: OpenGL render context created")
 
-                # Set up update callback
                 self.render_context.update_cb = self._on_mpv_render_update
 
             except _MPV_ERRORS as e:
-                logger.error(f"MPV Software: Failed to create render context: {e}")
-                logger.debug(
-                    "MPV Software: Will continue without render context (video may not display)"
-                )
+                logger.error("Failed to create render context: %s", e)
 
             self._register_events()
 
         except Exception as e:
-            logger.error(f"MPV Software: Failed to create instance: {e}")
+            logger.error("Failed to create instance: %s", e)
             raise
 
     def _init_opengl_mode(self):
         """Initialize MPV with OpenGL render context."""
-        logger.debug("MPV: Initializing in OpenGL render context mode...")
 
-        # Make OpenGL context current
         self.video_widget.make_current()
 
-        # Initialize MPV with libmpv video output
         if _IS_VIRTUAL_MACHINE:
-            logger.debug("MPV: Using VM-optimized settings (software rendering)")
             self.mpv_instance = mpv.MPV(
                 vo="libmpv",
                 hwdec="no",  # Disable hardware decoding in VMs
@@ -360,7 +299,6 @@ class MPVPlayer:
                 opengl_swapinterval=0,  # Disable vsync for better performance in VMs
             )
         else:
-            logger.debug("MPV: Using hardware-accelerated settings")
             self.mpv_instance = mpv.MPV(
                 vo="libmpv",
                 hwdec="auto",  # Auto-detect best hardware decoder
@@ -370,9 +308,7 @@ class MPVPlayer:
                 input_default_bindings="no",
                 input_vo_keyboard="no",
             )
-        logger.debug("MPV: Instance created successfully")
 
-        # Create OpenGL render context
         opengl_init_params = {
             "get_proc_address": MpvGlGetProcAddressFn(get_proc_address_wrapper())
         }
@@ -380,9 +316,7 @@ class MPVPlayer:
         self.render_context = MpvRenderContext(
             self.mpv_instance, "opengl", opengl_init_params=opengl_init_params
         )
-        logger.debug("MPV: OpenGL render context created successfully")
 
-        # Set up update callback
         self.render_context.update_cb = self._on_mpv_render_update
 
         self._register_events()
@@ -507,7 +441,6 @@ class MPVPlayer:
         # Safety check - don't process if cleanup has been called
         if not self.mpv_instance:
             return False
-        logger.debug("MPV: file-loaded event received on main thread")
         # The event of a file already stopped would report no tracks.
         if self.current_file is None:
             return False
@@ -526,49 +459,24 @@ class MPVPlayer:
         self._crop_applied = False
         # MPV should always be initialized (only once on first realize)
         if not self.mpv_instance:
-            logger.debug("MPV: Instance not found, initializing...")
             self._on_realize(self.video_widget)
             if not self.mpv_instance:
-                logger.error("MPV: Failed to initialize - cannot load video")
+                logger.error("Failed to initialize - cannot load video")
                 return False
 
         # Verify file exists
         if not os.path.exists(file_path):
-            logger.debug(f"MPV: File does not exist: {file_path}")
             return False
 
         try:
             self.current_file = file_path
             # The previous file's tracks are not this one's.
             self._reset_tracks()
-            # Convert to absolute path
-            abs_path = os.path.abspath(file_path)
-            logger.debug(f"MPV: Loading file: {abs_path}")
-            logger.debug(f"MPV: File size: {os.path.getsize(abs_path)} bytes")
-
-            self.mpv_instance.loadfile(abs_path)
-            logger.debug("MPV: Loadfile command sent")
-
-            GLib.timeout_add(100, self._query_duration)
-
+            self.mpv_instance.loadfile(os.path.abspath(file_path))
             return True
-
-        except (OSError, *_MPV_ERRORS) as e:
-            logger.error(f"Error loading video in MPV: {e}")
-            import traceback
-
-            traceback.print_exc()
+        except _MPV_ERRORS:
+            logger.exception("Could not load %s into the preview", file_path)
             return False
-
-    def _query_duration(self):
-        if self.mpv_instance:
-            try:
-                duration = self.mpv_instance.duration
-                if duration:
-                    self.duration = duration
-            except _MPV_ERRORS as e:
-                logger.debug(f"MPV: Duration not available yet: {e}")
-        return False
 
     def _detect_tracks(self):
         if not self.mpv_instance:
@@ -598,7 +506,7 @@ class MPVPlayer:
             self.current_subtitle_track = selected(self.mpv_instance.sid)
 
         except _MPV_ERRORS as e:
-            logger.error(f"Error detecting tracks: {e}")
+            logger.error("Error detecting tracks: %s", e)
 
     def play(self) -> None:
         if self.mpv_instance:
@@ -633,24 +541,18 @@ class MPVPlayer:
         except _MPV_ERRORS:
             return None
 
-    def get_duration(self):
-        return self.duration
-
     def _set_color_property(self, name: str, value: float) -> None:
         if not self.mpv_instance or not math.isfinite(value):
             return
         value = max(-100, min(100, round(value)))
-        if (
-            value == getattr(self, "cached_" + name)
-            and name not in self._pending_colors
-        ):
+        if value == self._applied_colors[name] and name not in self._pending_colors:
             return
         # A slider drag changes the value on every pointer event, and each
         # change makes mpv redraw the current frame, which takes the slot of
         # the next one. So mpv gets the latest value at most every 100 ms, and
         # asynchronously: this is the GTK thread, which also renders mpv's
-        # frames. Measured over a 2 s drag: 88 dropped frames with blocking
-        # writes on every event, 10 now.
+        # frames. Measured over a 2 s drag: 88 dropped frames with a blocking
+        # write per event, 10 this way.
         self._pending_colors[name] = value
         if self._color_flush_id is None:
             self._color_flush_id = GLib.timeout_add(100, self._flush_colors)
@@ -659,7 +561,7 @@ class MPVPlayer:
         self._color_flush_id = None
         pending, self._pending_colors = self._pending_colors, {}
         for name, value in pending.items():
-            if not self.mpv_instance or value == getattr(self, "cached_" + name):
+            if not self.mpv_instance or value == self._applied_colors[name]:
                 continue
             try:
                 self.mpv_instance.command_async("set", name, str(value))
@@ -667,7 +569,7 @@ class MPVPlayer:
                 logger.debug("MPV could not apply %s: %s", name, error)
                 continue
             # A failed write must not suppress the next retry.
-            setattr(self, "cached_" + name, value)
+            self._applied_colors[name] = value
         return GLib.SOURCE_REMOVE
 
     def set_brightness(self, value: float) -> None:
@@ -750,23 +652,14 @@ class MPVPlayer:
     def _update_video_crop(self):
         """Update MPV video-crop property using proper format."""
         if not self.mpv_instance:
-            logger.debug("MPV: No instance available for crop update")
             return
 
-        logger.debug(
-            f"MPV: Updating video-crop - L:{self.crop_left} R:{self.crop_right} T:{self.crop_top} B:{self.crop_bottom}"
-        )
-
-        # Get video dimensions first
         try:
             video_width = self.mpv_instance.width
             video_height = self.mpv_instance.height
 
             if not video_width or not video_height:
-                logger.debug("MPV: Video dimensions not available yet")
                 return
-
-            logger.debug(f"MPV: Video dimensions: {video_width}x{video_height}")
 
             # The margins are in displayed pixels, like FFmpeg's crop after
             # its display-matrix rotation, but mpv crops the decoded frame
@@ -786,9 +679,6 @@ class MPVPlayer:
 
             # Ensure positive dimensions
             if crop_width <= 0 or crop_height <= 0:
-                logger.debug(
-                    f"MPV: Invalid crop dimensions: {crop_width}x{crop_height}"
-                )
                 return
 
             # Check if any crop is applied
@@ -798,33 +688,27 @@ class MPVPlayer:
                 and self.crop_top == 0
                 and self.crop_bottom == 0
             ):
-                # Reset crop to clear any previous crop
                 crop_str = ""
-                logger.debug("MPV: Clearing video-crop")
             else:
                 # Format: WxH+X+Y
                 crop_str = f"{crop_width}x{crop_height}+{left}+{top}"
-                logger.debug(f"MPV: Setting video-crop to: {crop_str}")
 
-            # Set the video-crop property
             try:
                 self.mpv_instance["video-crop"] = crop_str
                 self._crop_applied = True
-                logger.debug("MPV: video-crop property set successfully")
                 # Queue render update
                 GLib.timeout_add(50, self._request_render_update)
             except _MPV_ERRORS as e:
-                logger.error(f"MPV: Error setting video-crop property: {e}")
+                logger.error("Error setting video-crop property: %s", e)
 
         except _MPV_ERRORS as e:
-            logger.error(f"MPV: Error getting video dimensions: {e}")
+            logger.error("Error getting video dimensions: %s", e)
 
     def _request_render_update(self):
         """Request a render update after crop change"""
         if self.render_context and self.video_widget:
             # Gtk.Widget.queue_render reports no errors, so nothing to catch.
             self.video_widget.queue_render()
-            logger.debug("MPV: Render update requested")
         return False
 
     def set_volume(self, volume) -> None:
@@ -837,7 +721,7 @@ class MPVPlayer:
                 self.mpv_instance.aid = track_index
                 self.current_audio_track = track_index
             except _MPV_ERRORS as e:
-                logger.error(f"Error switching audio track: {e}")
+                logger.error("Error switching audio track: %s", e)
 
     def set_subtitle_track(self, track_index: int) -> None:
         if self.mpv_instance:
@@ -863,15 +747,14 @@ class MPVPlayer:
             return
         try:
             self.mpv_instance.af = filter_string if filter_string else ""
-            logger.debug(f"MPV: Audio filter set to: {filter_string!r}")
             # Force audio pipeline rebuild during playback
             try:
                 if self.mpv_instance.time_pos is not None:
                     self.mpv_instance.command("seek", "0", "relative")
             except _MPV_ERRORS as e:
-                logger.debug(f"MPV: Could not rebuild the audio pipeline: {e}")
+                logger.debug("Could not rebuild the audio pipeline: %s", e)
         except _MPV_ERRORS as e:
-            logger.error(f"MPV: Error setting audio filter: {e}")
+            logger.error("Error setting audio filter: %s", e)
 
     def set_speed(self, speed: float) -> None:
         """Set playback speed (1.0 = normal)."""
@@ -879,7 +762,7 @@ class MPVPlayer:
             try:
                 self.mpv_instance.speed = speed
             except _MPV_ERRORS as e:
-                logger.error(f"MPV: Error setting speed: {e}")
+                logger.error("Error setting speed: %s", e)
 
     def set_rotation(self, degrees: int) -> None:
         """Set user rotation in degrees (0, 90, 180, 270)."""
@@ -910,7 +793,7 @@ class MPVPlayer:
             if self.video_widget:
                 self.video_widget.queue_render()
         except _MPV_ERRORS as e:
-            logger.error(f"MPV: Error applying transform: {e}")
+            logger.error("Error applying transform: %s", e)
 
     def _on_video_reconfig(self):
         if not self.mpv_instance:
@@ -919,7 +802,7 @@ class MPVPlayer:
             if self.crop_left or self.crop_right or self.crop_top or self.crop_bottom:
                 self._update_video_crop()
         except _MPV_ERRORS as e:
-            logger.error(f"MPV: Error applying the crop after reconfig: {e}")
+            logger.error("Error applying the crop after reconfig: %s", e)
         return False
 
     def get_audio_tracks(self):
@@ -937,25 +820,20 @@ class MPVPlayer:
                 if self.render_context and self.video_widget:
                     self.video_widget.queue_render()
             except _MPV_ERRORS as e:
-                logger.error(f"MPV: Error clearing crop: {e}")
+                logger.error("Error clearing crop: %s", e)
 
     def cleanup(self, *args) -> None:
         """Clean up playback state but keep MPV instance alive for reuse"""
-        logger.debug("MPV: Starting cleanup (keeping instance alive)")
 
-        # Stop playback and clear current file
         if self.mpv_instance:
             try:
-                logger.debug("MPV: Stopping playback")
                 self.mpv_instance.command("stop")
                 self.mpv_instance.pause = True
             except _MPV_ERRORS as e:
-                logger.error(f"MPV: Error stopping playback: {e}")
+                logger.error("Error stopping playback: %s", e)
 
-        # Reset playback state
         self.is_playing = False
         self.current_file = None
-        self.duration = 0
         self._reset_tracks()
         self._flip_h = False
         self._flip_v = False

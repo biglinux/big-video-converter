@@ -282,10 +282,10 @@ def test_only_an_ffmpeg_free_owner_needs_replacement(
     checker = dependency_checker.DependencyChecker.__new__(
         dependency_checker.DependencyChecker
     )
-    checker.distro, checker.ffmpeg_path, checker.mpv_path = (
+    checker.distro, checker.ffmpeg_path, checker.preview_available = (
         {"base": "rpm"},
         "/x/ffmpeg",
-        "/x/mpv",
+        True,
     )
     monkeypatch.setattr(
         dependency_checker.subprocess,
@@ -293,6 +293,24 @@ def test_only_an_ffmpeg_free_owner_needs_replacement(
         lambda *a, **k: subprocess.CompletedProcess(a[0], returncode, owner, ""),
     )
     assert checker.are_dependencies_available() is available
+
+
+def test_the_preview_needs_the_python_modules_not_the_mpv_command(monkeypatch):
+    """The editor plays through python-mpv and PyOpenGL; the mpv program is unused."""
+    from utils import dependency_checker
+
+    real_import = dependency_checker.importlib.import_module
+
+    def without_mpv(name, *args):
+        if name == "mpv":
+            raise OSError("libmpv.so.2: cannot open shared object file")
+        return real_import(name, *args)
+
+    monkeypatch.setattr(dependency_checker.importlib, "import_module", without_mpv)
+    monkeypatch.setattr(
+        dependency_checker.shutil, "which", lambda name: "/usr/bin/" + name
+    )
+    assert not dependency_checker.DependencyChecker().are_dependencies_available()
 
 
 def _fake_drm(tmp_path, nodes):
@@ -422,3 +440,28 @@ def test_every_integration_offers_the_same_video_files():
             "video/mpeg",
             "video/mp2t",
         }
+
+
+@pytest.mark.parametrize(
+    "parts, uri",
+    [
+        (
+            ("smb", "nas", "ana@casa", "", "Vídeos/Férias #1.mp4"),
+            "smb://ana%40casa@nas/Vídeos/Férias%20%231.mp4",
+        ),
+        (("sftp", "fe80::1", "", "2222", "home"), "sftp://[fe80::1]:2222/home"),
+        (("ftp", "server", "", "", ""), "ftp://server/"),
+    ],
+)
+def test_network_locations_are_escaped(parts, uri):
+    from file_handler import network_uri
+
+    assert network_uri(*parts) == uri
+
+
+@pytest.mark.parametrize("port", ["http", "0", "70000"])
+def test_an_invalid_port_is_refused(port):
+    from file_handler import network_uri
+
+    with pytest.raises(ValueError):
+        network_uri("sftp", "server", "", port, "/")
