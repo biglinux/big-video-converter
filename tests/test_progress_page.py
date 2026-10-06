@@ -19,7 +19,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, GLib, Gtk, Pango
 from queue_manager import QueueManagerMixin
-from ui.progress_page import ProgressPage, TimeLeft, format_clock, format_time_left
+from ui.progress_page import ProgressPage, TimeLeft, format_clock, format_duration, format_time_left
 
 
 class FakeApp:
@@ -170,6 +170,17 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(format_time_left(3900), "≈ 1 h 5 min left")
         self.assertEqual(format_clock(8), "0:08")
         self.assertEqual(format_clock(3725), "1:02:05")
+        self.assertEqual(format_duration(42), "42s")
+        self.assertEqual(format_duration(750), "12m 30s")
+        self.assertEqual(format_duration(27725), "7h 42m")
+
+    def test_finished_row_shows_how_long_it_took(self):
+        path = "/tmp/elapsed.mp4"
+        self.page.initialize_queue([path])
+        row = self.page.add_conversion("elapsed", path, None)
+        row.started_at = time.monotonic() - 750
+        row.mark_success()
+        self.assertEqual(row.status_label.get_text(), "Completed in 12m 30s")
 
     def test_hero_shows_time_left_and_metrics_on_the_bar(self):
         path = "/tmp/timed.mp4"
