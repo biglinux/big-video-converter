@@ -213,18 +213,12 @@ class TestH264Level:
     @pytest.mark.parametrize(
         "w,h,num,den,expected",
         [
-            (
-                1920,
-                1080,
-                24000,
-                1001,
-                "4.1",
-            ),  # what used to be hardcoded, still right here
+            (1920, 1080, 24000, 1001, "4.1"),
             (1920, 1080, 60, 1, "4.2"),
-            (3840, 1606, 24000, 1001, "5.1"),  # the real file that shipped with 4.1
+            (3840, 1606, 24000, 1001, "5.1"),  # a 4K film, cropped
             (3840, 2160, 60, 1, "5.2"),
             (7680, 4320, 30, 1, "6.0"),
-            ("", "", 30, 1, "4.1"),  # unknown geometry: the old default
+            ("", "", 30, 1, "4.1"),  # unknown geometry
         ],
     )
     def test_table(self, w, h, num, den, expected):

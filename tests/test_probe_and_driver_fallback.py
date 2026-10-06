@@ -1,25 +1,19 @@
-"""Issue #27 and broken GPU drivers, proven with generated media and fake ffmpeg wrappers.
+"""Probing files ffprobe answers oddly, and GPU drivers that fail or hang.
 
-Background: a camera MOV (video, two audio tracks, a tmcd timecode track)
-failed with "Missing argument for option 'ac:a:0'" and exit code 127. ffprobe 9
-prints the MOV's stream group alongside the streams, so every CSV answer had a
-blank row and a duplicated video row; the string-built command of the day split
-at the newline and ran the stray channel count as a shell command. The same
-release had no answer for a GPU driver that hangs: no fallback stage ever ran.
+A camera MOV carries a timecode track in a stream group, which ffprobe 9
+reports beside the streams: an empty CSV row and a repeated video row. The
+driver cases use an ffmpeg wrapper with one scripted defect.
 """
 
 import os
 import shutil
 import signal
-import stat
 import subprocess
 import time
 
 import pytest
-from conftest import CLI, media_command
+from conftest import CLI, fake_ffmpeg, media_command, wait_until
 from utils.media_validation import probe_media
-
-REAL_FFMPEG = shutil.which("ffmpeg")
 
 
 def _streams(path, kind=None):
@@ -63,14 +57,6 @@ def timecode_mov(tmp_path_factory):
     )
     assert _streams(path, "data"), "the sample must carry a timecode track"
     return path
-
-
-def _fake_ffmpeg(tmp_path, name, body):
-    """A wrapper that behaves like ffmpeg except for one scripted defect."""
-    wrapper = tmp_path / name
-    wrapper.write_text("#!/bin/bash\n" + body + f'\nexec {REAL_FFMPEG} "$@"\n')
-    wrapper.chmod(wrapper.stat().st_mode | stat.S_IXUSR)
-    return wrapper
 
 
 class TestFfprobeStreamGroups:
@@ -153,10 +139,11 @@ class TestFfprobeStreamGroups:
 class TestStallWatchdog:
     def test_silent_encoder_is_killed_and_the_job_fails(self, media, tmp_path, run_cli):
         """Only the encode (the call carrying -progress) hangs; probes are real."""
-        wrapper = _fake_ffmpeg(
+        pid_file = tmp_path / "encoder.pid"
+        wrapper = fake_ffmpeg(
             tmp_path,
             "hanging-ffmpeg",
-            'for a in "$@"; do [[ $a == -progress ]] && exec sleep 613; done',
+            f'for a in "$@"; do [[ $a == -progress ]] && {{ echo $$ > {pid_file}; exec sleep 60; }}; done',
         )
         started = time.monotonic()
         result = run_cli(
@@ -172,12 +159,9 @@ class TestStallWatchdog:
         assert "Audio stream copy may have failed" not in result.stdout
         assert not (tmp_path / "out.mp4").exists()
         assert not list(tmp_path.glob(".bvc-*"))
-        time.sleep(0.5)
-        assert (
-            subprocess.run(
-                ["pgrep", "-f", "sleep 613"], capture_output=True, check=False
-            ).returncode
-            != 0
+        pid = pid_file.read_text().strip()
+        wait_until(
+            lambda: not os.path.exists(f"/proc/{pid}"), 5, "the hung encoder survived"
         )
 
     def test_disabled_watchdog_adds_no_progress_option(self, media, tmp_path, run_cli):
@@ -192,10 +176,11 @@ class TestStallWatchdog:
 
     def test_sigterm_ends_the_script_and_its_ffmpeg(self, media, tmp_path, cli_env):
         """The GUI cancels with SIGTERM to the process group; nothing may survive it."""
-        wrapper = _fake_ffmpeg(
+        pid_file = tmp_path / "encoder.pid"
+        wrapper = fake_ffmpeg(
             tmp_path,
             "hanging-ffmpeg",
-            'for a in "$@"; do [[ $a == -progress ]] && exec sleep 617; done',
+            f'for a in "$@"; do [[ $a == -progress ]] && {{ echo $$ > {pid_file}; exec sleep 60; }}; done',
         )
         env = {
             **cli_env,
@@ -216,16 +201,15 @@ class TestStallWatchdog:
                 break
         else:
             pytest.fail("the encode never started")
-        time.sleep(0.3)
+        wait_until(pid_file.exists, 10, "the encoder never started")
         os.killpg(process.pid, signal.SIGTERM)
         process.stdout.read()
         assert process.wait(timeout=15) == 143
-        time.sleep(0.5)
-        assert (
-            subprocess.run(
-                ["pgrep", "-f", "sleep 617"], capture_output=True, check=False
-            ).returncode
-            != 0
+        pid = pid_file.read_text().strip()
+        wait_until(
+            lambda: not os.path.exists(f"/proc/{pid}"),
+            5,
+            "the encoder survived the cancel",
         )
         assert not list(tmp_path.glob(".bvc-*"))
 
@@ -235,14 +219,14 @@ class TestGpuSmokeTest:
         "defect",
         [
             'for a in "$@"; do [[ $a == -init_hw_device ]] && { echo "Device creation failed: -22." >&2; exit 1; }; done',
-            'for a in "$@"; do [[ $a == -init_hw_device ]] && exec sleep 619; done',
+            'for a in "$@"; do [[ $a == -init_hw_device ]] && exec sleep 60; done',
         ],
         ids=["driver-fails", "driver-hangs"],
     )
     def test_broken_driver_means_software_encoding(
         self, media, tmp_path, cli_env, defect
     ):
-        wrapper = _fake_ffmpeg(tmp_path, "broken-gpu-ffmpeg", defect)
+        wrapper = fake_ffmpeg(tmp_path, "broken-gpu-ffmpeg", defect)
         env = {
             **cli_env,
             "gpu": "amd",
@@ -271,7 +255,7 @@ class TestGpuSmokeTest:
     def test_check_can_be_skipped_and_the_stage_chain_still_recovers(
         self, media, tmp_path, cli_env
     ):
-        wrapper = _fake_ffmpeg(
+        wrapper = fake_ffmpeg(
             tmp_path,
             "broken-gpu-ffmpeg",
             'for a in "$@"; do [[ $a == -init_hw_device ]] && exit 1; done',
@@ -303,7 +287,7 @@ class TestGpuSmokeTest:
         self, media, tmp_path, cli_env
     ):
         """scale_vulkan garbles 1280x720 and 1920x1080; it must never be used."""
-        wrapper = _fake_ffmpeg(
+        wrapper = fake_ffmpeg(
             tmp_path,
             "no-gpu-ffmpeg",
             'for a in "$@"; do [[ $a == -init_hw_device ]] && exit 1; done',
@@ -341,8 +325,8 @@ class TestGpuSmokeTest:
         assert _streams(tmp_path / "out.mp4", "video")[0]["width"] == 64
 
     def test_exit_255_is_an_error_and_still_falls_back(self, media, tmp_path, cli_env):
-        """ffmpeg returns 255 for AVERROR(EPERM); it used to be read as a cancel."""
-        wrapper = _fake_ffmpeg(
+        """ffmpeg returns 255 for AVERROR(EPERM), an error and not a cancel."""
+        wrapper = fake_ffmpeg(
             tmp_path,
             "eperm-ffmpeg",
             'for a in "$@"; do [[ $a == -init_hw_device ]] && exit 255; done',
@@ -437,9 +421,17 @@ class TestFileInfoFailures:
         dialog._get_file_info_thread()
         assert shown and "invalid" in shown[0]
 
+        from ui import progress_page
+
         opened = []
-        monkeypatch.setattr(
-            file_info.Gtk, "show_uri", lambda _parent, uri, _time: opened.append(uri)
-        )
-        dialog._open_containing_folder("/videos/a#b%c?d")
+
+        class Launcher:
+            def __init__(self, file):
+                self.file = file
+
+            def open_containing_folder(self, *_args):
+                opened.append(self.file.get_uri())
+
+        monkeypatch.setattr(progress_page.Gtk.FileLauncher, "new", Launcher)
+        file_info.launch_file(None, None, "/videos/a#b%c?d", containing=True)
         assert opened == ["file:///videos/a%23b%25c%3Fd"]

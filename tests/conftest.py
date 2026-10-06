@@ -7,6 +7,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
 from contextlib import contextmanager
 from pathlib import Path
@@ -148,6 +149,65 @@ def pytest_runtest_call(item):
 def pytest_runtest_teardown(item):
     with _fail_on_callback_exceptions():
         return (yield)
+
+
+def fake_ffmpeg(directory, name, body):
+    """An ffmpeg that runs the bash ``body`` first and then the real one."""
+    wrapper = directory / name
+    wrapper.write_text(
+        "#!/bin/bash\n" + body + f'\nexec {shutil.which("ffmpeg")} "$@"\n'
+    )
+    wrapper.chmod(0o755)
+    return wrapper
+
+
+def group_members(pgid):
+    """The live processes of process group ``pgid``."""
+    members = []
+    for stat_file in Path("/proc").glob("[0-9]*/stat"):
+        try:
+            fields = stat_file.read_text().rpartition(")")[2].split()
+        except OSError:
+            continue
+        if fields[0] != "Z" and int(fields[2]) == pgid:
+            members.append(int(stat_file.parent.name))
+    return members
+
+
+def wait_until(predicate, timeout=10, message="condition not reached"):
+    end = time.monotonic() + timeout
+    while not predicate():
+        if time.monotonic() > end:
+            raise AssertionError(message)
+        time.sleep(0.02)
+
+
+def pump(seconds=0.1):
+    """Run the GLib main loop for a while."""
+    from gi.repository import GLib
+
+    context = GLib.MainContext.default()
+    end = time.monotonic() + seconds
+    while time.monotonic() < end:
+        while context.pending():
+            context.iteration(False)
+        time.sleep(0.005)
+
+
+def pump_until(predicate, timeout=15):
+    """Run the GLib main loop until ``predicate`` holds."""
+    from gi.repository import GLib
+
+    context = GLib.MainContext.default()
+    end = time.monotonic() + timeout
+    while True:
+        while context.pending():
+            context.iteration(False)
+        if predicate():
+            return
+        if time.monotonic() > end:
+            raise AssertionError("main-loop condition not reached")
+        time.sleep(0.005)
 
 
 def media_command(*args):

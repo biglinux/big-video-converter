@@ -161,6 +161,18 @@ def parse_segments_arg(text: str) -> list[dict[str, float]]:
     return segments
 
 
+def joined_cuts(segments) -> list[dict[str, float]]:
+    """The cuts a join shows: in timeline order, overlapping or touching ones
+    merged, so no part of the source plays twice."""
+    joined: list[dict[str, float]] = []
+    for segment in sorted(segments, key=lambda s: s["start"]):
+        if joined and segment["start"] <= joined[-1]["end"]:
+            joined[-1]["end"] = max(joined[-1]["end"], segment["end"])
+        else:
+            joined.append({"start": segment["start"], "end": segment["end"]})
+    return joined
+
+
 def effective_resolution(metadata: dict[str, Any], global_value: str = "") -> str:
     metadata = normalize_metadata(metadata)
     mode = metadata["resolution_mode"]

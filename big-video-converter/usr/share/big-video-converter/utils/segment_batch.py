@@ -15,10 +15,10 @@ from utils.conversion import (
     TEXT_SUBTITLE_CODECS,
     _failure_reason,
     call_on_main,
-    notify_completion,
     run_with_progress_dialog,
 )
 from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+from utils.job_options import joined_cuts
 from utils.media_validation import (
     ConversionResult,
     FileIdentity,
@@ -381,6 +381,8 @@ def start_segment_batch(page, context):
     # Splitting to a size: the cuts (or the whole video) are encoded once with
     # a short GOP, and that file is split by copying, into even parts.
     split_size = context.get("split_size")
+    if mode == "join" or split_size:
+        segments = tuple(joined_cuts(segments))
     # A single cut (a copied trim) is one part published under the job's name.
     single = len(segments) == 1 and not split_size
     if single:
@@ -809,7 +811,7 @@ def start_segment_batch(page, context):
                 "job_id": job_id,
             }
         )
-        if not result.cancelled:
+        if result.success:
             count = len(outputs) or len(segments)
             if split_size and len(outputs) > 1:
                 body = (
@@ -868,7 +870,7 @@ def start_segment_batch(page, context):
                         count,
                     )
                 ).format(count)
-            notify_completion(app, result, body=body)
+            row.add_output_text(body)
         app.conversion_completed(result.success, file_path=source, job_id=job_id)
 
     threading.Thread(target=work, daemon=True).start()

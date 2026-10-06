@@ -12,26 +12,12 @@ import pytest
 
 gi = pytest.importorskip("gi")
 gi.require_version("Adw", "1")
-from conftest import CLI
+from conftest import CLI, fake_ffmpeg, pump_until
 from gi.repository import GLib
 from queue_manager import QueueManagerMixin
 from utils import conversion
 from utils.media_validation import ConversionResult
 from utils.segment_batch import start_segment_batch
-
-
-def pump_until(predicate, timeout=15):
-    context = GLib.MainContext.default()
-    end = time.monotonic() + timeout
-    while time.monotonic() < end:
-        for _ in range(100):
-            if not context.pending():
-                break
-            context.iteration(False)
-        if predicate():
-            return
-        time.sleep(0.005)
-    raise AssertionError("Timed out waiting for main-loop completion")
 
 
 class Widget:
@@ -172,7 +158,8 @@ def test_log_opens_with_the_source_codec_and_pixel_format(media, tmp_path, cli_e
     assert "codec=h264" in lines and "pixel format=yuv420p" in lines
 
 
-def test_finished_job_notifies_the_user(media, tmp_path, cli_env):
+def test_a_finished_job_leaves_the_notification_to_its_queue(media, tmp_path, cli_env):
+    # One summary per queue, not one per file.
     app = App()
     out = tmp_path / "notified.mkv"
     conversion.run_with_progress_dialog(
@@ -185,9 +172,8 @@ def test_finished_job_notifies_the_user(media, tmp_path, cli_env):
         job_id="n",
     )
     pump_until(lambda: bool(app.notifications))
-    assert len(app.system_notifications) == 1
-    assert app.system_notifications[0][0] == "Conversion Complete"
-    assert not app.errors
+    assert app.notifications[0][0] is True
+    assert not app.system_notifications and not app.errors
 
 
 def test_failed_job_notifies_without_a_dialog_over_the_summary(
@@ -210,7 +196,7 @@ def test_failed_job_notifies_without_a_dialog_over_the_summary(
         )
         pump_until(lambda app=app: bool(app.notifications))
         assert app.notifications[0][0] is False
-        assert len(app.system_notifications) == 1 and len(app.errors) == dialogs
+        assert not app.system_notifications and len(app.errors) == dialogs
 
 
 def test_real_conversion_deletes_the_original_after_validation(
@@ -424,9 +410,8 @@ def test_updates_are_bounded_and_one_shot():
 class QueueApp(QueueManagerMixin):
     def __init__(self):
         self.logger = logging.getLogger("queue-test")
-        self.completion_lock = threading.Lock()
         self.conversions_lock = threading.Lock()
-        self._processing_completion = False
+        self.system_notifications = []
         self.active_conversions = []
         self.gpu_slots = deque()
         self.conversion_queue = deque()
@@ -440,6 +425,9 @@ class QueueApp(QueueManagerMixin):
     def process_next_in_queue(self):
         self.next_calls += 1
         return False
+
+    def send_system_notification(self, title, body):
+        self.system_notifications.append((title, body))
 
 
 def test_queue_completion_matches_identity_and_ignores_duplicates():
@@ -653,11 +641,10 @@ def test_subtitle_pass_never_drives_the_bar_or_claims_software_encoding(
 
 def test_frozen_preset_survives_gpu_fallback(media, tmp_path, cli_env):
     from test_presets import MINIMAL
-    from test_probe_and_driver_fallback import _fake_ffmpeg
     from utils.conversion import run_with_progress_dialog
     from utils.media_validation import probe_media
 
-    wrapper = _fake_ffmpeg(
+    wrapper = fake_ffmpeg(
         tmp_path,
         "unavailable-gpu",
         'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done',

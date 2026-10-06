@@ -1,11 +1,14 @@
+import os
 import re
 import shutil
+import signal
 import subprocess
+import time
 from array import array
 from pathlib import Path
 
 import pytest
-from conftest import CLI, media_command
+from conftest import APP, CLI, fake_ffmpeg, group_members, media_command, wait_until
 from constants import NOISE_MODELS, noise_reduction_filter
 from utils.media_validation import media_duration, probe_media, stream_count
 
@@ -290,7 +293,7 @@ def test_noise_reduction_keeps_timing_and_the_whole_audio(tmp_path, model, secon
 
 
 def test_webm_with_default_codecs_encodes_legal_ones_once(media, tmp_path, run_cli):
-    """H.264 and AAC used to fail after two full encodes."""
+    """WebM holds neither H.264 nor AAC; the legal codecs are chosen before encoding."""
     out = tmp_path / "web.webm"
     result = run_cli(media["video"], out, video_encoder="h264", audio_handling="copy")
     assert result.returncode == 0, result.stdout + result.stderr
@@ -302,7 +305,7 @@ def test_webm_with_default_codecs_encodes_legal_ones_once(media, tmp_path, run_c
 
 
 def test_audio_is_retried_only_for_an_audio_failure(media, tmp_path, run_cli):
-    """A full disk or a missing encoder ran every stage twice more."""
+    """A full disk or a missing encoder is no reason to try another audio codec."""
     failed = run_cli(
         media["video"], tmp_path / "broken.mkv", options="-c:v no_such_encoder"
     )
@@ -325,9 +328,7 @@ def test_audio_is_retried_only_for_an_audio_failure(media, tmp_path, run_cli):
 def test_amd_hevc_keeps_bitrate_keyframes_and_tag(media, tmp_path, run_cli, bitrate):
     """AMD's constant-QP HEVC command was rebuilt after the bitrate, GOP and
     hvc1 tag had been applied, dropping all three."""
-    from test_probe_and_driver_fallback import _fake_ffmpeg
-
-    wrapper = _fake_ffmpeg(
+    wrapper = fake_ffmpeg(
         tmp_path,
         "no-gpu",
         'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done',
@@ -360,29 +361,11 @@ def test_amd_hevc_keeps_bitrate_keyframes_and_tag(media, tmp_path, run_cli, bitr
         )
 
 
-def _group_members(pgid):
-    members = []
-    for stat_file in Path("/proc").glob("[0-9]*/stat"):
-        try:
-            fields = stat_file.read_text().rpartition(")")[2].split()
-        except OSError:
-            continue
-        if int(fields[2]) == pgid:
-            members.append(stat_file.parent.name)
-    return members
-
-
 @pytest.mark.parametrize("target", ["group", "script"])
 def test_cancel_during_gpu_check_ends_the_job_at_once(media, tmp_path, cli_env, target):
-    """timeout ran in a process group of its own and bash deferred its TERM
-    trap until the check finished: an orphan FFmpeg and workspace for 35 s."""
-    import os
-    import signal
-    import time
-
-    from test_probe_and_driver_fallback import _fake_ffmpeg
-
-    wrapper = _fake_ffmpeg(
+    """The GPU check runs in the job's process group and does not delay the
+    TERM trap, so a cancel leaves no FFmpeg and no workspace behind."""
+    wrapper = fake_ffmpeg(
         tmp_path,
         "hanging-gpu",
         'for arg in "$@"; do [[ $arg == color=c=gray* ]] && exec sleep 60; done',
@@ -404,13 +387,10 @@ def test_cancel_during_gpu_check_ends_the_job_at_once(media, tmp_path, cli_env, 
             start_new_session=True,
         )
     try:
-        deadline = time.monotonic() + 20
-        while (
-            "Checking GPU encoder" not in log.read_text()
-            and time.monotonic() < deadline
-        ):
-            time.sleep(0.05)
-        time.sleep(0.3)
+        wait_until(lambda: "Checking GPU encoder" in log.read_text(), 20)
+        wait_until(
+            lambda: len(group_members(job.pid)) > 2, 10, "the GPU check never started"
+        )
         started = time.monotonic()
         if target == "group":
             os.killpg(job.pid, signal.SIGTERM)
@@ -418,8 +398,7 @@ def test_cancel_during_gpu_check_ends_the_job_at_once(media, tmp_path, cli_env, 
             job.send_signal(signal.SIGTERM)
         assert job.wait(timeout=10) == 143
         assert time.monotonic() - started < 7
-        time.sleep(0.2)
-        assert _group_members(job.pid) == []
+        wait_until(lambda: not group_members(job.pid), 5, "part of the job survived")
         assert not list(tmp_path.glob(".bvc-*"))
     finally:
         if job.poll() is None:
@@ -510,8 +489,8 @@ def test_two_jobs_on_one_destination_keep_both_files(media, tmp_path, cli_env):
 def test_existing_sidecar_is_kept_and_the_track_numbered(
     media, tmp_path, run_cli, only_subtitles
 ):
-    """The video was already published when a taken sidecar name used to fail
-    the whole job; the track now takes the next number."""
+    """The video is already published when a sidecar name turns out taken:
+    the track takes the next number instead of failing the job."""
     existing = tmp_path / "extract.por.srt"
     existing.write_text("Manually corrected subtitles", encoding="utf-8")
     result = run_cli(
@@ -559,8 +538,7 @@ def _with_subtitle(media, path, codec):
     "name,codec", [("styled.mkv", "ass"), ("phone.mp4", "mov_text")]
 )
 def test_every_text_subtitle_codec_is_extracted(media, tmp_path, run_cli, name, codec):
-    """Only SubRip used to be extracted: an ASS or mov_text track vanished
-    while the job reported no subtitle to keep the original for."""
+    """ASS and mov_text tracks become SubRip sidecars like SubRip ones."""
     source = _with_subtitle(media, tmp_path / name, codec)
     result = run_cli(source, tmp_path / "out.mkv", subtitle_extract="extract")
     assert result.returncode == 0, result.stdout + result.stderr
@@ -868,3 +846,286 @@ def test_user_declared_hdr_is_tone_mapped_or_kept_tagged(tmp_path, run_cli):
 def test_invalid_source_hdr_is_refused(media, tmp_path, run_cli):
     result = run_cli(media["video"], tmp_path / "out.mkv", source_hdr="dolby")
     assert result.returncode == 2 and "Invalid source_hdr" in result.stderr
+
+
+def _audio_seconds(path):
+    """Length of the first audio stream."""
+    return float(
+        subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-select_streams",
+                "a:0",
+                "-show_entries",
+                "stream=duration",
+                "-of",
+                "csv=p=0",
+                str(path),
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    )
+
+
+def test_close_cuts_share_one_input_and_keep_sound_with_picture(
+    media, tmp_path, run_cli
+):
+    """Removed pauses are hundreds of cuts a moment apart. An input each
+    decoded them all at once, queueing frames until the join reached them."""
+    # 34 cuts of two frames (25 fps), each starting between frames: more than
+    # one block of 32, with 8 ms removed between them.
+    cuts = ",".join(f"{n * 0.088 + 0.01:.6f}+0.080000" for n in range(34))
+    out = tmp_path / "joined.mp4"
+    result = run_cli(
+        media["video"],
+        out,
+        segments=cuts,
+        audio_handling="reencode",
+        subtitle_extract="none",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    command = next(
+        line
+        for line in result.stdout.splitlines()
+        if line.startswith("Running command:")
+    )
+    assert command.count(" -i ") == 1, command
+    assert _frames(out) == 68
+    assert _audio_seconds(out) == pytest.approx(2.72, abs=0.05)
+    # Cuts of a single frame, trimmed from a shared input, all came out on one
+    # timestamp; they keep an input each.
+    single = tmp_path / "single.mp4"
+    result = run_cli(
+        media["video"],
+        single,
+        audio_handling="reencode",
+        subtitle_extract="none",
+        segments="0.010000+0.040000,0.090000+0.040000,0.170000+0.040000",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert _frames(single) == 3
+
+
+def test_cuts_keep_their_length_where_the_audio_starts_late(tmp_path, run_cli):
+    """Video and audio are joined apart; a cut short of audio must not pull
+    the sound of every later cut ahead of its picture."""
+    source = tmp_path / "late.mp4"
+    media_command(
+        "-f",
+        "lavfi",
+        "-i",
+        "testsrc2=size=128x72:rate=25:duration=3",
+        "-itsoffset",
+        "0.5",
+        "-f",
+        "lavfi",
+        "-i",
+        "sine=sample_rate=48000:duration=2.5",
+        "-c:v",
+        "libx264",
+        "-threads",
+        "1",
+        "-c:a",
+        "aac",
+        "-y",
+        source,
+    )
+    out = tmp_path / "joined.mp4"
+    result = run_cli(
+        source,
+        out,
+        audio_handling="reencode",
+        subtitle_extract="none",
+        segments="0.100000+0.800000,1.200000+0.800000,2.000000+0.800000",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert _frames(out) == 60
+    assert _audio_seconds(out) == pytest.approx(2.4, abs=0.05)
+
+
+def test_keyframe_interval_counts_output_frames(media, tmp_path, run_cli):
+    out = tmp_path / "ten.mp4"
+    result = run_cli(media["video"], out, video_fps="10", keyframe_interval="2")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert " -g 20 " in result.stdout
+
+
+def test_size_limit_counts_the_subtitles_added_after_the_encode(
+    media, tmp_path, run_cli
+):
+    """Embedded subtitles of a trimmed job are added after the encode."""
+    cue = "x" * 200
+    srt = tmp_path / "long.srt"
+    srt.write_text(
+        "".join(
+            f"{n}\n00:00:00,600 --> 00:00:02,000\n{cue} {n}\n\n" for n in range(1, 8001)
+        ),
+        encoding="utf-8",
+    )
+    source = tmp_path / "subtitled.mkv"
+    media_command(
+        "-i",
+        media["video"],
+        "-i",
+        srt,
+        "-map",
+        "0",
+        "-map",
+        "1",
+        "-c",
+        "copy",
+        "-y",
+        source,
+    )
+    out = tmp_path / "limited.mkv"
+    result = run_cli(
+        source, out, options="-ss 0.5 -t 2 -threads 1", size_limit="1000000"
+    )
+    assert "Adding subtitles" in result.stdout, result.stdout + result.stderr
+    assert result.returncode != 0 or out.stat().st_size <= 1000000
+
+
+def test_a_hung_opencl_probe_does_not_hang_the_job(media, tmp_path, run_cli):
+    wrapper = fake_ffmpeg(
+        tmp_path,
+        "hanging-opencl",
+        'for arg in "$@"; do [[ $arg == opencl=* ]] && exec sleep 60; done',
+    )
+    result = run_cli(
+        media["video"],
+        tmp_path / "out.mkv",
+        gpu="nvidia",
+        force_software="",
+        gpu_smoke_test="0",
+        gpu_probe_timeout="2",
+        source_hdr="pq",
+        ffmpeg_executable=wrapper,
+        options="-t 0.4 -threads 1",
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_cancel_ends_subtitle_extraction_at_once(media, tmp_path, cli_env):
+    pid_file = tmp_path / "extract.pid"
+    wrapper = fake_ffmpeg(
+        tmp_path,
+        "hanging-extract",
+        f'for arg in "$@"; do [[ $arg == srt ]] && {{ echo $$ > {pid_file}; exec sleep 60; }}; done',
+    )
+    env = {
+        **cli_env,
+        "ffmpeg_executable": str(wrapper),
+        "output_file": str(tmp_path / "out.mkv"),
+        "only_extract_subtitles": "1",
+        "subtitle_extract": "extract",
+    }
+    log = tmp_path / "log"
+    with log.open("wb") as output:
+        job = subprocess.Popen(
+            ["bash", str(CLI), str(media["multi"])],
+            env=env,
+            stdout=output,
+            stderr=output,
+            start_new_session=True,
+        )
+    try:
+        wait_until(pid_file.exists, 20, "the extraction never started")
+        started = time.monotonic()
+        job.send_signal(signal.SIGTERM)
+        assert job.wait(timeout=10) == 143
+        assert time.monotonic() - started < 7
+        wait_until(
+            lambda: not group_members(job.pid), 5, "the extraction survived the cancel"
+        )
+    finally:
+        if job.poll() is None:
+            os.killpg(job.pid, signal.SIGKILL)
+            job.wait()
+
+
+def test_a_failing_preset_helper_stops_the_job(media, tmp_path, cli_env):
+    preset = APP / "presets/whatsapp.toml"
+    tools = tmp_path / "bin"
+    tools.mkdir()
+    python = tools / "python3"
+    python.write_text(
+        '#!/bin/bash\nfor arg in "$@"; do [[ $arg == --encoder-args ]] && exit 1; done\n'
+        f'exec {shutil.which("python3")} "$@"\n'
+    )
+    python.chmod(0o755)
+    env = {
+        **cli_env,
+        "PATH": f"{tools}:{cli_env['PATH']}",
+        "preset_file": str(preset),
+        "output_file": str(tmp_path / "out.mkv"),
+    }
+    result = subprocess.run(
+        ["bash", str(CLI), str(media["video"])],
+        env=env,
+        cwd=cli_env["HOME"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert not (tmp_path / "out.mkv").exists()
+
+
+def test_cancel_while_publishing_leaves_no_empty_file(media, tmp_path, cli_env):
+    tools = tmp_path / "bin"
+    tools.mkdir()
+    slow_mv = tools / "mv"
+    slow_mv.write_text(f'#!/bin/bash\nsleep 60\nexec {shutil.which("mv")} "$@"\n')
+    slow_mv.chmod(0o755)
+    out = tmp_path / "out.mkv"
+    env = {
+        **cli_env,
+        "PATH": f"{tools}:{cli_env['PATH']}",
+        "output_file": str(out),
+        "options": "-t 0.4 -threads 1",
+    }
+    job = subprocess.Popen(
+        ["bash", str(CLI), str(media["video"])],
+        env=env,
+        cwd=cli_env["HOME"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+    try:
+        wait_until(out.exists, 60, "the output name was never claimed")
+        os.killpg(job.pid, signal.SIGTERM)
+        job.wait(timeout=15)
+        assert not out.exists()
+        assert not list(tmp_path.glob(".bvc-*"))
+    finally:
+        if job.poll() is None:
+            os.killpg(job.pid, signal.SIGKILL)
+            job.wait()
+
+
+def test_a_full_disk_is_not_encoded_again_on_other_stages(media, tmp_path, run_cli):
+    calls = tmp_path / "encodes"
+    wrapper = fake_ffmpeg(
+        tmp_path,
+        "full-disk",
+        f'for arg in "$@"; do [[ $arg == -progress ]] && {{ echo x >> {calls}; '
+        'echo "Error writing trailer: No space left on device" >&2; exit 1; }; done',
+    )
+    result = run_cli(
+        media["video"],
+        tmp_path / "out.mkv",
+        gpu="amd",
+        force_software="",
+        gpu_smoke_test="0",
+        ffmpeg_executable=wrapper,
+        options="-t 0.4 -threads 1",
+    )
+    assert result.returncode != 0
+    assert calls.read_text().count("x") == 1, result.stdout

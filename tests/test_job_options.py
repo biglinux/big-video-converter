@@ -118,3 +118,16 @@ def test_effects_are_normalized_and_count_as_picture_edits():
         {"source_hdr": "pq"},
     ):
         assert has_picture_edits(normalize_metadata(edit)), edit
+
+
+def test_a_join_shows_overlapping_or_unordered_cuts_once():
+    from utils.job_options import joined_cuts
+
+    cuts = [
+        {"start": 5, "end": 8},
+        {"start": 0, "end": 2},
+        {"start": 1, "end": 3},
+        {"start": 7, "end": 9},
+        {"start": 3, "end": 4},
+    ]
+    assert joined_cuts(cuts) == [{"start": 0, "end": 4}, {"start": 5, "end": 9}]
