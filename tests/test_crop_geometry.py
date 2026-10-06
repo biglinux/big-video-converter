@@ -43,7 +43,9 @@ def _picture(width, height):
 
 def _crop(picture, margins):
     left, right, top, bottom = margins
-    return [row[left:len(row) - right] for row in picture[top:len(picture) - bottom]]
+    return [
+        row[left : len(row) - right] for row in picture[top : len(picture) - bottom]
+    ]
 
 
 def _transform(picture, rotation, flip_h, flip_v):
@@ -56,8 +58,12 @@ def _transform(picture, rotation, flip_h, flip_v):
     return picture
 
 
-TRANSFORMS = [(rotation, flip_h, flip_v) for rotation in (0, 90, 180, 270)
-              for flip_h in (False, True) for flip_v in (False, True)]
+TRANSFORMS = [
+    (rotation, flip_h, flip_v)
+    for rotation in (0, 90, 180, 270)
+    for flip_h in (False, True)
+    for flip_v in (False, True)
+]
 
 
 def test_displayed_crop_is_the_crop_the_conversion_makes():
@@ -69,14 +75,18 @@ def test_displayed_crop_is_the_crop_the_conversion_makes():
         shown = _transform(source, *transform)
         assert (len(shown[0]), len(shown)) == displayed_size(7, 4, transform[0])
         converted = _transform(_crop(source, margins), *transform)
-        assert _crop(shown, source_to_display(margins, *transform)) == converted, transform
+        assert _crop(shown, source_to_display(margins, *transform)) == converted, (
+            transform
+        )
 
 
 def test_display_margins_map_back_to_the_same_source_margins():
     from ui.crop_overlay import display_to_source, source_to_display
 
     for transform in TRANSFORMS:
-        assert display_to_source(source_to_display((1, 2, 3, 4), *transform), *transform) == (1, 2, 3, 4)
+        assert display_to_source(
+            source_to_display((1, 2, 3, 4), *transform), *transform
+        ) == (1, 2, 3, 4)
 
 
 def test_dragging_the_visible_edge_crops_the_matching_source_edge():

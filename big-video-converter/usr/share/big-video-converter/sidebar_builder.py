@@ -113,17 +113,25 @@ class SidebarBuilderMixin:
         handle.add_css_class("bvc-sidebar-handle")
         handle.set_cursor_from_name("col-resize")
         handle.update_property(
-            [Gtk.AccessibleProperty.LABEL, Gtk.AccessibleProperty.VALUE_MIN,
-             Gtk.AccessibleProperty.VALUE_MAX],
-            [_("Resize sidebar"), split.get_min_sidebar_width(),
-             split.get_max_sidebar_width()],
+            [
+                Gtk.AccessibleProperty.LABEL,
+                Gtk.AccessibleProperty.VALUE_MIN,
+                Gtk.AccessibleProperty.VALUE_MAX,
+            ],
+            [
+                _("Resize sidebar"),
+                split.get_min_sidebar_width(),
+                split.get_max_sidebar_width(),
+            ],
         )
 
         def resize(width):
             total = split.get_width()
             if total <= 0:
                 return
-            width = max(split.get_min_sidebar_width(), min(split.get_max_sidebar_width(), width))
+            width = max(
+                split.get_min_sidebar_width(), min(split.get_max_sidebar_width(), width)
+            )
             split.set_sidebar_width_fraction(width / total)
             handle.update_property([Gtk.AccessibleProperty.VALUE_NOW], [float(width)])
 
@@ -148,7 +156,9 @@ class SidebarBuilderMixin:
         drag.connect("drag-begin", on_begin)
         drag.connect(
             "drag-update",
-            lambda g, dx, _dy: resize(start[0] + outwards() * (pointer_x(g, dx) - start[1])),
+            lambda g, dx, _dy: resize(
+                start[0] + outwards() * (pointer_x(g, dx) - start[1])
+            ),
         )
         drag.connect("drag-end", lambda *_a: handle.remove_css_class("dragging"))
         handle.add_controller(drag)
@@ -235,9 +245,7 @@ class SidebarBuilderMixin:
         self.output_format_combo.set_model(format_model)
 
         # Hidden data-holder for force copy state (driven by codec combo index 0)
-        self.force_copy_video_check = Adw.SwitchRow(
-            title=_("Copy without re-encoding")
-        )
+        self.force_copy_video_check = Adw.SwitchRow(title=_("Copy without re-encoding"))
 
         # Audio Handling
         audio_model = Gtk.StringList()
@@ -258,17 +266,24 @@ class SidebarBuilderMixin:
         self.noise_reduction_expander.set_subtitle(_("Remove background noise"))
         self.noise_reduction_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
         self.noise_reduction_switch.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Enable noise reduction")],
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Enable noise reduction")],
         )
-        self.noise_reduction_switch.connect("state-set", self._on_noise_reduction_toggled)
+        self.noise_reduction_switch.connect(
+            "state-set", self._on_noise_reduction_toggled
+        )
         self.noise_reduction_expander.add_suffix(self.noise_reduction_switch)
         self.noise_reduction_expander.set_enable_expansion(False)
         self.noise_reduction_expander.set_expanded(False)
 
         # Noise Reduction Strength (visible only when noise reduction is enabled)
         self.noise_strength_row = Adw.ActionRow(title=_("Strength"))
-        self.noise_strength_adj = Gtk.Adjustment(value=1.0, lower=0.0, upper=1.0, step_increment=0.05, page_increment=0.1)
-        self.noise_strength_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.noise_strength_adj)
+        self.noise_strength_adj = Gtk.Adjustment(
+            value=1.0, lower=0.0, upper=1.0, step_increment=0.05, page_increment=0.1
+        )
+        self.noise_strength_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.noise_strength_adj
+        )
         self.noise_strength_scale.set_digits(2)
         self.noise_strength_scale.set_hexpand(True)
         self.noise_strength_scale.set_size_request(200, -1)
@@ -280,7 +295,12 @@ class SidebarBuilderMixin:
         self._noise_strength_label.set_size_request(45, -1)
         self._noise_strength_label.add_css_class("numeric")
         self._noise_strength_label.add_css_class("caption")
-        self.noise_strength_adj.connect("notify::value", lambda a, _: self._noise_strength_label.set_text(f"{a.get_value()*100:.0f}%"))
+        self.noise_strength_adj.connect(
+            "notify::value",
+            lambda a, _: self._noise_strength_label.set_text(
+                f"{a.get_value() * 100:.0f}%"
+            ),
+        )
         self.noise_strength_row.add_suffix(self.noise_strength_scale)
         self.noise_strength_row.add_suffix(self._noise_strength_label)
         self.noise_reduction_expander.add_row(self.noise_strength_row)
@@ -294,7 +314,9 @@ class SidebarBuilderMixin:
             _("Higher quality — DPDFNet-2 48 kHz"),
         ]
         noise_model_model = Gtk.StringList.new(self._noise_model_list)
-        self.noise_model_row = Adw.ComboRow(title=_("AI Model"), model=noise_model_model)
+        self.noise_model_row = Adw.ComboRow(
+            title=_("AI Model"), model=noise_model_model
+        )
         self.noise_model_row.set_selected(0)
         self.noise_reduction_expander.add_row(self.noise_model_row)
 
@@ -302,7 +324,8 @@ class SidebarBuilderMixin:
         self.gate_expander = Adw.ExpanderRow(title=_("Noise Gate"))
         self.gate_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
         self.gate_switch.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Noise Gate")],
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Noise Gate")],
         )
         self.gate_switch.connect("state-set", self._on_gate_switch_changed)
         self.gate_expander.add_suffix(self.gate_switch)
@@ -311,8 +334,12 @@ class SidebarBuilderMixin:
         self.tooltip_helper.add_tooltip(self.gate_expander, "noise_gate")
 
         self.gate_intensity_row = Adw.ActionRow(title=_("Intensity"))
-        self.gate_intensity_adj = Gtk.Adjustment(value=0.5, lower=0.0, upper=1.0, step_increment=0.05, page_increment=0.1)
-        self.gate_intensity_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.gate_intensity_adj)
+        self.gate_intensity_adj = Gtk.Adjustment(
+            value=0.5, lower=0.0, upper=1.0, step_increment=0.05, page_increment=0.1
+        )
+        self.gate_intensity_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.gate_intensity_adj
+        )
         self.gate_intensity_scale.set_digits(2)
         self.gate_intensity_scale.set_hexpand(True)
         self.gate_intensity_scale.set_size_request(200, -1)
@@ -325,7 +352,12 @@ class SidebarBuilderMixin:
         self._gate_intensity_label.set_size_request(45, -1)
         self._gate_intensity_label.add_css_class("numeric")
         self._gate_intensity_label.add_css_class("caption")
-        self.gate_intensity_adj.connect("notify::value", lambda a, _: self._gate_intensity_label.set_text(f"{a.get_value()*100:.0f}%"))
+        self.gate_intensity_adj.connect(
+            "notify::value",
+            lambda a, _: self._gate_intensity_label.set_text(
+                f"{a.get_value() * 100:.0f}%"
+            ),
+        )
         self.gate_intensity_row.add_suffix(self.gate_intensity_scale)
         self.gate_intensity_row.add_suffix(self._gate_intensity_label)
         self.gate_expander.add_row(self.gate_intensity_row)
@@ -336,7 +368,8 @@ class SidebarBuilderMixin:
         self.compressor_expander = Adw.ExpanderRow(title=_("Compressor"))
         self.compressor_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
         self.compressor_switch.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Enable compressor")],
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Enable compressor")],
         )
         self.compressor_switch.connect("state-set", self._on_compressor_switch_changed)
         self.compressor_expander.add_suffix(self.compressor_switch)
@@ -344,21 +377,31 @@ class SidebarBuilderMixin:
         self.compressor_expander.set_expanded(False)
 
         self.compressor_intensity_row = Adw.ActionRow(title=_("Intensity"))
-        self.compressor_intensity_adj = Gtk.Adjustment(value=1.0, lower=0.0, upper=1.0, step_increment=0.05, page_increment=0.1)
-        self.compressor_intensity_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.compressor_intensity_adj)
+        self.compressor_intensity_adj = Gtk.Adjustment(
+            value=1.0, lower=0.0, upper=1.0, step_increment=0.05, page_increment=0.1
+        )
+        self.compressor_intensity_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL,
+            adjustment=self.compressor_intensity_adj,
+        )
         self.compressor_intensity_scale.set_digits(2)
         self.compressor_intensity_scale.set_hexpand(True)
         self.compressor_intensity_scale.set_size_request(200, -1)
         self.compressor_intensity_scale.set_valign(Gtk.Align.CENTER)
         self.compressor_intensity_scale.add_mark(0.0, Gtk.PositionType.BOTTOM, _("0%"))
         self.compressor_intensity_scale.add_mark(0.5, Gtk.PositionType.BOTTOM, _("50%"))
-        self.compressor_intensity_scale.add_mark(1.0, Gtk.PositionType.BOTTOM, _("100%"))
+        self.compressor_intensity_scale.add_mark(
+            1.0, Gtk.PositionType.BOTTOM, _("100%")
+        )
         self.compressor_intensity_scale.set_sensitive(False)
         self._compressor_label = Gtk.Label(label="100%")
         self._compressor_label.set_size_request(45, -1)
         self._compressor_label.add_css_class("numeric")
         self._compressor_label.add_css_class("caption")
-        self.compressor_intensity_adj.connect("notify::value", lambda a, _: self._compressor_label.set_text(f"{a.get_value()*100:.0f}%"))
+        self.compressor_intensity_adj.connect(
+            "notify::value",
+            lambda a, _: self._compressor_label.set_text(f"{a.get_value() * 100:.0f}%"),
+        )
         self.compressor_intensity_row.add_suffix(self.compressor_intensity_scale)
         self.compressor_intensity_row.add_suffix(self._compressor_label)
         self.compressor_expander.add_row(self.compressor_intensity_row)
@@ -372,8 +415,12 @@ class SidebarBuilderMixin:
         self.noise_reduction_expander.add_row(self.hpf_row)
 
         self.hpf_freq_row = Adw.ActionRow(title=_("Frequency"))
-        self.hpf_freq_adj = Gtk.Adjustment(value=80, lower=20, upper=500, step_increment=5, page_increment=20)
-        self.hpf_freq_scale = Gtk.Scale(orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.hpf_freq_adj)
+        self.hpf_freq_adj = Gtk.Adjustment(
+            value=80, lower=20, upper=500, step_increment=5, page_increment=20
+        )
+        self.hpf_freq_scale = Gtk.Scale(
+            orientation=Gtk.Orientation.HORIZONTAL, adjustment=self.hpf_freq_adj
+        )
         self.hpf_freq_scale.set_digits(0)
         self.hpf_freq_scale.set_hexpand(True)
         self.hpf_freq_scale.set_size_request(200, -1)
@@ -386,7 +433,10 @@ class SidebarBuilderMixin:
         self._hpf_label.set_size_request(55, -1)
         self._hpf_label.add_css_class("numeric")
         self._hpf_label.add_css_class("caption")
-        self.hpf_freq_adj.connect("notify::value", lambda a, _: self._hpf_label.set_text(f"{a.get_value():.0f} Hz"))
+        self.hpf_freq_adj.connect(
+            "notify::value",
+            lambda a, _: self._hpf_label.set_text(f"{a.get_value():.0f} Hz"),
+        )
         self.hpf_freq_row.add_suffix(self.hpf_freq_scale)
         self.hpf_freq_row.add_suffix(self._hpf_label)
         self.hpf_freq_row.set_visible(False)
@@ -396,7 +446,8 @@ class SidebarBuilderMixin:
         self.eq_expander = Adw.ExpanderRow(title=_("Equalizer"))
         self.eq_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
         self.eq_switch.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Enable equalizer")],
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Enable equalizer")],
         )
         self.eq_switch.connect("state-set", self._on_eq_switch_changed)
         self.eq_expander.add_suffix(self.eq_switch)
@@ -404,8 +455,16 @@ class SidebarBuilderMixin:
         self.eq_expander.set_expanded(False)
 
         self._eq_preset_keys = [
-            "default_voice", "flat", "voice_boost", "podcast", "warm",
-            "bright", "de_esser", "bass_cut", "presence", "custom",
+            "default_voice",
+            "flat",
+            "voice_boost",
+            "podcast",
+            "warm",
+            "bright",
+            "de_esser",
+            "bass_cut",
+            "presence",
+            "custom",
         ]
         self._eq_presets = {
             "default_voice": [0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 2.0, 3.0, 1.0, 0.0],
@@ -420,9 +479,16 @@ class SidebarBuilderMixin:
             "custom": [0.0] * 10,
         }
         _eq_preset_names = [
-            _("Default Voice"), _("Natural (No Effects)"), _("Crystal Voice"),
-            _("Radio Host"), _("Velvet Voice"), _("Extra Brightness"),
-            _("Soften 'S' (De-esser)"), _("Remove Rumble"), _("Present Voice"), _("Custom"),
+            _("Default Voice"),
+            _("Natural (No Effects)"),
+            _("Crystal Voice"),
+            _("Radio Host"),
+            _("Velvet Voice"),
+            _("Extra Brightness"),
+            _("Soften 'S' (De-esser)"),
+            _("Remove Rumble"),
+            _("Present Voice"),
+            _("Custom"),
         ]
         eq_preset_model = Gtk.StringList.new(_eq_preset_names)
         self.eq_preset_row = Adw.ComboRow(title=_("Preset"), model=eq_preset_model)
@@ -489,9 +555,7 @@ class SidebarBuilderMixin:
         self._customize_row = Adw.ActionRow(title=_("Customize encoding..."))
         self._customize_row.add_prefix(self._radio_custom)
         self._customize_row.set_activatable_widget(self._radio_custom)
-        self._customize_row.add_suffix(
-            Gtk.Image.new_from_icon_name("go-next-symbolic")
-        )
+        self._customize_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
         self._customize_row.set_activatable(True)
         self._customize_row.connect("activated", self._on_video_encoding_activated)
         video_group.add(self._customize_row)
@@ -521,9 +585,7 @@ class SidebarBuilderMixin:
         self._audio_row.add_prefix(
             Gtk.Image.new_from_icon_name("audio-x-generic-symbolic")
         )
-        self._audio_row.add_suffix(
-            Gtk.Image.new_from_icon_name("go-next-symbolic")
-        )
+        self._audio_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
         self._audio_row.set_activatable(True)
         self._audio_row.connect("activated", self._on_audio_activated)
         other_group.add(self._audio_row)
@@ -536,24 +598,22 @@ class SidebarBuilderMixin:
             Gtk.Image.new_from_icon_name("go-next-symbolic")
         )
         self._audio_cleaning_row.set_activatable(True)
-        self._audio_cleaning_row.connect(
-            "activated", self._on_noise_options_activated
-        )
+        self._audio_cleaning_row.connect("activated", self._on_noise_options_activated)
         other_group.add(self._audio_cleaning_row)
 
         self._subtitles_row = Adw.ActionRow(title=_("Subtitles"))
         self._subtitles_row.add_prefix(
             Gtk.Image.new_from_icon_name("insert-text-symbolic")
         )
-        self._subtitles_row.add_suffix(
-            Gtk.Image.new_from_icon_name("go-next-symbolic")
-        )
+        self._subtitles_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
         self._subtitles_row.set_activatable(True)
         self._subtitles_row.connect("activated", self._on_subtitles_activated)
         other_group.add(self._subtitles_row)
 
         self._size_row = Adw.ActionRow(title=_("Maximum size"))
-        self._size_row.add_prefix(Gtk.Image.new_from_icon_name("drive-harddisk-symbolic"))
+        self._size_row.add_prefix(
+            Gtk.Image.new_from_icon_name("drive-harddisk-symbolic")
+        )
         self._size_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
         self._size_row.set_activatable(True)
         self._size_row.connect("activated", self._on_size_activated)
@@ -563,9 +623,7 @@ class SidebarBuilderMixin:
         self._extra_row.add_prefix(
             Gtk.Image.new_from_icon_name("preferences-system-symbolic")
         )
-        self._extra_row.add_suffix(
-            Gtk.Image.new_from_icon_name("go-next-symbolic")
-        )
+        self._extra_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
         self._extra_row.set_activatable(True)
         self._extra_row.connect("activated", self._on_extra_activated)
         other_group.add(self._extra_row)
@@ -589,14 +647,19 @@ class SidebarBuilderMixin:
         # GPU
         self.gpu_combo.connect(
             "notify::selected",
-            lambda w, p: (self._save_gpu_setting(w.get_selected()), self._update_customize_subtitle()),
+            lambda w, p: (
+                self._save_gpu_setting(w.get_selected()),
+                self._update_customize_subtitle(),
+            ),
         )
 
         # GPU Device
         self.gpu_device_combo.connect(
             "notify::selected",
             lambda w, p: (
-                self.settings_manager.save_setting("gpu-device-index", w.get_selected()),
+                self.settings_manager.save_setting(
+                    "gpu-device-index", w.get_selected()
+                ),
                 self._update_customize_subtitle(),
             ),
         )
@@ -605,7 +668,10 @@ class SidebarBuilderMixin:
         def _on_sidebar_format_changed(w, p):
             idx = w.get_selected()
             self.settings_manager.save_setting("output-format-index", idx)
-            if hasattr(self, "settings_page") and self.settings_page.output_format_combo.get_selected() != idx:
+            if (
+                hasattr(self, "settings_page")
+                and self.settings_page.output_format_combo.get_selected() != idx
+            ):
                 self.settings_page.output_format_combo.set_selected(idx)
             self._update_customize_subtitle()
 
@@ -614,13 +680,21 @@ class SidebarBuilderMixin:
         # Video Quality
         self.video_quality_combo.connect(
             "notify::selected",
-            lambda w, p: (self._save_quality_setting(w.get_selected()), self._select_profile_radio(self._detect_current_profile()), self._update_customize_subtitle()),
+            lambda w, p: (
+                self._save_quality_setting(w.get_selected()),
+                self._select_profile_radio(self._detect_current_profile()),
+                self._update_customize_subtitle(),
+            ),
         )
 
         # Video Codec
         self.video_codec_combo.connect(
             "notify::selected",
-            lambda w, p: (self._save_codec_setting(w.get_selected()), self._select_profile_radio(self._detect_current_profile()), self._update_customize_subtitle()),
+            lambda w, p: (
+                self._save_codec_setting(w.get_selected()),
+                self._select_profile_radio(self._detect_current_profile()),
+                self._update_customize_subtitle(),
+            ),
         )
 
         # Copy video: sync hidden data-holder → codec combo
@@ -653,37 +727,43 @@ class SidebarBuilderMixin:
         # Noise Reduction Strength
         self.noise_strength_scale.connect(
             "value-changed",
-            lambda w: _nr_save_and_preview(
-                "noise-reduction-strength", w.get_value()
-            ),
+            lambda w: _nr_save_and_preview("noise-reduction-strength", w.get_value()),
         )
 
         def _on_model_combo_changed(w, p):
             _nr_save_and_preview("noise-model", w.get_selected())
+
         self.noise_model_row.connect("notify::selected", _on_model_combo_changed)
         # Gate intensity
         self.gate_intensity_scale.connect(
             "value-changed",
-            lambda w: (self.settings_manager.save_setting(
-                "noise-gate-intensity", w.get_value()
-            ), self._refresh_nr_preview()),
+            lambda w: (
+                self.settings_manager.save_setting(
+                    "noise-gate-intensity", w.get_value()
+                ),
+                self._refresh_nr_preview(),
+            ),
         )
 
         # Compressor intensity
         self.compressor_intensity_scale.connect(
             "value-changed",
-            lambda w: (self.settings_manager.save_setting(
-                "compressor-intensity", w.get_value()
-            ), self._refresh_nr_preview()),
+            lambda w: (
+                self.settings_manager.save_setting(
+                    "compressor-intensity", w.get_value()
+                ),
+                self._refresh_nr_preview(),
+            ),
         )
 
         # HPF
         self.hpf_row.connect("notify::active", self._on_hpf_toggled)
         self.hpf_freq_scale.connect(
             "value-changed",
-            lambda w: (self.settings_manager.save_setting(
-                "hpf-frequency", int(w.get_value())
-            ), self._refresh_nr_preview()),
+            lambda w: (
+                self.settings_manager.save_setting("hpf-frequency", int(w.get_value())),
+                self._refresh_nr_preview(),
+            ),
         )
 
         # Show tooltips — now managed via hamburger menu action
@@ -821,7 +901,9 @@ class SidebarBuilderMixin:
             self.eq_preset_row.set_selected(self._eq_preset_keys.index(eq_preset))
 
         # Loudness Normalization
-        normalize_enabled = self.settings_manager.load_setting("normalize-enabled", False)
+        normalize_enabled = self.settings_manager.load_setting(
+            "normalize-enabled", False
+        )
         self.normalize_row.set_active(normalize_enabled)
 
         # Show tooltips — state loaded via tooltip_action in _setup_actions
@@ -843,7 +925,9 @@ class SidebarBuilderMixin:
         if profile == "custom":
             codec_model = self.video_codec_combo.get_model()
             if codec_model:
-                val = codec_model.get_string(self.video_codec_combo.get_selected()) or ""
+                val = (
+                    codec_model.get_string(self.video_codec_combo.get_selected()) or ""
+                )
                 if val:
                     parts.append(val)
         quality_idx = self.video_quality_combo.get_selected()
@@ -913,7 +997,9 @@ class SidebarBuilderMixin:
         """Name of the preset in use, or an invitation to browse them."""
         preset = self.active_preset()
         if preset is None:
-            self._presets_row.set_subtitle(_("Ready-made recipes: YouTube, Instagram, editing…"))
+            self._presets_row.set_subtitle(
+                _("Ready-made recipes: YouTube, Instagram, editing…")
+            )
         else:
             summary = preset.summary
             name = preset.display_name
@@ -949,9 +1035,7 @@ class SidebarBuilderMixin:
         """Update the Audio Settings ActionRow subtitle with active features."""
         audio_will_reencode = self.audio_handling_combo.get_selected() == 1
         if not audio_will_reencode:
-            self._audio_cleaning_row.set_subtitle(
-                _("Requires audio set to re-encode")
-            )
+            self._audio_cleaning_row.set_subtitle(_("Requires audio set to re-encode"))
         else:
             active = []
             if self.noise_reduction_switch.get_active():
@@ -971,7 +1055,11 @@ class SidebarBuilderMixin:
             else:
                 self._audio_cleaning_row.set_subtitle(_("Disabled"))
         # Sync editor's Audio Cleaning row if present
-        if hasattr(self, "video_edit_page") and self.video_edit_page and hasattr(self.video_edit_page, "ui"):
+        if (
+            hasattr(self, "video_edit_page")
+            and self.video_edit_page
+            and hasattr(self.video_edit_page, "ui")
+        ):
             self.video_edit_page.ui._sync_nr_subtitle()
 
     def _update_subtitles_subtitle(self):
@@ -986,9 +1074,16 @@ class SidebarBuilderMixin:
         """Disable all sidebar options except Subtitles when only-extract-subtitles is active."""
         is_extract = self.settings_page.only_extract_subtitles_check.get_active()
         enable = not is_extract
-        for row in (self._copy_row, self._universal_row, self._efficient_row,
-                    self._smallest_row, self._customize_row,
-                    self._audio_row, self._audio_cleaning_row, self._extra_row):
+        for row in (
+            self._copy_row,
+            self._universal_row,
+            self._efficient_row,
+            self._smallest_row,
+            self._customize_row,
+            self._audio_row,
+            self._audio_cleaning_row,
+            self._extra_row,
+        ):
             row.set_sensitive(enable)
 
     def _on_size_activated(self, _row):
@@ -1006,9 +1101,14 @@ class SidebarBuilderMixin:
     def _update_extra_subtitle(self):
         """Update the Extra ActionRow subtitle."""
         parts = []
-        if hasattr(self, "settings_page") and self.settings_page.options_entry.get_text().strip():
+        if (
+            hasattr(self, "settings_page")
+            and self.settings_page.options_entry.get_text().strip()
+        ):
             parts.append(_("Custom FFmpeg flags"))
-        self._extra_row.set_subtitle(" · ".join(parts) if parts else _("No customizations"))
+        self._extra_row.set_subtitle(
+            " · ".join(parts) if parts else _("No customizations")
+        )
 
     def _save_gpu_setting(self, index):
         """Save GPU setting as direct value"""

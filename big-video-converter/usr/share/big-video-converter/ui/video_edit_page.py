@@ -79,7 +79,9 @@ class VideoEditPage:
         self.is_video_fullscreen = False
         self._sidebar_shown_before_fullscreen = True
         app.split_view.bind_property(
-            "show-sidebar", self.ui.sidebar_button, "active",
+            "show-sidebar",
+            self.ui.sidebar_button,
+            "active",
             GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
         )
         # The compositor or a window-manager shortcut can end fullscreen too.
@@ -203,7 +205,8 @@ class VideoEditPage:
 
             if hasattr(self.ui, "denoise_combo"):
                 self.ui.update_effects_state(
-                    self.denoise, self.sharpen, self.stabilize, self.effect_file)
+                    self.denoise, self.sharpen, self.stabilize, self.effect_file
+                )
             if hasattr(self.ui, "source_hdr_combo"):
                 self.ui.update_source_hdr(self.source_hdr)
 
@@ -255,27 +258,29 @@ class VideoEditPage:
         if not self.current_video_path or not hasattr(self.app, "conversion_page"):
             return
         metadata = self.app_state.file_metadata.get(self.current_video_path, {})
-        metadata.update({
-            "trim_segments": [dict(s) for s in self.trim_segments],
-            "crop_left": self.crop_left,
-            "crop_right": self.crop_right,
-            "crop_top": self.crop_top,
-            "crop_bottom": self.crop_bottom,
-            "brightness": self.brightness,
-            "contrast": self.contrast,
-            "saturation": self.saturation,
-            "hue": self.hue,
-            "rotation": self.rotation,
-            "flip_h": self.flip_h,
-            "flip_v": self.flip_v,
-            "denoise": self.denoise,
-            "sharpen": self.sharpen,
-            "stabilize": self.stabilize,
-            "effect_file": self.effect_file,
-            "source_hdr": self.source_hdr,
-            "crop_aspect": self.crop_aspect,
-            "output_mode": self.output_mode,
-        })
+        metadata.update(
+            {
+                "trim_segments": [dict(s) for s in self.trim_segments],
+                "crop_left": self.crop_left,
+                "crop_right": self.crop_right,
+                "crop_top": self.crop_top,
+                "crop_bottom": self.crop_bottom,
+                "brightness": self.brightness,
+                "contrast": self.contrast,
+                "saturation": self.saturation,
+                "hue": self.hue,
+                "rotation": self.rotation,
+                "flip_h": self.flip_h,
+                "flip_v": self.flip_v,
+                "denoise": self.denoise,
+                "sharpen": self.sharpen,
+                "stabilize": self.stabilize,
+                "effect_file": self.effect_file,
+                "source_hdr": self.source_hdr,
+                "crop_aspect": self.crop_aspect,
+                "output_mode": self.output_mode,
+            }
+        )
         self.app_state.file_metadata[self.current_video_path] = metadata
 
     def set_video(self, file_path: str):
@@ -399,7 +404,9 @@ class VideoEditPage:
                 int(self.ui.crop_top_spin.get_value()),
                 int(self.ui.crop_bottom_spin.get_value()),
             ),
-            self.rotation, self.flip_h, self.flip_v,
+            self.rotation,
+            self.flip_h,
+            self.flip_v,
         )
 
         self.crop_aspect = "free"
@@ -509,7 +516,9 @@ class VideoEditPage:
             # The overlay maps crop margins in displayed pixels (display_size),
             # not mpv's decoded size, which is sideways for phone recordings,
             # and shows them turned and mirrored like the preview.
-            self.ui.crop_overlay.set_video_dimensions(self.video_width, self.video_height)
+            self.ui.crop_overlay.set_video_dimensions(
+                self.video_width, self.video_height
+            )
             self.ui.crop_overlay.set_transform(self.rotation, self.flip_h, self.flip_v)
 
             # Set current crop values on overlay
@@ -595,7 +604,9 @@ class VideoEditPage:
             return
         setattr(self, name, value)
         self._save_file_metadata()
-        self.ui.update_effects_state(self.denoise, self.sharpen, self.stabilize, self.effect_file)
+        self.ui.update_effects_state(
+            self.denoise, self.sharpen, self.stabilize, self.effect_file
+        )
         self._apply_video_effects()
 
     def on_source_hdr_changed(self, mode: str) -> None:
@@ -607,7 +618,12 @@ class VideoEditPage:
         self._apply_video_effects()
 
     def on_reset_effects(self) -> None:
-        self.denoise, self.sharpen, self.stabilize, self.effect_file = "off", "off", False, ""
+        self.denoise, self.sharpen, self.stabilize, self.effect_file = (
+            "off",
+            "off",
+            False,
+            "",
+        )
         self._save_file_metadata()
         self._update_ui_from_metadata()
 
@@ -616,9 +632,16 @@ class VideoEditPage:
         file analysed first, so only the conversion applies it."""
         if not getattr(self, "mpv_player", None):
             return
-        shader = self.effect_file if os.path.splitext(self.effect_file)[1].lower() in SHADER_SUFFIXES else ""
+        shader = (
+            self.effect_file
+            if os.path.splitext(self.effect_file)[1].lower() in SHADER_SUFFIXES
+            else ""
+        )
         self.mpv_player.set_video_effects(
-            effects_graph(self.denoise, self.sharpen, self.effect_file), shader, self.source_hdr)
+            effects_graph(self.denoise, self.sharpen, self.effect_file),
+            shader,
+            self.source_hdr,
+        )
 
     def _update_transform_state(self) -> None:
         if hasattr(self.ui, "rotation_row"):
@@ -694,17 +717,31 @@ class VideoEditPage:
                 _("{start} → {end} ({duration})").format(
                     start=self.format_time_precise(segment["start"]),
                     end=self.format_time_precise(segment["end"]),
-                    duration=self.format_time_precise(segment["end"] - segment["start"]),
+                    duration=self.format_time_precise(
+                        segment["end"] - segment["start"]
+                    ),
                 )
             )
             row.add_css_class("property")
             row.set_tooltip_text(_("Go to segment start"))
             for icon, label, handler, arg in (
-                ("document-edit-symbolic", _("Edit segment times"), self._on_edit_segment_clicked, i),
-                ("edit-delete-symbolic", _("Remove segment"), self._on_remove_segment_clicked, segment),
+                (
+                    "document-edit-symbolic",
+                    _("Edit segment times"),
+                    self._on_edit_segment_clicked,
+                    i,
+                ),
+                (
+                    "edit-delete-symbolic",
+                    _("Remove segment"),
+                    self._on_remove_segment_clicked,
+                    segment,
+                ),
             ):
                 button = Gtk.Button(
-                    icon_name=icon, css_classes=["flat"], tooltip_text=label,
+                    icon_name=icon,
+                    css_classes=["flat"],
+                    tooltip_text=label,
                     valign=Gtk.Align.CENTER,
                 )
                 button.update_property([Gtk.AccessibleProperty.LABEL], [label])
@@ -737,9 +774,7 @@ class VideoEditPage:
         h_spin.set_value(hours)
         h_spin.set_width_chars(3)
         h_spin.set_tooltip_text(_("Hours"))
-        h_spin.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Hours")]
-        )
+        h_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Hours")])
         fields_box.append(h_spin)
 
         # Minutes
@@ -750,9 +785,7 @@ class VideoEditPage:
         m_spin.set_value(minutes)
         m_spin.set_width_chars(3)
         m_spin.set_tooltip_text(_("Minutes"))
-        m_spin.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Minutes")]
-        )
+        m_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Minutes")])
         fields_box.append(m_spin)
 
         # Seconds
@@ -763,9 +796,7 @@ class VideoEditPage:
         s_spin.set_value(seconds)
         s_spin.set_width_chars(3)
         s_spin.set_tooltip_text(_("Seconds"))
-        s_spin.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Seconds")]
-        )
+        s_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Seconds")])
         fields_box.append(s_spin)
 
         # Centiseconds (hundredths)
@@ -776,9 +807,7 @@ class VideoEditPage:
         cs_spin.set_value(centiseconds)
         cs_spin.set_width_chars(3)
         cs_spin.set_tooltip_text(_("Centiseconds"))
-        cs_spin.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Centiseconds")]
-        )
+        cs_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Centiseconds")])
         fields_box.append(cs_spin)
 
         return fields_box, (h_spin, m_spin, s_spin, cs_spin)
@@ -882,8 +911,9 @@ class VideoEditPage:
             if start_time >= self.video_duration:
                 self._show_error_dialog(
                     _("Invalid Time Range"),
-                    _("Start time must be before the end of the video ({duration})").format(
-                        duration=self.format_time_precise(self.video_duration)),
+                    _(
+                        "Start time must be before the end of the video ({duration})"
+                    ).format(duration=self.format_time_precise(self.video_duration)),
                 )
                 return None
             end_time = min(end_time, self.video_duration)
@@ -1009,9 +1039,13 @@ class VideoEditPage:
         if not hasattr(self.ui, "crop_left_spin"):
             return
         transform = (self.rotation, self.flip_h, self.flip_v)
-        width, height = displayed_size(self.video_width, self.video_height, self.rotation)
+        width, height = displayed_size(
+            self.video_width, self.video_height, self.rotation
+        )
         left, right, top, bottom = source_to_display(
-            (self.crop_left, self.crop_right, self.crop_top, self.crop_bottom), *transform)
+            (self.crop_left, self.crop_right, self.crop_top, self.crop_bottom),
+            *transform,
+        )
         previous = getattr(self, "_updating_crop_spins", False)
         self._updating_crop_spins = True
         try:
@@ -1149,14 +1183,14 @@ class VideoEditPage:
         if self.is_playing:
             self.mpv_player.pause()
             self.is_playing = False
-            self.ui.play_pause_button.set_icon_name('media-playback-start-symbolic')
+            self.ui.play_pause_button.set_icon_name("media-playback-start-symbolic")
             if self.position_update_id:
                 GLib.source_remove(self.position_update_id)
                 self.position_update_id = None
         else:
             self.mpv_player.play()
             self.is_playing = True
-            self.ui.play_pause_button.set_icon_name('media-playback-pause-symbolic')
+            self.ui.play_pause_button.set_icon_name("media-playback-pause-symbolic")
             if not self.position_update_id:
                 self.position_update_id = GLib.timeout_add(
                     100, self._update_position_callback
@@ -1187,13 +1221,13 @@ class VideoEditPage:
             self.mpv_player.set_volume(volume)
             if hasattr(self.ui, "volume_button"):
                 if volume == 0:
-                    self.ui.volume_button.set_icon_name('audio-volume-muted-symbolic')
+                    self.ui.volume_button.set_icon_name("audio-volume-muted-symbolic")
                 elif volume < 0.33:
-                    self.ui.volume_button.set_icon_name('audio-volume-low-symbolic')
+                    self.ui.volume_button.set_icon_name("audio-volume-low-symbolic")
                 elif volume < 0.66:
-                    self.ui.volume_button.set_icon_name('audio-volume-medium-symbolic')
+                    self.ui.volume_button.set_icon_name("audio-volume-medium-symbolic")
                 else:
-                    self.ui.volume_button.set_icon_name('audio-volume-high-symbolic')
+                    self.ui.volume_button.set_icon_name("audio-volume-high-symbolic")
 
     def on_speed_changed(self, speed: float) -> None:
         """Handle playback speed change."""
@@ -1275,9 +1309,11 @@ class VideoEditPage:
         if sm.get_boolean("noise-reduction", False) and os.path.exists(
             NOISE_MODELS[model][0]
         ):
-            filters.append(noise_reduction_filter(
-                model, sm.load_setting("noise-reduction-strength", 1.0)
-            ))
+            filters.append(
+                noise_reduction_filter(
+                    model, sm.load_setting("noise-reduction-strength", 1.0)
+                )
+            )
 
         # 5. Noise Gate (after NR — post-NR audio is mostly speech, so full-band detection is effective)
         if sm.get_boolean("noise-gate-enabled", False):
@@ -1375,7 +1411,9 @@ class VideoEditPage:
                 name = self._track_action(
                     f"subtitle-track-{track['index']}",
                     track["index"] == player.current_subtitle_track,
-                    lambda a, p, idx=track["index"]: self.on_subtitle_track_changed(idx),
+                    lambda a, p, idx=track["index"]: self.on_subtitle_track_changed(
+                        idx
+                    ),
                 )
                 self.ui.subtitle_menu.append(track["label"], f"win.{name}")
         self.ui.subtitle_button.set_visible(bool(subtitle_tracks))
@@ -1385,7 +1423,8 @@ class VideoEditPage:
         action = self.app.window.lookup_action(name)
         if action is None:
             action = Gio.SimpleAction.new_stateful(
-                name, None, GLib.Variant.new_boolean(active))
+                name, None, GLib.Variant.new_boolean(active)
+            )
             action.connect("activate", on_activate)
             self.app.window.add_action(action)
         else:
@@ -1402,9 +1441,9 @@ class VideoEditPage:
     def _on_fullscreen_changed(self):
         """Update fullscreen button icon based on current state"""
         if self.is_video_fullscreen:
-            self.ui.fullscreen_button.set_icon_name('view-restore-symbolic')
+            self.ui.fullscreen_button.set_icon_name("view-restore-symbolic")
         else:
-            self.ui.fullscreen_button.set_icon_name('view-fullscreen-symbolic')
+            self.ui.fullscreen_button.set_icon_name("view-fullscreen-symbolic")
 
     def _enter_video_fullscreen(self):
         """Video-only fullscreen: chrome and margins go, the tools stay one toggle away."""

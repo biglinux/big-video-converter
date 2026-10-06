@@ -71,7 +71,9 @@ class WelcomeDialog:
         features = [
             (
                 "🎬 " + _("Convert Video Formats"),
-                _("MP4, MKV, AVI, WebM and many more\nwith hardware acceleration support"),
+                _(
+                    "MP4, MKV, AVI, WebM and many more\nwith hardware acceleration support"
+                ),
             ),
             (
                 "✂️ " + _("Trim and Cut Videos"),
@@ -82,10 +84,7 @@ class WelcomeDialog:
             ),
             (
                 "🎨 " + _("Video Color Adjustments"),
-                _(
-                    "Control brightness, saturation, and hue\n"
-                    "to enhance your videos"
-                ),
+                _("Control brightness, saturation, and hue\nto enhance your videos"),
             ),
             (
                 "⚡ " + _("Fast Copy Mode"),
@@ -112,24 +111,15 @@ class WelcomeDialog:
             ),
             (
                 "🎙️ " + _("Audio Control"),
-                _(
-                    "Extract, copy, or re-encode audio\n"
-                    "with multiple codec options"
-                ),
+                _("Extract, copy, or re-encode audio\nwith multiple codec options"),
             ),
             (
                 "📝 " + _("Subtitle Management"),
-                _(
-                    "Extract subtitles to SRT files\n"
-                    "or keep them embedded in video"
-                ),
+                _("Extract subtitles to SRT files\nor keep them embedded in video"),
             ),
             (
                 "⚙️ " + _("Batch Processing"),
-                _(
-                    "Convert multiple videos at once\n"
-                    "with queue management"
-                ),
+                _("Convert multiple videos at once\nwith queue management"),
             ),
         ]
 

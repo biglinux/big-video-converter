@@ -16,48 +16,168 @@ _ = gettext.gettext
 
 ALLOWED_FFMPEG_FLAGS = {
     # Time / trimming
-    "-ss", "-sseof", "-t", "-to", "-itsoffset", "-copyts", "-start_at_zero",
-    "-avoid_negative_ts", "-shortest",
+    "-ss",
+    "-sseof",
+    "-t",
+    "-to",
+    "-itsoffset",
+    "-copyts",
+    "-start_at_zero",
+    "-avoid_negative_ts",
+    "-shortest",
     # Codecs and encoder tuning
-    "-c", "-codec", "-vcodec", "-acodec", "-scodec",
-    "-preset", "-tune", "-profile", "-level", "-crf", "-qp", "-cq",
-    "-b", "-minrate", "-maxrate", "-bufsize", "-g", "-bf", "-refs",
-    "-rc", "-rc_mode", "-global_quality", "-x264-params", "-x265-params",
-    "-svtav1-params", "-cpu-used", "-row-mt", "-aq-mode", "-look_ahead_depth",
+    "-c",
+    "-codec",
+    "-vcodec",
+    "-acodec",
+    "-scodec",
+    "-preset",
+    "-tune",
+    "-profile",
+    "-level",
+    "-crf",
+    "-qp",
+    "-cq",
+    "-b",
+    "-minrate",
+    "-maxrate",
+    "-bufsize",
+    "-g",
+    "-bf",
+    "-refs",
+    "-rc",
+    "-rc_mode",
+    "-global_quality",
+    "-x264-params",
+    "-x265-params",
+    "-svtav1-params",
+    "-cpu-used",
+    "-row-mt",
+    "-aq-mode",
+    "-look_ahead_depth",
     # Encoder private options a preset may pin (libx264/x265, NVENC, QSV,
     # VAAPI, SVT-AV1, libvpx, ProRes). None of them names a file or a device.
-    "-coder", "-qmin", "-qmax", "-keyint_min", "-sc_threshold", "-b_strategy",
-    "-trellis", "-subq", "-me_range", "-aq-strength", "-psy-rd", "-partitions",
-    "-weightp", "-mbtree", "-qcomp", "-deblock", "-x264opts", "-slices",
-    "-rc-lookahead", "-temporal-aq", "-spatial-aq", "-b_ref_mode", "-multipass",
-    "-forced-idr", "-zerolatency", "-a53cc", "-intra-refresh", "-nal-hrd",
-    "-extbrc", "-mbbrc", "-adaptive_i", "-adaptive_b", "-low_delay_brc",
-    "-async_depth", "-compression_level", "-quality", "-deadline",
-    "-tile-columns", "-tile-rows", "-lag-in-frames", "-auto-alt-ref",
-    "-tune-content", "-vendor", "-bits_per_mb",
-    "-color_primaries", "-color_trc", "-colorspace", "-color_range",
-    "-video_track_timescale", "-frag_duration", "-min_frag_duration",
+    "-coder",
+    "-qmin",
+    "-qmax",
+    "-keyint_min",
+    "-sc_threshold",
+    "-b_strategy",
+    "-trellis",
+    "-subq",
+    "-me_range",
+    "-aq-strength",
+    "-psy-rd",
+    "-partitions",
+    "-weightp",
+    "-mbtree",
+    "-qcomp",
+    "-deblock",
+    "-x264opts",
+    "-slices",
+    "-rc-lookahead",
+    "-temporal-aq",
+    "-spatial-aq",
+    "-b_ref_mode",
+    "-multipass",
+    "-forced-idr",
+    "-zerolatency",
+    "-a53cc",
+    "-intra-refresh",
+    "-nal-hrd",
+    "-extbrc",
+    "-mbbrc",
+    "-adaptive_i",
+    "-adaptive_b",
+    "-low_delay_brc",
+    "-async_depth",
+    "-compression_level",
+    "-quality",
+    "-deadline",
+    "-tile-columns",
+    "-tile-rows",
+    "-lag-in-frames",
+    "-auto-alt-ref",
+    "-tune-content",
+    "-vendor",
+    "-bits_per_mb",
+    "-color_primaries",
+    "-color_trc",
+    "-colorspace",
+    "-color_range",
+    "-video_track_timescale",
+    "-frag_duration",
+    "-min_frag_duration",
     # Video / audio format
-    "-pix_fmt", "-r", "-fps_mode", "-aspect", "-s",
-    "-ar", "-ac", "-sample_fmt", "-channel_layout",
+    "-pix_fmt",
+    "-r",
+    "-fps_mode",
+    "-aspect",
+    "-s",
+    "-ar",
+    "-ac",
+    "-sample_fmt",
+    "-channel_layout",
     # Filters
-    "-vf", "-af", "-filter", "-filter:v", "-filter:a", "-filter_complex", "-lavfi",
+    "-vf",
+    "-af",
+    "-filter",
+    "-filter:v",
+    "-filter:a",
+    "-filter_complex",
+    "-lavfi",
     # Stream selection / metadata
-    "-map", "-map_metadata", "-map_chapters", "-metadata", "-disposition",
-    "-vn", "-an", "-sn", "-dn", "-ignore_unknown", "-max_muxing_queue_size",
+    "-map",
+    "-map_metadata",
+    "-map_chapters",
+    "-metadata",
+    "-disposition",
+    "-vn",
+    "-an",
+    "-sn",
+    "-dn",
+    "-ignore_unknown",
+    "-max_muxing_queue_size",
     # Container
-    "-f", "-movflags", "-fflags", "-flags", "-strict", "-brand", "-tag",
+    "-f",
+    "-movflags",
+    "-fflags",
+    "-flags",
+    "-strict",
+    "-brand",
+    "-tag",
     # Threads / misc
-    "-threads", "-filter_threads", "-thread_queue_size", "-loglevel",
-    "-stats", "-nostats", "-hide_banner", "-probesize", "-analyzeduration",
-    "-err_detect", "-hwaccel", "-hwaccel_output_format", "-filter_hw_device",
-    "-frames", "-vframes", "-aframes",
+    "-threads",
+    "-filter_threads",
+    "-thread_queue_size",
+    "-loglevel",
+    "-stats",
+    "-nostats",
+    "-hide_banner",
+    "-probesize",
+    "-analyzeduration",
+    "-err_detect",
+    "-hwaccel",
+    "-hwaccel_output_format",
+    "-filter_hw_device",
+    "-frames",
+    "-vframes",
+    "-aframes",
 }
 
 
 _NO_VALUE_FLAGS = {
-    "-copyts", "-start_at_zero", "-shortest", "-vn", "-an", "-sn", "-dn",
-    "-ignore_unknown", "-stats", "-nostats", "-hide_banner",
+    "-copyts",
+    "-start_at_zero",
+    "-shortest",
+    "-vn",
+    "-an",
+    "-sn",
+    "-dn",
+    "-ignore_unknown",
+    "-stats",
+    "-nostats",
+    "-hide_banner",
 }
 # Keep the existing restrictions on arbitrary filter/option expressions. These
 # are an application policy, not the defence against shell interpretation.
@@ -68,21 +188,67 @@ _FILTERGRAPH_FLAGS = {"-vf", "-af", "-filter", "-filter_complex", "-lavfi"}
 # when someone else's text (an imported preset or profile) carries them.
 # Being generous costs a question, never a conversion.
 _FILE_ACCESS_FILTERS = {
-    "movie", "amovie", "subtitles", "ass", "lut1d", "lut3d", "ladspa", "lv2",
-    "frei0r", "frei0r_src", "vidstabdetect", "vidstabtransform", "libvmaf",
-    "vmafmotion", "sofalizer", "lensfun", "sendcmd", "asendcmd", "zmq", "azmq",
-    "removelogo", "find_rect", "cover_rect", "arnndn", "sr", "derain",
-    "dnn_processing", "dnn_detect", "dnn_classify", "ocr", "asr", "flite",
-    "whisper", "signature", "program_opencl", "openclsrc",
+    "movie",
+    "amovie",
+    "subtitles",
+    "ass",
+    "lut1d",
+    "lut3d",
+    "ladspa",
+    "lv2",
+    "frei0r",
+    "frei0r_src",
+    "vidstabdetect",
+    "vidstabtransform",
+    "libvmaf",
+    "vmafmotion",
+    "sofalizer",
+    "lensfun",
+    "sendcmd",
+    "asendcmd",
+    "zmq",
+    "azmq",
+    "removelogo",
+    "find_rect",
+    "cover_rect",
+    "arnndn",
+    "sr",
+    "derain",
+    "dnn_processing",
+    "dnn_detect",
+    "dnn_classify",
+    "ocr",
+    "asr",
+    "flite",
+    "whisper",
+    "signature",
+    "program_opencl",
+    "openclsrc",
 }
 # Filters whose file option a positional (unnamed) value can land on.
 _POSITIONAL_FILE_FILTERS = {
-    "drawtext", "curves", "deshake", "psnr", "ssim", "xpsnr", "metadata",
-    "ametadata", "firequalizer", "libplacebo",
+    "drawtext",
+    "curves",
+    "deshake",
+    "psnr",
+    "ssim",
+    "xpsnr",
+    "metadata",
+    "ametadata",
+    "firequalizer",
+    "libplacebo",
 }
 _FILE_KEYS = {
-    "result", "input", "sofa", "model", "plot", "object", "cover", "shader",
-    "destination", "fontsdir",
+    "result",
+    "input",
+    "sofa",
+    "model",
+    "plot",
+    "object",
+    "cover",
+    "shader",
+    "destination",
+    "fontsdir",
 }
 _FILTER_NAME = re.compile(r"([A-Za-z0-9_]+)(?:@[A-Za-z0-9_]+)?")
 _LABELS = re.compile(r"^(?:\s*\[[^\]]*\])*\s*|(?:\s*\[[^\]]*\])*\s*$")
@@ -93,10 +259,26 @@ _URL = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:\S")
 # SVT-AV1's "film-grain" is a strength, not the x265 grain file.
 _ENCODER_PARAM_FLAGS = {"-x264-params", "-x264opts", "-x265-params", "-svtav1-params"}
 _FILE_ENCODER_PARAMS = {
-    "stats", "pass", "qpfile", "cqmfile", "dump-yuv", "opencl-clbin", "recon",
-    "csv", "csv-log-level", "zonefile", "analysis-load", "analysis-save",
-    "analysis-reuse-file", "lambda-file", "scaling-list", "dhdr10-info",
-    "film-grain", "aom-film-grain", "dolby-vision-rpu", "nalu-file",
+    "stats",
+    "pass",
+    "qpfile",
+    "cqmfile",
+    "dump-yuv",
+    "opencl-clbin",
+    "recon",
+    "csv",
+    "csv-log-level",
+    "zonefile",
+    "analysis-load",
+    "analysis-save",
+    "analysis-reuse-file",
+    "lambda-file",
+    "scaling-list",
+    "dhdr10-info",
+    "film-grain",
+    "aom-film-grain",
+    "dolby-vision-rpu",
+    "nalu-file",
     "fovea-gaze-file",
 }
 _FILE_SVTAV1_PARAMS = {"stats", "pass", "fgs-table"}
@@ -112,32 +294,52 @@ def _base_flag(token: str) -> str:
 def parse_additional_options(text: str) -> list[str]:
     """Return argv tokens, rejecting incomplete options and extra filenames."""
     if not isinstance(text, str) or len(text) > 65536:
-        raise ValueError(_("Additional options could not be parsed: {0}").format("invalid text"))
+        raise ValueError(
+            _("Additional options could not be parsed: {0}").format("invalid text")
+        )
     tokens = shlex.split(text)
     i = 0
     while i < len(tokens):
         flag = tokens[i]
         base = _base_flag(flag)
         if base not in ALLOWED_FFMPEG_FLAGS:
-            raise ValueError(_(
-                "The FFmpeg option “{0}” is not allowed. Remove it from the "
-                "additional options to continue."
-            ).format(flag))
+            raise ValueError(
+                _(
+                    "The FFmpeg option “{0}” is not allowed. Remove it from the "
+                    "additional options to continue."
+                ).format(flag)
+            )
         if _FORBIDDEN.search(flag):
-            raise ValueError(_("Additional options contain characters that are not allowed: {0}").format(flag))
+            raise ValueError(
+                _(
+                    "Additional options contain characters that are not allowed: {0}"
+                ).format(flag)
+            )
         i += 1
         if base in _NO_VALUE_FLAGS:
             continue
         if i == len(tokens):
-            raise ValueError(_("Additional options could not be parsed: {0}").format(flag))
+            raise ValueError(
+                _("Additional options could not be parsed: {0}").format(flag)
+            )
         value = tokens[i]
         if not value or _FORBIDDEN.search(value):
-            raise ValueError(_("Additional options contain characters that are not allowed: {0}").format(value))
+            raise ValueError(
+                _(
+                    "Additional options contain characters that are not allowed: {0}"
+                ).format(value)
+            )
         if value.startswith("-") and not _is_negative_number(value):
-            negative_map = base == "-map" and re.fullmatch(r"-\d+(?::[A-Za-z0-9_:]+)?\??", value)
-            negative_disposition = base == "-disposition" and re.fullmatch(r"-[A-Za-z_]+", value)
+            negative_map = base == "-map" and re.fullmatch(
+                r"-\d+(?::[A-Za-z0-9_:]+)?\??", value
+            )
+            negative_disposition = base == "-disposition" and re.fullmatch(
+                r"-[A-Za-z_]+", value
+            )
             if not negative_map and not negative_disposition:
-                raise ValueError(_("Additional options could not be parsed: {0}").format(flag))
+                raise ValueError(
+                    _("Additional options could not be parsed: {0}").format(flag)
+                )
         i += 1
     return tokens
 
@@ -161,9 +363,15 @@ def file_access_settings(text: str) -> list[str]:
         value = tokens[i + 1]
         i += 2
         if base in _FILTERGRAPH_FLAGS:
-            found += [f for f in _split(value, ",") if _filter_reaches_out(_LABELS.sub("", f))]
+            found += [
+                f for f in _split(value, ",") if _filter_reaches_out(_LABELS.sub("", f))
+            ]
         elif base in _ENCODER_PARAM_FLAGS:
-            listed = _FILE_SVTAV1_PARAMS if base == "-svtav1-params" else _FILE_ENCODER_PARAMS
+            listed = (
+                _FILE_SVTAV1_PARAMS
+                if base == "-svtav1-params"
+                else _FILE_ENCODER_PARAMS
+            )
             for item in value.replace("'", "").replace('"', "").split(":"):
                 key, _sep, option = item.partition("=")
                 key = re.sub(r"^no-?", "", key.strip().lower().replace("_", "-"))
@@ -206,8 +414,11 @@ def _unquote(text: str) -> str:
 def _names_file(key: str) -> bool:
     """qpfile, stats_file, filename, db_path, result... but not profile."""
     key = key.lower()
-    return (key.startswith("/") or key in _FILE_KEYS
-            or bool(re.search(r"file|path", key.replace("profile", ""))))
+    return (
+        key.startswith("/")
+        or key in _FILE_KEYS
+        or bool(re.search(r"file|path", key.replace("profile", "")))
+    )
 
 
 def _reaches_out(value: str) -> bool:

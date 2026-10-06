@@ -410,7 +410,8 @@ class SettingsPage:
         self.video_fps_combo.connect(
             "notify::selected",
             lambda combo, _param: self.settings_manager.save_setting(
-                "video-fps", self._fps_values[combo.get_selected()]),
+                "video-fps", self._fps_values[combo.get_selected()]
+            ),
         )
 
         # Connect audio codec combo change
@@ -471,20 +472,28 @@ class SettingsPage:
         selected = combo_box.get_selected()
         if selected < len(self.render_mode_values):
             internal_value = self.render_mode_values[selected]
-            
+
             # Check if value actually changed
-            current_value = self.app.settings_manager.load_setting("video-preview-render-mode", "auto")
+            current_value = self.app.settings_manager.load_setting(
+                "video-preview-render-mode", "auto"
+            )
             if internal_value != current_value:
                 # Save the new value
-                self.app.settings_manager.save_setting("video-preview-render-mode", internal_value)
-                logger.debug(f"Saved render mode: {internal_value} (restart required to apply)")
-                
+                self.app.settings_manager.save_setting(
+                    "video-preview-render-mode", internal_value
+                )
+                logger.debug(
+                    f"Saved render mode: {internal_value} (restart required to apply)"
+                )
+
                 # Show dialog informing user that restart is required
                 dialog = Gtk.AlertDialog()
                 dialog.set_message(_("Restart Required"))
                 dialog.set_detail(
-                    _("The video preview rendering mode has been changed.\n\n"
-                      "Please close and reopen the application for the change to take effect.")
+                    _(
+                        "The video preview rendering mode has been changed.\n\n"
+                        "Please close and reopen the application for the change to take effect."
+                    )
                 )
                 dialog.set_buttons([_("OK")])
                 dialog.set_default_button(0)
@@ -623,7 +632,9 @@ class SettingsPage:
         self.only_extract_subtitles_check.set_active(only_extract_subtitles_active)
 
         # Load render mode
-        render_mode_value = self.settings_manager.load_setting("video-preview-render-mode", "auto")
+        render_mode_value = self.settings_manager.load_setting(
+            "video-preview-render-mode", "auto"
+        )
         render_mode_index = 0  # Default to auto
         try:
             render_mode_index = self.render_mode_values.index(render_mode_value)

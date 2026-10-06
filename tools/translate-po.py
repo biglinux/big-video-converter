@@ -9,6 +9,7 @@ to the exact string it was written for. Placeholders such as {0}, {free:.1f}
 or %s must survive unchanged; ``apply`` refuses an entry whose placeholders
 differ from the original and reports it.
 """
+
 import json
 import re
 import sys
@@ -24,7 +25,11 @@ def placeholders(text: str) -> list:
 
 def export(po_path: str, out_path: str) -> None:
     po = polib.pofile(po_path, wrapwidth=0)
-    entries = {e.msgid: "" for e in po if not e.obsolete and (not e.translated() or "fuzzy" in e.flags) and e.msgid}
+    entries = {
+        e.msgid: ""
+        for e in po
+        if not e.obsolete and (not e.translated() or "fuzzy" in e.flags) and e.msgid
+    }
     with open(out_path, "w", encoding="utf-8") as handle:
         json.dump(entries, handle, ensure_ascii=False, indent=1)
     print(f"{po_path}: {len(entries)} entries exported")
@@ -43,7 +48,9 @@ def apply(po_path: str, in_path: str) -> None:
             skipped += 1
             continue
         if placeholders(text) != placeholders(entry.msgid):
-            print(f"  placeholder mismatch, kept untranslated: {entry.msgid!r} -> {text!r}")
+            print(
+                f"  placeholder mismatch, kept untranslated: {entry.msgid!r} -> {text!r}"
+            )
             skipped += 1
             continue
         entry.msgstr = text

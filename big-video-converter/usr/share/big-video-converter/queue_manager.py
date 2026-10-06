@@ -21,8 +21,11 @@ class QueueManagerMixin:
         """Add a file to the conversion queue"""
         # A running queue already has one progress row per file; a file added
         # now would have none.
-        if (getattr(self, "_quitting", False) or self.currently_converting
-                or file_path in self.conversion_queue):
+        if (
+            getattr(self, "_quitting", False)
+            or self.currently_converting
+            or file_path in self.conversion_queue
+        ):
             return False
         if file_path and os.path.isfile(file_path):
             # Update last accessed directory
@@ -37,21 +40,28 @@ class QueueManagerMixin:
 
             # Initialize new files without discarding edits when a file is added again
             if hasattr(self, "conversion_page"):
-                self.conversion_page.file_metadata.setdefault(file_path, {
-                    "trim_segments": [],
-                    "crop_left": 0,
-                    "crop_right": 0,
-                    "crop_top": 0,
-                    "crop_bottom": 0,
-                    "brightness": 0.0,
-                    "saturation": 1.0,
-                    "hue": 0.0,
-                })
-                self.logger.debug(f"Initialized clean metadata for: {os.path.basename(file_path)}")
+                self.conversion_page.file_metadata.setdefault(
+                    file_path,
+                    {
+                        "trim_segments": [],
+                        "crop_left": 0,
+                        "crop_right": 0,
+                        "crop_top": 0,
+                        "crop_bottom": 0,
+                        "brightness": 0.0,
+                        "saturation": 1.0,
+                        "hue": 0.0,
+                    },
+                )
+                self.logger.debug(
+                    f"Initialized clean metadata for: {os.path.basename(file_path)}"
+                )
 
             # Update UI
-            if (hasattr(self, "conversion_page")
-                    and getattr(self, "_queue_refresh_id", None) is None):
+            if (
+                hasattr(self, "conversion_page")
+                and getattr(self, "_queue_refresh_id", None) is None
+            ):
                 self._queue_refresh_id = GLib.idle_add(self._refresh_queue_display)
             return True
         return False
@@ -114,7 +124,9 @@ class QueueManagerMixin:
         transcoding overhead. Returns True if enough space, False otherwise.
         """
         custom = self.settings_manager.get_boolean("use-custom-output-folder", False)
-        output_folder = self.settings_manager.load_setting("output-folder", "") if custom else ""
+        output_folder = (
+            self.settings_manager.load_setting("output-folder", "") if custom else ""
+        )
         volumes = {}
         for file_path in files:
             target = os.path.abspath(output_folder or os.path.dirname(file_path))
@@ -139,8 +151,8 @@ class QueueManagerMixin:
             return True
 
         # Not enough space — show warning dialog
-        free_gb = usage.free / (1024 ** 3)
-        needed_gb = required / (1024 ** 3)
+        free_gb = usage.free / (1024**3)
+        needed_gb = required / (1024**3)
         dialog = Adw.AlertDialog(
             heading=_("Low disk space"),
             body=_(
@@ -180,8 +192,12 @@ class QueueManagerMixin:
 
     def start_queue_processing(self) -> None:
         """Start processing the conversion queue"""
-        if (getattr(self, "_quitting", False) or self.active_conversions
-                or self.currently_converting or getattr(self, "_pending_imports", 0)):
+        if (
+            getattr(self, "_quitting", False)
+            or self.active_conversions
+            or self.currently_converting
+            or getattr(self, "_pending_imports", 0)
+        ):
             self._restore_queue_after_single_file(False)
             return
         if not self.conversion_queue:
@@ -190,10 +206,14 @@ class QueueManagerMixin:
             return
 
         # One message for the whole queue, not one dialog for every job.
-        options_error = self.conversion_page.additional_options_error(self.conversion_queue)
+        options_error = self.conversion_page.additional_options_error(
+            self.conversion_queue
+        )
         if options_error:
             self._restore_queue_after_single_file(False)
-            self.show_error_dialog(_("The additional FFmpeg options cannot be used"), options_error)
+            self.show_error_dialog(
+                _("The additional FFmpeg options cannot be used"), options_error
+            )
             self.header_bar.set_buttons_sensitive(True)
             return
 
@@ -373,7 +393,8 @@ class QueueManagerMixin:
                         # Move the best GPU to the front of the deque
                         slots.sort(
                             key=lambda s: (
-                                0 if s["type"] == best_type and s["device"] == best_device
+                                0
+                                if s["type"] == best_type and s["device"] == best_device
                                 else 1
                             )
                         )
@@ -407,8 +428,9 @@ class QueueManagerMixin:
         # Verify file exists
         if not os.path.exists(next_file):
             self.logger.debug(f"Skipping missing file: {next_file}")
-            self.progress_page.finish_pending(next_file, success=False,
-                                              reason=_("File not found"))
+            self.progress_page.finish_pending(
+                next_file, success=False, reason=_("File not found")
+            )
             # Try next one immediately
             GLib.idle_add(self.process_next_in_queue)
             return False
@@ -442,22 +464,29 @@ class QueueManagerMixin:
         # main loop never blocks; the launch itself stays on the main loop.
         def launch() -> bool:
             # A row skipped during the pre-flight probe set its job's event.
-            if (self.is_cancellation_requested or getattr(self, "_quitting", False)
-                    or conversion_info["cancel_event"].is_set()):
+            if (
+                self.is_cancellation_requested
+                or getattr(self, "_quitting", False)
+                or conversion_info["cancel_event"].is_set()
+            ):
                 conversion_info["cancel_event"].set()
-                self.conversion_completed(False, file_path=next_file,
-                                          job_id=conversion_info["job_id"])
+                self.conversion_completed(
+                    False, file_path=next_file, job_id=conversion_info["job_id"]
+                )
                 return False
             # Set right before use: another slot's launch may have run in between.
             self.conversion_page.current_file_path = next_file
             try:
-                result = self.conversion_page.force_start_conversion(gpu_override=gpu_slot)
+                result = self.conversion_page.force_start_conversion(
+                    gpu_override=gpu_slot
+                )
             except Exception:
                 self.logger.exception("Failed to prepare conversion")
                 result = False
             if result is False:
-                self.conversion_completed(False, file_path=next_file,
-                                          job_id=conversion_info["job_id"])
+                self.conversion_completed(
+                    False, file_path=next_file, job_id=conversion_info["job_id"]
+                )
             return False
 
         def warm_then_launch() -> None:
@@ -469,7 +498,9 @@ class QueueManagerMixin:
                 self.logger.exception("Pre-flight probe failed; launching anyway")
             GLib.idle_add(launch)
 
-        threading.Thread(target=warm_then_launch, name="bvc-preflight", daemon=True).start()
+        threading.Thread(
+            target=warm_then_launch, name="bvc-preflight", daemon=True
+        ).start()
 
         # Try to start another if we have capacity (active < max)
         with self.conversions_lock:
@@ -481,7 +512,10 @@ class QueueManagerMixin:
         return False
 
     def conversion_completed(
-        self, success, file_path: str | None = None, job_id: str | None = None,
+        self,
+        success,
+        file_path: str | None = None,
+        job_id: str | None = None,
     ) -> None:
         """Called when a conversion is completed.
 
@@ -502,11 +536,21 @@ class QueueManagerMixin:
             # A completion must match an active job. A late/duplicate event
             # never releases the oldest (or any unrelated) GPU slot.
             with self.conversions_lock:
-                matches = [i for i, info in enumerate(self.active_conversions)
-                           if (info.get("job_id") == job_id if job_id
-                               else file_path is not None and info.get("file_path") == file_path)]
+                matches = [
+                    i
+                    for i, info in enumerate(self.active_conversions)
+                    if (
+                        info.get("job_id") == job_id
+                        if job_id
+                        else file_path is not None
+                        and info.get("file_path") == file_path
+                    )
+                ]
                 if len(matches) != 1:
-                    self.logger.debug("Ignoring stale or unidentified completion: %s", job_id or file_path)
+                    self.logger.debug(
+                        "Ignoring stale or unidentified completion: %s",
+                        job_id or file_path,
+                    )
                     return
                 finished = self.active_conversions.pop(matches[0])
                 if finished.get("gpu_slot"):
@@ -514,8 +558,11 @@ class QueueManagerMixin:
                 self.claimed_outputs.discard(finished.get("output_path"))
 
             self.progress_page.finish_pending(
-                finished["file_path"], success=success,
-                cancelled=bool(finished.get("cancel_event") and finished["cancel_event"].is_set()),
+                finished["file_path"],
+                success=success,
+                cancelled=bool(
+                    finished.get("cancel_event") and finished["cancel_event"].is_set()
+                ),
             )
             if self.is_cancellation_requested:
                 if not self.active_conversions:

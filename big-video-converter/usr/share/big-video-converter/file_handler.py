@@ -59,7 +59,8 @@ class FileHandlerMixin:
                 self.show_error_dialog(str(persistence_error))
             finally:
                 self.header_bar.set_buttons_sensitive(
-                    not self._pending_imports and not self.active_conversions)
+                    not self._pending_imports and not self.active_conversions
+                )
             return False
 
         def scan():
@@ -70,13 +71,20 @@ class FileHandlerMixin:
                     if getattr(self, "_quitting", False):
                         break
                     if os.path.isdir(path):
+
                         def failed_walk(error):
                             raise error
-                        for directory, _dirs, names in os.walk(path, onerror=failed_walk):
+
+                        for directory, _dirs, names in os.walk(
+                            path, onerror=failed_walk
+                        ):
                             if getattr(self, "_quitting", False):
                                 break
-                            files.extend(os.path.join(directory, name) for name in names
-                                         if self.is_valid_video_file(name))
+                            files.extend(
+                                os.path.join(directory, name)
+                                for name in names
+                                if self.is_valid_video_file(name)
+                            )
                     elif selected_files or self.is_valid_video_file(path):
                         files.append(path)
             except OSError as caught:
@@ -151,13 +159,23 @@ class FileHandlerMixin:
         try:
             folder = dialog.select_folder_finish(result)
             if folder and (path := folder.get_path()):
+
                 def completed(count):
                     if count:
-                        self.show_info_dialog(_("Files Added"),
-                            _("{} video files have been added to the queue.").format(count))
+                        self.show_info_dialog(
+                            _("Files Added"),
+                            _("{} video files have been added to the queue.").format(
+                                count
+                            ),
+                        )
                     else:
-                        self.show_info_dialog(_("No Files Found"),
-                            _("No valid video files were found in the selected folder."))
+                        self.show_info_dialog(
+                            _("No Files Found"),
+                            _(
+                                "No valid video files were found in the selected folder."
+                            ),
+                        )
+
                 self.add_paths_to_queue([path], completed)
         except (GLib.Error, OSError) as error:
             self.logger.debug("Folder not selected: %s", error)
@@ -167,7 +185,9 @@ class FileHandlerMixin:
             files = dialog.open_multiple_finish(result)
             if files:
                 self.add_paths_to_queue(
-                    [file.get_path() for file in files if file.get_path()], selected_files=True)
+                    [file.get_path() for file in files if file.get_path()],
+                    selected_files=True,
+                )
         except (GLib.Error, OSError) as error:
             self.logger.debug("Files not selected: %s", error)
 
@@ -256,7 +276,8 @@ class FileHandlerMixin:
         connect_button.set_halign(Gtk.Align.CENTER)
         connect_button.set_margin_top(8)
         connect_button.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Connect and Browse")],
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Connect and Browse")],
         )
         content.append(connect_button)
 
@@ -313,7 +334,9 @@ class FileHandlerMixin:
                     gfile.mount_enclosing_volume_finish(result)
                 except GLib.Error as e:
                     # Already mounted is not an error
-                    if not e.matches(Gio.io_error_quark(), Gio.IOErrorEnum.ALREADY_MOUNTED):
+                    if not e.matches(
+                        Gio.io_error_quark(), Gio.IOErrorEnum.ALREADY_MOUNTED
+                    ):
                         error_msg = str(e)
                         self.logger.error(f"Mount error: {e}")
                         GLib.idle_add(

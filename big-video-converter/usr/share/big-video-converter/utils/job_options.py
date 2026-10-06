@@ -67,8 +67,18 @@ DEFAULT_METADATA = {
 EFFECT_LEVELS = ("off", "light", "medium", "strong")
 SOURCE_HDR_MODES = ("auto", "pq", "hlg", "sdr")
 
-SIZE_MODES = ("global", "none", "custom", "whatsapp", "discord", "email", "100mb",
-              "telegram", "telegram-premium", "fat32")
+SIZE_MODES = (
+    "global",
+    "none",
+    "custom",
+    "whatsapp",
+    "discord",
+    "email",
+    "100mb",
+    "telegram",
+    "telegram-premium",
+    "fat32",
+)
 
 
 def normalize_metadata(value: dict[str, Any] | None) -> dict[str, Any]:
@@ -86,11 +96,19 @@ def normalize_metadata(value: dict[str, Any] | None) -> dict[str, Any]:
     if result.get("source_hdr") not in SOURCE_HDR_MODES:
         result["source_hdr"] = "auto"
     effect_file = result.get("effect_file")
-    if not isinstance(effect_file, str) or len(effect_file) > 4096 or "\0" in effect_file:
+    if (
+        not isinstance(effect_file, str)
+        or len(effect_file) > 4096
+        or "\0" in effect_file
+    ):
         result["effect_file"] = ""
     size_mb = result.get("size_mb")
-    if (isinstance(size_mb, bool) or not isinstance(size_mb, (int, float))
-            or not math.isfinite(size_mb) or not 1 <= size_mb <= 1_000_000):
+    if (
+        isinstance(size_mb, bool)
+        or not isinstance(size_mb, (int, float))
+        or not math.isfinite(size_mb)
+        or not 1 <= size_mb <= 1_000_000
+    ):
         result["size_mb"] = None
         if result["size_mode"] == "custom":
             result["size_mode"] = "global"
@@ -131,8 +149,12 @@ def parse_segments_arg(text: str) -> list[dict[str, float]]:
         if not (math.isfinite(start) and math.isfinite(end) and 0 <= start < end):
             raise ValueError(f"segment {part.strip()!r} needs 0 <= start < end")
         if segments and start < segments[-1]["end"]:
-            raise ValueError(_("The segment {0} starts before the previous one ends; "
-                               "list the segments in order without overlaps.").format(part.strip()))
+            raise ValueError(
+                _(
+                    "The segment {0} starts before the previous one ends; "
+                    "list the segments in order without overlaps."
+                ).format(part.strip())
+            )
         segments.append({"start": start, "end": end})
     if len(segments) > MAX_SEGMENTS:
         raise ValueError(f"more than {MAX_SEGMENTS} segments")
@@ -197,11 +219,15 @@ def freeze(settings: dict[str, Any], metadata: dict[str, Any] | None) -> dict[st
         metadata, str(settings.get("video-resolution") or "")
     )
     if metadata["size_mode"] != "global":
-        effective["size-target"] = "" if metadata["size_mode"] == "none" else metadata["size_mode"]
+        effective["size-target"] = (
+            "" if metadata["size_mode"] == "none" else metadata["size_mode"]
+        )
         if metadata["size_mode"] == "custom":
             effective["size-target-mb"] = float(metadata["size_mb"])
     edited = has_picture_edits(metadata) or (
-        metadata["resolution_mode"] != "global" and bool(effective.get("video-resolution")))
+        metadata["resolution_mode"] != "global"
+        and bool(effective.get("video-resolution"))
+    )
     if edited:
         effective["force-copy-video"] = False
         if effective.get("video-codec") == "copy":

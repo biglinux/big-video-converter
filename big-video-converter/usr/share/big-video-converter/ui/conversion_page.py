@@ -139,7 +139,7 @@ class FileQueueRow(Gtk.ListBoxRow):
         folder = os.path.dirname(file_path)
         home = os.path.expanduser("~")
         if folder == home or folder.startswith(home + os.sep):
-            folder = "~" + folder[len(home):]
+            folder = "~" + folder[len(home) :]
         self.folder_label = Gtk.Label(label=folder, xalign=0)
         # The end of a path names the folder; its start is the same for all.
         self.folder_label.set_ellipsize(Pango.EllipsizeMode.START)
@@ -188,9 +188,12 @@ class FileQueueRow(Gtk.ListBoxRow):
         options_box.append(Gtk.Label(label=_("Options")))
         options_button.set_child(options_box)
         options_button.add_css_class("flat")
-        options_button.set_tooltip_text(_("Choose a preset or resolution for this video"))
+        options_button.set_tooltip_text(
+            _("Choose a preset or resolution for this video")
+        )
         options_button.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Options for “{name}”").format(name=name)]
+            [Gtk.AccessibleProperty.LABEL],
+            [_("Options for “{name}”").format(name=name)],
         )
         options_button.connect(
             "clicked", lambda _button: row.on_options_callback(row.file_path)
@@ -249,32 +252,47 @@ class FileQueueRow(Gtk.ListBoxRow):
         box.set_margin_bottom(8)
         box.set_margin_start(8)
         box.set_margin_end(8)
-        box.append(self._menu_action(
-            _("Play video"), "media-playback-start-symbolic",
-            lambda _b: row.on_play_callback(row.file_path),
-        ))
-        box.append(self._menu_action(
-            _("Video information"), "dialog-information-symbolic",
-            lambda _b: row.on_info_callback(row.file_path),
-        ))
-        box.append(self._menu_action(
-            _("Open containing folder"), "folder-open-symbolic",
-            lambda _b: row._on_open_folder(),
-        ))
+        box.append(
+            self._menu_action(
+                _("Play video"),
+                "media-playback-start-symbolic",
+                lambda _b: row.on_play_callback(row.file_path),
+            )
+        )
+        box.append(
+            self._menu_action(
+                _("Video information"),
+                "dialog-information-symbolic",
+                lambda _b: row.on_info_callback(row.file_path),
+            )
+        )
+        box.append(
+            self._menu_action(
+                _("Open containing folder"),
+                "folder-open-symbolic",
+                lambda _b: row._on_open_folder(),
+            )
+        )
         separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
         separator.set_margin_top(4)
         separator.set_margin_bottom(4)
         box.append(separator)
-        box.append(self._menu_action(
-            _("Remove from queue"), "list-remove-symbolic",
-            lambda _b: row.on_remove_callback(row.file_path),
-            destructive=True,
-        ))
-        box.append(self._menu_action(
-            _("Delete from disk…"), "user-trash-symbolic",
-            lambda _b: row._on_delete_from_disk(),
-            destructive=True,
-        ))
+        box.append(
+            self._menu_action(
+                _("Remove from queue"),
+                "list-remove-symbolic",
+                lambda _b: row.on_remove_callback(row.file_path),
+                destructive=True,
+            )
+        )
+        box.append(
+            self._menu_action(
+                _("Delete from disk…"),
+                "user-trash-symbolic",
+                lambda _b: row._on_delete_from_disk(),
+                destructive=True,
+            )
+        )
         popover.set_child(box)
         return popover
 
@@ -287,9 +305,7 @@ class FileQueueRow(Gtk.ListBoxRow):
             if row is not None:
                 GLib.idle_add(row._apply_thumbnail, expected, thumbnail_path)
 
-        self._thumbnail_request = self.thumbnail_manager.request(
-            self.file_path, ready
-        )
+        self._thumbnail_request = self.thumbnail_manager.request(self.file_path, ready)
 
     def _apply_thumbnail(self, expected, thumbnail_path):
         if (
@@ -302,7 +318,8 @@ class FileQueueRow(Gtk.ListBoxRow):
         self.thumbnail_picture.set_filename(thumbnail_path)
         self.thumbnail_stack.set_visible_child_name("picture")
         self.thumbnail_picture.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Video preview")])
+            [Gtk.AccessibleProperty.LABEL], [_("Video preview")]
+        )
         return GLib.SOURCE_REMOVE
 
     def set_recipe(self, summary_text: str, custom: bool) -> None:
@@ -368,9 +385,7 @@ class FileQueueRow(Gtk.ListBoxRow):
         )
         dialog.add_response("cancel", _("Keep video"))
         dialog.add_response("delete", _("Delete permanently"))
-        dialog.set_response_appearance(
-            "delete", Adw.ResponseAppearance.DESTRUCTIVE
-        )
+        dialog.set_response_appearance("delete", Adw.ResponseAppearance.DESTRUCTIVE)
         dialog.set_default_response("cancel")
         dialog.set_close_response("cancel")
 
@@ -391,7 +406,12 @@ class FileQueueRow(Gtk.ListBoxRow):
 
 def _apply_summary(row_ref, expected, summary):
     row = row_ref()
-    if row is None or row._thumbnail_disposed or expected != row.file_path or not summary:
+    if (
+        row is None
+        or row._thumbnail_disposed
+        or expected != row.file_path
+        or not summary
+    ):
         return GLib.SOURCE_REMOVE
     duration = summary.get("duration")
     if duration and duration > 0:
@@ -412,7 +432,8 @@ def has_own_settings(metadata) -> bool:
     """True when a video overrides the sidebar's profile, resolution or size."""
     metadata = normalize_metadata(metadata)
     return bool(metadata.get("preset_snapshot")) or any(
-        metadata[key] != "global" for key in ("resolution_mode", "size_mode"))
+        metadata[key] != "global" for key in ("resolution_mode", "size_mode")
+    )
 
 
 class ConversionPage:
@@ -433,11 +454,15 @@ class ConversionPage:
         self._decision_dialogs = set()
         self.thumbnail_manager = ThumbnailManager(max_workers=2)
         self._thumbnail_finalizer = weakref.finalize(
-            self, ThumbnailManager.shutdown, self.thumbnail_manager)
+            self, ThumbnailManager.shutdown, self.thumbnail_manager
+        )
         # FFprobe for the rows' duration and codec: two at a time, cached.
-        self.summary_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="bvc-queue-probe")
+        self.summary_pool = ThreadPoolExecutor(
+            max_workers=2, thread_name_prefix="bvc-queue-probe"
+        )
         self._summary_finalizer = weakref.finalize(
-            self, self.summary_pool.shutdown, wait=False, cancel_futures=True)
+            self, self.summary_pool.shutdown, wait=False, cancel_futures=True
+        )
 
         self.page = self._create_page()
 
@@ -493,17 +518,27 @@ class ConversionPage:
         options_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         options_box.add_css_class("bvc-queue-footer")
 
-        folder_options_store = Gtk.StringList.new([
-            _("Save in the same folder as the original file"),
-            _("Folder to save"),
-        ])
+        folder_options_store = Gtk.StringList.new(
+            [
+                _("Save in the same folder as the original file"),
+                _("Folder to save"),
+            ]
+        )
         # Long translations ellipsize instead of widening a narrow window.
         shrinking_labels = Gtk.SignalListItemFactory()
-        shrinking_labels.connect("setup", lambda _factory, item: item.set_child(
-            Gtk.Label(xalign=0, ellipsize=3)))
-        shrinking_labels.connect("bind", lambda _factory, item: item.get_child().set_label(
-            item.get_item().get_string()))
-        self.folder_combo = Gtk.DropDown(model=folder_options_store, factory=shrinking_labels)
+        shrinking_labels.connect(
+            "setup",
+            lambda _factory, item: item.set_child(Gtk.Label(xalign=0, ellipsize=3)),
+        )
+        shrinking_labels.connect(
+            "bind",
+            lambda _factory, item: item.get_child().set_label(
+                item.get_item().get_string()
+            ),
+        )
+        self.folder_combo = Gtk.DropDown(
+            model=folder_options_store, factory=shrinking_labels
+        )
         self.folder_combo.set_selected(0)
         self.folder_combo.update_property(
             [Gtk.AccessibleProperty.LABEL], [_("Save converted videos")]
@@ -519,7 +554,9 @@ class ConversionPage:
         self.folder_entry_box.set_hexpand(True)
         self.output_folder_entry = Gtk.Entry()
         self.output_folder_entry.set_hexpand(True)
-        self.output_folder_entry.update_property([Gtk.AccessibleProperty.LABEL], [_("Output folder")])
+        self.output_folder_entry.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Output folder")]
+        )
         self.output_folder_entry.set_placeholder_text(_("Select folder"))
         self.folder_entry_box.append(self.output_folder_entry)
         choose_folder = Gtk.Button.new_from_icon_name("folder-symbolic")
@@ -547,11 +584,15 @@ class ConversionPage:
         delete_box.append(delete_label)
         self.delete_original_check = Gtk.Switch()
         self.delete_original_check.set_valign(Gtk.Align.CENTER)
-        self.delete_original_check.update_property([Gtk.AccessibleProperty.LABEL], [_("Delete original files")])
+        self.delete_original_check.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Delete original files")]
+        )
         delete_box.append(self.delete_original_check)
         options_box.append(delete_box)
         # The same clamp as the list, so both share their edges at any width.
-        page.append(Adw.Clamp(maximum_size=1180, tightening_threshold=760, child=options_box))
+        page.append(
+            Adw.Clamp(maximum_size=1180, tightening_threshold=760, child=options_box)
+        )
 
         self.update_queue_display()
         return page
@@ -584,7 +625,9 @@ class ConversionPage:
         # Set output folder path if using custom folder
         self.output_folder_entry.set_text(output_folder)
 
-        self.output_folder_entry.connect("changed", self._on_output_folder_entry_changed)
+        self.output_folder_entry.connect(
+            "changed", self._on_output_folder_entry_changed
+        )
 
         # Set delete original switch
         self.delete_original_check.set_active(delete_original)
@@ -666,7 +709,9 @@ class ConversionPage:
                     on_options_callback=self.on_file_options_by_path,
                     metadata=self.file_metadata.get(file_path),
                     thumbnail_manager=self.thumbnail_manager,
-                    summary_text=self.file_recipe_summary(self.file_metadata.get(file_path)),
+                    summary_text=self.file_recipe_summary(
+                        self.file_metadata.get(file_path)
+                    ),
                     app=self.app,
                     custom_settings=has_own_settings(self.file_metadata.get(file_path)),
                     summary_pool=self.summary_pool,
@@ -769,8 +814,9 @@ class ConversionPage:
             source_index = int(value)
             # Only a row dragged from this list reorders it; text dropped
             # from elsewhere ("5") is not an index into the queue.
-            if (self.dragged_row is None
-                    or not 0 <= source_index < len(self.app.conversion_queue)):
+            if self.dragged_row is None or not 0 <= source_index < len(
+                self.app.conversion_queue
+            ):
                 return False
 
             # Get target row
@@ -897,8 +943,10 @@ class ConversionPage:
                             env["gpu"] = "intel"
                         elif "nvidia" in device_name:
                             env["gpu"] = "nvidia"
-                        elif ("amd" in device_name
-                              or "advanced micro devices" in device_name):
+                        elif (
+                            "amd" in device_name
+                            or "advanced micro devices" in device_name
+                        ):
                             env["gpu"] = "amd"
                         logger.debug(
                             f"Auto-detected {env['gpu']} GPU from device selection: "
@@ -948,7 +996,10 @@ class ConversionPage:
             file_metadata = deepcopy(self.file_metadata.get(input_file, {}))
             active_preset = self.app.active_preset()
             preset_snapshot = file_metadata.get("preset_snapshot")
-            if preset_snapshot and preset_snapshot.get("settings", {}).get("gpu", "auto") != "auto":
+            if (
+                preset_snapshot
+                and preset_snapshot.get("settings", {}).get("gpu", "auto") != "auto"
+            ):
                 gpu_override = None
             if preset_snapshot is None and active_preset is not None:
                 preset_snapshot = snapshot_preset(active_preset)
@@ -963,13 +1014,14 @@ class ConversionPage:
             # The script reads its settings from lowercase variables. An
             # inherited one (an exported "options" or "size_limit") would
             # silently change the job, so only the proxy variables pass.
-            env_vars = {name: value for name, value in os.environ.items()
-                        if not _SCRIPT_SETTING.fullmatch(name) or name in _PROXY_VARIABLES}
+            env_vars = {
+                name: value
+                for name, value in os.environ.items()
+                if not _SCRIPT_SETTING.fullmatch(name) or name in _PROXY_VARIABLES
+            }
 
             # Check if force copy video is enabled
-            force_copy_video_enabled = settings.get_boolean(
-                "force-copy-video", False
-            )
+            force_copy_video_enabled = settings.get_boolean("force-copy-video", False)
 
             # GPU - Use direct string value, but disable if copying without reencoding
             if force_copy_video_enabled:
@@ -991,16 +1043,22 @@ class ConversionPage:
             # file adds what has no widget: per-encoder arguments and the
             # preset's own FFmpeg options.
             env_vars.pop("preset_file", None)
-            for key in ("force_copy_video", "video_resolution", "video_fps", "video_stabilize", "source_hdr",
-                        "audio_bitrate", "audio_channels", "normalize_enabled"):
+            for key in (
+                "force_copy_video",
+                "video_resolution",
+                "video_fps",
+                "video_stabilize",
+                "source_hdr",
+                "audio_bitrate",
+                "audio_channels",
+                "normalize_enabled",
+            ):
                 env_vars[key] = ""
             if force_copy_video_enabled:
                 env_vars["force_copy_video"] = "1"
 
             # Audio handling - Check if video has audio streams
-            audio_handling = settings.load_setting(
-                "audio-handling", "copy"
-            )
+            audio_handling = settings.load_setting("audio-handling", "copy")
 
             # Import audio detection function
             from utils.file_info import has_audio_streams
@@ -1016,9 +1074,7 @@ class ConversionPage:
 
             # Only set video resolution if NOT in copy mode
             if not force_copy_video_enabled:
-                video_resolution = settings.load_setting(
-                    "video-resolution", ""
-                )
+                video_resolution = settings.load_setting("video-resolution", "")
                 if video_resolution:
                     env_vars["video_resolution"] = video_resolution
                 env_vars["video_fps"] = settings.load_setting("video-fps", "")
@@ -1034,9 +1090,7 @@ class ConversionPage:
                 env_vars["gpu_partial"] = "1"
             if force_copy_video_enabled:
                 env_vars["force_copy_video"] = "1"
-            if settings.get_boolean(
-                "only-extract-subtitles", False
-            ):
+            if settings.get_boolean("only-extract-subtitles", False):
                 env_vars["only_extract_subtitles"] = "1"
 
             # Noise reduction
@@ -1061,9 +1115,7 @@ class ConversionPage:
             # High-pass filter
             if sm.get_boolean("hpf-enabled", False):
                 env_vars["hpf_enabled"] = "1"
-                env_vars["hpf_frequency"] = str(
-                    sm.load_setting("hpf-frequency", 80)
-                )
+                env_vars["hpf_frequency"] = str(sm.load_setting("hpf-frequency", 80))
 
             # Compressor
             if sm.get_boolean("compressor-enabled", False):
@@ -1084,26 +1136,18 @@ class ConversionPage:
                 env_vars["normalize_enabled"] = "1"
 
             # Handle audio settings
-            audio_bitrate = settings.load_setting(
-                "audio-bitrate", ""
-            )
+            audio_bitrate = settings.load_setting("audio-bitrate", "")
             if audio_bitrate:
                 env_vars["audio_bitrate"] = audio_bitrate
-            audio_channels = settings.load_setting(
-                "audio-channels", ""
-            )
+            audio_channels = settings.load_setting("audio-channels", "")
             if audio_channels:
                 env_vars["audio_channels"] = audio_channels
-            audio_codec = settings.load_setting(
-                "audio-codec", "aac"
-            )
+            audio_codec = settings.load_setting("audio-codec", "aac")
             if audio_codec:
                 env_vars["audio_codec"] = audio_codec
 
             # Get per-file metadata for this file
-            logger.debug(
-                f"Using per-file metadata for {os.path.basename(input_file)}"
-            )
+            logger.debug(f"Using per-file metadata for {os.path.basename(input_file)}")
 
             # Get trim segments from per-file metadata
             trim_segments = deepcopy(file_metadata.get("trim_segments", []))
@@ -1166,9 +1210,12 @@ class ConversionPage:
                 logger.error(f"Crop not applicable: {error}")
                 self.app.show_error_dialog(
                     _("The crop cannot be applied"),
-                    _("“{name}” was not converted: its picture size could not be read, "
-                      "or the crop removes the whole picture. Check the crop in the "
-                      "editor and try again.").format(name=os.path.basename(input_file)))
+                    _(
+                        "“{name}” was not converted: its picture size could not be read, "
+                        "or the crop removes the whole picture. Check the crop in the "
+                        "editor and try again."
+                    ).format(name=os.path.basename(input_file)),
+                )
                 return False
 
             # Skip video filters when in copy mode since filters require re-encoding
@@ -1188,18 +1235,14 @@ class ConversionPage:
 
             # Validate the option grammar shared with the backend. The
             # transport text is parsed into argv, never executed as shell.
-            raw_additional_options = settings.load_setting(
-                "additional-options", ""
-            )
+            raw_additional_options = settings.load_setting("additional-options", "")
             options_ok, additional_options = validate_additional_options(
                 raw_additional_options
             )
             if not options_ok:
                 error_message = additional_options
                 logger.error(f"Rejected additional options: {error_message}")
-                GLib.idle_add(
-                    lambda msg=error_message: self.app.show_error_dialog(msg)
-                )
+                GLib.idle_add(lambda msg=error_message: self.app.show_error_dialog(msg))
                 return False
 
             env_vars["options"] = additional_options
@@ -1219,7 +1262,8 @@ class ConversionPage:
 
         # Get the extension of the selected output format
         output_ext = {0: ".mp4", 1: ".mkv", 2: ".mov", 3: ".webm"}.get(
-            settings.load_setting("output-format-index", 0), ".mp4")
+            settings.load_setting("output-format-index", 0), ".mp4"
+        )
         output_format = output_ext.lstrip(".")
 
         # Check if input file has the same extension as the selected output format
@@ -1253,8 +1297,14 @@ class ConversionPage:
         if not os.path.isabs(output_folder):
             output_folder = os.path.abspath(output_folder)
 
-        job_info = next((info for info in getattr(self.app, "active_conversions", [])
-                         if info.get("file_path") == input_file), {})
+        job_info = next(
+            (
+                info
+                for info in getattr(self.app, "active_conversions", [])
+                if info.get("file_path") == input_file
+            ),
+            {},
+        )
         claimed = self.app.claimed_outputs
 
         # Find a name neither on disk nor reserved by a parallel job
@@ -1267,7 +1317,10 @@ class ConversionPage:
             while True:
                 output_basename = f"{base_name}_{counter}{extension}"
                 full_output_path = os.path.join(output_folder, output_basename)
-                if not os.path.exists(full_output_path) and full_output_path not in claimed:
+                if (
+                    not os.path.exists(full_output_path)
+                    and full_output_path not in claimed
+                ):
                     logger.debug(
                         f"Output file exists, using alternative name: {output_basename}"
                     )
@@ -1336,8 +1389,9 @@ class ConversionPage:
         # copy-mode MP4 check.
         size_target = self._size_target(settings)
         if size_target is not None:
-            conversion_context.update(size_target=size_target,
-                                      encode_env=reencode_env or env_vars)
+            conversion_context.update(
+                size_target=size_target, encode_env=reencode_env or env_vars
+            )
             return self._start_size_job(conversion_context)
         if force_copy_video and output_format == "mp4":
             from utils.file_info import check_mp4_compatibility
@@ -1347,7 +1401,9 @@ class ConversionPage:
                 # Package all needed variables
                 def show_compatibility_warning() -> None:
                     if cancel_event.is_set():
-                        self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
+                        self.app.conversion_completed(
+                            False, file_path=input_file, job_id=job_id
+                        )
                         return
                     dialog = Adw.AlertDialog()
                     dialog.set_heading(_("These tracks can't be copied into MP4"))
@@ -1380,7 +1436,9 @@ class ConversionPage:
                     def on_response(dialog, response) -> None:
                         if cancel_event.is_set() or response == "cancel":
                             cancel_event.set()
-                            self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
+                            self.app.conversion_completed(
+                                False, file_path=input_file, job_id=job_id
+                            )
                             return
                         if response == "reencode":
                             conversion_context["env_vars"] = reencode_env
@@ -1391,7 +1449,9 @@ class ConversionPage:
                         except Exception as error:
                             logger.exception("Could not resume conversion")
                             self.app.show_error_dialog(str(error))
-                            self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
+                            self.app.conversion_completed(
+                                False, file_path=input_file, job_id=job_id
+                            )
 
                     dialog.connect("response", on_response)
                     # Quitting closes it: the job it holds must not keep the
@@ -1402,7 +1462,9 @@ class ConversionPage:
 
                 # Show dialog in main thread
                 GLib.idle_add(show_compatibility_warning)
-                return True  # The active job remains reserved while awaiting a decision.
+                return (
+                    True  # The active job remains reserved while awaiting a decision.
+                )
 
         return self._continue_conversion(conversion_context)
 
@@ -1415,13 +1477,16 @@ class ConversionPage:
         """Why the FFmpeg options of a queued file are rejected, if they are."""
         for path in files:
             try:
-                resolved = freeze(self.app.settings_manager.settings,
-                                  deepcopy(self.file_metadata.get(path, {})))
+                resolved = freeze(
+                    self.app.settings_manager.settings,
+                    deepcopy(self.file_metadata.get(path, {})),
+                )
             except (OSError, ValueError, PresetError):
                 continue  # The job reports its own recipe error.
             settings = SettingsOverride(self.app.settings_manager, resolved["settings"])
             accepted, message = validate_additional_options(
-                settings.load_setting("additional-options", ""))
+                settings.load_setting("additional-options", "")
+            )
             if not accepted:
                 return message
         return None
@@ -1492,8 +1557,12 @@ class ConversionPage:
         target_id = settings.load_setting("size-target", "")
         if not target_id:
             return None
-        return {"bytes": target_bytes(target_id, float(settings.load_setting("size-target-mb", 50))),
-                "strategy": settings.load_setting("size-strategy", "auto")}
+        return {
+            "bytes": target_bytes(
+                target_id, float(settings.load_setting("size-target-mb", 50))
+            ),
+            "strategy": settings.load_setting("size-strategy", "auto"),
+        }
 
     def _start_size_job(self, context):
         """Plan off the GTK thread (it probes the file), then start the job."""
@@ -1511,7 +1580,9 @@ class ConversionPage:
             return GLib.SOURCE_REMOVE
 
         def fail(message):
-            self.app.show_error_dialog(_("This video cannot be made to fit the size"), message)
+            self.app.show_error_dialog(
+                _("This video cannot be made to fit the size"), message
+            )
             self.app.conversion_completed(False, file_path=input_file, job_id=job_id)
             return GLib.SOURCE_REMOVE
 
@@ -1538,21 +1609,41 @@ class ConversionPage:
         trim_segments = context["trim_segments"]
 
         logger.debug(f"Conversion command: {' '.join(cmd)}")
-        for key in ("gpu", "video_quality", "video_encoder", "preset", "subtitle_extract",
-                    "audio_handling", "audio_bitrate", "audio_channels", "video_resolution",
-                    "video_fps", "video_stabilize", "source_hdr",
-                    "options", "gpu_partial", "force_copy_video", "only_extract_subtitles",
-                    "video_filter", "video_width", "video_height"):
+        for key in (
+            "gpu",
+            "video_quality",
+            "video_encoder",
+            "preset",
+            "subtitle_extract",
+            "audio_handling",
+            "audio_bitrate",
+            "audio_channels",
+            "video_resolution",
+            "video_fps",
+            "video_stabilize",
+            "source_hdr",
+            "options",
+            "gpu_partial",
+            "force_copy_video",
+            "only_extract_subtitles",
+            "video_filter",
+            "video_width",
+            "video_height",
+        ):
             if key in env_vars:
                 logger.debug(f"{key}={env_vars[key]}")
 
         if context.get("cancel_event") is not None and context["cancel_event"].is_set():
-            self.app.conversion_completed(False, file_path=input_file, job_id=context.get("job_id"))
+            self.app.conversion_completed(
+                False, file_path=input_file, job_id=context.get("job_id")
+            )
             return False
         # Several cuts go to a segment batch, and so does one cut copied
         # without re-encoding: the batch checks that it starts on a keyframe
         # and re-encodes it otherwise.
-        if len(trim_segments) > 1 or (trim_segments and env_vars.get("force_copy_video") == "1"):
+        if len(trim_segments) > 1 or (
+            trim_segments and env_vars.get("force_copy_video") == "1"
+        ):
             return start_segment_batch(self, context)
 
         # Single segment or no segments - use standard conversion
@@ -1564,8 +1655,12 @@ class ConversionPage:
             trim = f"-t {self._format_time_ffmpeg(segment_duration)}"
             if trim_start > 0:
                 trim = f"-ss {self._format_time_ffmpeg(trim_start)} {trim}"
-            env_vars = {**env_vars, "options": " ".join(
-                filter(None, [env_vars.get("options", "").strip(), trim]))}
+            env_vars = {
+                **env_vars,
+                "options": " ".join(
+                    filter(None, [env_vars.get("options", "").strip(), trim])
+                ),
+            }
             logger.debug(f"Single segment trim: {trim}")
 
         # Create and display progress dialog
@@ -1579,7 +1674,8 @@ class ConversionPage:
             env_vars,
             segment_duration=segment_duration,
             preset_source=context.get("preset_source"),
-            job_id=context.get("job_id"), cancel_event=context.get("cancel_event"),
+            job_id=context.get("job_id"),
+            cancel_event=context.get("cancel_event"),
         )
 
         return True
@@ -1591,7 +1687,9 @@ class ConversionPage:
         3.2999…) to milliseconds cut a frame early.
         """
         whole, micro = divmod(round(seconds * 1_000_000), 1_000_000)
-        return f"{whole // 3600:02d}:{whole // 60 % 60:02d}:{whole % 60:02d}.{micro:06d}"
+        return (
+            f"{whole // 3600:02d}:{whole // 60 % 60:02d}:{whole % 60:02d}.{micro:06d}"
+        )
 
     def _on_output_folder_entry_changed(self, entry) -> None:
         """Persist the destination folder while "In one folder" is selected."""
@@ -1633,7 +1731,9 @@ class ConversionPage:
         while row is not None:
             if isinstance(row, FileQueueRow):
                 metadata = self.file_metadata.get(row.file_path)
-                row.set_recipe(self.file_recipe_summary(metadata), has_own_settings(metadata))
+                row.set_recipe(
+                    self.file_recipe_summary(metadata), has_own_settings(metadata)
+                )
             row = row.get_next_sibling()
 
     def file_recipe_summary(self, metadata) -> str:
@@ -1648,7 +1748,8 @@ class ConversionPage:
         if target_id:
             # The size decides the resolution, so the limit takes its place.
             resolution = _("up to {size}").format(
-                size=shown_size(target_id, settings.get("size-target-mb", 50.0)))
+                size=shown_size(target_id, settings.get("size-target-mb", 50.0))
+            )
         return _("{profile} · {resolution}").format(profile=name, resolution=resolution)
 
     def on_file_options_by_path(self, file_path: str) -> None:
@@ -1664,8 +1765,9 @@ class ConversionPage:
             return
         saved_preset = metadata.get("preset_snapshot")
         if saved_preset:
-            presets = [saved_preset] + [preset for preset in presets
-                                      if preset["id"] != saved_preset["id"]]
+            presets = [saved_preset] + [
+                preset for preset in presets if preset["id"] != saved_preset["id"]
+            ]
 
         dialog = Adw.AlertDialog()
         connections = SignalConnections(dialog)
@@ -1699,7 +1801,9 @@ class ConversionPage:
         )
         selected_preset = 0
         for index, preset in enumerate(presets, start=1):
-            if preset["id"] == (saved_preset or {}).get("id", metadata.get("preset_id")):
+            if preset["id"] == (saved_preset or {}).get(
+                "id", metadata.get("preset_id")
+            ):
                 selected_preset = index
                 break
         preset_row.set_selected(selected_preset)
@@ -1752,8 +1856,12 @@ class ConversionPage:
 
         # Where this one video is going, when that differs from the others.
         size_modes = ("global", "none", *(t[0] for t in TARGETS), "custom")
-        size_labels = [_("Use the general size"), _("No limit"),
-                       *(f"{t[3]} · {_(t[1])}" for t in TARGETS), _("Another size")]
+        size_labels = [
+            _("Use the general size"),
+            _("No limit"),
+            *(f"{t[3]} · {_(t[1])}" for t in TARGETS),
+            _("Another size"),
+        ]
         size_row = Adw.ComboRow(
             title=_("Maximum size"),
             subtitle=_("Fits this video under a size, whatever the general setting"),
@@ -1764,7 +1872,9 @@ class ConversionPage:
         size_spin = Gtk.SpinButton.new_with_range(1, 1_000_000, 1)
         size_spin.set_value(metadata.get("size_mb") or 50)
         size_spin.set_valign(Gtk.Align.CENTER)
-        size_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Size in megabytes")])
+        size_spin.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Size in megabytes")]
+        )
         size_mb_row = Adw.ActionRow(title=_("Size in megabytes"))
         size_mb_row.add_suffix(size_spin)
         size_mb_row.set_activatable_widget(size_spin)
@@ -1801,11 +1911,7 @@ class ConversionPage:
             temporary["size_mode"] = size_modes[size_row.get_selected()]
             temporary["size_mb"] = float(size_spin.get_value())
             selected = preset_row.get_selected()
-            temporary["preset_snapshot"] = (
-                presets[selected - 1]
-                if selected
-                else None
-            )
+            temporary["preset_snapshot"] = presets[selected - 1] if selected else None
             preview_value.set_text(self.file_recipe_summary(temporary))
             refresh_size_result(temporary)
 
@@ -1819,10 +1925,14 @@ class ConversionPage:
             size_result.set_visible(True)
             size_result.set_subtitle(_("Checking the video…"))
             output_ext = {0: ".mp4", 1: ".mkv", 2: ".mov", 3: ".webm"}.get(
-                settings.get("output-format-index", 0), ".mp4")
+                settings.get("output-format-index", 0), ".mp4"
+            )
             context = {
-                "size_target": self._size_target(SettingsOverride(self.app.settings_manager, settings)),
-                "input_file": file_path, "output_ext": output_ext,
+                "size_target": self._size_target(
+                    SettingsOverride(self.app.settings_manager, settings)
+                ),
+                "input_file": file_path,
+                "output_ext": output_ext,
                 "trim_segments": temporary.get("trim_segments") or [],
                 "output_mode": temporary.get("output_mode", "join"),
                 "encode_env": {
@@ -1845,6 +1955,7 @@ class ConversionPage:
                     if not dialog_closed[0] and generation == size_generation[0]:
                         size_result.set_subtitle(text)
                     return GLib.SOURCE_REMOVE
+
                 GLib.idle_add(show)
 
             def start():

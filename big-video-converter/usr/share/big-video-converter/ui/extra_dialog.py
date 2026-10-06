@@ -34,9 +34,7 @@ def _load_svg(filename: str, size: int = 92) -> Gtk.Picture:
     return pic
 
 
-def _make_card(
-    svg: str, title: str, description: str, control: Gtk.Widget
-) -> Gtk.Box:
+def _make_card(svg: str, title: str, description: str, control: Gtk.Widget) -> Gtk.Box:
     card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     card.add_css_class("card")
     card.set_margin_bottom(12)
@@ -150,8 +148,8 @@ def show_extra_dialog(parent_window, app) -> None:
         if ffmpeg_entry.get_text() != text:
             ffmpeg_entry.set_text(text)
 
-    connections.connect(app.settings_page.options_entry,
-        "changed", lambda w: _on_source_changed(w)
+    connections.connect(
+        app.settings_page.options_entry, "changed", lambda w: _on_source_changed(w)
     )
 
     # Build card manually with entry below the header
@@ -268,10 +266,7 @@ def show_extra_dialog(parent_window, app) -> None:
         _make_card(
             "reset_settings.svg",
             _("Reset All Settings"),
-            _(
-                "Restore all options to their default values. "
-                "This cannot be undone."
-            ),
+            _("Restore all options to their default values. This cannot be undone."),
             reset_btn,
         )
     )
@@ -353,8 +348,12 @@ def _import_profile(dialog, parent_window, app) -> None:
         # Someone else's profile may carry options that reach the user's files.
         settings = file_access_settings(updates.get("additional-options", ""))
         if settings:
-            confirm_file_access(parent_window, _("This profile can read or write files"), settings,
-                                lambda: _finish(filepath, app.settings_manager.apply_profile(updates)))
+            confirm_file_access(
+                parent_window,
+                _("This profile can read or write files"),
+                settings,
+                lambda: _finish(filepath, app.settings_manager.apply_profile(updates)),
+            )
         else:
             _finish(filepath, app.settings_manager.apply_profile(updates))
 

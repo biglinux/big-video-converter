@@ -44,36 +44,98 @@ def _ffmpeg_error_map() -> list[tuple[str, str]]:
     """
     return [
         # The script's own checks name the input; the path stays in the log.
-        ("input file is corrupted or not a valid video file",
-         _("The file container could not be read. It may be a corrupted download or an unsupported format.")),
+        (
+            "input file is corrupted or not a valid video file",
+            _(
+                "The file container could not be read. It may be a corrupted download or an unsupported format."
+            ),
+        ),
         ("input file not found", _("File or folder not found.")),
-        ("input file is not readable", _("Permission denied — check file/folder permissions.")),
+        (
+            "input file is not readable",
+            _("Permission denied — check file/folder permissions."),
+        ),
         ("no space left on device", _("There is no space left on the disk.")),
         ("permission denied", _("Permission denied — check file/folder permissions.")),
         ("no such file or directory", _("File or folder not found.")),
-        ("invalid data found when processing input", _("The file appears to be corrupted or in an unsupported format.")),
+        (
+            "invalid data found when processing input",
+            _("The file appears to be corrupted or in an unsupported format."),
+        ),
         # Before the generic "codec not currently supported": the muxer says both.
-        ("could not find tag for codec", _("A track of this file cannot be stored in the chosen container. Try MKV.")),
-        ("codec not currently supported", _("This codec is not supported on your system.")),
+        (
+            "could not find tag for codec",
+            _(
+                "A track of this file cannot be stored in the chosen container. Try MKV."
+            ),
+        ),
+        (
+            "codec not currently supported",
+            _("This codec is not supported on your system."),
+        ),
         ("unknown decoder", _("A required decoder is not installed.")),
         ("unknown encoder", _("A required encoder is not installed.")),
-        ("encoder setup failed", _("Failed to initialize the encoder — the selected settings may be incompatible.")),
-        ("hardware accel", _("Hardware acceleration failed. Try disabling GPU encoding.")),
+        (
+            "encoder setup failed",
+            _(
+                "Failed to initialize the encoder — the selected settings may be incompatible."
+            ),
+        ),
+        (
+            "hardware accel",
+            _("Hardware acceleration failed. Try disabling GPU encoding."),
+        ),
         ("out of memory", _("Not enough memory to complete the conversion.")),
-        ("does not contain any stream", _("The file does not contain a valid media stream.")),
-        ("moov atom not found", _("The video file is incomplete or damaged (missing metadata).")),
+        (
+            "does not contain any stream",
+            _("The file does not contain a valid media stream."),
+        ),
+        (
+            "moov atom not found",
+            _("The video file is incomplete or damaged (missing metadata)."),
+        ),
         ("decoding for stream", _("Could not decode the file — it may be corrupted.")),
-        ("missing argument for option", _("The conversion command was built incorrectly. Please report this problem.")),
-        ("error splitting the argument list", _("FFmpeg rejected the conversion command. Check the additional options.")),
-        ("unrecognized option", _("FFmpeg rejected the conversion command. Check the additional options.")),
-        ("option not found", _("FFmpeg rejected the conversion command. Check the additional options.")),
-        ("device creation failed", _("The GPU could not be opened. Try disabling GPU encoding.")),
-        ("failed to initialise vaapi", _("The GPU could not be opened. Try disabling GPU encoding.")),
-        ("stall watchdog", _("The encoder stopped making progress and was terminated.")),
-        ("only vp8 or vp9 or av1 video and vorbis or opus audio",
-         _("WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. "
-           "Choose one of those codecs, or MKV to keep the original ones.")),
-        ("conversion produced no output", _("The conversion finished without producing a file.")),
+        (
+            "missing argument for option",
+            _(
+                "The conversion command was built incorrectly. Please report this problem."
+            ),
+        ),
+        (
+            "error splitting the argument list",
+            _("FFmpeg rejected the conversion command. Check the additional options."),
+        ),
+        (
+            "unrecognized option",
+            _("FFmpeg rejected the conversion command. Check the additional options."),
+        ),
+        (
+            "option not found",
+            _("FFmpeg rejected the conversion command. Check the additional options."),
+        ),
+        (
+            "device creation failed",
+            _("The GPU could not be opened. Try disabling GPU encoding."),
+        ),
+        (
+            "failed to initialise vaapi",
+            _("The GPU could not be opened. Try disabling GPU encoding."),
+        ),
+        (
+            "stall watchdog",
+            _("The encoder stopped making progress and was terminated."),
+        ),
+        (
+            "only vp8 or vp9 or av1 video and vorbis or opus audio",
+            _(
+                "WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. "
+                "Choose one of those codecs, or MKV to keep the original ones."
+            ),
+        ),
+        (
+            "conversion produced no output",
+            _("The conversion finished without producing a file."),
+        ),
     ]
 
 
@@ -90,10 +152,15 @@ def _friendly_ffmpeg_error(stderr_lines: list[str]) -> str:
 
 _ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
 # FFmpeg's periodic statistics and its build banner: noise, never the cause.
-_NOISE_RE = re.compile(r"^(frame=|size=|\s*(configuration|built with|lib[a-z0-9]+\s+\d))|^\s*$", re.IGNORECASE)
+_NOISE_RE = re.compile(
+    r"^(frame=|size=|\s*(configuration|built with|lib[a-z0-9]+\s+\d))|^\s*$",
+    re.IGNORECASE,
+)
 _HINT_RE = re.compile(
     r"error|invalid|fail|missing|could not|cannot|can't|unrecogni|not supported|"
-    r"no such|denied|unable|stall watchdog|gpu encoder check|only vp8 or vp9", re.IGNORECASE)
+    r"no such|denied|unable|stall watchdog|gpu encoder check|only vp8 or vp9",
+    re.IGNORECASE,
+)
 
 
 def _failure_reason(stderr_tail, error_hints=()) -> str:
@@ -116,18 +183,22 @@ def _failure_message(returncode: int, stderr_tail, error_hints=()) -> str:
     """
     hints = [_ANSI_RE.sub("", line).strip() for line in error_hints]
     tail = [_ANSI_RE.sub("", line).strip() for line in stderr_tail]
-    message = _failure_reason(stderr_tail, error_hints) or _("Conversion failed with code {0}").format(returncode)
+    message = _failure_reason(stderr_tail, error_hints) or _(
+        "Conversion failed with code {0}"
+    ).format(returncode)
     # The hints are ordered by arrival across every attempt, so the first and
     # the last three are the cause and the final symptoms. stdout and stderr
     # are separate pipes, so nothing here depends on their relative order.
     evidence: list[str] = []
-    for line in hints[:1] + hints[-3:] or [line for line in tail if not _NOISE_RE.match(line)][-3:]:
+    for line in (
+        hints[:1] + hints[-3:]
+        or [line for line in tail if not _NOISE_RE.match(line)][-3:]
+    ):
         if line and line not in evidence:
             evidence.append(line)
     if evidence:
         message += "\n" + "\n".join(evidence)
     return message
-
 
 
 def call_on_main(callback, *args, wait=False):
@@ -198,7 +269,9 @@ class _Updates:
             self.progress = self.status = self.command = None
             self.pending = False
         if lines:
-            self.item.add_output_text("".join(line if line.endswith("\n") else line + "\n" for line in lines))
+            self.item.add_output_text(
+                "".join(line if line.endswith("\n") else line + "\n" for line in lines)
+            )
         if progress is not None:
             self.item.update_progress(progress)
         if status is not None:
@@ -221,7 +294,8 @@ def detect_bit_depth_info(file_path: str):
         pixel_format = stream.get("pix_fmt", "unknown")
         codec = stream.get("codec_name", "unknown")
         return _("Video stream: codec={codec}, pixel format={pixel_format}").format(
-            codec=codec, pixel_format=pixel_format)
+            codec=codec, pixel_format=pixel_format
+        )
     except (OSError, subprocess.SubprocessError, ValueError, StopIteration):
         return _("Could not analyze the video stream with ffprobe")
 
@@ -252,7 +326,11 @@ def _expected_subtitles(data, destination):
 
 
 def _expected_media(source, env, duration, destination=None):
-    data = probe_media(source, executable=env.get("ffprobe_executable")) if source else None
+    data = (
+        probe_media(source, executable=env.get("ffprobe_executable"))
+        if source
+        else None
+    )
     options = parse_additional_options(env.get("options", ""))
     if duration is None and data:
         duration = media_duration(data)
@@ -265,26 +343,46 @@ def _expected_media(source, env, duration, destination=None):
         for index, token in enumerate(options):
             if token == "-t":
                 requested = _time_value(options[index + 1])
-                duration = min(duration, requested) if duration is not None else requested
+                duration = (
+                    min(duration, requested) if duration is not None else requested
+                )
             elif token == "-to":
                 requested = max(0.0, _time_value(options[index + 1]) - start)
-                duration = min(duration, requested) if duration is not None else requested
+                duration = (
+                    min(duration, requested) if duration is not None else requested
+                )
     # Explicit user maps may legitimately change the default stream inventory.
     expected = None
     if data and "-map" not in options:
         expected = {"video": 1}
-        expected["audio"] = 0 if env.get("audio_handling") == "none" or "-an" in options else stream_count(data, "audio")
+        expected["audio"] = (
+            0
+            if env.get("audio_handling") == "none" or "-an" in options
+            else stream_count(data, "audio")
+        )
         embedded = env.get("subtitle_extract") == "embedded" and "-sn" not in options
         expected["subtitle"] = _expected_subtitles(data, destination) if embedded else 0
     return duration, expected
 
 
-def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
-                             delete_original=False, env_vars=None,
-                             wait_for_completion=False, is_segment_batch=False,
-                             segment_duration=None, *, job_id=None,
-                             cancel_event=None, progress_item=None,
-                             source_file=None, output_file=None, preset_source=None):
+def run_with_progress_dialog(
+    app,
+    cmd: list,
+    title_suffix,
+    input_file=None,
+    delete_original=False,
+    env_vars=None,
+    wait_for_completion=False,
+    is_segment_batch=False,
+    segment_duration=None,
+    *,
+    job_id=None,
+    cancel_event=None,
+    progress_item=None,
+    source_file=None,
+    output_file=None,
+    preset_source=None,
+):
     """Launch one stage; synchronous callers receive its validated result.
 
     Only this supervisor completes a stage. Segment batches own the one terminal
@@ -308,11 +406,15 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
     job_directory = None
 
     try:
+
         def prepare_item():
             nonlocal progress_item, counted
             if progress_item is None:
                 progress_item = app.progress_page.add_conversion(
-                    title_suffix or os.path.basename(input_file or ""), input_file, process)
+                    title_suffix or os.path.basename(input_file or ""),
+                    input_file,
+                    process,
+                )
             else:
                 progress_item.process = process
             progress_item.cancel_event = cancel_event
@@ -321,7 +423,10 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
             progress_item.expected_duration = segment_duration
             progress_item.delete_original = bool(delete_original)
             progress_item.expected_output = destination
-            copying = "1" in (env.get("force_copy_video"), env.get("only_extract_subtitles"))
+            copying = "1" in (
+                env.get("force_copy_video"),
+                env.get("only_extract_subtitles"),
+            )
             progress_item.video_codec = "" if copying else env.get("video_encoder", "")
             app.conversions_running += 1
             counted = True
@@ -343,7 +448,9 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
         # lands there, never in the directory the application started from.
         # Beside the output, so large side files stay off a RAM-backed /tmp.
         job_directory = tempfile.TemporaryDirectory(
-            prefix=".bvc-cwd-", dir=os.path.dirname(destination) if destination else None)
+            prefix=".bvc-cwd-",
+            dir=os.path.dirname(destination) if destination else None,
+        )
         if preset_source is not None:
             # The GUI already resolved inheritance, including explicit empty
             # values such as original resolution. Keep only the preset's extras.
@@ -352,8 +459,13 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
             with open(env["preset_file"], "w", encoding="utf-8") as handle:
                 handle.write(preset_source)
         process = subprocess.Popen(
-            cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, bufsize=0, env=env, start_new_session=True,
+            cmd,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=0,
+            env=env,
+            start_new_session=True,
             cwd=job_directory.name,
         )
 
@@ -361,9 +473,13 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
         thread = threading.Thread(
             target=monitor_progress,
             args=(app, process, progress_item, env),
-            kwargs={"source_file": source_file, "identity": identity,
-                    "result_box": result_box, "job_id": job_id,
-                    "job_directory": job_directory},
+            kwargs={
+                "source_file": source_file,
+                "identity": identity,
+                "result_box": result_box,
+                "job_id": job_id,
+                "job_directory": job_directory,
+            },
             daemon=True,
         )
         thread.start()
@@ -384,6 +500,7 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
                 if pipe:
                     pipe.close()
         was_cancelled = isinstance(error, InterruptedError) or cancel_event.is_set()
+
         def failed(message=str(error)):
             if counted:
                 app.conversions_running = max(0, app.conversions_running - 1)
@@ -396,17 +513,32 @@ def run_with_progress_dialog(app, cmd: list, title_suffix, input_file=None,
                     progress_item.process = None
                     if was_cancelled:
                         progress_item.mark_cancelled()
-                        app.progress_page.mark_conversion_complete(progress_item.conversion_id, False)
+                        app.progress_page.mark_conversion_complete(
+                            progress_item.conversion_id, False
+                        )
                     else:
                         progress_item.add_output_text(detail)
-                        progress_item.mark_failure(_("The conversion could not start."), detail)
+                        progress_item.mark_failure(
+                            _("The conversion could not start."), detail
+                        )
                 app.conversion_completed(False, file_path=input_file, job_id=job_id)
+
         call_on_main(failed)
         return ConversionResult(False, -1, cancelled=was_cancelled, error=str(error))
 
 
-def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=None,
-                     identity=None, result_box=None, job_id=None, job_directory=None):
+def monitor_progress(
+    app,
+    process,
+    progress_item,
+    env_vars=None,
+    *,
+    source_file=None,
+    identity=None,
+    result_box=None,
+    job_id=None,
+    job_directory=None,
+):
     """Drain both pipes with a monotonic deadline and one terminal callback."""
     env = env_vars or {}
     cancelled = progress_item.cancel_event
@@ -450,7 +582,13 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
     subtitles_left_out = False
 
     def consume(text, source):
-        nonlocal duration, stage_mode, encoding, encoded_frames, workspace, reported_duration
+        nonlocal \
+            duration, \
+            stage_mode, \
+            encoding, \
+            encoded_frames, \
+            workspace, \
+            reported_duration
         nonlocal bar_start, bar_share, encode_start, encode_share, encode_mode
         nonlocal published, subtitles_left_out
         updates.push(text=text)
@@ -460,9 +598,14 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             workspace = text.partition(":")[2].strip()
         if text.startswith("Output file:"):
             # One line: the script escapes backslash, newline and return.
-            published = re.sub(r"\\(.)", lambda m: {"n": "\n", "r": "\r"}.get(m[1], m[1]),
-                               text.partition(": ")[2])
-        if text.startswith(("Warning: skipping subtitle stream", "Warning: Subtitle extraction failed")):
+            published = re.sub(
+                r"\\(.)",
+                lambda m: {"n": "\n", "r": "\r"}.get(m[1], m[1]),
+                text.partition(": ")[2],
+            )
+        if text.startswith(
+            ("Warning: skipping subtitle stream", "Warning: Subtitle extraction failed")
+        ):
             subtitles_left_out = True
         if source == "stderr":
             stderr_tail.append(text.strip())
@@ -550,8 +693,16 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             # source from an 8-bit one when a conversion misbehaves.
             updates.push(text=detect_bit_depth_info(source_file))
         try:
-            duration, expected_streams = _expected_media(source_file, env, duration, destination)
-        except (OSError, subprocess.SubprocessError, ValueError, KeyError, TypeError) as error:
+            duration, expected_streams = _expected_media(
+                source_file, env, duration, destination
+            )
+        except (
+            OSError,
+            subprocess.SubprocessError,
+            ValueError,
+            KeyError,
+            TypeError,
+        ) as error:
             # Metadata failure is not proof of input corruption. It does,
             # however, prohibit automatic deletion of the source.
             updates.push(text=_("Input probe unavailable: {0}").format(error))
@@ -564,7 +715,11 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             if now - started >= MAX_CONVERSION_SECONDS:
                 raise TimeoutError("Conversion exceeded the time limit")
             events = selector.select(timeout=0.1)
-            if not events and now - last_output > STUCK_WARNING_SECONDS and not warning_shown:
+            if (
+                not events
+                and now - last_output > STUCK_WARNING_SECONDS
+                and not warning_shown
+            ):
                 updates.push(text=_("No progress detected. Process may be stuck."))
                 warning_shown = True
             for key, _mask in events:
@@ -606,37 +761,61 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                     raise ValueError("No explicit output path was supplied")
                 copy_mode = env.get("force_copy_video") == "1"
                 try:
-                    validate_output(destination, source=source_file,
-                                    expected_duration=duration, expected_streams=expected_streams,
-                                    duration_tolerance=3.0 if copy_mode else None,
-                                    allow_longer=copy_mode,
-                                    ffprobe=env.get("ffprobe_executable"))
+                    validate_output(
+                        destination,
+                        source=source_file,
+                        expected_duration=duration,
+                        expected_streams=expected_streams,
+                        duration_tolerance=3.0 if copy_mode else None,
+                        allow_longer=copy_mode,
+                        ffprobe=env.get("ffprobe_executable"),
+                    )
                 except OutputDurationMismatch as mismatch:
                     # An unexpected length is not proof of a bad file: a stream
                     # copy cuts on keyframes and a variable frame rate source
                     # gets re-timed. Report it and keep the original.
                     duration_verified = False
-                    updates.push(text=_("Output duration not verified: {0}").format(mismatch))
+                    updates.push(
+                        text=_("Output duration not verified: {0}").format(mismatch)
+                    )
             result = ConversionResult(True, 0, None if extraction_only else destination)
             if progress_item.delete_original and source_file and not extraction_only:
                 try:
                     if identity is None or not duration_verified:
-                        raise ValueError(_("The output could not be verified against the input"))
+                        raise ValueError(
+                            _("The output could not be verified against the input")
+                        )
                     if subtitles_left_out:
-                        raise ValueError(_("The output does not carry every subtitle track of the original"))
+                        raise ValueError(
+                            _(
+                                "The output does not carry every subtitle track of the original"
+                            )
+                        )
                     updates.push(status=_("Checking output file..."))
-                    remove_original(source_file, identity, [destination], cancelled,
-                                    expected_frames=encoded_frames,
-                                    ffmpeg=env.get("ffmpeg_executable"),
-                                    ffprobe=env.get("ffprobe_executable"))
+                    remove_original(
+                        source_file,
+                        identity,
+                        [destination],
+                        cancelled,
+                        expected_frames=encoded_frames,
+                        ffmpeg=env.get("ffmpeg_executable"),
+                        ffprobe=env.get("ffprobe_executable"),
+                    )
                     updates.push(text=_("Original deleted after output validation"))
                 except InterruptedError:
                     raise
-                except (OSError, ValueError, TimeoutError, subprocess.SubprocessError) as error:
+                except (
+                    OSError,
+                    ValueError,
+                    TimeoutError,
+                    subprocess.SubprocessError,
+                ) as error:
                     updates.push(text=_("Original preserved: {0}").format(error))
     except InterruptedError as error:
         cancelled.set()
-        result = ConversionResult(False, -1, destination, cancelled=True, error=str(error))
+        result = ConversionResult(
+            False, -1, destination, cancelled=True, error=str(error)
+        )
     except Exception as error:
         monitor_error = error
         logger.exception("Conversion monitoring/validation failed")
@@ -668,7 +847,9 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                 return
             if result.cancelled:
                 progress_item.mark_cancelled()
-                app.progress_page.mark_conversion_complete(progress_item.conversion_id, False)
+                app.progress_page.mark_conversion_complete(
+                    progress_item.conversion_id, False
+                )
             elif result.success:
                 progress_item.mark_success()
             else:
@@ -678,10 +859,19 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
                 notify_completion(app, result)
             if not hasattr(app, "completed_conversions"):
                 app.completed_conversions = []
-            app.completed_conversions.append({"input_file": source_file,
-                "output_file": result.output_file, "success": result.success,
-                "cancelled": result.cancelled, "job_id": job_id})
-            app.conversion_completed(result.success, file_path=source_file, job_id=job_id)
+            app.completed_conversions.append(
+                {
+                    "input_file": source_file,
+                    "output_file": result.output_file,
+                    "success": result.success,
+                    "cancelled": result.cancelled,
+                    "job_id": job_id,
+                }
+            )
+            app.conversion_completed(
+                result.success, file_path=source_file, job_id=job_id
+            )
+
         call_on_main(finish)
 
 
@@ -694,6 +884,7 @@ def notify_completion(app, result, *, body=None) -> None:
     """
     if result.success:
         app.send_system_notification(
-            _("Conversion Complete"), body or _("Conversion completed successfully!"))
+            _("Conversion Complete"), body or _("Conversion completed successfully!")
+        )
         return
     app.send_system_notification(_("Error"), result.error or _("Failed"))

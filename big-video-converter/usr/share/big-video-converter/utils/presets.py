@@ -33,8 +33,24 @@ FORMAT_VERSION = 1
 USER_DIR_NAME = "presets"
 
 VIDEO_CODECS = ("copy", "h264", "h265", "av1", "vp9", "prores")
-VIDEO_QUALITIES = ("default", "veryhigh", "high", "medium", "low", "verylow", "superlow")
-VIDEO_SPEEDS = ("default", "ultrafast", "veryfast", "faster", "medium", "slow", "veryslow")
+VIDEO_QUALITIES = (
+    "default",
+    "veryhigh",
+    "high",
+    "medium",
+    "low",
+    "verylow",
+    "superlow",
+)
+VIDEO_SPEEDS = (
+    "default",
+    "ultrafast",
+    "veryfast",
+    "faster",
+    "medium",
+    "slow",
+    "veryslow",
+)
 GPU_MODES = ("auto", "software", "nvidia", "amd", "intel", "vulkan")
 AUDIO_MODES = ("copy", "reencode", "none")
 AUDIO_CODECS = ("aac", "opus", "ac3")
@@ -45,11 +61,25 @@ CONTAINER_INDEX = {"mp4": 0, "mkv": 1, "mov": 2, "webm": 3}
 # Encoders the script can select. A preset may carry arguments for any of
 # them; the ones for the encoder actually chosen at run time are applied.
 KNOWN_ENCODERS = (
-    "libx264", "libx265", "libsvtav1", "libvpx-vp9", "prores_ks",
-    "h264_nvenc", "hevc_nvenc", "av1_nvenc",
-    "h264_vaapi", "hevc_vaapi", "av1_vaapi", "vp9_vaapi",
-    "h264_qsv", "hevc_qsv", "av1_qsv", "vp9_qsv",
-    "h264_vulkan", "hevc_vulkan", "av1_vulkan",
+    "libx264",
+    "libx265",
+    "libsvtav1",
+    "libvpx-vp9",
+    "prores_ks",
+    "h264_nvenc",
+    "hevc_nvenc",
+    "av1_nvenc",
+    "h264_vaapi",
+    "hevc_vaapi",
+    "av1_vaapi",
+    "vp9_vaapi",
+    "h264_qsv",
+    "hevc_qsv",
+    "av1_qsv",
+    "vp9_qsv",
+    "h264_vulkan",
+    "hevc_vulkan",
+    "av1_vulkan",
 )
 
 _ID_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
@@ -91,7 +121,11 @@ class Preset:
 
     @property
     def display_description(self) -> str:
-        return _(self.description) if self.bundled and self.description else self.description
+        return (
+            _(self.description)
+            if self.bundled and self.description
+            else self.description
+        )
 
     @property
     def display_tags(self) -> list[str]:
@@ -105,8 +139,15 @@ class Preset:
         if codec == "copy":
             parts.append(_("Copy video"))
         elif codec:
-            parts.append({"h264": "H.264", "h265": "H.265", "av1": "AV1", "vp9": "VP9",
-                          "prores": "ProRes"}.get(codec, codec))
+            parts.append(
+                {
+                    "h264": "H.264",
+                    "h265": "H.265",
+                    "av1": "AV1",
+                    "vp9": "VP9",
+                    "prores": "ProRes",
+                }.get(codec, codec)
+            )
         if self.video.get("resolution"):
             parts.append(self.video["resolution"])
         if self.container.get("format"):
@@ -121,26 +162,34 @@ class Preset:
             return ""
         from utils.size_target import TARGETS
 
-        return _("up to {size}").format(size=next(t[3] for t in TARGETS if t[0] == self.size["target"]))
+        return _("up to {size}").format(
+            size=next(t[3] for t in TARGETS if t[0] == self.size["target"])
+        )
 
 
 # --------------------------------------------------------------------------
 # Locations
 # --------------------------------------------------------------------------
 
+
 def bundled_dir() -> str:
     """Presets shipped with the application, next to this package."""
-    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "presets")
+    return os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "presets"
+    )
 
 
 def user_dir() -> str:
-    base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
+    base = os.environ.get("XDG_CONFIG_HOME") or os.path.join(
+        os.path.expanduser("~"), ".config"
+    )
     return os.path.join(base, "big-video-converter", USER_DIR_NAME)
 
 
 # --------------------------------------------------------------------------
 # Parsing and validation
 # --------------------------------------------------------------------------
+
 
 def parse_preset_text(text: str) -> dict:
     """TOML text, possibly wrapped in a Markdown code fence by a chat bot."""
@@ -152,9 +201,13 @@ def parse_preset_text(text: str) -> dict:
     try:
         data = tomllib.loads(text)
     except tomllib.TOMLDecodeError as error:
-        raise PresetError(_("The preset is not valid TOML: {0}").format(error)) from error
+        raise PresetError(
+            _("The preset is not valid TOML: {0}").format(error)
+        ) from error
     except RecursionError as error:
-        raise PresetError(_("The preset is not valid TOML: its tables are nested too deeply.")) from error
+        raise PresetError(
+            _("The preset is not valid TOML: its tables are nested too deeply.")
+        ) from error
     if not isinstance(data, dict):
         raise PresetError(_("The preset must be a TOML table."))
     return data
@@ -167,18 +220,24 @@ def _table(data: dict, key: str) -> dict:
     return value
 
 
-def _choice(table: dict, section: str, key: str, allowed: tuple, required: bool = False):
+def _choice(
+    table: dict, section: str, key: str, allowed: tuple, required: bool = False
+):
     if key not in table:
         if required:
             raise PresetError(_("[{0}] {1} is required.").format(section, key))
         return None
     value = table[key]
     if not isinstance(value, str) or value not in allowed:
-        raise PresetError(_("[{0}] {1} must be one of: {2}").format(section, key, ", ".join(allowed)))
+        raise PresetError(
+            _("[{0}] {1} must be one of: {2}").format(section, key, ", ".join(allowed))
+        )
     return value
 
 
-def _text(table: dict, section: str, key: str, limit: int = 4096, default: str = "") -> str:
+def _text(
+    table: dict, section: str, key: str, limit: int = 4096, default: str = ""
+) -> str:
     value = table.get(key, default)
     if not isinstance(value, str) or len(value) > limit or "\x00" in value:
         raise PresetError(_("[{0}] {1} must be a short text.").format(section, key))
@@ -189,8 +248,16 @@ def _integer(table: dict, section: str, key: str, low: int, high: int):
     if key not in table:
         return None
     value = table[key]
-    if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
-        raise PresetError(_("[{0}] {1} must be a whole number between {2} and {3}.").format(section, key, low, high))
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int)
+        or not low <= value <= high
+    ):
+        raise PresetError(
+            _("[{0}] {1} must be a whole number between {2} and {3}.").format(
+                section, key, low, high
+            )
+        )
     return value
 
 
@@ -220,10 +287,14 @@ def _encoder_args(name: str, table) -> list[str]:
     from utils.ffmpeg_options import parse_additional_options
 
     if not isinstance(table, dict):
-        raise PresetError(_("[encoder.{0}] must be a table with an args list.").format(name))
+        raise PresetError(
+            _("[encoder.{0}] must be a table with an args list.").format(name)
+        )
     args = table.get("args", [])
     if not isinstance(args, list) or not all(isinstance(a, str) and a for a in args):
-        raise PresetError(_("[encoder.{0}] args must be a list of strings.").format(name))
+        raise PresetError(
+            _("[encoder.{0}] args must be a list of strings.").format(name)
+        )
     if len(args) > 200:
         raise PresetError(_("[encoder.{0}] has too many arguments.").format(name))
     try:
@@ -232,17 +303,38 @@ def _encoder_args(name: str, table) -> list[str]:
         raise PresetError(_("[encoder.{0}]: {1}").format(name, error)) from error
 
 
-def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled: bool = False) -> Preset:
+def validate_preset(
+    data: dict, *, preset_id: str = "", path: str = "", bundled: bool = False
+) -> Preset:
     """Turn a parsed TOML table into a Preset or raise PresetError."""
     if not isinstance(data, dict):
         raise PresetError(_("The preset must be a TOML table."))
     version = data.get("format", FORMAT_VERSION)
-    if isinstance(version, bool) or not isinstance(version, int) or version != FORMAT_VERSION:
-        raise PresetError(_("Unsupported preset format {0}; this version reads format {1}.").format(version, FORMAT_VERSION))
-    unknown = set(data) - {"format", "preset", "video", "audio", "subtitles", "container", "ffmpeg", "encoder",
-                           "size"}
+    if (
+        isinstance(version, bool)
+        or not isinstance(version, int)
+        or version != FORMAT_VERSION
+    ):
+        raise PresetError(
+            _("Unsupported preset format {0}; this version reads format {1}.").format(
+                version, FORMAT_VERSION
+            )
+        )
+    unknown = set(data) - {
+        "format",
+        "preset",
+        "video",
+        "audio",
+        "subtitles",
+        "container",
+        "ffmpeg",
+        "encoder",
+        "size",
+    }
     if unknown:
-        raise PresetError(_("Unknown section(s): {0}").format(", ".join(sorted(unknown))))
+        raise PresetError(
+            _("Unknown section(s): {0}").format(", ".join(sorted(unknown)))
+        )
 
     meta = _table(data, "preset")
     name = _text(meta, "preset", "name", 120).strip()
@@ -251,7 +343,11 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
     description = _text(meta, "preset", "description", 2000).strip()
     author = _text(meta, "preset", "author", 200).strip()
     tags = meta.get("tags", [])
-    if not isinstance(tags, list) or not all(isinstance(t, str) and 0 < len(t) <= 40 for t in tags) or len(tags) > 20:
+    if (
+        not isinstance(tags, list)
+        or not all(isinstance(t, str) and 0 < len(t) <= 40 for t in tags)
+        or len(tags) > 20
+    ):
         raise PresetError(_("[preset] tags must be a list of short words."))
 
     video_in = _table(data, "video")
@@ -259,7 +355,11 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
     codec = _choice(video_in, "video", "codec", VIDEO_CODECS)
     if codec:
         video["codec"] = codec
-    for key, allowed in (("quality", VIDEO_QUALITIES), ("speed", VIDEO_SPEEDS), ("gpu", GPU_MODES)):
+    for key, allowed in (
+        ("quality", VIDEO_QUALITIES),
+        ("speed", VIDEO_SPEEDS),
+        ("gpu", GPU_MODES),
+    ):
         value = _choice(video_in, "video", key, allowed)
         if value:
             video[key] = value
@@ -271,17 +371,35 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
         video["resolution"] = resolution
     if "fps" in video_in:
         fps = video_in["fps"]
-        if isinstance(fps, bool) or not isinstance(fps, (int, float)) or not 1 <= fps <= 240:
+        if (
+            isinstance(fps, bool)
+            or not isinstance(fps, (int, float))
+            or not 1 <= fps <= 240
+        ):
             raise PresetError(_("[video] fps must be a number between 1 and 240."))
         video["fps"] = fps
     if "pixel_format" in video_in:
         pix = _text(video_in, "video", "pixel_format", 32)
         if not _PIX_FMT_RE.match(pix):
-            raise PresetError(_("[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."))
+            raise PresetError(
+                _(
+                    "[video] pixel_format must be an FFmpeg pixel format name such as yuv420p."
+                )
+            )
         video["pixel_format"] = pix
-    unknown = set(video_in) - {"codec", "quality", "speed", "gpu", "resolution", "fps", "pixel_format"}
+    unknown = set(video_in) - {
+        "codec",
+        "quality",
+        "speed",
+        "gpu",
+        "resolution",
+        "fps",
+        "pixel_format",
+    }
     if unknown:
-        raise PresetError(_("[video] has unknown key(s): {0}").format(", ".join(sorted(unknown))))
+        raise PresetError(
+            _("[video] has unknown key(s): {0}").format(", ".join(sorted(unknown)))
+        )
 
     audio_in = _table(data, "audio")
     audio: dict = {}
@@ -303,9 +421,18 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
     normalize = _boolean(audio_in, "audio", "normalize")
     if normalize is not None:
         audio["normalize"] = normalize
-    unknown = set(audio_in) - {"mode", "codec", "bitrate", "channels", "sample_rate", "normalize"}
+    unknown = set(audio_in) - {
+        "mode",
+        "codec",
+        "bitrate",
+        "channels",
+        "sample_rate",
+        "normalize",
+    }
     if unknown:
-        raise PresetError(_("[audio] has unknown key(s): {0}").format(", ".join(sorted(unknown))))
+        raise PresetError(
+            _("[audio] has unknown key(s): {0}").format(", ".join(sorted(unknown)))
+        )
 
     subtitles_in = _table(data, "subtitles")
     subtitles: dict = {}
@@ -314,7 +441,9 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
         subtitles["mode"] = mode
     unknown = set(subtitles_in) - {"mode"}
     if unknown:
-        raise PresetError(_("[subtitles] has unknown key(s): {0}").format(", ".join(sorted(unknown))))
+        raise PresetError(
+            _("[subtitles] has unknown key(s): {0}").format(", ".join(sorted(unknown)))
+        )
 
     container_in = _table(data, "container")
     container: dict = {}
@@ -323,7 +452,9 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
         container["format"] = fmt
     unknown = set(container_in) - {"format"}
     if unknown:
-        raise PresetError(_("[container] has unknown key(s): {0}").format(", ".join(sorted(unknown))))
+        raise PresetError(
+            _("[container] has unknown key(s): {0}").format(", ".join(sorted(unknown)))
+        )
 
     ffmpeg_in = _table(data, "ffmpeg")
     ffmpeg: dict = {}
@@ -333,7 +464,9 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
             ffmpeg[key] = value
     unknown = set(ffmpeg_in) - {"input_options", "output_options"}
     if unknown:
-        raise PresetError(_("[ffmpeg] has unknown key(s): {0}").format(", ".join(sorted(unknown))))
+        raise PresetError(
+            _("[ffmpeg] has unknown key(s): {0}").format(", ".join(sorted(unknown)))
+        )
 
     from utils.size_target import TARGETS
 
@@ -344,34 +477,56 @@ def validate_preset(data: dict, *, preset_id: str = "", path: str = "", bundled:
         size["target"] = target
     unknown = set(size_in) - {"target"}
     if unknown:
-        raise PresetError(_("[size] has unknown key(s): {0}").format(", ".join(sorted(unknown))))
+        raise PresetError(
+            _("[size] has unknown key(s): {0}").format(", ".join(sorted(unknown)))
+        )
 
     encoders_in = _table(data, "encoder")
     encoders: dict[str, list[str]] = {}
     for enc_name, table in encoders_in.items():
         if not isinstance(enc_name, str) or not _ENCODER_RE.match(enc_name):
-            raise PresetError(_("[encoder.{0}] is not an encoder name.").format(enc_name))
+            raise PresetError(
+                _("[encoder.{0}] is not an encoder name.").format(enc_name)
+            )
         args = _encoder_args(enc_name, table)
         if args:
             encoders[enc_name] = args
 
     if codec == "copy" and encoders:
-        raise PresetError(_("A preset that copies the video cannot carry encoder arguments."))
+        raise PresetError(
+            _("A preset that copies the video cannot carry encoder arguments.")
+        )
 
     if not preset_id:
         preset_id = slugify(name)
     if not _ID_RE.match(preset_id):
         raise PresetError(_("Invalid preset identifier: {0}").format(preset_id))
-    return Preset(id=preset_id, name=name, description=description, tags=tags, author=author,
-                  video=video, audio=audio, subtitles=subtitles, container=container,
-                  ffmpeg=ffmpeg, encoders=encoders, size=size, path=path, bundled=bundled)
+    return Preset(
+        id=preset_id,
+        name=name,
+        description=description,
+        tags=tags,
+        author=author,
+        video=video,
+        audio=audio,
+        subtitles=subtitles,
+        container=container,
+        ffmpeg=ffmpeg,
+        encoders=encoders,
+        size=size,
+        path=path,
+        bundled=bundled,
+    )
 
 
 def preset_file_access(preset: Preset) -> list[str]:
     """Settings in a validated preset that may reach files or the network."""
     from utils.ffmpeg_options import file_access_settings
 
-    texts = [*preset.ffmpeg.values(), *(shlex.join(args) for args in preset.encoders.values())]
+    texts = [
+        *preset.ffmpeg.values(),
+        *(shlex.join(args) for args in preset.encoders.values()),
+    ]
     return list(dict.fromkeys(s for text in texts for s in file_access_settings(text)))
 
 
@@ -393,7 +548,12 @@ def load_preset(path: str, *, bundled: bool = False) -> Preset:
     except UnicodeDecodeError as error:
         raise PresetError(_("The preset is not UTF-8 text.")) from error
     stem = os.path.splitext(os.path.basename(path))[0]
-    return validate_preset(parse_preset_text(text), preset_id=stem, path=os.path.abspath(path), bundled=bundled)
+    return validate_preset(
+        parse_preset_text(text),
+        preset_id=stem,
+        path=os.path.abspath(path),
+        bundled=bundled,
+    )
 
 
 def list_presets(*, include_bundled: bool = True) -> list[Preset]:
@@ -440,14 +600,21 @@ def _toml_files(directory: str) -> list[str]:
         names = sorted(os.listdir(directory))
     except OSError:
         return []
-    return [os.path.join(directory, n) for n in names if n.endswith(".toml") and not n.startswith(".")]
+    return [
+        os.path.join(directory, n)
+        for n in names
+        if n.endswith(".toml") and not n.startswith(".")
+    ]
 
 
 # --------------------------------------------------------------------------
 # Saving
 # --------------------------------------------------------------------------
 
-def save_user_preset(text: str, *, preset_id: str = "", replace: bool = False) -> Preset:
+
+def save_user_preset(
+    text: str, *, preset_id: str = "", replace: bool = False
+) -> Preset:
     """Validate TOML text and store it in the user directory, atomically.
 
     The text is stored as written (comments included). A new preset never
@@ -460,13 +627,17 @@ def save_user_preset(text: str, *, preset_id: str = "", replace: bool = False) -
     target_id = preset.id
     if not replace:
         # A broken file still holds the user's text: never take its name.
-        existing = {os.path.splitext(os.path.basename(f))[0] for f in _toml_files(directory)}
+        existing = {
+            os.path.splitext(os.path.basename(f))[0] for f in _toml_files(directory)
+        }
         counter = 2
         while target_id in existing:
             target_id = f"{preset.id}-{counter}"
             counter += 1
     path = os.path.join(directory, target_id + ".toml")
-    _atomic_write(path, text if not _FENCE_RE.search(text) else _FENCE_RE.search(text).group(1))
+    _atomic_write(
+        path, text if not _FENCE_RE.search(text) else _FENCE_RE.search(text).group(1)
+    )
     return load_preset(path)
 
 
@@ -480,8 +651,12 @@ def export_preset(preset: Preset, path: str) -> None:
 
 
 def delete_user_preset(preset: Preset) -> None:
-    if preset.bundled or not preset.path.startswith(os.path.abspath(user_dir()) + os.sep):
-        raise PresetError(_("Bundled presets cannot be deleted; duplicate one to edit it."))
+    if preset.bundled or not preset.path.startswith(
+        os.path.abspath(user_dir()) + os.sep
+    ):
+        raise PresetError(
+            _("Bundled presets cannot be deleted; duplicate one to edit it.")
+        )
     os.remove(preset.path)
 
 
@@ -490,10 +665,17 @@ def duplicate_preset(preset: Preset) -> Preset:
     with open(preset.path, "r", encoding="utf-8") as handle:
         text = handle.read()
     copy_name = _("{0} (copy)").format(preset.display_name)
-    text, count = re.subn(r'^(\s*name\s*=\s*)"[^"\n]*"', lambda m: m.group(1) + _toml_string(copy_name), text,
-                          count=1, flags=re.MULTILINE)
+    text, count = re.subn(
+        r'^(\s*name\s*=\s*)"[^"\n]*"',
+        lambda m: m.group(1) + _toml_string(copy_name),
+        text,
+        count=1,
+        flags=re.MULTILINE,
+    )
     if count == 0:
-        text = text.replace("[preset]", "[preset]\nname = " + _toml_string(copy_name), 1)
+        text = text.replace(
+            "[preset]", "[preset]\nname = " + _toml_string(copy_name), 1
+        )
     return save_user_preset(text, preset_id=preset.id + "-copy")
 
 
@@ -522,6 +704,7 @@ def _atomic_write(path: str, text: str) -> None:
 # Applying a preset
 # --------------------------------------------------------------------------
 
+
 def preset_fps(preset: Preset) -> str:
     """The frame rate as the script's video_fps: "30", or "30000/1001" for
     29.97; "" keeps the source's."""
@@ -533,7 +716,11 @@ def preset_fps(preset: Preset) -> str:
     if value != int(value) and abs(value - ntsc / 1.001) < 0.005:
         return f"{ntsc * 1000}/1001"
     fps = Fraction(value).limit_denominator(1001)
-    return str(fps.numerator) if fps.denominator == 1 else f"{fps.numerator}/{fps.denominator}"
+    return (
+        str(fps.numerator)
+        if fps.denominator == 1
+        else f"{fps.numerator}/{fps.denominator}"
+    )
 
 
 def preset_settings(preset: Preset) -> dict:
@@ -549,7 +736,9 @@ def preset_settings(preset: Preset) -> dict:
         out["preset"] = preset.video["speed"]
     if "gpu" in preset.video:
         out["gpu"] = preset.video["gpu"]
-    out["video-resolution"] = preset.video.get("resolution", "") if codec != "copy" else ""
+    out["video-resolution"] = (
+        preset.video.get("resolution", "") if codec != "copy" else ""
+    )
     out["video-fps"] = preset_fps(preset)
     if "mode" in preset.audio:
         out["audio-handling"] = preset.audio["mode"]
@@ -644,12 +833,36 @@ def encoder_args(preset: Preset, encoder: str) -> list[str]:
 # --------------------------------------------------------------------------
 
 _LANGUAGE_NAMES = {
-    "pt": "Portuguese", "en": "English", "es": "Spanish", "fr": "French", "de": "German",
-    "it": "Italian", "ru": "Russian", "pl": "Polish", "nl": "Dutch", "tr": "Turkish",
-    "ja": "Japanese", "zh": "Chinese", "ko": "Korean", "ar": "Arabic", "hi": "Hindi",
-    "uk": "Ukrainian", "cs": "Czech", "sv": "Swedish", "da": "Danish", "fi": "Finnish",
-    "el": "Greek", "he": "Hebrew", "hu": "Hungarian", "ro": "Romanian", "bg": "Bulgarian",
-    "et": "Estonian", "id": "Indonesian", "vi": "Vietnamese", "th": "Thai", "ca": "Catalan",
+    "pt": "Portuguese",
+    "en": "English",
+    "es": "Spanish",
+    "fr": "French",
+    "de": "German",
+    "it": "Italian",
+    "ru": "Russian",
+    "pl": "Polish",
+    "nl": "Dutch",
+    "tr": "Turkish",
+    "ja": "Japanese",
+    "zh": "Chinese",
+    "ko": "Korean",
+    "ar": "Arabic",
+    "hi": "Hindi",
+    "uk": "Ukrainian",
+    "cs": "Czech",
+    "sv": "Swedish",
+    "da": "Danish",
+    "fi": "Finnish",
+    "el": "Greek",
+    "he": "Hebrew",
+    "hu": "Hungarian",
+    "ro": "Romanian",
+    "bg": "Bulgarian",
+    "et": "Estonian",
+    "id": "Indonesian",
+    "vi": "Vietnamese",
+    "th": "Thai",
+    "ca": "Catalan",
 }
 
 
@@ -734,13 +947,24 @@ Request from the user:
 """
 
 
-def build_ai_prompt(request: str, *, available_encoders=(), ffmpeg_version: str = "unknown",
-                    language: str | None = None) -> str:
+def build_ai_prompt(
+    request: str,
+    *,
+    available_encoders=(),
+    ffmpeg_version: str = "unknown",
+    language: str | None = None,
+) -> str:
     from utils.ffmpeg_options import ALLOWED_FFMPEG_FLAGS
     from utils.size_target import TARGETS
 
-    request = (request or "").strip() or "(the user did not describe the request; ask them what the preset is for)"
-    available = ", ".join(sorted(e for e in available_encoders if e in KNOWN_ENCODERS)) or "unknown"
+    request = (
+        (request or "").strip()
+        or "(the user did not describe the request; ask them what the preset is for)"
+    )
+    available = (
+        ", ".join(sorted(e for e in available_encoders if e in KNOWN_ENCODERS))
+        or "unknown"
+    )
     return PROMPT_TEMPLATE.format(
         language=language or system_language(),
         allowed_flags=" ".join(sorted(ALLOWED_FFMPEG_FLAGS)),
@@ -755,6 +979,7 @@ def build_ai_prompt(request: str, *, available_encoders=(), ffmpeg_version: str 
 # --------------------------------------------------------------------------
 # Command line used by the bash script
 # --------------------------------------------------------------------------
+
 
 def bundled_strings_source() -> str:
     """Python source listing every translatable text of the bundled presets.

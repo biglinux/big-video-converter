@@ -62,8 +62,14 @@ def _user_decimal_point() -> str:
     import), so the global locale cannot answer; a private locale object
     queried through libc does, without touching the process state.
     """
-    name = next((os.environ[key] for key in ("LC_ALL", "LC_NUMERIC", "LANG")
-                 if os.environ.get(key)), "C")
+    name = next(
+        (
+            os.environ[key]
+            for key in ("LC_ALL", "LC_NUMERIC", "LANG")
+            if os.environ.get(key)
+        ),
+        "C",
+    )
     try:
         libc = ctypes.CDLL(ctypes.util.find_library("c"))
         libc.newlocale.restype = ctypes.c_void_p
@@ -76,7 +82,9 @@ def _user_decimal_point() -> str:
             return "."
         try:
             # RADIXCHAR is the first item of the LC_NUMERIC category.
-            return (libc.nl_langinfo_l(locale.LC_NUMERIC << 16, handle) or b".").decode()
+            return (
+                libc.nl_langinfo_l(locale.LC_NUMERIC << 16, handle) or b"."
+            ).decode()
         finally:
             libc.freelocale(handle)
     except (OSError, AttributeError, UnicodeDecodeError):
@@ -103,9 +111,9 @@ def format_time_left(seconds: float) -> str:
         )
     minutes = round(seconds / 60)
     if minutes < 60:
-        return ngettext(
-            "≈ {minutes} min left", "≈ {minutes} min left", minutes
-        ).format(minutes=minutes)
+        return ngettext("≈ {minutes} min left", "≈ {minutes} min left", minutes).format(
+            minutes=minutes
+        )
     hours, minutes = divmod(minutes, 60)
     return ngettext(
         "≈ {hours} h {minutes} min left", "≈ {hours} h {minutes} min left", hours
@@ -156,7 +164,11 @@ class TimeLeft:
             return None
         start, first = self.origin
         elapsed = now - start
-        if elapsed < self.MIN_SECONDS or fraction < self.MIN_FRACTION or fraction <= first:
+        if (
+            elapsed < self.MIN_SECONDS
+            or fraction < self.MIN_FRACTION
+            or fraction <= first
+        ):
             return None
         raw = elapsed * (1.0 - fraction) / (fraction - first)
         if self.value is None:
@@ -219,7 +231,9 @@ def _launch_file(app, widget, path: str, *, containing: bool = False) -> None:
         parent = widget.get_root() if widget is not None else None
         Gtk.FileLauncher.new(file).open_containing_folder(parent, None, done)
     else:
-        display = widget.get_display() if widget is not None else Gdk.Display.get_default()
+        display = (
+            widget.get_display() if widget is not None else Gdk.Display.get_default()
+        )
         Gio.AppInfo.launch_default_for_uri_async(
             file.get_uri(), display.get_app_launch_context(), None, done
         )
@@ -354,7 +368,11 @@ class ProgressPage:
         self.result_sizes = Gtk.Label(wrap=True, justify=Gtk.Justification.CENTER)
         self.result_sizes_separator = Gtk.Label(label="·")
         self.result_sizes_separator.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
-        for label in (self.result_stats, self.result_sizes_separator, self.result_sizes):
+        for label in (
+            self.result_stats,
+            self.result_sizes_separator,
+            self.result_sizes,
+        ):
             label.add_css_class("bvc-metric")
             facts.append(label)
         box.append(facts)
@@ -605,7 +623,11 @@ class ProgressPage:
         return row
 
     def finish_pending(
-        self, file_path, *, success: bool = False, cancelled: bool = False,
+        self,
+        file_path,
+        *,
+        success: bool = False,
+        cancelled: bool = False,
         reason: str | None = None,
     ) -> bool:
         """Settle a job rejected before an active process was registered."""
@@ -762,12 +784,16 @@ class ProgressPage:
     def _failure_lines(self) -> str:
         failed = [row for row in self.queue_items.values() if row.status == "failed"]
         lines = [
-            _("“{name}”: {reason}").format(name=row.display_name, reason=row.failure_reason)
+            _("“{name}”: {reason}").format(
+                name=row.display_name, reason=row.failure_reason
+            )
             for row in failed[:3]
         ]
         if len(failed) > 3:
             extra = len(failed) - 3
-            lines.append(ngettext("+{count} more", "+{count} more", extra).format(count=extra))
+            lines.append(
+                ngettext("+{count} more", "+{count} more", extra).format(count=extra)
+            )
         return "\n".join(lines)
 
     def _refresh_result_summary(self) -> None:
@@ -1067,13 +1093,17 @@ class QueueItemRow(Gtk.ListBoxRow):
             [_("FFmpeg output for “{name}”").format(name=self.display_name)],
         )
         self._set_details_action(False)
-        self.details_button.connect("toggled", lambda button: row._on_details_toggled(button))
+        self.details_button.connect(
+            "toggled", lambda button: row._on_details_toggled(button)
+        )
         self.details_button.set_visible(False)
         self.actions.append(self.details_button)
         spacer = Gtk.Box(hexpand=True)
         self.actions.append(spacer)
 
-        self.open_button = Gtk.Button.new_from_icon_name("media-playback-start-symbolic")
+        self.open_button = Gtk.Button.new_from_icon_name(
+            "media-playback-start-symbolic"
+        )
         self.open_button.add_css_class("bvc-icon-button")
         self.open_button.add_css_class("bvc-quiet")
         self.open_button.set_tooltip_text(_("Open video"))
@@ -1142,7 +1172,9 @@ class QueueItemRow(Gtk.ListBoxRow):
     # Thumbnail -------------------------------------------------------------
 
     def _request_thumbnail(self):
-        manager = getattr(getattr(self.app, "conversion_page", None), "thumbnail_manager", None)
+        manager = getattr(
+            getattr(self.app, "conversion_page", None), "thumbnail_manager", None
+        )
         if manager is None or not self.file_path:
             return
         row_ref = weakref.ref(self)
@@ -1200,8 +1232,12 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.details_icon.set_visible(not running)
         self.details_label.set_visible(running)
         self.details_arrow.set_visible(running)
-        self._set_thumbnail_size(compact=not (self._hero and self.status in ("pending", "active")))
-        self.open_button.set_visible(self.status == "completed" and bool(self.output_paths))
+        self._set_thumbnail_size(
+            compact=not (self._hero and self.status in ("pending", "active"))
+        )
+        self.open_button.set_visible(
+            self.status == "completed" and bool(self.output_paths)
+        )
 
     def set_outputs(self, paths) -> None:
         """Show the files the supervisor published for this job."""
@@ -1279,13 +1315,19 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.details_arrow.set_from_icon_name(
             "pan-up-symbolic" if expanded else "pan-down-symbolic"
         )
-        self.details_button.update_state([Gtk.AccessibleState.EXPANDED], [int(expanded)])
+        self.details_button.update_state(
+            [Gtk.AccessibleState.EXPANDED], [int(expanded)]
+        )
 
     def _set_state(self, state):
         for name in ("pending", "active", *TERMINAL_STATES):
             self.remove_css_class(f"bvc-state-{name}")
         self.add_css_class(f"bvc-state-{state}")
-        for css_class in ("bvc-status-success", "bvc-status-error", "bvc-status-warning"):
+        for css_class in (
+            "bvc-status-success",
+            "bvc-status-error",
+            "bvc-status-warning",
+        ):
             self.status_label.remove_css_class(css_class)
             self.status_icon.remove_css_class(css_class)
         self.status_label.remove_css_class("dim-label")
@@ -1293,7 +1335,9 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.figures.set_visible(running)
         self.progress_bar.set_visible(running)
         self.metrics_label.set_visible(running and bool(self.metrics_label.get_text()))
-        self.size_label.set_visible(state == "completed" and self.output_size is not None)
+        self.size_label.set_visible(
+            state == "completed" and self.output_size is not None
+        )
         self.status_icon.set_visible(state in TERMINAL_STATES)
         self.cancel_button.set_visible(state in ("pending", "active"))
         if state == "pending":
@@ -1352,7 +1396,10 @@ class QueueItemRow(Gtk.ListBoxRow):
         percent = format_percent(fraction)
         seconds = self._time_left.update(fraction)
         remaining = format_time_left(seconds) if seconds is not None else ""
-        if self.percent_label.get_text() != percent or self.time_left_label.get_text() != remaining:
+        if (
+            self.percent_label.get_text() != percent
+            or self.time_left_label.get_text() != remaining
+        ):
             self.percent_label.set_text(percent)
             self.time_left_label.set_text(remaining)
             self.time_left_label.set_visible(bool(remaining))
@@ -1466,9 +1513,14 @@ class QueueItemRow(Gtk.ListBoxRow):
         if token is None:
             # Reserved but not launched yet (pre-flight probe, size planning,
             # a pending dialog): the row has no token, its job does.
-            token = next((info.get("cancel_event")
-                          for info in getattr(self.app, "active_conversions", ())
-                          if info.get("file_path") == self.file_path), None)
+            token = next(
+                (
+                    info.get("cancel_event")
+                    for info in getattr(self.app, "active_conversions", ())
+                    if info.get("file_path") == self.file_path
+                ),
+                None,
+            )
         if token is not None:
             token.set()
         if cancel_all:
@@ -1510,7 +1562,9 @@ class QueueItemRow(Gtk.ListBoxRow):
                 self.conversion_id, success=True
             )
 
-    def mark_failure(self, reason: str | None = None, detail: str | None = None) -> None:
+    def mark_failure(
+        self, reason: str | None = None, detail: str | None = None
+    ) -> None:
         """Fail the job: `reason` is one plain sentence, `detail` the raw error."""
         if reason is None and detail:
             reason = _("The conversion failed. The details are in “FFmpeg output”.")

@@ -30,7 +30,12 @@ def _milliseconds(seconds) -> int:
 def _parse_timecode(value: str) -> int:
     time, milliseconds = value.split(",")
     hours, minutes, seconds = map(int, time.split(":"))
-    if hours < 0 or not 0 <= minutes < 60 or not 0 <= seconds < 60 or len(milliseconds) != 3:
+    if (
+        hours < 0
+        or not 0 <= minutes < 60
+        or not 0 <= seconds < 60
+        or len(milliseconds) != 3
+    ):
         raise ValueError("Invalid SRT timecode")
     return ((hours * 60 + minutes) * 60 + seconds) * 1000 + int(milliseconds)
 
@@ -50,7 +55,12 @@ def _serialize(cues) -> str:
 
 
 def _read_cues(path):
-    content = Path(path).read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
+    content = (
+        Path(path)
+        .read_text(encoding="utf-8-sig")
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
+    )
     cues = []
     for match in _CUE.finditer(content.strip()):
         start, end = _parse_timecode(match[1]), _parse_timecode(match[2])
@@ -73,8 +83,17 @@ def _clip(cues, start, end, offset):
 class SubtitleProcessor:
     """Process subtitle intervals without using language as stream identity."""
 
-    def __init__(self, input_file, output_folder, output_basename,
-                 trim_segments, temp_dir, subtitle_mode, *, cancel_event=None):
+    def __init__(
+        self,
+        input_file,
+        output_folder,
+        output_basename,
+        trim_segments,
+        temp_dir,
+        subtitle_mode,
+        *,
+        cancel_event=None,
+    ):
         self.input_file = input_file
         self.output_folder = output_folder
         self.output_basename = output_basename
@@ -97,8 +116,9 @@ class SubtitleProcessor:
             language = tags.get("language") or "und"
             if not re.fullmatch(r"[A-Za-z]{2,3}", language):
                 language = "und"
-            forced = (stream.get("disposition", {}).get("forced") == 1
-                      or "(Forced)" in tags.get("title", ""))
+            forced = stream.get("disposition", {}).get(
+                "forced"
+            ) == 1 or "(Forced)" in tags.get("title", "")
             key = (language, forced)
             seen[key] = count = seen.get(key, 0) + 1
             content = self._merge_subtitle_stream(index, language)
@@ -116,12 +136,18 @@ class SubtitleProcessor:
     def _get_subtitle_streams(self):
         # Cues are read as SRT: a bitmap track has no text to clip, and its
         # extraction failing used to abort the whole segment job.
-        return [s for s in probe_media(self.input_file)["streams"]
-                if s.get("codec_type") == "subtitle" and s.get("codec_name") in TEXT_SUBTITLE_CODECS]
+        return [
+            s
+            for s in probe_media(self.input_file)["streams"]
+            if s.get("codec_type") == "subtitle"
+            and s.get("codec_name") in TEXT_SUBTITLE_CODECS
+        ]
 
     def _merge_subtitle_stream(self, stream_index, language):
         # Private file; one extraction/parse per stream, not per segment.
-        fd, path = tempfile.mkstemp(prefix="source-subtitle-", suffix=".srt", dir=self.temp_dir)
+        fd, path = tempfile.mkstemp(
+            prefix="source-subtitle-", suffix=".srt", dir=self.temp_dir
+        )
         os.close(fd)
         try:
             if not self._extract_segment_subtitle(path, stream_index):
@@ -130,7 +156,10 @@ class SubtitleProcessor:
             merged = []
             offset = 0
             for segment in self.trim_segments:
-                start, end = _milliseconds(segment["start"]), _milliseconds(segment["end"])
+                start, end = (
+                    _milliseconds(segment["start"]),
+                    _milliseconds(segment["end"]),
+                )
                 merged.extend(_clip(cues, start, end, offset))
                 offset += end - start
             return _serialize(merged)
@@ -141,9 +170,24 @@ class SubtitleProcessor:
         try:
             self._check_cancelled()
             process = run_cancellable(
-                [get_ffmpeg_executable(), "-nostdin", "-v", "error", "-y", "-i", self.input_file,
-                 "-map", f"0:{int(stream_index)}", "-c:s", "srt", output_file],
-                self.cancel_event, timeout=60, task="extracting subtitles")
+                [
+                    get_ffmpeg_executable(),
+                    "-nostdin",
+                    "-v",
+                    "error",
+                    "-y",
+                    "-i",
+                    self.input_file,
+                    "-map",
+                    f"0:{int(stream_index)}",
+                    "-c:s",
+                    "srt",
+                    output_file,
+                ],
+                self.cancel_event,
+                timeout=60,
+                task="extracting subtitles",
+            )
             if process.returncode:
                 logger.error("Subtitle extraction failed: %s", process.stderr[-2000:])
             return process.returncode == 0 and os.path.isfile(output_file)
@@ -155,9 +199,17 @@ class SubtitleProcessor:
 
     def _save_merged_subtitles(self, content, language, count, forced):
         self._check_cancelled()
-        folder = self.temp_dir if self.subtitle_mode == "embedded" else self.output_folder
-        basename = "merged" if self.subtitle_mode == "embedded" else os.path.splitext(self.output_basename)[0]
-        fd, staged = tempfile.mkstemp(prefix=".bvc-subtitle-", suffix=".srt", dir=folder)
+        folder = (
+            self.temp_dir if self.subtitle_mode == "embedded" else self.output_folder
+        )
+        basename = (
+            "merged"
+            if self.subtitle_mode == "embedded"
+            else os.path.splitext(self.output_basename)[0]
+        )
+        fd, staged = tempfile.mkstemp(
+            prefix=".bvc-subtitle-", suffix=".srt", dir=folder
+        )
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as file:
                 file.write(content)

@@ -175,8 +175,16 @@ class Settings:
 
 def probe_answer(duration="10.0", size="1000", frame_rate="25/1"):
     return {
-        "streams": [{"codec_type": "video", "codec_name": "h264", "width": 640,
-                     "height": 360, "duration": duration, "avg_frame_rate": frame_rate}],
+        "streams": [
+            {
+                "codec_type": "video",
+                "codec_name": "h264",
+                "width": 640,
+                "height": 360,
+                "duration": duration,
+                "avg_frame_rate": frame_rate,
+            }
+        ],
         "format": {"size": size},
     }
 
@@ -192,8 +200,10 @@ class VideoEditPageTests(unittest.TestCase):
         self.errors = []
         self.window = Gtk.ApplicationWindow()
         app = SimpleNamespace(
-            settings_manager=Settings(), split_view=Adw.OverlaySplitView(),
-            window=self.window, conversion_page=object(),
+            settings_manager=Settings(),
+            split_view=Adw.OverlaySplitView(),
+            window=self.window,
+            conversion_page=object(),
             show_error_dialog=self.errors.append,
         )
         self.page = VideoEditPage(app, SimpleNamespace(file_metadata={}))
@@ -215,7 +225,9 @@ class VideoEditPageTests(unittest.TestCase):
 
     def finish_loading(self, path, info=None):
         processor = self.page.processor
-        processor._on_video_info_loaded(info or probe_answer(), path, processor._generation)
+        processor._on_video_info_loaded(
+            info or probe_answer(), path, processor._generation
+        )
 
     def test_leaving_while_loading_keeps_the_previous_edits_out_of_the_new_video(self):
         first, second = self.videos
@@ -236,9 +248,13 @@ class VideoEditPageTests(unittest.TestCase):
         self.assertEqual(self.page.crop_left, 0)
         self.page.trim_segments.append({"start": 1.0, "end": 2.0})
         self.page._save_file_metadata()
-        self.assertEqual(self.metadata[first]["trim_segments"], [{"start": 0.1, "end": 0.5}])
+        self.assertEqual(
+            self.metadata[first]["trim_segments"], [{"start": 0.1, "end": 0.5}]
+        )
         self.assertEqual(self.metadata[first]["crop_left"], 10)
-        self.assertIsNot(self.metadata[second]["trim_segments"], self.page.trim_segments)
+        self.assertIsNot(
+            self.metadata[second]["trim_segments"], self.page.trim_segments
+        )
 
     def test_second_activation_of_the_loading_row_is_the_same_load(self):
         first, _second = self.videos
@@ -265,9 +281,13 @@ class VideoEditPageTests(unittest.TestCase):
             raise RuntimeError("boom")
 
         self.page.set_video(first)
-        with mock.patch.object(video_processing, "get_video_file_info", fail), \
-                mock.patch.object(video_processing.GLib, "idle_add", lambda f, *a: f(*a)):
-            self.page.processor._get_video_info_thread(first, self.page.processor._generation)
+        with (
+            mock.patch.object(video_processing, "get_video_file_info", fail),
+            mock.patch.object(video_processing.GLib, "idle_add", lambda f, *a: f(*a)),
+        ):
+            self.page.processor._get_video_info_thread(
+                first, self.page.processor._generation
+            )
         self.assertFalse(self.page.loading_video)
         self.assertEqual(self.errors[-1], "Error getting video info: boom")
 
@@ -275,7 +295,8 @@ class VideoEditPageTests(unittest.TestCase):
         player = SimpleNamespace(
             audio_tracks=[{"index": 1, "label": "eng"}, {"index": 2, "label": "por"}],
             subtitle_tracks=[{"index": 1, "label": "eng"}],
-            current_audio_track=2, current_subtitle_track=1,
+            current_audio_track=2,
+            current_subtitle_track=1,
         )
         player.get_audio_tracks = lambda: player.audio_tracks
         player.get_subtitle_tracks = lambda: player.subtitle_tracks
@@ -292,7 +313,9 @@ class VideoEditPageTests(unittest.TestCase):
         player.current_audio_track, player.current_subtitle_track = 1, -1
         self.page.update_audio_subtitle_controls()
         self.assertTrue(state("audio-track-1") and not state("audio-track-2"))
-        self.assertTrue(state("subtitle-track-disabled") and not state("subtitle-track-1"))
+        self.assertTrue(
+            state("subtitle-track-disabled") and not state("subtitle-track-1")
+        )
 
         player.audio_tracks, player.subtitle_tracks = [], []
         self.page.update_audio_subtitle_controls()
@@ -315,7 +338,9 @@ class VideoEditPageTests(unittest.TestCase):
         self.assertEqual(ui.crop_bottom_spin.get_adjustment().get_upper(), 628)
 
         crops = []
-        page.mpv_player = SimpleNamespace(set_crop=lambda *margins: crops.append(margins))
+        page.mpv_player = SimpleNamespace(
+            set_crop=lambda *margins: crops.append(margins)
+        )
         ui.crop_left_spin.set_value(9999)  # typed; the spin clamps it
         # The visible left is the source bottom; mpv crops the source.
         self.assertEqual(crops, [(10, 0, 4, 354)])
@@ -342,8 +367,14 @@ class MPVPlayerTrackTests(unittest.TestCase):
         reported = []
         player.on_tracks_changed = lambda: reported.append(list(player.audio_tracks))
         player.mpv_instance = SimpleNamespace(
-            loadfile=lambda _path: None, duration=None, aid=1, sid=False,
-            track_list=[{"id": 1, "type": "audio"}, {"id": 1, "type": "sub", "lang": "por"}],
+            loadfile=lambda _path: None,
+            duration=None,
+            aid=1,
+            sid=False,
+            track_list=[
+                {"id": 1, "type": "audio"},
+                {"id": 1, "type": "sub", "lang": "por"},
+            ],
         )
         with tempfile.NamedTemporaryFile() as video:
             self.assertTrue(player.load_video(video.name))
@@ -402,9 +433,13 @@ class MPVPlayerTransformTests(unittest.TestCase):
         player.set_video_flip(True, True)
         player.set_rotation(90)
         player.set_video_effects("", "", "auto")
-        self.assertEqual(player.mpv_instance.vf, [
-            "format=gamma=pq:primaries=bt.2020:colormatrix=bt.2020-ncl,lavfi=graph=%8%hqdn3d=4",
-            ""])
+        self.assertEqual(
+            player.mpv_instance.vf,
+            [
+                "format=gamma=pq:primaries=bt.2020:colormatrix=bt.2020-ncl,lavfi=graph=%8%hqdn3d=4",
+                "",
+            ],
+        )
         self.assertEqual(player.mpv_instance["video-crop"], "118x68+10+4")
 
     def test_the_crop_undoes_the_file_rotation(self):

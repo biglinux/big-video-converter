@@ -48,7 +48,9 @@ def test_vertical_video_scales_its_short_side():
 
 
 def test_heavy_audio_is_reduced_before_the_picture_starves():
-    plan = plan_size(Source(120, 90_000_000, 1920, 1080, 30), 16_000_000, audio_bps=320_000)
+    plan = plan_size(
+        Source(120, 90_000_000, 1920, 1080, 30), 16_000_000, audio_bps=320_000
+    )
     assert plan.kind == "bitrate" and plan.audio_bitrate == 64_000
 
 
@@ -65,7 +67,9 @@ def _packets(seconds, video_bytes_a_second, gop=2.0, fps=25):
     packets = []
     for frame in range(int(seconds * fps)):
         time = frame / fps
-        key = math.isclose(time % gop, 0, abs_tol=1e-9) or math.isclose(time % gop, gop, abs_tol=1e-9)
+        key = math.isclose(time % gop, 0, abs_tol=1e-9) or math.isclose(
+            time % gop, gop, abs_tol=1e-9
+        )
         packets.append((time, video_bytes_a_second // fps * (5 if key else 1), key))
     packets += [(i / 50, 400, False) for i in range(int(seconds * 50))]
     return packets
@@ -81,7 +85,10 @@ def test_large_targets_split_on_keyframes_without_re_encoding():
     for start, end in plan.cuts:
         assert start in keys and (end in keys or end == math.inf)
         part = [p for p in packets if start <= p[0] < end]
-        assert sum(p[1] for p in part) + PART_RESERVE + INDEX_BYTES_PER_PACKET * len(part) <= target
+        assert (
+            sum(p[1] for p in part) + PART_RESERVE + INDEX_BYTES_PER_PACKET * len(part)
+            <= target
+        )
     assert plan.cuts[0][0] == 0 and plan.cuts[-1][1] == math.inf
     assert all(a[1] == b[0] for a, b in pairwise(plan.cuts))
 
@@ -91,7 +98,12 @@ def test_a_keyframe_interval_bigger_than_the_target_cannot_be_copied():
     # Planning then falls back to splitting with a re-encode.
     packets = _packets(60, 5_000_000, gop=30)
     source = Source(60, sum(p[1] for p in packets), 1920, 1080, 25)
-    assert plan_size(source, 2_000_000, copy_ok=True, packets=packets, strategy="split").kind == "split"
+    assert (
+        plan_size(
+            source, 2_000_000, copy_ok=True, packets=packets, strategy="split"
+        ).kind
+        == "split"
+    )
 
 
 def test_parts_come_out_even_with_no_stub_at_the_end():
@@ -119,39 +131,63 @@ def test_targets():
 
 def _context(source, target, strategy="auto", **extra):
     from utils.size_target import prepare_size_job
-    context = {"size_target": {"bytes": target, "strategy": strategy},
-               "input_file": str(source), "output_ext": ".mkv", "trim_segments": [],
-               "output_mode": "join",
-               "encode_env": {"video_encoder": "h264", "audio_handling": "copy", "gpu": "auto"}}
+
+    context = {
+        "size_target": {"bytes": target, "strategy": strategy},
+        "input_file": str(source),
+        "output_ext": ".mkv",
+        "trim_segments": [],
+        "output_mode": "join",
+        "encode_env": {
+            "video_encoder": "h264",
+            "audio_handling": "copy",
+            "gpu": "auto",
+        },
+    }
     context.update(extra)
     return prepare_size_job(context)
 
 
 def test_the_job_carries_what_the_script_needs(media):
-    size = media['video'].stat().st_size
-    copied = _context(media['video'], size * 2)
+    size = media["video"].stat().st_size
+    copied = _context(media["video"], size * 2)
     assert copied["route"] == "single" and copied["env_vars"]["force_copy_video"] == "1"
     assert copied["env_vars"]["size_limit"] == str(size * 2)
     # Edited video cannot be copied: it is encoded at the chosen quality.
-    edited = _context(media['video'], size * 2,
-                      encode_env={"video_encoder": "copy", "video_filter": "hflip"})
-    assert edited["plan"].kind == "quality" and edited["env_vars"]["video_encoder"] == "h264"
-    squeezed = _context(media['video'], size // 2)
+    edited = _context(
+        media["video"],
+        size * 2,
+        encode_env={"video_encoder": "copy", "video_filter": "hflip"},
+    )
+    assert (
+        edited["plan"].kind == "quality"
+        and edited["env_vars"]["video_encoder"] == "h264"
+    )
+    squeezed = _context(media["video"], size // 2)
     assert squeezed["plan"].kind == "bitrate"
     assert int(squeezed["env_vars"]["video_bitrate"]) == squeezed["plan"].video_bitrate
-    split = _context(media['video'], size // 2, "split")
+    split = _context(media["video"], size // 2, "split")
     assert split["route"] == "batch" and split["trim_segments"][0]["start"] == 0.0
     assert split["plan"].kind in ("split", "copy_split")
 
 
 def test_joined_cuts_split_but_separate_cuts_do_not(media):
-    joined = _context(media['video'], 50_000, "split",
-                      trim_segments=[{"start": 0, "end": 1}, {"start": 2, "end": 3}])
+    joined = _context(
+        media["video"],
+        50_000,
+        "split",
+        trim_segments=[{"start": 0, "end": 1}, {"start": 2, "end": 3}],
+    )
     assert joined["route"] == "batch" and joined["split_size"] == 50_000
     assert len(joined["trim_segments"]) == 2 and joined["keyframe_interval"] > 0
     with pytest.raises(SizeTargetError):
-        _context(media['video'], 50_000, "split", output_mode="split",
-                 trim_segments=[{"start": 0, "end": 1}, {"start": 2, "end": 3}])
+        _context(
+            media["video"],
+            50_000,
+            "split",
+            output_mode="split",
+            trim_segments=[{"start": 0, "end": 1}, {"start": 2, "end": 3}],
+        )
 
 
 def test_parts_are_copied_into_a_folder_named_with_percent(media, tmp_path):
@@ -159,12 +195,21 @@ def test_parts_are_copied_into_a_folder_named_with_percent(media, tmp_path):
     import threading
 
     from utils.segment_batch import _copy_parts, _split_to_size
+
     work = tmp_path / "100% done"
     work.mkdir()
-    parts = _copy_parts(str(media['video']), ((0.0, 1.0), (1.0, math.inf)), str(work), ".mp4",
-                        threading.Event())
-    assert [p.rpartition("/")[2] for p in parts] == ["segment-0000.mp4", "segment-0001.mp4"]
+    parts = _copy_parts(
+        str(media["video"]),
+        ((0.0, 1.0), (1.0, math.inf)),
+        str(work),
+        ".mp4",
+        threading.Event(),
+    )
+    assert [p.rpartition("/")[2] for p in parts] == [
+        "segment-0000.mp4",
+        "segment-0001.mp4",
+    ]
     cancelled = threading.Event()
     cancelled.set()
     with pytest.raises(InterruptedError):
-        _split_to_size(str(media['video']), 60_000, str(work), ".mp4", cancelled)
+        _split_to_size(str(media["video"]), 60_000, str(work), ".mp4", cancelled)

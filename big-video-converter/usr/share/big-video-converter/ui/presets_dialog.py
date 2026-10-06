@@ -26,7 +26,14 @@ logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
 
-_CODEC_LABELS = {"copy": _("Copy"), "h264": "H.264", "h265": "H.265", "av1": "AV1", "vp9": "VP9", "prores": "ProRes"}
+_CODEC_LABELS = {
+    "copy": _("Copy"),
+    "h264": "H.264",
+    "h265": "H.265",
+    "av1": "AV1",
+    "vp9": "VP9",
+    "prores": "ProRes",
+}
 
 
 def _matches(preset, query: str) -> bool:
@@ -34,9 +41,18 @@ def _matches(preset, query: str) -> bool:
     query = (query or "").strip().lower()
     if not query:
         return True
-    haystack = " ".join([preset.name, preset.display_name, preset.description, preset.display_description,
-                         " ".join(preset.tags), " ".join(preset.display_tags),
-                         preset.video.get("codec", ""), preset.container.get("format", "")]).lower()
+    haystack = " ".join(
+        [
+            preset.name,
+            preset.display_name,
+            preset.description,
+            preset.display_description,
+            " ".join(preset.tags),
+            " ".join(preset.display_tags),
+            preset.video.get("codec", ""),
+            preset.container.get("format", ""),
+        ]
+    ).lower()
     return all(word in haystack for word in query.split())
 
 
@@ -94,7 +110,12 @@ class _PresetCard(Gtk.FlowBoxChild):
             chips.append(_chip(preset.container["format"].upper()))
         if preset.size_limit_text:
             chips.append(_chip(preset.size_limit_text))
-        chips.append(_chip(_("Bundled") if preset.bundled else _("Yours"), "success" if not preset.bundled else "dim-label"))
+        chips.append(
+            _chip(
+                _("Bundled") if preset.bundled else _("Yours"),
+                "success" if not preset.bundled else "dim-label",
+            )
+        )
         inner.append(chips)
 
         if preset.description:
@@ -121,10 +142,13 @@ def confirm_file_access(parent, heading: str, settings: list[str], on_accept) ->
     """Ask before keeping someone else's settings that reach outside the job."""
     alert = Adw.AlertDialog()
     alert.set_heading(heading)
-    alert.set_body(_(
-        "It contains FFmpeg settings that can open, create or overwrite files on this "
-        "computer, or reach the network:\n\n{settings}\n\n"
-        "Import it only if you trust where it came from.").format(settings="\n".join(settings)))
+    alert.set_body(
+        _(
+            "It contains FFmpeg settings that can open, create or overwrite files on this "
+            "computer, or reach the network:\n\n{settings}\n\n"
+            "Import it only if you trust where it came from."
+        ).format(settings="\n".join(settings))
+    )
     alert.add_response("cancel", _("Cancel"))
     alert.add_response("import", _("Import anyway"))
     alert.set_response_appearance("import", Adw.ResponseAppearance.DESTRUCTIVE)
@@ -152,7 +176,9 @@ def save_imported(parent, text: str, store, refuse):
     settings = preset_store.preset_file_access(preset)
     if not settings:
         return store(text)
-    confirm_file_access(parent, _("This preset can read or write files"), settings, lambda: store(text))
+    confirm_file_access(
+        parent, _("This preset can read or write files"), settings, lambda: store(text)
+    )
     return None
 
 
@@ -175,7 +201,11 @@ class PresetsDialog:
 
         ai_button = Gtk.Button(label=_("Create with AI…"))
         ai_button.add_css_class("suggested-action")
-        self.connections.connect(ai_button, "clicked", lambda *_a: show_ai_preset_dialog(self.dialog, app, self.refresh))
+        self.connections.connect(
+            ai_button,
+            "clicked",
+            lambda *_a: show_ai_preset_dialog(self.dialog, app, self.refresh),
+        )
         header.pack_start(ai_button)
 
         add_menu = Gio.Menu()
@@ -190,8 +220,11 @@ class PresetsDialog:
         toolbar.add_top_bar(header)
 
         actions = Gio.SimpleActionGroup()
-        for name, callback in (("import", self._import_file), ("paste", self._paste_clipboard),
-                               ("folder", self._open_folder)):
+        for name, callback in (
+            ("import", self._import_file),
+            ("paste", self._paste_clipboard),
+            ("folder", self._open_folder),
+        ):
             action = Gio.SimpleAction.new(name, None)
             self.connections.connect(action, "activate", lambda *_a, cb=callback: cb())
             actions.add_action(action)
@@ -205,11 +238,15 @@ class PresetsDialog:
 
         self.search = Gtk.SearchEntry()
         self.search.set_placeholder_text(_("Search by name, tag or codec…"))
-        self.connections.connect(self.search, "search-changed", lambda *_a: self.flowbox.invalidate_filter())
+        self.connections.connect(
+            self.search, "search-changed", lambda *_a: self.flowbox.invalidate_filter()
+        )
         content.append(self.search)
 
         self.banner = Adw.Banner()
-        self.connections.connect(self.banner, "button-clicked", lambda *_: self._show_broken(self._broken))
+        self.connections.connect(
+            self.banner, "button-clicked", lambda *_: self._show_broken(self._broken)
+        )
         self.banner.set_revealed(False)
         content.append(self.banner)
 
@@ -222,8 +259,12 @@ class PresetsDialog:
         self.flowbox.set_column_spacing(4)
         self.flowbox.set_valign(Gtk.Align.START)
         owner = weakref.proxy(self)
-        self.flowbox.set_filter_func(lambda child: _matches(child.preset, owner.search.get_text()))
-        self.connections.connect(self.flowbox, "child-activated", self._on_card_activated)
+        self.flowbox.set_filter_func(
+            lambda child: _matches(child.preset, owner.search.get_text())
+        )
+        self.connections.connect(
+            self.flowbox, "child-activated", self._on_card_activated
+        )
 
         scroll = Gtk.ScrolledWindow()
         scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
@@ -234,7 +275,9 @@ class PresetsDialog:
         self.empty = Adw.StatusPage()
         self.empty.set_icon_name("folder-videos-symbolic")
         self.empty.set_title(_("No presets"))
-        self.empty.set_description(_("Import a file, paste one from the clipboard or create one with AI."))
+        self.empty.set_description(
+            _("Import a file, paste one from the clipboard or create one with AI.")
+        )
         self.empty.set_visible(False)
         content.append(self.empty)
 
@@ -254,12 +297,16 @@ class PresetsDialog:
         active_id = self.app.settings_manager.load_setting("active-preset", "")
         self.presets = preset_store.list_presets()
         for preset in self.presets:
-            self.flowbox.append(_PresetCard(preset, preset.id == active_id, self._card_menu))
+            self.flowbox.append(
+                _PresetCard(preset, preset.id == active_id, self._card_menu)
+            )
         self.empty.set_visible(not self.presets)
         broken = self._broken = preset_store.broken_presets()
         if broken:
             names = ", ".join(os.path.basename(path) for path, _reason in broken[:3])
-            self.banner.set_title(_("Ignored invalid preset file(s): {0}").format(names))
+            self.banner.set_title(
+                _("Ignored invalid preset file(s): {0}").format(names)
+            )
             self.banner.set_button_label(_("Details"))
             self.banner.set_revealed(True)
         else:
@@ -296,7 +343,12 @@ class PresetsDialog:
         owner = weakref.proxy(self)
         for name in ("duplicate", "export", "edit", "delete"):
             action = Gio.SimpleAction.new(name, GLib.VariantType.new("s"))
-            action.connect("activate", lambda _a, param, name=name: getattr(owner, "_" + name)(owner._by_id(param.get_string())))
+            action.connect(
+                "activate",
+                lambda _a, param, name=name: getattr(owner, "_" + name)(
+                    owner._by_id(param.get_string())
+                ),
+            )
             group.add_action(action)
         popover.insert_action_group("card", group)
         return popover
@@ -335,7 +387,9 @@ class PresetsDialog:
     def _edit(self, preset):
         if preset is None:
             return
-        Gio.AppInfo.launch_default_for_uri(Gio.File.new_for_path(preset.path).get_uri(), None)
+        Gio.AppInfo.launch_default_for_uri(
+            Gio.File.new_for_path(preset.path).get_uri(), None
+        )
 
     def _export(self, preset):
         if preset is None:
@@ -410,8 +464,14 @@ class PresetsDialog:
     def import_text(self, text: str):
         """Validate and store TOML text as a user preset; returns the Preset,
         or None when refused or waiting for the user to allow file access."""
-        return save_imported(self.dialog, text, self._store,
-                             lambda error: self._toast(_("The preset was not imported: {0}").format(error)))
+        return save_imported(
+            self.dialog,
+            text,
+            self._store,
+            lambda error: self._toast(
+                _("The preset was not imported: {0}").format(error)
+            ),
+        )
 
     def _store(self, text: str):
         try:
@@ -426,7 +486,9 @@ class PresetsDialog:
     def _open_folder(self):
         directory = preset_store.user_dir()
         os.makedirs(directory, exist_ok=True)
-        Gio.AppInfo.launch_default_for_uri(Gio.File.new_for_path(directory).get_uri(), None)
+        Gio.AppInfo.launch_default_for_uri(
+            Gio.File.new_for_path(directory).get_uri(), None
+        )
 
     def _show_broken(self, broken):
         alert = Adw.AlertDialog()
@@ -470,10 +532,16 @@ def show_presets_dialog(parent_window, app) -> PresetsDialog:
 
 # ── AI-assisted creation ─────────────────────────────────────────────────────
 
+
 def _ffmpeg_version() -> str:
     try:
-        out = subprocess.run([get_ffmpeg_executable(), "-version"], capture_output=True, text=True, timeout=5,
-                             check=False)
+        out = subprocess.run(
+            [get_ffmpeg_executable(), "-version"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
         first = (out.stdout or "").splitlines()[0] if out.stdout else ""
         return first.replace("ffmpeg version ", "").split(" Copyright")[0] or "unknown"
     except (OSError, subprocess.SubprocessError, IndexError):
@@ -484,8 +552,11 @@ def build_prompt(request: str) -> str:
     """The text placed on the clipboard for a chat assistant."""
     from utils.gpu_selector import _available_ffmpeg_encoders
 
-    return preset_store.build_ai_prompt(request, available_encoders=_available_ffmpeg_encoders(),
-                                        ffmpeg_version=_ffmpeg_version())
+    return preset_store.build_ai_prompt(
+        request,
+        available_encoders=_available_ffmpeg_encoders(),
+        ffmpeg_version=_ffmpeg_version(),
+    )
 
 
 def copy_to_clipboard(text: str) -> None:
@@ -516,10 +587,13 @@ class AiPresetDialog:
         intro = Gtk.Label(xalign=0)
         intro.set_wrap(True)
         intro.add_css_class("dim-label")
-        intro.set_text(_(
-            "Describe what you need in your own words. The program turns it into a prompt "
-            "that any online AI assistant understands, with the exact preset format and the "
-            "encoders available on this computer. Paste the assistant's answer back here."))
+        intro.set_text(
+            _(
+                "Describe what you need in your own words. The program turns it into a prompt "
+                "that any online AI assistant understands, with the exact preset format and the "
+                "encoders available on this computer. Paste the assistant's answer back here."
+            )
+        )
         content.append(intro)
 
         step1 = Gtk.Label(label=_("1. What should the preset do?"), xalign=0)
@@ -541,7 +615,11 @@ class AiPresetDialog:
         hint.add_css_class("caption")
         hint.add_css_class("dim-label")
         hint.set_wrap(True)
-        hint.set_text(_("Example: “Vertical videos for TikTok, under 50 MB per minute, loud clear voice.”"))
+        hint.set_text(
+            _(
+                "Example: “Vertical videos for TikTok, under 50 MB per minute, loud clear voice.”"
+            )
+        )
         content.append(hint)
 
         copy_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
@@ -549,7 +627,12 @@ class AiPresetDialog:
         self.copy_button.add_css_class("suggested-action")
         self.connections.connect(self.copy_button, "clicked", self._on_copy)
         copy_row.append(self.copy_button)
-        copy_hint = Gtk.Label(label=_("Then paste it into ChatGPT, Gemini, Claude, Copilot or any other assistant."), xalign=0)
+        copy_hint = Gtk.Label(
+            label=_(
+                "Then paste it into ChatGPT, Gemini, Claude, Copilot or any other assistant."
+            ),
+            xalign=0,
+        )
         copy_hint.add_css_class("dim-label")
         copy_hint.set_wrap(True)
         copy_row.append(copy_hint)
@@ -615,7 +698,9 @@ class AiPresetDialog:
                 owner._set_status(error, error=True)
             else:
                 copy_to_clipboard(prompt)
-                owner.toasts.add_toast(Adw.Toast.new(_("Prompt copied. Paste it into your AI assistant.")))
+                owner.toasts.add_toast(
+                    Adw.Toast.new(_("Prompt copied. Paste it into your AI assistant."))
+                )
             return GLib.SOURCE_REMOVE
 
         def probe():
@@ -647,14 +732,22 @@ class AiPresetDialog:
     def save(self, text: str):
         """Validate the pasted TOML, store it, apply it; returns the Preset,
         or None when refused or waiting for the user to allow file access."""
-        return save_imported(self.dialog, text, self._store, lambda error: self._set_status(
-            _("The preset was not saved: {0}").format(error), error=True))
+        return save_imported(
+            self.dialog,
+            text,
+            self._store,
+            lambda error: self._set_status(
+                _("The preset was not saved: {0}").format(error), error=True
+            ),
+        )
 
     def _store(self, text: str):
         try:
             preset = preset_store.save_user_preset(text)
         except (preset_store.PresetError, OSError) as error:
-            self._set_status(_("The preset was not saved: {0}").format(error), error=True)
+            self._set_status(
+                _("The preset was not saved: {0}").format(error), error=True
+            )
             return None
         self._set_status(_("Saved as “{0}” in {1}").format(preset.name, preset.path))
         if hasattr(self.app, "apply_preset"):

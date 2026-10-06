@@ -9,11 +9,11 @@ BUNDLED_MAIN=$(dirname -- "$SCRIPT_DIR")/share/big-video-converter/main.py
 SYSTEM_MAIN=/usr/share/big-video-converter/main.py
 
 if [ -f "$BUNDLED_MAIN" ]; then
-    exec python3 "$BUNDLED_MAIN" "$@"
+	exec python3 "$BUNDLED_MAIN" "$@"
 fi
 
 if [ -f "$SYSTEM_MAIN" ]; then
-    exec python3 "$SYSTEM_MAIN" "$@"
+	exec python3 "$SYSTEM_MAIN" "$@"
 fi
 
 printf '%s\n' 'Big Video Converter installation was not found.' >&2

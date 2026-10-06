@@ -113,8 +113,11 @@ class SettingsManager:
                 text = file.read(1024 * 1024 + 1)
             if len(text) > 1024 * 1024:
                 raise ValueError("Settings file is too large")
-            data = json.loads(text, parse_constant=self._reject_constant,
-                              object_pairs_hook=self._unique_object)
+            data = json.loads(
+                text,
+                parse_constant=self._reject_constant,
+                object_pairs_hook=self._unique_object,
+            )
             if not isinstance(data, dict):
                 raise ValueError("Settings must be a JSON object")  # noqa: TRY004 - invalid file content, reported with the other ValueErrors
             # There are two models (0 and 1); older builds imported 2.
@@ -169,7 +172,9 @@ class SettingsManager:
         load_from_disk already falls back to it.
         """
         try:
-            data = json.dumps(self.settings, indent=2, ensure_ascii=False, allow_nan=False)
+            data = json.dumps(
+                self.settings, indent=2, ensure_ascii=False, allow_nan=False
+            )
             if self._read_file(self.settings_file) is not None:
                 try:
                     os.replace(self.settings_file, self.settings_file + ".bak")
@@ -213,9 +218,11 @@ class SettingsManager:
         """Update one value, rolling back memory when persistence fails."""
         if self._suspended:
             return True
-        if (key in self.settings
-                and type(self.settings[key]) is type(value)
-                and self.settings[key] == value):
+        if (
+            key in self.settings
+            and type(self.settings[key]) is type(value)
+            and self.settings[key] == value
+        ):
             return True
         before = copy.deepcopy(self.settings)
         self.settings[key] = value
@@ -302,8 +309,10 @@ class SettingsManager:
                 value = self.settings.get(key, self.DEFAULT_VALUES[key])
                 self._validate_profile_value(key, value)
                 profile[key] = value
-            self._atomic_write(filepath, json.dumps(
-                profile, indent=2, ensure_ascii=False, allow_nan=False))
+            self._atomic_write(
+                filepath,
+                json.dumps(profile, indent=2, ensure_ascii=False, allow_nan=False),
+            )
             return True
         except (OSError, ValueError, TypeError, UnicodeError) as error:
             logger.error("Error exporting profile: %s", error)
@@ -318,9 +327,15 @@ class SettingsManager:
         """The validated portable settings of a profile file, or None."""
         try:
             profile = self._read_file(filepath)
-            if not isinstance(profile, dict) or profile.get("_app") != "big-video-converter":
+            if (
+                not isinstance(profile, dict)
+                or profile.get("_app") != "big-video-converter"
+            ):
                 raise ValueError("Invalid profile application identifier")
-            if type(profile.get("_profile_version")) is not int or profile["_profile_version"] != 1:
+            if (
+                type(profile.get("_profile_version")) is not int
+                or profile["_profile_version"] != 1
+            ):
                 raise ValueError("Unsupported profile version")
             updates = {}
             for key, value in profile.items():
@@ -346,10 +361,16 @@ class SettingsManager:
     def apply_profile(self, updates: dict) -> bool:
         """Commit settings from read_profile atomically; unchanged ones write nothing."""
         if self._batch_mode or self._suspended:
-            logger.error("Error importing profile: another settings transaction is open")
+            logger.error(
+                "Error importing profile: another settings transaction is open"
+            )
             return False
-        if all(key in self.settings and type(self.settings[key]) is type(value)
-               and self.settings[key] == value for key, value in updates.items()):
+        if all(
+            key in self.settings
+            and type(self.settings[key]) is type(value)
+            and self.settings[key] == value
+            for key, value in updates.items()
+        ):
             return True
         before = copy.deepcopy(self.settings)
         self.settings.update(updates)
@@ -365,7 +386,6 @@ class SettingsManager:
     def save_setting(self, key: str, value: str):
         return self.set_value(key, value)
 
-
     @staticmethod
     def _migrate_vsync(text: str) -> str:
         modes = {"-1": "auto", "0": "passthrough", "1": "cfr", "2": "vfr"}
@@ -377,7 +397,7 @@ class SettingsManager:
             mode = tokens[index + 1].lower()
             mode = modes.get(mode, mode)
             if token == "-vsync" and mode in modes.values():
-                tokens[index:index + 2] = ["-fps_mode", mode]
+                tokens[index : index + 2] = ["-fps_mode", mode]
         return shlex.join(tokens)
 
     @staticmethod
@@ -426,31 +446,65 @@ class SettingsManager:
             raise ValueError("Invalid type for " + key)
         enums = {
             "video-codec": {"copy", "h264", "h265", "av1", "vp9", "prores"},
-            "video-quality": {"default", "veryhigh", "high", "medium", "low", "verylow", "superlow"},
-            "preset": {"default", "ultrafast", "veryfast", "faster", "medium", "slow", "veryslow"},
+            "video-quality": {
+                "default",
+                "veryhigh",
+                "high",
+                "medium",
+                "low",
+                "verylow",
+                "superlow",
+            },
+            "preset": {
+                "default",
+                "ultrafast",
+                "veryfast",
+                "faster",
+                "medium",
+                "slow",
+                "veryslow",
+            },
             "audio-codec": {"aac", "opus", "ac3"},
             "audio-handling": {"copy", "reencode", "none"},
             "subtitle-extract": {"extract", "embedded", "none"},
             "multi-segment-output-mode": {"join", "split"},
-            "size-target": {"", "custom", "whatsapp", "discord", "email", "100mb",
-                            "telegram", "telegram-premium", "fat32"},
+            "size-target": {
+                "",
+                "custom",
+                "whatsapp",
+                "discord",
+                "email",
+                "100mb",
+                "telegram",
+                "telegram-premium",
+                "fat32",
+            },
             "size-strategy": {"auto", "keep_resolution", "split"},
         }
         if key in enums and value not in enums[key]:
             raise ValueError("Unsupported value for " + key)
         ranges = {
-            "output-format-index": (0, 3), "noise-model": (0, 1),
+            "output-format-index": (0, 3),
+            "noise-model": (0, 1),
             "noise-reduction-strength": (0, 1),
-            "noise-gate-intensity": (0, 1), "compressor-intensity": (0, 10),
-            "hpf-frequency": (20, 20000), "size-target-mb": (1, 1_000_000),
+            "noise-gate-intensity": (0, 1),
+            "compressor-intensity": (0, 10),
+            "hpf-frequency": (20, 20000),
+            "size-target-mb": (1, 1_000_000),
         }
         if key in ranges and not ranges[key][0] <= value <= ranges[key][1]:
             raise ValueError("Out-of-range value for " + key)
-        if key == "audio-channels" and value and (
-            not re.fullmatch(r"[1-9][0-9]?", value) or int(value) > 64
+        if (
+            key == "audio-channels"
+            and value
+            and (not re.fullmatch(r"[1-9][0-9]?", value) or int(value) > 64)
         ):
             raise ValueError("Invalid audio channel count")
-        if key == "audio-bitrate" and value and not re.fullmatch(r"[1-9][0-9]*[kKmM]?", value):
+        if (
+            key == "audio-bitrate"
+            and value
+            and not re.fullmatch(r"[1-9][0-9]*[kKmM]?", value)
+        ):
             raise ValueError("Invalid audio bitrate")
         if key == "video-resolution" and value:
             match = re.fullmatch(r"([1-9][0-9]*)x([1-9][0-9]*)", value)
@@ -463,19 +517,29 @@ class SettingsManager:
                 raise ValueError("Invalid frame rate")
         if key == "eq-bands":
             bands = [float(part) for part in value.split(",")]
-            if len(bands) != 10 or any(not math.isfinite(v) or not -24 <= v <= 24 for v in bands):
+            if len(bands) != 10 or any(
+                not math.isfinite(v) or not -24 <= v <= 24 for v in bands
+            ):
                 raise ValueError("Invalid equalizer bands")
         if key == "eq-preset" and not re.fullmatch(r"[\w -]{1,64}", value):
             raise ValueError("Invalid equalizer preset")
         if key == "additional-options":
             from utils.ffmpeg_options import parse_additional_options
+
             parse_additional_options(value)
 
 
 # Local preferences are not portable conversion recipes.
-SettingsManager._PROFILE_EXCLUDE_KEYS.update({
-    "active-preset",
-    "delete-original", "gpu-device-index", "gpu",
-    "gpu-partial", "use-custom-output-folder",
-    "show-tooltips", "show-welcome-dialog", "video-preview-render-mode",
-})
+SettingsManager._PROFILE_EXCLUDE_KEYS.update(
+    {
+        "active-preset",
+        "delete-original",
+        "gpu-device-index",
+        "gpu",
+        "gpu-partial",
+        "use-custom-output-folder",
+        "show-tooltips",
+        "show-welcome-dialog",
+        "video-preview-render-mode",
+    }
+)

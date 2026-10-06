@@ -173,17 +173,17 @@ output_stage_dir=""
 # script (Ctrl+C, the GUI's cancel) must not leave it encoding on its own.
 ffmpeg_pid=""
 cleanup() {
-    if [[ -n $ffmpeg_pid ]] && kill -0 "$ffmpeg_pid" 2>/dev/null; then
-        kill -TERM "$ffmpeg_pid" 2>/dev/null
-        local i
-        for ((i = 0; i < 50; i++)); do
-            kill -0 "$ffmpeg_pid" 2>/dev/null || break
-            sleep 0.1
-        done
-        kill -KILL "$ffmpeg_pid" 2>/dev/null
-        wait "$ffmpeg_pid" 2>/dev/null
-    fi
-    [[ -z $output_stage_dir ]] || rm -rf -- "$output_stage_dir"
+	if [[ -n $ffmpeg_pid ]] && kill -0 "$ffmpeg_pid" 2>/dev/null; then
+		kill -TERM "$ffmpeg_pid" 2>/dev/null
+		local i
+		for ((i = 0; i < 50; i++)); do
+			kill -0 "$ffmpeg_pid" 2>/dev/null || break
+			sleep 0.1
+		done
+		kill -KILL "$ffmpeg_pid" 2>/dev/null
+		wait "$ffmpeg_pid" 2>/dev/null
+	fi
+	[[ -z $output_stage_dir ]] || rm -rf -- "$output_stage_dir"
 }
 trap cleanup EXIT
 trap 'exit 130' INT
@@ -198,46 +198,49 @@ trap 'exit 143' TERM
 # -T keeps a destination that became a directory from receiving the file.
 # Returns 0 when published, 1 when the name is taken, 2 on any other failure.
 publish_as() { # <staged file> <destination>
-    [[ ! -e $2 && ! -L $2 ]] || return 1
-    if ! (set -o noclobber; : > "$2") 2>/dev/null; then
-        [[ ! -e $2 && ! -L $2 ]] || return 1
-        echo "ERROR: Cannot create $2" >&2
-        return 2
-    fi
-    mv -fT -- "$1" "$2" && return 0
-    rm -f -- "$2"
-    return 2
+	[[ ! -e $2 && ! -L $2 ]] || return 1
+	if ! (
+		set -o noclobber
+		: >"$2"
+	) 2>/dev/null; then
+		[[ ! -e $2 && ! -L $2 ]] || return 1
+		echo "ERROR: Cannot create $2" >&2
+		return 2
+	fi
+	mv -fT -- "$1" "$2" && return 0
+	rm -f -- "$2"
+	return 2
 }
 
 # A taken name gets a counter, "movie_1.mp4", as the GUI's own batches do;
 # the name used is left in published_file.
 published_file=""
 publish() { # <staged file> <desired destination>
-    local candidate=$2 counter status
-    for ((counter = 1; counter <= 10000; counter++)); do
-        publish_as "$1" "$candidate"
-        status=$?
-        if [[ $status == 0 ]]; then
-            published_file=$candidate
-            return 0
-        fi
-        [[ $status == 1 ]] || return 1
-        candidate="${2%.*}_$counter.${2##*.}"
-    done
-    echo "ERROR: No unused output name next to $2" >&2
-    return 1
+	local candidate=$2 counter status
+	for ((counter = 1; counter <= 10000; counter++)); do
+		publish_as "$1" "$candidate"
+		status=$?
+		if [[ $status == 0 ]]; then
+			published_file=$candidate
+			return 0
+		fi
+		[[ $status == 1 ]] || return 1
+		candidate="${2%.*}_$counter.${2##*.}"
+	done
+	echo "ERROR: No unused output name next to $2" >&2
+	return 1
 }
 
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
 
 # Use the same FFprobe distribution as the selected FFmpeg whenever possible.
 if [[ -z ${ffprobe_executable:-} ]]; then
-    ffmpeg_path=$(command -v -- "$ffmpeg_executable") || exit 1
-    if [[ -x ${ffmpeg_path%/*}/ffprobe ]]; then
-        ffprobe_executable="${ffmpeg_path%/*}/ffprobe"
-    else
-        ffprobe_executable=ffprobe
-    fi
+	ffmpeg_path=$(command -v -- "$ffmpeg_executable") || exit 1
+	if [[ -x ${ffmpeg_path%/*}/ffprobe ]]; then
+		ffprobe_executable="${ffmpeg_path%/*}/ffprobe"
+	else
+		ffprobe_executable=ffprobe
+	fi
 fi
 
 # A preset file (TOML, read by utils/presets.py) fills in whatever the caller
@@ -246,65 +249,71 @@ fi
 # validates the file and answers NUL-separated, never as shell text.
 preset_helper="$script_dir/../share/big-video-converter/utils/presets.py"
 if [[ -n ${preset_file:-} ]]; then
-    python3 "$preset_helper" --validate "$preset_file" >/dev/null || exit 2
-    while IFS= read -r -d '' pair; do
-        name=${pair%%=*}
-        value=${pair#*=}
-        [[ $name =~ ^[a-z_]+$ ]] || continue
-        if [[ $name == preset_options ]]; then
-            options="$value ${options:-}"
-        elif [[ ${BVC_PRESET_SETTINGS_RESOLVED:-0} != 1 && -z ${!name:-} ]]; then
-            printf -v "$name" '%s' "$value"
-        fi
-    done < <(python3 "$preset_helper" --env "$preset_file")
-    echo "Preset: $preset_file"
+	python3 "$preset_helper" --validate "$preset_file" >/dev/null || exit 2
+	while IFS= read -r -d '' pair; do
+		name=${pair%%=*}
+		value=${pair#*=}
+		[[ $name =~ ^[a-z_]+$ ]] || continue
+		if [[ $name == preset_options ]]; then
+			options="$value ${options:-}"
+		elif [[ ${BVC_PRESET_SETTINGS_RESOLVED:-0} != 1 && -z ${!name:-} ]]; then
+			printf -v "$name" '%s' "$value"
+		fi
+	done < <(python3 "$preset_helper" --env "$preset_file")
+	echo "Preset: $preset_file"
 fi
 
 # Arguments a preset pins for one encoder go after the script's own, so
 # FFmpeg's last-one-wins rule lets them override a single knob.
 append_preset_encoder_args() { # <encoder array name>
-    [[ -n ${preset_file:-} ]] || return 0
-    local -n encoder_argv=$1
-    local i name=""
-    for ((i = 0; i < ${#encoder_argv[@]} - 1; i++)); do
-        [[ ${encoder_argv[$i]} == -c:v ]] && name=${encoder_argv[$((i + 1))]}
-    done
-    [[ -n $name && $name != copy ]] || return 0
-    local -a extra=()
-    mapfile -d '' -t extra < <(python3 "$preset_helper" --encoder-args "$preset_file" "$name")
-    [[ ${#extra[@]} -eq 0 ]] || encoder_argv+=("${extra[@]}")
+	[[ -n ${preset_file:-} ]] || return 0
+	local -n encoder_argv=$1
+	local i name=""
+	for ((i = 0; i < ${#encoder_argv[@]} - 1; i++)); do
+		[[ ${encoder_argv[$i]} == -c:v ]] && name=${encoder_argv[$((i + 1))]}
+	done
+	[[ -n $name && $name != copy ]] || return 0
+	local -a extra=()
+	mapfile -d '' -t extra < <(python3 "$preset_helper" --encoder-args "$preset_file" "$name")
+	[[ ${#extra[@]} -eq 0 ]] || encoder_argv+=("${extra[@]}")
 }
 
 # Scalar values used in arithmetic must not become awk/bc expressions.
 for name in hpf_frequency compressor_intensity gate_intensity noise_strength noise_model; do
-    value=${!name}
-    if [[ -n $value && ! $value =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-        echo "ERROR: Invalid numeric setting: $name" >&2
-        exit 2
-    fi
+	value=${!name}
+	if [[ -n $value && ! $value =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+		echo "ERROR: Invalid numeric setting: $name" >&2
+		exit 2
+	fi
 done
 if [[ -n ${video_bitrate:-} && ! $video_bitrate =~ ^[1-9][0-9]{4,9}$ ]]; then
-    echo "ERROR: Invalid video bitrate (bits per second): $video_bitrate" >&2
-    exit 2
+	echo "ERROR: Invalid video bitrate (bits per second): $video_bitrate" >&2
+	exit 2
 fi
 if [[ -n ${size_limit:-} && ! $size_limit =~ ^[1-9][0-9]{5,12}$ ]]; then
-    echo "ERROR: Invalid size limit (bytes): $size_limit" >&2
-    exit 2
+	echo "ERROR: Invalid size limit (bytes): $size_limit" >&2
+	exit 2
 fi
 if [[ -n ${keyframe_interval:-} && ! $keyframe_interval =~ ^([1-9][0-9]?|0[.][1-9][0-9]*|[1-9][0-9]?[.][0-9]+)$ ]]; then
-    echo "ERROR: Invalid keyframe interval (seconds): $keyframe_interval" >&2
-    exit 2
+	echo "ERROR: Invalid keyframe interval (seconds): $keyframe_interval" >&2
+	exit 2
 fi
 if [[ -n $audio_channels && ! $audio_channels =~ ^([1-9]|[1-5][0-9]|6[0-4])$ ]]; then
-    echo "ERROR: Invalid audio channel count" >&2
-    exit 2
+	echo "ERROR: Invalid audio channel count" >&2
+	exit 2
 fi
 if [[ -n $eq_bands ]]; then
-    IFS=, read -ra eq_values <<< "$eq_bands"
-    [[ ${#eq_values[@]} -eq 10 ]] || { echo "ERROR: Expected ten equalizer bands" >&2; exit 2; }
-    for value in "${eq_values[@]}"; do
-        [[ $value =~ ^-?[0-9]+([.][0-9]+)?$ ]] || { echo "ERROR: Invalid equalizer gain" >&2; exit 2; }
-    done
+	IFS=, read -ra eq_values <<<"$eq_bands"
+	[[ ${#eq_values[@]} -eq 10 ]] || {
+		echo "ERROR: Expected ten equalizer bands" >&2
+		exit 2
+	}
+	for value in "${eq_values[@]}"; do
+		[[ $value =~ ^-?[0-9]+([.][0-9]+)?$ ]] || {
+			echo "ERROR: Invalid equalizer gain" >&2
+			exit 2
+		}
+	done
 fi
 
 #############################################################################
@@ -478,7 +487,11 @@ echo "Source video codec detected: $source_video_codec"
 # Source geometry, frame rate and dynamic range. Three decisions below depend
 # on them: the H.264 level, whether 4K output may stay in H.264 at all, and
 # whether an HDR source needs tone mapping to become a valid SDR file.
-source_width=""; source_height=""; source_fps_num=""; source_fps_den=""; source_transfer=""
+source_width=""
+source_height=""
+source_fps_num=""
+source_fps_den=""
+source_transfer=""
 source_primaries="" source_matrix=""
 source_rotation=0 source_field_order=""
 if [[ $ffprobe_usable == true ]]; then
@@ -488,7 +501,10 @@ if [[ $ffprobe_usable == true ]]; then
 		case $key in
 		width) source_width=$value ;;
 		height) source_height=$value ;;
-		r_frame_rate) source_fps_num=${value%%/*}; source_fps_den=${value##*/} ;;
+		r_frame_rate)
+			source_fps_num=${value%%/*}
+			source_fps_den=${value##*/}
+			;;
 		color_transfer) source_transfer=$value ;;
 		color_primaries) source_primaries=$value ;;
 		color_space) source_matrix=$value ;;
@@ -522,7 +538,10 @@ auto) ;;
 pq) source_transfer=smpte2084 source_hdr_given=true ;;
 hlg) source_transfer=arib-std-b67 source_hdr_given=true ;;
 sdr) source_transfer="" ;;
-*) echo "ERROR: Invalid source_hdr: $source_hdr" >&2; exit 2 ;;
+*)
+	echo "ERROR: Invalid source_hdr: $source_hdr" >&2
+	exit 2
+	;;
 esac
 
 is_hdr=false
@@ -532,10 +551,12 @@ if [[ $source_transfer == smpte2084 || $source_transfer == arib-std-b67 ]]; then
 fi
 
 # Output geometry: the requested resolution when there is one, else the source.
-output_width=$source_width; output_height=$source_height
+output_width=$source_width
+output_height=$source_height
 fit_size=""
 if [[ $video_resolution =~ ^([0-9]+)x([0-9]+)$ ]]; then
-	output_width=${BASH_REMATCH[1]}; output_height=${BASH_REMATCH[2]}
+	output_width=${BASH_REMATCH[1]}
+	output_height=${BASH_REMATCH[2]}
 	# The requested resolution is a box: the picture keeps its aspect ratio
 	# inside it, with the even dimensions encoders need, instead of being
 	# stretched. iw/ih are the frames reaching the scaler, already rotated.
@@ -555,14 +576,14 @@ output_fps_num=$source_fps_num output_fps_den=$source_fps_den
 fps_filter=""
 if [[ -n ${video_fps:-} ]]; then
 	if [[ ! $video_fps =~ ^([1-9][0-9]{0,5})(/([1-9][0-9]{0,4}))?$ ]] ||
-		(( BASH_REMATCH[1] > 240 * ${BASH_REMATCH[3]:-1} )); then
+		((BASH_REMATCH[1] > 240 * ${BASH_REMATCH[3]:-1})); then
 		echo "ERROR: Invalid frame rate: $video_fps" >&2
 		exit 2
 	fi
-	fps_target=$(( BASH_REMATCH[1] * source_fps_den )) fps_source=$(( source_fps_num * ${BASH_REMATCH[3]:-1} ))
-	if (( fps_target * 1000 < fps_source * 995 )); then
+	fps_target=$((BASH_REMATCH[1] * source_fps_den)) fps_source=$((source_fps_num * ${BASH_REMATCH[3]:-1}))
+	if ((fps_target * 1000 < fps_source * 995)); then
 		fps_filter="fps=$video_fps"
-	elif (( fps_target * 1000 > fps_source * 1005 )); then
+	elif ((fps_target * 1000 > fps_source * 1005)); then
 		fps_filter="framerate=fps=$video_fps"
 	fi
 	if [[ -n $fps_filter ]]; then
@@ -586,46 +607,46 @@ esac
 input_file_without_extension=${input_file##*/}
 input_file_without_extension=${input_file_without_extension%.*}
 if [[ -z $output_file ]]; then
-    input_dir=${input_file%/*}
-    output_file="${output_folder:-$input_dir}/$input_file_without_extension.${output_format:-mp4}"
+	input_dir=${input_file%/*}
+	output_file="${output_folder:-$input_dir}/$input_file_without_extension.${output_format:-mp4}"
 elif [[ -n $output_format ]]; then
-    output_dir=${output_file%/*}
-    output_name=${output_file##*/}
-    [[ $output_dir != "$output_file" ]] || output_dir=.
-    output_file="$output_dir/${output_name%.*}.$output_format"
+	output_dir=${output_file%/*}
+	output_name=${output_file##*/}
+	[[ $output_dir != "$output_file" ]] || output_dir=.
+	output_file="$output_dir/${output_name%.*}.$output_format"
 elif [[ ! ${output_file,,} =~ \.(mp4|avi|mkv|mov|wmv|flv|webm|m4v|mpeg|mpg)$ ]]; then
-    output_file+=.mp4
+	output_file+=.mp4
 fi
 [[ $output_file == /* ]] || output_file="$PWD/$output_file"
 # "-ef" compares device and inode through symlinks, so this one test covers
 # every spelling of "the output is the input", including a symlinked path and a
 # hard link. Encoding over the source would destroy it while still reading it.
 if [[ $output_file -ef $input_file ]]; then
-    echo "ERROR: The output file is the same as the input file: $output_file" >&2
-    echo "Choose a different output folder or format." >&2
-    exit 1
+	echo "ERROR: The output file is the same as the input file: $output_file" >&2
+	echo "Choose a different output folder or format." >&2
+	exit 1
 fi
 
 # WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. With this
 # tool's defaults (H.264, AAC) FFmpeg refused the file after the whole encode,
 # and again after the audio retry. The legal codecs are chosen up front.
 if [[ ${output_file,,} == *.webm ]]; then
-    if [[ $force_copy_video != 1 && $video_encoder != vp9 && $video_encoder != av1 ]]; then
-        echo "WebM output: encoding the video as VP9 instead of ${video_encoder:-h264}"
-        video_encoder=vp9
-    fi
-    audio_codec=opus
-    if [[ ${audio_handling:-copy} == copy ]]; then
-        if [[ $ffprobe_usable == true ]]; then
-            webm_audio=$(probe_rows a stream=codec_name)
-        else
-            webm_audio=$(ffmpeg_probe_streams Audio | cut -d'|' -f3)
-        fi
-        if grep -qvxE 'opus|vorbis' <<<"$webm_audio" && [[ -n $webm_audio ]]; then
-            echo "WebM output: encoding the audio as Opus"
-            audio_handling=reencode
-        fi
-    fi
+	if [[ $force_copy_video != 1 && $video_encoder != vp9 && $video_encoder != av1 ]]; then
+		echo "WebM output: encoding the video as VP9 instead of ${video_encoder:-h264}"
+		video_encoder=vp9
+	fi
+	audio_codec=opus
+	if [[ ${audio_handling:-copy} == copy ]]; then
+		if [[ $ffprobe_usable == true ]]; then
+			webm_audio=$(probe_rows a stream=codec_name)
+		else
+			webm_audio=$(ffmpeg_probe_streams Audio | cut -d'|' -f3)
+		fi
+		if grep -qvxE 'opus|vorbis' <<<"$webm_audio" && [[ -n $webm_audio ]]; then
+			echo "WebM output: encoding the audio as Opus"
+			audio_handling=reencode
+		fi
+	fi
 fi
 
 # Above 1080p, H.264 is a PC-only format: televisions decode UHD in HEVC (or
@@ -643,15 +664,21 @@ fi
 # decoders trust the header, so those files failed to open on a television.
 h264_level_for() {
 	local w=$1 h=$2 num=${3:-30} den=${4:-1}
-	[[ $w =~ ^[0-9]+$ && $h =~ ^[0-9]+$ ]] || { echo 4.1; return; }
-	local mbs=$(( ((w + 15) / 16) * ((h + 15) / 16) ))
-	local mbps=$(( mbs * num / den ))
+	[[ $w =~ ^[0-9]+$ && $h =~ ^[0-9]+$ ]] || {
+		echo 4.1
+		return
+	}
+	local mbs=$((((w + 15) / 16) * ((h + 15) / 16)))
+	local mbps=$((mbs * num / den))
 	local entry level max_mbs max_mbps
 	for entry in "3.1:3600:108000" "3.2:5120:216000" "4.1:8192:245760" "4.2:8704:522240" \
-	             "5.0:22080:589824" "5.1:36864:983040" "5.2:36864:2073600" "6.0:139264:4177920" \
-	             "6.1:139264:8355840" "6.2:139264:16711680"; do
+		"5.0:22080:589824" "5.1:36864:983040" "5.2:36864:2073600" "6.0:139264:4177920" \
+		"6.1:139264:8355840" "6.2:139264:16711680"; do
 		IFS=: read -r level max_mbs max_mbps <<<"$entry"
-		if (( mbs <= max_mbs && mbps <= max_mbps )); then echo "$level"; return; fi
+		if ((mbs <= max_mbs && mbps <= max_mbps)); then
+			echo "$level"
+			return
+		fi
 	done
 	echo 6.2
 }
@@ -707,11 +734,11 @@ printf 'Job workspace: %s\n' "$output_stage_dir"
 staged_output="$output_stage_dir/video.${output_file##*.}"
 
 option_parser="$script_dir/../share/big-video-converter/utils/ffmpeg_options.py"
-if ! python3 "$option_parser" --null "${options:-}" > "$output_stage_dir/options"; then
-    echo "ERROR: Invalid additional FFmpeg options" >&2
-    exit 2
+if ! python3 "$option_parser" --null "${options:-}" >"$output_stage_dir/options"; then
+	echo "ERROR: Invalid additional FFmpeg options" >&2
+	exit 2
 fi
-mapfile -d '' -t option_args < "$output_stage_dir/options"
+mapfile -d '' -t option_args <"$output_stage_dir/options"
 input_options=()
 output_options=()
 # Seek options belong before -i. After it, FFmpeg decodes and throws away
@@ -719,13 +746,14 @@ output_options=()
 # in copy mode, leaves the requested opening seconds missing from the output.
 # The duration (-t) stays an output option: only there does FFmpeg also clip
 # the chapters to the cut instead of copying every chapter of the source.
-for ((opt=0; opt<${#option_args[@]}; opt++)); do
-    case ${option_args[$opt]} in
-    -ss|-to|-sseof|-itsoffset|-hwaccel|-hwaccel_output_format|-probesize|-analyzeduration|-thread_queue_size)
-        input_options+=("${option_args[$opt]}" "${option_args[$((opt+1))]}")
-        ((opt += 1)) ;;
-    *) output_options+=("${option_args[$opt]}") ;;
-    esac
+for ((opt = 0; opt < ${#option_args[@]}; opt++)); do
+	case ${option_args[$opt]} in
+	-ss | -to | -sseof | -itsoffset | -hwaccel | -hwaccel_output_format | -probesize | -analyzeduration | -thread_queue_size)
+		input_options+=("${option_args[$opt]}" "${option_args[$((opt + 1))]}")
+		((opt += 1))
+		;;
+	*) output_options+=("${option_args[$opt]}") ;;
+	esac
 done
 
 # A join of several cuts (the GUI's segment batch) is one encode: every cut is
@@ -737,21 +765,21 @@ done
 # audio ends before its last frame with silence, an audible gap at the seam.
 segment_inputs=()
 if [[ -n ${segments:-} ]]; then
-    if [[ $force_copy_video == 1 ]]; then
-        echo "ERROR: Joined cuts must be re-encoded" >&2
-        exit 2
-    fi
-    IFS=, read -ra segment_list <<< "$segments"
-    for segment in "${segment_list[@]}"; do
-        if [[ ! $segment =~ ^([0-9]+([.][0-9]+)?)[+]([0-9]+([.][0-9]+)?)$ ]]; then
-            echo "ERROR: Invalid segment: $segment" >&2
-            exit 2
-        fi
-        duration=$(awk -v d="${BASH_REMATCH[3]}" -v n="$source_fps_num" -v m="$source_fps_den" \
-            'BEGIN { f = int(d * n / m + 1e-6); printf "%.6f", (f > 0 ? f * m / n : d) }')
-        segment_inputs+=(-ss "${BASH_REMATCH[1]}" -t "$duration" -i "$input_file")
-    done
-    subtitle_extract=none
+	if [[ $force_copy_video == 1 ]]; then
+		echo "ERROR: Joined cuts must be re-encoded" >&2
+		exit 2
+	fi
+	IFS=, read -ra segment_list <<<"$segments"
+	for segment in "${segment_list[@]}"; do
+		if [[ ! $segment =~ ^([0-9]+([.][0-9]+)?)[+]([0-9]+([.][0-9]+)?)$ ]]; then
+			echo "ERROR: Invalid segment: $segment" >&2
+			exit 2
+		fi
+		duration=$(awk -v d="${BASH_REMATCH[3]}" -v n="$source_fps_num" -v m="$source_fps_den" \
+			'BEGIN { f = int(d * n / m + 1e-6); printf "%.6f", (f > 0 ? f * m / n : d) }')
+		segment_inputs+=(-ss "${BASH_REMATCH[1]}" -t "$duration" -i "$input_file")
+	done
+	subtitle_extract=none
 fi
 
 ##############
@@ -764,110 +792,110 @@ subtitle_counts=()
 subtitle_suffixes=()
 : "${subtitle_extract:=extract}"
 if [[ $ffprobe_usable == true ]]; then
-    subtitle_codec_info=$(probe_rows s stream=index,codec_name)
+	subtitle_codec_info=$(probe_rows s stream=index,codec_name)
 else
-    subtitle_codec_info=$(fb_subtitle_codecs)
+	subtitle_codec_info=$(fb_subtitle_codecs)
 fi
 subtitle_input_options=()
 subtitle_packet_options=()
 defer_subtitles=false
-if [[ -n $subtitle_codec_info && ( $subtitle_extract != none || $only_extract_subtitles == 1 ) ]]; then
-    if ! python3 "$script_dir/../share/big-video-converter/utils/subtitle_timing.py" "${options:-}" > "$output_stage_dir/subtitle-timing"; then
-        echo "ERROR: Invalid subtitle trim interval" >&2
-        exit 2
-    fi
-    mapfile -d '' -t subtitle_timing < "$output_stage_dir/subtitle-timing"
-    [[ -z ${subtitle_timing[0]} ]] || subtitle_input_options=(-t "${subtitle_timing[0]}")
-    if [[ -n ${subtitle_timing[1]} ]]; then
-        subtitle_packet_options=(-bsf:s "${subtitle_timing[1]}")
-        [[ $subtitle_extract != embedded ]] || defer_subtitles=true
-    fi
+if [[ -n $subtitle_codec_info && ($subtitle_extract != none || $only_extract_subtitles == 1) ]]; then
+	if ! python3 "$script_dir/../share/big-video-converter/utils/subtitle_timing.py" "${options:-}" >"$output_stage_dir/subtitle-timing"; then
+		echo "ERROR: Invalid subtitle trim interval" >&2
+		exit 2
+	fi
+	mapfile -d '' -t subtitle_timing <"$output_stage_dir/subtitle-timing"
+	[[ -z ${subtitle_timing[0]} ]] || subtitle_input_options=(-t "${subtitle_timing[0]}")
+	if [[ -n ${subtitle_timing[1]} ]]; then
+		subtitle_packet_options=(-bsf:s "${subtitle_timing[1]}")
+		[[ $subtitle_extract != embedded ]] || defer_subtitles=true
+	fi
 fi
 if [[ $only_extract_subtitles == 1 ]]; then
-    subtitle_extract=extract
+	subtitle_extract=extract
 fi
 # Subtitle codecs with a text form; the others (PGS, DVD, DVB) are pictures.
 text_subtitle_re='^(subrip|ass|ssa|mov_text|text|webvtt)$'
 if [[ $subtitle_extract == embedded ]]; then
-    case ${output_file##*.} in
-    mp4|mov|m4v|MP4|MOV|M4V) subtitle_encoder=mov_text ;;
-    webm|WEBM) subtitle_encoder=webvtt ;;
-    *) subtitle_encoder=copy ;;
-    esac
-    subtitle_codec_overrides=()
-    embedded_count=0
-    while IFS=, read -r index codec_name; do
-        [[ $index =~ ^[0-9]+$ ]] || continue
-        # A bitmap subtitle has no text form: keep the rest of the conversion
-        # rather than refusing the whole job over one track. The GUI keeps
-        # the original when it reads this line.
-        if [[ $subtitle_encoder != copy && ! $codec_name =~ $text_subtitle_re ]]; then
-            echo "Warning: skipping subtitle stream $index ($codec_name): not supported in .${output_file##*.}; select MKV or extract subtitles."
-            continue
-        fi
-        subtitle_cmd+=(-map "0:$index")
-        # Matroska has no mov_text: an MP4's text track is stored as SubRip.
-        [[ $subtitle_encoder != copy || $codec_name != mov_text ]] || subtitle_codec_overrides+=("-c:s:$embedded_count" srt)
-        ((embedded_count += 1))
-    done <<< "$subtitle_codec_info"
-    if [[ ${#subtitle_cmd[@]} -eq 0 ]]; then
-        defer_subtitles=false
-    else
-        subtitle_cmd+=(-c:s "$subtitle_encoder" "${subtitle_codec_overrides[@]}")
-    fi
+	case ${output_file##*.} in
+	mp4 | mov | m4v | MP4 | MOV | M4V) subtitle_encoder=mov_text ;;
+	webm | WEBM) subtitle_encoder=webvtt ;;
+	*) subtitle_encoder=copy ;;
+	esac
+	subtitle_codec_overrides=()
+	embedded_count=0
+	while IFS=, read -r index codec_name; do
+		[[ $index =~ ^[0-9]+$ ]] || continue
+		# A bitmap subtitle has no text form: keep the rest of the conversion
+		# rather than refusing the whole job over one track. The GUI keeps
+		# the original when it reads this line.
+		if [[ $subtitle_encoder != copy && ! $codec_name =~ $text_subtitle_re ]]; then
+			echo "Warning: skipping subtitle stream $index ($codec_name): not supported in .${output_file##*.}; select MKV or extract subtitles."
+			continue
+		fi
+		subtitle_cmd+=(-map "0:$index")
+		# Matroska has no mov_text: an MP4's text track is stored as SubRip.
+		[[ $subtitle_encoder != copy || $codec_name != mov_text ]] || subtitle_codec_overrides+=("-c:s:$embedded_count" srt)
+		((embedded_count += 1))
+	done <<<"$subtitle_codec_info"
+	if [[ ${#subtitle_cmd[@]} -eq 0 ]]; then
+		defer_subtitles=false
+	else
+		subtitle_cmd+=(-c:s "$subtitle_encoder" "${subtitle_codec_overrides[@]}")
+	fi
 elif [[ $subtitle_extract == extract || $only_extract_subtitles == 1 ]]; then
-    # Names players recognise: "<video>.<lang>.srt", with ".forced" for a
-    # forced track. A repeated language gets a counter from the second track
-    # on, counted per name so two forced tracks no longer land on one file.
-    # Every text codec (ASS, mov_text, WebVTT) becomes SubRip, as in the GUI's
-    # segment path; only SubRip used to be extracted and the rest was lost.
-    declare -A sidecar_count=()
-    while IFS=, read -r index codec_name; do
-        [[ $index =~ ^[0-9]+$ ]] || continue
-        if [[ ! $codec_name =~ $text_subtitle_re ]]; then
-            echo "Warning: skipping subtitle stream $index ($codec_name): a picture subtitle cannot be saved as .srt; select MKV and embedded subtitles to keep it."
-            continue
-        fi
-        language_code=und forced=0 title=""
-        if [[ $ffprobe_usable == true ]]; then
-            stream_info=$("$ffprobe_executable" -v error -select_streams "$index" -show_entries stream_disposition=forced:stream_tags=language,title -of default=nw=1 "$input_file") || exit 2
-            while IFS="=" read -r key value; do
-                case $key in
-                TAG:language) language_code=$value ;;
-                TAG:title) title=$value ;;
-                DISPOSITION:forced) forced=$value ;;
-                esac
-            done <<< "$stream_info"
-            [[ $language_code =~ ^[a-zA-Z]{2,3}$ ]] || language_code=und
-        fi
-        suffix=""
-        [[ $forced == 1 || $title == *"(Forced)"* ]] && suffix=.forced
-        count=$(( ${sidecar_count[$language_code$suffix]:-0} + 1 ))
-        sidecar_count[$language_code$suffix]=$count
-        sidecar="$output_stage_dir/subtitle-$index.srt"
-        subtitle_cmd+=(-map "0:$index" -c:s srt "${subtitle_packet_options[@]}" "$sidecar")
-        subtitle_outputs+=("$sidecar")
-        subtitle_languages+=("$language_code")
-        subtitle_counts+=("$count")
-        subtitle_suffixes+=("$suffix")
-    done <<< "$subtitle_codec_info"
+	# Names players recognise: "<video>.<lang>.srt", with ".forced" for a
+	# forced track. A repeated language gets a counter from the second track
+	# on, counted per name so two forced tracks no longer land on one file.
+	# Every text codec (ASS, mov_text, WebVTT) becomes SubRip, as in the GUI's
+	# segment path; only SubRip used to be extracted and the rest was lost.
+	declare -A sidecar_count=()
+	while IFS=, read -r index codec_name; do
+		[[ $index =~ ^[0-9]+$ ]] || continue
+		if [[ ! $codec_name =~ $text_subtitle_re ]]; then
+			echo "Warning: skipping subtitle stream $index ($codec_name): a picture subtitle cannot be saved as .srt; select MKV and embedded subtitles to keep it."
+			continue
+		fi
+		language_code=und forced=0 title=""
+		if [[ $ffprobe_usable == true ]]; then
+			stream_info=$("$ffprobe_executable" -v error -select_streams "$index" -show_entries stream_disposition=forced:stream_tags=language,title -of default=nw=1 "$input_file") || exit 2
+			while IFS="=" read -r key value; do
+				case $key in
+				TAG:language) language_code=$value ;;
+				TAG:title) title=$value ;;
+				DISPOSITION:forced) forced=$value ;;
+				esac
+			done <<<"$stream_info"
+			[[ $language_code =~ ^[a-zA-Z]{2,3}$ ]] || language_code=und
+		fi
+		suffix=""
+		[[ $forced == 1 || $title == *"(Forced)"* ]] && suffix=.forced
+		count=$((${sidecar_count[$language_code$suffix]:-0} + 1))
+		sidecar_count[$language_code$suffix]=$count
+		sidecar="$output_stage_dir/subtitle-$index.srt"
+		subtitle_cmd+=(-map "0:$index" -c:s srt "${subtitle_packet_options[@]}" "$sidecar")
+		subtitle_outputs+=("$sidecar")
+		subtitle_languages+=("$language_code")
+		subtitle_counts+=("$count")
+		subtitle_suffixes+=("$suffix")
+	done <<<"$subtitle_codec_info"
 fi
 
 # Sidecars are named after the video actually published. An existing one may
 # hold manual corrections, so a track whose name is taken gets the next number
 # ("movie.eng2.srt") instead of replacing it or failing the finished job.
 publish_subtitles() { # <path of the video the sidecars belong to>
-    local i count number status=0
-    for i in "${!subtitle_outputs[@]}"; do
-        for ((count = subtitle_counts[i]; count < subtitle_counts[i] + 10000; count++)); do
-            number=$count
-            [[ $count != 1 ]] || number=""
-            publish_as "${subtitle_outputs[$i]}" "${1%.*}.${subtitle_languages[$i]}$number${subtitle_suffixes[$i]}.srt"
-            status=$?
-            [[ $status == 1 ]] || break
-        done
-        [[ $status == 0 ]] || return 1
-    done
+	local i count number status=0
+	for i in "${!subtitle_outputs[@]}"; do
+		for ((count = subtitle_counts[i]; count < subtitle_counts[i] + 10000; count++)); do
+			number=$count
+			[[ $count != 1 ]] || number=""
+			publish_as "${subtitle_outputs[$i]}" "${1%.*}.${subtitle_languages[$i]}$number${subtitle_suffixes[$i]}.srt"
+			status=$?
+			[[ $status == 1 ]] || break
+		done
+		[[ $status == 0 ]] || return 1
+	done
 }
 
 ##############
@@ -953,11 +981,13 @@ if [[ $noise_reduction == "1" ]]; then
 	case ${noise_model:-0} in
 	1)
 		nr_plugin=/usr/lib/ladspa/libdpdfnet_native.so nr_label=dpdfnet_native_48hr
-		nr_delay=2880 nr_extra="" nr_full_db=48 ;;
+		nr_delay=2880 nr_extra="" nr_full_db=48
+		;;
 	*)
 		# DFN3 mutes its first second by default, meant for a live microphone.
 		nr_plugin=/usr/lib/ladspa/libdfn3_ladspa.so nr_label=deep_filter_net3_rs_mono
-		nr_delay=1919 nr_extra="|c6=0" nr_full_db=24 ;;
+		nr_delay=1919 nr_extra="|c6=0" nr_full_db=24
+		;;
 	esac
 	if [[ -e $nr_plugin ]]; then
 		# Strength 0..1 is linear in dB up to where the model stops removing
@@ -986,7 +1016,7 @@ fi
 # 6. Equalizer (10-band parametric)
 if [[ $eq_enabled == "1" ]]; then
 	: ${eq_bands:="0,0,0,0,0,0,0,0,0,0"}
-	IFS=',' read -ra bands_arr <<< "$eq_bands"
+	IFS=',' read -ra bands_arr <<<"$eq_bands"
 	eq_freqs=(31 63 125 250 500 1000 2000 4000 8000 16000)
 	eq_widths=(1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5 1.5)
 	eq_parts=()
@@ -997,7 +1027,10 @@ if [[ $eq_enabled == "1" ]]; then
 		fi
 	done
 	if [[ ${#eq_parts[@]} -gt 0 ]]; then
-		eq_filter=$(IFS=','; echo "${eq_parts[*]}")
+		eq_filter=$(
+			IFS=','
+			echo "${eq_parts[*]}"
+		)
 		local_filters+=("${eq_filter}")
 		echo "Equalizer enabled: ${#eq_parts[@]} active bands"
 	fi
@@ -1005,7 +1038,10 @@ fi
 
 # Join all filters with comma
 if [[ ${#local_filters[@]} -gt 0 ]]; then
-	noise_audio_filter=$(IFS=','; echo "${local_filters[*]}")
+	noise_audio_filter=$(
+		IFS=','
+		echo "${local_filters[*]}"
+	)
 	echo "Audio filter chain: ${noise_audio_filter}"
 
 	# Force re-encode if audio is set to copy (audio processing requires it)
@@ -1037,43 +1073,46 @@ function probe_audio_channels() {
 
 # Build argv arrays; empty audio metadata must produce no audio maps.
 function build_audio_cmd() {
-    audio_cmd=()
-    segment_audio=()
-    [[ $audio_handling != none ]] || { audio_cmd=(-an); return; }
-    local i=0 index_audio channels brate
-    local audio_info
-    audio_info=$(probe_audio_info)
-    while IFS=, read -r index_audio _; do
-        [[ $index_audio =~ ^[0-9]+$ ]] || continue
-        if [[ $audio_handling == copy ]]; then
-            audio_cmd+=(-map "0:$index_audio" "-c:a:$i" copy)
-        else
-            channels=${audio_channels:-$(probe_audio_channels "$i" "$index_audio")}
-            [[ $channels =~ ^[1-9][0-9]*$ ]] || channels=2
-            brate=${audio_bitrate:-$((channels * 32))k}
-            if [[ ${#segment_inputs[@]} -gt 0 ]]; then
-                # Joined cuts: the stream comes out of the concat filtergraph,
-                # which also runs the audio chain (see set_video_filters).
-                segment_audio+=("$index_audio")
-                audio_cmd+=(-map "[a$i]" "-map_metadata:s:a:$i" "0:s:$index_audio")
-            else
-                audio_cmd+=(-map "0:$index_audio")
-                [[ -z $noise_audio_filter ]] || audio_cmd+=("-filter:a:$i" "$noise_audio_filter")
-            fi
-            append_audio_codec audio_cmd "$i" "$brate" "$channels"
-        fi
-        ((i += 1))
-    done <<< "$audio_info"
+	audio_cmd=()
+	segment_audio=()
+	[[ $audio_handling != none ]] || {
+		audio_cmd=(-an)
+		return
+	}
+	local i=0 index_audio channels brate
+	local audio_info
+	audio_info=$(probe_audio_info)
+	while IFS=, read -r index_audio _; do
+		[[ $index_audio =~ ^[0-9]+$ ]] || continue
+		if [[ $audio_handling == copy ]]; then
+			audio_cmd+=(-map "0:$index_audio" "-c:a:$i" copy)
+		else
+			channels=${audio_channels:-$(probe_audio_channels "$i" "$index_audio")}
+			[[ $channels =~ ^[1-9][0-9]*$ ]] || channels=2
+			brate=${audio_bitrate:-$((channels * 32))k}
+			if [[ ${#segment_inputs[@]} -gt 0 ]]; then
+				# Joined cuts: the stream comes out of the concat filtergraph,
+				# which also runs the audio chain (see set_video_filters).
+				segment_audio+=("$index_audio")
+				audio_cmd+=(-map "[a$i]" "-map_metadata:s:a:$i" "0:s:$index_audio")
+			else
+				audio_cmd+=(-map "0:$index_audio")
+				[[ -z $noise_audio_filter ]] || audio_cmd+=("-filter:a:$i" "$noise_audio_filter")
+			fi
+			append_audio_codec audio_cmd "$i" "$brate" "$channels"
+		fi
+		((i += 1))
+	done <<<"$audio_info"
 }
 
 append_audio_codec() {
-    local -n target=$1
-    local i=$2 brate=$3 channels=$4
-    case $audio_codec in
-    opus) target+=("-c:a:$i" libopus "-b:a:$i" "$brate" "-ac:a:$i" "$channels") ;;
-    ac3) target+=("-c:a:$i" ac3 "-b:a:$i" "$brate" "-ac:a:$i" "$channels") ;;
-    *) target+=("-c:a:$i" aac -aac_coder fast -profile:a aac_low "-b:a:$i" "$brate" "-ac:a:$i" "$channels") ;;
-    esac
+	local -n target=$1
+	local i=$2 brate=$3 channels=$4
+	case $audio_codec in
+	opus) target+=("-c:a:$i" libopus "-b:a:$i" "$brate" "-ac:a:$i" "$channels") ;;
+	ac3) target+=("-c:a:$i" ac3 "-b:a:$i" "$brate" "-ac:a:$i" "$channels") ;;
+	*) target+=("-c:a:$i" aac -aac_coder fast -profile:a aac_low "-b:a:$i" "$brate" "-ac:a:$i" "$channels") ;;
+	esac
 }
 
 ##############
@@ -1128,7 +1167,10 @@ superlow)
 	cq_value_nvidia=38
 	qp_hevc=37
 	;;
-*) echo "ERROR: Unknown video quality: $video_quality" >&2; exit 2 ;;
+*)
+	echo "ERROR: Unknown video quality: $video_quality" >&2
+	exit 2
+	;;
 esac
 
 # QSV HEVC needs lower global_quality values than NVENC qp for same visual quality
@@ -1202,18 +1244,18 @@ function build_encoder_commands() {
 	# some TVs reject; 'hvc1' is the widely supported one.
 	local -a hevc_tag=()
 	case ${output_file##*.} in
-	mp4|mov|m4v|MP4|MOV|M4V) hevc_tag=(-tag:v hvc1) ;;
+	mp4 | mov | m4v | MP4 | MOV | M4V) hevc_tag=(-tag:v hvc1) ;;
 	esac
 	# A source with a timecode tag (camera MOV files) makes the MP4 muxer add
 	# a tmcd data track, which players list as an unknown stream. MP4 has no
 	# use for it; MOV keeps it for editing workflows. keep_timecode=1 opts out.
 	case ${output_file##*.} in
-	mp4|m4v|MP4|M4V) [[ ${keep_timecode:-0} == 1 ]] || general_params+=(-metadata:s:v:0 timecode=) ;;
+	mp4 | m4v | MP4 | M4V) [[ ${keep_timecode:-0} == 1 ]] || general_params+=(-metadata:s:v:0 timecode=) ;;
 	esac
 	if [[ $subtitle_extract == embedded && $defer_subtitles == false ]]; then
-        general_params+=("${subtitle_cmd[@]}")
-    fi
-    copy_video=("${general_params[@]}" -c:v copy)
+		general_params+=("${subtitle_cmd[@]}")
+	fi
+	copy_video=("${general_params[@]}" -c:v copy)
 	# After an input seek, stream-copied audio and subtitles keep every packet
 	# from the keyframe FFmpeg landed on, seconds before the cut, with negative
 	# timestamps (-copypriorss defaults to on). Matroska cannot store those, so
@@ -1222,7 +1264,10 @@ function build_encoder_commands() {
 	# on that same keyframe and needs those packets to stay in sync.
 	local opt
 	for opt in "${input_options[@]}"; do
-		[[ $opt != -ss && $opt != -sseof ]] || { general_params+=(-copypriorss:a 0 -copypriorss:s 0); break; }
+		[[ $opt != -ss && $opt != -sseof ]] || {
+			general_params+=(-copypriorss:a 0 -copypriorss:s 0)
+			break
+		}
 	done
 
 	# Select appropriate encoder command based on the specified video encoder
@@ -1257,12 +1302,12 @@ function build_encoder_commands() {
 		# profile 0=Proxy, 1=LT, 2=Standard, 3=HQ, 4=4444, 5=4444XQ
 		local prores_profile
 		case $video_quality in
-			superlow|verylow) prores_profile=0 ;; # Proxy
-			low) prores_profile=1 ;;               # LT
-			medium|default) prores_profile=2 ;;    # Standard
-			high) prores_profile=3 ;;              # HQ
-			veryhigh) prores_profile=4 ;;          # 4444
-			*) prores_profile=2 ;;                 # Standard
+		superlow | verylow) prores_profile=0 ;; # Proxy
+		low) prores_profile=1 ;;                # LT
+		medium | default) prores_profile=2 ;;   # Standard
+		high) prores_profile=3 ;;               # HQ
+		veryhigh) prores_profile=4 ;;           # 4444
+		*) prores_profile=2 ;;                  # Standard
 		esac
 		encoder_nvenc=()
 		encoder_vulkan=()
@@ -1310,7 +1355,10 @@ use_video_bitrate() { # <encoder array name>
 	local i name=""
 	for ((i = 0; i < ${#sized_argv[@]}; i++)); do
 		case ${sized_argv[$i]} in
-		-crf|-qp|-cq|-global_quality|-rc_mode|-rc:v|-b:v) ((i += 1)); continue ;;
+		-crf | -qp | -cq | -global_quality | -rc_mode | -rc:v | -b:v)
+			((i += 1))
+			continue
+			;;
 		-c:v) name=${sized_argv[$((i + 1))]} ;;
 		esac
 		kept+=("${sized_argv[$i]}")
@@ -1331,16 +1379,16 @@ gpu=${gpu/auto/}
 # Encode to a staging file this job owns.
 ffmpeg_generic_options=(-y "$staged_output")
 case ${output_file##*.} in
-mp4|mov|m4v|MP4|MOV|M4V) ffmpeg_generic_options=(-movflags +faststart -y "$staged_output") ;;
+mp4 | mov | m4v | MP4 | MOV | M4V) ffmpeg_generic_options=(-movflags +faststart -y "$staged_output") ;;
 esac
 if [[ $only_extract_subtitles == 1 ]]; then
-    if [[ ${#subtitle_cmd[@]} -eq 0 ]]; then
-        echo "ERROR: No extractable subtitles found" >&2
-        exit 2
-    fi
-    "$ffmpeg_executable" -nostdin "${subtitle_input_options[@]}" -i "$input_file" "${subtitle_cmd[@]}" || exit $?
-    publish_subtitles "$output_file"
-    exit $?
+	if [[ ${#subtitle_cmd[@]} -eq 0 ]]; then
+		echo "ERROR: No extractable subtitles found" >&2
+		exit 2
+	fi
+	"$ffmpeg_executable" -nostdin "${subtitle_input_options[@]}" -i "$input_file" "${subtitle_cmd[@]}" || exit $?
+	publish_subtitles "$output_file"
+	exit $?
 fi
 
 # A GPU driver that hangs (a Mesa regression, a VCN ring timeout) leaves
@@ -1365,57 +1413,57 @@ ffmpeg_log="$output_stage_dir/ffmpeg.log"
 
 # Keep human-readable diagnostics; only argv is executed.
 run_ffmpeg() {
-    local -a progress_opt=()
-    local progress_file="$output_stage_dir/progress"
-    if [[ $stall_timeout -gt 0 && -d $output_stage_dir ]]; then
-        : > "$progress_file"
-        progress_opt=(-progress "$progress_file")
-    fi
-    printf 'Running command:'
-    printf ' %q' "$ffmpeg_executable" -nostdin "${progress_opt[@]}" "$@"
-    printf '\n'
-    # FFmpeg's messages still reach stderr; the copy decides the retries.
-    # The copier is waited for below, so the log is whole when it is read.
-    local log_fd tee_pid
-    exec {log_fd}> >(tee -a -- "$ffmpeg_log" >&2)
-    tee_pid=$!
-    "$ffmpeg_executable" -nostdin "${progress_opt[@]}" "$@" 2>&"$log_fd" &
-    ffmpeg_pid=$!
-    local stalled=false status
-    if [[ ${#progress_opt[@]} -gt 0 ]]; then
-        # Poll for exit every quarter second (a short job must not wait on
-        # the watchdog) and compare the progress report once a second.
-        local ticks=0 idle=0 seen="" now i
-        while kill -0 "$ffmpeg_pid" 2>/dev/null; do
-            sleep 0.25
-            (( ++ticks % 4 == 0 )) || continue
-            now=$(progress_fingerprint "$progress_file")
-            if [[ $now != "$seen" ]]; then
-                seen=$now
-                idle=0
-                continue
-            fi
-            ((idle += 1))
-            if [[ $idle -ge $stall_timeout ]]; then
-                echo "Stall watchdog: no progress for ${idle}s, terminating ffmpeg" >&2
-                kill -TERM "$ffmpeg_pid" 2>/dev/null
-                for ((i = 0; i < 50; i++)); do
-                    kill -0 "$ffmpeg_pid" 2>/dev/null || break
-                    sleep 0.1
-                done
-                kill -KILL "$ffmpeg_pid" 2>/dev/null
-                stalled=true
-                break
-            fi
-        done
-    fi
-    wait "$ffmpeg_pid"
-    status=$?
-    ffmpeg_pid=""
-    exec {log_fd}>&-
-    wait "$tee_pid"
-    [[ $stalled == false ]] || status=124
-    return "$status"
+	local -a progress_opt=()
+	local progress_file="$output_stage_dir/progress"
+	if [[ $stall_timeout -gt 0 && -d $output_stage_dir ]]; then
+		: >"$progress_file"
+		progress_opt=(-progress "$progress_file")
+	fi
+	printf 'Running command:'
+	printf ' %q' "$ffmpeg_executable" -nostdin "${progress_opt[@]}" "$@"
+	printf '\n'
+	# FFmpeg's messages still reach stderr; the copy decides the retries.
+	# The copier is waited for below, so the log is whole when it is read.
+	local log_fd tee_pid
+	exec {log_fd}> >(tee -a -- "$ffmpeg_log" >&2)
+	tee_pid=$!
+	"$ffmpeg_executable" -nostdin "${progress_opt[@]}" "$@" 2>&"$log_fd" &
+	ffmpeg_pid=$!
+	local stalled=false status
+	if [[ ${#progress_opt[@]} -gt 0 ]]; then
+		# Poll for exit every quarter second (a short job must not wait on
+		# the watchdog) and compare the progress report once a second.
+		local ticks=0 idle=0 seen="" now i
+		while kill -0 "$ffmpeg_pid" 2>/dev/null; do
+			sleep 0.25
+			((++ticks % 4 == 0)) || continue
+			now=$(progress_fingerprint "$progress_file")
+			if [[ $now != "$seen" ]]; then
+				seen=$now
+				idle=0
+				continue
+			fi
+			((idle += 1))
+			if [[ $idle -ge $stall_timeout ]]; then
+				echo "Stall watchdog: no progress for ${idle}s, terminating ffmpeg" >&2
+				kill -TERM "$ffmpeg_pid" 2>/dev/null
+				for ((i = 0; i < 50; i++)); do
+					kill -0 "$ffmpeg_pid" 2>/dev/null || break
+					sleep 0.1
+				done
+				kill -KILL "$ffmpeg_pid" 2>/dev/null
+				stalled=true
+				break
+			fi
+		done
+	fi
+	wait "$ffmpeg_pid"
+	status=$?
+	ffmpeg_pid=""
+	exec {log_fd}>&-
+	wait "$tee_pid"
+	[[ $stalled == false ]] || status=124
+	return "$status"
 }
 
 # A hardware encoder whose driver is installed but broken (a Mesa regression,
@@ -1506,12 +1554,12 @@ set_video_filters() { # <video filter chain>
 
 # Function to attempt the conversion using the 3-stage fallback (GPU -> Partial -> CPU)
 function attempt_conversion() {
-	: > "$ffmpeg_log"
+	: >"$ffmpeg_log"
 	# Reset all hardware state before a retry.
-    encoder_format=()
-    decoder_format=()
-    init_hardware=()
-    force_8bit_color=""
+	encoder_format=()
+	decoder_format=()
+	init_hardware=()
+	force_8bit_color=""
 
 	# If gpu empty auto detect
 	if [[ -z $gpu ]]; then
@@ -1556,7 +1604,7 @@ function attempt_conversion() {
 	decoder_cuda=(-hwaccel cuda -hwaccel_output_format cuda)
 
 	local scale_filter_name="scale"
-	local detected_encoder_var=""  # Track which encoder var was selected
+	local detected_encoder_var="" # Track which encoder var was selected
 
 	# Handle explicit software encoding request
 	if [[ "$gpu" == "software" ]]; then
@@ -1605,40 +1653,78 @@ function attempt_conversion() {
 		encoder_format=("${copy_video[@]}")
 		detected_encoder_var="copy_video"
 	fi
-    if [[ -n $force_encoder ]]; then
-        case $force_encoder in
-        nvenc) detected_encoder_var=encoder_nvenc; init_hardware=("${init_nvidia[@]}"); scale_filter_name=scale_cuda ;;
-        vaapi) detected_encoder_var=encoder_vaapi; init_hardware=("${init_vaapi[@]}"); scale_filter_name=scale_vaapi ;;
-        qsv) detected_encoder_var=encoder_qsv; init_hardware=("${init_qsv[@]}"); scale_filter_name=scale_qsv ;;
-        vulkan) detected_encoder_var=encoder_vulkan; init_hardware=("${init_vulkan[@]}") ;;
-        software) detected_encoder_var=encoder_software ;;
-        *) echo "ERROR: Unsupported encoder backend: $force_encoder" >&2; exit_code=2; return ;;
-        esac
-        local -n requested_encoder=$detected_encoder_var
-        encoder_format=("${requested_encoder[@]}")
-    fi
-    if [[ -n $force_decoder ]]; then
-        case $force_decoder in
-        cuda) decoder_format=("${decoder_cuda[@]}"); init_hardware=("${init_nvidia[@]}") ;;
-        vaapi) decoder_format=("${decoder_vaapi[@]}"); init_hardware=("${init_vaapi[@]}") ;;
-        qsv) decoder_format=("${decoder_qsv[@]}"); init_hardware=("${init_qsv[@]}") ;;
-        vulkan) decoder_format=("${decoder_vulkan[@]}"); init_hardware=("${init_vulkan[@]}") ;;
-        software) decoder_format=(); gpu_partial=1 ;;
-        *) echo "ERROR: Unsupported decoder backend: $force_decoder" >&2; exit_code=2; return ;;
-        esac
-    fi
-    if [[ $force_software == 1 || ${#encoder_format[@]} -eq 0 ]]; then
-        encoder_format=("${encoder_software[@]}")
-        detected_encoder_var=encoder_software
-        init_hardware=()
-        decoder_format=()
-    fi
-    if [[ $force_copy_video == 1 ]]; then
-        encoder_format=("${copy_video[@]}")
-        detected_encoder_var=copy_video
-        init_hardware=()
-        decoder_format=()
-    fi
+	if [[ -n $force_encoder ]]; then
+		case $force_encoder in
+		nvenc)
+			detected_encoder_var=encoder_nvenc
+			init_hardware=("${init_nvidia[@]}")
+			scale_filter_name=scale_cuda
+			;;
+		vaapi)
+			detected_encoder_var=encoder_vaapi
+			init_hardware=("${init_vaapi[@]}")
+			scale_filter_name=scale_vaapi
+			;;
+		qsv)
+			detected_encoder_var=encoder_qsv
+			init_hardware=("${init_qsv[@]}")
+			scale_filter_name=scale_qsv
+			;;
+		vulkan)
+			detected_encoder_var=encoder_vulkan
+			init_hardware=("${init_vulkan[@]}")
+			;;
+		software) detected_encoder_var=encoder_software ;;
+		*)
+			echo "ERROR: Unsupported encoder backend: $force_encoder" >&2
+			exit_code=2
+			return
+			;;
+		esac
+		local -n requested_encoder=$detected_encoder_var
+		encoder_format=("${requested_encoder[@]}")
+	fi
+	if [[ -n $force_decoder ]]; then
+		case $force_decoder in
+		cuda)
+			decoder_format=("${decoder_cuda[@]}")
+			init_hardware=("${init_nvidia[@]}")
+			;;
+		vaapi)
+			decoder_format=("${decoder_vaapi[@]}")
+			init_hardware=("${init_vaapi[@]}")
+			;;
+		qsv)
+			decoder_format=("${decoder_qsv[@]}")
+			init_hardware=("${init_qsv[@]}")
+			;;
+		vulkan)
+			decoder_format=("${decoder_vulkan[@]}")
+			init_hardware=("${init_vulkan[@]}")
+			;;
+		software)
+			decoder_format=()
+			gpu_partial=1
+			;;
+		*)
+			echo "ERROR: Unsupported decoder backend: $force_decoder" >&2
+			exit_code=2
+			return
+			;;
+		esac
+	fi
+	if [[ $force_software == 1 || ${#encoder_format[@]} -eq 0 ]]; then
+		encoder_format=("${encoder_software[@]}")
+		detected_encoder_var=encoder_software
+		init_hardware=()
+		decoder_format=()
+	fi
+	if [[ $force_copy_video == 1 ]]; then
+		encoder_format=("${copy_video[@]}")
+		detected_encoder_var=copy_video
+		init_hardware=()
+		decoder_format=()
+	fi
 
 	#####################################################
 	# --- Encode and Decode video in GPU filter chain ---
@@ -1711,7 +1797,10 @@ function attempt_conversion() {
 		else
 			video_filter_chain="${gpu_first}${force_8bit_color}hwdownload,format=$download_format,null"
 		fi
-		[[ ${#filter_parts[@]} -eq 0 ]] || video_filter_chain+=",$(IFS=,; echo "${filter_parts[*]}")"
+		[[ ${#filter_parts[@]} -eq 0 ]] || video_filter_chain+=",$(
+			IFS=,
+			echo "${filter_parts[*]}"
+		)"
 		video_filter_chain+=",format=$download_format"
 		# VAAPI and Vulkan encoders only take frames in GPU memory; NVENC and
 		# QSV also accept these.
@@ -1745,7 +1834,7 @@ function attempt_conversion() {
 	# multiples of 32 (FFmpeg 9.0, measured on NVIDIA): 1280x720 and 1920x1080
 	# lost their chroma alignment even at the same size. Scale and reduce the
 	# bit depth in software, before the upload.
-	if [[ $detected_encoder_var == encoder_vulkan && ( -n "$video_resolution" || $needs_10bit_to_8bit_conversion == true ) ]]; then
+	if [[ $detected_encoder_var == encoder_vulkan && (-n "$video_resolution" || $needs_10bit_to_8bit_conversion == true) ]]; then
 		gpu_partial=1
 		echo "Vulkan scaling: forcing software decode (Stage 2)"
 	fi
@@ -1823,18 +1912,18 @@ function attempt_conversion() {
 			encoder_args=("${encoder_format[@]:${#segment_inputs[@]}}")
 		fi
 		local -a filters=()
-        set_video_filters "${video_filter_chain#-vf }"
-        run_ffmpeg "${init_hardware[@]}" "${input_options[@]}" "${decoded_inputs[@]}" "${encoder_args[@]}" "${output_options[@]}" "${filters[@]}" "${ffmpeg_generic_options[@]}"
+		set_video_filters "${video_filter_chain#-vf }"
+		run_ffmpeg "${init_hardware[@]}" "${input_options[@]}" "${decoded_inputs[@]}" "${encoder_args[@]}" "${output_options[@]}" "${filters[@]}" "${ffmpeg_generic_options[@]}"
 		exit_code=$?
 		if [[ $exit_code != 0 ]]; then
 			echo "Conversion failed!"
 		fi
 	elif [[ "$force_copy_video" != "1" ]]; then
-        exit_code=1
-    fi
+		exit_code=1
+	fi
 
 	# Stage 2: Partial GPU (decode CPU, encode GPU)
-	if [[ ( ($exit_code != 0 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1" ) && "$detected_encoder_var" != "encoder_software" && "$force_copy_video" != "1" ]]; then
+	if [[ (($exit_code != 0 && $force_software != 1 && $force_copy_video != 1) || "$gpu_partial" == "1") && "$detected_encoder_var" != "encoder_software" && "$force_copy_video" != "1" ]]; then
 		echo "Encode mode: Decode Software, Encode GPU"
 
 		local partial_video_filter_chain=""
@@ -1884,12 +1973,15 @@ function attempt_conversion() {
 		[[ $fps_filter != fps=* ]] || partial_filter_parts+=("$fps_filter")
 
 		if [[ ${#partial_filter_parts[@]} -gt 0 ]]; then
-			partial_video_filter_chain="-vf $(IFS=,; echo "${partial_filter_parts[*]}")"
+			partial_video_filter_chain="-vf $(
+				IFS=,
+				echo "${partial_filter_parts[*]}"
+			)"
 		fi
 
 		local -a filters=()
-        set_video_filters "${partial_video_filter_chain#-vf }"
-        run_ffmpeg "${init_hardware[@]}" "${input_options[@]}" "${encoder_format[@]}" "${output_options[@]}" "${filters[@]}" "${ffmpeg_generic_options[@]}"
+		set_video_filters "${partial_video_filter_chain#-vf }"
+		run_ffmpeg "${init_hardware[@]}" "${input_options[@]}" "${encoder_format[@]}" "${output_options[@]}" "${filters[@]}" "${ffmpeg_generic_options[@]}"
 		exit_code=$?
 		if [[ $exit_code != 0 ]]; then
 			echo "Conversion failed!"
@@ -1932,11 +2024,14 @@ function attempt_conversion() {
 		[[ $fps_filter != fps=* ]] || sw_filter_parts+=("$fps_filter")
 
 		if [[ ${#sw_filter_parts[@]} -gt 0 ]]; then
-			software_filter_chain="-vf $(IFS=,; echo "${sw_filter_parts[*]}")"
+			software_filter_chain="-vf $(
+				IFS=,
+				echo "${sw_filter_parts[*]}"
+			)"
 		fi
 
 		local -a filters=() second_pass=()
-        set_video_filters "${software_filter_chain#-vf }"
+		set_video_filters "${software_filter_chain#-vf }"
 		if [[ -n ${video_bitrate:-} && $video_encoder != prores ]]; then
 			# On the processor a bitrate job is two-pass: the first pass
 			# learns where the picture needs bits, so the size lands on
@@ -1946,10 +2041,13 @@ function attempt_conversion() {
 			[[ $video_encoder != h265 ]] || pass_log+=(-x265-stats "$output_stage_dir/pass.x265")
 			echo "Analysis pass: measuring the video before the sized encode"
 			run_ffmpeg "${input_options[@]}" "${encoder_software[@]}" "${output_options[@]}" "${filters[@]}" \
-				-pass 1 "${pass_log[@]}" -sn -dn -f null - || { exit_code=$?; return; }
+				-pass 1 "${pass_log[@]}" -sn -dn -f null - || {
+				exit_code=$?
+				return
+			}
 			second_pass=(-pass 2 "${pass_log[@]}")
 		fi
-        run_ffmpeg "${input_options[@]}" "${encoder_software[@]}" "${output_options[@]}" "${filters[@]}" "${second_pass[@]}" "${ffmpeg_generic_options[@]}"
+		run_ffmpeg "${input_options[@]}" "${encoder_software[@]}" "${output_options[@]}" "${filters[@]}" "${second_pass[@]}" "${ffmpeg_generic_options[@]}"
 		exit_code=$?
 	fi
 }
@@ -2053,59 +2151,62 @@ fi
 # bitrate that fits: scaled by how far the encoder missed when it already had
 # one, computed from the size budget when it was a quality encode.
 stream_bytes() { # <stream selector> <file> → total packet bytes
-    "$ffprobe_executable" -v error -select_streams "$1" -show_entries packet=size -of csv=p=0 "$2" |
-        awk '{ total += $1 } END { printf "%d", total }'
+	"$ffprobe_executable" -v error -select_streams "$1" -show_entries packet=size -of csv=p=0 "$2" |
+		awk '{ total += $1 } END { printf "%d", total }'
 }
 if [[ -n ${size_limit:-} ]]; then
-    size=$(stat -c %s -- "$staged_output")
-    if (( size > size_limit )); then
-        if [[ $force_copy_video == 1 ]]; then
-            echo "ERROR: The copied video is $size bytes, over the $size_limit-byte limit" >&2
-            exit 3
-        fi
-        video_bytes=$(stream_bytes v:0 "$staged_output")
-        other_bytes=$((size - video_bytes))
-        budget=$((size_limit * 92 / 100 - other_bytes))
-        seconds=$("$ffprobe_executable" -v error -show_entries format=duration -of csv=p=0 "$staged_output")
-        if (( budget <= 0 || video_bytes <= 0 )) || [[ ! $seconds =~ ^[0-9]+([.][0-9]+)?$ ]]; then
-            echo "ERROR: The output is $size bytes and cannot be brought under $size_limit" >&2
-            exit 3
-        fi
-        if [[ -n ${video_bitrate:-} ]]; then
-            video_bitrate=$((video_bitrate * budget / video_bytes))
-        else
-            video_bitrate=$(awk -v b="$budget" -v s="$seconds" 'BEGIN { printf "%d", b * 8 / s }')
-        fi
-        (( video_bitrate >= 50000 )) || { echo "ERROR: The output cannot fit $size_limit bytes" >&2; exit 3; }
-        echo "Output is $size bytes, over the $size_limit-byte limit: encoding again at $video_bitrate bit/s"
-        build_audio_cmd
-        build_encoder_commands
-        attempt_conversion
-        [[ $exit_code == 0 ]] || exit "$exit_code"
-        size=$(stat -c %s -- "$staged_output")
-        if (( size > size_limit )); then
-            echo "ERROR: The output is still $size bytes, over the $size_limit-byte limit" >&2
-            exit 3
-        fi
-    fi
+	size=$(stat -c %s -- "$staged_output")
+	if ((size > size_limit)); then
+		if [[ $force_copy_video == 1 ]]; then
+			echo "ERROR: The copied video is $size bytes, over the $size_limit-byte limit" >&2
+			exit 3
+		fi
+		video_bytes=$(stream_bytes v:0 "$staged_output")
+		other_bytes=$((size - video_bytes))
+		budget=$((size_limit * 92 / 100 - other_bytes))
+		seconds=$("$ffprobe_executable" -v error -show_entries format=duration -of csv=p=0 "$staged_output")
+		if ((budget <= 0 || video_bytes <= 0)) || [[ ! $seconds =~ ^[0-9]+([.][0-9]+)?$ ]]; then
+			echo "ERROR: The output is $size bytes and cannot be brought under $size_limit" >&2
+			exit 3
+		fi
+		if [[ -n ${video_bitrate:-} ]]; then
+			video_bitrate=$((video_bitrate * budget / video_bytes))
+		else
+			video_bitrate=$(awk -v b="$budget" -v s="$seconds" 'BEGIN { printf "%d", b * 8 / s }')
+		fi
+		((video_bitrate >= 50000)) || {
+			echo "ERROR: The output cannot fit $size_limit bytes" >&2
+			exit 3
+		}
+		echo "Output is $size bytes, over the $size_limit-byte limit: encoding again at $video_bitrate bit/s"
+		build_audio_cmd
+		build_encoder_commands
+		attempt_conversion
+		[[ $exit_code == 0 ]] || exit "$exit_code"
+		size=$(stat -c %s -- "$staged_output")
+		if ((size > size_limit)); then
+			echo "ERROR: The output is still $size bytes, over the $size_limit-byte limit" >&2
+			exit 3
+		fi
+	fi
 fi
 
 # Subtitle packets spanning a cut must be clipped, not omitted or allowed to
 # extend the A/V output. The first pass intentionally omitted subtitle streams.
 if [[ $defer_subtitles == true ]]; then
-    echo "Adding subtitles..."
-    with_subtitles="$output_stage_dir/subtitled.${output_file##*.}"
-    # The same selection as the first pass, re-aimed at the original as input 1.
-    # "-c copy" comes first so the per-stream subtitle encoder still wins.
-    run_ffmpeg -i "$staged_output" "${subtitle_input_options[@]}" -i "$input_file" \
-        -map 0:v:0 -map '0:a?' -map_metadata 0 -map_chapters 0 -c copy \
-        "${subtitle_cmd[@]/#0:/1:}" "${subtitle_packet_options[@]}" -y "$with_subtitles" || exit $?
-    staged_output=$with_subtitles
+	echo "Adding subtitles..."
+	with_subtitles="$output_stage_dir/subtitled.${output_file##*.}"
+	# The same selection as the first pass, re-aimed at the original as input 1.
+	# "-c copy" comes first so the per-stream subtitle encoder still wins.
+	run_ffmpeg -i "$staged_output" "${subtitle_input_options[@]}" -i "$input_file" \
+		-map 0:v:0 -map '0:a?' -map_metadata 0 -map_chapters 0 -c copy \
+		"${subtitle_cmd[@]/#0:/1:}" "${subtitle_packet_options[@]}" -y "$with_subtitles" || exit $?
+	staged_output=$with_subtitles
 fi
 
 if [[ ! -s $staged_output ]]; then
-    echo "ERROR: Conversion produced no output" >&2
-    exit 1
+	echo "ERROR: Conversion produced no output" >&2
+	exit 1
 fi
 # The video first: sidecars belong to a file that exists.
 publish "$staged_output" "$output_file" || exit 1

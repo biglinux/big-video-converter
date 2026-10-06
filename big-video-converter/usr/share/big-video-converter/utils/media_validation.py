@@ -49,10 +49,22 @@ class OutputDurationMismatch(ValueError):
 
 def probe_media(path: str, *, executable: str | None = None, timeout=15) -> dict:
     result = subprocess.run(
-        [executable or get_ffprobe_executable(), "-v", "error", "-show_streams",
-         "-show_format", "-of", "json", os.path.abspath(path)],
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
-        timeout=timeout, check=True,
+        [
+            executable or get_ffprobe_executable(),
+            "-v",
+            "error",
+            "-show_streams",
+            "-show_format",
+            "-of",
+            "json",
+            os.path.abspath(path),
+        ],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        timeout=timeout,
+        check=True,
     )
     data = json.loads(result.stdout)
     if not isinstance(data, dict) or not isinstance(data.get("streams"), list):
@@ -67,8 +79,11 @@ def media_duration(data: dict, kind: str = "video") -> float | None:
     audio seconds longer than the video that was asked for, so comparing the
     maximum both accepts a video cut short and rejects a correct conversion.
     """
-    candidates = [s.get("duration") for s in data.get("streams", [])
-                  if s.get("codec_type") == kind]
+    candidates = [
+        s.get("duration")
+        for s in data.get("streams", [])
+        if s.get("codec_type") == kind
+    ]
     candidates.append(data.get("format", {}).get("duration"))
     for value in candidates:
         try:
@@ -84,12 +99,16 @@ def stream_count(data: dict, kind: str) -> int:
     return sum(s.get("codec_type") == kind for s in data.get("streams", []))
 
 
-def validate_output(path: str, *, source: str | None = None,
-                    expected_duration: float | None = None,
-                    expected_streams: dict | None = None,
-                    duration_tolerance: float | None = None,
-                    allow_longer: bool = False,
-                    ffprobe: str | None = None) -> dict:
+def validate_output(
+    path: str,
+    *,
+    source: str | None = None,
+    expected_duration: float | None = None,
+    expected_streams: dict | None = None,
+    duration_tolerance: float | None = None,
+    allow_longer: bool = False,
+    ffprobe: str | None = None,
+) -> dict:
     identity = FileIdentity.capture(path)
     if identity.size == 0:
         raise ValueError("The conversion produced an empty output")
@@ -105,16 +124,21 @@ def validate_output(path: str, *, source: str | None = None,
         if not math.isfinite(expected_duration) or expected_duration <= 0:
             raise ValueError("Invalid expected output duration")
         actual = media_duration(media)
-        tolerance = (max(1.0, 0.02 * expected_duration) if duration_tolerance is None
-                     else duration_tolerance)
+        tolerance = (
+            max(1.0, 0.02 * expected_duration)
+            if duration_tolerance is None
+            else duration_tolerance
+        )
         if actual is None:
             raise OutputDurationMismatch("The output reports no usable duration")
         # A keyframe cut can only keep more than was asked for, never less, so
         # a stream copy is judged on the shortfall alone.
-        if (expected_duration - actual > tolerance
-                or (not allow_longer and actual - expected_duration > tolerance)):
+        if expected_duration - actual > tolerance or (
+            not allow_longer and actual - expected_duration > tolerance
+        ):
             raise OutputDurationMismatch(
-                f"expected about {expected_duration:.2f}s, output has {actual:.2f}s")
+                f"expected about {expected_duration:.2f}s, output has {actual:.2f}s"
+            )
     if FileIdentity.capture(path) != identity:
         raise ValueError("The output changed during validation")
     return media
@@ -161,8 +185,14 @@ def run_cancellable(argv, cancelled, *, timeout, task):
     CompletedProcess with text output; the caller judges the exit status.
     """
     with subprocess.Popen(
-        argv, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        text=True, encoding="utf-8", errors="replace", start_new_session=True,
+        argv,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        start_new_session=True,
     ) as process:
         deadline = time.monotonic() + timeout
         try:
@@ -174,7 +204,9 @@ def run_cancellable(argv, cancelled, *, timeout, task):
                     raise TimeoutError(f"Timed out while {task}")
                 try:
                     stdout, stderr = process.communicate(timeout=min(0.1, remaining))
-                    return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
+                    return subprocess.CompletedProcess(
+                        argv, process.returncode, stdout, stderr
+                    )
                 except subprocess.TimeoutExpired:
                     continue
         finally:
@@ -198,32 +230,71 @@ def sample_windows(duration: float | None) -> tuple[tuple[float, float], ...]:
     if not duration or not math.isfinite(duration) or duration <= FULL_DECODE_SECONDS:
         return ((0.0, math.inf),)
     step = duration / 4
-    return ((0.0, 2.0), (duration - 2.0, 2.0),
-            *((round(step * n, 3), 1.0) for n in (1, 2, 3)))
+    return (
+        (0.0, 2.0),
+        (duration - 2.0, 2.0),
+        *((round(step * n, 3), 1.0) for n in (1, 2, 3)),
+    )
 
 
-def _decode_window(path: str, start: float, length: float,
-                   cancelled: threading.Event, *, ffmpeg: str | None = None,
-                   timeout=120) -> None:
+def _decode_window(
+    path: str,
+    start: float,
+    length: float,
+    cancelled: threading.Event,
+    *,
+    ffmpeg: str | None = None,
+    timeout=120,
+) -> None:
     # Accurate seeking would decode and discard everything from the preceding
     # keyframe, which on a long GOP costs as much as the whole file. Landing on
     # the keyframe itself is what keeps a window's cost proportional to it.
-    interval = ([] if math.isinf(length) else
-                ["-noaccurate_seek", "-ss", f"{start:.3f}", "-t", f"{length:.3f}"])
+    interval = (
+        []
+        if math.isinf(length)
+        else ["-noaccurate_seek", "-ss", f"{start:.3f}", "-t", f"{length:.3f}"]
+    )
     process = run_cancellable(
-        [ffmpeg or get_ffmpeg_executable(), "-nostdin", "-v", "error", "-xerror",
-         "-err_detect", "explode", *interval,
-         "-i", path, "-map", "0:v", "-map", "0:a?", "-f", "null", "-"],
-        cancelled, timeout=timeout, task="decoding the output")
+        [
+            ffmpeg or get_ffmpeg_executable(),
+            "-nostdin",
+            "-v",
+            "error",
+            "-xerror",
+            "-err_detect",
+            "explode",
+            *interval,
+            "-i",
+            path,
+            "-map",
+            "0:v",
+            "-map",
+            "0:a?",
+            "-f",
+            "null",
+            "-",
+        ],
+        cancelled,
+        timeout=timeout,
+        task="decoding the output",
+    )
     if process.returncode:
         detail = process.stderr.strip().splitlines()
-        raise ValueError(f"The output failed to decode at {start:.1f}s: "
-                         + (detail[-1] if detail else "unknown decoder error"))
+        raise ValueError(
+            f"The output failed to decode at {start:.1f}s: "
+            + (detail[-1] if detail else "unknown decoder error")
+        )
 
 
-def verify_integrity(path: str, cancelled: threading.Event, *,
-                     expected_frames: int | None = None, ffprobe: str | None = None,
-                     ffmpeg: str | None = None, timeout=900) -> None:
+def verify_integrity(
+    path: str,
+    cancelled: threading.Event,
+    *,
+    expected_frames: int | None = None,
+    ffprobe: str | None = None,
+    ffmpeg: str | None = None,
+    timeout=900,
+) -> None:
     """Prove the published file is complete, without decoding all of it.
 
     Decoding every frame costs a full pass over the media and still misses the
@@ -239,14 +310,31 @@ def verify_integrity(path: str, cancelled: threading.Event, *,
     if cancelled.is_set():
         raise InterruptedError("Cancelled before checking the output")
     probe = run_cancellable(
-        [ffprobe or get_ffprobe_executable(), "-v", "error", "-err_detect", "explode",
-         "-count_packets", "-show_entries", "stream=codec_type,nb_read_packets,duration",
-         "-show_entries", "format=duration", "-of", "json", path],
-        cancelled, timeout=timeout, task="counting the output packets")
+        [
+            ffprobe or get_ffprobe_executable(),
+            "-v",
+            "error",
+            "-err_detect",
+            "explode",
+            "-count_packets",
+            "-show_entries",
+            "stream=codec_type,nb_read_packets,duration",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "json",
+            path,
+        ],
+        cancelled,
+        timeout=timeout,
+        task="counting the output packets",
+    )
     complaints = probe.stderr.strip().splitlines()
     if probe.returncode or complaints:
-        raise ValueError("The output is damaged: "
-                         + (complaints[-1] if complaints else "could not be read"))
+        raise ValueError(
+            "The output is damaged: "
+            + (complaints[-1] if complaints else "could not be read")
+        )
     data = json.loads(probe.stdout)
     packets = {}
     for stream in data.get("streams", []):
@@ -261,18 +349,33 @@ def verify_integrity(path: str, cancelled: threading.Event, *,
     # One frame of slack: the last progress line can be written before the
     # muxer flushes its final packet.
     if expected_frames and packets.get("video", 0) + 1 < expected_frames:
-        raise ValueError(f"The output holds {packets.get('video', 0)} video packets, "
-                         f"but FFmpeg reported writing {expected_frames} frames")
+        raise ValueError(
+            f"The output holds {packets.get('video', 0)} video packets, "
+            f"but FFmpeg reported writing {expected_frames} frames"
+        )
     for start, length in sample_windows(media_duration(data)):
         if cancelled.is_set():
             raise InterruptedError("Cancelled before deleting the original")
-        _decode_window(path, start, length, cancelled, ffmpeg=ffmpeg,
-                       timeout=timeout if math.isinf(length) else 120)
+        _decode_window(
+            path,
+            start,
+            length,
+            cancelled,
+            ffmpeg=ffmpeg,
+            timeout=timeout if math.isinf(length) else 120,
+        )
 
 
-def remove_original(source: str, identity: FileIdentity, outputs: list[str],
-                    cancelled: threading.Event, *, expected_frames: int | None = None,
-                    ffmpeg: str | None = None, ffprobe: str | None = None) -> None:
+def remove_original(
+    source: str,
+    identity: FileIdentity,
+    outputs: list[str],
+    cancelled: threading.Event,
+    *,
+    expected_frames: int | None = None,
+    ffmpeg: str | None = None,
+    ffprobe: str | None = None,
+) -> None:
     """Delete the unchanged input, only after validating outputs this job owns.
 
     The deletion is permanent, so every precondition is re-checked after the
@@ -286,13 +389,20 @@ def remove_original(source: str, identity: FileIdentity, outputs: list[str],
     for path in outputs:
         validate_output(path, source=source, ffprobe=ffprobe)
         output_identities.append(FileIdentity.capture(path))
-        verify_integrity(path, cancelled, ffprobe=ffprobe, ffmpeg=ffmpeg,
-                         expected_frames=expected_frames if len(outputs) == 1 else None)
+        verify_integrity(
+            path,
+            cancelled,
+            ffprobe=ffprobe,
+            ffmpeg=ffmpeg,
+            expected_frames=expected_frames if len(outputs) == 1 else None,
+        )
         # Readable cached data is not yet durable. Both the contents and the
         # published name must survive a power loss before removing the source.
         with open(path, "rb") as output:
             os.fsync(output.fileno())
-        directory = os.open(os.path.dirname(os.path.abspath(path)), os.O_RDONLY | os.O_DIRECTORY)
+        directory = os.open(
+            os.path.dirname(os.path.abspath(path)), os.O_RDONLY | os.O_DIRECTORY
+        )
         try:
             os.fsync(directory)
         finally:
@@ -301,7 +411,10 @@ def remove_original(source: str, identity: FileIdentity, outputs: list[str],
         raise InterruptedError("Cancelled before deleting the original")
     if FileIdentity.capture(source) != identity:
         raise ValueError("The original changed while the conversion was running")
-    if any(FileIdentity.capture(p) != expected for p, expected in zip(outputs, output_identities, strict=True)):
+    if any(
+        FileIdentity.capture(p) != expected
+        for p, expected in zip(outputs, output_identities, strict=True)
+    ):
         raise ValueError("An output changed after validation")
     os.unlink(source)
 

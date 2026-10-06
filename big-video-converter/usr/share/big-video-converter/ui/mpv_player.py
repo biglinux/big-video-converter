@@ -17,43 +17,50 @@ import gi
 logger = logging.getLogger(__name__)
 _ = gettext.gettext
 
+
 def is_running_in_vm() -> bool:
     """Detect if running inside a virtual machine (VirtualBox, VMware, QEMU, etc.)"""
     try:
         # Check systemd-detect-virt (most reliable on modern Linux)
         result = subprocess.run(
-            ['systemd-detect-virt', '--vm'],
-            capture_output=True, text=True, timeout=2, check=False
+            ["systemd-detect-virt", "--vm"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
         )
-        if result.returncode == 0 and result.stdout.strip() != 'none':
+        if result.returncode == 0 and result.stdout.strip() != "none":
             vm_type = result.stdout.strip()
             logger.debug(f"MPV: Detected virtual machine: {vm_type}")
             return True
     except (FileNotFoundError, subprocess.TimeoutExpired):
         pass
-    
+
     try:
         # Fallback: check DMI info
-        with open('/sys/class/dmi/id/product_name', 'r') as f:
+        with open("/sys/class/dmi/id/product_name", "r") as f:
             product = f.read().lower()
-            if any(vm in product for vm in ['virtualbox', 'vmware', 'qemu', 'kvm', 'virtual']):
+            if any(
+                vm in product
+                for vm in ["virtualbox", "vmware", "qemu", "kvm", "virtual"]
+            ):
                 logger.debug(
                     f"MPV: Detected virtual machine from DMI: {product.strip()}"
                 )
                 return True
     except (FileNotFoundError, PermissionError):
         pass
-    
+
     try:
         # Fallback: check for hypervisor in cpuinfo
-        with open('/proc/cpuinfo', 'r') as f:
+        with open("/proc/cpuinfo", "r") as f:
             cpuinfo = f.read().lower()
-            if 'hypervisor' in cpuinfo:
+            if "hypervisor" in cpuinfo:
                 logger.debug("MPV: Detected hypervisor flag in CPU")
                 return True
     except (FileNotFoundError, PermissionError):
         pass
-    
+
     return False
 
 
@@ -62,11 +69,12 @@ def get_render_mode_setting():
     Returns: 'auto', 'opengl', or 'software'
     """
     import json
+
     config_home = os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config")
     settings_file = os.path.join(config_home, "big-video-converter", "settings.json")
     try:
         if os.path.exists(settings_file):
-            with open(settings_file, 'r') as f:
+            with open(settings_file, "r") as f:
                 settings = json.load(f)
                 mode = settings.get("video-preview-render-mode", "auto")
                 logger.debug(f"MPV: Loaded render mode setting: '{mode}'")
@@ -114,7 +122,9 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import GLib, Gtk
 
 if _USE_SOFTWARE_MODE:
-    os.environ.setdefault("GSK_RENDERER", "gl" if Gtk.get_minor_version() >= 18 else "ngl")
+    os.environ.setdefault(
+        "GSK_RENDERER", "gl" if Gtk.get_minor_version() >= 18 else "ngl"
+    )
 
 try:
     import mpv
@@ -146,18 +156,22 @@ except ImportError:
 
 def get_proc_address_wrapper():
     """Get OpenGL function address for MPV render context"""
+
     def glx_impl(name: bytes):
         from OpenGL import GLX
+
         return GLX.glXGetProcAddress(name.decode("utf-8"))
 
     def egl_impl(name: bytes):
         from OpenGL import EGL
+
         return EGL.eglGetProcAddress(name.decode("utf-8"))
 
     platform_func = None
 
     try:
         from OpenGL import GLX  # noqa: F401 - probes that the GLX binding loads
+
         platform_func = glx_impl
     except (AttributeError, ImportError):
         pass
@@ -165,6 +179,7 @@ def get_proc_address_wrapper():
     if platform_func is None:
         try:
             from OpenGL import EGL  # noqa: F401 - probes that the EGL binding loads
+
             platform_func = egl_impl
         except (AttributeError, ImportError):
             pass
@@ -207,7 +222,7 @@ class MPVPlayer:
         self.crop_right = 0
         self.crop_top = 0
         self.crop_bottom = 0
-        
+
         # Cache current adjustment values to avoid redundant updates
         self.cached_brightness = 0
         self.cached_contrast = 0
@@ -261,6 +276,7 @@ class MPVPlayer:
         except Exception:  # noqa: BLE001 - realize handler: a GL, ctypes or libmpv failure is logged and must not escape into GTK
             logger.error("ERROR: Failed to initialize MPV")
             import traceback
+
             traceback.print_exc()
             self.mpv_instance = None
             self.render_context = None
@@ -268,55 +284,55 @@ class MPVPlayer:
     def _init_software_mode(self):
         """Initialize MPV with pure software rendering (for VMs without 3D)."""
         logger.debug("MPV: Initializing in software rendering mode...")
-        
+
         try:
             # Use libmpv with aggressive software rendering settings
             self.mpv_instance = mpv.MPV(
                 vo="libmpv",
-                hwdec="no",               # Disable hardware decoding
+                hwdec="no",  # Disable hardware decoding
                 keep_open="yes",
                 idle="yes",
                 osc="no",
                 input_default_bindings="no",
                 input_vo_keyboard="no",
                 # Software rendering options
-                gpu_sw="yes",             # Force software GPU rendering
-                opengl_swapinterval=0,    # Disable vsync
-                video_sync="audio",       # Sync to audio (less demanding)
-                interpolation="no",       # Disable interpolation
-                scale="bilinear",         # Fast scaling
-                dscale="bilinear",        # Fast downscaling
-                cscale="bilinear",        # Fast chroma scaling
+                gpu_sw="yes",  # Force software GPU rendering
+                opengl_swapinterval=0,  # Disable vsync
+                video_sync="audio",  # Sync to audio (less demanding)
+                interpolation="no",  # Disable interpolation
+                scale="bilinear",  # Fast scaling
+                dscale="bilinear",  # Fast downscaling
+                cscale="bilinear",  # Fast chroma scaling
             )
             logger.debug("MPV Software: Instance created successfully")
-            
+
             # For software mode, we still need the OpenGL render context
             # but with reduced expectations
             try:
                 self.video_widget.make_current()
-                
+
                 opengl_init_params = {
-                    "get_proc_address": MpvGlGetProcAddressFn(get_proc_address_wrapper())
+                    "get_proc_address": MpvGlGetProcAddressFn(
+                        get_proc_address_wrapper()
+                    )
                 }
-                
+
                 self.render_context = MpvRenderContext(
-                    self.mpv_instance,
-                    "opengl",
-                    opengl_init_params=opengl_init_params
+                    self.mpv_instance, "opengl", opengl_init_params=opengl_init_params
                 )
                 logger.debug("MPV Software: OpenGL render context created")
-                
+
                 # Set up update callback
                 self.render_context.update_cb = self._on_mpv_render_update
-                
+
             except _MPV_ERRORS as e:
                 logger.error(f"MPV Software: Failed to create render context: {e}")
                 logger.debug(
                     "MPV Software: Will continue without render context (video may not display)"
                 )
-            
+
             self._register_events()
-                
+
         except Exception as e:
             logger.error(f"MPV Software: Failed to create instance: {e}")
             raise
@@ -333,21 +349,21 @@ class MPVPlayer:
             logger.debug("MPV: Using VM-optimized settings (software rendering)")
             self.mpv_instance = mpv.MPV(
                 vo="libmpv",
-                hwdec="no",           # Disable hardware decoding in VMs
+                hwdec="no",  # Disable hardware decoding in VMs
                 keep_open="yes",
                 idle="yes",
                 osc="no",
                 input_default_bindings="no",
                 input_vo_keyboard="no",
                 # Software rendering fallbacks for VMs
-                gpu_sw="yes",         # Use software rendering for GPU operations
+                gpu_sw="yes",  # Use software rendering for GPU operations
                 opengl_swapinterval=0,  # Disable vsync for better performance in VMs
             )
         else:
             logger.debug("MPV: Using hardware-accelerated settings")
             self.mpv_instance = mpv.MPV(
                 vo="libmpv",
-                hwdec="auto",         # Auto-detect best hardware decoder
+                hwdec="auto",  # Auto-detect best hardware decoder
                 keep_open="yes",
                 idle="yes",
                 osc="no",
@@ -360,11 +376,9 @@ class MPVPlayer:
         opengl_init_params = {
             "get_proc_address": MpvGlGetProcAddressFn(get_proc_address_wrapper())
         }
-        
+
         self.render_context = MpvRenderContext(
-            self.mpv_instance,
-            "opengl",
-            opengl_init_params=opengl_init_params
+            self.mpv_instance, "opengl", opengl_init_params=opengl_init_params
         )
         logger.debug("MPV: OpenGL render context created successfully")
 
@@ -517,7 +531,7 @@ class MPVPlayer:
             if not self.mpv_instance:
                 logger.error("MPV: Failed to initialize - cannot load video")
                 return False
-        
+
         # Verify file exists
         if not os.path.exists(file_path):
             logger.debug(f"MPV: File does not exist: {file_path}")
@@ -531,7 +545,7 @@ class MPVPlayer:
             abs_path = os.path.abspath(file_path)
             logger.debug(f"MPV: Loading file: {abs_path}")
             logger.debug(f"MPV: File size: {os.path.getsize(abs_path)} bytes")
-            
+
             self.mpv_instance.loadfile(abs_path)
             logger.debug("MPV: Loadfile command sent")
 
@@ -542,6 +556,7 @@ class MPVPlayer:
         except (OSError, *_MPV_ERRORS) as e:
             logger.error(f"Error loading video in MPV: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -603,7 +618,9 @@ class MPVPlayer:
         if not self.mpv_instance or not self.current_file:
             return False
         try:
-            self.mpv_instance.command_async("seek", f"{position_seconds:.6f}", "absolute+exact")
+            self.mpv_instance.command_async(
+                "seek", f"{position_seconds:.6f}", "absolute+exact"
+            )
             return True
         except _MPV_ERRORS:
             return False
@@ -623,7 +640,10 @@ class MPVPlayer:
         if not self.mpv_instance or not math.isfinite(value):
             return
         value = max(-100, min(100, round(value)))
-        if value == getattr(self, "cached_" + name) and name not in self._pending_colors:
+        if (
+            value == getattr(self, "cached_" + name)
+            and name not in self._pending_colors
+        ):
             return
         # A slider drag changes the value on every pointer event, and each
         # change makes mpv redraw the current frame, which takes the slot of
@@ -670,7 +690,9 @@ class MPVPlayer:
         "sdr": "format=gamma=bt.1886:primaries=bt.709:colormatrix=bt.709",
     }
 
-    def set_video_effects(self, graph: str, shader: str, source_hdr: str = "auto") -> None:
+    def set_video_effects(
+        self, graph: str, shader: str, source_hdr: str = "auto"
+    ) -> None:
         """Preview an FFmpeg filter graph, an mpv shader (.hook) and the
         colours the source is read as.
 
@@ -690,10 +712,14 @@ class MPVPlayer:
             size = len(graph.encode())
             chain = [self._SOURCE_HDR_FORMATS.get(source_hdr, "")]
             chain.append(f"lavfi=graph=%{size}%{graph}" if graph else "")
-            self.mpv_instance.command("vf", "set", ",".join(part for part in chain if part))
+            self.mpv_instance.command(
+                "vf", "set", ",".join(part for part in chain if part)
+            )
             self.mpv_instance.command("change-list", "glsl-shaders", "clr", "")
             if shader:
-                self.mpv_instance.command("change-list", "glsl-shaders", "append", shader)
+                self.mpv_instance.command(
+                    "change-list", "glsl-shaders", "append", shader
+                )
         except _MPV_ERRORS as error:
             logger.warning("MPV could not preview the effects: %s", error)
 
@@ -701,10 +727,10 @@ class MPVPlayer:
         if self.mpv_instance:
             # Convert to integers and check if values actually changed
             new_left = int(left)
-            new_right = int(right) 
+            new_right = int(right)
             new_top = int(top)
             new_bottom = int(bottom)
-            
+
             # Only update if values actually changed to avoid unnecessary updates
             if (
                 not getattr(self, "_crop_applied", False)
@@ -713,7 +739,6 @@ class MPVPlayer:
                 or new_top != self.crop_top
                 or new_bottom != self.crop_bottom
             ):
-                
                 self.crop_left = new_left
                 self.crop_right = new_right
                 self.crop_top = new_top
@@ -736,7 +761,7 @@ class MPVPlayer:
         try:
             video_width = self.mpv_instance.width
             video_height = self.mpv_instance.height
-            
+
             if not video_width or not video_height:
                 logger.debug("MPV: Video dimensions not available yet")
                 return

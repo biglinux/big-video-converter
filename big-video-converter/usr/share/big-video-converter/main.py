@@ -62,7 +62,8 @@ class VideoConverterApp(
             source = Gio.SettingsSchemaSource.get_default()
             schema = (
                 source.lookup("org.gnome.desktop.wm.preferences", True)
-                if source is not None else None
+                if source is not None
+                else None
             )
             if (
                 schema is None
@@ -86,7 +87,9 @@ class VideoConverterApp(
                     return False
         except GLib.Error as error:
             # Called before self.logger exists, and in tests without an instance.
-            logging.getLogger(__name__).debug("Could not read the button layout: %s", error)
+            logging.getLogger(__name__).debug(
+                "Could not read the button layout: %s", error
+            )
         # Default: right side
         return False
 
@@ -357,7 +360,9 @@ class VideoConverterApp(
         self._create_right_pane()
 
         sidebar_position = self.settings_manager.load_setting("sidebar-position", 430)
-        self.split_view.set_sidebar_width_fraction(min(0.5, max(0.2, sidebar_position / width)))
+        self.split_view.set_sidebar_width_fraction(
+            min(0.5, max(0.2, sidebar_position / width))
+        )
 
         self.main_stack.add_titled(self.split_view, "main_view", _("Main"))
 
@@ -389,18 +394,24 @@ class VideoConverterApp(
             return True
         if getattr(self, "_close_dialog", None) is not None:
             return True
-        dialog = Adw.AlertDialog(heading=_("Stop converting and close?"),
-            body=_("Conversions are still running. Closing stops unfinished work and keeps its originals."))
+        dialog = Adw.AlertDialog(
+            heading=_("Stop converting and close?"),
+            body=_(
+                "Conversions are still running. Closing stops unfinished work and keeps its originals."
+            ),
+        )
         self._close_dialog = dialog
         dialog.add_response("continue", _("Keep converting"))
         dialog.add_response("close", _("Stop and close"))
         dialog.set_response_appearance("close", Adw.ResponseAppearance.DESTRUCTIVE)
         dialog.set_default_response("continue")
         dialog.set_close_response("continue")
+
         def respond(_dialog, response):
             self._close_dialog = None
             if response == "close":
                 self.quit()
+
         dialog.connect("response", respond)
         dialog.present(window)
         return True
@@ -449,7 +460,9 @@ class VideoConverterApp(
 
         # Save sidebar position
         if self.split_view.get_show_sidebar():
-            self.settings_manager.save_setting("sidebar-position", self.split_view.get_sidebar().get_width())
+            self.settings_manager.save_setting(
+                "sidebar-position", self.split_view.get_sidebar().get_width()
+            )
 
     def terminate_process_tree(self, process) -> bool:
         from utils.media_validation import terminate_process_group
@@ -523,7 +536,8 @@ class VideoConverterApp(
         # Add editor view to right stack. In a small window the editor's
         # controls wrap below the video; they scroll instead of being clipped.
         editor_scroller = Gtk.ScrolledWindow(
-            hscrollbar_policy=Gtk.PolicyType.NEVER, child=self.video_edit_page.get_page()
+            hscrollbar_policy=Gtk.PolicyType.NEVER,
+            child=self.video_edit_page.get_page(),
         )
         self.right_stack.add_titled(editor_scroller, "editor_view", _("Editor"))
 
@@ -690,11 +704,15 @@ class VideoConverterApp(
         if refused_busy:
             self.show_info_dialog(
                 _("Conversion in progress"),
-                _("New videos can be added when the current conversions finish."))
+                _("New videos can be added when the current conversions finish."),
+            )
         if remote:
             self.show_error_dialog(
-                ngettext("This file cannot be opened", "These files cannot be opened",
-                         len(remote)),
+                ngettext(
+                    "This file cannot be opened",
+                    "These files cannot be opened",
+                    len(remote),
+                ),
                 ngettext(
                     "It is not on a local or mounted drive. Open its network share "
                     "in the file manager, or use “Add Network File”, then add it "
@@ -702,7 +720,9 @@ class VideoConverterApp(
                     "They are not on a local or mounted drive. Open their network "
                     "share in the file manager, or use “Add Network File”, then add "
                     "them again:\n{files}",
-                    len(remote)).format(files="\n".join(remote)))
+                    len(remote),
+                ).format(files="\n".join(remote)),
+            )
 
         if files_added > 0:
             GLib.idle_add(self.show_queue_view)
@@ -720,13 +740,17 @@ class VideoConverterApp(
             if "segments" in options:
                 segments = parse_segments_arg(options["segments"])
             if source_hdr is not None and source_hdr not in SOURCE_HDR_MODES:
-                raise ValueError(f"source-hdr {source_hdr!r} is not one of {', '.join(SOURCE_HDR_MODES)}")
+                raise ValueError(
+                    f"source-hdr {source_hdr!r} is not one of {', '.join(SOURCE_HDR_MODES)}"
+                )
         except ValueError as exc:
             # Refuse rather than queue the whole file as if no cuts were asked
             # for. Players start us detached, so stderr alone reaches nobody.
             command_line.printerr(f"big-video-converter: {exc}\n")
             self.activate()
-            self.show_error_dialog(_("The settings sent by the player could not be used"), str(exc))
+            self.show_error_dialog(
+                _("The settings sent by the player could not be used"), str(exc)
+            )
             return 2
 
         # A second instance forwards its arguments: resolve them against its

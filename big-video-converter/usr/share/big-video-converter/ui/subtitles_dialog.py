@@ -31,9 +31,7 @@ def _load_svg(filename: str, size: int = 92) -> Gtk.Picture:
     return pic
 
 
-def _make_card(
-    svg: str, title: str, description: str, control: Gtk.Widget
-) -> Gtk.Box:
+def _make_card(svg: str, title: str, description: str, control: Gtk.Widget) -> Gtk.Box:
     card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     card.add_css_class("card")
     card.set_margin_bottom(12)
@@ -129,11 +127,7 @@ def show_subtitles_dialog(parent_window, app) -> None:
     content.set_margin_bottom(24)
 
     intro = Gtk.Label()
-    intro.set_text(
-        _(
-            "Configure how subtitles are handled during conversion."
-        )
-    )
+    intro.set_text(_("Configure how subtitles are handled during conversion."))
     intro.set_wrap(True)
     intro.set_xalign(0)
     intro.set_margin_bottom(20)
@@ -162,7 +156,9 @@ def show_subtitles_dialog(parent_window, app) -> None:
     extract_toggle.set_active(
         app.settings_page.only_extract_subtitles_check.get_active()
     )
-    _make_switch_sync(app.settings_page.only_extract_subtitles_check, extract_toggle, connections)
+    _make_switch_sync(
+        app.settings_page.only_extract_subtitles_check, extract_toggle, connections
+    )
     content.append(
         _make_card(
             "subtitle_extract.svg",

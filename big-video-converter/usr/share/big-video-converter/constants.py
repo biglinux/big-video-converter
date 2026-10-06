@@ -13,7 +13,9 @@ _ = gettext.gettext
 APP_ID = "br.com.biglinux.converter"
 APP_NAME = "Big Video Converter"
 try:
-    APP_VERSION = Path(__file__).with_name("VERSION").read_text(encoding="utf-8").strip()
+    APP_VERSION = (
+        Path(__file__).with_name("VERSION").read_text(encoding="utf-8").strip()
+    )
 except OSError:
     APP_VERSION = "development"
 
@@ -21,9 +23,9 @@ APP_DEVELOPERS = ["Tales A. Mendonça", "Bruno Gonçalves Araujo"]
 
 # Use the backend from the running application tree, including local builds
 # on machines that also have a system installation.
-CONVERT_SCRIPT_PATH = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), "..", "..", "bin", "big-video-converter"
-))
+CONVERT_SCRIPT_PATH = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "bin", "big-video-converter")
+)
 
 # AI noise reduction models, by the "noise-model" setting: LADSPA plugin,
 # label, output delay in samples at 48 kHz, extra controls, the package that
@@ -34,10 +36,22 @@ CONVERT_SCRIPT_PATH = os.path.abspath(os.path.join(
 # 48 dB leaves noise at -74 dBFS. A higher cap left half the slider silent.
 NOISE_MODELS = (
     # DFN3 mutes its first second by default, meant for a live microphone.
-    ("/usr/lib/ladspa/libdfn3_ladspa.so", "deep_filter_net3_rs_mono", 1919,
-     "|c6=0", "deepfilternet3-native", 24),
-    ("/usr/lib/ladspa/libdpdfnet_native.so", "dpdfnet_native_48hr", 2880,
-     "", "dpdfnet-native", 48),
+    (
+        "/usr/lib/ladspa/libdfn3_ladspa.so",
+        "deep_filter_net3_rs_mono",
+        1919,
+        "|c6=0",
+        "deepfilternet3-native",
+        24,
+    ),
+    (
+        "/usr/lib/ladspa/libdpdfnet_native.so",
+        "dpdfnet_native_48hr",
+        2880,
+        "",
+        "dpdfnet-native",
+        48,
+    ),
 )
 
 
@@ -85,10 +99,26 @@ VIDEO_FILE_MIME_TYPES = [
 # The file names those types cover, for paths opened without a MIME check
 # ("Open with", the command line, folders). The Nautilus extension keeps a
 # copy of this set.
-VIDEO_FILE_EXTENSIONS = frozenset({
-    ".mp4", ".mkv", ".webm", ".mov", ".avi", ".wmv", ".mpeg", ".mpg", ".m4v",
-    ".ts", ".m2ts", ".mts", ".flv", ".3gp", ".ogv",
-})
+VIDEO_FILE_EXTENSIONS = frozenset(
+    {
+        ".mp4",
+        ".mkv",
+        ".webm",
+        ".mov",
+        ".avi",
+        ".wmv",
+        ".mpeg",
+        ".mpg",
+        ".m4v",
+        ".ts",
+        ".m2ts",
+        ".mts",
+        ".flv",
+        ".3gp",
+        ".ogv",
+    }
+)
+
 
 # Encoding options - User-friendly display names
 def get_gpu_options():
@@ -99,13 +129,15 @@ def get_gpu_options():
         _("VAAPI (Intel/AMD)"),
         _("QSV (Intel)"),
         _("Vulkan"),
-        _("Software (CPU)")
+        _("Software (CPU)"),
     ]
+
 
 GPU_OPTIONS = get_gpu_options()  # Default initialization
 
 # Internal values mapping for GPU options
 GPU_VALUES = {0: "auto", 1: "nvidia", 2: "amd", 3: "intel", 4: "vulkan", 5: "software"}
+
 
 # User-friendly quality display names
 def get_video_quality_options():
@@ -120,6 +152,7 @@ def get_video_quality_options():
         _("Super Low"),
     ]
 
+
 VIDEO_QUALITY_OPTIONS = get_video_quality_options()  # Default initialization
 
 # Internal values for ffmpeg
@@ -133,6 +166,7 @@ VIDEO_QUALITY_VALUES = {
     6: "superlow",
 }
 
+
 # User-friendly codec display names
 def get_video_codec_options():
     """Return translated video codec options"""
@@ -145,10 +179,12 @@ def get_video_codec_options():
         _("ProRes — Professional editing"),
     ]
 
+
 VIDEO_CODEC_OPTIONS = get_video_codec_options()  # Default initialization
 
 # Internal codec values for ffmpeg (index 0 = copy)
 VIDEO_CODEC_VALUES = {0: "copy", 1: "h264", 2: "h265", 3: "av1", 4: "vp9", 5: "prores"}
+
 
 # User-friendly preset names
 def get_preset_options():
@@ -163,6 +199,7 @@ def get_preset_options():
         _("Very slow (smallest file)"),
     ]
 
+
 PRESET_OPTIONS = get_preset_options()  # Default initialization
 
 # Internal preset values for ffmpeg
@@ -176,15 +213,18 @@ PRESET_VALUES = {
     6: "veryslow",
 }
 
+
 # User-friendly subtitle options
 def get_subtitle_options():
     """Return translated subtitle options"""
     return [_("Extract as separate file"), _("Keep inside the video"), _("Remove")]
 
+
 SUBTITLE_OPTIONS = get_subtitle_options()  # Default initialization
 
 # Internal subtitle values for ffmpeg
 SUBTITLE_VALUES = {0: "extract", 1: "embedded", 2: "none"}
+
 
 # User-friendly audio handling options
 def get_audio_options():
@@ -195,10 +235,12 @@ def get_audio_options():
         _("Remove audio"),
     ]
 
+
 AUDIO_OPTIONS = get_audio_options()  # Default initialization
 
 # Internal audio values for ffmpeg
 AUDIO_VALUES = {0: "copy", 1: "reencode", 2: "none"}
+
 
 # Audio codec options for re-encoding (user-friendly names)
 def get_audio_codec_options():
@@ -209,10 +251,12 @@ def get_audio_codec_options():
         _("AC3 (Dolby Digital)"),
     ]
 
+
 AUDIO_CODEC_OPTIONS = get_audio_codec_options()  # Default initialization
 
 # Internal audio codec values for ffmpeg
 AUDIO_CODEC_VALUES = {0: "aac", 1: "opus", 2: "ac3"}
+
 
 # Video resolution options (user-friendly names)
 def get_video_resolution_options():
@@ -232,6 +276,7 @@ def get_video_resolution_options():
         _("Custom"),
     ]
 
+
 VIDEO_RESOLUTION_OPTIONS = get_video_resolution_options()  # Default initialization
 
 # Internal resolution values for ffmpeg
@@ -250,6 +295,7 @@ VIDEO_RESOLUTION_VALUES = {
     11: "custom",  # Custom
 }
 
+
 # Output frame rate: fewer frames drop the extra ones, more blend neighbours.
 def get_video_fps_options():
     """Return translated frame rate options"""
@@ -263,10 +309,12 @@ def get_video_fps_options():
         "15 fps",
     ]
 
+
 VIDEO_FPS_OPTIONS = get_video_fps_options()  # Default initialization
 
 # Internal frame rate values for the script's video_fps
 VIDEO_FPS_VALUES = {0: "", 1: "60", 2: "50", 3: "30", 4: "25", 5: "24", 6: "15"}
+
 
 # Beginner-friendly tooltips for all UI elements
 def get_tooltips():
@@ -450,9 +498,13 @@ def get_tooltips():
 def refresh_translations() -> None:
     """Refresh all translated constants after gettext is properly initialized"""
     global GPU_OPTIONS, VIDEO_QUALITY_OPTIONS, VIDEO_CODEC_OPTIONS, PRESET_OPTIONS
-    global SUBTITLE_OPTIONS, AUDIO_OPTIONS, AUDIO_CODEC_OPTIONS, VIDEO_RESOLUTION_OPTIONS
+    global \
+        SUBTITLE_OPTIONS, \
+        AUDIO_OPTIONS, \
+        AUDIO_CODEC_OPTIONS, \
+        VIDEO_RESOLUTION_OPTIONS
     global VIDEO_FPS_OPTIONS
-    
+
     GPU_OPTIONS = get_gpu_options()
     VIDEO_QUALITY_OPTIONS = get_video_quality_options()
     VIDEO_CODEC_OPTIONS = get_video_codec_options()

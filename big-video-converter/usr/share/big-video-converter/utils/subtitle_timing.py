@@ -39,12 +39,19 @@ def seconds(text: str) -> Decimal:
 
 def clipping_options(argv: list[str]) -> tuple[str, str]:
     """Return original-input end limit and safe packet filter (empty if uncut)."""
-    times = {flag: seconds(argv[i + 1]) for i, flag in enumerate(argv)
-             if flag in ("-ss", "-t", "-to")}
+    times = {
+        flag: seconds(argv[i + 1])
+        for i, flag in enumerate(argv)
+        if flag in ("-ss", "-t", "-to")
+    }
     if not times:
         return "", ""
-    if any(flag in argv for flag in ("-sseof", "-itsoffset", "-copyts", "-start_at_zero")):
-        raise ValueError("Subtitle trimming cannot be combined with timestamp overrides")
+    if any(
+        flag in argv for flag in ("-sseof", "-itsoffset", "-copyts", "-start_at_zero")
+    ):
+        raise ValueError(
+            "Subtitle trimming cannot be combined with timestamp overrides"
+        )
     start = times.get("-ss", Decimal(0))
     end = start + times["-t"] if "-t" in times else times.get("-to")
     if end is not None and end <= start:
@@ -56,14 +63,17 @@ def clipping_options(argv: list[str]) -> tuple[str, str]:
         e = format(end, "f")
         drop += f"+gte(pts*tb,{e})"
         right = f"min(PTS+DURATION,{e}/TB)"
-    filters = (f"noise=amount=0:drop='{drop}',"
-               f"setts=pts='max(PTS-{s}/TB,0)':dts='max(DTS-{s}/TB,0)':"
-               f"duration='max(0,{right}-max(PTS,{s}/TB))'")
+    filters = (
+        f"noise=amount=0:drop='{drop}',"
+        f"setts=pts='max(PTS-{s}/TB,0)':dts='max(DTS-{s}/TB,0)':"
+        f"duration='max(0,{right}-max(PTS,{s}/TB))'"
+    )
     return format(end, "f") if end is not None else "", filters
 
 
 if __name__ == "__main__":
     from ffmpeg_options import parse_additional_options
+
     try:
         result = clipping_options(parse_additional_options(sys.argv[1]))
     except (IndexError, ValueError) as error:

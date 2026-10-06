@@ -81,7 +81,9 @@ class ProgressPageTests(unittest.TestCase):
         self.page.initialize_queue([path])
         self.page.finish_pending(path, success=False, reason="File not found")
         row = self.page.queue_items[path]
-        self.assertEqual((row.status, row.status_label.get_text()), ("failed", "File not found"))
+        self.assertEqual(
+            (row.status, row.status_label.get_text()), ("failed", "File not found")
+        )
 
     def test_strip_counts_failed_and_cancelled_as_finished(self):
         paths = ["/tmp/failed.mp4", "/tmp/skipped.mp4", "/tmp/waiting.mp4"]
@@ -238,27 +240,35 @@ class ProgressPageTests(unittest.TestCase):
         def supervisor_finish():
             # utils.conversion: settle the row, then record the result.
             row.mark_success()
-            self.app.completed_conversions.append({
-                "input_file": str(source), "output_file": str(published),
-                "success": True, "cancelled": False, "job_id": "job-1",
-            })
+            self.app.completed_conversions.append(
+                {
+                    "input_file": str(source),
+                    "output_file": str(published),
+                    "success": True,
+                    "cancelled": False,
+                    "job_id": "job-1",
+                }
+            )
+
         supervisor_finish()
         self.assertTrue(self.page.show_completion_summary())
         pump_until(lambda: row.output_size == 7000)
 
         self.assertEqual(row.filename_label.get_text(), "holiday_1.mp4")
         self.assertEqual(row.size_label.get_text(), GLib.format_size(7000))
-        self.assertRegex(self.page.result_stats.get_text(), r"^1 video converted · \d+s$")
+        self.assertRegex(
+            self.page.result_stats.get_text(), r"^1 video converted · \d+s$"
+        )
         self.assertEqual(
             self.page.result_sizes.get_text(),
             f"{GLib.format_size(10000)} → {GLib.format_size(7000)} (−30%)",
         )
         self.assertTrue(self.page.open_button.get_visible())
-        self.assertEqual(self.page.folder_button.get_child().get_label(), "Show in folder")
-        self.assertTrue(row.open_button.get_visible())
         self.assertEqual(
-            row.open_button.get_tooltip_text(), "Open video"
+            self.page.folder_button.get_child().get_label(), "Show in folder"
         )
+        self.assertTrue(row.open_button.get_visible())
+        self.assertEqual(row.open_button.get_tooltip_text(), "Open video")
 
     def test_primary_action_returns_to_the_queue_and_takes_focus(self):
         window = Adw.Window()
@@ -298,7 +308,9 @@ class ProgressPageTests(unittest.TestCase):
         self.assertTrue(self.page.show_completion_summary())
 
         reasons = self.page.result_reason.get_text().split("\n")
-        self.assertEqual(reasons[0], "“broken-0.mp4”: The file container could not be read.")
+        self.assertEqual(
+            reasons[0], "“broken-0.mp4”: The file container could not be read."
+        )
         self.assertEqual(len(reasons), 4)
         self.assertEqual(reasons[-1], "+2 more")
         for text in (self.page.result_reason.get_text(), row.status_label.get_text()):
@@ -330,7 +342,9 @@ class ProgressPageTests(unittest.TestCase):
     def test_mixed_result_omits_zero_categories_and_reports_issues(self):
         self.settle(["completed", "failed", "cancelled"])
         detail = self.page.result_stats.get_text()
-        self.assertEqual(self.page.result_heading.get_text(), "Queue finished with issues")
+        self.assertEqual(
+            self.page.result_heading.get_text(), "Queue finished with issues"
+        )
         self.assertIn("1 video converted", detail)
         self.assertIn("1 conversion failed", detail)
         self.assertIn("1 conversion cancelled", detail)

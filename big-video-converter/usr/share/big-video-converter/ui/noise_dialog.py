@@ -88,7 +88,7 @@ def _card_header(svg_file: str, title: str, desc: str, control: Gtk.Widget) -> G
 
 def _slider_row(label: str, adj: Gtk.Adjustment, format_func=None) -> Gtk.Box:
     """Simple labelled slider packaged in a horizontal box.
-    
+
     If format_func is provided, it receives (value) and returns a string.
     Otherwise, 0–1 ranges auto-format as percentage.
     """
@@ -119,16 +119,22 @@ def _slider_row(label: str, adj: Gtk.Adjustment, format_func=None) -> Gtk.Box:
     # Determine formatter
     if format_func is None:
         if adj.get_upper() <= 1.01 and adj.get_lower() >= -0.01:
+
             def format_func(v):
                 return f"{v * 100:.0f}%"
+
             scale.set_digits(2)
         elif adj.get_lower() < 0:
+
             def format_func(v):
                 return f"{abs(v) * 100:.0f}%"
+
             scale.set_digits(1)
         else:
+
             def format_func(v):
                 return f"{v:.0f}"
+
             scale.set_digits(0)
     else:
         scale.set_digits(2 if adj.get_upper() <= 1.0 else 0)
@@ -211,8 +217,10 @@ def show_noise_dialog(parent_window, app) -> bool:
     # Strength slider — synced with sidebar
     strength_adj = Gtk.Adjustment(
         value=app.noise_strength_adj.get_value(),
-        lower=0.0, upper=1.0,
-        step_increment=0.05, page_increment=0.1,
+        lower=0.0,
+        upper=1.0,
+        step_increment=0.05,
+        page_increment=0.1,
     )
     card1.append(_slider_row(_("Strength"), strength_adj))
 
@@ -227,7 +235,9 @@ def show_noise_dialog(parent_window, app) -> bool:
             strength_adj.set_value(v)
 
     strength_adj.connect("notify::value", _sync_strength_to_sidebar)
-    connections.connect(app.noise_strength_adj, "notify::value", _sync_strength_from_sidebar)
+    connections.connect(
+        app.noise_strength_adj, "notify::value", _sync_strength_from_sidebar
+    )
 
     # AI Model dropdown
     model_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
@@ -290,7 +300,9 @@ def show_noise_dialog(parent_window, app) -> bool:
     connections.connect(
         model_dd, "notify::selected", lambda dd, _p: _show_model_note(dd.get_selected())
     )
-    connections.connect(app.noise_model_row, "notify::selected", _sync_model_from_sidebar)
+    connections.connect(
+        app.noise_model_row, "notify::selected", _sync_model_from_sidebar
+    )
 
     content.append(card1)
 
@@ -306,7 +318,9 @@ def show_noise_dialog(parent_window, app) -> bool:
             nr_switch.set_active(active)
 
     nr_switch.connect("state-set", _sync_nr_switch)
-    connections.connect(app.noise_reduction_switch, "notify::active", _sync_nr_from_sidebar)
+    connections.connect(
+        app.noise_reduction_switch, "notify::active", _sync_nr_from_sidebar
+    )
 
     # ===== Section 2: Noise Gate =====
     content.append(_section_header(_("Noise Gate"), margin_top=16))
@@ -329,8 +343,10 @@ def show_noise_dialog(parent_window, app) -> bool:
 
     gate_adj = Gtk.Adjustment(
         value=app.gate_intensity_adj.get_value(),
-        lower=0.0, upper=1.0,
-        step_increment=0.05, page_increment=0.1,
+        lower=0.0,
+        upper=1.0,
+        step_increment=0.05,
+        page_increment=0.1,
     )
     card2.append(_slider_row(_("Intensity"), gate_adj))
 
@@ -383,11 +399,14 @@ def show_noise_dialog(parent_window, app) -> bool:
 
     hpf_adj = Gtk.Adjustment(
         value=app.hpf_freq_adj.get_value(),
-        lower=20, upper=500,
-        step_increment=5, page_increment=20,
+        lower=20,
+        upper=500,
+        step_increment=5,
+        page_increment=20,
     )
-    card3.append(_slider_row(_("Frequency (Hz)"), hpf_adj,
-                              format_func=lambda v: f"{v:.0f} Hz"))
+    card3.append(
+        _slider_row(_("Frequency (Hz)"), hpf_adj, format_func=lambda v: f"{v:.0f} Hz")
+    )
 
     def _sync_hpf_adj(adj, _pspec):
         v = adj.get_value()
@@ -465,8 +484,10 @@ def show_noise_dialog(parent_window, app) -> bool:
 
     comp_adj = Gtk.Adjustment(
         value=app.compressor_intensity_adj.get_value(),
-        lower=0.0, upper=1.0,
-        step_increment=0.05, page_increment=0.1,
+        lower=0.0,
+        upper=1.0,
+        step_increment=0.05,
+        page_increment=0.1,
     )
     card6.append(_slider_row(_("Intensity"), comp_adj))
 
@@ -481,7 +502,9 @@ def show_noise_dialog(parent_window, app) -> bool:
             comp_adj.set_value(v)
 
     comp_adj.connect("notify::value", _sync_comp_adj)
-    connections.connect(app.compressor_intensity_adj, "notify::value", _sync_comp_adj_back)
+    connections.connect(
+        app.compressor_intensity_adj, "notify::value", _sync_comp_adj_back
+    )
 
     def _sync_comp_switch(sw, state):
         if app.compressor_switch.get_active() != state:
@@ -544,7 +567,9 @@ def show_noise_dialog(parent_window, app) -> bool:
     _eq_slider_guard = {"active": False}
 
     # Load saved band values
-    saved_bands_str = app.settings_manager.load_setting("eq-bands", "0,0,0,0,0,0,0,0,0,0")
+    saved_bands_str = app.settings_manager.load_setting(
+        "eq-bands", "0,0,0,0,0,0,0,0,0,0"
+    )
     try:
         saved_bands = [float(v) for v in saved_bands_str.split(",")]
     except (ValueError, AttributeError):
@@ -576,9 +601,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             _eq_slider_guard["active"] = False
         # Save all band values
         bands = [s.get_value() for s in eq_scales]
-        app.settings_manager.save_setting(
-            "eq-bands", ",".join(str(b) for b in bands)
-        )
+        app.settings_manager.save_setting("eq-bands", ",".join(str(b) for b in bands))
         # Refresh mpv preview
         if (
             hasattr(app, "video_edit_page")
@@ -598,8 +621,11 @@ def show_noise_dialog(parent_window, app) -> bool:
         eq_value_labels.append(val_label)
 
         adj = Gtk.Adjustment(
-            value=saved_bands[i], lower=-40.0, upper=40.0,
-            step_increment=0.5, page_increment=2.0,
+            value=saved_bands[i],
+            lower=-40.0,
+            upper=40.0,
+            step_increment=0.5,
+            page_increment=2.0,
         )
         scale = Gtk.Scale(orientation=Gtk.Orientation.VERTICAL, adjustment=adj)
         scale.set_inverted(True)
@@ -609,7 +635,8 @@ def show_noise_dialog(parent_window, app) -> bool:
         scale.add_mark(0.0, Gtk.PositionType.RIGHT, None)
         freq_str = f"{freq // 1000}k Hz" if freq >= 1000 else f"{freq} Hz"
         scale.update_property(
-            [Gtk.AccessibleProperty.LABEL], [f"EQ {freq_str}"],
+            [Gtk.AccessibleProperty.LABEL],
+            [f"EQ {freq_str}"],
         )
         _idx = i
         scale.connect("value-changed", lambda s, idx=_idx: _on_eq_band_changed(s, idx))
@@ -676,8 +703,12 @@ def show_noise_dialog(parent_window, app) -> bool:
     content.append(card7)
 
     # Contextual controls: inactive operations retain values, not active knobs.
-    for card, switch in ((card1, nr_switch), (card2, gate_switch),
-                         (card3, hpf_switch), (card6, comp_switch)):
+    for card, switch in (
+        (card1, nr_switch),
+        (card2, gate_switch),
+        (card3, hpf_switch),
+        (card6, comp_switch),
+    ):
         header = card.get_first_child()
         child = header.get_next_sibling()
         details = []

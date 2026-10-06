@@ -63,14 +63,23 @@ def _available_ffmpeg_encoders() -> frozenset[str]:
         return frozenset()
 
 
-_PCI_VENDORS = {"0x10de": ("nvidia", "NVIDIA"), "0x1002": ("amd", "AMD"), "0x8086": ("intel", "Intel")}
+_PCI_VENDORS = {
+    "0x10de": ("nvidia", "NVIDIA"),
+    "0x1002": ("amd", "AMD"),
+    "0x8086": ("intel", "Intel"),
+}
 
 
 def _pci_name(slot: str, fallback_vendor: str, run) -> str:
     """Commercial name of one PCI device, e.g. "NVIDIA TU116 [GeForce GTX 1660 Ti]"."""
     try:
-        out = run(["lspci", "-vmm", "-s", slot], capture_output=True, text=True,
-                  timeout=2, check=False).stdout
+        out = run(
+            ["lspci", "-vmm", "-s", slot],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        ).stdout
     except (subprocess.SubprocessError, OSError):
         return ""
     fields = dict(line.split(":\t", 1) for line in out.splitlines() if ":\t" in line)
@@ -81,7 +90,9 @@ def _pci_name(slot: str, fallback_vendor: str, run) -> str:
     return name[:47].rstrip() + "..." if len(name) > 50 else name
 
 
-def detect_render_devices(drm_dir: str = "/sys/class/drm", run=subprocess.run) -> list[dict]:
+def detect_render_devices(
+    drm_dir: str = "/sys/class/drm", run=subprocess.run
+) -> list[dict]:
     """Render nodes with the GPU vendor each belongs to, read from sysfs.
 
     The vendor and the lspci name both come from the node's own PCI device,
@@ -106,11 +117,14 @@ def detect_render_devices(drm_dir: str = "/sys/class/drm", run=subprocess.run) -
             vendor = ""
         gpu_type, label = _PCI_VENDORS.get(vendor, ("unknown", ""))
         slot = os.path.basename(os.path.realpath(device_dir))
-        gpus.append({
-            "name": _pci_name(slot, label, run) or (f"{label} ({node})" if label else node),
-            "device": os.path.join("/dev/dri", node),
-            "type": gpu_type,
-        })
+        gpus.append(
+            {
+                "name": _pci_name(slot, label, run)
+                or (f"{label} ({node})" if label else node),
+                "device": os.path.join("/dev/dri", node),
+                "type": gpu_type,
+            }
+        )
     names = [g["name"] for g in gpus]
     for gpu in gpus:
         if names.count(gpu["name"]) > 1:
@@ -206,9 +220,7 @@ def select_best_gpu(
 
         # Check if ffmpeg has this encoder compiled in
         if encoder_name not in available_encoders:
-            logger.debug(
-                f"GPU {gpu['name']}: encoder {encoder_name} not in ffmpeg"
-            )
+            logger.debug(f"GPU {gpu['name']}: encoder {encoder_name} not in ffmpeg")
             continue
 
         # For VAAPI/QSV GPUs, verify hardware actually supports the codec

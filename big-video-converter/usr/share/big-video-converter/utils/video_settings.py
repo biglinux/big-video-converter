@@ -59,14 +59,20 @@ def available_filters() -> frozenset[str]:
     try:
         result = subprocess.run(
             [get_ffmpeg_executable(), "-hide_banner", "-filters"],
-            capture_output=True, text=True, timeout=10, check=False,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
         )
     except (subprocess.SubprocessError, OSError) as error:
         logger.warning("Failed to query ffmpeg filters: %s", error)
         return frozenset()
     # " TS  hqdn3d  V->V  Apply a High Quality 3D Denoiser."
-    return frozenset(parts[1] for parts in map(str.split, result.stdout.splitlines())
-                     if len(parts) >= 3 and "->" in parts[2])
+    return frozenset(
+        parts[1]
+        for parts in map(str.split, result.stdout.splitlines())
+        if len(parts) >= 3 and "->" in parts[2]
+    )
 
 
 def filter_path(path: str) -> str:
@@ -201,7 +207,9 @@ def preview_hue_to_ffmpeg(hue):
 #
 # FFmpeg Filter Generation
 #
-def get_ffmpeg_filter_string(settings, video_width: int | None = None, video_height: int | None = None):
+def get_ffmpeg_filter_string(
+    settings, video_width: int | None = None, video_height: int | None = None
+):
     """The comma-separated FFmpeg filter chain, or "" when nothing changes.
 
     Raises CropError when crop margins are set but cannot be applied.
@@ -229,10 +237,15 @@ def get_ffmpeg_filter_string(settings, video_width: int | None = None, video_hei
             raise CropError("the video frame size is unknown")
         crop_width = video_width - crop_left - crop_right
         crop_height = video_height - crop_top - crop_bottom
-        if crop_width <= 0 or crop_height <= 0 or min(crop_left, crop_right, crop_top, crop_bottom) < 0:
+        if (
+            crop_width <= 0
+            or crop_height <= 0
+            or min(crop_left, crop_right, crop_top, crop_bottom) < 0
+        ):
             raise CropError(
                 f"crop margins {crop_left}/{crop_right}/{crop_top}/{crop_bottom} "
-                f"leave no picture of a {video_width}x{video_height} frame")
+                f"leave no picture of a {video_width}x{video_height} frame"
+            )
         filters.append(f"crop={crop_width}:{crop_height}:{crop_left}:{crop_top}")
 
     # 2. Add eq filter with calibrated values (brightness, saturation)
@@ -254,8 +267,11 @@ def get_ffmpeg_filter_string(settings, video_width: int | None = None, video_hei
 
     # Effects before the colour adjustments, as the preview shows them.
     effect_file = settings.get_value("preview-effect-file", "") or ""
-    effects = effects_graph(settings.get_value("preview-denoise", "off"),
-                            settings.get_value("preview-sharpen", "off"), effect_file)
+    effects = effects_graph(
+        settings.get_value("preview-denoise", "off"),
+        settings.get_value("preview-sharpen", "off"),
+        effect_file,
+    )
     if effects:
         filters.append(effects)
 

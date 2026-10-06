@@ -39,9 +39,7 @@ def _load_svg(filename: str, size: int = 92) -> Gtk.Picture:
     return pic
 
 
-def _make_card(
-    svg: str, title: str, description: str, control: Gtk.Widget
-) -> Gtk.Box:
+def _make_card(svg: str, title: str, description: str, control: Gtk.Widget) -> Gtk.Box:
     card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
     card.add_css_class("card")
     card.set_margin_bottom(12)
@@ -235,9 +233,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     custom_entry.set_text(app.settings_page.custom_resolution_row.get_text())
     custom_box.append(custom_entry)
 
-    is_custom_res = (
-        res_dd.get_selected() == len(constants.VIDEO_RESOLUTION_OPTIONS) - 1
-    )
+    is_custom_res = res_dd.get_selected() == len(constants.VIDEO_RESOLUTION_OPTIONS) - 1
     custom_box.set_visible(is_custom_res)
     content.append(custom_box)
 
@@ -324,7 +320,9 @@ def show_video_encoding_dialog(parent_window, app) -> None:
     # --- Software Decode ---
     sw_decode_toggle = Gtk.Switch()
     sw_decode_toggle.set_active(app.settings_page.gpu_partial_check.get_active())
-    _make_switch_sync(app.settings_page.gpu_partial_check, sw_decode_toggle, connections)
+    _make_switch_sync(
+        app.settings_page.gpu_partial_check, sw_decode_toggle, connections
+    )
     content.append(
         _make_card(
             "sw_decode.svg",

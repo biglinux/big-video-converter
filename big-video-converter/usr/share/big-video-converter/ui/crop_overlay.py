@@ -411,7 +411,8 @@ class CropOverlay(Gtk.DrawingArea):
                 new_b = min(new_b, self._video_h - new_t - 2)
 
         self._source_crop = display_to_source(
-            (new_l, new_r, new_t, new_b), *self._transform)
+            (new_l, new_r, new_t, new_b), *self._transform
+        )
         self._update_display()
 
         if self._on_crop_changed:

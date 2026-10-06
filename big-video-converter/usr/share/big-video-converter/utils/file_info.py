@@ -95,8 +95,14 @@ def display_size(stream: dict):
     so a crop computed from the stored size fails on a portrait recording.
     """
     width, height = int(stream.get("width", 0)), int(stream.get("height", 0))
-    rotation = next((side.get("rotation") for side in stream.get("side_data_list", [])
-                     if "rotation" in side), 0)
+    rotation = next(
+        (
+            side.get("rotation")
+            for side in stream.get("side_data_list", [])
+            if "rotation" in side
+        ),
+        0,
+    )
     return (height, width) if round(float(rotation) / 90) % 2 else (width, height)
 
 
@@ -104,11 +110,21 @@ def display_size(stream: dict):
 def get_video_dimensions(file_path: str):
     """Displayed (width, height) of the first video stream, or (None, None)."""
     command = [
-        get_ffprobe_executable(), "-v", "error", "-select_streams", "v:0",
-        "-show_entries", "stream=width,height:stream_side_data=rotation", "-of", "json", file_path,
+        get_ffprobe_executable(),
+        "-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=width,height:stream_side_data=rotation",
+        "-of",
+        "json",
+        file_path,
     ]
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=10, check=False)
+        result = subprocess.run(
+            command, capture_output=True, text=True, timeout=10, check=False
+        )
     except (subprocess.SubprocessError, OSError) as error:
         logger.error(f"Error getting video dimensions: {error}")
         raise _ProbeFailed((None, None)) from error
@@ -134,12 +150,24 @@ def get_queue_summary(file_path: str):
     Values the file does not report are None.
     """
     command = [
-        get_ffprobe_executable(), "-v", "error", "-select_streams", "v:0",
-        "-show_entries", ("format=duration:stream=codec_name,width,height,duration"
-                          ":stream_side_data=rotation"), "-of", "json", file_path,
+        get_ffprobe_executable(),
+        "-v",
+        "error",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        (
+            "format=duration:stream=codec_name,width,height,duration"
+            ":stream_side_data=rotation"
+        ),
+        "-of",
+        "json",
+        file_path,
     ]
     try:
-        result = subprocess.run(command, capture_output=True, text=True, timeout=10, check=False)
+        result = subprocess.run(
+            command, capture_output=True, text=True, timeout=10, check=False
+        )
         data = json.loads(result.stdout or "{}")
     except (subprocess.SubprocessError, OSError, ValueError) as error:
         raise _ProbeFailed(None) from error
@@ -155,8 +183,12 @@ def get_queue_summary(file_path: str):
             break
         except (TypeError, ValueError):
             continue
-    return {"duration": duration, "width": width, "height": height,
-            "codec": stream.get("codec_name")}
+    return {
+        "duration": duration,
+        "width": width,
+        "height": height,
+        "codec": stream.get("codec_name"),
+    }
 
 
 class VideoInfoDialog:
@@ -334,7 +366,7 @@ class VideoInfoDialog:
         file_path_row.set_subtitle(_("Location"))
 
         # Add open folder button
-        open_button = Gtk.Button.new_from_icon_name('folder-open-symbolic')
+        open_button = Gtk.Button.new_from_icon_name("folder-open-symbolic")
         open_button.add_css_class("flat")
         open_button.set_tooltip_text(_("Open containing folder"))
         self._connections.connect(
@@ -406,7 +438,9 @@ class VideoInfoDialog:
         btn = Gtk.Button.new_from_icon_name("edit-copy-symbolic")
         btn.add_css_class("flat")
         btn.set_tooltip_text(tooltip)
-        self._connections.connect(btn, "clicked", lambda b, v=value: self._copy_to_clipboard(v))
+        self._connections.connect(
+            btn, "clicked", lambda b, v=value: self._copy_to_clipboard(v)
+        )
         return btn
 
     def _open_containing_folder(self, folder_path):
@@ -732,7 +766,7 @@ class VideoInfoDialog:
         error_box.set_valign(Gtk.Align.CENTER)
         error_box.set_halign(Gtk.Align.CENTER)
 
-        error_icon = Gtk.Image.new_from_icon_name('dialog-error-symbolic')
+        error_icon = Gtk.Image.new_from_icon_name("dialog-error-symbolic")
         error_icon.set_pixel_size(48)
         error_icon.add_css_class("error")
         error_box.append(error_icon)
@@ -792,9 +826,7 @@ _FFMPEG_STREAM_RE = re.compile(
     r"(?:\((?P<language>[A-Za-z]{2,3})\))?"
     r":\s*(?P<kind>Video|Audio|Subtitle|Data|Attachment):\s*(?P<rest>.*)$"
 )
-_FFMPEG_DURATION_RE = re.compile(
-    r"Duration:\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)"
-)
+_FFMPEG_DURATION_RE = re.compile(r"Duration:\s*(\d+):(\d\d):(\d\d(?:\.\d+)?)")
 
 
 def _probe_with_ffmpeg(file_path: str):
@@ -905,7 +937,9 @@ def _probe_with_ffmpeg(file_path: str):
             int(hours) * 3600 + int(minutes) * 60 + float(seconds)
         )
 
-    container = re.search(r"^Input #0,\s*([^,]+(?:,[^,]+)*),\s*from", input_block, re.MULTILINE)
+    container = re.search(
+        r"^Input #0,\s*([^,]+(?:,[^,]+)*),\s*from", input_block, re.MULTILINE
+    )
     if container:
         info["format"]["format_name"] = container.group(1).strip()
         info["format"]["format_long_name"] = container.group(1).strip()
@@ -953,8 +987,14 @@ def get_video_file_info(file_path: str):
         # decoder for any stream (e.g. dvd_subtitle tracks on FFmpeg 9) even
         # though it already printed usable JSON for the rest of the file.
         # ffprobe copies tag bytes into its JSON as they are, Latin-1 too.
-        result = subprocess.run(command, capture_output=True, encoding="utf-8",
-                                errors="replace", timeout=15, check=False)
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=15,
+            check=False,
+        )
 
         # ffprobe may also stop halfway through, leaving truncated JSON behind.
         try:
@@ -975,7 +1015,9 @@ def get_video_file_info(file_path: str):
         # Calculate bitrate if not provided by ffprobe
         if (
             "format" in info
-            and ("bit_rate" not in info["format"] or info["format"]["bit_rate"] == "N/A")
+            and (
+                "bit_rate" not in info["format"] or info["format"]["bit_rate"] == "N/A"
+            )
             and "duration" in info["format"]
             and "size" in info["format"]
         ):
@@ -990,6 +1032,7 @@ def get_video_file_info(file_path: str):
     except (subprocess.SubprocessError, OSError) as e:
         logger.error(f"Error getting file info: {e}")
         return None
+
 
 def format_file_size(size_bytes):
     """Format file size in bytes to a human-readable string"""
@@ -1033,7 +1076,9 @@ def has_audio_streams(file_path: str):
             file_path,
         ]
 
-        result = subprocess.run(command, capture_output=True, text=True, timeout=10, check=False)
+        result = subprocess.run(
+            command, capture_output=True, text=True, timeout=10, check=False
+        )
 
         if result.stdout.strip():
             return True
@@ -1109,9 +1154,7 @@ def check_mp4_compatibility(file_path: str):
             if not codec_name:
                 continue
 
-            allowed = (
-                mp4_video_codecs if codec_type == "video" else mp4_audio_codecs
-            )
+            allowed = mp4_video_codecs if codec_type == "video" else mp4_audio_codecs
             if codec_name in allowed:
                 continue
 

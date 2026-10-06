@@ -68,8 +68,13 @@ class VideoProcessor:
 
     def _on_video_info_loaded(self, info, file_path, generation):
         """Callback executed on the main thread after ffprobe finishes."""
-        if generation != self._generation or file_path != self.page.requested_video_path:
-            logger.debug("Ignoring stale video info for: %s", os.path.basename(file_path))
+        if (
+            generation != self._generation
+            or file_path != self.page.requested_video_path
+        ):
+            logger.debug(
+                "Ignoring stale video info for: %s", os.path.basename(file_path)
+            )
             return False
         # Whatever the probe answered, the editor must not stay locked in
         # "loading" with its controls inert.
@@ -78,7 +83,8 @@ class VideoProcessor:
         except Exception as error:
             logger.exception("Could not show video info for %s", file_path)
             self.page.app.show_error_dialog(
-                _("Error getting video info: {error}").format(error=error))
+                _("Error getting video info: {error}").format(error=error)
+            )
         finally:
             self.page.loading_video = False
         return False
@@ -137,7 +143,9 @@ class VideoProcessor:
             and not self.page.mpv_player.load_video(file_path)
         ):
             self.page.app.show_error_dialog(
-                _("Error: Failed to load video file. Please check the file format and try again.")
+                _(
+                    "Error: Failed to load video file. Please check the file format and try again."
+                )
             )
             return
 
@@ -162,7 +170,9 @@ class VideoProcessor:
         if hasattr(self.page, "mpv_player") and self.page.mpv_player:
             self.page.mpv_player.play()
             self.page.is_playing = True
-            self.page.ui.play_pause_button.set_icon_name('media-playback-pause-symbolic')
+            self.page.ui.play_pause_button.set_icon_name(
+                "media-playback-pause-symbolic"
+            )
             # Start position update timer
             if not self.page.position_update_id:
                 self.page.position_update_id = GLib.timeout_add(

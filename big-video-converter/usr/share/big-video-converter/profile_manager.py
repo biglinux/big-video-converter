@@ -138,7 +138,10 @@ class ProfileManagerMixin:
             for key, value in values.items():
                 self.settings_manager.save_setting(key, value)
             self.settings_manager.save_setting("active-preset", preset.id)
-        force_copy = values.get("force-copy-video", self.settings_manager.load_setting("force-copy-video", False))
+        force_copy = values.get(
+            "force-copy-video",
+            self.settings_manager.load_setting("force-copy-video", False),
+        )
         self._load_left_pane_settings()
         self.settings_page._load_settings()
         self.settings_page.update_for_force_copy_state(force_copy)

@@ -13,8 +13,14 @@ ngettext = gettext.ngettext
 
 # Actions that change the queue or its settings; shortcuts reach them from
 # the progress view too, so they follow the buttons.
-QUEUE_ACTIONS = ("add_files", "add_folder", "add_network_file", "clear_queue",
-                 "start_conversion", "restore_settings")
+QUEUE_ACTIONS = (
+    "add_files",
+    "add_folder",
+    "add_network_file",
+    "clear_queue",
+    "start_conversion",
+    "restore_settings",
+)
 
 
 class HeaderBar(Gtk.Box):
@@ -38,15 +44,20 @@ class HeaderBar(Gtk.Box):
         self.view_name = "queue"
         self.sidebar_button = Gtk.ToggleButton(icon_name="sidebar-show-symbolic")
         self.app.split_view.bind_property(
-            "show-sidebar", self.sidebar_button, "active",
+            "show-sidebar",
+            self.sidebar_button,
+            "active",
             GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
         )
         self.app.split_view.connect("notify::collapsed", self._sync_sidebar_toggle)
         self.header_bar.pack_start(self.sidebar_button)
 
         # Labels ellipsize rather than push the header past a narrow window.
-        self.back_button = Gtk.Button(child=Adw.ButtonContent(
-            icon_name="go-previous-symbolic", label=_("Back"), can_shrink=True))
+        self.back_button = Gtk.Button(
+            child=Adw.ButtonContent(
+                icon_name="go-previous-symbolic", label=_("Back"), can_shrink=True
+            )
+        )
         self.back_button.connect("clicked", self._on_back_clicked)
         self.back_button.set_visible(False)
         self.header_bar.pack_start(self.back_button)
@@ -98,11 +109,11 @@ class HeaderBar(Gtk.Box):
         self.convert_button.set_visible(False)
         action_box.append(self.convert_button)
 
-        self.convert_current_button = Gtk.Button(label=_("Convert This File"), can_shrink=True)
-        self.convert_current_button.add_css_class("suggested-action")
-        self.convert_current_button.connect(
-            "clicked", self._on_convert_current_clicked
+        self.convert_current_button = Gtk.Button(
+            label=_("Convert This File"), can_shrink=True
         )
+        self.convert_current_button.add_css_class("suggested-action")
+        self.convert_current_button.connect("clicked", self._on_convert_current_clicked)
         self.convert_current_button.set_visible(False)
         action_box.append(self.convert_current_button)
 
@@ -152,10 +163,16 @@ class HeaderBar(Gtk.Box):
         self.app.convert_current_file()
 
     def _can_start_conversion(self) -> bool:
-        return not any(getattr(self.app, name, False) for name in (
-            "currently_converting", "active_conversions", "conversions_running",
-            "_pending_imports", "_quitting",
-        ))
+        return not any(
+            getattr(self.app, name, False)
+            for name in (
+                "currently_converting",
+                "active_conversions",
+                "conversions_running",
+                "_pending_imports",
+                "_quitting",
+            )
+        )
 
     def set_buttons_sensitive(self, sensitive: bool) -> None:
         sensitive = sensitive and self._can_start_conversion()
@@ -170,7 +187,8 @@ class HeaderBar(Gtk.Box):
         queue = self.add_button.get_visible()
         # Count and clear only matter once there is more than one file.
         self.queue_size_label.set_text(
-            ngettext("{count} file", "{count} files", count).format(count=count))
+            ngettext("{count} file", "{count} files", count).format(count=count)
+        )
         self.clear_queue_button.set_visible(queue and count > 1)
         self.queue_size_label.set_visible(queue and count > 1)
         self.convert_button.set_visible(queue and count > 0)
