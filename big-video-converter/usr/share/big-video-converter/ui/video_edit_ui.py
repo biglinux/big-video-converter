@@ -5,7 +5,6 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-# Setup translation
 import gettext
 
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
@@ -16,6 +15,7 @@ from utils.job_options import EFFECT_LEVELS, SOURCE_HDR_MODES
 from utils.video_settings import available_filters
 
 from ui.crop_overlay import CropOverlay
+from ui.pause_popover import PausePopover
 
 
 class VideoEditUI:
@@ -71,7 +71,7 @@ class VideoEditUI:
         return page
 
     def _create_overlay_controls(self, overlay):
-        """Create YouTube-style overlay controls at bottom of video"""
+        """Playback controls overlaid on the bottom of the video."""
         controls_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         controls_container.set_valign(Gtk.Align.END)
         controls_container.set_halign(Gtk.Align.FILL)
@@ -129,7 +129,7 @@ class VideoEditUI:
         button_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
         button_row.set_halign(Gtk.Align.CENTER)
 
-        # --- New Single Mark Button ---
+        # Mark button
         mark_button = Gtk.Button(icon_name="bookmark-new-symbolic")
         mark_button.set_tooltip_text(_("Mark segment point"))
         mark_button.update_property(
@@ -140,7 +140,7 @@ class VideoEditUI:
         mark_button.add_css_class("bvc-icon-button")
         button_row.append(mark_button)
 
-        # --- Feedback for marking ---
+        # Feedback for marking
         self.mark_time_label = Gtk.Label(label="")
         self.mark_time_label.set_visible(False)
         button_row.append(self.mark_time_label)
@@ -346,8 +346,6 @@ class VideoEditUI:
         overlay.add_overlay(controls_container)
         self.overlay_controls = controls_container
 
-        # Auto-hide functionality
-        self.hide_timer_id = None
         motion = Gtk.EventControllerMotion.new()
         motion.connect("enter", self._on_video_mouse_enter)
         motion.connect("motion", self._on_video_mouse_motion)
@@ -369,7 +367,7 @@ class VideoEditUI:
         toolbar_box.set_margin_bottom(6)
         toolbar_box.add_css_class("bvc-editor-inspector")
 
-        # --- Crop Controls ---
+        # Crop Controls
         crop_grid = Gtk.Grid(column_spacing=12, row_spacing=4)
         self.crop_grid = crop_grid
         crop_grid.set_valign(Gtk.Align.CENTER)
@@ -442,12 +440,11 @@ class VideoEditUI:
         self.crop_edit_btn.add_css_class("bvc-icon-button")
         crop_box.append(self.crop_edit_btn)
 
-        # Add tooltip to crop grid
         if hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(crop_grid, "crop")
 
         toolbar_box.append(crop_box)
-        # --- Info Display ---
+        # Info Display
         info_grid = Gtk.Grid(column_spacing=12, row_spacing=4)
         info_grid.set_valign(Gtk.Align.CENTER)
         info_grid.set_hexpand(True)
@@ -583,7 +580,7 @@ class VideoEditUI:
         )
         sidebar_box.append(self.copy_mode_note)
 
-        # --- Image ---
+        # Image
         adjust_group = Adw.PreferencesGroup()
         adjust_group.set_title(_("Image"))
         self._image_refreshers = []
@@ -658,7 +655,7 @@ class VideoEditUI:
         self._refresh_image_reset()
         sidebar_box.append(adjust_group)
 
-        # --- Orientation ---
+        # Orientation
         transform_group = Adw.PreferencesGroup()
         transform_group.set_title(_("Orientation"))
         self.transform_reset_button = self._group_reset_button(
@@ -693,12 +690,12 @@ class VideoEditUI:
 
         sidebar_box.append(self._create_effects_group())
 
-        # --- Audio Cleaning Group (visible only when re-encode active) ---
+        # Audio Cleaning Group (visible only when re-encode active)
         self.nr_sidebar_group = self._create_nr_sidebar_group()
         self.nr_sidebar_group.set_visible(False)
         sidebar_box.append(self.nr_sidebar_group)
 
-        # --- Trim Segments ---
+        # Trim Segments
         trim_group = Adw.PreferencesGroup(title=_("Trim Segments"))
         self.trim_group = trim_group
         segment_actions = Gtk.Box(spacing=4)
@@ -723,10 +720,39 @@ class VideoEditUI:
         )
         segment_actions.append(self.clear_segments_button)
         trim_group.set_header_suffix(segment_actions)
+        self.pause_popover = PausePopover(self.page)
+        self.pause_popover.button.set_margin_bottom(12)
+        trim_group.add(self.pause_popover.button)
 
-        self.segments_listbox = Gtk.ListBox(
-            selection_mode=Gtk.SelectionMode.NONE, css_classes=["boxed-list"]
+        # A list view builds rows only for what is on screen: removing pauses
+        # leaves hundreds of segments, and a list box of 600 took 0.4 s to
+        # build again after every edit.
+        self.segment_items = Gtk.StringList()
+        factory = Gtk.SignalListItemFactory()
+        factory.connect("setup", self._setup_segment_row)
+        factory.connect("bind", self._bind_segment_row)
+        segments_list = Gtk.ListView(
+            model=Gtk.NoSelection(model=self.segment_items),
+            factory=factory,
+            single_click_activate=True,
         )
+        segments_list.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Trim Segments")]
+        )
+        segments_list.connect(
+            "activate",
+            lambda _view, position: self.page._on_goto_segment_clicked(
+                None, self.page.trim_segments[position]["start"]
+            ),
+        )
+        self.segments_stack = Gtk.Stack(vhomogeneous=False)
+        self.segments_scroller = Gtk.ScrolledWindow(
+            child=segments_list,
+            hscrollbar_policy=Gtk.PolicyType.NEVER,
+            max_content_height=360,
+            css_classes=["card"],
+        )
+        self.segments_stack.add_named(self.segments_scroller, "list")
         placeholder = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
             spacing=6,
@@ -750,14 +776,20 @@ class VideoEditUI:
                 justify=Gtk.Justification.CENTER,
             )
         )
-        self.segments_listbox.set_placeholder(placeholder)
-        self.segments_listbox.connect(
-            "row-activated",
-            lambda _box, row: self.page._on_goto_segment_clicked(
-                None, row.segment_start
-            ),
+        placeholder.append(
+            Gtk.Label(
+                label=_("Or remove the pauses to keep only the speech."),
+                css_classes=["dim-label"],
+                wrap=True,
+                justify=Gtk.Justification.CENTER,
+            )
         )
-        trim_group.add(self.segments_listbox)
+        empty = Gtk.Box(css_classes=["card"])
+        empty.append(placeholder)
+        placeholder.set_hexpand(True)
+        self.segments_stack.add_named(empty, "empty")
+        self.segments_stack.set_visible_child_name("empty")
+        trim_group.add(self.segments_stack)
         if hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(trim_group, "segments")
         sidebar_box.append(trim_group)
@@ -950,6 +982,78 @@ class VideoEditUI:
         self.flip_v_btn.set_active(flip_v)
         self.transform_reset_button.set_sensitive(bool(rotation or flip_h or flip_v))
 
+    def _setup_segment_row(self, _factory, item):
+        row = Gtk.Box(
+            spacing=6, margin_top=6, margin_bottom=6, margin_start=12, margin_end=6
+        )
+        text = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL, hexpand=True, valign=Gtk.Align.CENTER
+        )
+        row.title = Gtk.Label(xalign=0)
+        row.subtitle = Gtk.Label(xalign=0, css_classes=["dim-label", "caption"])
+        text.append(row.title)
+        text.append(row.subtitle)
+        row.append(text)
+        page = self.page
+        for icon, label, handler in (
+            (
+                "document-edit-symbolic",
+                _("Edit segment times"),
+                lambda button: page._on_edit_segment_clicked(
+                    button, item.get_position()
+                ),
+            ),
+            (
+                "edit-delete-symbolic",
+                _("Remove segment"),
+                lambda button: page._on_remove_segment_clicked(
+                    button, page.trim_segments[item.get_position()]
+                ),
+            ),
+        ):
+            button = Gtk.Button(
+                icon_name=icon,
+                css_classes=["flat"],
+                tooltip_text=label,
+                valign=Gtk.Align.CENTER,
+            )
+            button.update_property([Gtk.AccessibleProperty.LABEL], [label])
+            button.connect("clicked", handler)
+            row.append(button)
+        row.set_tooltip_text(_("Go to segment start"))
+        item.set_child(row)
+
+    def _bind_segment_row(self, _factory, item):
+        position = item.get_position()
+        segment = self.page.trim_segments[position]
+        row = item.get_child()
+        title = _("Segment {num}").format(num=position + 1)
+        subtitle = _("{start} → {end} ({duration})").format(
+            start=self.page.format_time_precise(segment["start"]),
+            end=self.page.format_time_precise(segment["end"]),
+            duration=self.page.format_time_precise(segment["end"] - segment["start"]),
+        )
+        row.title.set_label(title)
+        row.subtitle.set_label(subtitle)
+        item.set_accessible_label(f"{title}, {subtitle}")
+
+    def fit_segment_list(self, count) -> None:
+        """Show every row up to the cap, then scroll within it.
+
+        The sidebar scrolls, and a scrolled window gives its content only its
+        minimum height: the list's own scroller asked for one row. Ten rows
+        already pass the cap, and measuring hundreds cost 40 ms.
+        """
+        cap = self.segments_scroller.get_max_content_height()
+        rows = (
+            cap
+            if count >= 10
+            else self.segments_scroller.get_child().measure(
+                Gtk.Orientation.VERTICAL, -1
+            )[1]
+        )
+        self.segments_scroller.set_min_content_height(min(rows, cap))
+
     def update_segment_actions(self, count) -> None:
         self.clear_segments_button.set_sensitive(count > 0)
         self.output_group.set_visible(count > 1)
@@ -1081,14 +1185,9 @@ class VideoEditUI:
 
     def _draw_segment_markers(self, area, cr, width, height):
         """Draw segment markers on the progress bar"""
-        if not self.page.current_video_path:
-            return
-
-        if not hasattr(self.page, "mpv_player") or not self.page.mpv_player:
-            return
-
-        duration = self.page.mpv_player.get_duration()
-        if duration <= 0:
+        # The probed length: mpv knows it only once loading finishes.
+        duration = self.page.video_duration
+        if not self.page.current_video_path or duration <= 0:
             return
 
         # Draw first mark point if it exists (before second mark is made)
@@ -1100,6 +1199,49 @@ class VideoEditUI:
             cr.move_to(first_x, 0)
             cr.line_to(first_x, height)
             cr.stroke()
+
+        if self.page.proposed_pauses:
+            # Found pauses, shown in place of the segments until cut out.
+            cr.set_line_width(1)
+            cr.set_dash([4, 3])
+            for pause in self.page.proposed_pauses:
+                start_x = pause["start"] / duration * width
+                pause_width = max(
+                    1.5, (pause["stop"] - pause["start"]) / duration * width
+                )
+                cr.set_source_rgba(0.9, 0.25, 0.25, 0.25)
+                cr.rectangle(start_x, 0, pause_width, height)
+                cr.fill()
+                if pause_width > 3:
+                    cr.set_source_rgba(0.9, 0.25, 0.25, 0.8)
+                    cr.rectangle(start_x + 0.5, 0.5, pause_width - 1, height - 1)
+                    cr.stroke()
+            cr.set_dash([])
+            return
+
+        # What the segments leave out is dimmed: with hundreds of segments the
+        # gaps between them are what the eye looks for.
+        if self.page.trim_segments:
+            cr.set_source_rgba(0, 0, 0, 0.45)
+            cursor = 0.0
+            for segment in sorted(self.page.trim_segments, key=lambda s: s["start"]):
+                if segment["start"] > cursor:
+                    gap_x = cursor / duration * width
+                    cr.rectangle(
+                        gap_x,
+                        0,
+                        max(1.5, segment["start"] / duration * width - gap_x),
+                        height,
+                    )
+                cursor = max(cursor, segment["end"])
+            if cursor < duration:
+                cr.rectangle(
+                    cursor / duration * width,
+                    0,
+                    (1 - cursor / duration) * width,
+                    height,
+                )
+            cr.fill()
 
         # Draw completed segments
         if self.page.trim_segments:
@@ -1126,8 +1268,7 @@ class VideoEditUI:
 
     def update_segment_markers(self) -> None:
         """Request redraw of segment markers"""
-        if hasattr(self, "segment_markers_canvas"):
-            self.segment_markers_canvas.queue_draw()
+        self.segment_markers_canvas.queue_draw()
 
     def _setup_drag_controllers(self):
         """Setup drag controllers on the interactive DrawingArea."""
@@ -1152,10 +1293,8 @@ class VideoEditUI:
     def _find_segment_edge_at_position(self, x, width):
         if width <= 0:
             return None
-        if not self.page.trim_segments or not hasattr(self.page, "mpv_player"):
-            return None
-        duration = self.page.mpv_player.get_duration()
-        if duration <= 0:
+        duration = self.page.video_duration
+        if not self.page.trim_segments or duration <= 0:
             return None
         for idx, segment in enumerate(self.page.trim_segments):
             start_x = (segment["start"] / duration) * width
@@ -1198,17 +1337,18 @@ class VideoEditUI:
 
     def _on_drag_end(self, gesture, offset_x, offset_y):
         if self._segment_drag_active:
+            # An edge dragged past a neighbour changes the order.
+            self.page.trim_segments.sort(key=lambda s: s["start"])
             self.page._save_file_metadata()
+            self.page._update_segments_listbox()
         self.page.user_is_dragging_slider = False
         self._dragging_segment = None
         self._segment_drag_active = False
         self._drag_start_pos = None
 
     def _update_slider_drag(self, x, width):
-        if width <= 0 or not hasattr(self.page, "mpv_player"):
-            return
-        duration = self.page.mpv_player.get_duration()
-        if duration <= 0:
+        duration = self.page.video_duration
+        if width <= 0 or duration <= 0:
             return
         new_time = (x / width) * duration
         new_time = max(0, min(duration, new_time))
@@ -1228,10 +1368,8 @@ class VideoEditUI:
     def _update_segment_drag(self, x, width):
         if width <= 0:
             return
-        if not self._dragging_segment or not hasattr(self.page, "mpv_player"):
-            return
-        duration = self.page.mpv_player.get_duration()
-        if duration <= 0:
+        duration = self.page.video_duration
+        if not self._dragging_segment or duration <= 0:
             return
         new_time = (x / width) * duration
         new_time = max(0, min(duration, new_time))
@@ -1265,27 +1403,21 @@ class VideoEditUI:
     def _any_popover_visible(self):
         """Checks if any of the main popover-controlling buttons are active."""
         return (
-            (hasattr(self, "volume_button") and self.volume_button.get_active())
-            or (
-                hasattr(self, "audio_track_button")
-                and self.audio_track_button.get_active()
-            )
-            or (hasattr(self, "subtitle_button") and self.subtitle_button.get_active())
-            or (
-                hasattr(self, "speed_button")
-                and self.speed_button.get_popover()
-                and self.speed_button.get_popover().is_visible()
-            )
+            self.volume_button.get_active()
+            or self.audio_track_button.get_active()
+            or self.subtitle_button.get_active()
+            or self.speed_button.get_popover().is_visible()
+            # Found pauses are previewed on the timeline in these controls.
+            or (hasattr(self, "pause_popover") and self.pause_popover.is_visible())
         )
 
     def _show_controls(self):
         if getattr(self.page, "crop_edit_mode", False):
             return
-        if hasattr(self, "overlay_controls"):
-            self.overlay_controls.set_visible(True)
-            if self.hide_timer_id is not None:
-                GLib.source_remove(self.hide_timer_id)
-                self.hide_timer_id = None
+        self.overlay_controls.set_visible(True)
+        if self.hide_timer_id is not None:
+            GLib.source_remove(self.hide_timer_id)
+            self.hide_timer_id = None
 
     def _schedule_hide_controls(self, delay=2000):
         if self._any_popover_visible():
@@ -1297,8 +1429,7 @@ class VideoEditUI:
     def _hide_controls(self):
         if self._any_popover_visible():
             return True
-        if hasattr(self, "overlay_controls"):
-            self.overlay_controls.set_visible(False)
+        self.overlay_controls.set_visible(False)
         self.hide_timer_id = None
         return False
 
@@ -1307,8 +1438,7 @@ class VideoEditUI:
         if self.hide_timer_id is not None:
             GLib.source_remove(self.hide_timer_id)
             self.hide_timer_id = None
-        if hasattr(self, "overlay_controls"):
-            self.overlay_controls.set_visible(True)
+        self.overlay_controls.set_visible(True)
 
     def apply_tooltips(self) -> None:
         """Apply tooltips to all video edit UI elements"""
@@ -1317,9 +1447,7 @@ class VideoEditUI:
 
         tooltip_helper = self.page.app.tooltip_helper
 
-        # Apply tooltips to stored widget references
-        if hasattr(self, "crop_grid") and self.crop_grid:
-            tooltip_helper.add_tooltip(self.crop_grid, "crop")
+        tooltip_helper.add_tooltip(self.crop_grid, "crop")
         if hasattr(self, "brightness_row") and self.brightness_row:
             tooltip_helper.add_tooltip(self.brightness_row, "brightness")
         if hasattr(self, "saturation_row") and self.saturation_row:

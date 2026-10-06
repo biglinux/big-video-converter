@@ -6,7 +6,7 @@ import os
 
 import pytest
 import test_gtk
-from test_gtk import pump
+from conftest import pump, pump_until
 
 
 @pytest.fixture(scope="module")
@@ -155,7 +155,7 @@ def test_prompt_probe_does_not_block_gtk_or_publish_after_close(app, monkeypatch
     owner._on_copy()
     assert finished.wait(2)
     assert probe_threads == [probe_threads[0]] and probe_threads[0] != main_thread
-    test_gtk.until(lambda: copied == ["measured prompt"])
+    pump_until(lambda: copied == ["measured prompt"])
     owner._on_copy()
     owner.dialog.force_close()
     pump(0.6)
@@ -219,7 +219,7 @@ def test_dependency_window_waits_for_child_and_handles_spawn_failure(app, missin
     window.close()
     assert window.get_visible()
     assert not window._connections._closed
-    test_gtk.until(lambda: not window._installing)
+    pump_until(lambda: not window._installing)
     assert window.installation_success is not missing
     window.close()
     pump(0.6)
@@ -244,3 +244,28 @@ def test_player_keeps_native_render_callback_while_inactive(monkeypatch):
     monkeypatch.setattr(GLib, "idle_add", lambda *args, **kwargs: queued.append(args))
     player._on_mpv_render_update()
     assert not queued
+
+
+def test_segment_rows_finalize_with_their_list(app):
+    from gi.repository import Gtk
+
+    page = app.video_edit_page
+    page.trim_segments = [{"start": 0.0, "end": 1.0}, {"start": 2.0, "end": 3.0}]
+    factory = Gtk.SignalListItemFactory()
+    factory.connect("setup", page.ui._setup_segment_row)
+    factory.connect("bind", page.ui._bind_segment_row)
+    view = Gtk.ListView(
+        model=Gtk.NoSelection(model=Gtk.StringList.new(["0", "1"])), factory=factory
+    )
+    window = Gtk.Window(child=view)
+    window.present()
+    pump(0.3)
+    row = view.get_first_child().get_first_child()
+    track(row, 300)
+    window.destroy()
+    del window, view, row, factory
+    page.trim_segments = []
+    gc.collect()
+    pump(0.3)
+    gc.collect()
+    assert 300 in _finalized

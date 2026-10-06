@@ -17,6 +17,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, GLib, Gtk
 from ui import video_processing
 from ui.mpv_player import MPVPlayer
+from ui.progress_page import format_size
 from ui.video_edit_page import VideoEditPage
 from ui.video_edit_ui import VideoEditUI
 
@@ -24,9 +25,6 @@ from ui.video_edit_ui import VideoEditUI
 class FakePlayer:
     def __init__(self):
         self.cleaned = False
-
-    def get_duration(self):
-        return 6.0
 
     def cleanup(self):
         self.cleaned = True
@@ -44,7 +42,10 @@ class FakePage:
         self.first_segment_point = None
         self.current_video_path = None
         self.mpv_player = FakePlayer()
+        self.video_duration = 6.0
         self.speed = 1.0
+        self.proposed_pauses = []
+        self.settings = SimpleNamespace(get_value=lambda _key, default=None: default)
 
     def __getattr__(self, name):
         if name.startswith(("on_", "reset_", "_on_")):
@@ -81,6 +82,16 @@ class VideoEditUITests(unittest.TestCase):
         self.ui._update_segment_drag(4, 0)
         self.assertEqual(self.page.trim_segments[0]["start"], 1.0)
         self.assertIsNone(self.ui._find_segment_edge_at_position(0, 0))
+
+    def test_segment_edges_work_before_the_player_knows_the_length(self):
+        # mpv knows the length only after loading, late on big or remote files;
+        # the editor uses the probed one.
+        self.page.current_video_path = "/tmp/video.mp4"
+        self.page.trim_segments = [{"start": 1.5, "end": 3.0}]
+        self.assertEqual(
+            self.ui._find_segment_edge_at_position(150, 600),
+            {"segment_index": 0, "edge": "start"},
+        )
 
     def test_disconnect_cancels_hide_timer_and_restores_controls(self):
         self.ui._schedule_hide_controls(delay=60000)
@@ -136,6 +147,7 @@ class VideoEditUITests(unittest.TestCase):
             60000, lambda: GLib.SOURCE_REMOVE
         )
         page.first_segment_point = 1.5
+        page._restoring_metadata = False
         page.loading_video = False
         page.requested_video_path = None
         page.is_playing = True
@@ -161,8 +173,18 @@ class VideoEditUITests(unittest.TestCase):
         _box, fields = page._create_time_input_fields(3661.25)
         self.assertEqual(
             [field.get_tooltip_text() for field in fields],
-            ["Hours", "Minutes", "Seconds", "Centiseconds"],
+            ["Hours", "Minutes", "Seconds", "Milliseconds"],
         )
+
+    def test_saving_unchanged_times_keeps_them(self):
+        page = VideoEditPage.__new__(VideoEditPage)
+        for seconds in (3.3, 2.9995, 59.9999, 3661.25):
+            _box, fields = page._create_time_input_fields(seconds)
+            self.assertAlmostEqual(
+                page._get_time_from_spinbuttons(fields),
+                round(seconds * 1000) / 1000,
+                places=6,
+            )
 
 
 class Settings:
@@ -270,7 +292,7 @@ class VideoEditPageTests(unittest.TestCase):
         self.assertFalse(self.page.loading_video)
         self.assertEqual(self.errors, [])
         self.assertEqual(self.page.video_duration, 0)
-        self.assertEqual(self.page.ui.info_filesize_label.get_text(), "0.00 MB")
+        self.assertEqual(self.page.ui.info_filesize_label.get_text(), format_size(0))
 
         self.page.set_video(first)
         self.finish_loading(first, probe_answer(frame_rate="x/y"))
@@ -446,6 +468,62 @@ class MPVPlayerTransformTests(unittest.TestCase):
         player = self.player(file_rotation=90, render_context=object())
         player.set_crop(10, 0, 4, 0)
         self.assertEqual(player.mpv_instance["video-crop"], "124x62+4+0")
+
+
+class PausePopoverTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        Adw.init()
+
+    def test_installing_the_denoiser_is_noticed_without_a_restart(self):
+        from ui import pause_popover
+
+        class Page(SimpleNamespace):  # the popover holds its page weakly
+            pass
+
+        page = Page(
+            settings=SimpleNamespace(get_value=lambda _key, default=None: default),
+            current_video_path=__file__,
+            mpv_player=SimpleNamespace(
+                get_audio_tracks=lambda: [{"index": 1, "label": "eng"}],
+                current_audio_track=1,
+            ),
+            proposed_pauses=[],
+            is_playing=False,
+            ui=SimpleNamespace(update_segment_markers=lambda: None),
+        )
+        popover = pause_popover.PausePopover(page)
+        window = Gtk.Window(child=popover.button)
+        window.present()
+        try:
+            with mock.patch.object(pause_popover.shutil, "which", return_value=None):
+                popover._show_state()
+            self.assertEqual(popover.stack.get_visible_child_name(), "missing")
+            with mock.patch.object(
+                pause_popover.shutil, "which", return_value="/usr/bin/x"
+            ):
+                popover.popup()
+                context = GLib.MainContext.default()
+                while context.pending():
+                    context.iteration(False)
+                self.assertEqual(popover.stack.get_visible_child_name(), "start")
+            popover.popdown()
+        finally:
+            window.destroy()
+
+
+class MPVPlayerColorTests(unittest.TestCase):
+    def test_a_colour_change_reaches_mpv_once(self):
+        player = MPVPlayer(Gtk.GLArea())
+        sent = []
+        player.mpv_instance = SimpleNamespace(
+            command_async=lambda *args: sent.append(args)
+        )
+        player.set_brightness(0.5)
+        player._flush_colors()
+        player.set_brightness(0.5)
+        self.assertEqual(sent, [("set", "brightness", "50")])
+        self.assertIsNone(player._color_flush_id)
 
 
 if __name__ == "__main__":
