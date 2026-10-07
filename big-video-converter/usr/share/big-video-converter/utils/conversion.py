@@ -470,6 +470,9 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             error_hints.append(text.strip())
         if text.startswith("Running command:"):
             updates.push(command=text.partition(":")[2].strip())
+        if text.startswith("Output is wider than 1920 px: switching from H.264 to H.265"):
+            # uhd_h265=1: the card announced the H.264 the job asked for.
+            GLib.idle_add(progress_item.set_video_codec, "h265")
         if text.startswith("Extracting subtitles"):
             stage_mode = _("Extracting subtitles…")
             updates.push(status=stage_mode)
@@ -509,7 +512,8 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             stage_mode = _("Analyzing the video for the target size…")
             bar_start, bar_share = encode_start, encode_share * 0.4
             updates.push(status=stage_mode)
-        if text.startswith("Running command:") and " -pass 2 " in text:
+        # "-pass 2", or ":pass=2:" inside -x265-params on FFmpeg before 8.
+        if text.startswith("Running command:") and (" -pass 2 " in text or ":pass=2:" in text):
             stage_mode = encode_mode
             bar_start, bar_share = encode_start + encode_share * 0.4, encode_share * 0.6
             updates.push(status=stage_mode)

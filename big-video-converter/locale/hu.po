@@ -4230,6 +4230,27 @@ msgstr "Alkalmazásindítási hiba"
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Nem sikerült elindítani a Big Video Converter-t: {0}"
 
+msgid "Encode H.264 videos wider than 1920 px as H.265, so televisions can play them"
+msgstr "Az 1920 px-nél szélesebb H.264 videók kódolása H.265-be, hogy a tévék lejátszhassák őket"
+
+msgid "Switch 4K H.264 output to H.265 automatically"
+msgstr "A H.264 formátumú 4K kimenet automatikus váltása H.265-re"
+
+msgid "Televisions do not play 4K video in H.264. When enabled, H.264 videos wider than 1920 px are converted to H.265 instead."
+msgstr "A tévék nem játsszák le a 4K videót H.264-ben. Bekapcsolva az 1920 px-nél szélesebb H.264 videók helyette H.265-be konvertálódnak."
+
+msgid ""
+"Televisions play 4K video only in H.265 (or VP9/AV1), never in H.264.\n"
+"\n"
+"When enabled, an H.264 conversion whose output is wider than 1920 px is encoded as H.265 instead. Other codecs and smaller outputs are not changed."
+msgstr "A tévék a 4K videót csak H.265-ben (vagy VP9/AV1-ben) játsszák le, H.264-ben soha.\n\nBekapcsolva az olyan H.264 konverzió, amelynek kimenete 1920 px-nél szélesebb, helyette H.265-be kódolódik. A többi kodek és a kisebb kimenetek nem változnak."
+
+msgid "{hours}h {mins}m"
+msgstr "{hours}ó {mins}p"
+
+msgid "Completed in {duration}"
+msgstr "Befejezve ennyi idő alatt: {duration}"
+
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32-meghajtó vagy Telegram Premium"
 

@@ -293,6 +293,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Televisions play 4K video only in H.265 (or VP9/AV1), never in H.264.\n"
+"\n"
+"When enabled, an H.264 conversion whose output is wider than 1920 px is encoded as H.265 instead. Other codecs and smaller outputs are not changed."
+msgstr ""
+
+msgid ""
 "Audio quality:\n"
 "\n"
 "• Higher = better quality, larger file\n"
@@ -1627,6 +1633,10 @@ msgstr[0] ""
 msgstr[1] ""
 
 #, python-brace-format
+msgid "{hours}h {mins}m"
+msgstr ""
+
+#, python-brace-format
 msgid "{mins}m {secs}s"
 msgstr ""
 
@@ -1816,6 +1826,10 @@ msgstr ""
 msgid "{fps} · {elapsed}"
 msgstr ""
 
+#, python-brace-format
+msgid "Completed in {duration}"
+msgstr ""
+
 msgid "Completed"
 msgstr ""
 
@@ -1835,6 +1849,12 @@ msgid "GPU partial mode"
 msgstr ""
 
 msgid "Decode using CPU, encode using GPU"
+msgstr ""
+
+msgid "Switch 4K H.264 output to H.265 automatically"
+msgstr ""
+
+msgid "Encode H.264 videos wider than 1920 px as H.265, so televisions can play them"
 msgstr ""
 
 msgid "Compression preset"
@@ -2327,6 +2347,9 @@ msgid "The container that holds audio and video. MP4 is the most compatible. MKV
 msgstr ""
 
 msgid "Choose the compression format. H.264 is the most compatible. H.265 and AV1 produce smaller files but need more processing power."
+msgstr ""
+
+msgid "Televisions do not play 4K video in H.264. When enabled, H.264 videos wider than 1920 px are converted to H.265 instead."
 msgstr ""
 
 msgid "Higher quality keeps more detail but creates larger files. 'Good' is a balanced choice for most videos."

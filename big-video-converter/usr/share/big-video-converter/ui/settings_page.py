@@ -45,6 +45,7 @@ class SettingsPage:
 
         # Encoding settings - disable all except Output Format
         self.gpu_partial_check.set_sensitive(enable_encoding_options)
+        self.uhd_h265_check.set_sensitive(enable_encoding_options)
         self.preset_combo.set_sensitive(enable_encoding_options)
         self.video_resolution_combo.set_sensitive(enable_encoding_options)
         self.custom_resolution_row.set_sensitive(enable_encoding_options)
@@ -119,6 +120,15 @@ class SettingsPage:
         self.gpu_partial_check.set_subtitle(_("Decode using CPU, encode using GPU"))
         encoding_group.add(self.gpu_partial_check)
         self.app.tooltip_helper.add_tooltip(self.gpu_partial_check, "gpu_partial")
+
+        self.uhd_h265_check = Adw.SwitchRow(
+            title=_("Switch 4K H.264 output to H.265 automatically")
+        )
+        self.uhd_h265_check.set_subtitle(
+            _("Encode H.264 videos wider than 1920 px as H.265, so televisions can play them")
+        )
+        encoding_group.add(self.uhd_h265_check)
+        self.app.tooltip_helper.add_tooltip(self.uhd_h265_check, "uhd_h265")
 
         # Preset
         preset_row = Adw.ComboRow(
@@ -386,6 +396,12 @@ class SettingsPage:
                 "gpu-partial", w.get_active()
             ),
         )
+        self.uhd_h265_check.connect(
+            "notify::active",
+            lambda w, p: self.settings_manager.save_setting(
+                "uhd-h265", w.get_active()
+            ),
+        )
 
         # Connect preset combo change
         self.preset_combo.connect("notify::selected", self._save_preset_setting)
@@ -602,6 +618,9 @@ class SettingsPage:
         # Load boolean switch settings
         gpu_partial_active = self.settings_manager.load_setting("gpu-partial", False)
         self.gpu_partial_check.set_active(gpu_partial_active)
+        self.uhd_h265_check.set_active(
+            self.settings_manager.load_setting("uhd-h265", False)
+        )
 
         # Load preset
         preset_value = self.settings_manager.load_setting("preset", "default")

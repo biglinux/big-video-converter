@@ -112,6 +112,7 @@ if [[ $# -eq 0 || $1 == "-h" || $1 == "--help" ]]; then
 	echo -e "${COLOR_BLUE}13. Specifying Video Encoder:${COLOR_RESET}"
 	echo -e "   ${COLOR_CYAN}You can specify the video encoder. Options include:${COLOR_GREEN} h264, h265, av1, vp9${COLOR_RESET} Default is h264"
 	echo -e "   ${COLOR_CYAN}Example to use h265 encoder:${COLOR_RESET} ${COLOR_YELLOW}video_encoder=h265${COLOR_RESET} $0 ${COLOR_YELLOW}video.mkv${COLOR_RESET}"
+	echo -e "   ${COLOR_CYAN}With ${COLOR_YELLOW}uhd_h265=1${COLOR_CYAN}, an H.264 output wider than 1920 px (4K) is encoded as H.265, which televisions can play${COLOR_RESET}"
 	echo ""
 	echo -e "${COLOR_BLUE}14. Force Gpu partial mode, decode using CPU and encode using GPU:${COLOR_RESET}"
 	echo -e "   ${COLOR_YELLOW}gpu_partial=1${COLOR_RESET}"
@@ -629,12 +630,13 @@ if [[ ${output_file,,} == *.webm ]]; then
 fi
 
 # Above 1080p, H.264 is a PC-only format: televisions decode UHD in HEVC (or
-# VP9/AV1), never in H.264. H.264 is this tool's default, so a 4K source
-# converted with defaults used to produce a file no TV would open. Switch to
-# H.265 unless the caller insists (video_encoder_strict=1).
-if [[ ($video_encoder == "h264" || -z "$video_encoder") && $output_width =~ ^[0-9]+$ && $output_width -gt 1920 && $video_encoder_strict != 1 ]]; then
+# VP9/AV1), never in H.264. With uhd_h265=1 (opt-in, the GUI's "H.265 for 4K
+# videos" switch) an H.264 encode whose output is wider than 1920 px becomes
+# H.265, so the file opens on a TV. Off by default: the codec the user picked
+# is the codec they get.
+if [[ $uhd_h265 == 1 && $force_copy_video != 1 && ($video_encoder == "h264" || -z "$video_encoder") && $output_width =~ ^[0-9]+$ && $output_width -gt 1920 ]]; then
 	video_encoder=h265
-	echo "Output is wider than 1920 px: switching from H.264 to H.265 (televisions do not decode H.264 above 1080p; set video_encoder_strict=1 to keep H.264)"
+	echo "Output is wider than 1920 px: switching from H.264 to H.265 (televisions do not decode H.264 above 1080p)"
 fi
 
 # The smallest H.264 level whose macroblock budget fits the picture and frame
@@ -1363,6 +1365,20 @@ progress_fingerprint() { # last frame/out_time/size values of a -progress file
 # What FFmpeg printed during the current conversion attempt.
 ffmpeg_log="$output_stage_dir/ffmpeg.log"
 
+# FFmpeg 8 gave libx265 -pass and -x265-stats. Earlier releases (Debian 13
+# ships 7.1) refuse -x265-stats and ignore -pass there, so x265 is handed the
+# pass through its own parameters. Asked once, of the binary in use.
+x265_takes_stats() {
+	if [[ -z ${x265_stats_option:-} ]]; then
+		if "$ffmpeg_executable" -hide_banner -h encoder=libx265 2>/dev/null | grep -q -- '-x265-stats'; then
+			x265_stats_option=yes
+		else
+			x265_stats_option=no
+		fi
+	fi
+	[[ $x265_stats_option == yes ]]
+}
+
 # Keep human-readable diagnostics; only argv is executed.
 run_ffmpeg() {
     local -a progress_opt=()
@@ -1942,12 +1958,25 @@ function attempt_conversion() {
 			# learns where the picture needs bits, so the size lands on
 			# target. Audio stays in: joined cuts feed it through the same
 			# filtergraph, which would be left with an unconnected output.
-			local -a pass_log=(-passlogfile "$output_stage_dir/pass")
-			[[ $video_encoder != h265 ]] || pass_log+=(-x265-stats "$output_stage_dir/pass.x265")
+			local -a pass_log=(-passlogfile "$output_stage_dir/pass") first_pass=()
+			if [[ $video_encoder != h265 ]]; then
+				first_pass=(-pass 1 "${pass_log[@]}")
+				second_pass=(-pass 2 "${pass_log[@]}")
+			elif x265_takes_stats; then
+				first_pass=(-pass 1 "${pass_log[@]}" -x265-stats "$output_stage_dir/pass.x265")
+				second_pass=(-pass 2 "${pass_log[@]}" -x265-stats "$output_stage_dir/pass.x265")
+			else
+				# The later -x265-params replaces the encoder's log-level one,
+				# so it is repeated. ':' and '\' in the path are escaped for
+				# FFmpeg's key=value list.
+				local stats=$output_stage_dir/pass.x265
+				stats=${stats//\\/\\\\}; stats=${stats//:/\\:}
+				first_pass=(-x265-params "log-level=warning:pass=1:stats=$stats")
+				second_pass=(-x265-params "log-level=warning:pass=2:stats=$stats")
+			fi
 			echo "Analysis pass: measuring the video before the sized encode"
 			run_ffmpeg "${input_options[@]}" "${encoder_software[@]}" "${output_options[@]}" "${filters[@]}" \
-				-pass 1 "${pass_log[@]}" -sn -dn -f null - || { exit_code=$?; return; }
-			second_pass=(-pass 2 "${pass_log[@]}")
+				"${first_pass[@]}" -sn -dn -f null - || { exit_code=$?; return; }
 		fi
         run_ffmpeg "${input_options[@]}" "${encoder_software[@]}" "${output_options[@]}" "${filters[@]}" "${second_pass[@]}" "${ffmpeg_generic_options[@]}"
 		exit_code=$?

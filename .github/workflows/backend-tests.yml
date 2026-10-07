@@ -40,11 +40,14 @@ jobs:
             python3-opengl python3-numpy python3-polib \
             gsettings-desktop-schemas at-spi2-core \
             gir1.2-gtk-4.0 gir1.2-adw-1 gir1.2-vte-3.91 \
-            libmpv2 libgl1-mesa-dri libegl1 xauth xvfb dbus-x11; \
+            libmpv2 libgl1-mesa-dri libegl1 xauth xvfb dbus-x11 locales; \
             } > /tmp/bvc-apt.log 2>&1; then
             tail -n 100 /tmp/bvc-apt.log
             exit 1
           fi
+          # The numeric-locale test needs a comma decimal separator.
+          sed -i 's/^# *\(pt_BR.UTF-8 UTF-8\)/\1/' /etc/locale.gen
+          locale-gen > /dev/null
           echo 'Dependency installation completed.'
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -108,6 +111,26 @@ jobs:
           suites = [root] if root.tag == 'testsuite' else list(root.iter('testsuite'))
           counts = {key: sum(int(s.get(key, 0)) for s in suites)
                     for key in ('tests', 'failures', 'errors', 'skipped')}
+          # Skips this runner cannot avoid, by their exact reason: Debian has
+          # no DeepFilterNet/DPDFNet packages, and the popover surface fix is
+          # Wayland-only while Xvfb is X11. Any other skip still fails.
+          expected_skips = ('deepfilternet3-native not installed',
+                            'dpdfnet-native not installed',
+                            'the fix covers Wayland only')
+          unexpected = []
+          for case in root.iter('testcase'):
+              skipped = case.find('skipped')
+              if skipped is None:
+                  continue
+              reason = skipped.get('message', '')
+              name = f"{case.get('classname')}::{case.get('name')}"
+              if any(reason.endswith(known) for known in expected_skips):
+                  counts['skipped'] -= 1
+                  print(f'expected skip: {name}: {reason}')
+              else:
+                  unexpected.append(f'{name}: {reason}')
+          for line in unexpected:
+              print(f'UNEXPECTED skip: {line}')
           print(json.dumps(counts, sort_keys=True))
           with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as f:
               f.write('### Backend / GTK regression results\n\n```json\n'

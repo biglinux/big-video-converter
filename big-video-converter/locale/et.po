@@ -5235,6 +5235,27 @@ msgstr "Rakenduse käivitamise viga"
 msgid "Failed to start Big Video Converter: {0}"
 msgstr "Big Video Converter'i käivitamine ebaõnnestus: {0}"
 
+msgid "Encode H.264 videos wider than 1920 px as H.265, so televisions can play them"
+msgstr "Kodeeri üle 1920 px laiused H.264-videod H.265-vormingusse, et telerid saaksid neid esitada"
+
+msgid "Switch 4K H.264 output to H.265 automatically"
+msgstr "Vaheta H.264-vormingus 4K-väljund automaatselt H.265-vormingusse"
+
+msgid "Televisions do not play 4K video in H.264. When enabled, H.264 videos wider than 1920 px are converted to H.265 instead."
+msgstr "Telerid ei esita 4K-videot H.264-vormingus. Kui see on sisse lülitatud, teisendatakse üle 1920 px laiused H.264-videod hoopis H.265-vormingusse."
+
+msgid ""
+"Televisions play 4K video only in H.265 (or VP9/AV1), never in H.264.\n"
+"\n"
+"When enabled, an H.264 conversion whose output is wider than 1920 px is encoded as H.265 instead. Other codecs and smaller outputs are not changed."
+msgstr "Telerid esitavad 4K-videot ainult H.265 (või VP9/AV1) vormingus, mitte kunagi H.264-vormingus.\n\nKui see on sisse lülitatud, kodeeritakse H.264-teisendus, mille väljund on laiem kui 1920 px, hoopis H.265-vormingusse. Teisi koodekeid ja väiksemaid väljundeid ei muudeta."
+
+msgid "{hours}h {mins}m"
+msgstr "{hours}h {mins}m"
+
+msgid "Completed in {duration}"
+msgstr "Lõpetatud ajaga {duration}"
+
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32-draiv või Telegram Premium"
 
