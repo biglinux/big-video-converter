@@ -29,22 +29,16 @@ jobs:
           persist-credentials: false
       - name: Build the checked-out sources
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          # The recipe builds the checkout it sits in: this commit, not main.
           mkdir package-build
-          git ls-files -z | tar --null --transform='s,^,big-video-converter/,' \
-            -T - -czf package-build/source.tar.gz
-          cp pkgbuild/PKGBUILD package-build/PKGBUILD
-          # Keep the release recipe, but test this checkout rather than main.
-          printf '\nsource=(source.tar.gz "${source[1]}")\n' >> package-build/PKGBUILD
-          printf "sha256sums=('%s' 'SKIP')\n" "$(sha256sum package-build/source.tar.gz | cut -d ' ' -f 1)" \
-            >> package-build/PKGBUILD
-          chown -R builder:builder package-build
-          runuser -u builder -- bash -c 'cd package-build && makepkg --cleanbuild --noconfirm'
+          chown -R builder:builder .
+          runuser -u builder -- bash -c \
+            'cd pkgbuild && PKGDEST="$GITHUB_WORKSPACE/package-build" makepkg --cleanbuild --noconfirm'
       - name: Validate the built package
         run: |
           package=$(find package-build -maxdepth 1 -name '*.pkg.tar.zst' -print -quit)
           test -n "$package"
-          namcap package-build/PKGBUILD "$package" | tee package-build/namcap.log
+          namcap pkgbuild/PKGBUILD "$package" | tee package-build/namcap.log
           if grep -q ' E: ' package-build/namcap.log; then exit 1; fi
           mkdir package-build/installed
           tar -xf "$package" -C package-build/installed

@@ -330,8 +330,8 @@ class VideoConverterApp(
 
         # Create CSS for sidebar styling
         css_provider = Gtk.CssProvider()
-        css_provider.load_from_data(
-            b"""
+        css_provider.load_from_string(
+            """
         .sidebar {
             background-color: @sidebar_bg_color;
         }
@@ -344,8 +344,7 @@ class VideoConverterApp(
             border-radius: 999px;
             padding: 1px 8px;
         }
-        """,
-            -1,
+        """
         )
         Gtk.StyleContext.add_provider_for_display(
             Gdk.Display.get_default(),
