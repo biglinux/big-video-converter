@@ -225,6 +225,23 @@ def test_amd_hevc_keeps_bitrate_keyframes_and_tag(media, tmp_path, run_cli, bitr
         assert (' -rc_mode VBR -b:v 500000 ' in line) if bitrate else (' -rc_mode CQP ' in line)
 
 
+def test_sized_h265_runs_two_passes_on_ffmpeg_before_8(media, tmp_path, run_cli):
+    """FFmpeg 7.1 (Debian 13) has no -x265-stats and ignores -pass for
+    libx265: the sized encode failed there with "Unrecognized option"."""
+    from test_probe_and_driver_fallback import REAL_FFMPEG, _fake_ffmpeg
+    wrapper = _fake_ffmpeg(tmp_path, 'ffmpeg7',
+        'for arg in "$@"; do [[ $arg == -x265-stats ]] && { echo "Unrecognized option" >&2; exit 8; }; done\n'
+        f'if [[ $* == *encoder=libx265* ]]; then {REAL_FFMPEG} "$@" | grep -v -- -x265-stats; exit 0; fi')
+    out = tmp_path / 'sized.mp4'
+    result = run_cli(media['video'], out, force_software='1', video_encoder='h265',
+                     video_bitrate='500000', ffmpeg_executable=wrapper, options='-t 1 -threads 1')
+    assert result.returncode == 0, result.stdout + result.stderr
+    commands = [line for line in result.stdout.splitlines() if line.startswith('Running command:')]
+    assert any(':pass=1:stats=' in line for line in commands), result.stdout
+    assert any(':pass=2:stats=' in line for line in commands), result.stdout
+    assert out.stat().st_size > 0
+
+
 def _group_members(pgid):
     members = []
     for stat_file in Path('/proc').glob('[0-9]*/stat'):

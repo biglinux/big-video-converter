@@ -512,7 +512,8 @@ def monitor_progress(app, process, progress_item, env_vars=None, *, source_file=
             stage_mode = _("Analyzing the video for the target size…")
             bar_start, bar_share = encode_start, encode_share * 0.4
             updates.push(status=stage_mode)
-        if text.startswith("Running command:") and " -pass 2 " in text:
+        # "-pass 2", or ":pass=2:" inside -x265-params on FFmpeg before 8.
+        if text.startswith("Running command:") and (" -pass 2 " in text or ":pass=2:" in text):
             stage_mode = encode_mode
             bar_start, bar_share = encode_start + encode_share * 0.4, encode_share * 0.6
             updates.push(status=stage_mode)

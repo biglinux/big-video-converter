@@ -1365,6 +1365,20 @@ progress_fingerprint() { # last frame/out_time/size values of a -progress file
 # What FFmpeg printed during the current conversion attempt.
 ffmpeg_log="$output_stage_dir/ffmpeg.log"
 
+# FFmpeg 8 gave libx265 -pass and -x265-stats. Earlier releases (Debian 13
+# ships 7.1) refuse -x265-stats and ignore -pass there, so x265 is handed the
+# pass through its own parameters. Asked once, of the binary in use.
+x265_takes_stats() {
+	if [[ -z ${x265_stats_option:-} ]]; then
+		if "$ffmpeg_executable" -hide_banner -h encoder=libx265 2>/dev/null | grep -q -- '-x265-stats'; then
+			x265_stats_option=yes
+		else
+			x265_stats_option=no
+		fi
+	fi
+	[[ $x265_stats_option == yes ]]
+}
+
 # Keep human-readable diagnostics; only argv is executed.
 run_ffmpeg() {
     local -a progress_opt=()
@@ -1944,12 +1958,25 @@ function attempt_conversion() {
 			# learns where the picture needs bits, so the size lands on
 			# target. Audio stays in: joined cuts feed it through the same
 			# filtergraph, which would be left with an unconnected output.
-			local -a pass_log=(-passlogfile "$output_stage_dir/pass")
-			[[ $video_encoder != h265 ]] || pass_log+=(-x265-stats "$output_stage_dir/pass.x265")
+			local -a pass_log=(-passlogfile "$output_stage_dir/pass") first_pass=()
+			if [[ $video_encoder != h265 ]]; then
+				first_pass=(-pass 1 "${pass_log[@]}")
+				second_pass=(-pass 2 "${pass_log[@]}")
+			elif x265_takes_stats; then
+				first_pass=(-pass 1 "${pass_log[@]}" -x265-stats "$output_stage_dir/pass.x265")
+				second_pass=(-pass 2 "${pass_log[@]}" -x265-stats "$output_stage_dir/pass.x265")
+			else
+				# The later -x265-params replaces the encoder's log-level one,
+				# so it is repeated. ':' and '\' in the path are escaped for
+				# FFmpeg's key=value list.
+				local stats=$output_stage_dir/pass.x265
+				stats=${stats//\\/\\\\}; stats=${stats//:/\\:}
+				first_pass=(-x265-params "log-level=warning:pass=1:stats=$stats")
+				second_pass=(-x265-params "log-level=warning:pass=2:stats=$stats")
+			fi
 			echo "Analysis pass: measuring the video before the sized encode"
 			run_ffmpeg "${input_options[@]}" "${encoder_software[@]}" "${output_options[@]}" "${filters[@]}" \
-				-pass 1 "${pass_log[@]}" -sn -dn -f null - || { exit_code=$?; return; }
-			second_pass=(-pass 2 "${pass_log[@]}")
+				"${first_pass[@]}" -sn -dn -f null - || { exit_code=$?; return; }
 		fi
         run_ffmpeg "${input_options[@]}" "${encoder_software[@]}" "${output_options[@]}" "${filters[@]}" "${second_pass[@]}" "${ffmpeg_generic_options[@]}"
 		exit_code=$?
