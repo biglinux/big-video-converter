@@ -1563,7 +1563,7 @@ class ConversionPage:
     def on_show_file_info_by_path(self, file_path: str) -> None:
         """Show detailed information about the video file"""
         if file_path and os.path.exists(file_path):
-            from utils.file_info import VideoInfoDialog
+            from ui.video_info_dialog import VideoInfoDialog
 
             info_dialog = VideoInfoDialog(self.app.window, file_path)
             info_dialog.show()

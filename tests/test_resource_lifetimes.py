@@ -84,7 +84,7 @@ def test_welcome_dialog_finalizes_after_close(app):
 
 
 def test_info_window_finalizes_after_close(app, media):
-    from utils.file_info import VideoInfoDialog
+    from ui.video_info_dialog import VideoInfoDialog
 
     for serial in range(10, 15):
         info = VideoInfoDialog(app.window, str(media["video"]))

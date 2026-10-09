@@ -405,10 +405,12 @@ class TestFileInfoFailures:
     def test_info_dialog_reports_any_failure_and_opens_escaped_folders(
         self, monkeypatch
     ):
-        from utils import file_info
+        from ui import video_info_dialog
 
         shown = []
-        dialog = file_info.VideoInfoDialog.__new__(file_info.VideoInfoDialog)
+        dialog = video_info_dialog.VideoInfoDialog.__new__(
+            video_info_dialog.VideoInfoDialog
+        )
         dialog.file_path = "/videos/x.mp4"
         dialog.dialog = None
         dialog._show_error = shown.append
@@ -416,8 +418,8 @@ class TestFileInfoFailures:
         def fail(_path):
             raise UnicodeDecodeError("utf-8", b"\xe9", 0, 1, "invalid")
 
-        monkeypatch.setattr(file_info, "get_video_file_info", fail)
-        monkeypatch.setattr(file_info.GLib, "idle_add", lambda f, *a: f(*a))
+        monkeypatch.setattr(video_info_dialog, "get_video_file_info", fail)
+        monkeypatch.setattr(video_info_dialog.GLib, "idle_add", lambda f, *a: f(*a))
         dialog._get_file_info_thread()
         assert shown and "invalid" in shown[0]
 
@@ -433,5 +435,5 @@ class TestFileInfoFailures:
                 opened.append(self.file.get_uri())
 
         monkeypatch.setattr(progress_page.Gtk.FileLauncher, "new", Launcher)
-        file_info.launch_file(None, None, "/videos/a#b%c?d", containing=True)
+        progress_page.launch_file(None, None, "/videos/a#b%c?d", containing=True)
         assert opened == ["file:///videos/a%23b%25c%3Fd"]
