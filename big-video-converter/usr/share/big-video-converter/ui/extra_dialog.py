@@ -295,11 +295,11 @@ def _export_profile(dialog, parent_window, app) -> None:
             return
         if not gfile:
             return
+        # The name the dialog confirmed, as typed: adding ".json" here would
+        # replace a different file without asking.
         filepath = gfile.get_path()
         if not filepath:
             return
-        if not filepath.endswith(".json"):
-            filepath += ".json"
         ok = app.settings_manager.export_profile(filepath)
         msg = Gtk.AlertDialog()
         if ok:

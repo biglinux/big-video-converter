@@ -363,6 +363,23 @@ class PresetsDialog:
     def _delete(self, preset):
         if preset is None:
             return
+        alert = Adw.AlertDialog()
+        alert.set_heading(_("Delete “{0}”?").format(preset.display_name))
+        alert.set_body(_("The preset file is removed: {0}").format(preset.path))
+        alert.add_response("cancel", _("Cancel"))
+        alert.add_response("delete", _("Delete"))
+        alert.set_response_appearance("delete", Adw.ResponseAppearance.DESTRUCTIVE)
+        alert.set_default_response("cancel")
+        alert.set_close_response("cancel")
+        alert.connect(
+            "response",
+            lambda _alert, response: (
+                response == "delete" and self._delete_confirmed(preset)
+            ),
+        )
+        alert.present(self.dialog)
+
+    def _delete_confirmed(self, preset):
         try:
             preset_store.delete_user_preset(preset)
         except (preset_store.PresetError, OSError) as error:

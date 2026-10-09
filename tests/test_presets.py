@@ -267,6 +267,22 @@ def _answer(window, label):
     raise AssertionError(f"No {label} button")
 
 
+class TestDeleteConfirmation:
+    def test_a_preset_is_deleted_only_after_confirming(
+        self, presets_window, user_presets
+    ):
+        window, dialog = presets_window
+        preset = presets.save_user_preset(MINIMAL)
+        dialog._delete(preset)
+        pump(0.3)
+        _answer(window, "Cancel")
+        assert os.path.exists(preset.path)
+        dialog._delete(preset)
+        pump(0.3)
+        _answer(window, "Delete")
+        assert not os.path.exists(preset.path)
+
+
 class TestImportConfirmation:
     def test_cancel_saves_nothing_and_import_anyway_saves(
         self, presets_window, user_presets
