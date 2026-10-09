@@ -22,6 +22,8 @@ from utils import presets as preset_store
 from utils.ffmpeg_path import get_ffmpeg_executable
 from utils.signal_connections import SignalConnections
 
+from ui.progress_page import launch_file
+
 logger = logging.getLogger(__name__)
 
 _ = gettext.gettext
@@ -397,9 +399,7 @@ class PresetsDialog:
     def _edit(self, preset):
         if preset is None:
             return
-        Gio.AppInfo.launch_default_for_uri(
-            Gio.File.new_for_path(preset.path).get_uri(), None
-        )
+        launch_file(self.app, self.dialog, preset.path)
 
     def _export(self, preset):
         if preset is None:
@@ -496,9 +496,7 @@ class PresetsDialog:
     def _open_folder(self):
         directory = preset_store.user_dir()
         os.makedirs(directory, exist_ok=True)
-        Gio.AppInfo.launch_default_for_uri(
-            Gio.File.new_for_path(directory).get_uri(), None
-        )
+        launch_file(self.app, self.dialog, directory)
 
     def _show_broken(self, broken):
         alert = Adw.AlertDialog()
