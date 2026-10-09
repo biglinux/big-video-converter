@@ -10,7 +10,12 @@ from pathlib import Path
 
 from utils.conversion import TEXT_SUBTITLE_CODECS
 from utils.ffmpeg_path import get_ffmpeg_executable
-from utils.media_validation import probe_media, publish_output, run_cancellable
+from utils.media_validation import (
+    new_file_mode,
+    probe_media,
+    publish_output,
+    run_cancellable,
+)
 
 logger = logging.getLogger(__name__)
 _TIMECODE = r"\d{2,}:\d{2}:\d{2},\d{3}"
@@ -216,6 +221,7 @@ class SubtitleProcessor:
             prefix=".bvc-subtitle-", suffix=".srt", dir=folder
         )
         try:
+            os.fchmod(fd, new_file_mode())
             with os.fdopen(fd, "w", encoding="utf-8") as file:
                 file.write(content)
                 file.flush()

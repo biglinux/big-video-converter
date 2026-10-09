@@ -711,10 +711,24 @@ def _toml_string(value: str) -> str:
     return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
+def _new_file_mode() -> int:
+    """media_validation.new_file_mode; the converter script runs this module
+    on its own, without the utils package."""
+    try:
+        with open("/proc/self/status", encoding="ascii") as status:
+            for line in status:
+                if line.startswith("Umask:"):
+                    return 0o666 & ~int(line.split()[1], 8)
+    except (OSError, ValueError):
+        pass
+    return 0o644
+
+
 def _atomic_write(path: str, text: str) -> None:
     directory = os.path.dirname(path)
     fd, tmp = tempfile.mkstemp(prefix=".preset-", suffix=".tmp", dir=directory)
     try:
+        os.fchmod(fd, _new_file_mode())
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
             handle.write(text if text.endswith("\n") else text + "\n")
             handle.flush()

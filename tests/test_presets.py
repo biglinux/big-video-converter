@@ -542,3 +542,14 @@ class TestTranslatableTexts:
             '[preset]\nname="Meu preset"\ndescription="Descrição"\ntags=["meu"]'
         )
         assert preset.display_name == "Meu preset" and preset.display_tags == ["meu"]
+
+
+def test_an_exported_preset_is_readable_like_any_new_file(user_presets, tmp_path):
+    preset = presets.save_user_preset(MINIMAL)
+    target = tmp_path / "shared.toml"
+    umask = os.umask(0o022)
+    try:
+        presets.export_preset(preset, str(target))
+    finally:
+        os.umask(umask)
+    assert target.stat().st_mode & 0o777 == 0o644

@@ -419,6 +419,22 @@ def remove_original(
     os.unlink(source)
 
 
+def new_file_mode() -> int:
+    """The mode open(2) gives a new file under this process's umask.
+
+    mkstemp creates 0600, which hides a sidecar or an exported file from a
+    media server or a share running as another user.
+    """
+    try:
+        with open("/proc/self/status", encoding="ascii") as status:
+            for line in status:
+                if line.startswith("Umask:"):
+                    return 0o666 & ~int(line.split()[1], 8)
+    except (OSError, ValueError):
+        pass
+    return 0o644
+
+
 def publish_output(staged: str, destination: str) -> None:
     """Atomic, no-clobber publication on the same filesystem.
 

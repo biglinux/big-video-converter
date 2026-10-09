@@ -9,6 +9,8 @@ import tempfile
 from contextlib import contextmanager
 from typing import ClassVar
 
+from utils.media_validation import new_file_mode
+
 logger = logging.getLogger(__name__)
 
 
@@ -396,6 +398,7 @@ class SettingsManager:
         os.makedirs(directory, exist_ok=True)
         fd, temporary = tempfile.mkstemp(prefix=".bvc-settings-", dir=directory)
         try:
+            os.fchmod(fd, new_file_mode())
             with os.fdopen(fd, "w", encoding="utf-8") as file:
                 file.write(text)
             os.replace(temporary, path)
