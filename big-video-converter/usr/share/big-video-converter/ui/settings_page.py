@@ -29,10 +29,6 @@ class SettingsPage:
 
         self._load_settings()
 
-    def get_page(self):
-        """Return the settings page widget"""
-        return self.page
-
     def update_for_force_copy_state(self, force_copy_enabled) -> None:
         """Update controls sensitivity based on force copy state"""
         # When force copy is enabled, most encoding options don't apply

@@ -4,7 +4,6 @@ Main entry point for Big Video Converter application.
 
 import logging
 import os
-import subprocess
 import sys
 import threading
 from collections import deque
@@ -413,18 +412,6 @@ class VideoConverterApp(
                 "sidebar-position", self.split_view.get_sidebar().get_width()
             )
 
-    def terminate_process_tree(self, process) -> bool:
-        from utils.media_validation import terminate_process_group
-
-        if process is None:
-            return False
-        try:
-            terminate_process_group(process)
-            return True
-        except (OSError, ValueError, subprocess.SubprocessError):
-            self.logger.exception("Could not terminate conversion process group")
-            return False
-
     def _create_right_pane(self):
         """Create right pane with stack for queue and editor views using ToolbarView"""
         self.right_toolbar_view = Adw.ToolbarView()
@@ -602,28 +589,6 @@ class VideoConverterApp(
         notification.set_body(body)
         self.send_notification(None, notification)
 
-    # GIO Application overrides
-    def _present_window_and_request_focus(self, window):
-        """Present the window and use a modal dialog hack to request focus if needed."""
-        window.present()
-
-        def check_and_apply_hack():
-            if not window.is_active():
-                self.logger.info(
-                    "Window not active after present(), applying modal window hack."
-                )
-                hack_window = Gtk.Window(transient_for=window, modal=True)
-
-                hack_window.set_default_size(1, 1)
-                hack_window.set_decorated(False)
-
-                hack_window.present()
-                GLib.idle_add(hack_window.destroy)
-
-            return GLib.SOURCE_REMOVE
-
-        GLib.idle_add(check_and_apply_hack)
-
     def do_open(self, files: str, n_files: str, hint) -> None:
         """Handle files opened via file association or from another instance"""
         if not hasattr(self, "window") or self.window is None:
@@ -671,7 +636,7 @@ class VideoConverterApp(
             GLib.idle_add(self.show_queue_view)
             # Request window focus when files are added externally
             if hasattr(self, "window") and self.window:
-                self._present_window_and_request_focus(self.window)
+                self.window.present()
 
     def do_command_line(self, command_line):
         """Handle command line arguments"""

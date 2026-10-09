@@ -1502,7 +1502,6 @@ class QueueItemRow(Gtk.ListBoxRow):
         if self.status not in ("active", "pending"):
             return
 
-        was_active = self.status == "active"
         was_pending = self.status == "pending"
 
         self._cancelled = True
@@ -1524,15 +1523,6 @@ class QueueItemRow(Gtk.ListBoxRow):
             self.app.is_cancellation_requested = True
 
         self.cancel_button.set_sensitive(False)
-
-        if was_active and self.process and token is None:
-            try:
-                if hasattr(self.app, "terminate_process_tree"):
-                    self.app.terminate_process_tree(self.process)
-                else:
-                    self.process.terminate()
-            except OSError as e:
-                logger.error("Error cancelling: %s", e)
 
         # For pending items, also remove from the conversion queue
         if (
