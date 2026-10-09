@@ -1129,3 +1129,36 @@ def test_a_full_disk_is_not_encoded_again_on_other_stages(media, tmp_path, run_c
     )
     assert result.returncode != 0
     assert calls.read_text().count("x") == 1, result.stdout
+
+
+def test_job_stops_when_the_application_that_started_it_is_gone(
+    media, tmp_path, cli_env
+):
+    application = subprocess.Popen(["sleep", "60"])
+    stalled = fake_ffmpeg(
+        tmp_path, "ffmpeg", '[[ " $* " == *" -progress "* ]] && exec sleep 30'
+    )
+    destination = tmp_path / "out.mp4"
+    job = subprocess.Popen(
+        ["bash", str(CLI), str(media["video"])],
+        env={
+            **cli_env,
+            "ffmpeg_executable": str(stalled),
+            "output_file": str(destination),
+            "BVC_PARENT_PID": str(application.pid),
+        },
+        cwd=tmp_path,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+    try:
+        wait_until(lambda: any(tmp_path.glob(".bvc-*/progress")), timeout=20)
+        application.kill()
+        application.wait()
+        _out, err = job.communicate(timeout=10)
+    finally:
+        job.kill()
+        application.kill()
+    assert job.returncode == 143, err[-2000:]
+    assert not destination.exists() and not list(tmp_path.glob(".bvc-*"))

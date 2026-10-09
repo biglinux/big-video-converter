@@ -1345,33 +1345,38 @@ run_ffmpeg() {
 	"$ffmpeg_executable" -nostdin "${progress_opt[@]}" "$@" 2>&"$log_fd" &
 	ffmpeg_pid=$!
 	local stalled=false status
-	if [[ ${#progress_opt[@]} -gt 0 ]]; then
-		# Poll for exit every quarter second (a short job must not wait on
-		# the watchdog) and compare the progress report once a second.
-		local ticks=0 idle=0 seen="" now i
-		while kill -0 "$ffmpeg_pid" 2>/dev/null; do
-			sleep 0.25
-			((++ticks % 4 == 0)) || continue
-			now=$(progress_fingerprint "$progress_file")
-			if [[ $now != "$seen" ]]; then
-				seen=$now
-				idle=0
-				continue
-			fi
-			((idle += 1))
-			if [[ $idle -ge $stall_timeout ]]; then
-				echo "Stall watchdog: no progress for ${idle}s, terminating ffmpeg" >&2
-				kill -TERM "$ffmpeg_pid" 2>/dev/null
-				for ((i = 0; i < 50; i++)); do
-					kill -0 "$ffmpeg_pid" 2>/dev/null || break
-					sleep 0.1
-				done
-				kill -KILL "$ffmpeg_pid" 2>/dev/null
-				stalled=true
-				break
-			fi
-		done
-	fi
+	# Poll for exit every quarter second (a short job must not wait on the
+	# watchdog). The job runs in its own session, so nothing else ends it when
+	# the application that started it (BVC_PARENT_PID) dies; exiting runs the
+	# cleanup trap, which stops FFmpeg and drops the staged output.
+	local ticks=0 idle=0 seen="" now i
+	while kill -0 "$ffmpeg_pid" 2>/dev/null; do
+		sleep 0.25
+		if [[ -n ${BVC_PARENT_PID:-} ]] && ! kill -0 "$BVC_PARENT_PID" 2>/dev/null; then
+			echo "The application that started this job has quit" >&2
+			exit 143
+		fi
+		[[ ${#progress_opt[@]} -gt 0 ]] || continue
+		((++ticks % 4 == 0)) || continue
+		now=$(progress_fingerprint "$progress_file")
+		if [[ $now != "$seen" ]]; then
+			seen=$now
+			idle=0
+			continue
+		fi
+		((idle += 1))
+		if [[ $idle -ge $stall_timeout ]]; then
+			echo "Stall watchdog: no progress for ${idle}s, terminating ffmpeg" >&2
+			kill -TERM "$ffmpeg_pid" 2>/dev/null
+			for ((i = 0; i < 50; i++)); do
+				kill -0 "$ffmpeg_pid" 2>/dev/null || break
+				sleep 0.1
+			done
+			kill -KILL "$ffmpeg_pid" 2>/dev/null
+			stalled=true
+			break
+		fi
+	done
 	wait "$ffmpeg_pid"
 	status=$?
 	ffmpeg_pid=""

@@ -458,6 +458,8 @@ def run_with_progress_dialog(
             env["preset_file"] = os.path.join(job_directory.name, "job.toml")
             with open(env["preset_file"], "w", encoding="utf-8") as handle:
                 handle.write(preset_source)
+        # The script stops on its own when this process is gone.
+        env["BVC_PARENT_PID"] = str(os.getpid())
         process = subprocess.Popen(
             cmd,
             stdin=subprocess.DEVNULL,
