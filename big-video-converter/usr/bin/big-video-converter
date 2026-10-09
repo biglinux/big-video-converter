@@ -1547,8 +1547,9 @@ set_video_filters() { # <video filter chain>
 }
 
 # Appends a -filter_complex to the caller's filters. An argument holds at most
-# 128 KiB: a longer graph is read from a file, which needs FFmpeg 7, while the
-# usual joins stay arguments for older ones.
+# 128 KiB in bytes (MAX_ARG_STRLEN) and ${#2} counts characters, so a graph over
+# 64 KiB, which multibyte file names could take past the limit, is read from a
+# file. That needs FFmpeg 7; the usual joins stay arguments for older ones.
 add_filtergraph() { # <name> <graph>
 	if ((${#2} > 65536)); then
 		printf '%s' "$2" >"$output_stage_dir/$1.graph"
