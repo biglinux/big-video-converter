@@ -902,7 +902,7 @@ class ConversionPage:
         """Start converting current_file_path.
 
         ``probes`` holds the answers of ``file_info.launch_probes``, taken off
-        the main loop; without them each one is probed (or read from cache) here.
+        the main loop; a missing answer counts as a failed probe.
         """
         probes = probes or {}
         # Check if we have a file to convert
@@ -977,12 +977,8 @@ class ConversionPage:
             # Audio handling - Check if video has audio streams
             audio_handling = settings.load_setting("audio-handling", "copy")
 
-            from utils.file_info import has_audio_streams
-
-            has_audio = (
-                probes["audio"] if "audio" in probes else has_audio_streams(input_file)
-            )
-            if not has_audio:
+            # A probe that failed answers True, as has_audio_streams does.
+            if not probes.get("audio", True):
                 audio_handling = "none"
 
             env_vars["audio_handling"] = audio_handling
@@ -1097,11 +1093,7 @@ class ConversionPage:
             # Cropping needs the frame size.
             video_width = video_height = None
             if crop_left > 0 or crop_right > 0 or crop_top > 0 or crop_bottom > 0:
-                from utils.file_info import get_video_dimensions
-
-                video_width, video_height = probes.get("size") or get_video_dimensions(
-                    input_file
-                )
+                video_width, video_height = probes.get("size") or (None, None)
 
             # The unified video filter string from the per-file values, also
             # used when a copy job is re-encoded after all.
@@ -1276,11 +1268,7 @@ class ConversionPage:
             )
             return self._start_size_job(conversion_context)
         if force_copy_video and output_format == "mp4":
-            from utils.file_info import check_mp4_compatibility
-
-            is_compatible, incompatible_streams = probes.get(
-                "mp4"
-            ) or check_mp4_compatibility(input_file)
+            is_compatible, incompatible_streams = probes.get("mp4") or (True, [])
             if not is_compatible:
                 # Package all needed variables
                 def show_compatibility_warning() -> None:

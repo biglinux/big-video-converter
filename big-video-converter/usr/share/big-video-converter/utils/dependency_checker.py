@@ -70,26 +70,25 @@ class DependencyChecker:
         if not self.ffmpeg_path or not self.preview_available:
             return False
         # On RPM systems the limited 'ffmpeg-free' package lacks most encoders.
-        # A build no package owns (AppImage, /usr/local, jellyfin) is usable,
-        # and so is one whose owner cannot be determined.
+        # A build no package owns (/usr/local, jellyfin) is usable, and so is
+        # one whose owner cannot be determined. Every activation asks, and the
+        # owner cannot change while the application runs: ask rpm once.
         if self.distro.get("base") == "rpm":
-            try:
-                command = [
-                    "rpm",
-                    "-qf",
-                    "--queryformat",
-                    "%{NAME}\\n",
-                    self.ffmpeg_path,
-                ]
-                result = subprocess.run(
-                    command, capture_output=True, text=True, timeout=5, check=False
-                )
-            except (subprocess.SubprocessError, OSError) as e:
-                logger.warning("Could not verify the ffmpeg package provider: %s", e)
-            else:
-                if result.returncode == 0 and "ffmpeg-free" in result.stdout.split():
-                    return False
+            if getattr(self, "_ffmpeg_free", None) is None:
+                self._ffmpeg_free = self._owned_by_ffmpeg_free()
+            return not self._ffmpeg_free
         return True
+
+    def _owned_by_ffmpeg_free(self) -> bool:
+        command = ["rpm", "-qf", "--queryformat", "%{NAME}\\n", self.ffmpeg_path]
+        try:
+            result = subprocess.run(
+                command, capture_output=True, text=True, timeout=5, check=False
+            )
+        except (subprocess.SubprocessError, OSError) as e:
+            logger.warning("Could not verify the ffmpeg package provider: %s", e)
+            return False
+        return result.returncode == 0 and "ffmpeg-free" in result.stdout.split()
 
     def get_install_command(self):
         """Let the native package manager present and confirm its transaction."""

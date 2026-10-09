@@ -380,7 +380,9 @@ def test_individual_recipe_reaches_real_conversion(
         "crop_left": 28,
         "crop_right": 28,
     }
-    assert page.force_start_conversion()
+    from utils.file_info import launch_probes
+
+    assert page.force_start_conversion(probes=launch_probes(source))
     app.settings_manager.settings["video-resolution"] = "32x18"
     for index, context in enumerate(contexts):
         supervisor = SupervisorApp()
@@ -1237,7 +1239,6 @@ def test_queue_drop_accepts_only_its_own_rows_and_moves_to_the_end(app, monkeypa
 
 
 def test_closing_the_mp4_question_completes_its_job(app, media, monkeypatch):
-    from utils import file_info
 
     page = app.conversion_page
     source = str(media["video"])
@@ -1245,19 +1246,12 @@ def test_closing_the_mp4_question_completes_its_job(app, media, monkeypatch):
     _job_settings(app, monkeypatch, **{"force-copy-video": True})
     monkeypatch.setattr(page, "file_metadata", {})
     monkeypatch.setattr(page, "current_file_path", source, raising=False)
-    monkeypatch.setattr(
-        file_info,
-        "check_mp4_compatibility",
-        lambda path: (
-            False,
-            [{"codec_type": "audio", "codec_name": "pcm_s16le", "index": 1}],
-        ),
-    )
     completed = []
     monkeypatch.setattr(
         app, "conversion_completed", lambda ok, **kwargs: completed.append((ok, kwargs))
     )
-    assert page.force_start_conversion()
+    pcm = [{"codec_type": "audio", "codec_name": "pcm_s16le", "index": 1}]
+    assert page.force_start_conversion(probes={"mp4": (False, pcm)})
     pump_until(lambda: bool(page._decision_dialogs))
     # What quit() does: the job it waits for must settle.
     page.close_decision_dialogs()
@@ -1297,13 +1291,11 @@ def test_job_environment_ignores_inherited_script_settings(app, media, monkeypat
 
 @pytest.mark.parametrize("size", [(None, None), (56, 72)])
 def test_crop_that_cannot_be_applied_fails_the_job(app, media, monkeypatch, size):
-    from utils import file_info
 
     page = app.conversion_page
     source = str(media["video"])
     _reserved_jobs(app, monkeypatch, source)
     _job_settings(app, monkeypatch)
-    monkeypatch.setattr(file_info, "get_video_dimensions", lambda path: size)
     monkeypatch.setattr(
         page, "file_metadata", {source: {"crop_left": 28, "crop_right": 28}}
     )
@@ -1313,7 +1305,7 @@ def test_crop_that_cannot_be_applied_fails_the_job(app, media, monkeypatch, size
     monkeypatch.setattr(
         page, "_continue_conversion", lambda context: contexts.append(context) or True
     )
-    assert page.force_start_conversion() is False
+    assert page.force_start_conversion(probes={"size": size}) is False
     assert not contexts and len(errors) == 1 and not app.claimed_outputs
 
 
