@@ -39,13 +39,13 @@ bash tools/compile-translations.sh
 
 Use Tab and Shift+Tab to move between controls, Enter or Space to activate them, and Escape to dismiss dialogs. The sidebar toggle makes the conversion settings available in narrow windows.
 
-Originals are kept by default. The optional deletion setting applies only after the converted results pass validation. Closing during active conversions asks whether to keep converting or stop; cancellation does not count as a successful conversion.
+Originals are kept by default. The optional deletion setting applies only after the converted results pass validation. Closing during active conversions asks whether to keep converting or stop.
 
 ## Features
 
 **Queue and profiles.** Each row has a video thumbnail, a settings summary and actions to play, inspect, edit or remove the video. Individual resolution choices include general, preset, original, landscape, portrait and custom dimensions. A conversion takes a snapshot of its settings when it starts, so later changes do not alter the active job.
 
-**Editing.** Adjust brightness, contrast, saturation and hue; crop freely or to a selected aspect ratio; rotate or mirror the picture. Select time segments and export them separately or together. **Remove pauses** finds the pauses in speech, in the audio cleaned by DPDFNet (package `dpdfnet-native`), and at once makes the parts between them the segments, joined into one video; Undo brings back the segments it replaced, and every audio track gets the same cuts. It is made for speech, not music. Editing metadata belongs to the selected video; source files remain unchanged until an explicitly requested deletion after conversion.
+**Editing.** Adjust brightness, contrast, saturation and hue; crop freely or to a selected aspect ratio; rotate or mirror the picture. Select time segments and export them separately or together. **Remove pauses** finds the pauses in speech, in the audio cleaned by DPDFNet (package `dpdfnet-native`), and replaces the segments with the speech between them, joined into one video; Undo brings back the segments it replaced, and every audio track gets the same cuts. It is made for speech, not music. Edits belong to the selected video.
 
 **Encoding and streams.** Select video codecs and quality, copy or re-encode audio, configure noise reduction and normalization, and embed or extract subtitles. Available hardware paths depend on the local FFmpeg and driver capabilities; software fallback handles supported hardware failures.
 
@@ -59,16 +59,16 @@ Clone the repository and install the runtime dependencies above, plus pytest, Nu
 git clone https://github.com/biglinux/big-video-converter.git
 cd big-video-converter
 bash -n big-video-converter/usr/bin/big-video-converter
-shellcheck -S warning big-video-converter/usr/bin/big-video-converter
+shellcheck -S style big-video-converter/usr/bin/big-video-converter tools/*.sh
 python3 -m compileall -q big-video-converter/usr/share/big-video-converter tests
 python3 -m pytest -q tests
 ```
 
-Tests generate their own media. The suite starts its own hidden Xvfb display and D-Bus session bus, so test windows never open on your desktop and never reach a converter you have running; set `BVC_TESTS_KEEP_SESSION=1` only inside an already isolated session. Without Xvfb, the native GTK tests are skipped, which is not a complete validation. See the [regression workflow](.github/workflows/backend-tests.yml) for the CI dependencies and commands. Use an isolated graphical session for visual, focus and accessibility checks.
+Tests generate their own media. The suite starts its own hidden Xvfb display and D-Bus session bus, so test windows never open on your desktop and never reach a converter you have running; set `BVC_TESTS_KEEP_SESSION=1` only inside an already isolated session. Without Xvfb the GTK tests are skipped. The [regression workflow](.github/workflows/backend-tests.yml) lists the CI dependencies and commands.
 
-The GUI entry point is `main.py` under `usr/share/big-video-converter`. Queue scheduling prepares each job; `ui/conversion_page.py` resolves its settings and destination; `utils/conversion.py` supervises the shell converter under `usr/bin`. The supervisor publishes successful results and reports completion to the queue. Per-video settings must therefore reach the real conversion path, including segment jobs and fallback, rather than only updating a dialog.
+The GUI entry point is `main.py` under `usr/share/big-video-converter`. Queue scheduling prepares each job; `ui/conversion_page.py` resolves its settings and destination; `utils/conversion.py` supervises the shell converter under `usr/bin`. The supervisor publishes successful results and reports completion to the queue.
 
-Keep thumbnail work off the GTK thread. On shutdown, cancel workers and conversions and wait for their processes to finish before leaving the main loop.
+Thumbnails are made off the GTK thread, and shutdown waits for workers and conversions to finish before it leaves the main loop.
 
 ## Translation
 
@@ -80,7 +80,7 @@ bash tools/update-translations.sh
 bash tools/compile-translations.sh
 ```
 
-The first command extracts Python and shell messages and merges all catalogs. The second validates them with `msgfmt` and generates the installed `.mo` files. Do not replace translated messages with English to hide missing translations.
+The first command extracts the Python messages and merges all catalogs. The second validates them with `msgfmt` and writes the `.mo` files, which git does not track; the PKGBUILD compiles them as well.
 
 ## Packaging and release
 
@@ -91,14 +91,14 @@ cd pkgbuild
 makepkg
 ```
 
-Inside a checkout the recipe builds the working tree: tracked files and new, unignored ones, uncommitted changes included. Commit new files before relying on a build from Git, which only the repository's history reaches. Outside a checkout it fetches the GitHub repository. The [package workflow](.github/workflows/build-package.yml) instead archives the checked-out revision, builds that exact source, runs Namcap and metadata checks, and retains the package and checksum as artifacts. Installation and upgrade testing must use the resulting package in an isolated environment.
+Inside a checkout the recipe builds the working tree: tracked files and new, unignored ones, uncommitted changes included. Commit new files before relying on a build from Git, which only the repository's history reaches. Outside a checkout it fetches the GitHub repository. The [package workflow](.github/workflows/build-package.yml) instead archives the checked-out revision, builds that exact source, runs Namcap and metadata checks, and retains the package and checksum as artifacts.
 
-The desktop and AppStream identifier is `br.com.biglinux.converter`. Keep these files, the icon, launcher and application identifier consistent.
+The desktop file, the metainfo, the icon and the launcher share the identifier `br.com.biglinux.converter`.
 
 ## Contributing, support and license
 
 Report a reproducible problem through [GitHub issues](https://github.com/biglinux/big-video-converter/issues), including the application version, relevant conversion options and a synthetic sample when possible. Remove private filenames and other personal information from logs before sharing them.
 
-For changes, include the affected workflow and the checks performed. Conversion changes need evidence from the output media; UI changes need evidence from the rendered interface and keyboard path.
+For a change, describe the affected workflow and the checks you ran.
 
 Licensed under the [MIT License](LICENSE).

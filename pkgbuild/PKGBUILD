@@ -7,7 +7,7 @@ makedepends=('git' 'gettext' 'desktop-file-utils' 'appstream')
 optdepends=('deepfilternet3-native: light AI noise reduction for speech (DeepFilterNet3)'
             'dpdfnet-native: higher-quality AI noise reduction and pause removal for speech (DPDFNet-2 48 kHz)'
             'render-menu-options: the software rendering launcher action'
-            'nautilus-python: Load the Nautilus context menu extension'
+            'nautilus-python: the Nautilus context menu extension'
             'libnautilus-extension: Nautilus API used by the context menu extension')
 conflicts=('comm-video-converter')
 replaces=('comm-video-converter')
@@ -60,7 +60,7 @@ package() {
     install -Dm644 big-video-converter/usr/share/big-video-converter/big_gtk_kit/LICENSE \
         "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.big-gtk-kit"
     printf '%s\n' "${pkgver}-${pkgrel}" > "${pkgdir}/usr/share/big-video-converter/VERSION"
-    # The release AppStream lists is this package's version.
+    # Add this version as the AppStream release.
     local metainfo="${pkgdir}/usr/share/metainfo/br.com.biglinux.converter.metainfo.xml"
     sed -i "s|^</component>|  <releases>\n    <release version=\"${pkgver}-${pkgrel}\" date=\"$(date -u +%F)\"/>\n  </releases>\n</component>|" "$metainfo"
     appstreamcli validate --no-net "$metainfo"

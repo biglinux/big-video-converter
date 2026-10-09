@@ -19,11 +19,9 @@ fi
 
 # GPU detection helpers.
 #
-# Neither vainfo nor lspci is required: vainfo is not used anywhere in this
-# script, and lspci is missing on minimal installs (Ubuntu inside an AppImage,
-# containers), where refusing to run would break every GPU conversion. When
-# lspci is unavailable the PCI vendor IDs exported by the kernel are used
-# instead, formatted so the vendor matching below keeps working.
+# lspci is optional: minimal installs (an AppImage's Ubuntu base, containers)
+# lack it, and then the PCI vendor IDs the kernel exports stand in, formatted
+# so the vendor matching below still works.
 detect_gpu_devices() {
 	if command -v lspci >/dev/null; then
 		lspci

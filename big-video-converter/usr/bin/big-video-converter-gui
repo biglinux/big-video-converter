@@ -1,9 +1,8 @@
 #!/bin/sh
 set -eu
 
-# Prefer the application tree next to this launcher. This is essential for
-# AppImage and development layouts: an installed system copy must not shadow
-# the bundled copy that the user explicitly launched.
+# Prefer the application tree next to this launcher (an AppImage, a checkout):
+# an installed copy must not shadow the one the user launched.
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd -P)
 BUNDLED_MAIN=$(dirname -- "$SCRIPT_DIR")/share/big-video-converter/main.py
 SYSTEM_MAIN=/usr/share/big-video-converter/main.py
