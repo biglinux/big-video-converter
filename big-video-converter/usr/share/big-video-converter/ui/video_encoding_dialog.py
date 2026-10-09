@@ -259,7 +259,7 @@ def show_video_encoding_dialog(parent_window, app) -> None:
             _("Frame Rate"),
             _(
                 "Fewer frames per second make a smaller file. More frames are "
-                "blended from their neighbours: smoother, with a faint trail "
+                "blended from their neighbors: smoother, with a faint trail "
                 "on fast movement."
             ),
             fps_dd,

@@ -393,7 +393,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr "Число кадров в секунду в преобразованном видео:\n\n• Меньше кадров: меньше файл. При одинаковом качестве переход с 30 на 24 кадра/с уменьшил размер на 10–17%, с 30 на 15 кадров/с — на 28–42%\n• Больше кадров: промежуточные кадры смешиваются из соседних, поэтому движение выглядит плавнее, но при быстром движении остаётся слабый шлейф"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -402,13 +402,13 @@ msgstr "Убирает зернистость и крапинки в видео,
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "Делает контуры и мелкие детали чётче (адаптивное повышение резкости AMD с учётом контраста). Более резкое видео создаёт немного больший файл."
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "Стабилизирует видео, снятое дрожащей камерой. Сначала видео анализируется, поэтому преобразование занимает примерно вдвое больше времени; изображение немного увеличивается, чтобы скрыть движение по краям."
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "Как закодированы цвета этого видео. Сохраните описание из файла, если только при предпросмотре изображение не выглядит серым и блёклым: в таком случае файл содержит HDR без соответствующей отметки — обычно HDR10 (PQ), а для некоторых трансляций HLG. При преобразовании видео интерпретируется так же."
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "Применяет цветовой стиль из файла LUT (.cube, .3dl) или шейдера mpv (.hook, .glsl) ко всему видео."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4065,7 +4065,7 @@ msgstr "Насыщенность"
 msgid "Hue"
 msgstr "Оттенок"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "Исходные цвета"
 
 msgid "As the file says"
@@ -4192,7 +4192,7 @@ msgstr "Цветовой стиль или шейдер"
 msgid "None"
 msgstr "Нет"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "Выбрать цветовой стиль (.cube) или шейдер (.hook)"
 
 msgid "Remove the look or shader"
@@ -4258,7 +4258,7 @@ msgstr "Увеличение разрешения выше оригинальн�
 msgid "Frame Rate"
 msgstr "Частота кадров"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "Меньше кадров в секунду — меньше файл. Дополнительные кадры смешиваются из соседних: движение плавнее, но при быстром движении остаётся слабый шлейф."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

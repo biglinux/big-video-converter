@@ -399,7 +399,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr "Images par seconde de la vidéo convertie :\n\n• Moins d’images : fichier plus petit. À qualité égale, passer de 30 à 24 ips économise 10–17% et de 30 à 15 ips, 28–42%\n• Plus d’images : les images intermédiaires sont obtenues en mélangeant les images voisines. Le mouvement est plus fluide, mais les mouvements rapides laissent une légère traînée"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -408,13 +408,13 @@ msgstr "Supprime le grain et les parasites des vidéos prises en faible luminosi
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "Rend les contours et les détails fins plus nets (accentuation adaptative du contraste d’AMD). Une vidéo plus nette produit un fichier légèrement plus volumineux."
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "Stabilise les prises de vue tremblantes. La vidéo est d’abord analysée : la conversion prend donc environ deux fois plus de temps. Un léger zoom masque les mouvements sur les bords."
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "Indique comment les couleurs de cette vidéo sont codées. Conservez la description du fichier, sauf si l’aperçu paraît gris et délavé : le fichier est alors en HDR sans le signaler, généralement HDR10 (PQ), ou HLG pour certaines émissions. La conversion l’interprète de la même manière."
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "Applique à toute la vidéo un rendu colorimétrique provenant d’un fichier LUT (.cube, .3dl) ou d’un shader mpv (.hook, .glsl)."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4078,7 +4078,7 @@ msgstr "Saturation"
 msgid "Hue"
 msgstr "Teinte"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "Couleurs de la source"
 
 msgid "As the file says"
@@ -4205,7 +4205,7 @@ msgstr "Rendu colorimétrique ou shader"
 msgid "None"
 msgstr "Aucun"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "Choisir un rendu colorimétrique (.cube) ou un shader (.hook)"
 
 msgid "Remove the look or shader"
@@ -4271,7 +4271,7 @@ msgstr "Augmenter au-delà de la résolution d'origine n'améliore pas la qualit
 msgid "Frame Rate"
 msgstr "Fréquence d’images"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "Moins d’images par seconde produisent un fichier plus petit. Les images supplémentaires sont obtenues en mélangeant les images voisines : le mouvement est plus fluide, avec une légère traînée lors des mouvements rapides."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

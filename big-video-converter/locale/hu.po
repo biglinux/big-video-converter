@@ -379,7 +379,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr "Az átalakított videó másodpercenkénti képkockaszáma:\n\n• Kevesebb képkocka: kisebb fájl. Azonos minőség mellett a 30-ról 24 fps-re váltás 10–17%, a 30-ról 15 fps-re váltás 28–42% méretcsökkenést eredményezett\n• Több képkocka: a köztes képkockák a szomszédosak összekeverésével készülnek, így a mozgás simábbnak látszik, de a gyors mozgás halvány csíkot hagy"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -388,13 +388,13 @@ msgstr "Eltávolítja a szemcsézettséget és a gyenge fényben készült vide�
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "Élesebbé teszi az éleket és a finom részleteket (AMD kontrasztadaptív élesítés). Az élesebb videó valamivel nagyobb fájlt eredményez."
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "Stabilizálja a remegő kamerával készült felvételt. Először elemzi a videót, ezért az átalakítás nagyjából kétszer annyi ideig tart; a képet kissé felnagyítja, hogy elrejtse a szélek mozgását."
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "A videó színeinek kódolási módja. Tartsa meg a fájl saját leírását, kivéve, ha az előnézet szürkének és fakónak látszik: ilyenkor a fájl jelöletlen HDR-t tartalmaz, általában HDR10 (PQ), egyes adásoknál HLG formátumban. Az átalakítás is ugyanígy értelmezi."
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "LUT-fájlból (.cube, .3dl) származó színvilágot vagy mpv shadert (.hook, .glsl) alkalmaz a teljes videóra."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -3070,7 +3070,7 @@ msgstr "Telítettség"
 msgid "Hue"
 msgstr "Színárnyalat"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "Forrás színei"
 
 msgid "As the file says"
@@ -3197,7 +3197,7 @@ msgstr "Színvilág vagy shader"
 msgid "None"
 msgstr "Nincs"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "Színvilág (.cube) vagy shader (.hook) kiválasztása"
 
 msgid "Remove the look or shader"
@@ -3263,7 +3263,7 @@ msgstr "A felbontás növelése az eredeti felbontás fölé nem javítja a min�
 msgid "Frame Rate"
 msgstr "Képkockasebesség"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "A kevesebb képkocka másodpercenként kisebb fájlt eredményez. A többletképkockák a szomszédosak összekeverésével készülnek: a mozgás simább, de a gyors mozgás halvány csíkot hagy."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

@@ -44,13 +44,13 @@ DEFAULT_METADATA = {
     "flip_h": False,
     "flip_v": False,
     # Effects: noise reduction and sharpening levels (utils/video_settings),
-    # two-pass stabilization, and a colour LUT (.cube/.3dl) or mpv shader
+    # two-pass stabilization, and a color LUT (.cube/.3dl) or mpv shader
     # (.hook/.glsl) the user chose.
     "denoise": "off",
     "sharpen": "off",
     "stabilize": False,
     "effect_file": "",
-    # How to read the source's colours when its file does not say (see the
+    # How to read the source's colors when its file does not say (see the
     # script's source_hdr): "auto" trusts the file.
     "source_hdr": "auto",
     "output_mode": "join",

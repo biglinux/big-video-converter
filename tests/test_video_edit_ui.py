@@ -622,7 +622,7 @@ class PausePanelTests(unittest.TestCase):
 
 
 class MPVPlayerColorTests(unittest.TestCase):
-    def test_a_colour_change_reaches_mpv_once(self):
+    def test_a_color_change_reaches_mpv_once(self):
         player = MPVPlayer(Gtk.GLArea())
         sent = []
         player.mpv_instance = SimpleNamespace(

@@ -408,7 +408,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr "変換後の動画の1秒あたりのフレーム数：\n\n• 少なくする：ファイルが小さくなります。同じ画質で測定した場合、30から24 fpsへの変更で10～17%、30から15 fpsへの変更で28～42%削減できました\n• 多くする：隣り合うフレームを合成して中間フレームを作ります。動きが滑らかになりますが、速い動きには薄い残像が出ます"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -417,13 +417,13 @@ msgstr "暗い場所で撮影した動画の粒状感や斑点状のノイズを
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "輪郭や細部を鮮明にします（AMDのコントラスト適応型シャープニング）。鮮明な動画はファイルが少し大きくなります。"
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "カメラの手ぶれを補正します。最初に動画を解析するため、変換時間は約2倍になります。端の動きを隠すため、画像を少し拡大します。"
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "この動画の色の符号化方式です。プレビューが灰色がかって色あせて見える場合を除き、ファイルの指定を使ってください。そのように見える場合は、HDRであることが記録されていない動画です。通常はHDR10（PQ）ですが、一部の放送ではHLGです。変換でも同じ方式で読み取ります。"
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "LUTファイル（.cube、.3dl）またはmpvシェーダー（.hook、.glsl）の色調を動画全体に適用します。"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4048,7 +4048,7 @@ msgstr "彩度"
 msgid "Hue"
 msgstr "色相"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "元の色の方式"
 
 msgid "As the file says"
@@ -4175,7 +4175,7 @@ msgstr "色調設定またはシェーダー"
 msgid "None"
 msgstr "なし"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "色調設定（.cube）またはシェーダー（.hook）を選択"
 
 msgid "Remove the look or shader"
@@ -4241,7 +4241,7 @@ msgstr "元の解像度を超えても品質は向上しません。解像度を
 msgid "Frame Rate"
 msgstr "フレームレート"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "1秒あたりのフレーム数を減らすとファイルが小さくなります。増やす場合は隣り合うフレームを合成します。動きが滑らかになりますが、速い動きには薄い残像が出ます。"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

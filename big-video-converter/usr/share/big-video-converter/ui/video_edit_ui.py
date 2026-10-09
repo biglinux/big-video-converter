@@ -78,8 +78,8 @@ class VideoEditUI:
         controls_container.set_margin_start(12)
         controls_container.set_margin_end(12)
         controls_container.set_margin_bottom(12)
-        # Not "toolbar": desktop themes recolour that class (BigStyle paints it
-        # with the header bar colours), and this bar sits on video, so it keeps
+        # Not "toolbar": desktop themes recolor that class (BigStyle paints it
+        # with the header bar colors), and this bar sits on video, so it keeps
         # the fixed dark OSD look in every theme and focus state.
         controls_container.add_css_class("osd")
         controls_container.add_css_class("bvc-editor-toolbar")
@@ -646,10 +646,10 @@ class VideoEditUI:
             self.page.reset_hue,
             percent,
         )
-        # For a file that does not say how its colours are coded: HDR read
-        # as SDR looks grey and washed out, and is converted that way too.
+        # For a file that does not say how its colors are coded: HDR read
+        # as SDR looks gray and washed out, and is converted that way too.
         self.source_hdr_combo = Adw.ComboRow(
-            title=_("Source colours"),
+            title=_("Source colors"),
             model=Gtk.StringList.new(
                 [
                     _("As the file says"),
@@ -871,7 +871,7 @@ class VideoEditUI:
         self.effect_file_row = Adw.ActionRow(
             title=_("Look or shader"), subtitle=_("None")
         )
-        choose_label = _("Choose a colour look (.cube) or shader (.hook)")
+        choose_label = _("Choose a color look (.cube) or shader (.hook)")
         choose = Gtk.Button(
             icon_name="document-open-symbolic",
             tooltip_text=choose_label,
@@ -1330,7 +1330,7 @@ class VideoEditUI:
 
     def _on_cuts_drag_end(self, *_args):
         if self._dragging_segment is not None:
-            # An edge dragged past a neighbour changes the order. The page
+            # An edge dragged past a neighbor changes the order. The page
             # edits its own copy of the segments; store the change once.
             self.page.trim_segments.sort(key=lambda s: s["start"])
             self.page._save_file_metadata()

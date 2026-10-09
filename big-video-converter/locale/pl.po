@@ -410,7 +410,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr "Liczba klatek na sekundę w przekonwertowanym wideo:\n\n• Mniej klatek: mniejszy plik. Przy tej samej jakości zmiana z 30 na 24 kl./s zmniejszyła rozmiar o 10–17%, a z 30 na 15 kl./s o 28–42%\n• Więcej klatek: klatki pośrednie powstają przez mieszanie sąsiednich klatek, więc ruch jest płynniejszy, ale przy szybkim ruchu pozostaje delikatna smuga"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -419,13 +419,13 @@ msgstr "Usuwa ziarno i drobne zakłócenia z filmów nagranych przy słabym ośw
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "Wyostrza krawędzie i drobne szczegóły (adaptacyjne wyostrzanie kontrastu AMD). Ostrzejszy obraz daje nieco większy plik."
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "Stabilizuje drżące nagranie. Wideo jest najpierw analizowane, więc konwersja trwa około dwa razy dłużej; obraz jest lekko powiększany, aby ukryć przesuwające się krawędzie."
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "Sposób kodowania kolorów w tym wideo. Zachowaj opis z pliku, chyba że podgląd wygląda szaro i blado: wtedy plik zawiera HDR bez odpowiedniego oznaczenia, zwykle HDR10 (PQ) lub HLG w niektórych transmisjach. Konwersja odczyta go w ten sam sposób."
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "Stosuje do całego wideo wygląd kolorystyczny z pliku LUT (.cube, .3dl) lub shader mpv (.hook, .glsl)."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -3151,7 +3151,7 @@ msgstr "Nasycenie"
 msgid "Hue"
 msgstr "Odcień"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "Kolory źródłowe"
 
 msgid "As the file says"
@@ -3278,7 +3278,7 @@ msgstr "Wygląd kolorystyczny lub shader"
 msgid "None"
 msgstr "Brak"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "Wybierz wygląd kolorystyczny (.cube) lub shader (.hook)"
 
 msgid "Remove the look or shader"
@@ -3344,7 +3344,7 @@ msgstr "Zwiększenie ponad oryginalną rozdzielczość nie poprawia jakości. Zm
 msgid "Frame Rate"
 msgstr "Liczba klatek na sekundę"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "Mniej klatek na sekundę daje mniejszy plik. Dodatkowe klatki powstają przez mieszanie sąsiednich: ruch jest płynniejszy, ale szybki ruch pozostawia delikatną smugę."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

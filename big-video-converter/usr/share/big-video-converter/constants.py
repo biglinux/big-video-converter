@@ -288,7 +288,7 @@ VIDEO_RESOLUTION_VALUES = {
 }
 
 
-# Output frame rate: fewer frames drop the extra ones, more blend neighbours.
+# Output frame rate: fewer frames drop the extra ones, more blend neighbors.
 def get_video_fps_options():
     """Return translated frame rate options"""
     return [
@@ -360,7 +360,7 @@ def get_tooltips():
             "• Fewer frames: a smaller file. Measured with the same quality: "
             "30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
             "• More frames: in-between frames are blended from their "
-            "neighbours, so motion looks smoother but fast movement leaves "
+            "neighbors, so motion looks smoother but fast movement leaves "
             "a faint trail"
         ),
         "denoise": _(
@@ -373,18 +373,18 @@ def get_tooltips():
             "sharpening). Sharper video makes a slightly larger file."
         ),
         "stabilize": _(
-            "Steadies shaky camera footage. The video is analysed first, so "
+            "Steadies shaky camera footage. The video is analyzed first, so "
             "the conversion takes about twice as long; the edges are zoomed "
             "in slightly to hide the movement."
         ),
         "source_hdr": _(
-            "How the colours of this video are coded. Keep the file's own "
-            "description unless the preview looks grey and washed out: then "
+            "How the colors of this video are coded. Keep the file's own "
+            "description unless the preview looks gray and washed out: then "
             "the file is HDR without saying so, usually HDR10 (PQ), or HLG "
             "for some broadcasts. The conversion reads it the same way."
         ),
         "effect_file": _(
-            "Applies a colour look from a LUT file (.cube, .3dl) or an mpv "
+            "Applies a color look from a LUT file (.cube, .3dl) or an mpv "
             "shader (.hook, .glsl) to the whole video."
         ),
         "output_format": _(

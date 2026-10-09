@@ -13,7 +13,7 @@ from utils.size_target import TARGETS, shown_size
 _ = gettext.gettext
 
 # Translated again where shown: this runs at import, possibly before the
-# catalogue is bound.
+# catalog is bound.
 STRATEGY_TEXTS = (
     (
         "auto",

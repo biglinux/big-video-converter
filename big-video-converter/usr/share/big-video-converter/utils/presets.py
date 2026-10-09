@@ -134,7 +134,7 @@ class Preset:
     bundled: bool = False
 
     # Bundled presets are written in English; their texts are listed in
-    # presets/bundled_strings.py so the ordinary gettext catalogue carries
+    # presets/bundled_strings.py so the ordinary gettext catalog carries
     # them into every language. A user's own preset is shown as written.
     @property
     def display_name(self) -> str:
@@ -958,7 +958,7 @@ codec = "aac"            # aac | opus | ac3
 bitrate = "192k"
 channels = 2
 sample_rate = 48000
-normalize = false        # loudness normalisation to broadcast/streaming levels
+normalize = false        # loudness normalization to broadcast/streaming levels
 
 [subtitles]
 mode = "embedded"        # extract (to .srt files) | embedded (inside the container) | none
@@ -1021,7 +1021,7 @@ def bundled_strings_source() -> str:
     """Python source listing every translatable text of the bundled presets.
 
     Written to presets/bundled_strings.py, never imported: xgettext reads it
-    together with the rest of the application, so the same catalogue that
+    together with the rest of the application, so the same catalog that
     translates the interface translates the preset names and descriptions.
     A test keeps the file in step with the TOML files.
     """

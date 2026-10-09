@@ -606,7 +606,7 @@ class VideoEditPage:
 
     def _apply_video_effects(self) -> None:
         """Show the effects in the preview; stabilization needs the whole
-        file analysed first, so only the conversion applies it."""
+        file analyzed first, so only the conversion applies it."""
         if not self.mpv_player:
             return
         shader = (

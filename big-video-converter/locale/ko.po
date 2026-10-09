@@ -417,7 +417,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr "변환한 동영상의 초당 프레임 수:\n\n• 프레임 수를 줄이면 파일이 작아집니다. 같은 화질로 측정했을 때 30→24 fps는 10–17%, 30→15 fps는 28–42% 절약되었습니다\n• 프레임 수를 늘리면 인접 프레임을 혼합해 중간 프레임을 만듭니다. 움직임이 부드러워지지만 빠른 움직임에는 희미한 잔상이 남습니다"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -426,13 +426,13 @@ msgstr "어두운 곳에서 촬영한 동영상의 입자감과 점 형태의 �
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "윤곽과 세부 표현을 선명하게 합니다(AMD 대비 적응형 선명도 향상). 선명해진 동영상은 파일이 조금 더 커집니다."
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "카메라 흔들림을 보정합니다. 동영상을 먼저 분석하므로 변환 시간이 약 두 배 걸립니다. 가장자리의 움직임을 숨기려고 화면을 약간 확대합니다."
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "이 동영상의 색상 인코딩 방식입니다. 미리보기가 회색빛으로 색이 바래 보이지 않는 한 파일에 지정된 방식을 유지하세요. 그렇게 보인다면 HDR 표시가 없는 HDR 동영상으로, 보통 HDR10 (PQ)이며 일부 방송은 HLG입니다. 변환에도 같은 해석을 적용합니다."
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "LUT 파일(.cube, .3dl) 또는 mpv 셰이더(.hook, .glsl)의 색상 스타일을 동영상 전체에 적용합니다."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -3114,7 +3114,7 @@ msgstr "채도"
 msgid "Hue"
 msgstr "색조"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "원본 색상 방식"
 
 msgid "As the file says"
@@ -3241,7 +3241,7 @@ msgstr "색상 스타일 또는 셰이더"
 msgid "None"
 msgstr "없음"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "색상 스타일(.cube) 또는 셰이더(.hook) 선택"
 
 msgid "Remove the look or shader"
@@ -3307,7 +3307,7 @@ msgstr "원래 해상도를 초과하여 증가시키는 것은 품질을 향상
 msgid "Frame Rate"
 msgstr "프레임 레이트"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "초당 프레임 수를 줄이면 파일이 작아집니다. 늘릴 때는 인접 프레임을 혼합합니다. 움직임이 부드러워지지만 빠른 움직임에는 희미한 잔상이 남습니다."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

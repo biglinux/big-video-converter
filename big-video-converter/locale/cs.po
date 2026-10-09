@@ -392,7 +392,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr "Počet snímků za sekundu v převedeném videu:\n\n• Méně snímků: menší soubor. Při stejné kvalitě ušetřil převod z 30 na 24 fps 10–17 %, z 30 na 15 fps 28–42 %\n• Více snímků: mezisnímky vznikají smícháním sousedních snímků, takže pohyb vypadá plynuleji, ale při rychlém pohybu zůstává slabá stopa"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -401,13 +401,13 @@ msgstr "Odstraňuje zrno a skvrnky z videa natočeného za slabého osvětlení.
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "Zvýrazňuje hrany a jemné detaily (adaptivní doostření podle kontrastu od AMD). Ostřejší video vytváří o něco větší soubor."
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "Stabilizuje roztřesené záběry. Video se nejprve analyzuje, takže převod trvá přibližně dvakrát déle; obraz se mírně přiblíží, aby se skryl pohyb okrajů."
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "Způsob kódování barev v tomto videu. Ponechte popis ze souboru, pokud náhled nevypadá šedě a vybledle: v takovém případě je soubor HDR, ale neuvádí to — obvykle HDR10 (PQ), u některých vysílání HLG. Stejným způsobem se bude číst i při převodu."
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "Použije barevný vzhled ze souboru LUT (.cube, .3dl) nebo shader mpv (.hook, .glsl) na celé video."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -3121,7 +3121,7 @@ msgstr "Sytost"
 msgid "Hue"
 msgstr "Odstín"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "Barvy zdroje"
 
 msgid "As the file says"
@@ -3248,7 +3248,7 @@ msgstr "Barevný vzhled nebo shader"
 msgid "None"
 msgstr "Žádný"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "Vybrat barevný vzhled (.cube) nebo shader (.hook)"
 
 msgid "Remove the look or shader"
@@ -3314,7 +3314,7 @@ msgstr "Zvyšování nad původní rozlišení nezlepšuje kvalitu. Snížení r
 msgid "Frame Rate"
 msgstr "Snímková frekvence"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "Méně snímků za sekundu vytváří menší soubor. Více snímků vzniká smícháním sousedních snímků: pohyb je plynulejší, ale při rychlém pohybu zůstává slabá stopa."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

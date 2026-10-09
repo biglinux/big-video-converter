@@ -384,7 +384,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr "Fotogramas por segundo do vídeo convertido:\n\n• Menos fotogramas: um ficheiro mais pequeno. Com a mesma qualidade, passar de 30 para 24 fps reduziu o tamanho em 10–17% e de 30 para 15 fps em 28–42%\n• Mais fotogramas: os fotogramas intermédios são criados pela mistura dos adjacentes, tornando o movimento mais fluido, mas deixando um ligeiro rasto nos movimentos rápidos"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -393,13 +393,13 @@ msgstr "Remove o grão e os pontos de ruído de vídeos gravados com pouca luz. 
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "Torna os contornos e os pormenores finos mais nítidos (nitidez adaptativa ao contraste da AMD). Um vídeo mais nítido produz um ficheiro ligeiramente maior."
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "Estabiliza gravações com a câmara a tremer. O vídeo é analisado primeiro, pelo que a conversão demora cerca do dobro do tempo; a imagem é ligeiramente ampliada para ocultar o movimento nas margens."
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "Como estão codificadas as cores deste vídeo. Mantenha a descrição do próprio ficheiro, a menos que a pré-visualização pareça cinzenta e desbotada: nesse caso, o ficheiro é HDR sem o indicar, geralmente HDR10 (PQ), ou HLG em algumas transmissões. A conversão interpreta-o da mesma forma."
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "Aplica a todo o vídeo um estilo de cor de um ficheiro LUT (.cube, .3dl) ou de um shader do mpv (.hook, .glsl)."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4030,7 +4030,7 @@ msgstr "Saturação"
 msgid "Hue"
 msgstr "Matiz"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "Cores da origem"
 
 msgid "As the file says"
@@ -4157,7 +4157,7 @@ msgstr "Estilo ou shader"
 msgid "None"
 msgstr "Nenhum"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "Escolher um estilo de cor (.cube) ou shader (.hook)"
 
 msgid "Remove the look or shader"
@@ -4223,7 +4223,7 @@ msgstr "Aumentar além da resolução original não melhora a qualidade. Reduzir
 msgid "Frame Rate"
 msgstr "Taxa de Fotogramas"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "Menos fotogramas por segundo produzem um ficheiro mais pequeno. Os fotogramas adicionais são criados pela mistura dos adjacentes: o movimento fica mais fluido, com um ligeiro rasto nos movimentos rápidos."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

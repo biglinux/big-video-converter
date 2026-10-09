@@ -676,7 +676,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr "Muunnetun videon kuvataajuus:\n\n• Vähemmän kuvia: pienempi tiedosto. Samalla laadulla mitattuna 30 → 24 fps säästi 10–17 % ja 30 → 15 fps säästi 28–42 %\n• Enemmän kuvia: välikuvat muodostetaan yhdistämällä viereisiä kuvia, jolloin liike näyttää sulavammalta mutta nopeasta liikkeestä jää hento jälki"
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -685,13 +685,13 @@ msgstr "Poistaa rakeisuutta ja heikossa valossa kuvatun videon kohinaa. Voimakka
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "Terävöittää reunoja ja pieniä yksityiskohtia (AMD:n kontrastiin mukautuva terävöitys). Terävämpi video tuottaa hieman suuremman tiedoston."
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "Vakauttaa tärisevällä kameralla kuvattua videota. Video analysoidaan ensin, joten muunnos kestää noin kaksinkertaisen ajan. Kuvaa lähennetään hieman reunoilta liikkeen peittämiseksi."
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "Videon värien koodaustapa. Säilytä tiedoston oma määritys, ellei esikatselu näytä harmaalta ja haalistuneelta. Tällöin tiedosto on HDR-videota ilman asianmukaista merkintää, yleensä HDR10 (PQ) tai joidenkin lähetysten tapauksessa HLG. Muunnos käyttää samaa tulkintaa."
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "Käyttää LUT-tiedoston (.cube, .3dl) tai mpv-varjostimen (.hook, .glsl) värityyliä koko videoon."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4345,7 +4345,7 @@ msgstr "Värikylläisyys"
 msgid "Hue"
 msgstr "Värisävy"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "Lähteen värit"
 
 msgid "As the file says"
@@ -4472,7 +4472,7 @@ msgstr "Värityyli tai varjostin"
 msgid "None"
 msgstr "Ei mitään"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "Valitse värityyli (.cube) tai varjostin (.hook)"
 
 msgid "Remove the look or shader"
@@ -4538,7 +4538,7 @@ msgstr "Alkuperäisen resoluution ylittäminen ei paranna laatua. Resoluutioiden
 msgid "Frame Rate"
 msgstr "Kuvataajuus"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "Vähemmän kuvia sekunnissa tuottaa pienemmän tiedoston. Lisäkuvat muodostetaan viereisistä kuvista: liike on sulavampaa, mutta nopeasta liikkeestä jää hento jälki."
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

@@ -40,7 +40,7 @@ def hdr_source(tmp_path_factory):
     if not _has_encoder("libx265"):
         pytest.skip("libx265 is required to build an HDR sample")
     path = tmp_path_factory.mktemp("hdr") / "hdr.mp4"
-    # The VUI colour tags must go through x265 itself; ffmpeg's -color_* output
+    # The VUI color tags must go through x265 itself; ffmpeg's -color_* output
     # options are not forwarded to this encoder.
     media_command(
         "-f",

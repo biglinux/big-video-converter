@@ -10,4 +10,4 @@ for po in "${catalogs[@]}"; do
 	mkdir -p "$target"
 	msgfmt --check --check-header -o "$target/big-video-converter.mo" "$po"
 done
-echo "compiled ${#catalogs[@]} catalogues"
+echo "compiled ${#catalogs[@]} catalogs"

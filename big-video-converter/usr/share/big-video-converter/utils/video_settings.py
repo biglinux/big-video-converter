@@ -1,4 +1,4 @@
-"""FFmpeg video filters built from one file's crop, colour and transform edits."""
+"""FFmpeg video filters built from one file's crop, color and transform edits."""
 
 import logging
 import math
@@ -90,7 +90,7 @@ def filter_path(path: str) -> str:
 
 
 def effect_file_filter(path: str) -> str:
-    """lut3d for a colour LUT, libplacebo for an mpv shader, "" otherwise."""
+    """lut3d for a color LUT, libplacebo for an mpv shader, "" otherwise."""
     suffix = os.path.splitext(path)[1].lower()
     if suffix in LUT_SUFFIXES:
         return f"lut3d=file={filter_path(path)}"
@@ -100,7 +100,7 @@ def effect_file_filter(path: str) -> str:
 
 
 def effects_graph(denoise: str, sharpen: str, effect_file: str) -> str:
-    """The effects that run before the colour adjustments, as one graph.
+    """The effects that run before the color adjustments, as one graph.
 
     The order is the preview's: mpv runs its filter graph first and applies
     brightness, contrast, saturation and hue afterwards, when it converts the
@@ -125,7 +125,7 @@ class CropError(ValueError):
 class SettingsOverride:
     """Read-only settings view with per-file overrides.
 
-    A conversion must not write its per-file crop/colour values into the global
+    A conversion must not write its per-file crop/color values into the global
     settings: with parallel conversions the second file overwrites the first
     one's values before its FFmpeg command is built, so both end up with the
     wrong filters. Wrapping the manager keeps the per-file values local to the
@@ -215,7 +215,7 @@ def get_ffmpeg_filter_string(
     """
     filters = []
 
-    # Crop, colour, hue, rotation, then flip: the order mpv shows them in.
+    # Crop, color, hue, rotation, then flip: the order mpv shows them in.
     crop_left = get_adjustment_value(settings, "crop_left")
     crop_right = get_adjustment_value(settings, "crop_right")
     crop_top = get_adjustment_value(settings, "crop_top")
@@ -265,7 +265,7 @@ def get_ffmpeg_filter_string(
         ffmpeg_saturation = preview_saturation_to_ffmpeg(saturation)
         eq_parts.append(f"saturation={ffmpeg_saturation:.3f}")
 
-    # Effects before the colour adjustments, as the preview shows them.
+    # Effects before the color adjustments, as the preview shows them.
     effect_file = settings.get_value("preview-effect-file", "") or ""
     effects = effects_graph(
         settings.get_value("preview-denoise", "off"),
@@ -301,7 +301,7 @@ def get_ffmpeg_filter_string(
     if flip_v:
         filters.append("vflip")
 
-    # mpv runs a shader on the displayed picture, after the colour changes.
+    # mpv runs a shader on the displayed picture, after the color changes.
     if os.path.splitext(effect_file)[1].lower() in SHADER_SUFFIXES:
         filters.append(effect_file_filter(effect_file))
 

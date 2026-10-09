@@ -601,7 +601,7 @@ class MPVPlayer:
         self, graph: str, shader: str, source_hdr: str = "auto"
     ) -> None:
         """Preview an FFmpeg filter graph, an mpv shader (.hook) and the
-        colours the source is read as.
+        colors the source is read as.
 
         mpv feeds no CPU filter with frames decoded into GPU memory: it drops
         the graph ("Disabling filter lavfi because it has failed") and plays

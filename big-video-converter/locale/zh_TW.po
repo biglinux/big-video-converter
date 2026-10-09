@@ -417,7 +417,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr ""
 "轉換後影片的每秒影格數：\n"
 "\n"
@@ -430,13 +430,13 @@ msgstr "去除顆粒和低光影片中的雜訊。較強的處理也會抹平細
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr "增強邊緣和細節的清晰度（AMD 對比度自適應銳化）。畫面越銳利，檔案就略大一些。"
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr "穩定相機抖動的畫面。轉換前需先分析影片，因此耗時約增加一倍；畫面會略微放大，以隱藏邊緣的移動。"
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr "此影片的顏色編碼方式。通常應保留檔案自身的標記。如果預覽灰暗、褪色，檔案可能是未正確標記的 HDR，通常為 HDR10 (PQ)，部分廣播則為 HLG。轉換時也會採用此處選擇的解釋方式。"
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr "將 LUT 檔案（.cube、.3dl）或 mpv 著色器（.hook、.glsl）的色彩效果應用到整個影片。"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4104,7 +4104,7 @@ msgstr "飽和度"
 msgid "Hue"
 msgstr "色相"
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr "源色彩"
 
 msgid "As the file says"
@@ -4231,7 +4231,7 @@ msgstr "色彩風格或著色器"
 msgid "None"
 msgstr "無"
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr "選擇色彩風格（.cube）或著色器（.hook）"
 
 msgid "Remove the look or shader"
@@ -4297,7 +4297,7 @@ msgstr "將解析度提高到原始解析度以上不會提升畫質。降低解
 msgid "Frame Rate"
 msgstr "影格率"
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr "每秒影格數越少，檔案越小。新增影格透過混合相鄰影格產生：動作更流暢，但快速動作會留下輕微殘影。"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#

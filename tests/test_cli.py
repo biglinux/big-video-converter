@@ -775,7 +775,7 @@ def test_effect_file_path_survives_the_filter_graph(media, tmp_path, run_cli):
 
 
 def _untagged_pq(tmp_path):
-    """10-bit PQ picture whose file describes no colours at all, like a DVB
+    """10-bit PQ picture whose file describes no colors at all, like a DVB
     recording: the transfer is in the samples only."""
     source = tmp_path / "untagged-pq.mkv"
     subprocess.run(
@@ -808,7 +808,7 @@ def _untagged_pq(tmp_path):
     return source
 
 
-def _colour(path):
+def _color(path):
     return subprocess.run(
         [
             "ffprobe",
@@ -837,10 +837,10 @@ def test_user_declared_hdr_is_tone_mapped_or_kept_tagged(tmp_path, run_cli):
     )
     assert mapped.returncode == 0, mapped.stdout + mapped.stderr
     assert "set by the user" in mapped.stdout and "tonemap=" in mapped.stdout
-    assert _colour(tmp_path / "sdr.mkv") == "yuv420p,bt709"
+    assert _color(tmp_path / "sdr.mkv") == "yuv420p,bt709"
     kept = run_cli(source, tmp_path / "hdr.mkv", video_encoder="h265", source_hdr="pq")
     assert kept.returncode == 0, kept.stdout + kept.stderr
-    assert _colour(tmp_path / "hdr.mkv") == "yuv420p10le,smpte2084"
+    assert _color(tmp_path / "hdr.mkv") == "yuv420p10le,smpte2084"
 
 
 def test_invalid_source_hdr_is_refused(media, tmp_path, run_cli):

@@ -104,13 +104,13 @@ class VideoConverterApp(
             "Cuts to keep, in seconds: START-END[,START-END...]",
             "RANGES",
         )
-        # And how they read its colours, when the file does not say.
+        # And how they read its colors, when the file does not say.
         self.add_main_option(
             "source-hdr",
             0,
             GLib.OptionFlags.NONE,
             GLib.OptionArg.STRING,
-            "Colours of a file that does not describe them: pq, hlg or sdr",
+            "Colors of a file that does not describe them: pq, hlg or sdr",
             "MODE",
         )
 

@@ -2,7 +2,7 @@
 
 One job is shown as a single hero card. Several jobs get a thin summary strip
 above a list whose active rows carry their own bar. A settled queue shows a
-centred result summary above the per-video results.
+centered result summary above the per-video results.
 """
 
 import ctypes
@@ -331,7 +331,7 @@ class ProgressPage:
 
     def _build_result_summary(self):
         # The heading is the header bar's title; the figures and actions sit
-        # centred under it, and the files follow below.
+        # centered under it, and the files follow below.
         title = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
         title.set_visible(False)
         self.result_badge = Gtk.Box(valign=Gtk.Align.CENTER)
@@ -555,7 +555,7 @@ class ProgressPage:
             self.toolbar_view.add_css_class("bvc-result-shown")
         else:
             self.toolbar_view.remove_css_class("bvc-result-shown")
-        # A single job and the result summary are centred vertically.
+        # A single job and the result summary are centered vertically.
         self.clamp.set_valign(Gtk.Align.START if multi or settled else Gtk.Align.CENTER)
         for row in self.queue_items.values():
             row.apply_layout(hero=total == 1 and not settled)
@@ -1342,7 +1342,7 @@ class QueueItemRow(Gtk.ListBoxRow):
                 "failed": ("bvc-status-error", "dialog-error-symbolic"),
                 "cancelled": ("bvc-status-warning", "action-unavailable-symbolic"),
             }[state]
-            # Colour is an accent: the icon, and only a short verdict in text.
+            # Color is an accent: the icon, and only a short verdict in text.
             if state != "failed":
                 self.status_label.add_css_class(accent)
             self.status_icon.add_css_class(accent)

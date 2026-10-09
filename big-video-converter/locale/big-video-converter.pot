@@ -231,7 +231,7 @@ msgid ""
 "Frames per second of the converted video:\n"
 "\n"
 "• Fewer frames: a smaller file. Measured with the same quality: 30 to 24 fps saved 10–17%, 30 to 15 fps saved 28–42%\n"
-"• More frames: in-between frames are blended from their neighbours, so motion looks smoother but fast movement leaves a faint trail"
+"• More frames: in-between frames are blended from their neighbors, so motion looks smoother but fast movement leaves a faint trail"
 msgstr ""
 
 msgid "Removes grain and the speckles of low-light video. Stronger levels also soften fine detail. Cleaner video compresses into a slightly smaller file."
@@ -240,13 +240,13 @@ msgstr ""
 msgid "Makes edges and fine detail crisper (AMD contrast adaptive sharpening). Sharper video makes a slightly larger file."
 msgstr ""
 
-msgid "Steadies shaky camera footage. The video is analysed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
+msgid "Steadies shaky camera footage. The video is analyzed first, so the conversion takes about twice as long; the edges are zoomed in slightly to hide the movement."
 msgstr ""
 
-msgid "How the colours of this video are coded. Keep the file's own description unless the preview looks grey and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
+msgid "How the colors of this video are coded. Keep the file's own description unless the preview looks gray and washed out: then the file is HDR without saying so, usually HDR10 (PQ), or HLG for some broadcasts. The conversion reads it the same way."
 msgstr ""
 
-msgid "Applies a colour look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
+msgid "Applies a color look from a LUT file (.cube, .3dl) or an mpv shader (.hook, .glsl) to the whole video."
 msgstr ""
 
 msgid ""
@@ -370,6 +370,15 @@ msgstr ""
 
 msgid "Uses AV1, the latest generation codec with the best compression available. Produces the smallest files but encoding is slower. Ideal for archiving or uploading where size matters most."
 msgstr ""
+
+msgid "Some folders were skipped"
+msgstr ""
+
+#, python-brace-format
+msgid "{0} folder could not be read; its videos were not added."
+msgid_plural "{0} folders could not be read; their videos were not added."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "Select Video Files"
 msgstr ""
@@ -1595,6 +1604,14 @@ msgid "Saved as “{0}”. Edit it in {1}"
 msgstr ""
 
 #, python-brace-format
+msgid "Delete “{0}”?"
+msgstr ""
+
+#, python-brace-format
+msgid "The preset file is removed: {0}"
+msgstr ""
+
+#, python-brace-format
 msgid "Preset “{0}” deleted."
 msgstr ""
 
@@ -2248,7 +2265,7 @@ msgstr ""
 msgid "Hue"
 msgstr ""
 
-msgid "Source colours"
+msgid "Source colors"
 msgstr ""
 
 msgid "As the file says"
@@ -2344,7 +2361,7 @@ msgstr ""
 msgid "None"
 msgstr ""
 
-msgid "Choose a colour look (.cube) or shader (.hook)"
+msgid "Choose a color look (.cube) or shader (.hook)"
 msgstr ""
 
 msgid "Remove the look or shader"
@@ -2401,7 +2418,7 @@ msgstr ""
 msgid "Frame Rate"
 msgstr ""
 
-msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbours: smoother, with a faint trail on fast movement."
+msgid "Fewer frames per second make a smaller file. More frames are blended from their neighbors: smoother, with a faint trail on fast movement."
 msgstr ""
 
 msgid "Conversion Speed"
@@ -2423,6 +2440,140 @@ msgid "Decode Using Software"
 msgstr ""
 
 msgid "Decode on CPU and only encode on GPU. Enable this if GPU decoding causes errors or artifacts."
+msgstr ""
+
+msgid "File Information"
+msgstr ""
+
+msgid "Analyzing video file..."
+msgstr ""
+
+msgid "Could not retrieve file information."
+msgstr ""
+
+msgid "Video Streams"
+msgstr ""
+
+msgid "Audio Streams"
+msgstr ""
+
+msgid "General Information"
+msgstr ""
+
+msgid "File Name"
+msgstr ""
+
+msgid "Copy file name"
+msgstr ""
+
+msgid "Location"
+msgstr ""
+
+msgid "File Size"
+msgstr ""
+
+msgid "Copy file size"
+msgstr ""
+
+msgid "Duration"
+msgstr ""
+
+msgid "Copy duration"
+msgstr ""
+
+msgid "Format"
+msgstr ""
+
+msgid "Copy format"
+msgstr ""
+
+msgid "Bitrate"
+msgstr ""
+
+msgid "Copy bitrate"
+msgstr ""
+
+msgid "Codec"
+msgstr ""
+
+msgid "Copy codec"
+msgstr ""
+
+msgid "Copy resolution"
+msgstr ""
+
+msgid "Copy frame rate"
+msgstr ""
+
+msgid "Pixel Format"
+msgstr ""
+
+msgid "Copy pixel format"
+msgstr ""
+
+msgid "Language"
+msgstr ""
+
+msgid "Copy language code"
+msgstr ""
+
+#, python-brace-format
+msgid "Audio track {number}"
+msgstr ""
+
+#, python-brace-format
+msgid "Subtitle {number}"
+msgstr ""
+
+msgid "Sample Rate"
+msgstr ""
+
+msgid "Copy sample rate"
+msgstr ""
+
+msgid "CD Quality"
+msgstr ""
+
+msgid "Hi-Res Audio"
+msgstr ""
+
+msgid "(Mono)"
+msgstr ""
+
+msgid "(Stereo)"
+msgstr ""
+
+msgid "(5.1 Surround)"
+msgstr ""
+
+msgid "(7.1 Surround)"
+msgstr ""
+
+msgid "Channels"
+msgstr ""
+
+msgid "Copy channels"
+msgstr ""
+
+msgid "Copy value"
+msgstr ""
+
+msgid "Format Details"
+msgstr ""
+
+msgid "Bitrate (bps)"
+msgstr ""
+
+msgid "Detection Score"
+msgstr ""
+
+msgid "Metadata"
+msgstr ""
+
+msgid "Error retrieving file information"
+msgstr ""
+
+msgid "Retry"
 msgstr ""
 
 msgid "The video metadata could not be read"
@@ -2667,140 +2818,6 @@ msgstr ""
 msgid "Additional options contain characters that are not allowed: {0}"
 msgstr ""
 
-msgid "File Information"
-msgstr ""
-
-msgid "Analyzing video file..."
-msgstr ""
-
-msgid "Could not retrieve file information."
-msgstr ""
-
-msgid "Video Streams"
-msgstr ""
-
-msgid "Audio Streams"
-msgstr ""
-
-msgid "General Information"
-msgstr ""
-
-msgid "File Name"
-msgstr ""
-
-msgid "Copy file name"
-msgstr ""
-
-msgid "Location"
-msgstr ""
-
-msgid "File Size"
-msgstr ""
-
-msgid "Copy file size"
-msgstr ""
-
-msgid "Duration"
-msgstr ""
-
-msgid "Copy duration"
-msgstr ""
-
-msgid "Format"
-msgstr ""
-
-msgid "Copy format"
-msgstr ""
-
-msgid "Bitrate"
-msgstr ""
-
-msgid "Copy bitrate"
-msgstr ""
-
-msgid "Codec"
-msgstr ""
-
-msgid "Copy codec"
-msgstr ""
-
-msgid "Copy resolution"
-msgstr ""
-
-msgid "Copy frame rate"
-msgstr ""
-
-msgid "Pixel Format"
-msgstr ""
-
-msgid "Copy pixel format"
-msgstr ""
-
-msgid "Language"
-msgstr ""
-
-msgid "Copy language code"
-msgstr ""
-
-#, python-brace-format
-msgid "Audio track {number}"
-msgstr ""
-
-#, python-brace-format
-msgid "Subtitle {number}"
-msgstr ""
-
-msgid "Sample Rate"
-msgstr ""
-
-msgid "Copy sample rate"
-msgstr ""
-
-msgid "CD Quality"
-msgstr ""
-
-msgid "Hi-Res Audio"
-msgstr ""
-
-msgid "(Mono)"
-msgstr ""
-
-msgid "(Stereo)"
-msgstr ""
-
-msgid "(5.1 Surround)"
-msgstr ""
-
-msgid "(7.1 Surround)"
-msgstr ""
-
-msgid "Channels"
-msgstr ""
-
-msgid "Copy channels"
-msgstr ""
-
-msgid "Copy value"
-msgstr ""
-
-msgid "Format Details"
-msgstr ""
-
-msgid "Bitrate (bps)"
-msgstr ""
-
-msgid "Detection Score"
-msgstr ""
-
-msgid "Metadata"
-msgstr ""
-
-msgid "Error retrieving file information"
-msgstr ""
-
-msgid "Retry"
-msgstr ""
-
 #, python-brace-format
 msgid "The segment {0} starts before the previous one ends; list the segments in order without overlaps."
 msgstr ""
@@ -2945,6 +2962,12 @@ msgstr ""
 
 msgid "The video could not be split into parts under the size limit."
 msgstr ""
+
+#, python-brace-format
+msgid "{0} subtitle track could not be extracted and was left out."
+msgid_plural "{0} subtitle tracks could not be extracted and were left out."
+msgstr[0] ""
+msgstr[1] ""
 
 #, python-brace-format
 msgid "{0} cannot hold picture subtitles (PGS, DVD): {1} track left out. Choose MKV to keep it."

@@ -489,7 +489,7 @@ fi
 [[ $source_fps_den =~ ^[0-9]+$ && $source_fps_den -gt 0 ]] || source_fps_den=1
 
 # source_hdr=pq|hlg|sdr overrides the detection. A recording can carry no
-# colour description at all (a DVB sample: none in the stream, none per
+# color description at all (a DVB sample: none in the stream, none per
 # frame), and FFprobe builds differ on the container's (jellyfin-ffmpeg 7.1
 # ignored Matroska's): such HDR video was converted as if it were SDR.
 source_hdr_given=false
@@ -529,7 +529,7 @@ elif [[ -n $video_resolution ]]; then
 fi
 
 # Output frame rate (video_fps, "24" or "30000/1001"). Fewer frames drop the
-# extra ones; more frames blend neighbours, because FFmpeg's motion
+# extra ones; more frames blend neighbors, because FFmpeg's motion
 # interpolation (minterpolate) ran at 6 frames per second on 1080p -- hours
 # for a film. Within half a percent (29.97 against 30) nothing changes.
 output_fps_num=$source_fps_num output_fps_den=$source_fps_den
@@ -662,7 +662,7 @@ fi
 # and lands in bt709 8-bit with matching tags. Hardware decode is skipped
 # for these files (Stage 2 onwards) so the filter sees full-depth frames.
 needs_tonemap=false
-# The decoder tags frames only from the bitstream's own colour description;
+# The decoder tags frames only from the bitstream's own color description;
 # a stream that has none (a DVB recording) or carries it only in the
 # container reached the tone mappers as "unknown", and zscale refused it.
 # The frames get what FFprobe read, bt2020 where that is missing too.
@@ -821,7 +821,7 @@ if [[ $subtitle_extract == embedded ]]; then
 		subtitle_cmd+=(-c:s "$subtitle_encoder" "${subtitle_codec_overrides[@]}")
 	fi
 elif [[ $subtitle_extract == extract || $only_extract_subtitles == 1 ]]; then
-	# Names players recognise: "<video>.<lang>.srt", with ".forced" for a
+	# Names players recognize: "<video>.<lang>.srt", with ".forced" for a
 	# forced track. A repeated language gets a counter from the second track
 	# on, counted per name, so two forced tracks get two files. Every text
 	# codec (ASS, mov_text, WebVTT) becomes SubRip, as in the GUI's segment path.
@@ -1003,7 +1003,7 @@ if [[ ${#local_filters[@]} -gt 0 ]]; then
 	fi
 fi
 
-# Audio stream queries, honouring the ffprobe fallback.
+# Audio stream queries, honoring the ffprobe fallback.
 # probe_audio_info emits "index,language"; the channel helper takes the
 # relative audio stream number and its absolute index in the container.
 probe_audio_info() {
