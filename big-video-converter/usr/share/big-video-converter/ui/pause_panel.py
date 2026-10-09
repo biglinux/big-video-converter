@@ -234,7 +234,7 @@ class PausePanel(Adw.PreferencesGroup):
             or self.undo.video != page.current_video_path
             or page.trim_segments != self.undo.applied
         ):
-            self.undo = None  # edited since: no longer the segments it made
+            self.undo = None  # edited since: not the segments it made
         visible = self.undo is not None
         self.undo_row.set_visible(visible)
         # Once marked, one row says it all: the result, what it replaced and

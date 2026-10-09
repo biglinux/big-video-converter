@@ -151,13 +151,13 @@ class QueueManagerMixin:
 
         window = self.get_active_window()
         dialog.choose(window, None, on_response)
-        return False  # Caller should NOT proceed — async dialog handles it
+        return False  # the dialog's response continues the queue
 
     def _on_disk_space_response(self, response: str) -> None:
         """Continue the queue, or hand the buttons back after a cancel.
 
-        The header disabled Convert before asking; a cancel here used to
-        leave it disabled until the application was restarted.
+        The header disabled Convert before asking, so a cancel enables it
+        again.
         """
         if response == "continue":
             self._do_start_queue_processing()

@@ -519,8 +519,7 @@ def show_presets_dialog(parent_window, app) -> PresetsDialog:
     """Open the grid, or bring back the one already open.
 
     Clicking the Presets row both ticks its radio and activates the row, and
-    each path asks for the grid; a second one used to stack on the first, so
-    Close had to be pressed twice.
+    each path asks for the grid: the second request gets the open one.
     """
     global _open_presets_dialog
     if _open_presets_dialog is not None:

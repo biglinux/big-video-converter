@@ -1166,8 +1166,6 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.details_revealer.set_child(details)
         self.main_box.append(self.details_revealer)
 
-    # Thumbnail -------------------------------------------------------------
-
     def _request_thumbnail(self):
         manager = getattr(
             getattr(self.app, "conversion_page", None), "thumbnail_manager", None
@@ -1200,8 +1198,6 @@ class QueueItemRow(Gtk.ListBoxRow):
             self.thumbnail_frame.add_css_class("bvc-thumb-compact")
         else:
             self.thumbnail_frame.remove_css_class("bvc-thumb-compact")
-
-    # Layout ----------------------------------------------------------------
 
     def apply_layout(self, *, hero: bool) -> None:
         """Hero card for the only job; compact list row otherwise."""
@@ -1283,8 +1279,6 @@ class QueueItemRow(Gtk.ListBoxRow):
             launch_file(self.app, button, self.output_paths[0])
         else:
             launch_file(self.app, button, self.output_paths[0], containing=True)
-
-    # State -----------------------------------------------------------------
 
     def _set_cancel_action(self, pending: bool) -> None:
         if pending:

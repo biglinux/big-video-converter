@@ -97,9 +97,9 @@ def detect_render_devices(
 
     The vendor and the lspci name both come from the node's own PCI device,
     so the pairing cannot drift the way the i-th lspci VGA line and the i-th
-    node did (a BMC VGA without a render node shifted every name). One
-    `lspci -s` per node costs about 10 ms, acceptable on the GTK thread.
-    A single node needs no choice: [].
+    node did (a BMC VGA without a render node shifted every name). The short
+    `lspci -s` per node runs on the GTK thread. A single node needs no
+    choice: [].
     """
     try:
         nodes = sorted(n for n in os.listdir(drm_dir) if n.startswith("renderD"))

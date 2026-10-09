@@ -802,11 +802,7 @@ class ConversionPage:
                     row.remove_css_class("dragging")
                     row.remove_css_class("drag-hover")
 
-            # Reorder the queue - properly handle deque.pop() which doesn't take arguments
-            # First, get the item to move
             item_to_move = self.app.conversion_queue[source_index]
-
-            # Create a new list from the deque, modify it, then recreate the deque
             queue_list = list(self.app.conversion_queue)
             del queue_list[source_index]
             queue_list.insert(
@@ -983,7 +979,6 @@ class ConversionPage:
 
             env_vars["audio_handling"] = audio_handling
 
-            # Only set video resolution if NOT in copy mode
             if not force_copy_video_enabled:
                 video_resolution = settings.load_setting("video-resolution", "")
                 if video_resolution:

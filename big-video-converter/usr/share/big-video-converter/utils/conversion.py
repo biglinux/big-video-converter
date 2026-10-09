@@ -619,8 +619,8 @@ def monitor_progress(
             stage_mode = _("Extracting subtitles…")
             updates.push(status=stage_mode)
         if text.startswith("Stabilization analysis"):
-            # The first of two passes over the video. Measured on 1080p it
-            # takes about 40 % of the time, so it fills that much of the bar.
+            # The first of two passes over the video. It takes about 40 % of
+            # the time, so it fills that much of the bar.
             stage_mode = _("Measuring camera shake…")
             encoding = True
             bar_start, bar_share = 0.0, 0.4

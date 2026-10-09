@@ -725,9 +725,9 @@ done
 # audio ends before its last frame with silence, an audible gap at the seam.
 # Cuts close together share one input, split and trimmed in the filtergraph.
 # Every input decodes at once and queues its frames until the concat filter
-# reaches it, about 460 MB each at 1080p: the pauses of an hour as 600 inputs
-# took 17 GB and 11468 threads. A cut opens a new input only after more than
-# 30 s removed, which seeking skips instead of decoding.
+# reaches it, so hundreds of inputs exhaust memory and threads. A cut opens a
+# new input only after more than 30 s removed, which seeking skips instead of
+# decoding.
 # segment_cuts[n] lists input n's cuts, "START+DURATION ..." from its start.
 segment_inputs=()
 segment_cuts=()
@@ -1438,8 +1438,8 @@ hw_encoder_smoke_test() {
 }
 
 # Crop, turn and flip without leaving GPU memory when they are the only
-# edits: on 30 s of 1080p VAAPI took half the time and CUDA a third of the
-# processor, with the same pixels. Each API keeps only what it gets right:
+# edits, which is faster and gives the same pixels. Each API keeps only what
+# it gets right:
 # CUDA has no crop in FFmpeg 9.0 (scale_cuda ignores the crop filter's frame
 # cropping), and transpose_vaapi on AMD turned a 1920x802 picture along with
 # the decoder's padding rows, shifting it. Prints the GPU chain, or fails.
@@ -1466,8 +1466,8 @@ gpu_geometry_filters() { # <user filter chain>
 # Sets the caller's filters array: -vf for a single input; for joined cuts, one
 # filtergraph that splits, trims and joins the video, and one for the audio.
 # In one graph the audio output keeps asking for input while the slower video
-# encoder lags, so decoded frames piled up (2.2 GB over ten minutes at 1080p);
-# apart, each graph waits for its own encoder. Without audio the concat filter
+# encoder lags, so decoded frames pile up; apart, each graph waits for its own
+# encoder. Without audio the concat filter
 # guesses a cut's last frame from the ones before it, so a cut of one frame
 # lasted nothing: each cut brings a silent track of its length to time it.
 # Apart, nothing pads a cut whose audio ends early (audio starting late, or a
@@ -1731,12 +1731,10 @@ attempt_conversion() {
 	[[ $is_10bit == false || $needs_10bit_to_8bit_conversion == true ]] || download_format=p010le
 
 	# HDR to SDR on the GPU where one maps it: OpenCL beside CUDA, libplacebo
-	# (Vulkan) beside VAAPI. On a 4K HDR10 broadcast, OpenCL's hable came out
-	# far darker than the software chain and a player (mpv's libplacebo
-	# rendering: 23 dB); mobius matched both (32.6 dB, like software's 32.5).
-	# 30 s of 4K took 13.9 s and 15 s of processor time, against 22.5 s and
-	# 200 s in software; libplacebo on AMD 8.1 s and 1.5 s. Both hand
-	# over 8-bit frames in system memory; a failure lands in Stage 2.
+	# (Vulkan) beside VAAPI, both much faster than software. OpenCL's hable
+	# comes out far darker than the software chain and mpv; mobius matches
+	# both. Both hand over 8-bit frames in system memory; a failure lands in
+	# Stage 2.
 	# setparams: tonemap_opencl's frames reach format negotiation untagged,
 	# and with bt709 requested for the stream a later scale_cuda then failed
 	# ("Impossible to convert between the formats").
@@ -1820,7 +1818,7 @@ attempt_conversion() {
 		echo "Rotated video (${source_rotation}°): forcing software decode (Stage 2)"
 	fi
 	# scale_vulkan garbles the picture unless both input dimensions are
-	# multiples of 32 (FFmpeg 9.0, measured on NVIDIA): 1280x720 and 1920x1080
+	# multiples of 32 (FFmpeg 9.0 on NVIDIA): 1280x720 and 1920x1080
 	# lost their chroma alignment even at the same size. Scale and reduce the
 	# bit depth in software, before the upload.
 	if [[ $detected_encoder_var == encoder_vulkan && (-n "$video_resolution" || $needs_10bit_to_8bit_conversion == true) ]]; then

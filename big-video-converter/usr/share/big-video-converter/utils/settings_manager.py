@@ -334,7 +334,7 @@ class SettingsManager:
                     continue
                 # A setting this build does not know is never read, so skipping
                 # it lets a profile written by a newer version still import its
-                # shared keys. Values that ARE used stay strictly validated.
+                # shared keys. Known values are still strictly validated.
                 if key not in self.DEFAULT_VALUES:
                     logger.info("Ignoring unknown profile setting: %s", key)
                     continue

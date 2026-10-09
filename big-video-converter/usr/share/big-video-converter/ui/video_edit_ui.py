@@ -739,9 +739,8 @@ class VideoEditUI:
         segment_actions.append(self.clear_segments_button)
         trim_group.set_header_suffix(segment_actions)
 
-        # A list view builds rows only for what is on screen: removing pauses
-        # leaves hundreds of segments, and a list box of 600 took 0.4 s to
-        # build again after every edit.
+        # A list view builds rows only for what is on screen; removing pauses
+        # leaves hundreds of segments.
         self.segment_items = Gtk.StringList()
         factory = Gtk.SignalListItemFactory()
         factory.connect("setup", self._setup_segment_row)

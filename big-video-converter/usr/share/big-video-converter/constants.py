@@ -31,9 +31,8 @@ CONVERT_SCRIPT_PATH = os.path.abspath(
 # label, output delay in samples at 48 kHz, extra controls, the package that
 # installs it, and the attenuation at full strength. The export script keeps
 # the same table.
-# Full strength is where the model stops removing more (measured on speech in
-# pink noise): DFN3's residual moves under 1 dB past 24 dB, while DPDFNet-2 at
-# 48 dB leaves noise at -74 dBFS. A higher cap left half the slider silent.
+# Full strength is where the model stops removing more noise from speech, so
+# no part of the slider does nothing.
 NOISE_MODELS = (
     # DFN3 mutes its first second and gates what it takes for no voice by
     # default, both meant for a live microphone.

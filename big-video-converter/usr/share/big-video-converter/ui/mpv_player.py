@@ -71,8 +71,8 @@ _USE_SOFTWARE_MODE = _RENDER_MODE_SETTING == "software" or _IS_VIRTUAL_MACHINE
 # composites the GLArea preview late: frames from before a seek, rotate or flip
 # stay on screen. The GL renderer presents each mpv frame. This module is
 # imported before the first window is realized, which is when GTK reads the
-# variable; a renderer the person chose explicitly wins. GTK 4.18 renamed the
-# "ngl" renderer to "gl" and removed the old one that used that name.
+# variable; a renderer the user chose explicitly wins. GTK 4.18 and later name
+# the GL renderer "gl", earlier versions "ngl".
 gi.require_version("Gtk", "4.0")
 from gi.repository import GLib, Gtk
 
@@ -560,8 +560,7 @@ class MPVPlayer:
         # change makes mpv redraw the current frame, which takes the slot of
         # the next one. So mpv gets the latest value at most every 100 ms, and
         # asynchronously: this is the GTK thread, which also renders mpv's
-        # frames. Measured over a 2 s drag: 88 dropped frames with a blocking
-        # write per event, 10 this way.
+        # frames.
         self._pending_colors[name] = value
         if self._color_flush_id is None:
             self._color_flush_id = GLib.timeout_add(100, self._flush_colors)
