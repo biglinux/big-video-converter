@@ -4337,6 +4337,31 @@ msgstr "Ništa se ne briše iz izvorne datoteke."
 msgid "Play only the segments"
 msgstr "Reproduciraj samo segmente"
 
+msgid "Some folders were skipped"
+msgstr "Neke su mape preskočene"
+
+#, python-brace-format
+msgid "{0} folder could not be read; its videos were not added."
+msgid_plural "{0} folders could not be read; their videos were not added."
+msgstr[0] "{0} mapu nije bilo moguće pročitati; njezini videozapisi nisu dodani."
+msgstr[1] "{0} mape nije bilo moguće pročitati; njihovi videozapisi nisu dodani."
+msgstr[2] "{0} mapa nije bilo moguće pročitati; njihovi videozapisi nisu dodani."
+
+#, python-brace-format
+msgid "Delete “{0}”?"
+msgstr "Izbrisati „{0}”?"
+
+#, python-brace-format
+msgid "The preset file is removed: {0}"
+msgstr "Datoteka predloška bit će uklonjena: {0}"
+
+#, python-brace-format
+msgid "{0} subtitle track could not be extracted and was left out."
+msgid_plural "{0} subtitle tracks could not be extracted and were left out."
+msgstr[0] "{0} zapis titlova nije bilo moguće izdvojiti pa je izostavljen."
+msgstr[1] "{0} zapisa titlova nije bilo moguće izdvojiti pa su izostavljena."
+msgstr[2] "{0} zapisa titlova nije bilo moguće izdvojiti pa su izostavljeni."
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format

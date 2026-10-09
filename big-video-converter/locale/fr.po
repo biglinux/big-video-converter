@@ -5277,6 +5277,29 @@ msgstr "Rien n'est supprimé du fichier d'origine."
 msgid "Play only the segments"
 msgstr "Lire uniquement les segments"
 
+msgid "Some folders were skipped"
+msgstr "Certains dossiers ont été ignorés"
+
+#, python-brace-format
+msgid "{0} folder could not be read; its videos were not added."
+msgid_plural "{0} folders could not be read; their videos were not added."
+msgstr[0] "{0} dossier n’a pas pu être lu ; ses vidéos n’ont pas été ajoutées."
+msgstr[1] "{0} dossiers n’ont pas pu être lus ; leurs vidéos n’ont pas été ajoutées."
+
+#, python-brace-format
+msgid "Delete “{0}”?"
+msgstr "Supprimer « {0} » ?"
+
+#, python-brace-format
+msgid "The preset file is removed: {0}"
+msgstr "Le fichier du préréglage sera supprimé : {0}"
+
+#, python-brace-format
+msgid "{0} subtitle track could not be extracted and was left out."
+msgid_plural "{0} subtitle tracks could not be extracted and were left out."
+msgstr[0] "{0} piste de sous-titres n’a pas pu être extraite et a été laissée de côté."
+msgstr[1] "{0} pistes de sous-titres n’ont pas pu être extraites et ont été laissées de côté."
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format

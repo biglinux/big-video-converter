@@ -5357,6 +5357,27 @@ msgstr "原始檔案不會被刪除。"
 msgid "Play only the segments"
 msgstr "僅播放片段"
 
+msgid "Some folders were skipped"
+msgstr "已略過部分資料夾"
+
+#, python-brace-format
+msgid "{0} folder could not be read; its videos were not added."
+msgid_plural "{0} folders could not be read; their videos were not added."
+msgstr[0] "有 {0} 個資料夾無法讀取，其中的影片未加入。"
+
+#, python-brace-format
+msgid "Delete “{0}”?"
+msgstr "刪除「{0}」？"
+
+#, python-brace-format
+msgid "The preset file is removed: {0}"
+msgstr "將移除設定集檔案：{0}"
+
+#, python-brace-format
+msgid "{0} subtitle track could not be extracted and was left out."
+msgid_plural "{0} subtitle tracks could not be extracted and were left out."
+msgstr[0] "有 {0} 條字幕軌無法擷取，已略過。"
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format

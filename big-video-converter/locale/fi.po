@@ -5582,6 +5582,29 @@ msgstr "Alkuperäisestä tiedostosta ei poisteta mitään."
 msgid "Play only the segments"
 msgstr "Toista vain segmentit"
 
+msgid "Some folders were skipped"
+msgstr "Joitakin kansioita ohitettiin"
+
+#, python-brace-format
+msgid "{0} folder could not be read; its videos were not added."
+msgid_plural "{0} folders could not be read; their videos were not added."
+msgstr[0] "{0} kansio jäi lukematta; sen videoita ei lisätty."
+msgstr[1] "{0} kansiota jäi lukematta; niiden videoita ei lisätty."
+
+#, python-brace-format
+msgid "Delete “{0}”?"
+msgstr "Poistetaanko ”{0}”?"
+
+#, python-brace-format
+msgid "The preset file is removed: {0}"
+msgstr "Esiasetuksen tiedosto poistetaan: {0}"
+
+#, python-brace-format
+msgid "{0} subtitle track could not be extracted and was left out."
+msgid_plural "{0} subtitle tracks could not be extracted and were left out."
+msgstr[0] "{0} tekstitysraita jäi pois, koska sitä ei voitu purkaa."
+msgstr[1] "{0} tekstitysraitaa jäi pois, koska niitä ei voitu purkaa."
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format

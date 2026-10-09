@@ -5386,6 +5386,33 @@ msgstr "Початковий файл не змінюється."
 msgid "Play only the segments"
 msgstr "Відтворювати лише сегменти"
 
+msgid "Some folders were skipped"
+msgstr "Деякі теки пропущено"
+
+#, python-brace-format
+msgid "{0} folder could not be read; its videos were not added."
+msgid_plural "{0} folders could not be read; their videos were not added."
+msgstr[0] "Не вдалося прочитати {0} теку; її відео не додано."
+msgstr[1] "Не вдалося прочитати {0} теки; їхні відео не додано."
+msgstr[2] "Не вдалося прочитати {0} тек; їхні відео не додано."
+msgstr[3] "Не вдалося прочитати {0} теку; її відео не додано."
+
+#, python-brace-format
+msgid "Delete “{0}”?"
+msgstr "Видалити «{0}»?"
+
+#, python-brace-format
+msgid "The preset file is removed: {0}"
+msgstr "Файл набору налаштувань буде видалено: {0}"
+
+#, python-brace-format
+msgid "{0} subtitle track could not be extracted and was left out."
+msgid_plural "{0} subtitle tracks could not be extracted and were left out."
+msgstr[0] "Не вдалося видобути {0} доріжку субтитрів, її пропущено."
+msgstr[1] "Не вдалося видобути {0} доріжки субтитрів, їх пропущено."
+msgstr[2] "Не вдалося видобути {0} доріжок субтитрів, їх пропущено."
+msgstr[3] "Не вдалося видобути {0} доріжку субтитрів, її пропущено."
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format

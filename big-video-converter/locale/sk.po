@@ -5306,6 +5306,31 @@ msgstr "Z pôvodného súboru sa nič neodstráni."
 msgid "Play only the segments"
 msgstr "Prehrať iba segmenty"
 
+msgid "Some folders were skipped"
+msgstr "Niektoré priečinky boli preskočené"
+
+#, python-brace-format
+msgid "{0} folder could not be read; its videos were not added."
+msgid_plural "{0} folders could not be read; their videos were not added."
+msgstr[0] "{0} priečinok sa nepodarilo prečítať; jeho videá neboli pridané."
+msgstr[1] "{0} priečinky sa nepodarilo prečítať; ich videá neboli pridané."
+msgstr[2] "{0} priečinkov sa nepodarilo prečítať; ich videá neboli pridané."
+
+#, python-brace-format
+msgid "Delete “{0}”?"
+msgstr "Vymazať „{0}“?"
+
+#, python-brace-format
+msgid "The preset file is removed: {0}"
+msgstr "Súbor predvoľby bude odstránený: {0}"
+
+#, python-brace-format
+msgid "{0} subtitle track could not be extracted and was left out."
+msgid_plural "{0} subtitle tracks could not be extracted and were left out."
+msgstr[0] "{0} titulkovú stopu sa nepodarilo extrahovať, a preto bola vynechaná."
+msgstr[1] "{0} titulkové stopy sa nepodarilo extrahovať, a preto boli vynechané."
+msgstr[2] "{0} titulkových stôp sa nepodarilo extrahovať, a preto boli vynechané."
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format
