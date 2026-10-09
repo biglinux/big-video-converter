@@ -643,12 +643,6 @@ msgid "Files Added"
 msgstr "Súbory pridané"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "Do frontu boli pridané videosúbory: {}."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "Žiadne súbory nenájdené"
@@ -749,11 +743,6 @@ msgstr "Vyberte sieťové video súbory"
 msgid "Main"
 msgstr "Hlavné"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Režim extrakcie titulkov je aktívny — video NEBUDE konvertované"
-
 msgid "Stop converting and close?"
 msgstr "Zastaviť prevod a zavrieť?"
 
@@ -834,26 +823,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg a/alebo MPV nie sú nainštalované a nemohli sme zistiť, ako ich nainštalovať pre váš systém. Prosím, nainštalujte ich manuálne pomocou správcu balíkov vašej distribúcie."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "Inštalácia úspešná"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "Závislosti boli nainštalované. Aplikácia sa teraz reštartuje."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "Inštalácia zlyhala"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "Závislosti neboli po inštalácii nájdené. Prosím, reštartujte aplikáciu manuálne."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Archív (AV1 + Opus)"
@@ -1679,11 +1648,6 @@ msgid "Could not open this video file"
 msgstr "Nepodarilo sa otvoriť tento video súbor."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "Nepodarilo sa otvoriť video súbor s predvoleným prehrávačom."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1905,9 +1869,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Chyba pri spúšťaní príkazu"
-
-msgid "Pre-command completed successfully."
-msgstr "Predpríkaz bol úspešne dokončený."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -3676,9 +3637,6 @@ msgstr "Minúty"
 msgid "Seconds"
 msgstr "Sekundy"
 
-msgid "Centiseconds"
-msgstr "Stotiny sekundy"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -3949,12 +3907,6 @@ msgstr "Zadajte začiatok a koniec času pre nový segment."
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "Pridať segment"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Snímka: {current}/{total}"
 
 msgid "Video position"
 msgstr "Pozícia vo videu"
@@ -4690,17 +4642,6 @@ msgstr "Originál odstránený po overení výstupu"
 msgid "Original preserved: {0}"
 msgstr "Originál zachovaný: {0}"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "Konverzia dokončená"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -5291,18 +5232,17 @@ msgstr "1 s"
 msgid "2 s"
 msgstr "2 s"
 
-msgid "Cut Them Out"
-msgstr "Vystrihnúť ich"
-
 msgid "Undo"
 msgstr "Späť"
 
 msgid "This video has no sound to find pauses in"
 msgstr "Toto video nemá zvuk, v ktorom by sa dali hľadať pauzy"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "Počúvate {track}. Ostatné stopy dostanú rovnaké strihy."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} pauza · o {duration} kratšie"
@@ -5312,29 +5252,19 @@ msgstr[2] "{count} páuz · o {duration} kratšie"
 msgid "No pauses found. Nothing would change."
 msgstr "Nenašli sa žiadne pauzy. Nič by sa nezmenilo."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "Ponechaná {count} časť"
 msgstr[1] "Ponechané {count} časti"
 msgstr[2] "Ponechaných {count} častí"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Hľadanie páuz: {percent} %"
 
-msgid "Pauses found"
-msgstr "Pauzy sa našli"
-
-msgid "Review"
-msgstr "Skontrolovať"
-
 msgid "The pauses could not be measured."
 msgstr "Pauzy sa nepodarilo zmerať."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "Vystrihnutá {count} pauza"
-msgstr[1] "Vystrihnuté {count} pauzy"
-msgstr[2] "Vystrihnutých {count} páuz"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Alebo odstráňte pauzy a ponechajte len reč."
@@ -5342,9 +5272,11 @@ msgstr "Alebo odstráňte pauzy a ponechajte len reč."
 msgid "Milliseconds"
 msgstr "Milisekundy"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "Zvuková stopa {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "Titulky {number}"
 
@@ -5354,11 +5286,99 @@ msgstr "Port musí byť číslo od 1 do 65535."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Extrahujú sa iba titulky; videá sa neprevedú"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "Do frontu bol pridaný {count} videosúbor."
 msgstr[1] "Do frontu boli pridané {count} videosúbory."
 msgstr[2] "Do frontu bolo pridaných {count} videosúborov."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "Týmto sa nahradí {count} segment, ktorý ste mali."
+msgstr[1] "Týmto sa nahradia {count} segmenty, ktoré ste mali."
+msgstr[2] "Týmto sa nahradí {count} segmentov, ktoré ste mali."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Z pôvodného súboru sa nič neodstráni."
+
+msgid "Play only the segments"
+msgstr "Prehrať iba segmenty"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "Do frontu boli pridané videosúbory: {}."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Režim extrakcie titulkov je aktívny — video NEBUDE konvertované"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "Inštalácia úspešná"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "Závislosti boli nainštalované. Aplikácia sa teraz reštartuje."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "Inštalácia zlyhala"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "Závislosti neboli po inštalácii nájdené. Prosím, reštartujte aplikáciu manuálne."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Nepodarilo sa otvoriť video súbor s predvoleným prehrávačom."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Predpríkaz bol úspešne dokončený."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Stotiny sekundy"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Snímka: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "Konverzia dokončená"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Vystrihnúť ich"
+
+#~ msgid "Pauses found"
+#~ msgstr "Pauzy sa našli"
+
+#~ msgid "Review"
+#~ msgstr "Skontrolovať"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "Vystrihnutá {count} pauza"
+#~ msgstr[1] "Vystrihnuté {count} pauzy"
+#~ msgstr[2] "Vystrihnutých {count} páuz"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "Disk FAT32 alebo Telegram Premium"

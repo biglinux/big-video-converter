@@ -657,12 +657,6 @@ msgid "Files Added"
 msgstr "קבצים נוספו"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "{} קבצי וידאו נוספו לתור."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "לא נמצאו קבצים"
@@ -761,11 +755,6 @@ msgstr "בחר קבצי וידאו ברשת"
 msgid "Main"
 msgstr "ראשי"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ מצב חילוץ כתוביות בלבד פעיל — הסרטון לא יומר"
-
 msgid "Stop converting and close?"
 msgstr "לעצור את ההמרה ולסגור?"
 
@@ -848,26 +837,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg ו/או MPV אינם מותקנים ולא הצלחנו לקבוע כיצד להתקין אותם עבור המערכת שלך. אנא התקן אותם ידנית באמצעות מנהל החבילות של הפצתך."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "ההתקנה בוצעה בהצלחה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "תלויות הותקנו. היישום יתחיל מחדש כעת."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "התקנה נכשלה"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "לא נמצאו תלויות לאחר ההתקנה. אנא הפעל את היישום מחדש ידנית."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "ארכיון (AV1 + Opus)"
@@ -1666,11 +1635,6 @@ msgid "Could not open this video file"
 msgstr "לא ניתן לפתוח את קובץ הווידאו הזה"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "לא ניתן לפתוח את קובץ הווידאו עם הנגן ברירת המחדל."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1890,9 +1854,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "שגיאה בהפעלת הפקודה"
-
-msgid "Pre-command completed successfully."
-msgstr "פקודת הקדם הושלמה בהצלחה."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -2982,9 +2943,6 @@ msgstr "דקות"
 msgid "Seconds"
 msgstr "שניות"
 
-msgid "Centiseconds"
-msgstr "מאיות השנייה"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -3103,12 +3061,6 @@ msgstr "הזן את זמני ההתחלה והסיום עבור הקטע החד�
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "הוסף קטע"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "תמונה: {current}/{total}"
 
 msgid "Video position"
 msgstr "מיקום בסרטון"
@@ -3854,17 +3806,6 @@ msgstr "המקור נמחק לאחר אימות הפלט"
 #, python-brace-format
 msgid "Original preserved: {0}"
 msgstr "המקור נשמר: {0}"
-
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "המרה הושלמה"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
@@ -5533,18 +5474,17 @@ msgstr "1 שנ׳"
 msgid "2 s"
 msgstr "2 שנ׳"
 
-msgid "Cut Them Out"
-msgstr "לחתוך אותן"
-
 msgid "Undo"
 msgstr "ביטול"
 
 msgid "This video has no sound to find pauses in"
 msgstr "בסרטון הזה אין שמע שבו אפשר לאתר הפסקות"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "מתנגן {track}. שאר הרצועות מקבלות את אותם החיתוכים."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} הפסקה · {duration} פחות"
@@ -5555,6 +5495,7 @@ msgstr[3] "{count} הפסקות · {duration} פחות"
 msgid "No pauses found. Nothing would change."
 msgstr "לא נמצאו הפסקות. שום דבר לא ישתנה."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "נשמר {count} חלק"
@@ -5562,24 +5503,12 @@ msgstr[1] "נשמרו {count} חלקים"
 msgstr[2] "נשמרו {count} חלקים"
 msgstr[3] "נשמרו {count} חלקים"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "מאתר הפסקות: {percent}%"
 
-msgid "Pauses found"
-msgstr "נמצאו הפסקות"
-
-msgid "Review"
-msgstr "סקירה"
-
 msgid "The pauses could not be measured."
 msgstr "לא ניתן למדוד את ההפסקות."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "נחתכה {count} הפסקה"
-msgstr[1] "נחתכו {count} הפסקות"
-msgstr[2] "נחתכו {count} הפסקות"
-msgstr[3] "נחתכו {count} הפסקות"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "או להסיר את ההפסקות ולהשאיר רק את הדיבור."
@@ -5587,9 +5516,11 @@ msgstr "או להסיר את ההפסקות ולהשאיר רק את הדיבו�
 msgid "Milliseconds"
 msgstr "אלפיות שנייה"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "רצועת שמע {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "כתובית {number}"
 
@@ -5599,12 +5530,102 @@ msgstr "הפתחה חייבת להיות מספר בין 1 ל־65535."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "רק הכתוביות יחולצו; הסרטונים לא יומרו"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "{count} קובץ וידאו נוסף לתור."
 msgstr[1] "{count} קובצי וידאו נוספו לתור."
 msgstr[2] "{count} קובצי וידאו נוספו לתור."
 msgstr[3] "{count} קובצי וידאו נוספו לתור."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "פעולה זו מחליפה את הקטע ה־{count} שהיה לך."
+msgstr[1] "פעולה זו מחליפה את {count} הקטעים שהיו לך."
+msgstr[2] "פעולה זו מחליפה את {count} הקטעים שהיו לך."
+msgstr[3] "פעולה זו מחליפה את {count} הקטעים שהיו לך."
+
+msgid "Nothing is deleted from the original file."
+msgstr "דבר אינו נמחק מהקובץ המקורי."
+
+msgid "Play only the segments"
+msgstr "נגן רק את הקטעים"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "{} קבצי וידאו נוספו לתור."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ מצב חילוץ כתוביות בלבד פעיל — הסרטון לא יומר"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "ההתקנה בוצעה בהצלחה"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "תלויות הותקנו. היישום יתחיל מחדש כעת."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "התקנה נכשלה"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "לא נמצאו תלויות לאחר ההתקנה. אנא הפעל את היישום מחדש ידנית."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "לא ניתן לפתוח את קובץ הווידאו עם הנגן ברירת המחדל."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "פקודת הקדם הושלמה בהצלחה."
+
+#~ msgid "Centiseconds"
+#~ msgstr "מאיות השנייה"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "תמונה: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "המרה הושלמה"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "לחתוך אותן"
+
+#~ msgid "Pauses found"
+#~ msgstr "נמצאו הפסקות"
+
+#~ msgid "Review"
+#~ msgstr "סקירה"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "נחתכה {count} הפסקה"
+#~ msgstr[1] "נחתכו {count} הפסקות"
+#~ msgstr[2] "נחתכו {count} הפסקות"
+#~ msgstr[3] "נחתכו {count} הפסקות"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "כונן FAT32 או Telegram Premium"

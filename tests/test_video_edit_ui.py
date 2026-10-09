@@ -44,7 +44,6 @@ class FakePage:
         self.mpv_player = FakePlayer()
         self.video_duration = 6.0
         self.speed = 1.0
-        self.proposed_pauses = []
         self.settings = SimpleNamespace(get_value=lambda _key, default=None: default)
 
     def __getattr__(self, name):
@@ -74,24 +73,19 @@ class VideoEditUITests(unittest.TestCase):
 
     def test_zero_width_drag_is_ignored(self):
         self.ui.position_scale.set_value(1.25)
-        self.ui._update_slider_drag(4, 0)
+        self.ui._seek_to(self.ui.seek_area, 4)
         self.assertEqual(self.ui.position_scale.get_value(), 1.25)
 
         self.page.trim_segments = [{"start": 1.0, "end": 3.0}]
-        self.ui._dragging_segment = {"segment_index": 0, "edge": "start"}
-        self.ui._update_segment_drag(4, 0)
-        self.assertEqual(self.page.trim_segments[0]["start"], 1.0)
-        self.assertIsNone(self.ui._find_segment_edge_at_position(0, 0))
+        self.assertIsNone(self.ui._edge_at(0))
 
     def test_segment_edges_work_before_the_player_knows_the_length(self):
         # mpv knows the length only after loading, late on big or remote files;
         # the editor uses the probed one.
         self.page.current_video_path = "/tmp/video.mp4"
         self.page.trim_segments = [{"start": 1.5, "end": 3.0}]
-        self.assertEqual(
-            self.ui._find_segment_edge_at_position(150, 600),
-            {"segment_index": 0, "edge": "start"},
-        )
+        self.ui.cuts_track.get_width = lambda: 600
+        self.assertEqual(self.ui._edge_at(150), (0, "start"))
 
     def test_disconnect_cancels_hide_timer_and_restores_controls(self):
         self.ui._schedule_hide_controls(delay=60000)
@@ -133,6 +127,23 @@ class VideoEditUITests(unittest.TestCase):
             "Playback speed: 1.5x",
         )
 
+    def test_seeking_never_moves_a_cut_and_the_track_moves_the_nearest_edge(self):
+        self.page.video_duration = 100.0
+        self.page.current_video_path = __file__
+        self.page.trim_segments = [
+            {"start": n * 2.0, "end": n * 2.0 + 1.5} for n in range(50)
+        ]
+        before = [dict(s) for s in self.page.trim_segments]
+        for widget in (self.ui.seek_area, self.ui.cuts_track):
+            widget.get_width = lambda: 1000
+        self.ui._begin_seek(self.ui.seek_area, 405)
+        self.ui._end_drag()
+        self.assertEqual(self.page.trim_segments, before)
+        self.assertAlmostEqual(self.ui.position_scale.get_value(), 40.5)
+        # 41.4 s is 1 px from the end of the cut that ends at 41.5 s.
+        self.assertEqual(self.ui._edge_at(414), (20, "end"))
+        self.assertIsNone(self.ui._edge_at(428))
+
     def test_page_cleanup_removes_seek_timer_and_transient_mark(self):
         page = VideoEditPage.__new__(VideoEditPage)
         page.cleanup_called = False
@@ -142,6 +153,7 @@ class VideoEditUITests(unittest.TestCase):
         page.crop_edit_mode = False
         page.is_video_fullscreen = False
         page.position_update_id = None
+        page._segment_jump_id = None
         page._seek_cooldown = True
         page._seek_cooldown_timer_id = GLib.timeout_add(
             60000, lambda: GLib.SOURCE_REMOVE
@@ -470,46 +482,125 @@ class MPVPlayerTransformTests(unittest.TestCase):
         self.assertEqual(player.mpv_instance["video-crop"], "124x62+4+0")
 
 
-class PausePopoverTests(unittest.TestCase):
+class SegmentPlaybackTests(unittest.TestCase):
+    def test_playing_only_the_segments_skips_the_parts_between_them(self):
+        segments = [{"start": 5.0, "end": 8.0}, {"start": 1.0, "end": 3.0}]
+        where = VideoEditPage.next_segment_stop
+        self.assertEqual(where(segments, 0.0), (None, 1.0))  # before: go to the first
+        self.assertEqual(where(segments, 2.0), (3.0, None))  # inside: play to its end
+        self.assertEqual(where(segments, 3.0), (None, 5.0))  # between: jump ahead
+        self.assertEqual(where(segments, 8.5), (None, None))  # after the last: stop
+        self.assertEqual(where([], 2.0), (None, None))
+
+
+class PausePanelTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         Adw.init()
 
-    def test_installing_the_denoiser_is_noticed_without_a_restart(self):
-        from ui import pause_popover
+    def setUp(self):
+        from ui import pause_panel
 
-        class Page(SimpleNamespace):  # the popover holds its page weakly
+        self.module = pause_panel
+
+        class Page(SimpleNamespace):  # the panel holds its page weakly
             pass
 
-        page = Page(
-            settings=SimpleNamespace(get_value=lambda _key, default=None: default),
+        self.page = Page(
+            settings=SimpleNamespace(
+                get_value=lambda _key, default=None: default,
+                save_setting=lambda *_args: None,
+            ),
             current_video_path=__file__,
+            video_duration=10.0,
+            trim_segments=[],
+            output_mode="split",
             mpv_player=SimpleNamespace(
                 get_audio_tracks=lambda: [{"index": 1, "label": "eng"}],
                 current_audio_track=1,
             ),
-            proposed_pauses=[],
-            is_playing=False,
-            ui=SimpleNamespace(update_segment_markers=lambda: None),
+            format_time_precise=lambda seconds: f"0:00:{seconds:06.3f}",
+            _save_file_metadata=lambda: None,
+            _update_segments_listbox=lambda: None,
+            ui=SimpleNamespace(
+                update_segment_markers=lambda: None,
+                output_mode_combo=Gtk.DropDown.new_from_strings(["join", "split"]),
+            ),
         )
-        popover = pause_popover.PausePopover(page)
-        window = Gtk.Window(child=popover.button)
-        window.present()
-        try:
-            with mock.patch.object(pause_popover.shutil, "which", return_value=None):
-                popover._show_state()
-            self.assertEqual(popover.stack.get_visible_child_name(), "missing")
-            with mock.patch.object(
-                pause_popover.shutil, "which", return_value="/usr/bin/x"
+
+    def test_installing_the_denoiser_is_noticed_without_a_restart(self):
+        with mock.patch.object(self.module.shutil, "which", return_value=None):
+            panel = self.module.PausePanel(self.page)
+        self.assertIn("dpdfnet-native", panel.status_row.get_title())
+        self.assertFalse(panel.actions.get_visible())
+        with mock.patch.object(self.module.shutil, "which", return_value="/usr/bin/x"):
+            panel.sync()
+        self.assertTrue(panel.actions.get_visible())
+        self.assertEqual(panel.actions.get_visible_child_name(), "find")
+
+    def test_the_analysis_shows_its_progress_in_the_panel(self):
+        with mock.patch.object(self.module.shutil, "which", return_value="/usr/bin/x"):
+            panel = self.module.PausePanel(self.page)
+            with (
+                mock.patch.object(self.module.PauseFinder, "start"),
+                mock.patch.object(
+                    type(panel.finder), "busy", new_callable=mock.PropertyMock
+                ) as busy,
             ):
-                popover.popup()
-                context = GLib.MainContext.default()
-                while context.pending():
-                    context.iteration(False)
-                self.assertEqual(popover.stack.get_visible_child_name(), "start")
-            popover.popdown()
-        finally:
-            window.destroy()
+                busy.return_value = True
+                panel._on_find()
+                self.assertTrue(panel.progress_row.get_visible())
+                self.assertEqual(panel.actions.get_visible_child_name(), "cancel")
+                panel._on_progress(0.42)
+                self.assertEqual(panel.status_row.get_title(), "Finding pauses: 42%")
+                busy.return_value = False
+                panel._on_cancel()
+        self.assertFalse(panel.progress_row.get_visible())
+        self.assertEqual(panel.actions.get_visible_child_name(), "find")
+
+    def test_found_speech_becomes_the_segments_at_once(self):
+        self.page.trim_segments = [{"start": 1.0, "end": 2.0}]
+        with mock.patch.object(self.module.shutil, "which", return_value="/usr/bin/x"):
+            panel = self.module.PausePanel(self.page)
+        # 3 s of speech, a 1.5 s pause, 3 s of speech.
+        panel._on_found([-6.0] * 300 + [-80.0] * 150 + [-6.0] * 300)
+        kept = self.page.trim_segments
+        self.assertEqual(len(kept), 2)
+        self.assertEqual(kept[0]["start"], 0.0)
+        self.assertEqual(kept[1]["end"], 10.0)
+        self.assertEqual(self.page.output_mode, "join")
+        self.assertTrue(panel.undo_row.get_visible())
+        self.assertFalse(panel.status_row.get_visible())
+        self.assertIn("1 segment you had", panel.undo_row.get_subtitle())
+
+        # A pause shorter than the new length: the panel's segments go, the
+        # person's do not come back as if they were found.
+        panel.length_buttons[2].set_active(True)  # 2 s: no pause that long
+        self.assertEqual(self.page.trim_segments, [{"start": 1.0, "end": 2.0}])
+        self.assertEqual(self.page.output_mode, "split")
+        self.assertFalse(panel.undo_row.get_visible())
+
+        panel.length_buttons[0].set_active(True)
+        self.assertEqual(len(self.page.trim_segments), 2)
+        panel.undo_apply()
+        self.assertEqual(self.page.trim_segments, [{"start": 1.0, "end": 2.0}])
+        self.assertEqual(self.page.output_mode, "split")
+        # Marking again is one click away.
+        self.assertTrue(panel.actions.get_visible())
+        self.assertEqual(panel.actions.get_visible_child_name(), "find")
+
+    def test_an_edit_after_marking_keeps_the_segments(self):
+        with mock.patch.object(self.module.shutil, "which", return_value="/usr/bin/x"):
+            panel = self.module.PausePanel(self.page)
+        panel._on_found([-6.0] * 300 + [-80.0] * 200 + [-6.0] * 300)
+        self.page.trim_segments[0]["end"] = 2.5
+        edited = [dict(s) for s in self.page.trim_segments]
+        panel.segments_changed()
+        self.assertFalse(panel.undo_row.get_visible())
+        self.assertTrue(panel.status_row.get_visible())
+        self.assertEqual(panel.actions.get_visible_child_name(), "find")
+        panel.undo_apply()
+        self.assertEqual(self.page.trim_segments, edited)
 
 
 class MPVPlayerColorTests(unittest.TestCase):

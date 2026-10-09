@@ -620,12 +620,6 @@ msgid "Files Added"
 msgstr "Failid lisatud"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "Järjekorda on lisatud {} videofaili."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "Faile ei leitud"
@@ -724,11 +718,6 @@ msgstr "Vali võrgus olevad videofailid"
 msgid "Main"
 msgstr "Peamine"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Ainult subtiitrite eraldamise režiim on sees — videot EI teisendata"
-
 msgid "Stop converting and close?"
 msgstr "Kas peatada teisendamine ja sulgeda?"
 
@@ -807,26 +796,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg ja/või MPV pole paigaldatud ning nende paigaldamisviisi sinu süsteemis ei saanud määrata.\nPaigalda need käsitsi oma distributsiooni paketihalduriga."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "Installeerimine õnnestus"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "Sõltuvused on installitud. Rakendus taaskäivitub nüüd."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "Installeerimine ebaõnnestus"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "Sõltuvusi ei leitud pärast installimist. Palun taaskäivitage rakendus käsitsi."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Arhiveerimine (AV1 + Opus)"
@@ -1647,11 +1616,6 @@ msgid "Could not open this video file"
 msgstr "Seda videofaili ei saanud avada."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "Ei suutnud avada videofaili vaikimisi mängijaga."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1873,9 +1837,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Tõrge käsu käivitamisel"
-
-msgid "Pre-command completed successfully."
-msgstr "Eelkäsk täideti edukalt."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -3629,9 +3590,6 @@ msgstr "Minutid"
 msgid "Seconds"
 msgstr "Sekundid"
 
-msgid "Centiseconds"
-msgstr "Sajandiksekundid"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -3902,12 +3860,6 @@ msgstr "Sisesta uue lõigu algus- ja lõppaeg"
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "Lisa lõik"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Kaader: {current}/{total}"
 
 msgid "Video position"
 msgstr "Video asukoht"
@@ -4673,17 +4625,6 @@ msgstr "Algfail kustutati pärast väljundi kontrollimist"
 msgid "Original preserved: {0}"
 msgstr "Algfail säilitati: {0}"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "Teisendamine lõpetatud"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -5265,18 +5206,17 @@ msgstr "1 s"
 msgid "2 s"
 msgstr "2 s"
 
-msgid "Cut Them Out"
-msgstr "Lõika need välja"
-
 msgid "Undo"
 msgstr "Võta tagasi"
 
 msgid "This video has no sound to find pauses in"
 msgstr "Selles videos pole heli, millest pause otsida"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "Kuulad rada {track}. Teised rajad saavad samad lõiked."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} paus · {duration} lühem"
@@ -5285,27 +5225,18 @@ msgstr[1] "{count} pausi · {duration} lühem"
 msgid "No pauses found. Nothing would change."
 msgstr "Pause ei leitud. Midagi ei muutuks."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "{count} osa alles jäetud"
 msgstr[1] "{count} osa alles jäetud"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Pauside otsimine: {percent}%"
 
-msgid "Pauses found"
-msgstr "Pausid leitud"
-
-msgid "Review"
-msgstr "Vaata üle"
-
 msgid "The pauses could not be measured."
 msgstr "Pause ei õnnestunud mõõta."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "{count} paus välja lõigatud"
-msgstr[1] "{count} pausi välja lõigatud"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Või eemalda pausid, et alles jääks ainult kõne."
@@ -5313,9 +5244,11 @@ msgstr "Või eemalda pausid, et alles jääks ainult kõne."
 msgid "Milliseconds"
 msgstr "Millisekundid"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "Helirada {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "Subtiiter {number}"
 
@@ -5325,10 +5258,96 @@ msgstr "Port peab olema arv vahemikus 1–65535."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Eraldatakse ainult subtiitrid; videoid ei teisendata"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "Järjekorda lisati {count} videofail."
 msgstr[1] "Järjekorda lisati {count} videofaili."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "See asendab sul olnud {count} lõigu."
+msgstr[1] "See asendab sul olnud {count} lõiku."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Algsest failist ei kustutata midagi."
+
+msgid "Play only the segments"
+msgstr "Esita ainult lõigud"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "Järjekorda on lisatud {} videofaili."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Ainult subtiitrite eraldamise režiim on sees — videot EI teisendata"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "Installeerimine õnnestus"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "Sõltuvused on installitud. Rakendus taaskäivitub nüüd."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "Installeerimine ebaõnnestus"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "Sõltuvusi ei leitud pärast installimist. Palun taaskäivitage rakendus käsitsi."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Ei suutnud avada videofaili vaikimisi mängijaga."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Eelkäsk täideti edukalt."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Sajandiksekundid"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Kaader: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "Teisendamine lõpetatud"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Lõika need välja"
+
+#~ msgid "Pauses found"
+#~ msgstr "Pausid leitud"
+
+#~ msgid "Review"
+#~ msgstr "Vaata üle"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "{count} paus välja lõigatud"
+#~ msgstr[1] "{count} pausi välja lõigatud"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32-draiv või Telegram Premium"

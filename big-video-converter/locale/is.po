@@ -585,12 +585,6 @@ msgid "Files Added"
 msgstr "Skrár bættar við"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "{} myndskeiðaskrám hefur verið bætt við biðröðina."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "Engar skrár fundust"
@@ -689,11 +683,6 @@ msgstr "Veldu myndskeiðaskrár á neti"
 msgid "Main"
 msgstr "Aðal"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Aðeins útdráttur skjátexta er virkur — myndskeiðinu verður EKKI umbreytt"
-
 msgid "Stop converting and close?"
 msgstr "Stöðva umbreytingu og loka?"
 
@@ -772,26 +761,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg og/eða MPV eru ekki uppsett og ekki var hægt að finna uppsetningarleið fyrir kerfið þitt.\nSettu þau upp handvirkt með pakkastjóra dreifingarinnar."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "Uppsetning tókst"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "Nauðsynlegir hugbúnaðarpakkar hafa verið settir upp. Forritið verður nú endurræst."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "Uppsetning mistókst"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "Nauðsynlegir hugbúnaðarpakkar fundust ekki eftir uppsetningu. Endurræstu forritið handvirkt."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Safn (AV1 + Opus)"
@@ -1612,11 +1581,6 @@ msgid "Could not open this video file"
 msgstr "Ekki tókst að opna þessa myndskeiðaskrá"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "Ekki tókst að opna myndskeiðaskrána með sjálfgefna spilaranum"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1838,9 +1802,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Villa við að keyra skipun"
-
-msgid "Pre-command completed successfully."
-msgstr "Fyrirskipun lauk án villna."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -3594,9 +3555,6 @@ msgstr "Mínútur"
 msgid "Seconds"
 msgstr "Sekúndur"
 
-msgid "Centiseconds"
-msgstr "Hundraðshlutar úr sekúndu"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -3867,12 +3825,6 @@ msgstr "Sláðu inn upphafs- og lokatíma nýja bútsins"
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "Bæta við bút"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Rammi: {current}/{total}"
 
 msgid "Video position"
 msgstr "Staðsetning í myndskeiði"
@@ -4607,17 +4559,6 @@ msgstr "Frumskrá eytt eftir sannprófun úttaks"
 #, python-brace-format
 msgid "Original preserved: {0}"
 msgstr "Frumskrá varðveitt: {0}"
-
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "Umbreytingu lokið"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
@@ -6809,18 +6750,17 @@ msgstr "1 s"
 msgid "2 s"
 msgstr "2 s"
 
-msgid "Cut Them Out"
-msgstr "Klippa þau burt"
-
 msgid "Undo"
 msgstr "Afturkalla"
 
 msgid "This video has no sound to find pauses in"
 msgstr "Þetta myndskeið hefur ekkert hljóð til að finna hlé í"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "Þú hlustar á {track}. Hinar rásirnar fá sömu klippingar."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} hlé · {duration} styttra"
@@ -6829,27 +6769,18 @@ msgstr[1] "{count} hlé · {duration} styttra"
 msgid "No pauses found. Nothing would change."
 msgstr "Engin hlé fundust. Ekkert myndi breytast."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "{count} hluta haldið"
 msgstr[1] "{count} hlutum haldið"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Leita að hléum: {percent}%"
 
-msgid "Pauses found"
-msgstr "Hlé fundust"
-
-msgid "Review"
-msgstr "Yfirfara"
-
 msgid "The pauses could not be measured."
 msgstr "Ekki tókst að mæla hléin."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "{count} hlé klippt burt"
-msgstr[1] "{count} hlé klippt burt"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Eða fjarlægðu hléin til að halda aðeins talinu."
@@ -6857,9 +6788,11 @@ msgstr "Eða fjarlægðu hléin til að halda aðeins talinu."
 msgid "Milliseconds"
 msgstr "Millisekúndur"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "Hljóðrás {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "Skjátexti {number}"
 
@@ -6869,10 +6802,96 @@ msgstr "Gáttin verður að vera tala frá 1 til 65535."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Aðeins skjátextar verða dregnir út; myndskeiðum verður ekki umbreytt"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "{count} myndskeiðsskrá var bætt í biðröðina."
 msgstr[1] "{count} myndskeiðsskrám var bætt í biðröðina."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "Þetta kemur í stað {count} búts sem þú áttir."
+msgstr[1] "Þetta kemur í stað {count} búta sem þú áttir."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Engu er eytt úr upprunalegu skránni."
+
+msgid "Play only the segments"
+msgstr "Spila aðeins bútana"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "{} myndskeiðaskrám hefur verið bætt við biðröðina."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Aðeins útdráttur skjátexta er virkur — myndskeiðinu verður EKKI umbreytt"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "Uppsetning tókst"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "Nauðsynlegir hugbúnaðarpakkar hafa verið settir upp. Forritið verður nú endurræst."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "Uppsetning mistókst"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "Nauðsynlegir hugbúnaðarpakkar fundust ekki eftir uppsetningu. Endurræstu forritið handvirkt."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Ekki tókst að opna myndskeiðaskrána með sjálfgefna spilaranum"
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Fyrirskipun lauk án villna."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Hundraðshlutar úr sekúndu"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Rammi: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "Umbreytingu lokið"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Klippa þau burt"
+
+#~ msgid "Pauses found"
+#~ msgstr "Hlé fundust"
+
+#~ msgid "Review"
+#~ msgstr "Yfirfara"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "{count} hlé klippt burt"
+#~ msgstr[1] "{count} hlé klippt burt"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32-drif eða Telegram Premium"

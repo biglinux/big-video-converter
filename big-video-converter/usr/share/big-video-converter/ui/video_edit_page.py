@@ -70,7 +70,10 @@ class VideoEditPage:
         # Building the UI below already fires handlers that read the player.
         self.mpv_player = None
         self.processor = VideoProcessor(self)
-        self.proposed_pauses = []  # found pauses previewed on the timeline
+        # Preview only the segments, as the joined export plays them.
+        self.segments_only = False
+        self.playback_speed = 1.0
+        self._segment_jump_id = None
         self.ui = VideoEditUI(self)
         self.page = self.ui.create_page()
         self.mpv_player = MPVPlayer(self.ui.preview_video)
@@ -175,8 +178,8 @@ class VideoEditPage:
     def _sync_pauses(self):
         # The pause finder sits in the trim group, which main.py puts into the
         # app's sidebar after this page exists.
-        if hasattr(self.ui, "pause_popover"):
-            self.ui.pause_popover.sync()
+        if hasattr(self.ui, "pause_panel"):
+            self.ui.pause_panel.sync()
 
     def _update_ui_from_metadata(self):
         self._restoring_metadata = True
@@ -326,6 +329,7 @@ class VideoEditPage:
         if self.position_update_id:
             GLib.source_remove(self.position_update_id)
             self.position_update_id = None
+        self._cancel_segment_jump()
 
         if self._seek_cooldown_timer_id is not None:
             GLib.source_remove(self._seek_cooldown_timer_id)
@@ -688,6 +692,8 @@ class VideoEditPage:
         )
         self.ui.update_segment_actions(len(self.trim_segments))
         self.ui.update_segment_markers()
+        if hasattr(self.ui, "pause_panel"):
+            self.ui.pause_panel.segments_changed()
 
     def _on_goto_segment_clicked(self, button, start_time):
         self.ui.position_scale.set_value(start_time)
@@ -1087,7 +1093,16 @@ class VideoEditPage:
             if self.position_update_id:
                 GLib.source_remove(self.position_update_id)
                 self.position_update_id = None
+            self._cancel_segment_jump()
         else:
+            if self.segments_only:
+                end, later = self.next_segment_stop(
+                    self.trim_segments, self.current_position
+                )
+                if end is None:
+                    # Outside the segments: start at the next one, or the first.
+                    first = min((s["start"] for s in self.trim_segments), default=0)
+                    self.ui.position_scale.set_value(first if later is None else later)
             self.mpv_player.play()
             self.is_playing = True
             self.ui.play_pause_button.set_icon_name("media-playback-pause-symbolic")
@@ -1113,7 +1128,63 @@ class VideoEditPage:
             self.ui.position_scale.handler_unblock(self.position_changed_handler_id)
         self.update_position_display(pos)
         self.update_frame_counter(pos)
+        if self.segments_only:
+            self._follow_segments(pos)
         return True
+
+    @staticmethod
+    def next_segment_stop(segments, position):
+        """Where playing only the segments goes from position.
+
+        Returns the end of the segment being played, or else the start of the
+        next one; neither once past the last segment.
+        """
+        later = None
+        for segment in sorted(segments, key=lambda s: s["start"]):
+            if segment["start"] <= position < segment["end"]:
+                return segment["end"], None
+            if segment["start"] > position and later is None:
+                later = segment["start"]
+        return None, later
+
+    def on_segments_only_toggled(self, button) -> None:
+        self.segments_only = button.get_active()
+        self._cancel_segment_jump()
+        if self.segments_only and self.is_playing:
+            self._follow_segments(self.current_position)
+
+    def _follow_segments(self, position):
+        """Jump over what the segments leave out; stop after the last one."""
+        end, later = self.next_segment_stop(self.trim_segments, position)
+        if end is None:
+            if later is None:
+                self.on_play_pause_clicked(None)
+            else:
+                self.ui.position_scale.set_value(later)
+            return
+        # Position polling every 100 ms would let up to 100 ms of the left-out
+        # part play: the last stretch of a segment is timed exactly.
+        remaining = (end - position) / max(self.playback_speed, 0.1)
+        if remaining < 0.15 and self._segment_jump_id is None:
+            self._segment_jump_id = GLib.timeout_add(
+                max(1, round(remaining * 1000)), self._jump_past_segment, end
+            )
+
+    def _jump_past_segment(self, end):
+        self._segment_jump_id = None
+        if self.segments_only and self.is_playing:
+            inside, later = self.next_segment_stop(self.trim_segments, end)
+            if inside is None:
+                if later is None:
+                    self.on_play_pause_clicked(None)
+                else:
+                    self.ui.position_scale.set_value(later)
+        return GLib.SOURCE_REMOVE
+
+    def _cancel_segment_jump(self):
+        if self._segment_jump_id is not None:
+            GLib.source_remove(self._segment_jump_id)
+            self._segment_jump_id = None
 
     def on_volume_changed(self, scale) -> None:
         volume = scale.get_value()
@@ -1131,6 +1202,7 @@ class VideoEditPage:
 
     def on_speed_changed(self, speed: float) -> None:
         """Handle playback speed change."""
+        self.playback_speed = speed
         if self.mpv_player:
             self.mpv_player.set_speed(speed)
 

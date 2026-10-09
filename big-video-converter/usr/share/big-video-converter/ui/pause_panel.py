@@ -1,12 +1,19 @@
-"""Find the pauses of the edited video, preview them and cut them out."""
+"""Find the pauses of the edited video and keep the speech between them.
+
+The segments are what is exported, so the pauses go by making the speech the
+segments, joined into one video. The panel sits in the editor's sidebar, so
+an analysis of a long video can be followed and cancelled while the rest of
+the editor stays usable.
+"""
 
 import gettext
 import shutil
 import weakref
+from typing import NamedTuple
 
 from gi.repository import Adw, Gtk
 from utils.ffmpeg_path import get_ffmpeg_executable
-from utils.pauses import PAUSE_LENGTHS, PauseFinder, find_pauses
+from utils.pauses import PAUSE_LENGTHS, STEP, PauseFinder, find_pauses
 
 _ = gettext.gettext
 
@@ -23,101 +30,38 @@ def kept_parts(pauses, end):
     return kept
 
 
-class PausePopover(Gtk.Popover):
+class Undo(NamedTuple):
+    """What marking replaced, kept until the video or its segments change."""
+
+    video: str
+    segments: list
+    output_mode: str
+    applied: list
+
+
+class PausePanel(Adw.PreferencesGroup):
     def __init__(self, page):
-        super().__init__()
+        super().__init__(
+            title=_("Remove pauses"),
+            description=_(
+                "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
+            ),
+        )
         self.page = weakref.ref(page)
         self.finder = PauseFinder()
         self.source = None  # (path, audio track) the levels belong to
         self.levels = None
         self.pauses = []
-        # (video, previous segments, previous output mode, applied segments)
         self.undo = None
+        owner = weakref.proxy(self)
 
-        box = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL,
-            spacing=12,
-            width_request=320,
-            margin_top=12,
-            margin_bottom=12,
-            margin_start=12,
-            margin_end=12,
-        )
-        box.append(
-            Gtk.Label(label=_("Remove pauses"), xalign=0, css_classes=["heading"])
-        )
-        box.append(
-            Gtk.Label(
-                label=_(
-                    "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-                ),
-                xalign=0,
-                wrap=True,
-                max_width_chars=40,
-                css_classes=["dim-label"],
-            )
-        )
-        # Which track, when there is a choice; the cuts apply to every track.
-        self.track_label = Gtk.Label(
-            xalign=0, wrap=True, max_width_chars=40, visible=False
-        )
-        box.append(self.track_label)
-        self.stack = Gtk.Stack(vhomogeneous=False)
-        box.append(self.stack)
-
-        self.stack.add_named(
-            Gtk.Label(
-                label=_("Unavailable: install {package}").format(
-                    package="dpdfnet-native"
-                ),
-                xalign=0,
-                wrap=True,
-            ),
-            "missing",
-        )
-
-        start = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        start.append(
-            Gtk.Label(
-                label=_("Takes about a minute for each hour of audio."),
-                xalign=0,
-                wrap=True,
-            )
-        )
-        find = Gtk.Button(label=_("Find Pauses"), css_classes=["suggested-action"])
-        find.connect("clicked", self._on_find)
-        start.append(find)
-        self.stack.add_named(start, "start")
-
-        busy = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        self.progress = Gtk.ProgressBar(show_text=True)
-        self.progress.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Finding pauses")]
-        )
-        busy.append(self.progress)
-        cancel = Gtk.Button(label=_("Cancel"))
-        cancel.connect("clicked", self._on_cancel)
-        busy.append(cancel)
-        self.stack.add_named(busy, "busy")
-
-        failed = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        self.error = Gtk.Label(xalign=0, wrap=True, max_width_chars=40)
-        failed.append(self.error)
-        retry = Gtk.Button(label=_("Try Again"))
-        retry.connect("clicked", self._on_find)
-        failed.append(retry)
-        self.stack.add_named(failed, "failed")
-
-        ready = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        length_label = Gtk.Label(label=_("Pauses longer than"), xalign=0)
-        ready.append(length_label)
         lengths = Gtk.Box(
             css_classes=["linked"],
-            homogeneous=True,
+            valign=Gtk.Align.CENTER,
             accessible_role=Gtk.AccessibleRole.GROUP,
         )
         lengths.update_property(
-            [Gtk.AccessibleProperty.LABEL], [length_label.get_label()]
+            [Gtk.AccessibleProperty.LABEL], [_("Pauses longer than")]
         )
         self.length_buttons = []
         for seconds, label in zip(
@@ -129,38 +73,46 @@ class PausePopover(Gtk.Popover):
             button.seconds = seconds
             lengths.append(button)
             self.length_buttons.append(button)
-        ready.append(lengths)
-        self.summary = Gtk.Label(xalign=0, wrap=True)
-        ready.append(self.summary)
-        self.apply_button = Gtk.Button(
-            label=_("Cut Them Out"), css_classes=["suggested-action"]
-        )
-        self.apply_button.connect("clicked", self._on_apply)
-        ready.append(self.apply_button)
-        self.stack.add_named(ready, "ready")
+        self.length_row = Adw.ActionRow(title=_("Pauses longer than"))
+        self.length_row.add_suffix(lengths)
+        self.add(self.length_row)
 
-        self.undo_box = Gtk.Box(spacing=12, visible=False)
-        self.undo_label = Gtk.Label(xalign=0, hexpand=True, wrap=True)
-        self.undo_box.append(self.undo_label)
-        undo = Gtk.Button(label=_("Undo"))
-        undo.connect("clicked", self.undo_apply)
-        self.undo_box.append(undo)
-        box.append(self.undo_box)
-        self.set_child(box)
+        # One row says where the analysis stands and offers its next step.
+        self.status_row = Adw.ActionRow(title_lines=3, subtitle_lines=3)
+        self.actions = Gtk.Stack(valign=Gtk.Align.CENTER, hhomogeneous=False)
+        for name, label, handler, suggested in (
+            ("find", _("Find Pauses"), lambda _b: owner._on_find(), True),
+            ("cancel", _("Cancel"), lambda _b: owner._on_cancel(), False),
+            ("retry", _("Try Again"), lambda _b: owner._on_find(), False),
+        ):
+            button = Gtk.Button(label=label)
+            if suggested:
+                button.add_css_class("suggested-action")
+            button.connect("clicked", handler)
+            self.actions.add_named(button, name)
+        self.status_row.add_suffix(self.actions)
+        self.add(self.status_row)
 
-        # The button shows a spinner in place of its icon while working.
-        self.icon = Gtk.Stack()
-        self.icon.add_named(Gtk.Image(icon_name="edit-cut-symbolic"), "idle")
-        self.icon.add_named(Gtk.Spinner(spinning=True), "busy")
-        content = Gtk.Box(spacing=6)
-        content.append(self.icon)
-        content.append(Gtk.Label(label=_("Remove pauses")))
-        self.button = Gtk.MenuButton(
-            child=content, popover=self, halign=Gtk.Align.START
+        self.progress = Gtk.ProgressBar(
+            show_text=True,
+            margin_start=12,
+            margin_end=12,
+            margin_top=10,
+            margin_bottom=10,
         )
-        self.button.update_property(
-            [Gtk.AccessibleProperty.LABEL], [_("Remove pauses")]
+        self.progress.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Finding pauses")]
         )
+        self.progress_row = Gtk.ListBoxRow(
+            child=self.progress, activatable=False, selectable=False, visible=False
+        )
+        self.add(self.progress_row)
+
+        self.undo_row = Adw.ActionRow(visible=False, subtitle_lines=4)
+        undo = Gtk.Button(label=_("Undo"), valign=Gtk.Align.CENTER)
+        undo.connect("clicked", lambda _b: owner.undo_apply())
+        self.undo_row.add_suffix(undo)
+        self.add(self.undo_row)
 
         try:
             chosen = PAUSE_LENGTHS.index(
@@ -171,12 +123,10 @@ class PausePopover(Gtk.Popover):
         # Connected after showing the saved choice, which is no new choice.
         self.length_buttons[chosen].set_active(True)
         for button in self.length_buttons:
-            button.connect("toggled", self._on_length_toggled)
-        self.connect("show", self._on_show)
-        self.connect("closed", self._on_closed)
+            button.connect("toggled", lambda b: owner._on_length_toggled(b))
+        # Coming back to the editor re-checks the video and dpdfnet-native.
+        self.connect("map", lambda _panel: owner.sync())
         self.sync()
-
-    # State
 
     def _current(self):
         """The edited video and its audio track in the preview, 0-based."""
@@ -197,35 +147,35 @@ class PausePopover(Gtk.Popover):
     def sync(self):
         """Follow the edited video and track: drop what belongs to another."""
         current, tracks = self._current()
-        self.button.set_sensitive(current is not None)
-        page = self.page()
-        self.button.set_tooltip_text(
-            None
-            if current
-            else _("This video has no sound to find pauses in")
-            if page and page.current_video_path
-            else None
-        )
-        if len(tracks) > 1 and current:
-            self.track_label.set_label(
-                _("Listening to {track}. The other tracks get the same cuts.").format(
-                    track=tracks[current[1]]["label"]
-                )
+        self.set_sensitive(current is not None)
+        self.status_row.set_subtitle(
+            _("Listening to {track}. The other tracks get the same cuts.").format(
+                track=tracks[current[1]]["label"]
             )
-        self.track_label.set_visible(len(tracks) > 1 and current is not None)
+            if current and len(tracks) > 1
+            else ""
+        )
         if current == self.source:
+            # dpdfnet-native may have been installed since the last look.
+            if self.levels is None and not self.finder.busy:
+                self._show_state()
             return
         self.finder.cancel()
         self.source = current
         self.levels = None
+        self.undo = None
         self._show_state()
 
     def _length(self):
         return next(b.seconds for b in self.length_buttons if b.get_active())
 
     def _show_state(self, name=None):
+        page = self.page()
+        self._show_undo()
         if name is None:
-            if self.finder.busy:
+            if self.source is None:
+                name = "silent" if page and page.current_video_path else "idle"
+            elif self.finder.busy:
                 name = "busy"
             elif self.levels is not None:
                 name = "ready"
@@ -233,21 +183,36 @@ class PausePopover(Gtk.Popover):
                 name = "missing"
             else:
                 name = "start"
-        self.stack.set_visible_child_name(name)
-        self.icon.set_visible_child_name("busy" if name == "busy" else "idle")
-        if name != "busy":
-            self.button.update_property([Gtk.AccessibleProperty.DESCRIPTION], [""])
-        if name == "ready":
-            self._find()
-        self._show_undo()
+        self.progress_row.set_visible(name == "busy")
+        # Once edited, the segments are the person's; finding again marks anew.
+        self.actions.set_visible(
+            name in ("start", "busy", "failed")
+            or (name == "ready" and bool(self.pauses) and self.undo is None)
+        )
+        self.length_row.set_sensitive(name != "missing")
+        if name in ("start", "ready"):
+            self.actions.set_visible_child_name("find")
+        if name == "start":
+            self.status_row.set_title(_("Takes about a minute for each hour of audio."))
+        elif name == "busy":
+            self.status_row.set_title(_("Finding pauses"))
+            self.actions.set_visible_child_name("cancel")
+        elif name == "missing":
+            self.status_row.set_title(
+                _("Unavailable: install {package}").format(package="dpdfnet-native")
+            )
+        elif name == "silent":
+            self.status_row.set_title(_("This video has no sound to find pauses in"))
+        elif name == "idle":
+            self.status_row.set_title("")
+        elif name == "ready":
+            self.status_row.set_title(self._pause_summary())
 
-    def _find(self):
-        """Pauses at the chosen length, previewed on the timeline while open."""
-        self.pauses = find_pauses(self.levels, self._length())
+    def _pause_summary(self):
         count = len(self.pauses)
         removed = sum(p["stop"] - p["start"] for p in self.pauses)
         page = self.page()
-        self.summary.set_label(
+        return (
             gettext.ngettext(
                 "{count} pause · {duration} shorter",
                 "{count} pauses · {duration} shorter",
@@ -261,35 +226,46 @@ class PausePopover(Gtk.Popover):
             if count
             else _("No pauses found. Nothing would change.")
         )
-        self.apply_button.set_sensitive(bool(count))
-        self._preview(self.pauses if self.get_visible() else [])
-
-    def _preview(self, pauses):
-        page = self.page()
-        if page:
-            page.proposed_pauses = pauses
-            if pauses:
-                page.ui._show_controls()  # the timeline that shows them
-            page.ui.update_segment_markers()
 
     def _show_undo(self):
         page = self.page()
-        here = bool(page and self.undo and self.undo[0] == page.current_video_path)
-        if here and page.trim_segments != self.undo[3]:
-            self.undo = None  # edited since: no longer the cut that was applied
-        visible = here and self.undo is not None
-        self.undo_box.set_visible(visible)
+        if self.undo and (
+            page is None
+            or self.undo.video != page.current_video_path
+            or page.trim_segments != self.undo.applied
+        ):
+            self.undo = None  # edited since: no longer the segments it made
+        visible = self.undo is not None
+        self.undo_row.set_visible(visible)
+        # Once marked, one row says it all: the result, what it replaced and
+        # that it can be undone.
+        self.status_row.set_visible(not visible)
         if visible:
-            count = len(self.undo[3])
-            self.undo_label.set_label(
+            count = len(self.undo.applied)
+            self.undo_row.set_title(
                 gettext.ngettext(
                     "{count} part kept", "{count} parts kept", count
                 ).format(count=count)
             )
+            notes = [self._pause_summary()]
+            replaced = len(self.undo.segments)
+            if replaced:
+                notes.append(
+                    gettext.ngettext(
+                        "This replaces the {count} segment you had.",
+                        "This replaces the {count} segments you had.",
+                        replaced,
+                    ).format(count=replaced)
+                )
+            notes.append(_("Nothing is deleted from the original file."))
+            self.undo_row.set_subtitle("\n".join(notes))
 
-    # Actions
+    def segments_changed(self):
+        """An edit after marking makes the segments the person's again."""
+        if self.undo:
+            self._show_state()
 
-    def _on_find(self, _button):
+    def _on_find(self):
         current, _tracks = self._current()
         page = self.page()
         if current is None or page is None:
@@ -301,14 +277,14 @@ class PausePopover(Gtk.Popover):
             return
         self.levels = self.finder.cached(key)
         if self.levels is not None:
-            self._show_state()
+            self._mark()
             return
         denoiser = shutil.which("dpdfnet-enhance")
         if not denoiser:
             self._show_state("missing")
             return
         self.progress.set_fraction(0)
-        self.progress.set_text(None)
+        self.progress.set_text(_("{percent}%").format(percent="0"))
         owner = weakref.proxy(self)
         self.finder.start(
             key,
@@ -325,27 +301,20 @@ class PausePopover(Gtk.Popover):
         self.progress.set_fraction(fraction)
         percent = f"{fraction * 100:.0f}"
         self.progress.set_text(_("{percent}%").format(percent=percent))
-        self.button.update_property(
-            [Gtk.AccessibleProperty.DESCRIPTION],
-            [_("Finding pauses: {percent}%").format(percent=percent)],
+        self.status_row.set_title(
+            _("Finding pauses: {percent}%").format(percent=percent)
         )
 
     def _on_found(self, levels):
         self.levels = levels
-        self._show_state()
-        page = self.page()
-        if page and not self.get_visible():
-            # The analysis ran in the background: say so where it can be reopened.
-            toast = Adw.Toast(title=_("Pauses found"), button_label=_("Review"))
-            button = weakref.ref(self.button)
-            toast.connect("button-clicked", lambda _t: button() and button().popup())
-            page.app.toast_overlay.add_toast(toast)
+        self._mark()
 
     def _fail(self, message):
-        self.error.set_label(message or _("The pauses could not be measured."))
         self._show_state("failed")
+        self.status_row.set_title(message or _("The pauses could not be measured."))
+        self.actions.set_visible_child_name("retry")
 
-    def _on_cancel(self, _button):
+    def _on_cancel(self):
         self.finder.cancel()
         self._show_state()
 
@@ -356,22 +325,7 @@ class PausePopover(Gtk.Popover):
         if page:
             page.settings.save_setting("pause-length", button.seconds)
         if self.levels is not None:
-            self._find()
-
-    def _on_show(self, _popover):
-        self.sync()
-        # dpdfnet-native may have been installed while the window was open.
-        if self.stack.get_visible_child_name() == "missing":
-            self._show_state()
-        self._show_undo()
-        if self.stack.get_visible_child_name() == "ready":
-            self._preview(self.pauses)
-
-    def _on_closed(self, _popover):
-        self._preview([])
-        page = self.page()
-        if page and page.is_playing:
-            page.ui._schedule_hide_controls()
+            self._mark()
 
     def _set_segments(self, page, segments, mode):
         page.trim_segments = [dict(s) for s in segments]
@@ -385,40 +339,35 @@ class PausePopover(Gtk.Popover):
         page._save_file_metadata()
         page._update_segments_listbox()
 
-    def _on_apply(self, _button):
-        page = self.page()
-        if page is None or not self.pauses or not page.video_duration:
-            return
-        previous = ([dict(s) for s in page.trim_segments], page.output_mode)
-        self._preview([])
-        kept = kept_parts(self.pauses, page.video_duration)
-        # The parts between the pauses are joined into one video.
-        self._set_segments(page, kept, "join")
-        self.undo = (page.current_video_path, *previous, [dict(s) for s in kept])
-        count = len(self.pauses)
-        toast = Adw.Toast(
-            title=gettext.ngettext(
-                "{count} pause cut out", "{count} pauses cut out", count
-            ).format(count=count),
-            button_label=_("Undo"),
-        )
-        owner = weakref.proxy(self)
-        toast.connect("button-clicked", lambda _t: owner.undo_apply())
-        page.app.toast_overlay.add_toast(toast)
-        self._show_undo()
-        self.popdown()
+    def _mark(self):
+        """Make the speech found the segments, joined: the pauses go.
 
-    def undo_apply(self, *_args):
+        A new length replaces the segments the last one made, not the person's.
+        """
+        page = self.page()
+        if page is None:
+            return
+        self.undo_apply()
+        self.pauses = find_pauses(self.levels, self._length())
+        if self.pauses:
+            previous = ([dict(s) for s in page.trim_segments], page.output_mode)
+            # The probed length; the levels end where the audio track does.
+            end = page.video_duration or round(len(self.levels) * STEP, 3)
+            kept = kept_parts(self.pauses, end)
+            self._set_segments(page, kept, "join")
+            self.undo = Undo(page.current_video_path, *previous, kept)
+        self._show_state()
+
+    def undo_apply(self):
         page = self.page()
         if (
             page is None
             or not self.undo
-            or self.undo[0] != page.current_video_path
-            or page.trim_segments != self.undo[3]
+            or self.undo.video != page.current_video_path
+            or page.trim_segments != self.undo.applied
         ):
             return
-        _video, segments, mode, _applied = self.undo
+        segments, mode = self.undo.segments, self.undo.output_mode
         self.undo = None
         self._set_segments(page, segments, mode)
-        self._show_undo()
-        self.popdown()
+        self._show_state()

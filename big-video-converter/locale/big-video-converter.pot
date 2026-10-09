@@ -384,8 +384,10 @@ msgid "Files Added"
 msgstr ""
 
 #, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr ""
+msgid "{count} video file has been added to the queue."
+msgid_plural "{count} video files have been added to the queue."
+msgstr[0] ""
+msgstr[1] ""
 
 msgid "No Files Found"
 msgstr ""
@@ -425,6 +427,9 @@ msgstr ""
 msgid "Please enter a server address."
 msgstr ""
 
+msgid "The port must be a number from 1 to 65535."
+msgstr ""
+
 msgid "Connecting..."
 msgstr ""
 
@@ -444,7 +449,7 @@ msgstr ""
 msgid "Main"
 msgstr ""
 
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr ""
 
 msgid "Stop converting and close?"
@@ -510,18 +515,6 @@ msgstr ""
 msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
-msgstr ""
-
-msgid "Installation Successful"
-msgstr ""
-
-msgid "Dependencies have been installed. The application will now restart."
-msgstr ""
-
-msgid "Installation Failed"
-msgstr ""
-
-msgid "Dependencies were not found after installation. Please restart the application manually."
 msgstr ""
 
 msgid "Archive (AV1 + Opus)"
@@ -763,6 +756,10 @@ msgid "50%"
 msgstr ""
 
 msgid "100%"
+msgstr ""
+
+#, python-brace-format
+msgid "{percent}%"
 msgstr ""
 
 msgid "Light — DeepFilterNet3"
@@ -1062,9 +1059,6 @@ msgstr ""
 msgid "Could not open this video file"
 msgstr ""
 
-msgid "Could not open the video file with the default player"
-msgstr ""
-
 msgid "Could not find this video file"
 msgstr ""
 
@@ -1254,13 +1248,10 @@ msgstr ""
 msgid "Error running command"
 msgstr ""
 
-msgid "Pre-command completed successfully."
+msgid "Command failed with exit code"
 msgstr ""
 
 msgid "Installation completed successfully!"
-msgstr ""
-
-msgid "Command failed with exit code"
 msgstr ""
 
 msgid "Please restart the application."
@@ -1447,6 +1438,77 @@ msgstr ""
 msgid "Shape the sound spectrum: boost clarity, cut rumble or apply ready-made presets like Podcast or De-esser."
 msgstr ""
 
+msgid "Remove pauses"
+msgstr ""
+
+msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
+msgstr ""
+
+msgid "Pauses longer than"
+msgstr ""
+
+msgid "0.5 s"
+msgstr ""
+
+msgid "1 s"
+msgstr ""
+
+msgid "2 s"
+msgstr ""
+
+msgid "Find Pauses"
+msgstr ""
+
+msgid "Try Again"
+msgstr ""
+
+msgid "Finding pauses"
+msgstr ""
+
+msgid "Undo"
+msgstr ""
+
+#, python-brace-format
+msgid "Listening to {track}. The other tracks get the same cuts."
+msgstr ""
+
+msgid "Takes about a minute for each hour of audio."
+msgstr ""
+
+msgid "This video has no sound to find pauses in"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} pause · {duration} shorter"
+msgid_plural "{count} pauses · {duration} shorter"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "No pauses found. Nothing would change."
+msgstr ""
+
+#, python-brace-format
+msgid "{count} part kept"
+msgid_plural "{count} parts kept"
+msgstr[0] ""
+msgstr[1] ""
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Nothing is deleted from the original file."
+msgstr ""
+
+#, python-brace-format
+msgid "Finding pauses: {percent}%"
+msgstr ""
+
+msgid "The pauses could not be measured."
+msgstr ""
+
 msgid "Copy"
 msgstr ""
 
@@ -1602,10 +1664,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "Saved as “{0}” in {1}"
-msgstr ""
-
-#, python-brace-format
-msgid "{percent}%"
 msgstr ""
 
 #, python-brace-format
@@ -1998,23 +2056,6 @@ msgstr ""
 msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
 msgstr ""
 
-#, python-brace-format
-msgid "Segment {num}"
-msgstr ""
-
-#, python-brace-format
-msgid "{start} → {end} ({duration})"
-msgstr ""
-
-msgid "Go to segment start"
-msgstr ""
-
-msgid "Edit segment times"
-msgstr ""
-
-msgid "Remove segment"
-msgstr ""
-
 msgid "Hours"
 msgstr ""
 
@@ -2024,7 +2065,7 @@ msgstr ""
 msgid "Seconds"
 msgstr ""
 
-msgid "Centiseconds"
+msgid "Milliseconds"
 msgstr ""
 
 msgid "Edit Segment"
@@ -2077,7 +2118,7 @@ msgid "Add Segment"
 msgstr ""
 
 #, python-brace-format
-msgid "Frame: {current}/{total}"
+msgid "Frame: {current} / {total}"
 msgstr ""
 
 msgid "Video position"
@@ -2090,6 +2131,9 @@ msgid "Mark segment point"
 msgstr ""
 
 msgid "Cancel current mark"
+msgstr ""
+
+msgid "Play only the segments"
 msgstr ""
 
 msgid "Back 1 second (Left)"
@@ -2130,10 +2174,6 @@ msgid "Audio Track"
 msgstr ""
 
 msgid "Toggle Fullscreen"
-msgstr ""
-
-#, python-brace-format
-msgid "Frame: {current} / {total}"
 msgstr ""
 
 msgid "Left"
@@ -2256,6 +2296,9 @@ msgstr ""
 msgid "Press M or use the mark button to add segments"
 msgstr ""
 
+msgid "Or remove the pauses to keep only the speech."
+msgstr ""
+
 msgid "Join segments into a single file"
 msgstr ""
 
@@ -2311,6 +2354,23 @@ msgid "Choose a Look or Shader"
 msgstr ""
 
 msgid "Looks and shaders"
+msgstr ""
+
+msgid "Edit segment times"
+msgstr ""
+
+msgid "Remove segment"
+msgstr ""
+
+msgid "Go to segment start"
+msgstr ""
+
+#, python-brace-format
+msgid "Segment {num}"
+msgstr ""
+
+#, python-brace-format
+msgid "{start} → {end} ({duration})"
 msgstr ""
 
 #, python-brace-format
@@ -2592,12 +2652,6 @@ msgstr ""
 msgid "Original preserved: {0}"
 msgstr ""
 
-msgid "Conversion Complete"
-msgstr ""
-
-msgid "Conversion completed successfully!"
-msgstr ""
-
 msgid "The full FFmpeg comes from the RPM Fusion repository, which must be enabled first. The command replaces the limited ffmpeg-free package."
 msgstr ""
 
@@ -2686,6 +2740,14 @@ msgid "Language"
 msgstr ""
 
 msgid "Copy language code"
+msgstr ""
+
+#, python-brace-format
+msgid "Audio track {number}"
+msgstr ""
+
+#, python-brace-format
+msgid "Subtitle {number}"
 msgstr ""
 
 msgid "Sample Rate"
@@ -2915,6 +2977,9 @@ msgstr[1] ""
 msgid "Conversion completed successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgstr ""
 
+msgid "Conversion completed successfully!"
+msgstr ""
+
 #, python-brace-format
 msgid "All {0} segment has been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
 msgid_plural "All {0} segments have been joined successfully! The video was re-encoded because a cut did not start on a keyframe."
@@ -3007,98 +3072,3 @@ msgstr ""
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
 msgstr ""
-
-msgid "Remove pauses"
-msgstr ""
-
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr ""
-
-msgid "Takes about a minute for each hour of audio."
-msgstr ""
-
-msgid "Find Pauses"
-msgstr ""
-
-msgid "Finding pauses"
-msgstr ""
-
-msgid "Try Again"
-msgstr ""
-
-msgid "Pauses longer than"
-msgstr ""
-
-msgid "0.5 s"
-msgstr ""
-
-msgid "1 s"
-msgstr ""
-
-msgid "2 s"
-msgstr ""
-
-msgid "Cut Them Out"
-msgstr ""
-
-msgid "Undo"
-msgstr ""
-
-msgid "This video has no sound to find pauses in"
-msgstr ""
-
-msgid "Listening to {track}. The other tracks get the same cuts."
-msgstr ""
-
-msgid "{count} pause · {duration} shorter"
-msgid_plural "{count} pauses · {duration} shorter"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "No pauses found. Nothing would change."
-msgstr ""
-
-msgid "{count} part kept"
-msgid_plural "{count} parts kept"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "Finding pauses: {percent}%"
-msgstr ""
-
-msgid "Pauses found"
-msgstr ""
-
-msgid "Review"
-msgstr ""
-
-msgid "The pauses could not be measured."
-msgstr ""
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "Or remove the pauses to keep only the speech."
-msgstr ""
-
-msgid "Milliseconds"
-msgstr ""
-
-msgid "Audio track {number}"
-msgstr ""
-
-msgid "Subtitle {number}"
-msgstr ""
-
-msgid "The port must be a number from 1 to 65535."
-msgstr ""
-
-msgid "Only subtitles will be extracted; videos will not be converted"
-msgstr ""
-
-msgid "{count} video file has been added to the queue."
-msgid_plural "{count} video files have been added to the queue."
-msgstr[0] ""
-msgstr[1] ""

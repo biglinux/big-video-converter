@@ -483,10 +483,6 @@ msgstr "Select Folder with Video Files"
 msgid "Files Added"
 msgstr "Files Added"
 
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "{} video files have been added to the queue."
-
 msgid "No Files Found"
 msgstr "No Files Found"
 
@@ -545,9 +541,6 @@ msgstr "Select Network Video Files"
 
 msgid "Main"
 msgstr "Main"
-
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Subtitle extraction only mode is active — video will NOT be converted"
 
 msgid "Stop converting and close?"
 msgstr "Stop converting and close?"
@@ -619,18 +612,6 @@ msgid ""
 msgstr ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
-
-msgid "Installation Successful"
-msgstr "Installation Successful"
-
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "Dependencies have been installed. The application will now restart."
-
-msgid "Installation Failed"
-msgstr "Installation Failed"
-
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "Dependencies were not found after installation. Please restart the application manually."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Archive (AV1 + Opus)"
@@ -1173,9 +1154,6 @@ msgstr "Select the output folder"
 msgid "Could not open this video file"
 msgstr "Could not open this video file"
 
-msgid "Could not open the video file with the default player"
-msgstr "Could not open the video file with the default player"
-
 msgid "Could not find this video file"
 msgstr "Could not find this video file"
 
@@ -1368,9 +1346,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Error running command"
-
-msgid "Pre-command completed successfully."
-msgstr "Pre-command completed successfully."
 
 msgid "Installation completed successfully!"
 msgstr "Installation completed successfully!"
@@ -2151,9 +2126,6 @@ msgstr "Minutes"
 msgid "Seconds"
 msgstr "Seconds"
 
-msgid "Centiseconds"
-msgstr "Centiseconds"
-
 msgid "Edit Segment"
 msgstr "Edit Segment"
 
@@ -2202,10 +2174,6 @@ msgstr "Enter start and end times for the new segment"
 
 msgid "Add Segment"
 msgstr "Add Segment"
-
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Frame: {current}/{total}"
 
 msgid "Video position"
 msgstr "Video position"
@@ -2735,9 +2703,6 @@ msgstr "Original deleted after output validation"
 msgid "Original preserved: {0}"
 msgstr "Original preserved: {0}"
 
-msgid "Conversion Complete"
-msgstr "Conversion Complete"
-
 msgid "Conversion completed successfully!"
 msgstr "Conversion completed successfully!"
 
@@ -3181,18 +3146,17 @@ msgstr "1 s"
 msgid "2 s"
 msgstr "2 s"
 
-msgid "Cut Them Out"
-msgstr "Cut Them Out"
-
 msgid "Undo"
 msgstr "Undo"
 
 msgid "This video has no sound to find pauses in"
 msgstr "This video has no sound to find pauses in"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "Listening to {track}. The other tracks get the same cuts."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} pause · {duration} shorter"
@@ -3201,27 +3165,18 @@ msgstr[1] "{count} pauses · {duration} shorter"
 msgid "No pauses found. Nothing would change."
 msgstr "No pauses found. Nothing would change."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "{count} part kept"
 msgstr[1] "{count} parts kept"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Finding pauses: {percent}%"
 
-msgid "Pauses found"
-msgstr "Pauses found"
-
-msgid "Review"
-msgstr "Review"
-
 msgid "The pauses could not be measured."
 msgstr "The pauses could not be measured."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "{count} pause cut out"
-msgstr[1] "{count} pauses cut out"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Or remove the pauses to keep only the speech."
@@ -3229,9 +3184,11 @@ msgstr "Or remove the pauses to keep only the speech."
 msgid "Milliseconds"
 msgstr "Milliseconds"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "Audio track {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "Subtitle {number}"
 
@@ -3241,7 +3198,69 @@ msgstr "The port must be a number from 1 to 65535."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Only subtitles will be extracted; videos will not be converted"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "{count} video file has been added to the queue."
 msgstr[1] "{count} video files have been added to the queue."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "This replaces the {count} segment you had."
+msgstr[1] "This replaces the {count} segments you had."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Nothing is deleted from the original file."
+
+msgid "Play only the segments"
+msgstr "Play only the segments"
+
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "{} video files have been added to the queue."
+
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+
+#~ msgid "Installation Successful"
+#~ msgstr "Installation Successful"
+
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "Dependencies have been installed. The application will now restart."
+
+#~ msgid "Installation Failed"
+#~ msgstr "Installation Failed"
+
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "Dependencies were not found after installation. Please restart the application manually."
+
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Could not open the video file with the default player"
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Pre-command completed successfully."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Centiseconds"
+
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Frame: {current}/{total}"
+
+#~ msgid "Conversion Complete"
+#~ msgstr "Conversion Complete"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Cut Them Out"
+
+#~ msgid "Pauses found"
+#~ msgstr "Pauses found"
+
+#~ msgid "Review"
+#~ msgstr "Review"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "{count} pause cut out"
+#~ msgstr[1] "{count} pauses cut out"

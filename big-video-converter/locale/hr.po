@@ -642,12 +642,6 @@ msgid "Files Added"
 msgstr "Datoteke dodane"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "U red čekanja dodane su videodatoteke: {}."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "Nema pronađenih datoteka"
@@ -746,11 +740,6 @@ msgstr "Odaberite mrežne video datoteke"
 msgid "Main"
 msgstr "Glavni"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Aktiviran je način samo za vađenje titlova — video NEĆE biti konvertiran"
-
 msgid "Stop converting and close?"
 msgstr "Zaustaviti pretvorbu i zatvoriti?"
 
@@ -831,26 +820,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg i/ili MPV nisu instalirani i nismo mogli odrediti kako ih instalirati za vaš sustav. Molimo instalirajte ih ručno koristeći upravitelja paketa vaše distribucije."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "Instalacija uspješna"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "Ovisnosti su instalirane. Aplikacija će se sada ponovno pokrenuti."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "Instalacija neuspjela"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "Ovisnosti nisu pronađene nakon instalacije. Molimo ručno ponovo pokrenite aplikaciju."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Arhiva (AV1 + Opus)"
@@ -1652,11 +1621,6 @@ msgid "Could not open this video file"
 msgstr "Nije moguće otvoriti ovu video datoteku."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "Videodatoteka se nije mogla otvoriti u zadanom reproduktoru."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1878,9 +1842,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Pogreška pri pokretanju naredbe"
-
-msgid "Pre-command completed successfully."
-msgstr "Prethodna naredba uspješno je izvršena."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -2885,9 +2846,6 @@ msgstr "Minute"
 msgid "Seconds"
 msgstr "Sekunde"
 
-msgid "Centiseconds"
-msgstr "Stotinke sekunde"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -2978,12 +2936,6 @@ msgstr "Unesite vrijeme početka i završetka za novi segment."
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "Dodaj segment"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Sličica: {current}/{total}"
 
 msgid "Video position"
 msgstr "Položaj u videu"
@@ -3721,17 +3673,6 @@ msgstr "Izvornik izbrisan nakon provjere izlaza"
 msgid "Original preserved: {0}"
 msgstr "Izvornik zadržan: {0}"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "Konverzija dovršena"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4322,18 +4263,17 @@ msgstr "1 s"
 msgid "2 s"
 msgstr "2 s"
 
-msgid "Cut Them Out"
-msgstr "Izreži ih"
-
 msgid "Undo"
 msgstr "Poništi"
 
 msgid "This video has no sound to find pauses in"
 msgstr "Ovaj video nema zvuk u kojem bi se tražile stanke"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "Slušate {track}. Ostali zapisi dobivaju iste rezove."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} stanka · {duration} kraće"
@@ -4343,29 +4283,19 @@ msgstr[2] "{count} stanki · {duration} kraće"
 msgid "No pauses found. Nothing would change."
 msgstr "Nisu pronađene stanke. Ništa se ne bi promijenilo."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "Zadržan {count} dio"
 msgstr[1] "Zadržana {count} dijela"
 msgstr[2] "Zadržano {count} dijelova"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Traženje stanki: {percent} %"
 
-msgid "Pauses found"
-msgstr "Stanke pronađene"
-
-msgid "Review"
-msgstr "Pregledaj"
-
 msgid "The pauses could not be measured."
 msgstr "Stanke nije bilo moguće izmjeriti."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "Izrezana {count} stanka"
-msgstr[1] "Izrezane {count} stanke"
-msgstr[2] "Izrezano {count} stanki"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Ili uklonite stanke da zadržite samo govor."
@@ -4373,9 +4303,11 @@ msgstr "Ili uklonite stanke da zadržite samo govor."
 msgid "Milliseconds"
 msgstr "Milisekunde"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "Zvučni zapis {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "Podnaslov {number}"
 
@@ -4385,11 +4317,99 @@ msgstr "Priključak mora biti broj od 1 do 65535."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Izdvojit će se samo podnaslovi; videozapisi se neće pretvoriti"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "U red je dodana {count} video datoteka."
 msgstr[1] "U red su dodane {count} video datoteke."
 msgstr[2] "U red je dodano {count} video datoteka."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "Ovo zamjenjuje {count} segment koji ste imali."
+msgstr[1] "Ovo zamjenjuje {count} segmenta koje ste imali."
+msgstr[2] "Ovo zamjenjuje {count} segmenata koje ste imali."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Ništa se ne briše iz izvorne datoteke."
+
+msgid "Play only the segments"
+msgstr "Reproduciraj samo segmente"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "U red čekanja dodane su videodatoteke: {}."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Aktiviran je način samo za vađenje titlova — video NEĆE biti konvertiran"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "Instalacija uspješna"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "Ovisnosti su instalirane. Aplikacija će se sada ponovno pokrenuti."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "Instalacija neuspjela"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "Ovisnosti nisu pronađene nakon instalacije. Molimo ručno ponovo pokrenite aplikaciju."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Videodatoteka se nije mogla otvoriti u zadanom reproduktoru."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Prethodna naredba uspješno je izvršena."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Stotinke sekunde"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Sličica: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "Konverzija dovršena"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Izreži ih"
+
+#~ msgid "Pauses found"
+#~ msgstr "Stanke pronađene"
+
+#~ msgid "Review"
+#~ msgstr "Pregledaj"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "Izrezana {count} stanka"
+#~ msgstr[1] "Izrezane {count} stanke"
+#~ msgstr[2] "Izrezano {count} stanki"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32 pogon ili Telegram Premium"

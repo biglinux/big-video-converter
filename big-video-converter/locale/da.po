@@ -649,12 +649,6 @@ msgid "Files Added"
 msgstr "Filer tilføjet"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "{} videofiler er blevet tilføjet til køen."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "Ingen filer fundet"
@@ -753,11 +747,6 @@ msgstr "Vælg netværksvideofiler"
 msgid "Main"
 msgstr "Hoved"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Tilstanden til kun at udtrække undertekster er aktiv — videoen bliver IKKE konverteret"
-
 msgid "Stop converting and close?"
 msgstr "Stop konverteringen og luk?"
 
@@ -836,26 +825,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg og/eller MPV er ikke installeret, og vi kunne ikke finde ud af, hvordan man installerer dem til dit system. Venligst installer dem manuelt ved hjælp af din distributions pakkehåndtering."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "Installation gennemført"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "Afhængigheder er blevet installeret. Applikationen genstarter nu."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "Installation mislykkedes"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "Afhængigheder blev ikke fundet efter installationen. Genstart venligst applikationen manuelt."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Arkiv (AV1 + Opus)"
@@ -1654,11 +1623,6 @@ msgid "Could not open this video file"
 msgstr "Kunne ikke åbne denne videofil"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "Kunne ikke åbne videofilen med standardafspilleren."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1880,9 +1844,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Fejl under kørsel af kommando"
-
-msgid "Pre-command completed successfully."
-msgstr "Forudgående kommando blev fuldført."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -2869,9 +2830,6 @@ msgstr "Minutter"
 msgid "Seconds"
 msgstr "Sekunder"
 
-msgid "Centiseconds"
-msgstr "Hundrededele af et sekund"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -2962,12 +2920,6 @@ msgstr "Indtast start- og sluttidspunkter for det nye segment."
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "Tilføj segment"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Billede: {current}/{total}"
 
 msgid "Video position"
 msgstr "Videoposition"
@@ -3703,17 +3655,6 @@ msgstr "Original slettet efter kontrol af output"
 msgid "Original preserved: {0}"
 msgstr "Original bevaret: {0}"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "Konvertering Fuldført"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4318,18 +4259,17 @@ msgstr "1 s"
 msgid "2 s"
 msgstr "2 s"
 
-msgid "Cut Them Out"
-msgstr "Klip dem ud"
-
 msgid "Undo"
 msgstr "Fortryd"
 
 msgid "This video has no sound to find pauses in"
 msgstr "Denne video har ingen lyd at finde pauser i"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "Du hører {track}. De andre spor får de samme klip."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} pause · {duration} kortere"
@@ -4338,27 +4278,18 @@ msgstr[1] "{count} pauser · {duration} kortere"
 msgid "No pauses found. Nothing would change."
 msgstr "Ingen pauser fundet. Intet ville ændre sig."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "{count} del beholdt"
 msgstr[1] "{count} dele beholdt"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Søger efter pauser: {percent} %"
 
-msgid "Pauses found"
-msgstr "Pauser fundet"
-
-msgid "Review"
-msgstr "Gennemse"
-
 msgid "The pauses could not be measured."
 msgstr "Pauserne kunne ikke måles."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "{count} pause klippet ud"
-msgstr[1] "{count} pauser klippet ud"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Eller fjern pauserne for kun at beholde talen."
@@ -4366,9 +4297,11 @@ msgstr "Eller fjern pauserne for kun at beholde talen."
 msgid "Milliseconds"
 msgstr "Millisekunder"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "Lydspor {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "Undertekst {number}"
 
@@ -4378,10 +4311,96 @@ msgstr "Porten skal være et tal fra 1 til 65535."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Kun undertekster udtrækkes; videoerne konverteres ikke"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "{count} videofil er føjet til køen."
 msgstr[1] "{count} videofiler er føjet til køen."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "Dette erstatter det {count} segment, du havde."
+msgstr[1] "Dette erstatter de {count} segmenter, du havde."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Der slettes intet fra den originale fil."
+
+msgid "Play only the segments"
+msgstr "Afspil kun segmenterne"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "{} videofiler er blevet tilføjet til køen."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Tilstanden til kun at udtrække undertekster er aktiv — videoen bliver IKKE konverteret"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "Installation gennemført"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "Afhængigheder er blevet installeret. Applikationen genstarter nu."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "Installation mislykkedes"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "Afhængigheder blev ikke fundet efter installationen. Genstart venligst applikationen manuelt."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Kunne ikke åbne videofilen med standardafspilleren."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Forudgående kommando blev fuldført."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Hundrededele af et sekund"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Billede: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "Konvertering Fuldført"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Klip dem ud"
+
+#~ msgid "Pauses found"
+#~ msgstr "Pauser fundet"
+
+#~ msgid "Review"
+#~ msgstr "Gennemse"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "{count} pause klippet ud"
+#~ msgstr[1] "{count} pauser klippet ud"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32-drev eller Telegram Premium"

@@ -604,12 +604,6 @@ msgid "Files Added"
 msgstr "Fájlok hozzáadva"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "{} videófájl került a várólistára."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "Nincsenek fájlok."
@@ -708,11 +702,6 @@ msgstr "Hálózati videófájlok kiválasztása"
 msgid "Main"
 msgstr "Fő"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Csak feliratkivonási mód aktív — a videó NEM lesz konvertálva"
-
 msgid "Stop converting and close?"
 msgstr "Leállítja az átalakítást és bezárja az alkalmazást?"
 
@@ -791,26 +780,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "Az FFmpeg és/vagy az MPV nincs telepítve, és nem tudtuk meghatározni, hogyan telepíthetők a rendszerére. Kérjük, telepítse őket manuálisan a disztribúciója csomagkezelőjének használatával."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "Sikeres telepítés"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "A függőségek telepítve lettek. Az alkalmazás most újraindul."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "Telepítés sikertelen"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "A telepítés után nem találhatóak a függőségek. Kérjük, indítsa újra az alkalmazást manuálisan."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Archiválás (AV1 + Opus)"
@@ -1612,11 +1581,6 @@ msgid "Could not open this video file"
 msgstr "Nem sikerült megnyitni ezt a videófájlt."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "Nem sikerült megnyitni a videófájlt az alapértelmezett lejátszóval."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1838,9 +1802,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Hiba a parancs futtatásakor"
-
-msgid "Pre-command completed successfully."
-msgstr "Az előparancs sikeresen befejeződött."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -2830,9 +2791,6 @@ msgstr "Perc"
 msgid "Seconds"
 msgstr "Másodperc"
 
-msgid "Centiseconds"
-msgstr "Századmásodperc"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -2923,12 +2881,6 @@ msgstr "Adja meg az új szegmens kezdő és záró időpontját."
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "Szegmens hozzáadása"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Képkocka: {current}/{total}"
 
 msgid "Video position"
 msgstr "Videópozíció"
@@ -3668,17 +3620,6 @@ msgstr "Eredeti fájl törölve a kimenet ellenőrzése után"
 msgid "Original preserved: {0}"
 msgstr "Eredeti fájl megtartva: {0}"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "A konverzió befejeződött"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4260,18 +4201,17 @@ msgstr "1 mp"
 msgid "2 s"
 msgstr "2 mp"
 
-msgid "Cut Them Out"
-msgstr "Kivágás"
-
 msgid "Undo"
 msgstr "Visszavonás"
 
 msgid "This video has no sound to find pauses in"
 msgstr "Ennek a videónak nincs hangja, amelyben szüneteket lehetne keresni"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "A(z) {track} szól. A többi sáv ugyanazokat a vágásokat kapja."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} szünet · {duration} rövidebb"
@@ -4280,27 +4220,18 @@ msgstr[1] "{count} szünet · {duration} rövidebb"
 msgid "No pauses found. Nothing would change."
 msgstr "Nincs szünet. Semmi sem változna."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "{count} rész megtartva"
 msgstr[1] "{count} rész megtartva"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Szünetek keresése: {percent}%"
 
-msgid "Pauses found"
-msgstr "Szünetek megtalálva"
-
-msgid "Review"
-msgstr "Áttekintés"
-
 msgid "The pauses could not be measured."
 msgstr "A szüneteket nem sikerült megmérni."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "{count} szünet kivágva"
-msgstr[1] "{count} szünet kivágva"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Vagy távolítsa el a szüneteket, hogy csak a beszéd maradjon."
@@ -4308,9 +4239,11 @@ msgstr "Vagy távolítsa el a szüneteket, hogy csak a beszéd maradjon."
 msgid "Milliseconds"
 msgstr "Ezredmásodperc"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "{number}. hangsáv"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "{number}. felirat"
 
@@ -4320,10 +4253,96 @@ msgstr "A portnak 1 és 65535 közötti számnak kell lennie."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Csak a feliratok kerülnek kibontásra; a videók nem lesznek átalakítva"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "{count} videofájl került a sorba."
 msgstr[1] "{count} videofájl került a sorba."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "Ez lecseréli a korábban meglévő {count} szegmenst."
+msgstr[1] "Ez lecseréli a korábban meglévő {count} szegmenst."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Az eredeti fájlból semmi sem törlődik."
+
+msgid "Play only the segments"
+msgstr "Csak a szakaszok lejátszása"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "{} videófájl került a várólistára."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Csak feliratkivonási mód aktív — a videó NEM lesz konvertálva"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "Sikeres telepítés"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "A függőségek telepítve lettek. Az alkalmazás most újraindul."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "Telepítés sikertelen"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "A telepítés után nem találhatóak a függőségek. Kérjük, indítsa újra az alkalmazást manuálisan."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Nem sikerült megnyitni a videófájlt az alapértelmezett lejátszóval."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Az előparancs sikeresen befejeződött."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Századmásodperc"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Képkocka: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "A konverzió befejeződött"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Kivágás"
+
+#~ msgid "Pauses found"
+#~ msgstr "Szünetek megtalálva"
+
+#~ msgid "Review"
+#~ msgstr "Áttekintés"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "{count} szünet kivágva"
+#~ msgstr[1] "{count} szünet kivágva"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32-meghajtó vagy Telegram Premium"

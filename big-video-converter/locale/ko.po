@@ -658,12 +658,6 @@ msgid "Files Added"
 msgstr "파일 추가됨"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "동영상 파일 {}개를 대기열에 추가했습니다."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "파일을 찾을 수 없습니다."
@@ -762,11 +756,6 @@ msgstr "네트워크 비디오 파일 선택"
 msgid "Main"
 msgstr "메인"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ 자막 추출 전용 모드가 활성화되었습니다 — 비디오는 변환되지 않습니다"
-
 msgid "Stop converting and close?"
 msgstr "변환을 중지하고 닫을까요?"
 
@@ -843,26 +832,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg 및/또는 MPV가 설치되어 있지 않으며, 귀하의 시스템에 설치하는 방법을 확인할 수 없습니다. 배포판의 패키지 관리자를 사용하여 수동으로 설치해 주십시오."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "설치 성공"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "종속성이 설치되었습니다. 애플리케이션이 이제 재시작됩니다."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "설치 실패"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "설치 후 종속성을 찾을 수 없습니다. 애플리케이션을 수동으로 다시 시작해 주십시오."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "보관용 (AV1 + Opus)"
@@ -1666,11 +1635,6 @@ msgid "Could not open this video file"
 msgstr "이 비디오 파일을 열 수 없습니다."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "기본 플레이어로 비디오 파일을 열 수 없습니다."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1890,9 +1854,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "명령 실행 오류"
-
-msgid "Pre-command completed successfully."
-msgstr "사전 명령이 성공적으로 완료되었습니다."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -2867,9 +2828,6 @@ msgstr "분"
 msgid "Seconds"
 msgstr "초"
 
-msgid "Centiseconds"
-msgstr "100분의 1초"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -2967,12 +2925,6 @@ msgstr "새 구간의 시작 및 종료 시간을 입력하세요"
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "구간 추가"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "프레임: {current}/{total}"
 
 msgid "Video position"
 msgstr "동영상 재생 위치"
@@ -3710,17 +3662,6 @@ msgstr "출력 검증 후 원본 삭제됨"
 msgid "Original preserved: {0}"
 msgstr "원본 유지됨: {0}"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "변환 완료"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -4293,18 +4234,17 @@ msgstr "1초"
 msgid "2 s"
 msgstr "2초"
 
-msgid "Cut Them Out"
-msgstr "잘라내기"
-
 msgid "Undo"
 msgstr "실행 취소"
 
 msgid "This video has no sound to find pauses in"
 msgstr "이 동영상에는 공백을 찾을 소리가 없습니다"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "{track} 재생 중. 다른 트랙에도 같은 컷이 적용됩니다."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "공백 {count}개 · {duration} 단축"
@@ -4312,25 +4252,17 @@ msgstr[0] "공백 {count}개 · {duration} 단축"
 msgid "No pauses found. Nothing would change."
 msgstr "공백을 찾지 못했습니다. 바뀌는 것이 없습니다."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "{count}개 부분 유지"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "공백 찾는 중: {percent}%"
 
-msgid "Pauses found"
-msgstr "공백을 찾았습니다"
-
-msgid "Review"
-msgstr "검토"
-
 msgid "The pauses could not be measured."
 msgstr "공백을 측정하지 못했습니다."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "공백 {count}개 잘라냄"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "또는 공백을 제거해 음성만 남기세요."
@@ -4338,9 +4270,11 @@ msgstr "또는 공백을 제거해 음성만 남기세요."
 msgid "Milliseconds"
 msgstr "밀리초"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "오디오 트랙 {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "자막 {number}"
 
@@ -4350,9 +4284,93 @@ msgstr "포트는 1부터 65535 사이의 숫자여야 합니다."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "자막만 추출합니다. 동영상은 변환하지 않습니다"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "동영상 파일 {count}개를 대기열에 추가했습니다."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "이전에 있던 구간 {count}개를 대체합니다."
+
+msgid "Nothing is deleted from the original file."
+msgstr "원본 파일에서는 아무것도 삭제되지 않습니다."
+
+msgid "Play only the segments"
+msgstr "구간만 재생"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "동영상 파일 {}개를 대기열에 추가했습니다."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ 자막 추출 전용 모드가 활성화되었습니다 — 비디오는 변환되지 않습니다"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "설치 성공"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "종속성이 설치되었습니다. 애플리케이션이 이제 재시작됩니다."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "설치 실패"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "설치 후 종속성을 찾을 수 없습니다. 애플리케이션을 수동으로 다시 시작해 주십시오."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "기본 플레이어로 비디오 파일을 열 수 없습니다."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "사전 명령이 성공적으로 완료되었습니다."
+
+#~ msgid "Centiseconds"
+#~ msgstr "100분의 1초"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "프레임: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "변환 완료"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "잘라내기"
+
+#~ msgid "Pauses found"
+#~ msgstr "공백을 찾았습니다"
+
+#~ msgid "Review"
+#~ msgstr "검토"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "공백 {count}개 잘라냄"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32 드라이브 또는 Telegram Premium"

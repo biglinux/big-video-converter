@@ -633,12 +633,6 @@ msgid "Files Added"
 msgstr "Bestanden toegevoegd"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "{} videobestanden zijn aan de wachtrij toegevoegd."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "Geen bestanden gevonden"
@@ -737,11 +731,6 @@ msgstr "Selecteer netwerkvideobestanden"
 msgid "Main"
 msgstr "Hoofd"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Alleen ondertitels extraheren is actief — de video wordt NIET geconverteerd"
-
 msgid "Stop converting and close?"
 msgstr "Conversie stoppen en sluiten?"
 
@@ -820,26 +809,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg en/of MPV zijn niet geïnstalleerd en we konden niet bepalen hoe ze voor uw systeem te installeren. Installeer ze handmatig met behulp van de pakketbeheerder van uw distributie."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "Installatie Succesvol"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "Afhankelijkheden zijn geïnstalleerd. De applicatie zal nu opnieuw opstarten."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "Installatie mislukt"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "Afhankelijkheden werden niet gevonden na installatie. Start de applicatie handmatig opnieuw."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Archief (AV1 + Opus)"
@@ -1663,11 +1632,6 @@ msgid "Could not open this video file"
 msgstr "Kon dit videobestand niet openen."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "Kon het videobestand niet openen met de standaardspeler."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1887,9 +1851,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Fout bij het uitvoeren van opdracht"
-
-msgid "Pre-command completed successfully."
-msgstr "Het voorbereidende commando is met succes voltooid."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -3643,9 +3604,6 @@ msgstr "Minuten"
 msgid "Seconds"
 msgstr "Seconden"
 
-msgid "Centiseconds"
-msgstr "Honderdsten van seconden"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -3916,12 +3874,6 @@ msgstr "Voer start- en eindtijden in voor het nieuwe segment."
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "Segment toevoegen"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Frame: {current}/{total}"
 
 msgid "Video position"
 msgstr "Videopositie"
@@ -4657,17 +4609,6 @@ msgstr "Origineel verwijderd na controle van de uitvoer"
 msgid "Original preserved: {0}"
 msgstr "Origineel behouden: {0}"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "Conversie Voltooid"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -5249,18 +5190,17 @@ msgstr "1 s"
 msgid "2 s"
 msgstr "2 s"
 
-msgid "Cut Them Out"
-msgstr "Wegknippen"
-
 msgid "Undo"
 msgstr "Ongedaan maken"
 
 msgid "This video has no sound to find pauses in"
 msgstr "Deze video heeft geen geluid om pauzes in te zoeken"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "Je hoort {track}. De andere sporen krijgen dezelfde knippen."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} pauze · {duration} korter"
@@ -5269,27 +5209,18 @@ msgstr[1] "{count} pauzes · {duration} korter"
 msgid "No pauses found. Nothing would change."
 msgstr "Geen pauzes gevonden. Er zou niets veranderen."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "{count} deel behouden"
 msgstr[1] "{count} delen behouden"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Pauzes zoeken: {percent}%"
 
-msgid "Pauses found"
-msgstr "Pauzes gevonden"
-
-msgid "Review"
-msgstr "Bekijken"
-
 msgid "The pauses could not be measured."
 msgstr "De pauzes konden niet worden gemeten."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "{count} pauze weggeknipt"
-msgstr[1] "{count} pauzes weggeknipt"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Of verwijder de pauzes om alleen de spraak te houden."
@@ -5297,9 +5228,11 @@ msgstr "Of verwijder de pauzes om alleen de spraak te houden."
 msgid "Milliseconds"
 msgstr "Milliseconden"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "Audiospoor {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "Ondertitel {number}"
 
@@ -5309,10 +5242,96 @@ msgstr "De poort moet een getal van 1 tot 65535 zijn."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Alleen ondertitels worden uitgepakt; video's worden niet geconverteerd"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "{count} videobestand is aan de wachtrij toegevoegd."
 msgstr[1] "{count} videobestanden zijn aan de wachtrij toegevoegd."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "Dit vervangt het {count} segment dat je had."
+msgstr[1] "Dit vervangt de {count} segmenten die je had."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Er wordt niets verwijderd uit het originele bestand."
+
+msgid "Play only the segments"
+msgstr "Alleen de segmenten afspelen"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "{} videobestanden zijn aan de wachtrij toegevoegd."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Alleen ondertitels extraheren is actief — de video wordt NIET geconverteerd"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "Installatie Succesvol"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "Afhankelijkheden zijn geïnstalleerd. De applicatie zal nu opnieuw opstarten."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "Installatie mislukt"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "Afhankelijkheden werden niet gevonden na installatie. Start de applicatie handmatig opnieuw."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Kon het videobestand niet openen met de standaardspeler."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Het voorbereidende commando is met succes voltooid."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Honderdsten van seconden"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Frame: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "Conversie Voltooid"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Wegknippen"
+
+#~ msgid "Pauses found"
+#~ msgstr "Pauzes gevonden"
+
+#~ msgid "Review"
+#~ msgstr "Bekijken"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "{count} pauze weggeknipt"
+#~ msgstr[1] "{count} pauzes weggeknipt"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32-schijf of Telegram Premium"

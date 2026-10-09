@@ -647,12 +647,6 @@ msgid "Files Added"
 msgstr "Filer lagt til"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "{} videofiler har blitt lagt til i køen."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "Ingen filer funnet"
@@ -751,11 +745,6 @@ msgstr "Velg nettverksvideofiler"
 msgid "Main"
 msgstr "Hovedinnstillinger"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Bare undertekster trekkes ut — videoen blir IKKE konvertert"
-
 msgid "Stop converting and close?"
 msgstr "Stoppe konverteringene og lukke?"
 
@@ -834,26 +823,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg og/eller MPV er ikke installert, og vi kunne ikke finne ut hvordan vi skal installere dem for systemet ditt. Vennligst installer dem manuelt ved å bruke pakkebehandleren til distribusjonen din."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "Installasjon vellykket"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "Avhengigheter har blitt installert. Applikasjonen vil nå starte på nytt."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "Installasjonen mislyktes"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "Avhengigheter ble ikke funnet etter installasjon. Vennligst start applikasjonen på nytt manuelt."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Arkiv (AV1 + Opus)"
@@ -1677,11 +1646,6 @@ msgid "Could not open this video file"
 msgstr "Kunne ikke åpne denne videofilen"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "Kunne ikke åpne videofilen med standardavspilleren."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1903,9 +1867,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Feil under kjøring av kommando"
-
-msgid "Pre-command completed successfully."
-msgstr "Forhåndskommando fullført."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -3656,9 +3617,6 @@ msgstr "Minutter"
 msgid "Seconds"
 msgstr "Sekunder"
 
-msgid "Centiseconds"
-msgstr "Hundredels sekunder"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -3929,12 +3887,6 @@ msgstr "Skriv inn start- og sluttid for det nye segmentet."
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "Legg til segment"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Bilde: {current}/{total}"
 
 msgid "Video position"
 msgstr "Videoposisjon"
@@ -4668,17 +4620,6 @@ msgstr "Originalen ble slettet etter kontroll av utdata"
 msgid "Original preserved: {0}"
 msgstr "Originalen er beholdt: {0}"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "Konvertering fullført"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -5265,18 +5206,17 @@ msgstr "1 s"
 msgid "2 s"
 msgstr "2 s"
 
-msgid "Cut Them Out"
-msgstr "Klipp dem ut"
-
 msgid "Undo"
 msgstr "Angre"
 
 msgid "This video has no sound to find pauses in"
 msgstr "Denne videoen har ingen lyd å finne pauser i"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "Du hører {track}. De andre sporene får de samme klippene."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} pause · {duration} kortere"
@@ -5285,27 +5225,18 @@ msgstr[1] "{count} pauser · {duration} kortere"
 msgid "No pauses found. Nothing would change."
 msgstr "Fant ingen pauser. Ingenting ville endret seg."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "{count} del beholdt"
 msgstr[1] "{count} deler beholdt"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Leter etter pauser: {percent} %"
 
-msgid "Pauses found"
-msgstr "Fant pauser"
-
-msgid "Review"
-msgstr "Se gjennom"
-
 msgid "The pauses could not be measured."
 msgstr "Pausene kunne ikke måles."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "{count} pause klippet ut"
-msgstr[1] "{count} pauser klippet ut"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Eller fjern pausene for å beholde bare talen."
@@ -5313,9 +5244,11 @@ msgstr "Eller fjern pausene for å beholde bare talen."
 msgid "Milliseconds"
 msgstr "Millisekunder"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "Lydspor {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "Undertekst {number}"
 
@@ -5325,10 +5258,96 @@ msgstr "Porten må være et tall fra 1 til 65535."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Bare undertekster hentes ut; videoene konverteres ikke"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "{count} videofil er lagt til i køen."
 msgstr[1] "{count} videofiler er lagt til i køen."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "Dette erstatter det {count} segmentet du hadde."
+msgstr[1] "Dette erstatter de {count} segmentene du hadde."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Ingenting slettes fra originalfilen."
+
+msgid "Play only the segments"
+msgstr "Spill bare av segmentene"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "{} videofiler har blitt lagt til i køen."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Bare undertekster trekkes ut — videoen blir IKKE konvertert"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "Installasjon vellykket"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "Avhengigheter har blitt installert. Applikasjonen vil nå starte på nytt."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "Installasjonen mislyktes"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "Avhengigheter ble ikke funnet etter installasjon. Vennligst start applikasjonen på nytt manuelt."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Kunne ikke åpne videofilen med standardavspilleren."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Forhåndskommando fullført."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Hundredels sekunder"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Bilde: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "Konvertering fullført"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Klipp dem ut"
+
+#~ msgid "Pauses found"
+#~ msgstr "Fant pauser"
+
+#~ msgid "Review"
+#~ msgstr "Se gjennom"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "{count} pause klippet ut"
+#~ msgstr[1] "{count} pauser klippet ut"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "FAT32-enhet eller Telegram Premium"

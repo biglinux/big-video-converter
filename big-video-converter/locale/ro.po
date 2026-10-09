@@ -640,12 +640,6 @@ msgid "Files Added"
 msgstr "Fișiere adăugate"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 911
-#, python-brace-format
-msgid "{} video files have been added to the queue."
-msgstr "Au fost adăugate fișiere video în coadă: {}."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 922
 msgid "No Files Found"
 msgstr "Nu au fost găsite fișiere."
@@ -744,11 +738,6 @@ msgstr "Selectați fișiere video de rețea"
 msgid "Main"
 msgstr "Principal"
 
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 348
-msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
-msgstr "⚠ Modul de extragere a subtitrărilor este activ — videoclipul NU va fi convertit"
-
 msgid "Stop converting and close?"
 msgstr "Opriți conversia și închideți?"
 
@@ -829,26 +818,6 @@ msgid ""
 "FFmpeg and/or MPV are not installed and we could not determine how to install them for your system.\n"
 "Please install them manually using your distribution's package manager."
 msgstr "FFmpeg și/sau MPV nu sunt instalate și nu am putut determina cum să le instalăm pentru sistemul tău. Te rugăm să le instalezi manual folosind managerul de pachete al distribuției tale."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1692
-msgid "Installation Successful"
-msgstr "Instalare reușită"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1693
-msgid "Dependencies have been installed. The application will now restart."
-msgstr "Dependențele au fost instalate. Aplicația se va reporni acum."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1700
-msgid "Installation Failed"
-msgstr "Instalare eșuată"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1701
-msgid "Dependencies were not found after installation. Please restart the application manually."
-msgstr "Dependențele nu au fost găsite după instalare. Vă rugăm să reporniți aplicația manual."
 
 msgid "Archive (AV1 + Opus)"
 msgstr "Arhivă (AV1 + Opus)"
@@ -1672,11 +1641,6 @@ msgid "Could not open this video file"
 msgstr "Nu s-a putut deschide acest fișier video."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 979
-msgid "Could not open the video file with the default player"
-msgstr "Nu s-a putut deschide fișierul video cu playerul implicit."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 983
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 1436
@@ -1898,9 +1862,6 @@ msgstr ""
 
 msgid "Error running command"
 msgstr "Eroare la rularea comenzii"
-
-msgid "Pre-command completed successfully."
-msgstr "Comanda prealabilă s-a finalizat cu succes."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/dependency_dialog.py, line: 172
@@ -3669,9 +3630,6 @@ msgstr "Minute"
 msgid "Seconds"
 msgstr "Secunde"
 
-msgid "Centiseconds"
-msgstr "Sutimi de secundă"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_page.py, line: 394
 msgid "Edit Segment"
@@ -3942,12 +3900,6 @@ msgstr "Introduceți orele de început și de sfârșit pentru noul segment."
 # converter/ui/video_edit_page.py, line: 547
 msgid "Add Segment"
 msgstr "Adaugă segment"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_page.py, line: 906
-#, python-brace-format
-msgid "Frame: {current}/{total}"
-msgstr "Cadru: {current}/{total}"
 
 msgid "Video position"
 msgstr "Poziție în videoclip"
@@ -4685,17 +4637,6 @@ msgstr "Originalul a fost șters după verificarea ieșirii"
 msgid "Original preserved: {0}"
 msgstr "Originalul a fost păstrat: {0}"
 
-# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
-#
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/main.py, line: 1174
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1303
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/conversion_page.py, line: 1466
-msgid "Conversion Complete"
-msgstr "Conversie finalizată"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/utils/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
@@ -5286,18 +5227,17 @@ msgstr "1 s"
 msgid "2 s"
 msgstr "2 s"
 
-msgid "Cut Them Out"
-msgstr "Taie-le"
-
 msgid "Undo"
 msgstr "Anulează"
 
 msgid "This video has no sound to find pauses in"
 msgstr "Acest videoclip nu are sunet în care să se caute pauze"
 
+#, python-brace-format
 msgid "Listening to {track}. The other tracks get the same cuts."
 msgstr "Ascultați {track}. Celelalte piste primesc aceleași tăieturi."
 
+#, python-brace-format
 msgid "{count} pause · {duration} shorter"
 msgid_plural "{count} pauses · {duration} shorter"
 msgstr[0] "{count} pauză · cu {duration} mai scurt"
@@ -5307,29 +5247,19 @@ msgstr[2] "{count} de pauze · cu {duration} mai scurt"
 msgid "No pauses found. Nothing would change."
 msgstr "Nu s-au găsit pauze. Nu s-ar schimba nimic."
 
+#, python-brace-format
 msgid "{count} part kept"
 msgid_plural "{count} parts kept"
 msgstr[0] "{count} parte păstrată"
 msgstr[1] "{count} părți păstrate"
 msgstr[2] "{count} de părți păstrate"
 
+#, python-brace-format
 msgid "Finding pauses: {percent}%"
 msgstr "Se caută pauze: {percent}%"
 
-msgid "Pauses found"
-msgstr "Pauze găsite"
-
-msgid "Review"
-msgstr "Verifică"
-
 msgid "The pauses could not be measured."
 msgstr "Pauzele nu au putut fi măsurate."
-
-msgid "{count} pause cut out"
-msgid_plural "{count} pauses cut out"
-msgstr[0] "{count} pauză tăiată"
-msgstr[1] "{count} pauze tăiate"
-msgstr[2] "{count} de pauze tăiate"
 
 msgid "Or remove the pauses to keep only the speech."
 msgstr "Sau eliminați pauzele pentru a păstra doar vorbirea."
@@ -5337,9 +5267,11 @@ msgstr "Sau eliminați pauzele pentru a păstra doar vorbirea."
 msgid "Milliseconds"
 msgstr "Milisecunde"
 
+#, python-brace-format
 msgid "Audio track {number}"
 msgstr "Pistă audio {number}"
 
+#, python-brace-format
 msgid "Subtitle {number}"
 msgstr "Subtitrare {number}"
 
@@ -5349,11 +5281,99 @@ msgstr "Portul trebuie să fie un număr de la 1 la 65535."
 msgid "Only subtitles will be extracted; videos will not be converted"
 msgstr "Vor fi extrase doar subtitrările; videoclipurile nu vor fi convertite"
 
+#, python-brace-format
 msgid "{count} video file has been added to the queue."
 msgid_plural "{count} video files have been added to the queue."
 msgstr[0] "{count} fișier video a fost adăugat în coadă."
 msgstr[1] "{count} fișiere video au fost adăugate în coadă."
 msgstr[2] "{count} de fișiere video au fost adăugate în coadă."
+
+#, python-brace-format
+msgid "This replaces the {count} segment you had."
+msgid_plural "This replaces the {count} segments you had."
+msgstr[0] "Aceasta înlocuiește {count} segment pe care îl aveai."
+msgstr[1] "Aceasta înlocuiește {count} segmente pe care le aveai."
+msgstr[2] "Aceasta înlocuiește {count} de segmente pe care le aveai."
+
+msgid "Nothing is deleted from the original file."
+msgstr "Nimic nu este șters din fișierul original."
+
+msgid "Play only the segments"
+msgstr "Redă doar segmentele"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 911
+#, python-brace-format
+#~ msgid "{} video files have been added to the queue."
+#~ msgstr "Au fost adăugate fișiere video în coadă: {}."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 348
+#~ msgid "⚠ Subtitle extraction only mode is active — video will NOT be converted"
+#~ msgstr "⚠ Modul de extragere a subtitrărilor este activ — videoclipul NU va fi convertit"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1692
+#~ msgid "Installation Successful"
+#~ msgstr "Instalare reușită"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1693
+#~ msgid "Dependencies have been installed. The application will now restart."
+#~ msgstr "Dependențele au fost instalate. Aplicația se va reporni acum."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1700
+#~ msgid "Installation Failed"
+#~ msgstr "Instalare eșuată"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1701
+#~ msgid "Dependencies were not found after installation. Please restart the application manually."
+#~ msgstr "Dependențele nu au fost găsite după instalare. Vă rugăm să reporniți aplicația manual."
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 979
+#~ msgid "Could not open the video file with the default player"
+#~ msgstr "Nu s-a putut deschide fișierul video cu playerul implicit."
+
+#~ msgid "Pre-command completed successfully."
+#~ msgstr "Comanda prealabilă s-a finalizat cu succes."
+
+#~ msgid "Centiseconds"
+#~ msgstr "Sutimi de secundă"
+
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/video_edit_page.py, line: 906
+#, python-brace-format
+#~ msgid "Frame: {current}/{total}"
+#~ msgstr "Cadru: {current}/{total}"
+
+# #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
+#
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/main.py, line: 1174
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1303
+# File: big-video-converter/big-video-converter/usr/share/big-video-
+# converter/ui/conversion_page.py, line: 1466
+#~ msgid "Conversion Complete"
+#~ msgstr "Conversie finalizată"
+
+#~ msgid "Cut Them Out"
+#~ msgstr "Taie-le"
+
+#~ msgid "Pauses found"
+#~ msgstr "Pauze găsite"
+
+#~ msgid "Review"
+#~ msgstr "Verifică"
+
+#~ msgid "{count} pause cut out"
+#~ msgid_plural "{count} pauses cut out"
+#~ msgstr[0] "{count} pauză tăiată"
+#~ msgstr[1] "{count} pauze tăiate"
+#~ msgstr[2] "{count} de pauze tăiate"
 
 #~ msgid "FAT32 drive or Telegram Premium"
 #~ msgstr "Unitate FAT32 sau Telegram Premium"

@@ -7,7 +7,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 import gettext
 
-from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
+from gi.repository import Adw, Gdk, Gio, GLib, Graphene, Gtk, Pango
 
 _ = gettext.gettext
 
@@ -15,7 +15,7 @@ from utils.job_options import EFFECT_LEVELS, SOURCE_HDR_MODES
 from utils.video_settings import available_filters
 
 from ui.crop_overlay import CropOverlay
-from ui.pause_popover import PausePopover
+from ui.pause_panel import PausePanel
 
 
 class VideoEditUI:
@@ -111,19 +111,23 @@ class VideoEditUI:
 
         slider_overlay.set_child(self.position_scale)
 
-        self.segment_markers_canvas = Gtk.DrawingArea()
-        self.segment_markers_canvas.set_draw_func(self._draw_segment_markers)
-        self.segment_markers_canvas.set_can_target(True)
-        marker_hint = _("Drag to seek or adjust segment edges")
-        self.segment_markers_canvas.set_tooltip_text(marker_hint)
-        self.segment_markers_canvas.update_property(
-            [Gtk.AccessibleProperty.LABEL],
-            [marker_hint],
-        )
+        # The slider seeks and nothing else: hundreds of cut edges under it
+        # turned almost every click into a moved cut. Cuts have their own
+        # track above it.
+        self.seek_area = Gtk.DrawingArea(can_target=True)
+        self.seek_area.set_tooltip_text(_("Video position"))
+        slider_overlay.add_overlay(self.seek_area)
 
-        slider_overlay.add_overlay(self.segment_markers_canvas)
+        self.cuts_track = Gtk.DrawingArea(
+            content_height=10, hexpand=True, visible=False, margin_bottom=2
+        )
+        self.cuts_track.set_draw_func(self._draw_cuts_track)
+        cuts_hint = _("Drag to seek or adjust segment edges")
+        self.cuts_track.set_tooltip_text(cuts_hint)
+        self.cuts_track.update_property([Gtk.AccessibleProperty.LABEL], [cuts_hint])
         self._setup_drag_controllers()
 
+        controls_container.append(self.cuts_track)
         controls_container.append(slider_overlay)
 
         button_row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=4)
@@ -156,6 +160,20 @@ class VideoEditUI:
         self.mark_cancel_button.set_visible(False)
         self.mark_cancel_button.add_css_class("bvc-icon-button")
         button_row.append(self.mark_cancel_button)
+
+        # The preview of what a joined export keeps, like the audio
+        # converter's "Selection only".
+        self.segments_only_button = Gtk.ToggleButton(
+            icon_name="selection-mode-symbolic", visible=False
+        )
+        self.segments_only_button.set_tooltip_text(_("Play only the segments"))
+        self.segments_only_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [_("Play only the segments")]
+        )
+        self.segments_only_button.add_css_class("flat")
+        self.segments_only_button.add_css_class("bvc-icon-button")
+        self.segments_only_button.connect("toggled", self.page.on_segments_only_toggled)
+        button_row.append(self.segments_only_button)
 
         button_row.append(
             Gtk.Separator(
@@ -720,9 +738,6 @@ class VideoEditUI:
         )
         segment_actions.append(self.clear_segments_button)
         trim_group.set_header_suffix(segment_actions)
-        self.pause_popover = PausePopover(self.page)
-        self.pause_popover.button.set_margin_bottom(12)
-        trim_group.add(self.pause_popover.button)
 
         # A list view builds rows only for what is on screen: removing pauses
         # leaves hundreds of segments, and a list box of 600 took 0.4 s to
@@ -792,6 +807,9 @@ class VideoEditUI:
         trim_group.add(self.segments_stack)
         if hasattr(self.page.app, "tooltip_helper"):
             self.page.app.tooltip_helper.add_tooltip(trim_group, "segments")
+        # The analysis of a long video runs where it can be followed.
+        self.pause_panel = PausePanel(self.page)
+        sidebar_box.append(self.pause_panel)
         sidebar_box.append(trim_group)
 
         # Join/split only means something with two or more segments.
@@ -1056,6 +1074,9 @@ class VideoEditUI:
 
     def update_segment_actions(self, count) -> None:
         self.clear_segments_button.set_sensitive(count > 0)
+        self.segments_only_button.set_visible(count > 0)
+        if not count:
+            self.segments_only_button.set_active(False)
         self.output_group.set_visible(count > 1)
 
     def _on_reset_image_clicked(self, _button):
@@ -1183,210 +1204,150 @@ class VideoEditUI:
         controller.connect("scroll", on_scroll)
         scale.add_controller(controller)
 
-    def _draw_segment_markers(self, area, cr, width, height):
-        """Draw segment markers on the progress bar"""
-        # The probed length: mpv knows it only once loading finishes.
+    def _draw_cuts_track(self, area, cr, width, height):
+        """The kept parts and a pending mark, above the slider."""
         duration = self.page.video_duration
         if not self.page.current_video_path or duration <= 0:
             return
+        left, width = self._slider_span(area)
+        cr.translate(left, 0)
+        scale = width / duration
+        cr.set_source_rgba(1, 1, 1, 0.12)
+        cr.rectangle(0, 0, width, height)
+        cr.fill()
 
-        # Draw first mark point if it exists (before second mark is made)
+        cr.set_source_rgba(0.21, 0.52, 0.89, 1)
+        for segment in self.page.trim_segments:
+            start_x = segment["start"] * scale
+            cr.rectangle(start_x, 0, max(1.5, segment["end"] * scale - start_x), height)
+        cr.fill()
+
         if self.page.first_segment_point is not None:
-            first_x = (self.page.first_segment_point / duration) * width
-            # Draw a bright marker line for the first point
-            cr.set_source_rgba(1.0, 0.5, 0.0, 0.9)  # Orange color
-            cr.set_line_width(3)
-            cr.move_to(first_x, 0)
-            cr.line_to(first_x, height)
-            cr.stroke()
-
-        if self.page.proposed_pauses:
-            # Found pauses, shown in place of the segments until cut out.
-            cr.set_line_width(1)
-            cr.set_dash([4, 3])
-            for pause in self.page.proposed_pauses:
-                start_x = pause["start"] / duration * width
-                pause_width = max(
-                    1.5, (pause["stop"] - pause["start"]) / duration * width
-                )
-                cr.set_source_rgba(0.9, 0.25, 0.25, 0.25)
-                cr.rectangle(start_x, 0, pause_width, height)
-                cr.fill()
-                if pause_width > 3:
-                    cr.set_source_rgba(0.9, 0.25, 0.25, 0.8)
-                    cr.rectangle(start_x + 0.5, 0.5, pause_width - 1, height - 1)
-                    cr.stroke()
-            cr.set_dash([])
-            return
-
-        # What the segments leave out is dimmed: with hundreds of segments the
-        # gaps between them are what the eye looks for.
-        if self.page.trim_segments:
-            cr.set_source_rgba(0, 0, 0, 0.45)
-            cursor = 0.0
-            for segment in sorted(self.page.trim_segments, key=lambda s: s["start"]):
-                if segment["start"] > cursor:
-                    gap_x = cursor / duration * width
-                    cr.rectangle(
-                        gap_x,
-                        0,
-                        max(1.5, segment["start"] / duration * width - gap_x),
-                        height,
-                    )
-                cursor = max(cursor, segment["end"])
-            if cursor < duration:
-                cr.rectangle(
-                    cursor / duration * width,
-                    0,
-                    (1 - cursor / duration) * width,
-                    height,
-                )
+            # The start of a segment being marked.
+            cr.set_source_rgba(1.0, 0.6, 0.1, 1)
+            cr.rectangle(self.page.first_segment_point * scale - 1.5, 0, 3, height)
             cr.fill()
 
-        # Draw completed segments
-        if self.page.trim_segments:
-            for segment in self.page.trim_segments:
-                start = segment["start"]
-                end = segment["end"]
-
-                start_x = (start / duration) * width
-                end_x = (end / duration) * width
-                segment_width = end_x - start_x
-
-                cr.set_source_rgba(0.2, 0.6, 1.0, 0.4)
-                cr.rectangle(start_x, 0, segment_width, height)
-                cr.fill()
-
-                cr.set_source_rgba(0.2, 0.6, 1.0, 0.8)
-                cr.set_line_width(2)
-                cr.move_to(start_x, 0)
-                cr.line_to(start_x, height)
-                cr.stroke()
-                cr.move_to(end_x, 0)
-                cr.line_to(end_x, height)
-                cr.stroke()
-
     def update_segment_markers(self) -> None:
-        """Request redraw of segment markers"""
-        self.segment_markers_canvas.queue_draw()
+        """Show the cuts track while there is something on it."""
+        page = self.page
+        self.cuts_track.set_visible(
+            bool(page.trim_segments) or page.first_segment_point is not None
+        )
+        self.cuts_track.queue_draw()
 
     def _setup_drag_controllers(self):
-        """Setup drag controllers on the interactive DrawingArea."""
+        """Seeking on the slider; seeking or moving cut edges on the cuts track."""
         self._dragging_segment = None
-        self._drag_threshold = 10
-        self._segment_drag_active = False
-        self._drag_start_pos = None
+        self._edge_reach = 6  # pixels either side of an edge that pick it up
 
-        self.drag_gesture = Gtk.GestureDrag.new()
-        self.drag_gesture.set_touch_only(False)
-        self.drag_gesture.set_button(1)
-        self.drag_gesture.connect("drag-begin", self._on_drag_begin)
-        self.drag_gesture.connect("drag-update", self._on_drag_update)
-        self.drag_gesture.connect("drag-end", self._on_drag_end)
-        self.segment_markers_canvas.add_controller(self.drag_gesture)
+        seek = Gtk.GestureDrag(button=1)
+        seek.connect(
+            "drag-begin", lambda _g, x, _y: self._begin_seek(self.seek_area, x)
+        )
+        seek.connect(
+            "drag-update",
+            lambda g, dx, _dy: self._seek_to(
+                self.seek_area, g.get_start_point()[1] + dx
+            ),
+        )
+        seek.connect("drag-end", self._end_drag)
+        self.seek_area.add_controller(seek)
 
-        motion_controller = Gtk.EventControllerMotion.new()
-        motion_controller.connect("motion", self._on_motion)
-        motion_controller.connect("leave", self._on_motion_leave)
-        self.segment_markers_canvas.add_controller(motion_controller)
+        cuts = Gtk.GestureDrag(button=1)
+        cuts.connect("drag-begin", self._on_cuts_drag_begin)
+        cuts.connect("drag-update", self._on_cuts_drag_update)
+        cuts.connect("drag-end", self._on_cuts_drag_end)
+        self.cuts_track.add_controller(cuts)
 
-    def _find_segment_edge_at_position(self, x, width):
-        if width <= 0:
-            return None
+        motion = Gtk.EventControllerMotion()
+        motion.connect("motion", self._on_cuts_motion)
+        self.cuts_track.add_controller(motion)
+
+    def _slider_span(self, widget):
+        """Where the slider travels, in widget's coordinates.
+
+        The scale is narrower than the bar around it (theme padding), so
+        clicks and cuts are placed along the slider, not the whole bar.
+        """
+        width = self.position_scale.get_width()
+        found, origin = self.position_scale.compute_point(widget, Graphene.Point())
+        if not found or width <= 0:
+            return 0, widget.get_width()
+        return origin.x, width
+
+    def _time_at(self, widget, x):
+        left, width = self._slider_span(widget)
         duration = self.page.video_duration
-        if not self.page.trim_segments or duration <= 0:
+        if width <= 0 or duration <= 0:
             return None
-        for idx, segment in enumerate(self.page.trim_segments):
-            start_x = (segment["start"] / duration) * width
-            end_x = (segment["end"] / duration) * width
-            if abs(x - start_x) <= self._drag_threshold:
-                return {"segment_index": idx, "edge": "start"}
-            if abs(x - end_x) <= self._drag_threshold:
-                return {"segment_index": idx, "edge": "end"}
-        return None
+        return max(0, min(duration, (x - left) / width * duration))
 
-    def _on_drag_begin(self, gesture, start_x, start_y):
+    def _edge_at(self, x):
+        """The segment edge nearest to x, if one is within reach."""
+        left, width = self._slider_span(self.cuts_track)
+        duration = self.page.video_duration
+        if width <= 0 or duration <= 0:
+            return None
+        nearest, distance = None, self._edge_reach + 1
+        for index, segment in enumerate(self.page.trim_segments):
+            for edge in ("start", "end"):
+                gap = abs(x - left - segment[edge] / duration * width)
+                if gap < distance:
+                    nearest, distance = (index, edge), gap
+        return nearest
+
+    def _begin_seek(self, widget, x):
         self.page.user_is_dragging_slider = True
-        self._drag_start_pos = (start_x, start_y)
-        width = self.segment_markers_canvas.get_allocated_width()
-        if width <= 0:
-            self.page.user_is_dragging_slider = False
-            self._drag_start_pos = None
-            return
-        edge_info = self._find_segment_edge_at_position(start_x, width)
-        if edge_info:
-            self._dragging_segment = edge_info
-            self._segment_drag_active = True
-        else:
-            self._segment_drag_active = False
-            self._update_slider_drag(start_x, width)
+        self._seek_to(widget, x)
 
-    def _on_drag_update(self, gesture, offset_x, offset_y):
-        if not self._drag_start_pos:
-            return
-        start_x, _ = self._drag_start_pos
-        current_x = start_x + offset_x
-        width = self.segment_markers_canvas.get_allocated_width()
-        if width <= 0:
-            return
-        current_x = max(0, min(width, current_x))
-        if self._segment_drag_active:
-            self._update_segment_drag(current_x, width)
-        else:
-            self._update_slider_drag(current_x, width)
+    def _seek_to(self, widget, x):
+        time = self._time_at(widget, x)
+        if time is not None:
+            self.position_scale.set_value(time)
 
-    def _on_drag_end(self, gesture, offset_x, offset_y):
-        if self._segment_drag_active:
-            # An edge dragged past a neighbour changes the order.
+    def _end_drag(self, *_args):
+        self.page.user_is_dragging_slider = False
+
+    def _on_cuts_drag_begin(self, _gesture, x, _y):
+        self._dragging_segment = self._edge_at(x)
+        if self._dragging_segment is None:
+            self._begin_seek(self.cuts_track, x)
+        else:
+            self.page.user_is_dragging_slider = True
+
+    def _on_cuts_drag_update(self, gesture, offset_x, _offset_y):
+        x = gesture.get_start_point()[1] + offset_x
+        if self._dragging_segment is None:
+            self._seek_to(self.cuts_track, x)
+            return
+        time = self._time_at(self.cuts_track, x)
+        if time is None:
+            return
+        index, edge = self._dragging_segment
+        segment = self.page.trim_segments[index]
+        if (edge == "start" and time < segment["end"]) or (
+            edge == "end" and time > segment["start"]
+        ):
+            segment[edge] = time
+            self.position_scale.set_value(time)
+            self.update_segment_markers()
+
+    def _on_cuts_drag_end(self, *_args):
+        if self._dragging_segment is not None:
+            # An edge dragged past a neighbour changes the order. The page
+            # edits its own copy of the segments; store the change once.
             self.page.trim_segments.sort(key=lambda s: s["start"])
             self.page._save_file_metadata()
             self.page._update_segments_listbox()
-        self.page.user_is_dragging_slider = False
         self._dragging_segment = None
-        self._segment_drag_active = False
-        self._drag_start_pos = None
+        self._end_drag()
 
-    def _update_slider_drag(self, x, width):
-        duration = self.page.video_duration
-        if width <= 0 or duration <= 0:
-            return
-        new_time = (x / width) * duration
-        new_time = max(0, min(duration, new_time))
-        self.position_scale.set_value(new_time)
-
-    def _on_motion(self, controller, x, y):
+    def _on_cuts_motion(self, _controller, x, _y):
         if not self.page.user_is_dragging_slider:
-            width = self.segment_markers_canvas.get_allocated_width()
-            edge_info = self._find_segment_edge_at_position(x, width)
-            self.segment_markers_canvas.set_cursor_from_name(
-                "ew-resize" if edge_info else None
+            self.cuts_track.set_cursor_from_name(
+                "ew-resize" if self._edge_at(x) else None
             )
-
-    def _on_motion_leave(self, controller):
-        self.segment_markers_canvas.set_cursor(None)
-
-    def _update_segment_drag(self, x, width):
-        if width <= 0:
-            return
-        duration = self.page.video_duration
-        if not self._dragging_segment or duration <= 0:
-            return
-        new_time = (x / width) * duration
-        new_time = max(0, min(duration, new_time))
-        idx, edge = (
-            self._dragging_segment["segment_index"],
-            self._dragging_segment["edge"],
-        )
-        if edge == "start" and new_time < self.page.trim_segments[idx]["end"]:
-            self.page.trim_segments[idx]["start"] = new_time
-            self.position_scale.set_value(new_time)
-        elif edge == "end" and new_time > self.page.trim_segments[idx]["start"]:
-            self.page.trim_segments[idx]["end"] = new_time
-            self.position_scale.set_value(new_time)
-        # The page edits its own copy of the segments; store the change.
-        self.page._save_file_metadata()
-        self.update_segment_markers()
-        self.page._update_segments_listbox()
 
     def _on_video_mouse_enter(self, c, x, y):
         self._show_controls()
@@ -1407,8 +1368,6 @@ class VideoEditUI:
             or self.audio_track_button.get_active()
             or self.subtitle_button.get_active()
             or self.speed_button.get_popover().is_visible()
-            # Found pauses are previewed on the timeline in these controls.
-            or (hasattr(self, "pause_popover") and self.pause_popover.is_visible())
         )
 
     def _show_controls(self):
