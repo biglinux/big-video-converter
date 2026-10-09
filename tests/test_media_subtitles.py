@@ -428,3 +428,26 @@ def test_left_out_picture_subtitles_block_the_batch_deletion(tmp_path):
     assert _left_out_subtitles(source, extract, extract, ".mkv") == 1
     assert _left_out_subtitles(source, embedded, none, ".mkv") == 1
     assert _left_out_subtitles(source, none, none, ".mp4") == 0
+
+
+def test_a_track_that_fails_to_extract_is_left_out_and_the_rest_kept(
+    media, tmp_path, monkeypatch
+):
+    processor = SubtitleProcessor(
+        str(media["multi"]),
+        str(tmp_path),
+        "joined.mkv",
+        [{"start": 0, "end": 2}],
+        str(tmp_path),
+        "extract",
+    )
+    extract = processor._extract_segment_subtitle
+    first = processor._get_subtitle_streams()[0]["index"]
+    monkeypatch.setattr(
+        processor,
+        "_extract_segment_subtitle",
+        lambda path, index: index != first and extract(path, index),
+    )
+    processor.process()
+    assert processor.failed == [first]
+    assert len(processor.created_files) == 1

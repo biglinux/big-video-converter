@@ -101,6 +101,9 @@ class SubtitleProcessor:
         self.temp_dir = temp_dir
         self.subtitle_mode = subtitle_mode
         self.created_files = []
+        # Streams that could not be extracted: the job goes on without them,
+        # and the caller counts them as left out.
+        self.failed = []
         self.cancel_event = cancel_event
 
     def process(self):
@@ -121,8 +124,10 @@ class SubtitleProcessor:
             ) == 1 or "(Forced)" in tags.get("title", "")
             key = (language, forced)
             seen[key] = count = seen.get(key, 0) + 1
-            content = self._merge_subtitle_stream(index, language)
-            if content:
+            content = self._merge_subtitle_stream(index)
+            if content is None:
+                self.failed.append(index)
+            elif content:
                 output = self._save_merged_subtitles(content, language, count, forced)
                 self.created_files.append(output)
                 if self.subtitle_mode == "embedded":
@@ -134,8 +139,7 @@ class SubtitleProcessor:
             raise InterruptedError("Subtitle processing cancelled")
 
     def _get_subtitle_streams(self):
-        # Cues are read as SRT: a bitmap track has no text to clip, and a
-        # failed extraction must not abort the whole segment job.
+        # Cues are read as SRT: a bitmap track has no text to clip.
         return [
             s
             for s in probe_media(self.input_file)["streams"]
@@ -143,15 +147,16 @@ class SubtitleProcessor:
             and s.get("codec_name") in TEXT_SUBTITLE_CODECS
         ]
 
-    def _merge_subtitle_stream(self, stream_index, language):
-        # Private file; one extraction/parse per stream, not per segment.
+    def _merge_subtitle_stream(self, stream_index):
+        """The stream's cues clipped to the segments as SRT, or None when the
+        stream cannot be extracted. One extraction per stream."""
         fd, path = tempfile.mkstemp(
             prefix="source-subtitle-", suffix=".srt", dir=self.temp_dir
         )
         os.close(fd)
         try:
             if not self._extract_segment_subtitle(path, stream_index):
-                raise RuntimeError(f"Could not extract subtitle stream {stream_index}")
+                return None
             cues = _read_cues(path)
             merged = []
             offset = 0

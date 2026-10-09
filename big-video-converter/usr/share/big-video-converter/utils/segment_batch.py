@@ -278,24 +278,47 @@ def _bitmap_timeline(cuts):
     )
 
 
+def _process_subtitles(row, processor):
+    """Run the processor; return its tracks and how many could not be read.
+
+    A track that fails to extract is reported on the row and left out, so the
+    job keeps the parts it already finished.
+    """
+    tracks = processor.process()
+    if processor.failed:
+        call_on_main(
+            row.add_output_text,
+            ngettext(
+                "{0} subtitle track could not be extracted and was left out.",
+                "{0} subtitle tracks could not be extracted and were left out.",
+                len(processor.failed),
+            ).format(len(processor.failed)),
+        )
+    return tracks, len(processor.failed)
+
+
 def _embed_subtitles(app, row, context, cuts, joined, work_dir, duration, cancel_event):
     """Mux the source's subtitles, clipped to the cuts, into the joined file.
 
     Text tracks are clipped cue by cue. Bitmap tracks (PGS, DVD) are copied
-    packet by packet, and only Matroska can hold them.
+    packet by packet, and only Matroska can hold them. Returns the file and
+    the number of tracks that could not be extracted.
     """
     from utils.subtitle_processor import SubtitleProcessor
 
     source = context["input_file"]
-    tracks = SubtitleProcessor(
-        source,
-        work_dir,
-        "merged",
-        cuts,
-        work_dir,
-        "embedded",
-        cancel_event=cancel_event,
-    ).process()
+    tracks, failed = _process_subtitles(
+        row,
+        SubtitleProcessor(
+            source,
+            work_dir,
+            "merged",
+            cuts,
+            work_dir,
+            "embedded",
+            cancel_event=cancel_event,
+        ),
+    )
     bitmaps = [
         s["index"]
         for s in probe_media(source)["streams"]
@@ -315,7 +338,7 @@ def _embed_subtitles(app, row, context, cuts, joined, work_dir, duration, cancel
         )
         bitmaps = []
     if not tracks and not bitmaps:
-        return joined
+        return joined, failed
     output = str(Path(work_dir) / f"subtitled{context['output_ext']}")
     encoder = {
         ".mp4": "mov_text",
@@ -365,7 +388,7 @@ def _embed_subtitles(app, row, context, cuts, joined, work_dir, duration, cancel
         if result.cancelled:
             raise InterruptedError(result.error)
         raise RuntimeError(result.error or "Adding the subtitles failed")
-    return output
+    return output, failed
 
 
 def start_segment_batch(page, context):
@@ -408,6 +431,7 @@ def start_segment_batch(page, context):
         nonlocal reencoded
         outputs = []
         reason = None
+        failed_subtitles = 0
         if context.get("plan") is not None:
             call_on_main(row.add_output_text, describe_plan(context))
         result = ConversionResult(False, -1)
@@ -440,11 +464,13 @@ def start_segment_batch(page, context):
                             "extract",
                             cancel_event=cancel_event,
                         )
-                        processor.process()
+                        failed_subtitles += _process_subtitles(row, processor)[1]
                         outputs.extend(processor.created_files)
                     if not outputs:
                         raise ValueError(
-                            "No subtitle cues intersect the selected segments"
+                            "The subtitles could not be extracted"
+                            if failed_subtitles
+                            else "No subtitle cues intersect the selected segments"
                         )
                     result = ConversionResult(
                         True, 0, outputs[0] if len(outputs) == 1 else None
@@ -687,7 +713,7 @@ def start_segment_batch(page, context):
                                 raise InterruptedError(result.error)
                             raise RuntimeError(result.error or "Concatenation failed")
                     elif env_vars.get("subtitle_extract") == "embedded":
-                        joined = _embed_subtitles(
+                        joined, failed_subtitles = _embed_subtitles(
                             app,
                             row,
                             context,
@@ -714,7 +740,7 @@ def start_segment_batch(page, context):
                             "extract",
                             cancel_event=cancel_event,
                         )
-                        processor.process()
+                        failed_subtitles += _process_subtitles(row, processor)[1]
                 else:
                     for index, path in enumerate(paths):
                         if cancel_event.is_set():
@@ -742,12 +768,12 @@ def start_segment_batch(page, context):
                                 "extract",
                                 cancel_event=cancel_event,
                             )
-                            processor.process()
+                            failed_subtitles += _process_subtitles(row, processor)[1]
                 if context["delete_original"]:
                     try:
                         if identity is None:
                             raise ValueError("Source identity cannot authorize removal")
-                        if _left_out_subtitles(
+                        if failed_subtitles or _left_out_subtitles(
                             source, context["env_vars"], env_vars, context["output_ext"]
                         ):
                             raise ValueError(

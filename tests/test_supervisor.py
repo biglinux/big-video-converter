@@ -804,3 +804,31 @@ def test_job_runs_in_a_private_directory_removed_with_it(
     )
     assert list(caller.iterdir()) == []
     assert [p.name for p in folder.iterdir()] == ["out.mkv"]
+
+
+def test_failed_subtitle_extraction_keeps_the_parts_and_the_original(
+    media, tmp_path, cli_env, monkeypatch
+):
+    import utils.segment_batch as module
+    from utils.subtitle_processor import SubtitleProcessor
+
+    def forbidden(*a, **k):
+        raise AssertionError("an original missing subtitles must be kept")
+
+    monkeypatch.setattr(module, "remove_original", forbidden)
+    monkeypatch.setattr(
+        SubtitleProcessor, "_extract_segment_subtitle", lambda *a, **k: False
+    )
+    app = App()
+    page = SimpleNamespace(app=app, _format_time_ffmpeg=lambda v: f"{v:.6f}")
+    context = batch_context(media, tmp_path, cli_env, "split")
+    context["env_vars"]["subtitle_extract"] = "extract"
+    context["delete_original"] = True
+    start_segment_batch(page, context)
+    pump_until(lambda: bool(app.notifications), timeout=25)
+    row = app.progress_page.rows[0]
+    assert app.notifications[0][0] is True, row.lines
+    outputs = app.completed_conversions[-1]["output_files"]
+    assert len(outputs) == 2 and all(Path(f).is_file() for f in outputs)
+    assert any("could not be extracted" in line for line in row.lines)
+    assert Path(context["input_file"]).is_file()
