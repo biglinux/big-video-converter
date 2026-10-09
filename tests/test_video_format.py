@@ -11,7 +11,7 @@ user's library.
 import subprocess
 
 import pytest
-from conftest import CLI, media_command
+from conftest import cli_functions, media_command
 from utils.media_validation import probe_media
 
 
@@ -198,10 +198,10 @@ class TestH264Level:
 
     @staticmethod
     def _level(w, h, num, den=1):
-        text = CLI.read_text()
-        start = text.index("h264_level_for() {")
-        end = text.index("\n}\n", start) + 2
-        script = text[start:end] + f'\nh264_level_for "{w}" "{h}" "{num}" "{den}"\n'
+        script = (
+            cli_functions("h264_level_for")
+            + f'\nh264_level_for "{w}" "{h}" "{num}" "{den}"\n'
+        )
         return subprocess.run(
             ["bash", "-c", script],
             capture_output=True,

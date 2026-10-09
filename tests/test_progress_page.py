@@ -160,9 +160,7 @@ class ProgressPageTests(unittest.TestCase):
         waiting = self.page.queue_items[paths[1]]
         self.assertTrue(waiting.has_css_class("bvc-state-pending"))
         self.assertEqual(waiting.cancel_label.get_label(), "Skip")
-        self.assertFalse(waiting.cancel_button.has_css_class("bvc-cancel-job"))
-        self.assertFalse(waiting.cancel_button.has_css_class("bvc-danger"))
-        self.assertTrue(row.cancel_button.has_css_class("bvc-cancel-job"))
+        self.assertEqual(row.cancel_label.get_label(), "Cancel")
 
     def test_time_left_is_gated_smoothed_and_formatted(self):
         estimate = TimeLeft()

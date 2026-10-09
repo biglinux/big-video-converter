@@ -12,7 +12,7 @@ import subprocess
 import time
 
 import pytest
-from conftest import CLI, fake_ffmpeg, media_command, wait_until
+from conftest import CLI, cli_functions, fake_ffmpeg, media_command, wait_until
 from utils.media_validation import probe_media
 
 
@@ -62,12 +62,9 @@ def timecode_mov(tmp_path_factory):
 class TestFfprobeStreamGroups:
     def test_probe_helpers_ignore_group_rows(self, timecode_mov):
         """The Bash helpers, run for real against the MOV."""
-        text = CLI.read_text()
-        start = text.index("probe_rows() {")
-        end = text.index("\n}\n", text.index("probe_value() {")) + 2
         script = (
             f"ffprobe_executable={shutil.which('ffprobe')}\ninput_file={str(timecode_mov)!r}\n"
-            + text[start:end]
+            + cli_functions("probe_rows", "probe_value")
             + "\n"
             "probe_rows a stream=index:stream_tags=language; echo ---\n"
             "probe_value a:0 stream=channels; echo ---\n"
@@ -88,12 +85,9 @@ class TestFfprobeStreamGroups:
         assert subtitles.strip() == ""
 
     def test_probe_rows_keeps_real_subtitle_rows(self, media):
-        text = CLI.read_text()
-        start = text.index("probe_rows() {")
-        end = text.index("\n}\n", text.index("probe_value() {")) + 2
         script = (
             f"ffprobe_executable={shutil.which('ffprobe')}\ninput_file={str(media['multi'])!r}\n"
-            + text[start:end]
+            + cli_functions("probe_rows", "probe_value")
             + "\nprobe_rows s stream=index,codec_name\n"
         )
         out = subprocess.run(

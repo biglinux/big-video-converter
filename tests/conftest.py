@@ -161,6 +161,14 @@ def fake_ffmpeg(directory, name, body):
     return wrapper
 
 
+def cli_functions(first, last=None):
+    """The converter script's source from function ``first`` through ``last``."""
+    text = CLI.read_text()
+    start = text.index(f"{first}() {{")
+    end = text.index("\n}\n", text.index(f"{last or first}() {{")) + 2
+    return text[start:end]
+
+
 def group_members(pgid):
     """The live processes of process group ``pgid``."""
     members = []
