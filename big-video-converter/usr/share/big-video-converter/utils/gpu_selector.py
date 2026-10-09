@@ -202,7 +202,6 @@ def select_best_gpu(
         if not encoder_name:
             continue
 
-        # Check if ffmpeg has this encoder compiled in
         if encoder_name not in available_encoders:
             continue
 

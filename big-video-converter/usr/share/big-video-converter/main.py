@@ -72,10 +72,8 @@ class VideoConverterApp(
             layout = settings.get_string("button-layout")
             if layout and ":" in layout:
                 left, right = layout.split(":", 1)
-                # Check for 'close' on the left side
                 if "close" in left:
                     return True
-                # Check for 'close' on the right side
                 if "close" in right:
                     return False
             elif layout:
@@ -130,7 +128,6 @@ class VideoConverterApp(
 
         self.logger = logging.getLogger(__name__)
 
-        # Make sure that the selected format is one of the available options
         # Indices: 0=MP4, 1=MKV, 2=MOV, 3=WebM
         current_format = self.settings_manager.load_setting("output-format-index", 0)
         if current_format > 3:
@@ -156,7 +153,6 @@ class VideoConverterApp(
         self._setup_actions()
 
     def _setup_actions(self):
-        """Setup application actions for the menu"""
         actions = {
             "about": self.on_about_action,
             "welcome": self.on_welcome_action,
@@ -208,7 +204,6 @@ class VideoConverterApp(
     def on_activate(self, app) -> None:
         self._setup_icon_theme()
 
-        # Check if this is the first activation
         is_first_activation = not hasattr(self, "window") or self.window is None
 
         if is_first_activation:
@@ -248,7 +243,6 @@ class VideoConverterApp(
         width = self.settings_manager.load_setting("window-width", 1200)
         height = self.settings_manager.load_setting("window-height", 720)
 
-        # Ensure default size is not smaller than minimum
         width = max(width, MIN_WIDTH)
         height = max(height, MIN_HEIGHT)
         self.window.set_default_size(width, height)
@@ -260,7 +254,6 @@ class VideoConverterApp(
 
         self.window.set_title("Big Video Converter")
 
-        # Add close request handler to ensure processes are terminated and save window state
         self.window.connect("close-request", self._on_window_close_request)
 
         self.window.set_icon_name("big-video-converter")
@@ -269,7 +262,6 @@ class VideoConverterApp(
 
         self.toast_overlay = Adw.ToastOverlay()
 
-        # Create master ViewStack for main view and progress view
         self.main_stack = Adw.ViewStack()
 
         self.split_view = Adw.OverlaySplitView()
@@ -445,7 +437,6 @@ class VideoConverterApp(
         self.split_view.set_content(content)
 
     def _create_pages(self):
-        """Create and add all application pages"""
         self.conversion_page = ConversionPage(self)
 
         self.video_edit_page = VideoEditPage(self, self.conversion_page)
@@ -475,7 +466,6 @@ class VideoConverterApp(
         )
 
     def _on_tooltip_action_activated(self, action, _param):
-        """Toggle the tooltip action state from the hamburger menu."""
         current = action.get_state().get_boolean()
         new_state = not current
         action.set_state(GLib.Variant.new_boolean(new_state))
@@ -484,7 +474,6 @@ class VideoConverterApp(
 
     # UI Navigation
     def show_queue_view(self) -> None:
-        """Show the file queue view"""
         self.right_stack.set_visible_child_name("queue_view")
         self.header_bar.set_view("queue")
         self.left_stack.set_visible_child_name("conversion_settings")
@@ -518,11 +507,9 @@ class VideoConverterApp(
         GLib.idle_add(load_video_action)
 
     def show_progress_page(self) -> None:
-        """Show progress page by switching to progress view"""
         self.main_stack.set_visible_child_name("progress_view")
 
     def return_to_main_view(self) -> None:
-        """Return to main view from progress view"""
         self.main_stack.set_visible_child_name("main_view")
         self.show_queue_view()
         self.header_bar.set_buttons_sensitive(True)
@@ -534,7 +521,6 @@ class VideoConverterApp(
 
     # Menu actions
     def on_about_action(self, action, param) -> None:
-        """Show about dialog"""
         from constants import APP_DEVELOPERS, APP_NAME, APP_VERSION
 
         about = Adw.AboutDialog(
@@ -550,7 +536,6 @@ class VideoConverterApp(
         about.present(self.window)
 
     def on_welcome_action(self, action, param) -> None:
-        """Show the welcome dialog"""
         self.welcome_dialog = WelcomeDialog(self.window, self.settings_manager)
         self.welcome_dialog.present()
 
@@ -575,7 +560,6 @@ class VideoConverterApp(
         dialog.show(self.window)
 
     def show_info_dialog(self, title: str, message: str) -> None:
-        """Shows an information dialog"""
         dialog = Gtk.AlertDialog()
         dialog.set_message(title)
         dialog.set_detail(message)
@@ -639,7 +623,6 @@ class VideoConverterApp(
                 self.window.present()
 
     def do_command_line(self, command_line):
-        """Handle command line arguments"""
         args = command_line.get_arguments()
         options = command_line.get_options_dict().end().unpack()
         segments = None

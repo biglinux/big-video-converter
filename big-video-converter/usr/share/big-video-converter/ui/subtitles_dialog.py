@@ -106,7 +106,6 @@ def _clone_model(source_combo):
 
 
 def show_subtitles_dialog(parent_window, app) -> None:
-    """Present the subtitles dialog."""
     dialog = Adw.Dialog()
     connections = SignalConnections(dialog)
     dialog.set_title(_("Subtitles"))

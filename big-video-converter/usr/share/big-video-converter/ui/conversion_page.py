@@ -461,7 +461,6 @@ class ConversionPage:
         self._connect_settings()
 
     def get_page(self):
-        """Return the page widget"""
         return self.page
 
     def _create_page(self):
@@ -643,7 +642,6 @@ class ConversionPage:
         self.on_edit_file_by_path(row.file_path)
 
     def update_queue_display(self) -> None:
-        """Update the queue display with current items"""
 
         if self._queue_render_id is not None:
             GLib.source_remove(self._queue_render_id)
@@ -702,7 +700,6 @@ class ConversionPage:
 
         self.app.header_bar.update_queue_size(len(self.app.conversion_queue))
 
-        # Setup drag and drop on the listbox if we have items to reorder
         if len(self.app.conversion_queue) > 1 and not self.queue_dragging_enabled:
             if hasattr(self, "drag_source") and self.drag_source:
                 self.queue_listbox.remove_controller(self.drag_source)
@@ -737,7 +734,6 @@ class ConversionPage:
 
     # Unified drag and drop handlers for listbox
     def on_drag_prepare_listbox(self, drag_source, x, y):
-        """Prepare data for drag operation from the listbox"""
         row = self.queue_listbox.get_row_at_y(y)
         if row and hasattr(row, "index"):
             self.dragged_row = row
@@ -746,7 +742,6 @@ class ConversionPage:
         return None
 
     def on_drag_begin_listbox(self, drag_source, drag) -> None:
-        """Handle start of drag operation"""
         if self.dragged_row:
             self.dragged_row.add_css_class("dragging")
 
@@ -829,7 +824,6 @@ class ConversionPage:
             self.app.show_error_dialog(_("Could not open this video file"))
 
     def on_remove_from_queue_by_path(self, file_path: str) -> None:
-        """Remove a specific file from the queue"""
         self.app.remove_from_queue(file_path)
         self.update_queue_display()
 
@@ -851,7 +845,6 @@ class ConversionPage:
         env = {}
 
         if gpu_override:
-            # Use override settings for parallel processing
             if "type" in gpu_override:
                 env["gpu"] = gpu_override["type"]
             if "device" in gpu_override:
@@ -901,7 +894,6 @@ class ConversionPage:
         the main loop; a missing answer counts as a failed probe.
         """
         probes = probes or {}
-        # Check if we have a file to convert
         if not hasattr(self, "current_file_path") or not os.path.exists(
             self.current_file_path
         ):
@@ -937,7 +929,6 @@ class ConversionPage:
                 if not _SCRIPT_SETTING.fullmatch(name) or name in _PROXY_VARIABLES
             }
 
-            # Check if force copy video is enabled
             force_copy_video_enabled = settings.get_boolean("force-copy-video", False)
 
             # GPU - Use direct string value, but disable if copying without reencoding
@@ -1038,7 +1029,6 @@ class ConversionPage:
             if sm.get_boolean("normalize-enabled", False):
                 env_vars["normalize_enabled"] = "1"
 
-            # Handle audio settings
             audio_bitrate = settings.load_setting("audio-bitrate", "")
             if audio_bitrate:
                 env_vars["audio_bitrate"] = audio_bitrate
@@ -1048,8 +1038,6 @@ class ConversionPage:
             audio_codec = settings.load_setting("audio-codec", "aac")
             if audio_codec:
                 env_vars["audio_codec"] = audio_codec
-
-            # Get per-file metadata for this file
 
             trim_segments = deepcopy(file_metadata.get("trim_segments", []))
 
@@ -1143,7 +1131,6 @@ class ConversionPage:
         )
         output_ext = "." + output_format
 
-        # Check if input file has the same extension as the selected output format
         input_ext = os.path.splitext(input_file)[1].lower()
         input_basename = os.path.splitext(os.path.basename(input_file))[0]
         input_dir = os.path.dirname(os.path.abspath(input_file))
@@ -1160,7 +1147,6 @@ class ConversionPage:
         )  # 0 = "Same folder as original file"
 
         if use_same_folder:
-            # Use same folder as input
             output_folder = input_dir
         else:
             # Custom folder selected
@@ -1169,7 +1155,6 @@ class ConversionPage:
                 # If custom folder is empty, use input directory
                 output_folder = input_dir
 
-        # Ensure output folder path is absolute
         if not os.path.isabs(output_folder):
             output_folder = os.path.abspath(output_folder)
 
@@ -1216,7 +1201,6 @@ class ConversionPage:
         job_id = job_info.get("job_id")
         cancel_event = job_info.get("cancel_event") or threading.Event()
 
-        # Check MP4 compatibility when copying without reencoding to MP4
         force_copy_video = env_vars.get("force_copy_video") == "1"
         # Re-encoding uses the settings copy mode had skipped, the accelerator
         # included: choosing "re-encode" is not a request to fall back to the
@@ -1465,7 +1449,6 @@ class ConversionPage:
         return True
 
     def _continue_conversion(self, context):
-        """Continue with the actual conversion process"""
         # The naming and segment fields are read by start_segment_batch, which
         # takes the whole context; only these are used here.
         cmd = context["cmd"]
@@ -1505,8 +1488,7 @@ class ConversionPage:
                 ),
             }
 
-        # Create and display progress dialog
-        # Always pass input_file for proper queue tracking
+        # input_file lets the queue match the job when it completes.
         run_with_progress_dialog(
             self.app,
             cmd,
@@ -1540,7 +1522,6 @@ class ConversionPage:
         self.app.settings_manager.save_setting("output-folder", entry.get_text())
 
     def _on_folder_type_changed(self, combo, param):
-        """Handle folder type combo change"""
         selected = combo.get_selected()
         use_custom_folder = selected == 1  # "Custom folder" option is selected
 

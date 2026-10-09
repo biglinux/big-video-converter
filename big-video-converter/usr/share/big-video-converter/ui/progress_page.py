@@ -871,12 +871,10 @@ class ProgressPage:
         dialog.present(window)
 
     def _on_cancel_all_response(self, dialog, response):
-        """Handle cancel all confirmation response"""
         if response == "confirm":
             self._do_cancel_all()
 
     def _do_cancel_all(self):
-        """Actually cancel all conversions"""
         self.app.is_cancellation_requested = True
         for info in list(getattr(self.app, "active_conversions", [])):
             token = info.get("cancel_event")

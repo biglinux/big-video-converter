@@ -333,11 +333,9 @@ def get_video_file_info(file_path: str):
         Dictionary containing file information or None on error
     """
     try:
-        # Ensure file exists
         if not os.path.exists(file_path):
             return None
 
-        # Run ffprobe with JSON output
         command = [
             get_ffprobe_executable(),
             "-v",
@@ -463,11 +461,9 @@ def has_audio_streams(file_path: str):
         bool: True if the file has at least one audio stream, False otherwise
     """
     try:
-        # Ensure file exists
         if not os.path.exists(file_path):
             return False
 
-        # Run ffprobe to check for audio streams
         command = [
             get_ffprobe_executable(),
             "-v",
@@ -522,7 +518,6 @@ def check_mp4_compatibility(file_path: str):
         and ``title``. Translation is left to the caller.
     """
     try:
-        # Ensure file exists
         if not os.path.exists(file_path):
             return False, []
 

@@ -17,7 +17,6 @@ class WelcomeDialog:
     """Welcome dialog explaining video converter features and benefits"""
 
     def __init__(self, parent_window, settings_manager):
-        """Initialize the welcome dialog"""
         self.parent_window = parent_window
         self.settings_manager = settings_manager
         self.dialog = None
@@ -26,7 +25,6 @@ class WelcomeDialog:
         self.setup_ui()
 
     def setup_ui(self) -> None:
-        """Set up the UI components"""
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scrolled.set_vexpand(True)
@@ -172,19 +170,16 @@ class WelcomeDialog:
 
         self.dialog = Adw.Dialog()
         self.dialog.connect("closed", lambda dialog: dialog.set_child(None))
-        # Use larger defaults but allow dialog to adapt to screen size
         self.dialog.set_content_width(900)
         self.dialog.set_content_height(650)
 
         self.dialog.set_child(scrolled)
 
     def present(self) -> None:
-        """Present the dialog"""
         if self.dialog and self.parent_window:
             self.dialog.present(self.parent_window)
 
     def _create_feature_box(self, title, description):
-        """Create a feature box with title and description"""
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
 
         title_label = Gtk.Label(label=title, css_classes=["heading"])
@@ -204,7 +199,6 @@ class WelcomeDialog:
         return box
 
     def on_close_clicked(self, button) -> None:
-        """Handle close button click"""
         if self.show_switch:
             show_on_startup = self.show_switch.get_active()
             self.settings_manager.save_setting("show-welcome-dialog", show_on_startup)

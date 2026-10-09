@@ -161,7 +161,6 @@ class SettingsOverride:
 
 
 def get_adjustment_value(settings, name: str):
-    """Get adjustment value from settings"""
     return settings.get_value(SETTING_KEYS[name], VIDEO_ADJUSTMENT_DEFAULTS[name])
 
 
@@ -216,10 +215,7 @@ def get_ffmpeg_filter_string(
     """
     filters = []
 
-    # Pixel-format negotiation belongs to the encoder backend. It must never
-    # suppress the user's crop, colour, rotation or flip operations for HEVC.
-
-    # 1. Add crop filter
+    # Crop, colour, hue, rotation, then flip: the order mpv shows them in.
     crop_left = get_adjustment_value(settings, "crop_left")
     crop_right = get_adjustment_value(settings, "crop_right")
     crop_top = get_adjustment_value(settings, "crop_top")
@@ -252,7 +248,7 @@ def get_ffmpeg_filter_string(
             )
         filters.append(f"crop={crop_width}:{crop_height}:{crop_left}:{crop_top}")
 
-    # 2. Add eq filter with calibrated values (brightness, saturation)
+    # Brightness and saturation, calibrated to match the preview.
     eq_parts = []
 
     # Preview and FFmpeg eq brightness share the -1.0..1.0 range, 0.0 neutral.
@@ -282,13 +278,12 @@ def get_ffmpeg_filter_string(
     if eq_parts:
         filters.append(f"eq={':'.join(eq_parts)}")
 
-    # 3. Add hue filter separately (FFmpeg requires separate hue filter, not in eq)
+    # eq has no hue; FFmpeg's hue filter takes it.
     hue = get_adjustment_value(settings, "hue")
     if abs(hue) > FLOAT_THRESHOLD:
         ffmpeg_hue = preview_hue_to_ffmpeg(hue) * 180 / math.pi
         filters.append(f"hue=h={ffmpeg_hue:.3f}")
 
-    # 4. Rotation (transpose for 90/270, hflip+vflip for 180)
     rotation = int(settings.load_setting("preview-rotation", 0))
     rotation = rotation % 360
     if rotation == 90:
@@ -299,7 +294,6 @@ def get_ffmpeg_filter_string(
     elif rotation == 270:
         filters.append("transpose=2")
 
-    # 5. Flip (applied after rotation to match mpv behavior)
     flip_h = settings.get_boolean("preview-flip-h", False)
     flip_v = settings.get_boolean("preview-flip-v", False)
     if flip_h:

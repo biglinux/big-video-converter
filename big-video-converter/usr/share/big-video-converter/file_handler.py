@@ -41,12 +41,10 @@ class FileHandlerMixin:
 
     def _setup_drag_and_drop(self):
         """Set up drag and drop support for the window"""
-        # Handle single files
         drop_target = Gtk.DropTarget.new(Gio.File, Gdk.DragAction.COPY)
         drop_target.connect("drop", self.on_drop_file)
         self.window.add_controller(drop_target)
 
-        # Handle multiple files
         filelist_drop_target = Gtk.DropTarget.new(Gdk.FileList, Gdk.DragAction.COPY)
         filelist_drop_target.connect("drop", self.on_drop_filelist)
         self.window.add_controller(filelist_drop_target)
@@ -383,7 +381,6 @@ class FileHandlerMixin:
         dialog.present(self.window)
 
     def _handle_mount_error(self, status_label, button, error_msg):
-        """Handle mount error in network dialog"""
         status_label.remove_css_class("dim-label")
         status_label.add_css_class("error")
         status_label.set_text(_("Connection failed: {}").format(error_msg))

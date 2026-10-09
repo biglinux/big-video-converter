@@ -24,7 +24,6 @@ class AudioSettingsMixin:
         return False
 
     def _on_gate_switch_changed(self, switch, state):
-        """Handle noise gate toggle"""
         self.settings_manager.save_setting("noise-gate-enabled", state)
 
         self.gate_expander.set_enable_expansion(state)
@@ -37,7 +36,6 @@ class AudioSettingsMixin:
         return False
 
     def _on_compressor_switch_changed(self, switch, state):
-        """Handle compressor toggle"""
         self.settings_manager.save_setting("compressor-enabled", state)
 
         self.compressor_expander.set_enable_expansion(state)
@@ -50,14 +48,12 @@ class AudioSettingsMixin:
         return False
 
     def _on_hpf_toggled(self, row, pspec):
-        """Handle HPF toggle"""
         active = row.get_active()
         self.settings_manager.save_setting("hpf-enabled", active)
         self.hpf_freq_row.set_visible(active)
         self._refresh_nr_preview()
 
     def _on_eq_switch_changed(self, switch, state):
-        """Handle EQ toggle"""
         self.settings_manager.save_setting("eq-enabled", state)
         self.eq_expander.set_enable_expansion(state)
         self.eq_preset_row.set_sensitive(state)
@@ -69,12 +65,10 @@ class AudioSettingsMixin:
         return False
 
     def _on_normalize_toggled(self, row, pspec):
-        """Handle loudness normalization toggle"""
         self.settings_manager.save_setting("normalize-enabled", row.get_active())
         self._refresh_nr_preview()
 
     def _on_eq_preset_changed(self, row, param):
-        """Handle EQ preset change"""
         idx = row.get_selected()
         if idx < len(self._eq_preset_keys):
             key = self._eq_preset_keys[idx]

@@ -154,7 +154,6 @@ def _slider_row(label: str, adj: Gtk.Adjustment, format_func=None) -> Gtk.Box:
 
 
 def show_noise_dialog(parent_window, app) -> bool:
-    """Present the noise-cleaning dialog."""
     dialog = Adw.Dialog()
     connections = SignalConnections(dialog)
     dialog.set_title(_("Audio Settings"))

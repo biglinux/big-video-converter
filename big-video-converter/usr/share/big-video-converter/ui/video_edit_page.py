@@ -61,7 +61,6 @@ class VideoEditPage:
         self.source_hdr = "auto"
         self.crop_edit_mode = False
         self.crop_aspect = "free"
-        # Load default output mode from settings (last used by user)
         self.output_mode = self.settings.get_value("multi-segment-output-mode", "join")
         self._restoring_metadata = False
         self._updating_crop_spins = False
@@ -482,7 +481,6 @@ class VideoEditPage:
         _CROP_MARGIN = 20
 
         if active:
-            # Hide overlay controls (seekbar, transport buttons) during crop edit
             if hasattr(self.ui, "overlay_controls"):
                 self.ui.overlay_controls.set_visible(False)
 
@@ -631,7 +629,6 @@ class VideoEditPage:
         self.update_crop_spinbuttons()
 
     def _apply_video_flip(self) -> None:
-        """Apply flip state to MPV preview."""
         if self.mpv_player:
             self.mpv_player.set_video_flip(self.flip_h, self.flip_v)
 
@@ -810,7 +807,6 @@ class VideoEditPage:
     def _on_edit_segment_dialog_response_spinbuttons(
         self, dialog, response, segment_index, start_spinbuttons, end_spinbuttons
     ):
-        """Handle the edit segment dialog response with spinbuttons"""
         if response == "save":
             try:
                 times = self._segment_times(start_spinbuttons, end_spinbuttons)
@@ -856,7 +852,6 @@ class VideoEditPage:
         return start_time, end_time
 
     def _show_error_dialog(self, title, message):
-        """Show a simple error dialog"""
         error_dialog = Adw.AlertDialog.new(title, None)
         error_dialog.set_body(message)
         error_dialog.add_response("ok", _("OK"))
@@ -870,7 +865,6 @@ class VideoEditPage:
         self._update_segments_listbox()
 
     def _on_clear_all_segments_with_confirmation(self, button):
-        """Show confirmation dialog before clearing all segments"""
         if not self.trim_segments:
             return  # Nothing to clear
 
@@ -888,14 +882,12 @@ class VideoEditPage:
         dialog.present(self.app.window)
 
     def _on_clear_confirmation_response(self, dialog, response):
-        """Handle the clear confirmation dialog response"""
         if response == "clear":
             self.trim_segments = []
             self._save_file_metadata()
             self._update_segments_listbox()
 
     def _on_add_manual_segment_clicked(self, button):
-        """Show dialog to manually add a new segment"""
         dialog = Adw.AlertDialog.new(_("Add Segment Manually"), None)
         dialog.set_body(_("Enter start and end times for the new segment"))
 
@@ -935,7 +927,6 @@ class VideoEditPage:
     def _on_add_manual_segment_response_spinbuttons(
         self, dialog, response, start_spinbuttons, end_spinbuttons
     ):
-        """Handle the add manual segment dialog response with spinbuttons"""
         if response == "add":
             try:
                 times = self._segment_times(start_spinbuttons, end_spinbuttons)
@@ -993,7 +984,6 @@ class VideoEditPage:
             self.mpv_player.set_hue(self.hue)
 
     def _on_output_mode_changed(self, combo, pspec):
-        """Handle output mode combo box change"""
         selected = combo.get_selected()
         self.output_mode = "join" if selected == 0 else "split"
         self._save_file_metadata()
@@ -1210,7 +1200,6 @@ class VideoEditPage:
                     self.ui.volume_button.set_icon_name("audio-volume-high-symbolic")
 
     def on_speed_changed(self, speed: float) -> None:
-        """Handle playback speed change."""
         self.playback_speed = speed
         if self.mpv_player:
             self.mpv_player.set_speed(speed)
@@ -1246,11 +1235,7 @@ class VideoEditPage:
         self._audio_filter_timer = GLib.timeout_add(150, self._do_apply_audio_filters)
 
     def _do_apply_audio_filters(self) -> bool:
-        """Build and apply the full audio filter chain to the mpv player.
-
-        Chain order: HPF → Compressor → Normalize → [NR] → Gate → EQ
-        Each filter works independently — NR is optional.
-        """
+        """Apply the export's audio chain, in the converter script's order, to mpv."""
         self._audio_filter_timer = None
         if not (self.mpv_player):
             return False
@@ -1258,12 +1243,10 @@ class VideoEditPage:
         sm = self.app.settings_manager
         filters = []
 
-        # 1. High-Pass Filter
         if sm.get_boolean("hpf-enabled", False):
             freq = sm.load_setting("hpf-frequency", 80)
             filters.append(f"highpass=f={freq}:poles=2")
 
-        # 2. Compressor
         if sm.get_boolean("compressor-enabled", False):
             import math
 
@@ -1281,11 +1264,10 @@ class VideoEditPage:
                 f":knee={knee_lin:.6f}:detection=rms"
             )
 
-        # 3. Volume Normalization (before NR for consistent input level)
         if sm.get_boolean("normalize-enabled", False):
             filters.append("speechnorm=e=12.5:r=0.0001:l=1")
 
-        # 4. AI Noise Reduction (only if NR enabled AND its plugin exists)
+        # Noise reduction only when its plugin is installed.
         model = sm.load_setting("noise-model", 0)
         if sm.get_boolean("noise-reduction", False) and os.path.exists(
             NOISE_MODELS[model][0]
@@ -1296,7 +1278,6 @@ class VideoEditPage:
                 )
             )
 
-        # 5. Noise Gate (after NR — post-NR audio is mostly speech, so full-band detection is effective)
         if sm.get_boolean("noise-gate-enabled", False):
             import math
 
@@ -1310,7 +1291,6 @@ class VideoEditPage:
                 f":attack=10:release=250:ratio=4:detection=rms"
             )
 
-        # 6. Equalizer
         if sm.get_boolean("eq-enabled", False):
             bands_str = sm.load_setting("eq-bands", "0,0,0,0,0,0,0,0,0,0")
             bands = [float(b) for b in str(bands_str).split(",")]

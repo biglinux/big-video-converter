@@ -110,7 +110,6 @@ def _make_switch_sync(source, toggle, connections):
 
 
 def _clone_model(source_combo):
-    """Clone a StringList model from a ComboRow."""
     model = source_combo.get_model()
     items = Gtk.StringList()
     for i in range(model.get_n_items()):
@@ -119,7 +118,6 @@ def _clone_model(source_combo):
 
 
 def show_video_encoding_dialog(parent_window, app) -> None:
-    """Present the video encoding dialog."""
     dialog = Adw.Dialog()
     connections = SignalConnections(dialog)
     dialog.set_title(_("Video Encoding"))

@@ -47,7 +47,6 @@ class SettingsPage:
     def _create_page(self):
         page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
-        # Add ScrolledWindow to enable scrolling when window is small
         scrolled_window = Gtk.ScrolledWindow()
         scrolled_window.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scrolled_window.set_hexpand(True)
@@ -59,7 +58,6 @@ class SettingsPage:
         scrollable_content.set_vexpand(True)
         scrolled_window.set_child(scrollable_content)
 
-        # Use Adw.Clamp for consistent width
         clamp = Adw.Clamp()
         clamp.set_maximum_size(800)
         clamp.set_tightening_threshold(600)
@@ -145,7 +143,6 @@ class SettingsPage:
         self.video_resolution_combo.set_size_request(400, -1)
         self.app.tooltip_helper.add_tooltip(self.video_resolution_combo, "resolution")
 
-        # Add custom entry for resolution that shows when "Custom" is selected
         self.custom_resolution_row = Adw.EntryRow(title=_("Custom resolution"))
         self.custom_resolution_row.set_tooltip_text(_("Ex: 1280x720, 1920x1080"))
         self.custom_resolution_row.set_visible(False)  # Initially hidden
@@ -190,7 +187,6 @@ class SettingsPage:
         self.audio_bitrate_combo.set_model(bitrate_model)
         self.audio_bitrate_combo.set_selected(0)  # Default
 
-        # Add custom entry for bitrate that shows when "Custom" is selected
         self.custom_bitrate_row = Adw.EntryRow(title=_("Custom bitrate"))
         self.custom_bitrate_row.set_tooltip_text(_("Ex: 128k, 192k, 256k"))
         self.custom_bitrate_row.set_visible(False)  # Initially hidden
@@ -220,7 +216,6 @@ class SettingsPage:
         self.audio_channels_combo.set_model(channels_model)
         self.audio_channels_combo.set_selected(0)  # Default
 
-        # Add custom entry for channels that shows when "Custom" is selected
         self.custom_channels_row = Adw.EntryRow(title=_("Custom channels"))
         self.custom_channels_row.set_tooltip_text(_("Ex: 2 (stereo), 6 (5.1)"))
         self.custom_channels_row.set_visible(False)  # Initially hidden
@@ -317,14 +312,12 @@ class SettingsPage:
             self.settings_manager.save_setting("audio-channels", "")
 
     def _on_resolution_combo_changed(self, combo, param):
-        """Handle resolution combo selection change"""
         selected = combo.get_selected()
 
         # Check if Custom is selected (last option in VIDEO_RESOLUTION_OPTIONS)
         if selected == len(constants.VIDEO_RESOLUTION_OPTIONS) - 1:  # Custom option
             self.custom_resolution_row.set_visible(True)
 
-            # Use the custom value if it's not empty
             custom_value = self.custom_resolution_row.get_text()
             if custom_value:
                 self.settings_manager.save_setting("video-resolution", custom_value)
@@ -332,13 +325,11 @@ class SettingsPage:
         else:
             self.custom_resolution_row.set_visible(False)
 
-            # Use the mapping to get the internal value
             if selected < len(constants.VIDEO_RESOLUTION_VALUES):
                 resolution = constants.VIDEO_RESOLUTION_VALUES[selected]
                 self.settings_manager.save_setting("video-resolution", resolution)
 
     def _on_custom_resolution_changed(self, entry):
-        """Save custom resolution when entry changes"""
         value = entry.get_text()
         if (
             value
@@ -348,7 +339,6 @@ class SettingsPage:
             self.settings_manager.save_setting("video-resolution", value)
 
     def _connect_setting_signals(self):
-        """Connect signals for saving settings"""
         # Use direct value saving instead of indexes
 
         # Additional settings
@@ -419,7 +409,6 @@ class SettingsPage:
             entry.set_tooltip_text(message)
 
     def _save_preset_setting(self, combo_box, _param=None):
-        """Save preset setting"""
         selected = combo_box.get_selected()
         if selected < len(constants.PRESET_VALUES):
             internal_value = constants.PRESET_VALUES[selected]
@@ -436,7 +425,6 @@ class SettingsPage:
             self.app._update_sidebar_for_extract_mode()
 
     def _save_audio_codec_setting(self, combo_box, _param=None):
-        """Save audio codec setting"""
         selected = combo_box.get_selected()
         if selected < len(constants.AUDIO_CODEC_VALUES):
             internal_value = constants.AUDIO_CODEC_VALUES[selected]
@@ -444,12 +432,10 @@ class SettingsPage:
             logger.debug("Saved audio codec: %s", internal_value)
 
     def _save_render_mode_setting(self, combo_box, _param=None):
-        """Save video preview render mode setting"""
         selected = combo_box.get_selected()
         if selected < len(self.render_mode_values):
             internal_value = self.render_mode_values[selected]
 
-            # Check if value actually changed
             current_value = self.app.settings_manager.load_setting(
                 "video-preview-render-mode", "auto"
             )
@@ -506,7 +492,6 @@ class SettingsPage:
         saved_resolution = self.settings_manager.load_setting("video-resolution", "")
 
         if saved_resolution:
-            # Check if it's one of the standard resolutions using reverse mapping
             standard_index = -1
             for index, internal_value in constants.VIDEO_RESOLUTION_VALUES.items():
                 if internal_value == saved_resolution:
@@ -532,7 +517,6 @@ class SettingsPage:
         # Audio bitrate
         bitrate_value = self.settings_manager.load_setting("audio-bitrate", "")
         if bitrate_value:
-            # Check if it's one of the standard bitrates
             standard_index = -1
             for i, rate in enumerate(self.bitrate_values):
                 if rate == bitrate_value:
@@ -558,7 +542,6 @@ class SettingsPage:
         # Audio channels
         channels_value = self.settings_manager.load_setting("audio-channels", "")
         if channels_value:
-            # Check if it's one of the standard channel configurations
             standard_index = -1
             for i, ch in enumerate(self.channels_values):
                 if ch == channels_value:
@@ -634,7 +617,6 @@ class SettingsPage:
         return 0
 
     def _on_reset_button_clicked(self, button):
-        """Handle reset settings button click"""
         dialog = Gtk.AlertDialog()
         dialog.set_message(_("Reset All Settings?"))
         dialog.set_detail(
@@ -649,7 +631,6 @@ class SettingsPage:
         dialog.choose(self.app.window, None, self._on_reset_confirmation_response)
 
     def _on_reset_confirmation_response(self, dialog, result):
-        """Handle response from reset confirmation dialog"""
         try:
             response = dialog.choose_finish(result)
         except GLib.Error:
@@ -688,7 +669,6 @@ class SettingsPage:
         self.app.tooltip_action.set_state(GLib.Variant.new_boolean(show_tooltips))
         self.app.tooltip_helper.refresh()
 
-        # Update encoding options state based on reset force copy value
         force_copy = self.settings_manager.load_setting("force-copy-video", False)
         self.update_for_force_copy_state(force_copy)
         if hasattr(self.app, "_update_encoding_options_state"):

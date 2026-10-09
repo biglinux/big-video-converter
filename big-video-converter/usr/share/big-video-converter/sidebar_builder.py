@@ -23,8 +23,6 @@ class SidebarBuilderMixin:
     """Mixin providing sidebar (left pane) construction, signal wiring, and settings loading."""
 
     def _create_left_pane(self):
-        """Create left settings pane with contextual ViewStack"""
-        # Create ToolbarView for left pane to get the correct sidebar style
         left_toolbar_view = Adw.ToolbarView()
         left_toolbar_view.add_css_class("sidebar")
 
@@ -39,7 +37,6 @@ class SidebarBuilderMixin:
             "close,maximize,minimize:menu" if window_buttons_left else ""
         )
 
-        # Create title box with label and (optionally) app icon
         if not window_buttons_left:
             # The editor puts its own title and note here (show_editor_for_file).
             self.sidebar_title = Adw.WindowTitle(title="Big Video Converter")
@@ -48,7 +45,6 @@ class SidebarBuilderMixin:
             title_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
             self.sidebar_title = Adw.WindowTitle(title="Big Video Converter")
             title_box.append(self.sidebar_title)
-            # Add an expanding box to push controls to the left
             expander = Gtk.Box()
             expander.set_hexpand(True)
             title_box.append(expander)
@@ -648,7 +644,6 @@ class SidebarBuilderMixin:
         return settings_box
 
     def _connect_left_pane_signals(self):
-        """Connect signals for left pane settings controls"""
         # GPU
         self.gpu_combo.connect(
             "notify::selected",
@@ -975,13 +970,11 @@ class SidebarBuilderMixin:
             self.conversion_page.refresh_recipe_summaries()
 
     def _on_video_encoding_activated(self, _row):
-        """Open the video encoding dialog."""
         from ui.video_encoding_dialog import show_video_encoding_dialog
 
         show_video_encoding_dialog(self.window, self)
 
     def _on_audio_activated(self, _row):
-        """Open the audio dialog."""
         from ui.audio_dialog import show_audio_dialog
 
         show_audio_dialog(self.window, self)
@@ -993,13 +986,11 @@ class SidebarBuilderMixin:
         show_noise_dialog(self.window, self)
 
     def _on_subtitles_activated(self, _row):
-        """Open the subtitles dialog."""
         from ui.subtitles_dialog import show_subtitles_dialog
 
         show_subtitles_dialog(self.window, self)
 
     def _on_presets_activated(self, _row):
-        """Open the presets grid."""
         from ui.presets_dialog import show_presets_dialog
 
         show_presets_dialog(self.window, self)
@@ -1017,7 +1008,6 @@ class SidebarBuilderMixin:
             self._presets_row.set_subtitle(f"{name} · {summary}" if summary else name)
 
     def _on_extra_activated(self, _row):
-        """Open the extra settings dialog."""
         from ui.extra_dialog import show_extra_dialog
 
         show_extra_dialog(self.window, self)
@@ -1025,7 +1015,6 @@ class SidebarBuilderMixin:
     # Sidebar subtitle update methods
 
     def _update_audio_subtitle(self):
-        """Update the Audio ActionRow subtitle with current settings."""
         parts = []
         audio_model = self.audio_handling_combo.get_model()
         if audio_model:
@@ -1074,7 +1063,6 @@ class SidebarBuilderMixin:
             self.video_edit_page.ui._sync_nr_subtitle()
 
     def _update_subtitles_subtitle(self):
-        """Update the Subtitles ActionRow subtitle."""
         model = self.subtitle_combo.get_model()
         if model:
             idx = self.subtitle_combo.get_selected()
@@ -1110,7 +1098,6 @@ class SidebarBuilderMixin:
             self.conversion_page.refresh_recipe_summaries()
 
     def _update_extra_subtitle(self):
-        """Update the Extra ActionRow subtitle."""
         parts = []
         if (
             hasattr(self, "settings_page")
@@ -1122,12 +1109,10 @@ class SidebarBuilderMixin:
         )
 
     def _save_gpu_setting(self, index):
-        """Save GPU setting as direct value"""
         if index in GPU_VALUES:
             self.settings_manager.save_setting("gpu", GPU_VALUES[index])
 
     def _save_quality_setting(self, index):
-        """Save video quality setting as direct value"""
         if index in VIDEO_QUALITY_VALUES:
             self.settings_manager.save_setting(
                 "video-quality", VIDEO_QUALITY_VALUES[index]
@@ -1147,13 +1132,11 @@ class SidebarBuilderMixin:
         self._update_encoding_options_state(is_copy)
 
     def _find_gpu_index(self, value):
-        """Find index of GPU value"""
         value = value.lower()
         reverse_map = {v: k for k, v in GPU_VALUES.items()}
         return reverse_map.get(value, 0)
 
     def _find_quality_index(self, value):
-        """Find index of quality value"""
         value = value.lower()
         reverse_map = {v: k for k, v in VIDEO_QUALITY_VALUES.items()}
         return reverse_map.get(value, 0)

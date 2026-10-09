@@ -43,13 +43,11 @@ class VideoInfoDialog:
 
         content_box.append(header_bar)
 
-        # Create main box for content with proper structure for scrolling
         main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         main_box.set_hexpand(True)  # Ensure box takes full width
         main_box.set_vexpand(True)  # Ensure box takes full height
 
-        # Create a scrolled window that extends to the edges of the main window
-        # No margins on scrolled window itself
+        # No margins: the scrolled window reaches the dialog's edges.
         scrolled = Gtk.ScrolledWindow()
         scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         scrolled.set_vexpand(True)
@@ -59,7 +57,6 @@ class VideoInfoDialog:
         scrolled.set_margin_top(0)
         scrolled.set_margin_bottom(0)
 
-        # Use a content container inside the scrolled window to apply proper margins
         content_container = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         content_container.set_margin_start(24)
         content_container.set_margin_end(24)  # Leave space for scrollbar
@@ -68,7 +65,6 @@ class VideoInfoDialog:
         content_container.set_spacing(24)
         content_container.set_hexpand(True)
 
-        # Use Adw.Clamp inside the content container
         clamp = Adw.Clamp()
         clamp.set_maximum_size(800)
         clamp.set_tightening_threshold(600)
@@ -123,7 +119,6 @@ class VideoInfoDialog:
             return False
 
     def _get_file_info_thread(self):
-        """Background thread to get file information"""
         try:
             info = get_video_file_info(self.file_path)
             GLib.idle_add(self._update_ui_with_info, info)
@@ -132,7 +127,6 @@ class VideoInfoDialog:
             GLib.idle_add(self._show_error, str(e))
 
     def _update_ui_with_info(self, info):
-        """Update the UI with the file information"""
         if not self.dialog.get_visible():
             return
         self.info_box.remove(self.loading_box)
@@ -168,7 +162,6 @@ class VideoInfoDialog:
             self._add_format_info(info["format"])
 
     def _add_general_info(self, info):
-        """Add general file information"""
         group = Adw.PreferencesGroup(title=_("General Information"))
 
         # File name - show the file name first, "File Name" as subtitle
@@ -249,7 +242,6 @@ class VideoInfoDialog:
         self.info_box.append(group)
 
     def _copy_to_clipboard(self, text):
-        """Copy text to clipboard"""
         clipboard = Gdk.Display.get_default().get_clipboard()
         clipboard.set(text)
 
@@ -360,7 +352,6 @@ class VideoInfoDialog:
 
                     group.add(lang_row)
 
-                # Add a separator between multiple video streams if needed
                 if idx < len(streams) - 1:
                     separator = Gtk.Separator(orientation=Gtk.Orientation.HORIZONTAL)
                     separator.set_margin_top(8)
@@ -510,10 +501,8 @@ class VideoInfoDialog:
         self.info_box.append(group)
 
     def _add_format_info(self, format_data):
-        """Add format-specific information"""
         group = Adw.PreferencesGroup(title=_("Format Details"))
 
-        # Add selected format fields - value first, field name as subtitle
         format_fields = [
             ("format_long_name", _("Format")),
             ("bit_rate", _("Bitrate (bps)")),
@@ -548,7 +537,6 @@ class VideoInfoDialog:
         self.info_box.append(group)
 
     def _show_error(self, message):
-        """Show error message in the dialog"""
         if not self.dialog.get_visible():
             return
         if hasattr(self, "loading_box") and self.loading_box in self.info_box:
@@ -583,7 +571,6 @@ class VideoInfoDialog:
         self.info_box.append(error_box)
 
     def _on_retry_clicked(self, button):
-        """Handle retry button click"""
         while True:
             child = self.info_box.get_first_child()
             if child:

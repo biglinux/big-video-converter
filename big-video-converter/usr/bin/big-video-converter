@@ -890,20 +890,19 @@ calc() {
 	awk "BEGIN { printf \"%.6f\", $1 }"
 }
 
-# Audio Processing Filter Chain
-# Build filter chain: HPF → Compressor → Normalize → [NR] → Gate → EQ
-# Each filter works independently — NR is just one optional filter
+# The audio chain, each filter optional: high-pass, compressor and speechnorm
+# first, so the noise reduction hears an even level; then the gate, whose
+# full-band detection works on what is mostly speech after it; then the
+# equalizer. ui/video_edit_page.py builds the same chain for the preview.
 noise_audio_filter=""
 local_filters=()
 
-# 1. High-Pass Filter
 if [[ $hpf_enabled == "1" ]]; then
 	: "${hpf_frequency:=80}"
 	local_filters+=("highpass=f=${hpf_frequency}:poles=2")
 	echo "HPF enabled: frequency=${hpf_frequency}Hz"
 fi
 
-# 2. Compressor (before NR to even out dynamics)
 if [[ $compressor_enabled == "1" ]]; then
 	: "${compressor_intensity:=1.0}"
 	comp_threshold_db=$(calc "-20 - ${compressor_intensity} * 20")
@@ -917,14 +916,13 @@ if [[ $compressor_enabled == "1" ]]; then
 	echo "Compressor enabled: intensity=${compressor_intensity} threshold=${comp_threshold_db}dB ratio=${comp_ratio}"
 fi
 
-# 3. Volume Normalization (before NR for consistent input level)
-# speechnorm: fast, no internal resampling, no pumping artifacts
+# speechnorm: no internal resampling and no pumping.
 if [[ $normalize_enabled == "1" ]]; then
 	local_filters+=("speechnorm=e=12.5:r=0.0001:l=1")
 	echo "Volume normalization enabled (speechnorm)"
 fi
 
-# 4. AI noise reduction: DeepFilterNet3 (noise_model=0) or DPDFNet-2 48 kHz
+# AI noise reduction: DeepFilterNet3 (noise_model=0) or DPDFNet-2 48 kHz
 # (noise_model=1). Both are mono 48 kHz LADSPA plugins; FFmpeg runs one
 # instance per channel, so the chain applies to any layout.
 # - The plugins delay their output (DFN3 1919 samples, DPDFNet 2880): the end
@@ -961,7 +959,6 @@ if [[ $noise_reduction == "1" ]]; then
 	fi
 fi
 
-# 5. Noise Gate (after NR — post-NR audio is mostly speech, so full-band detection is effective)
 if [[ $noise_gate == "1" ]]; then
 	: "${gate_intensity:=0.5}"
 	gate_threshold_db=$(calc "-50 + sqrt(${gate_intensity}) * 35")
@@ -972,7 +969,7 @@ if [[ $noise_gate == "1" ]]; then
 	echo "Noise gate enabled: intensity=${gate_intensity} threshold=${gate_threshold_db}dB range=${gate_range_db}dB"
 fi
 
-# 6. Equalizer (10-band parametric)
+# 10-band parametric equalizer
 if [[ $eq_enabled == "1" ]]; then
 	: "${eq_bands:=0,0,0,0,0,0,0,0,0,0}"
 	IFS=',' read -ra bands_arr <<<"$eq_bands"

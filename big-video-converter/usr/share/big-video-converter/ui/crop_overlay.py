@@ -172,7 +172,6 @@ class CropOverlay(Gtk.DrawingArea):
     # Drawing
 
     def _draw(self, area, cr, width, height) -> None:
-        """Draw the crop overlay."""
         if self._video_w <= 0 or self._video_h <= 0:
             return
 
@@ -419,6 +418,5 @@ class CropOverlay(Gtk.DrawingArea):
             self._on_crop_changed(*self._source_crop)
 
     def _on_drag_end(self, gesture, offset_x, offset_y) -> None:
-        """Finish dragging."""
         self._drag_target = _NONE
         self.set_cursor(None)

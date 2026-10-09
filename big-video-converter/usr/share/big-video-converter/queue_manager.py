@@ -20,7 +20,6 @@ class QueueManagerMixin:
     """Mixin providing conversion queue management and orchestration."""
 
     def add_file_to_queue(self, file_path: str) -> bool:
-        """Add a file to the conversion queue"""
         # A running queue already has one progress row per file; a file added
         # while it runs would have none.
         if (
@@ -57,7 +56,6 @@ class QueueManagerMixin:
         return GLib.SOURCE_REMOVE
 
     def clear_queue(self) -> None:
-        """Clear the conversion queue"""
         # Clearing a running queue left its progress rows pending forever.
         if self.currently_converting or self.active_conversions:
             return
@@ -68,7 +66,6 @@ class QueueManagerMixin:
             self.conversion_page.update_queue_display()
 
     def remove_from_queue(self, file_path: str) -> bool:
-        """Remove a specific file from the queue"""
         if file_path in self.conversion_queue:
             self.conversion_queue.remove(file_path)
 
@@ -166,7 +163,6 @@ class QueueManagerMixin:
         self.header_bar.set_buttons_sensitive(True)
 
     def start_queue_processing(self) -> None:
-        """Start processing the conversion queue"""
         if (
             getattr(self, "_quitting", False)
             or self.active_conversions
@@ -191,7 +187,6 @@ class QueueManagerMixin:
             self.header_bar.set_buttons_sensitive(True)
             return
 
-        # Check disk space before starting
         if not self._check_disk_space(list(self.conversion_queue)):
             return  # Dialog will call _do_start_queue_processing if user confirms
 
@@ -206,7 +201,6 @@ class QueueManagerMixin:
         self.currently_converting = True
         self.header_bar.set_buttons_sensitive(False)
 
-        # Initialize one progress model for this queue generation.
         self._queue_completion_presented = False
         if hasattr(self, "progress_page"):
             self.progress_page.initialize_queue(list(self.conversion_queue))
@@ -309,7 +303,6 @@ class QueueManagerMixin:
         # Determine max concurrent conversions based on settings/hardware
         max_concurrent = 1
 
-        # Check if we can do parallel processing
         gpu_mode = self.settings_manager.load_setting("gpu", "auto")
         force_copy = self.settings_manager.get_boolean("force-copy-video", False)
 
@@ -322,7 +315,6 @@ class QueueManagerMixin:
             # Two encoders at once already saturate disk and CPU on these machines.
             max_concurrent = min(len(self.detected_gpus), 2)
 
-            # Initialize GPU slots if empty and we haven't started yet
             if not self.gpu_slots and not self.active_conversions:
                 slots = [
                     {
@@ -357,12 +349,10 @@ class QueueManagerMixin:
                 for slot in slots:
                     self.gpu_slots.append(slot)
 
-        # Check if we reached capacity
         if len(self.active_conversions) >= max_concurrent:
             # We're full, wait for a completion
             return False
 
-        # Check if queue is empty
         if not self.conversion_queue:
             # Only finish if no active conversions remain
             if not self.active_conversions:

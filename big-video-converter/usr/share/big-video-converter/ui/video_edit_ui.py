@@ -477,7 +477,6 @@ class VideoEditUI:
         return toolbar_box
 
     def _add_info_row(self, grid, row_index, title):
-        """Helper to add a row to the info grid."""
         title_label = Gtk.Label(label=title, xalign=1, css_classes=["dim-label"])
         value_label = Gtk.Label(
             label="...", xalign=0, selectable=True, ellipsize=Pango.EllipsizeMode.END
@@ -487,7 +486,6 @@ class VideoEditUI:
         return value_label
 
     def _on_speed_btn_clicked(self, button, speed_value):
-        """Handle playback speed selection from popover button."""
         self._current_speed = speed_value
         self.speed_button.set_label(f"{speed_value}x")
         speed_summary = _("Playback speed: {speed}x").format(speed=speed_value)
@@ -505,7 +503,6 @@ class VideoEditUI:
         self.page.on_crop_edit_toggled(active)
 
     def _create_volume_button(self):
-        """Creates the volume button with its popover."""
         volume_button = Gtk.MenuButton(
             icon_name="audio-volume-high-symbolic", tooltip_text=_("Volume")
         )
@@ -560,7 +557,6 @@ class VideoEditUI:
         self.nr_settings_row.connect("activated", self._on_nr_settings_activated)
         nr_group.add(self.nr_settings_row)
 
-        # Set initial subtitle from the main screen's audio cleaning row
         self._sync_nr_subtitle()
 
         return nr_group

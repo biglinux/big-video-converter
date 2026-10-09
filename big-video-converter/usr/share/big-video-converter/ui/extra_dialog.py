@@ -96,7 +96,6 @@ def _clone_model(source_combo):
 
 
 def show_extra_dialog(parent_window, app) -> None:
-    """Present the extra settings dialog."""
     dialog = Adw.Dialog()
     connections = SignalConnections(dialog)
     dialog.set_title(_("Extra"))
@@ -276,7 +275,6 @@ def show_extra_dialog(parent_window, app) -> None:
 
 
 def _export_profile(dialog, parent_window, app) -> None:
-    """Show a save dialog and export the current profile."""
     file_dialog = Gtk.FileDialog()
     file_dialog.set_title(_("Export Profile"))
 
@@ -314,7 +312,6 @@ def _export_profile(dialog, parent_window, app) -> None:
 
 
 def _import_profile(dialog, parent_window, app) -> None:
-    """Show an open dialog and import a profile."""
     file_dialog = Gtk.FileDialog()
     file_dialog.set_title(_("Import Profile"))
 

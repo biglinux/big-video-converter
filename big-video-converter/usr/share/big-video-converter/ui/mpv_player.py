@@ -235,7 +235,6 @@ class MPVPlayer:
         """Initialize MPV with pure software rendering (for VMs without 3D)."""
 
         try:
-            # Use libmpv with aggressive software rendering settings
             self.mpv_instance = mpv.MPV(
                 vo="libmpv",
                 hwdec="no",  # Disable hardware decoding
@@ -337,13 +336,11 @@ class MPVPlayer:
         # Safety check - don't process if cleanup has been called
         if not self.render_context or self.current_file is None:
             return
-        # Use idle_add to schedule render in GTK main loop
-        # This coalesces multiple update requests
+        # One idle callback coalesces the update requests mpv sends.
         GLib.idle_add(self._update_frame, priority=GLib.PRIORITY_HIGH_IDLE)
 
     def _update_frame(self):
         """Update frame rendering - only queue if render context indicates update needed"""
-        # Check if MPV actually has a new frame to render
         if (
             self.render_context
             and self.current_file is not None
@@ -654,7 +651,6 @@ class MPVPlayer:
                 self.crop_top = new_top
                 self.crop_bottom = new_bottom
 
-                # Use MPV's built-in video-crop property
                 self._update_video_crop()
 
     def _update_video_crop(self):
@@ -685,11 +681,9 @@ class MPVPlayer:
             crop_width = video_width - left - right
             crop_height = video_height - top - bottom
 
-            # Ensure positive dimensions
             if crop_width <= 0 or crop_height <= 0:
                 return
 
-            # Check if any crop is applied
             if (
                 self.crop_left == 0
                 and self.crop_right == 0
@@ -713,7 +707,6 @@ class MPVPlayer:
             logger.error("Error getting video dimensions: %s", e)
 
     def _request_render_update(self):
-        """Request a render update after crop change"""
         if self.render_context and self.video_widget:
             # Gtk.Widget.queue_render reports no errors, so nothing to catch.
             self.video_widget.queue_render()

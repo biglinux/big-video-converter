@@ -122,7 +122,6 @@ VIDEO_FILE_EXTENSIONS = frozenset(
 
 # Encoding options - User-friendly display names
 def get_gpu_options():
-    """Return translated GPU options"""
     return [
         _("Auto-detect"),
         _("NVENC (Nvidia)"),
@@ -141,7 +140,6 @@ GPU_VALUES = {0: "auto", 1: "nvidia", 2: "amd", 3: "intel", 4: "vulkan", 5: "sof
 
 # User-friendly quality display names
 def get_video_quality_options():
-    """Return translated video quality options"""
     return [
         _("Good (recommended)"),
         _("Very High"),
@@ -169,7 +167,6 @@ VIDEO_QUALITY_VALUES = {
 
 # User-friendly codec display names
 def get_video_codec_options():
-    """Return translated video codec options"""
     return [
         _("Copy — No re-encoding"),
         _("H.264 — Universal (recommended)"),
@@ -188,7 +185,6 @@ VIDEO_CODEC_VALUES = {0: "copy", 1: "h264", 2: "h265", 3: "av1", 4: "vp9", 5: "p
 
 # User-friendly preset names
 def get_preset_options():
-    """Return translated preset options"""
     return [
         _("Balanced (recommended)"),
         _("Very fast (larger file)"),
@@ -216,7 +212,6 @@ PRESET_VALUES = {
 
 # User-friendly subtitle options
 def get_subtitle_options():
-    """Return translated subtitle options"""
     return [_("Extract as separate file"), _("Keep inside the video"), _("Remove")]
 
 
@@ -228,7 +223,6 @@ SUBTITLE_VALUES = {0: "extract", 1: "embedded", 2: "none"}
 
 # User-friendly audio handling options
 def get_audio_options():
-    """Return translated audio options"""
     return [
         _("Copy without changes (fastest)"),
         _("Re-encode audio"),
@@ -244,7 +238,6 @@ AUDIO_VALUES = {0: "copy", 1: "reencode", 2: "none"}
 
 # Audio codec options for re-encoding (user-friendly names)
 def get_audio_codec_options():
-    """Return translated audio codec options"""
     return [
         _("AAC (recommended)"),
         _("Opus (best quality)"),
@@ -260,7 +253,6 @@ AUDIO_CODEC_VALUES = {0: "aac", 1: "opus", 2: "ac3"}
 
 # Video resolution options (user-friendly names)
 def get_video_resolution_options():
-    """Return translated video resolution options"""
     return [
         _("Original (no change)"),
         _("4K UHD (3840×2160)"),
@@ -318,7 +310,6 @@ VIDEO_FPS_VALUES = {0: "", 1: "60", 2: "50", 3: "30", 4: "25", 5: "24", 6: "15"}
 
 # Beginner-friendly tooltips for all UI elements
 def get_tooltips():
-    """Return translated tooltips dictionary"""
     return {
         # Sidebar options
         "gpu": _(
