@@ -237,7 +237,7 @@ class PauseFinder:
                 callback(*args)
             return GLib.SOURCE_REMOVE
 
-        # GLib.idle_add intermittently raised a TypeError here under pytest; an explicit source does not.
+        # An explicit source: GLib.idle_add raised TypeError here intermittently.
         source = GLib.idle_source_new()
         source.set_callback(run)
         source.attach(GLib.MainContext.default())

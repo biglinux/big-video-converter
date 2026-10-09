@@ -184,7 +184,7 @@ class PausePanel(Adw.PreferencesGroup):
             else:
                 name = "start"
         self.progress_row.set_visible(name == "busy")
-        # Once edited, the segments are the person's; finding again marks anew.
+        # Once edited, the segments are the user's; finding again marks anew.
         self.actions.set_visible(
             name in ("start", "busy", "failed")
             or (name == "ready" and bool(self.pauses) and self.undo is None)
@@ -261,7 +261,7 @@ class PausePanel(Adw.PreferencesGroup):
             self.undo_row.set_subtitle("\n".join(notes))
 
     def segments_changed(self):
-        """An edit after marking makes the segments the person's again."""
+        """An edit after marking hands the segments back to the user."""
         if self.undo:
             self._show_state()
 
@@ -330,7 +330,7 @@ class PausePanel(Adw.PreferencesGroup):
     def _set_segments(self, page, segments, mode):
         page.trim_segments = [dict(s) for s in segments]
         page.output_mode = mode
-        # Not a choice of the person: the general default stays as it was.
+        # Not the user's choice: the general default stays as it was.
         page._restoring_metadata = True
         try:
             page.ui.output_mode_combo.set_selected({"join": 0, "split": 1}[mode])
@@ -340,9 +340,10 @@ class PausePanel(Adw.PreferencesGroup):
         page._update_segments_listbox()
 
     def _mark(self):
-        """Make the speech found the segments, joined: the pauses go.
+        """Replace the segments with the speech between the pauses, joined.
 
-        A new length replaces the segments the last one made, not the person's.
+        A new length replaces only the segments the last one made, never the
+        user's.
         """
         page = self.page()
         if page is None:

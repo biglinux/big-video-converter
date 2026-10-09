@@ -369,7 +369,7 @@ class FileHandlerMixin:
                         if not connections.closed:
                             self._handle_mount_error(status_label, button, str(e))
                         return
-                # The person may have closed the dialog while it connected.
+                # The user may have closed the dialog while it connected.
                 if not connections.closed:
                     self._open_network_file_browser(dialog, gfile)
 

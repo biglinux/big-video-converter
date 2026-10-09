@@ -1,7 +1,4 @@
-"""Native component tests; not a screenshot or a full usability certification.
-
-Run explicitly under Xvfb. Missing GTK is an error, never a passing skip.
-"""
+"""The audio dialog's controls, built as real widgets on the suite's display."""
 
 import sys
 import unittest

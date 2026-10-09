@@ -39,7 +39,7 @@ def is_running_in_vm() -> bool:
 
 
 def get_render_mode_setting():
-    """The preview renderer the person chose: 'auto', 'opengl' or 'software'.
+    """The preview renderer the user chose: 'auto', 'opengl' or 'software'.
 
     Read straight from the settings file: the choice must be known before the
     first window exists, which is earlier than the SettingsManager.

@@ -1,8 +1,4 @@
-"""Native GTK/libadwaita regressions; run under dbus-run-session + Xvfb.
-
-These tests create real widgets and open the existing application. They do not
-claim physical-GPU, screen-reader usability or AI noise-reduction audio-quality coverage.
-"""
+"""The application's windows, built as real widgets on the suite's display."""
 
 import importlib
 import os

@@ -545,7 +545,7 @@ class FakeThumbnails:
 
 
 def visible_bars(root):
-    """Progress bars a person can see: the bar and all its ancestors visible."""
+    """Progress bars the user can see: the bar and all its ancestors visible."""
     found = []
 
     def walk(widget):

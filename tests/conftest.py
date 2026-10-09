@@ -1,4 +1,4 @@
-"""Local regression tests; media is generated, never taken from a user's videos."""
+"""Fixtures for the regression suite: generated media, a private display and bus."""
 
 import atexit
 import os
@@ -23,12 +23,12 @@ sys.path.insert(0, str(APP))
 def _private_session():
     """Give the tests a display and a session bus of their own.
 
-    Windows must never reach the desktop of the person running the tests, and
+    Windows must never reach the desktop of whoever runs the tests, and
     xvfb-run alone does not prevent it: GTK prefers Wayland, and without
     WAYLAND_DISPLAY libwayland connects to $XDG_RUNTIME_DIR/wayland-0, the live
     desktop. A GApplication on the live bus would also hand its activation to
-    a converter the person has open. Sessions that already run in a private
-    runtime directory (a nested KWin harness) are kept as they are.
+    a converter the user has open. A session that already runs in a private
+    runtime directory is kept as it is.
     """
     runtime = os.environ.get("XDG_RUNTIME_DIR", "")
     if os.environ.get("BVC_TESTS_KEEP_SESSION") or (

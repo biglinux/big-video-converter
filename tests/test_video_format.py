@@ -1,12 +1,5 @@
-"""Files that televisions open: HEVC for UHD, real SDR from HDR, honest H.264 levels.
-
-Background: a 4K HDR source converted with the defaults produced an H.264 4K
-file, 8-bit, still tagged bt2020/PQ, with level 4.1 in the header. Samsung
-hardware players refused it (PLAYER_ERROR_CONNECTION_FAILED) while a PC played
-it; the picture was also washed out because the bits were truncated rather than
-tone mapped. Every case here is generated with FFmpeg, never taken from a
-user's library.
-"""
+"""Files that televisions open: HEVC for UHD, tone-mapped SDR from HDR, and an
+H.264 level that matches the stream."""
 
 import subprocess
 

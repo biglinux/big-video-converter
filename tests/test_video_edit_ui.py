@@ -1,4 +1,4 @@
-"""Focused native tests for editor controls, cleanup and review evidence."""
+"""Editor controls and cleanup."""
 
 import sys
 import tempfile
@@ -591,8 +591,8 @@ class PausePanelTests(unittest.TestCase):
         self.assertFalse(panel.status_row.get_visible())
         self.assertIn("1 segment you had", panel.undo_row.get_subtitle())
 
-        # A pause shorter than the new length: the panel's segments go, the
-        # person's do not come back as if they were found.
+        # A pause shorter than the new length: the panel's segments go, and
+        # the user's do not come back as if they were found.
         panel.length_buttons[2].set_active(True)  # 2 s: no pause that long
         self.assertEqual(self.page.trim_segments, [{"start": 1.0, "end": 2.0}])
         self.assertEqual(self.page.output_mode, "split")
