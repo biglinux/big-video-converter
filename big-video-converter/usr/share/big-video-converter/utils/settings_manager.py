@@ -99,6 +99,7 @@ class SettingsManager:
         self.settings = {}
         self._batch_mode = False  # When True, defer disk writes
         self._suspended = False  # When True, writes are ignored (UI loading)
+        self._unsaved = False  # set_value_soon changed memory, not the file yet
         # Whether settings.json holds a file this process read or wrote; only
         # such a file may become the backup.
         self._primary_valid = False
@@ -180,6 +181,7 @@ class SettingsManager:
                     logger.warning("Could not refresh settings backup: %s", error)
             self._atomic_write(self.settings_file, data)
             self._primary_valid = True
+            self._unsaved = False
             return True
         except (OSError, ValueError, TypeError, RecursionError) as error:
             logger.error("Error saving settings: %s", error)
@@ -231,6 +233,17 @@ class SettingsManager:
             return True
         self.settings = before
         return False
+
+    def set_value_soon(self, key: str, value) -> None:
+        """Update memory now and leave the file to flush(): a slider being
+        dragged changes on every pixel."""
+        if not self._suspended:
+            self.settings[key] = value
+            self._unsaved = True
+
+    def flush(self) -> None:
+        if self._unsaved and not self._suspended:
+            self.save_to_disk()
 
     @contextmanager
     def suspend_writes(self):

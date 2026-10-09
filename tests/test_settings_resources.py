@@ -43,3 +43,20 @@ def test_reset_failure_is_reported_not_hidden(monkeypatch):
     dialog = SimpleNamespace(choose_finish=lambda _result: 1)
     settings_page.SettingsPage._on_reset_confirmation_response(page, dialog, None)
     assert shown[0] == "Settings Could Not Be Reset" and "disk full" in shown[1]
+
+
+def test_a_dragged_slider_writes_the_file_once(tmp_path, monkeypatch):
+    settings = SettingsManager(
+        dev_mode=True, dev_settings_file=str(tmp_path / "s.json")
+    )
+    writes = []
+    save = settings.save_to_disk
+    monkeypatch.setattr(settings, "save_to_disk", lambda: writes.append(1) or save())
+    for step in range(50):
+        settings.set_value_soon("noise-gate-intensity", step / 50)
+    assert settings.get_value("noise-gate-intensity") == 49 / 50 and not writes
+    settings.flush()
+    settings.flush()
+    assert len(writes) == 1
+    reread = SettingsManager(dev_mode=True, dev_settings_file=str(tmp_path / "s.json"))
+    assert reread.get_value("noise-gate-intensity") == 49 / 50

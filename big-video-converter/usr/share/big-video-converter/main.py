@@ -371,6 +371,7 @@ class VideoConverterApp(
         if getattr(self, "_quitting", False):
             return
         self._quitting = True
+        self.settings_manager.flush()
         if getattr(self, "conversion_page", None) is not None:
             self.conversion_page.thumbnail_manager.shutdown()
         self.is_cancellation_requested = True

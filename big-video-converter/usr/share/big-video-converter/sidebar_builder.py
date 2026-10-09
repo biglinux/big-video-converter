@@ -11,7 +11,7 @@ from constants import (
     VIDEO_CODEC_VALUES,
     VIDEO_QUALITY_VALUES,
 )
-from gi.repository import Adw, Gdk, Gtk
+from gi.repository import Adw, Gdk, GLib, Gtk
 from utils.gpu_selector import detect_render_devices, select_best_gpu
 
 _ = gettext.gettext
@@ -730,10 +730,12 @@ class SidebarBuilderMixin:
                 self.video_edit_page._apply_audio_filters()
 
         # Noise Reduction Strength
-        self.noise_strength_scale.connect(
-            "value-changed",
-            lambda w: _nr_save_and_preview("noise-reduction-strength", w.get_value()),
-        )
+        def _on_noise_strength_changed(w):
+            self._save_slider("noise-reduction-strength", w.get_value())
+            if hasattr(self, "video_edit_page") and self.video_edit_page:
+                self.video_edit_page._apply_audio_filters()
+
+        self.noise_strength_scale.connect("value-changed", _on_noise_strength_changed)
 
         def _on_model_combo_changed(w, p):
             _nr_save_and_preview("noise-model", w.get_selected())
@@ -743,9 +745,7 @@ class SidebarBuilderMixin:
         self.gate_intensity_scale.connect(
             "value-changed",
             lambda w: (
-                self.settings_manager.save_setting(
-                    "noise-gate-intensity", w.get_value()
-                ),
+                self._save_slider("noise-gate-intensity", w.get_value()),
                 self._refresh_nr_preview(),
             ),
         )
@@ -754,9 +754,7 @@ class SidebarBuilderMixin:
         self.compressor_intensity_scale.connect(
             "value-changed",
             lambda w: (
-                self.settings_manager.save_setting(
-                    "compressor-intensity", w.get_value()
-                ),
+                self._save_slider("compressor-intensity", w.get_value()),
                 self._refresh_nr_preview(),
             ),
         )
@@ -766,7 +764,7 @@ class SidebarBuilderMixin:
         self.hpf_freq_scale.connect(
             "value-changed",
             lambda w: (
-                self.settings_manager.save_setting("hpf-frequency", int(w.get_value())),
+                self._save_slider("hpf-frequency", int(w.get_value())),
                 self._refresh_nr_preview(),
             ),
         )
@@ -782,6 +780,17 @@ class SidebarBuilderMixin:
             "notify::active",
             lambda w, p: self._update_customize_subtitle(),
         )
+
+    def _save_slider(self, key, value):
+        """Write the settings file once the slider has stopped for 300 ms."""
+        self.settings_manager.set_value_soon(key, value)
+        if not getattr(self, "_slider_flush_id", 0):
+            self._slider_flush_id = GLib.timeout_add(300, self._flush_slider_settings)
+
+    def _flush_slider_settings(self):
+        self._slider_flush_id = 0
+        self.settings_manager.flush()
+        return GLib.SOURCE_REMOVE
 
     def _load_left_pane_settings(self):
         """Load settings for left pane controls.
