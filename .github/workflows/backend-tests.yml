@@ -63,8 +63,8 @@ jobs:
       - name: Check shell syntax and safety
         run: |
           bash -n big-video-converter/usr/bin/big-video-converter
-          shellcheck -S style big-video-converter/usr/bin/big-video-converter
-          shfmt -ln bash -d big-video-converter/usr/bin/big-video-converter big-video-converter/usr/bin/big-video-converter-gui
+          shellcheck -S style big-video-converter/usr/bin/big-video-converter tools/*.sh
+          shfmt -ln bash -d big-video-converter/usr/bin/big-video-converter big-video-converter/usr/bin/big-video-converter-gui tools/*.sh
       - name: Check Python syntax, lint and formatting
         run: |
           python3 -m compileall -q big-video-converter/usr/share/big-video-converter tests

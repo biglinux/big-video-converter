@@ -11,27 +11,27 @@ pot="$locale/big-video-converter.pot"
 
 mapfile -t sources < <(find "$app/usr/share" -name '*.py' | sort)
 xgettext --from-code=UTF-8 --language=Python --keyword=_ --keyword=ngettext:1,2 --keyword=_count_text:1,2 --no-location --no-wrap \
-    --package-name=big-video-converter --msgid-bugs-address='' \
-    --copyright-holder='BigLinux' -o "$pot" "${sources[@]}"
+	--package-name=big-video-converter --msgid-bugs-address='' \
+	--copyright-holder='BigLinux' -o "$pot" "${sources[@]}"
 sed -i '/^"POT-Creation-Date:/d' "$pot"
 
 for po in "$locale"/*.po; do
-    lang=$(basename "$po" .po)
-    if [[ $lang == en ]]; then
-        msgmerge --update --no-wrap --backup=none --no-fuzzy-matching \
-            --compendium <(msgen --no-wrap "$pot") "$po" "$pot"
-        sed -i -e 's/nplurals=INTEGER; plural=EXPRESSION;/nplurals=2; plural=(n != 1);/' \
-            -e 's/Language: \\n/Language: en\\n/' \
-            -e 's/FULL NAME <EMAIL@ADDRESS>/BigLinux/' \
-            -e 's/LANGUAGE <LL@li.org>/English/' -e '/^#, fuzzy$/d' "$po"
-    else
-        msgmerge --update --no-wrap --backup=none --no-fuzzy-matching "$po" "$pot"
-    fi
-    # msgfmt --check-header warns about placeholder or missing header fields.
-    # The revision date is only filled in when absent, so reruns cause no churn.
-    sed -i -e '/^"POT-Creation-Date:/d;/^"PO-Revision-Date: YEAR/d' \
-        -e 's/FULL NAME <EMAIL@ADDRESS>/BigLinux/;s/LANGUAGE <LL@li.org>/BigLinux/' "$po"
-    grep -q '^"PO-Revision-Date:' "$po" ||
-        sed -i "0,/^\"Last-Translator:/s//\"PO-Revision-Date: $(date -u +'%Y-%m-%d %H:%M+0000')\\\\n\"\\n&/" "$po"
-    printf '%-6s untranslated: %s\n' "$lang" "$(msgattrib --untranslated "$po" | grep -c '^msgid' || true)"
+	lang=$(basename "$po" .po)
+	if [[ $lang == en ]]; then
+		msgmerge --update --no-wrap --backup=none --no-fuzzy-matching \
+			--compendium <(msgen --no-wrap "$pot") "$po" "$pot"
+		sed -i -e 's/nplurals=INTEGER; plural=EXPRESSION;/nplurals=2; plural=(n != 1);/' \
+			-e 's/Language: \\n/Language: en\\n/' \
+			-e 's/FULL NAME <EMAIL@ADDRESS>/BigLinux/' \
+			-e 's/LANGUAGE <LL@li.org>/English/' -e '/^#, fuzzy$/d' "$po"
+	else
+		msgmerge --update --no-wrap --backup=none --no-fuzzy-matching "$po" "$pot"
+	fi
+	# msgfmt --check-header warns about placeholder or missing header fields.
+	# The revision date is only filled in when absent, so reruns cause no churn.
+	sed -i -e '/^"POT-Creation-Date:/d;/^"PO-Revision-Date: YEAR/d' \
+		-e 's/FULL NAME <EMAIL@ADDRESS>/BigLinux/;s/LANGUAGE <LL@li.org>/BigLinux/' "$po"
+	grep -q '^"PO-Revision-Date:' "$po" ||
+		sed -i "0,/^\"Last-Translator:/s//\"PO-Revision-Date: $(date -u +'%Y-%m-%d %H:%M+0000')\\\\n\"\\n&/" "$po"
+	printf '%-6s untranslated: %s\n' "$lang" "$(msgattrib --untranslated "$po" | grep -c '^msgid' || true)"
 done
