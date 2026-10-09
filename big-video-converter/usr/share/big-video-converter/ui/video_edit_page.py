@@ -1095,6 +1095,8 @@ class VideoEditPage:
                 self.position_update_id = None
             self._cancel_segment_jump()
         else:
+            if self.mpv_player.at_end():
+                self.ui.position_scale.set_value(0)
             if self.segments_only:
                 end, later = self.next_segment_stop(
                     self.trim_segments, self.current_position
@@ -1117,6 +1119,13 @@ class VideoEditPage:
             return False
         if self.user_is_dragging_slider or self._seek_cooldown:
             return True
+        if self.mpv_player.at_end():
+            # mpv holds the last frame; nothing moves until the next play.
+            self.mpv_player.pause()
+            self.is_playing = False
+            self.ui.play_pause_button.set_icon_name("media-playback-start-symbolic")
+            self.position_update_id = None
+            return False
         pos = self.mpv_player.get_position()
         if pos is None:
             return True

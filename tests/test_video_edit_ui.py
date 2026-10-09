@@ -492,6 +492,24 @@ class SegmentPlaybackTests(unittest.TestCase):
         self.assertEqual(where(segments, 8.5), (None, None))  # after the last: stop
         self.assertEqual(where([], 2.0), (None, None))
 
+    def test_the_position_timer_stops_on_the_last_frame(self):
+        page = VideoEditPage.__new__(VideoEditPage)
+        paused = []
+        page.mpv_player = SimpleNamespace(
+            at_end=lambda: True, pause=lambda: paused.append(True)
+        )
+        page.ui = SimpleNamespace(play_pause_button=Gtk.Button())
+        page.is_playing = True
+        page.user_is_dragging_slider = page._seek_cooldown = False
+        page.position_update_id = 1
+        self.assertFalse(page._update_position_callback())
+        self.assertFalse(page.is_playing)
+        self.assertIsNone(page.position_update_id)
+        self.assertEqual(paused, [True])
+        self.assertEqual(
+            page.ui.play_pause_button.get_icon_name(), "media-playback-start-symbolic"
+        )
+
 
 class PausePanelTests(unittest.TestCase):
     @classmethod

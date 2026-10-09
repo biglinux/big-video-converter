@@ -541,6 +541,15 @@ class MPVPlayer:
         except _MPV_ERRORS:
             return None
 
+    def at_end(self) -> bool:
+        """Whether playback stopped on the last frame (keep_open holds it)."""
+        if not self.mpv_instance:
+            return False
+        try:
+            return bool(self.mpv_instance.eof_reached)
+        except _MPV_ERRORS:
+            return False
+
     def _set_color_property(self, name: str, value: float) -> None:
         if not self.mpv_instance or not math.isfinite(value):
             return
