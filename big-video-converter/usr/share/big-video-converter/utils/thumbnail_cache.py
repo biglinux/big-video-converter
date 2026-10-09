@@ -11,7 +11,6 @@ import hashlib
 import logging
 import os
 import queue
-import shutil
 import signal
 import subprocess
 import tempfile
@@ -26,6 +25,8 @@ import gi
 
 gi.require_version("GdkPixbuf", "2.0")
 from gi.repository import GdkPixbuf, GLib
+
+from utils.ffmpeg_path import get_ffmpeg_executable
 
 logger = logging.getLogger(__name__)
 _SHARED_SIZES = ("xx-large", "x-large", "large", "normal")
@@ -232,7 +233,7 @@ class ThumbnailManager:
         return None
 
     def _generate(self, job: _Job, target: Path) -> Path | None:
-        ffmpeg = self._ffmpeg or shutil.which("ffmpeg")
+        ffmpeg = self._ffmpeg or get_ffmpeg_executable()
         if not ffmpeg or job.cancel_event.is_set():
             return None
         fd, temporary_name = tempfile.mkstemp(

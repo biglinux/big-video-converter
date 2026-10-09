@@ -1286,16 +1286,17 @@ use_video_bitrate() { # <encoder array name>
 
 gpu=${gpu/auto/}
 # The GPU to encode on: the vendor asked for, else the first the system
-# reports, in the order NVIDIA, AMD, Intel.
+# reports, in the order NVIDIA, Intel, AMD (utils/gpu_selector.py ranks
+# encoder throughput the same way).
 gpu_vendor=""
 gpu_devices=${gpu:+VGA $gpu}
 [[ -n $gpu_devices ]] || gpu_devices=$(detect_gpu_devices)
 if grep -qiE '(VGA|Display controller|3d).*nvidia' <<<"$gpu_devices"; then
 	gpu_vendor=nvidia
-elif grep -qiE '(VGA|Display controller).*(\bAMD\b|\bATI\b)' <<<"$gpu_devices"; then
-	gpu_vendor=amd
 elif grep -qiE '(VGA|Display controller).*intel' <<<"$gpu_devices"; then
 	gpu_vendor=intel
+elif grep -qiE '(VGA|Display controller).*(\bAMD\b|\bATI\b)' <<<"$gpu_devices"; then
+	gpu_vendor=amd
 elif [[ -z $gpu ]]; then
 	echo "No supported GPU detected - using software encoding"
 fi

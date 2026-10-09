@@ -478,7 +478,7 @@ class SettingsManager:
             "noise-model": (0, 1),
             "noise-reduction-strength": (0, 1),
             "noise-gate-intensity": (0, 1),
-            "compressor-intensity": (0, 10),
+            "compressor-intensity": (0, 1),
             "hpf-frequency": (20, 20000),
             "size-target-mb": (1, 1_000_000),
             "pause-length": (0.5, 2),
