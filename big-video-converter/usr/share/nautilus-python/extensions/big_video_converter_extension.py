@@ -1,20 +1,13 @@
-"""
-Big Video Converter - Nautilus Extension
-Adds a context menu option to convert video files using the
-Big Video Converter application.
-"""
+"""Files context-menu entry that opens the selected videos in Big Video Converter."""
 
 import gettext
 import logging
-import subprocess
 from pathlib import Path
 from urllib.parse import unquote
 
-# Import 'gi' and explicitly require GTK and Nautilus versions.
-# This is mandatory in modern PyGObject to prevent warnings and ensure API compatibility.
 import gi
 
-gi.require_version("Gtk", "4.0")
+gi.require_version("Nautilus", "4.0")
 
 from gi.repository import Gio, GLib, GObject, Nautilus
 
@@ -29,20 +22,13 @@ def _(message):
 
 
 class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
-    """
-    Provides the context menu items for Nautilus to allow video conversion.
-    """
-
     def __init__(self):
-        """Initializes the extension."""
         super().__init__()
         self.app_executable = "big-video-converter-gui"
 
-        # Using a set provides O(1) lookup time, which is more efficient than a list.
-        # Both spellings of the Matroska type are listed: shared-mime-info 2.4
-        # renamed it from "video/x-matroska" to "video/matroska", and Nautilus
-        # reports the canonical name of the installed database — matching only
-        # the old one made the menu disappear for every .mkv file.
+        # Both spellings of the Matroska type: shared-mime-info 2.4 renamed
+        # "video/x-matroska" to "video/matroska", and Nautilus reports the
+        # name the installed database uses.
         self.supported_mimetypes = {
             "video/mp4",
             "video/matroska",
@@ -85,12 +71,9 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         }
 
     def get_file_items(self, *args):
-        """
-        Returns menu items for the selected files.
-        The menu is only shown if one or more supported video files are selected.
+        """One entry when the selection holds supported videos.
 
-        Note: Using *args for compatibility across Nautilus versions.
-        The last argument is always the list of selected files.
+        Older Nautilus versions also pass the window; the files come last.
         """
         files = args[-1]
         video_files = [f for f in files if self._is_video_file(f)]
@@ -99,7 +82,6 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
 
         num_videos = len(video_files)
 
-        # Define the label based on the number of selected files.
         if num_videos == 1:
             label = _("Convert Video")
             name = "BigVideoConverter::Convert"
@@ -114,10 +96,7 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         return [menu_item]
 
     def _is_video_file(self, file_info: Nautilus.FileInfo) -> bool:
-        """
-        Checks if a file is a supported video by its mimetype, falling back to
-        the file extension when the mimetype is not one we know.
-        """
+        """By mimetype, else by extension for a mimetype we do not know."""
         if not file_info or file_info.is_directory():
             return False
 
@@ -128,25 +107,15 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
         uri = file_info.get_uri() or ""
         return Path(unquote(uri)).suffix.lower() in self.supported_extensions
 
-    def _get_file_path(self, file_info: Nautilus.FileInfo) -> str | None:
-        """
-        The local path of the file, or None when it has none. GIO keeps
-        non-UTF-8 names intact and maps network locations to their gvfs FUSE
-        path when that is available.
-        """
-        return file_info.get_location().get_path()
-
     def _launch_application(
         self, menu_item: Nautilus.MenuItem, files: list[Nautilus.FileInfo]
     ):
-        """
-        Launches the Big Video Converter application with the selected files.
-        """
-        file_paths = []
-        for f in files:
-            path = self._get_file_path(f)
-            if path and Path(path).exists():
-                file_paths.append(path)
+        # GIO keeps non-UTF-8 names intact and maps a network location to its
+        # gvfs FUSE path when there is one. The application checks that each
+        # path exists; a stat here on a slow mount would freeze Files.
+        file_paths = [
+            path for f in files if (path := f.get_location().get_path()) is not None
+        ]
 
         if not file_paths:
             self._show_error_notification(
@@ -155,26 +124,19 @@ class BigVideoConverterExtension(GObject.GObject, Nautilus.MenuProvider):
             )
             return
 
+        # GIO reaps the child when it exits, so Files keeps no zombie.
         try:
-            cmd = [self.app_executable] + file_paths
-            subprocess.Popen(
-                cmd,
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=True,
+            Gio.Subprocess.new(
+                [self.app_executable, *file_paths],
+                Gio.SubprocessFlags.STDOUT_SILENCE | Gio.SubprocessFlags.STDERR_SILENCE,
             )
-        except OSError as e:
+        except GLib.Error as e:
             self._show_error_notification(
                 _("Application Launch Error"),
-                _("Failed to start Big Video Converter: {0}").format(str(e)),
+                _("Failed to start Big Video Converter: {0}").format(e.message),
             )
 
     def _show_error_notification(self, title: str, message: str):
-        """
-        Displays a desktop error notification using 'notify-send'.
-        """
-        # Nautilus must not wait for the notification daemon; GIO reaps the
-        # child from the main loop.
         try:
             Gio.Subprocess.new(
                 [
