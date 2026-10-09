@@ -135,9 +135,11 @@ class HeaderBar(Gtk.Box):
             icon_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
             icon_box.set_valign(Gtk.Align.CENTER)
             icon_box.append(self.menu_button)
-            app_icon = Gtk.Image.new_from_icon_name("big-video-converter")
-            app_icon.set_pixel_size(20)
-            app_icon.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
+            app_icon = Gtk.Image(
+                icon_name="big-video-converter",
+                pixel_size=20,
+                accessible_role=Gtk.AccessibleRole.PRESENTATION,
+            )
             icon_box.append(app_icon)
             self.header_bar.pack_end(icon_box)
         else:

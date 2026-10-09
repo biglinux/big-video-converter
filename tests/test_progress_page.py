@@ -66,6 +66,17 @@ class ProgressPageTests(unittest.TestCase):
         self.assertTrue(self.page.show_completion_summary())
         return paths
 
+    def test_decorative_parts_leave_other_labels_and_icons_readable(self):
+        # An instance's set_accessible_role() is GtkWidgetClass's: it once
+        # hid every label made after this page from screen readers.
+        self.settle(["completed", "failed"])
+        self.assertEqual(
+            self.page.result_sizes_separator.get_accessible_role(),
+            Gtk.AccessibleRole.PRESENTATION,
+        )
+        self.assertEqual(Gtk.Label().get_accessible_role(), Gtk.AccessibleRole.LABEL)
+        self.assertEqual(Gtk.Image().get_accessible_role(), Gtk.AccessibleRole.IMG)
+
     def test_skip_cancels_a_job_reserved_before_its_row_started(self):
         import threading
 

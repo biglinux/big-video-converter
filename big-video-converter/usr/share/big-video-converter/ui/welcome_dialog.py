@@ -41,9 +41,11 @@ class WelcomeDialog:
         header_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
         header_box.set_halign(Gtk.Align.CENTER)
 
-        app_icon = Gtk.Image.new_from_icon_name("big-video-converter")
-        app_icon.set_pixel_size(64)
-        app_icon.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
+        app_icon = Gtk.Image(
+            icon_name="big-video-converter",
+            pixel_size=64,
+            accessible_role=Gtk.AccessibleRole.PRESENTATION,
+        )
         header_box.append(app_icon)
 
         title = Gtk.Label()

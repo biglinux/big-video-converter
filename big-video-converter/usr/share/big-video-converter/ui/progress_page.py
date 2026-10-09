@@ -336,8 +336,11 @@ class ProgressPage:
         title.set_visible(False)
         self.result_badge = Gtk.Box(valign=Gtk.Align.CENTER)
         self.result_badge.add_css_class("bvc-result-badge")
-        self.result_icon = Gtk.Image(pixel_size=16)
-        self.result_icon.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
+        # The role is given at construction: set_accessible_role() is
+        # GtkWidgetClass's and would hide every label or image made after.
+        self.result_icon = Gtk.Image(
+            pixel_size=16, accessible_role=Gtk.AccessibleRole.PRESENTATION
+        )
         self.result_badge.append(self.result_icon)
         title.append(self.result_badge)
         self.result_heading = Gtk.Label()
@@ -356,8 +359,9 @@ class ProgressPage:
         facts.add_css_class("bvc-result-stats")
         self.result_stats = Gtk.Label(wrap=True, justify=Gtk.Justification.CENTER)
         self.result_sizes = Gtk.Label(wrap=True, justify=Gtk.Justification.CENTER)
-        self.result_sizes_separator = Gtk.Label(label="·")
-        self.result_sizes_separator.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
+        self.result_sizes_separator = Gtk.Label(
+            label="·", accessible_role=Gtk.AccessibleRole.PRESENTATION
+        )
         for label in (
             self.result_stats,
             self.result_sizes_separator,
@@ -1012,8 +1016,11 @@ class QueueItemRow(Gtk.ListBoxRow):
         text.append(self.filename_label)
 
         status_line = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        self.status_icon = Gtk.Image(pixel_size=16, valign=Gtk.Align.START)
-        self.status_icon.set_accessible_role(Gtk.AccessibleRole.PRESENTATION)
+        self.status_icon = Gtk.Image(
+            pixel_size=16,
+            valign=Gtk.Align.START,
+            accessible_role=Gtk.AccessibleRole.PRESENTATION,
+        )
         status_line.append(self.status_icon)
         self.status_label = Gtk.Label(label=_("Waiting in queue"), xalign=0)
         self.status_label.set_wrap(True)
