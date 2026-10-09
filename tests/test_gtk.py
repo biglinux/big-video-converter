@@ -799,6 +799,27 @@ def test_folder_import_is_async_and_redraws_once(app, tmp_path, monkeypatch):
     app.clear_queue()
 
 
+def test_an_unreadable_subfolder_is_skipped_and_reported(app, tmp_path, monkeypatch):
+    app.clear_queue()
+    pump()
+    (tmp_path / "ok").mkdir()
+    (tmp_path / "ok" / "clip.mp4").touch()
+    locked = tmp_path / "locked"
+    locked.mkdir()
+    (locked / "hidden.mp4").touch()
+    locked.chmod(0)
+    shown = []
+    monkeypatch.setattr(app, "show_info_dialog", lambda *text: shown.append(text))
+    try:
+        app.add_paths_to_queue([str(tmp_path)])
+        pump_until(lambda: not app._pending_imports)
+    finally:
+        locked.chmod(0o755)
+    assert [os.path.basename(path) for path in app.conversion_queue] == ["clip.mp4"]
+    assert len(shown) == 1 and "1 folder could not be read" in shown[0][1]
+    app.clear_queue()
+
+
 def test_space_check_uses_selected_destinations(app, tmp_path, monkeypatch):
     from types import SimpleNamespace
 

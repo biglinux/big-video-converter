@@ -67,7 +67,7 @@ class FileHandlerMixin:
         self._pending_imports = getattr(self, "_pending_imports", 0) + 1
         self.header_bar.set_buttons_sensitive(False)
 
-        def finish(files, error):
+        def finish(files, error, skipped):
             self._pending_imports -= 1
             if getattr(self, "_quitting", False):
                 return False
@@ -78,8 +78,18 @@ class FileHandlerMixin:
                         added += self.add_file_to_queue(file_path)
                 if error is not None:
                     self.show_error_dialog(str(error))
-                elif on_complete is not None:
-                    on_complete(added)
+                else:
+                    if skipped:
+                        self.show_info_dialog(
+                            _("Some folders were skipped"),
+                            ngettext(
+                                "{0} folder could not be read; its videos were not added.",
+                                "{0} folders could not be read; their videos were not added.",
+                                skipped,
+                            ).format(skipped),
+                        )
+                    if on_complete is not None:
+                        on_complete(added)
             except OSError as persistence_error:
                 self.show_error_dialog(str(persistence_error))
             finally:
@@ -91,18 +101,20 @@ class FileHandlerMixin:
         def scan():
             files = []
             error = None
+            # A folder that cannot be read (lost+found on a USB drive) is
+            # counted and passed over; the rest of the tree is still added.
+            skipped = 0
+
+            def skip(_error):
+                nonlocal skipped
+                skipped += 1
+
             try:
                 for path in paths:
                     if getattr(self, "_quitting", False):
                         break
                     if os.path.isdir(path):
-
-                        def failed_walk(error):
-                            raise error
-
-                        for directory, _dirs, names in os.walk(
-                            path, onerror=failed_walk
-                        ):
+                        for directory, _dirs, names in os.walk(path, onerror=skip):
                             if getattr(self, "_quitting", False):
                                 break
                             files.extend(
@@ -114,7 +126,7 @@ class FileHandlerMixin:
                         files.append(path)
             except OSError as caught:
                 error = caught
-            GLib.idle_add(finish, files, error)
+            GLib.idle_add(finish, files, error, skipped)
 
         threading.Thread(target=scan, name="bvc-file-scan", daemon=True).start()
 
