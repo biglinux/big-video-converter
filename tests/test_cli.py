@@ -215,8 +215,8 @@ def test_the_preview_denoises_with_the_export_chain(media, tmp_path, run_cli, mo
 def test_noise_strength_is_linear_up_to_each_models_cap():
     """Past 24 dB DFN3 removes no more noise; a squared 0-100 dB curve left
     the top half of the slider doing nothing."""
-    assert "controls=c0=12.00|c6=0," in noise_reduction_filter(0, 0.5)
-    assert "controls=c0=24.00|c6=0," in noise_reduction_filter(0, 1.0)
+    assert "controls=c0=12.00|c6=0|c17=0," in noise_reduction_filter(0, 0.5)
+    assert "controls=c0=24.00|c6=0|c17=0," in noise_reduction_filter(0, 1.0)
     assert "controls=c0=24.00," in noise_reduction_filter(1, 0.5)
     assert "controls=c0=48.00," in noise_reduction_filter(1, 3.0)
 

@@ -35,12 +35,13 @@ CONVERT_SCRIPT_PATH = os.path.abspath(
 # pink noise): DFN3's residual moves under 1 dB past 24 dB, while DPDFNet-2 at
 # 48 dB leaves noise at -74 dBFS. A higher cap left half the slider silent.
 NOISE_MODELS = (
-    # DFN3 mutes its first second by default, meant for a live microphone.
+    # DFN3 mutes its first second and gates what it takes for no voice by
+    # default, both meant for a live microphone.
     (
         "/usr/lib/ladspa/libdfn3_ladspa.so",
         "deep_filter_net3_rs_mono",
         1919,
-        "|c6=0",
+        "|c6=0|c17=0",
         "deepfilternet3-native",
         24,
     ),

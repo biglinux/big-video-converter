@@ -942,9 +942,10 @@ if [[ $noise_reduction == "1" ]]; then
 		nr_delay=2880 nr_extra="" nr_full_db=48
 		;;
 	*)
-		# DFN3 mutes its first second by default, meant for a live microphone.
+		# DFN3 mutes its first second and gates what it takes for no voice by
+		# default, both meant for a live microphone.
 		nr_plugin=/usr/lib/ladspa/libdfn3_ladspa.so nr_label=deep_filter_net3_rs_mono
-		nr_delay=1919 nr_extra="|c6=0" nr_full_db=24
+		nr_delay=1919 nr_extra="|c6=0|c17=0" nr_full_db=24
 		;;
 	esac
 	if [[ -e $nr_plugin ]]; then
