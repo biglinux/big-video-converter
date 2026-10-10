@@ -207,7 +207,58 @@ class QueueRunnerMixin:
             self.progress_page.initialize_queue(list(self.conversion_queue))
 
         self.main_stack.set_visible_child_name("progress_view")
-        GLib.timeout_add(300, self.process_next_in_queue)
+        if self._gpu_concurrency() > 1:
+            # Ranking runs ffmpeg, vainfo and an NVENC test frame on the first
+            # call, so it happens on a worker before the first job starts.
+            gpus = list(self.detected_gpus)
+            codec = self.settings_store.load_setting("video-codec", "h264")
+
+            def rank() -> None:
+                from engine.gpu_selector import select_best_gpu
+
+                try:
+                    best = select_best_gpu(gpus, codec)
+                except Exception:
+                    self.logger.exception("Could not rank the GPUs")
+                    best = None
+                GLib.idle_add(self._start_on_gpu_slots, gpus, best)
+
+            threading.Thread(target=rank, name="bvc-gpu-rank", daemon=True).start()
+        else:
+            GLib.timeout_add(300, self.process_next_in_queue)
+
+    def _gpu_concurrency(self) -> int:
+        """How many jobs run at once: one per GPU, at most two, in auto mode."""
+        if (
+            self.settings_store.load_setting("gpu", "auto") == "auto"
+            and len(getattr(self, "detected_gpus", ())) > 1
+            and not self.settings_store.get_boolean("force-copy-video", False)
+        ):
+            # Two encoders at once already saturate disk and CPU on these machines.
+            return min(len(self.detected_gpus), 2)
+        return 1
+
+    def _start_on_gpu_slots(self, gpus, best) -> bool:
+        """Give each concurrent job a GPU, the chosen one first, then start."""
+        if best:
+            gpus = sorted(
+                gpus,
+                key=lambda g: (
+                    (g["type"], g["device"]) != (best["type"], best["device"])
+                ),
+            )
+        self.gpu_slots.clear()
+        self.gpu_slots.extend(
+            {
+                "id": i,
+                "type": gpu["type"] if gpu["type"] != "unknown" else "auto",
+                "device": gpu["device"],
+                "name": gpu["name"],
+            }
+            for i, gpu in enumerate(gpus[: self._gpu_concurrency()])
+        )
+        self.process_next_in_queue()
+        return GLib.SOURCE_REMOVE
 
     def _present_queue_completion(self) -> bool:
         """Present and notify one settled queue generation exactly once."""
@@ -301,54 +352,7 @@ class QueueRunnerMixin:
                 self._finish_queue_generation(False)
             return False
 
-        # Determine max concurrent conversions based on settings/hardware
-        max_concurrent = 1
-
-        gpu_mode = self.settings_store.load_setting("gpu", "auto")
-        force_copy = self.settings_store.get_boolean("force-copy-video", False)
-
-        if (
-            gpu_mode == "auto"
-            and hasattr(self, "detected_gpus")
-            and len(self.detected_gpus) > 1
-            and not force_copy
-        ):
-            # Two encoders at once already saturate disk and CPU on these machines.
-            max_concurrent = min(len(self.detected_gpus), 2)
-
-            if not self.gpu_slots and not self.active_conversions:
-                slots = [
-                    {
-                        "id": i,
-                        "type": gpu["type"] if gpu["type"] != "unknown" else "auto",
-                        "device": gpu["device"],
-                        "name": gpu["name"],
-                    }
-                    for i, gpu in enumerate(self.detected_gpus[:max_concurrent])
-                ]
-
-                # Reorder slots so the best GPU for the target codec comes first
-                try:
-                    from engine.gpu_selector import select_best_gpu
-
-                    codec = self.settings_store.load_setting("video-codec", "h264")
-                    best = select_best_gpu(self.detected_gpus, codec)
-                    if best:
-                        best_type = best["type"]
-                        best_device = best.get("device", "")
-                        # Move the best GPU to the front of the deque
-                        slots.sort(
-                            key=lambda s: (
-                                0
-                                if s["type"] == best_type and s["device"] == best_device
-                                else 1
-                            )
-                        )
-                except (OSError, ValueError) as error:
-                    self.logger.warning("Could not rank the GPUs: %s", error)
-
-                for slot in slots:
-                    self.gpu_slots.append(slot)
+        max_concurrent = self._gpu_concurrency()
 
         if len(self.active_conversions) >= max_concurrent:
             # We're full, wait for a completion
