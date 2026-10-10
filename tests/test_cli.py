@@ -1,5 +1,6 @@
 import os
 import re
+import shlex
 import shutil
 import signal
 import subprocess
@@ -359,6 +360,92 @@ def test_amd_hevc_keeps_bitrate_keyframes_and_tag(media, tmp_path, run_cli, bitr
             if bitrate
             else (" -rc_mode CQP " in line)
         )
+
+
+def fake_gpu_selector(directory, answer):
+    """A python3 that answers ``answer`` for the GPU selector and runs the rest."""
+    wrapper = directory / "python3"
+    wrapper.write_text(
+        "#!/bin/bash\n"
+        f'[[ $1 == */gpu_selector.py ]] && {{ echo "{answer}"; exit 0; }}\n'
+        f'exec {shutil.which("python3")} "$@"\n'
+    )
+    wrapper.chmod(0o755)
+    return directory
+
+
+def hardware_commands(stdout, encoder):
+    """The argv of each logged command that encodes with ``encoder`` on a GPU."""
+    commands = []
+    for line in stdout.splitlines():
+        if line.startswith("Running command:") and "-init_hw_device" in line:
+            argv = shlex.split(line.removeprefix("Running command:"))
+            if encoder in argv:
+                commands.append(argv)
+    return commands
+
+
+def device_options(argv):
+    return [argv[i + 1] for i, arg in enumerate(argv) if arg == "-init_hw_device"]
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [{"gpu": "auto"}, {"gpu": "nvidia", "gpu_device": "/dev/dri/renderD129"}],
+)
+def test_nvidia_is_initialized_by_its_cuda_index_in_pci_order(
+    media, tmp_path, run_cli, cli_env, settings
+):
+    """FFmpeg's cuda device is an index; a /dev/dri path made it fail on any
+    machine and fall back to a slower stage."""
+    order = tmp_path / "order"
+    wrapper = fake_ffmpeg(
+        tmp_path,
+        "no-gpu",
+        f'echo "$CUDA_DEVICE_ORDER" > {order}\n'
+        'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done',
+    )
+    tools = fake_gpu_selector(tmp_path, "nvidia /dev/dri/renderD129 1")
+    result = run_cli(
+        media["video"],
+        tmp_path / "out.mkv",
+        PATH=f"{tools}:{cli_env['PATH']}",
+        force_software="",
+        gpu_smoke_test="0",
+        ffmpeg_executable=wrapper,
+        options="-t 0.4 -threads 1",
+        **settings,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    commands = hardware_commands(result.stdout, "h264_nvenc")
+    assert commands, result.stdout
+    assert all(device_options(argv) == ["cuda=cu:1"] for argv in commands)
+    assert order.read_text().strip() == "PCI_BUS_ID"
+
+
+def test_qsv_opens_the_chosen_intel_device(media, tmp_path, run_cli):
+    wrapper = fake_ffmpeg(
+        tmp_path,
+        "no-gpu",
+        'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done',
+    )
+    result = run_cli(
+        media["video"],
+        tmp_path / "out.mkv",
+        gpu="intel",
+        gpu_device="/dev/dri/renderD129",
+        force_software="",
+        gpu_smoke_test="0",
+        ffmpeg_executable=wrapper,
+        options="-t 0.4 -threads 1",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    commands = hardware_commands(result.stdout, "h264_qsv")
+    assert commands, result.stdout
+    assert all(
+        device_options(argv)[0].startswith("vaapi=va:/dev/dri/renderD129,driver=iHD")
+        for argv in commands
+    )
 
 
 @pytest.mark.parametrize("target", ["group", "script"])

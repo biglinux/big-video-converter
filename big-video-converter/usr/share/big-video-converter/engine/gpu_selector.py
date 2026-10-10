@@ -4,7 +4,7 @@ Among the GPUs that can encode the chosen codec, the one that alone encodes
 AV1 wins, else the one that alone encodes VP9; with equal or unknown support
 the order is NVIDIA, AMD, Intel. Support is read from the device (VAAPI
 profiles, an NVENC test frame), never assumed from the vendor. Run as a
-script, it prints "<vendor> <device>" for the converter.
+script, it prints "<vendor> <device> [<CUDA index>]" for the converter.
 """
 
 import logging
@@ -219,6 +219,11 @@ def _nvenc_encodes(encoder: str, cuda_index: int) -> bool | None:
     return False if any(text in error for text in _NVENC_UNSUPPORTED) else None
 
 
+def cuda_index(gpu: dict, gpus: list[dict]) -> int:
+    """The NVIDIA card's index in CUDA's PCI_BUS_ID order, as -gpu and cuda=cu: take it."""
+    return sorted(g["slot"] for g in gpus if g["type"] == "nvidia").index(gpu["slot"])
+
+
 def supports(gpu: dict, gpus: list[dict], codec: str) -> bool | None:
     """Whether one of ``gpus`` encodes ``codec``; None when it cannot be told."""
     encoder = _ENCODERS.get(gpu["type"], {}).get(codec, "")
@@ -230,8 +235,7 @@ def supports(gpu: dict, gpus: list[dict], codec: str) -> bool | None:
         if codec != "av1":
             return True
         # AV1 encoding exists only on recent cards: ask this one.
-        slots = sorted(g["slot"] for g in gpus if g["type"] == "nvidia")
-        return _nvenc_encodes(encoder, slots.index(gpu["slot"]))
+        return _nvenc_encodes(encoder, cuda_index(gpu, gpus))
     profiles = _vainfo_profiles(gpu["device"])
     if profiles is None:
         return None
@@ -281,4 +285,6 @@ if __name__ == "__main__":
     else:
         chosen = choose_gpu(gpus, sys.argv[1])
     if chosen is not None:
-        print(chosen["type"], chosen["device"])
+        # The script initializes CUDA by index, in the PCI order it exports.
+        index = cuda_index(chosen, gpus) if chosen["type"] == "nvidia" else ""
+        print(chosen["type"], chosen["device"], index)

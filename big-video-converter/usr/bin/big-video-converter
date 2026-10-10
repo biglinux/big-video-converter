@@ -1266,20 +1266,32 @@ gpu=${gpu/auto/}
 # encodes AV1, else the one that alone encodes VP9, else NVIDIA, AMD, Intel
 # among those that encode the chosen codec.
 gpu_vendor=""
+cuda_index=""
+gpu_selector="$script_dir/../share/big-video-converter/engine/gpu_selector.py"
 case $gpu in
-nvidia | amd | intel) gpu_vendor=$gpu ;;
+nvidia | amd | intel)
+	gpu_vendor=$gpu
+	# A named NVIDIA device is initialized by its CUDA index.
+	if [[ $gpu == nvidia && -n $gpu_device ]]; then
+		read -r _ _ cuda_index < <(
+			ffmpeg_executable=$ffmpeg_executable python3 "$gpu_selector" h264 "$gpu_device"
+		) || true
+	fi
+	;;
 "")
 	if [[ $force_copy_video != 1 && ${video_encoder:-h264} != prores ]]; then
 		chosen_device=""
-		read -r gpu_vendor chosen_device < <(
+		read -r gpu_vendor chosen_device cuda_index < <(
 			ffmpeg_executable=$ffmpeg_executable python3 \
-				"$script_dir/../share/big-video-converter/engine/gpu_selector.py" "${video_encoder:-h264}" ${gpu_device:+"$gpu_device"}
+				"$gpu_selector" "${video_encoder:-h264}" ${gpu_device:+"$gpu_device"}
 		) || true
 		gpu_device=$chosen_device
 		[[ -n $gpu_vendor ]] || echo "No GPU encodes ${video_encoder:-h264} here - using software encoding"
 	fi
 	;;
 esac
+# CUDA's own device order is fastest first; the selector counts in PCI order.
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
 # Encode to a staging file this job owns.
 ffmpeg_generic_options=(-y "$staged_output")
@@ -1557,20 +1569,15 @@ attempt_conversion() {
 	# Never hardcode kernel_driver=i915: Arrow Lake and newer Intel GPUs are
 	# driven by "xe", and asking for i915 there fails with "Device creation
 	# failed", which silently pushes every Intel conversion down to software
-	# encoding. Use the driver the kernel actually reports for the Intel GPU,
-	# and omit the filter when it cannot be determined.
+	# encoding. Use the driver the kernel reports for the chosen node, else for
+	# the first Intel GPU, and omit the filter when it cannot be determined.
 	intel_kernel_driver=""
-	for _vendor_file in /sys/class/drm/card[0-9]*/device/vendor; do
-		[[ -r $_vendor_file ]] || continue
-		[[ $(<"$_vendor_file") == "0x8086" ]] || continue
-		intel_kernel_driver=$(basename "$(readlink -f "${_vendor_file%/vendor}/driver" 2>/dev/null)")
+	for _device_dir in ${gpu_device:+"/sys/class/drm/${gpu_device##*/}/device"} /sys/class/drm/card[0-9]*/device; do
+		[[ -r $_device_dir/vendor && $(<"$_device_dir/vendor") == 0x8086 ]] || continue
+		intel_kernel_driver=$(basename "$(readlink -f "$_device_dir/driver" 2>/dev/null)")
 		[[ -n $intel_kernel_driver ]] && break
 	done
-	if [[ -n $intel_kernel_driver ]]; then
-		init_qsv=(-init_hw_device "vaapi=va:,driver=iHD,kernel_driver=$intel_kernel_driver" -init_hw_device qsv=qs@va)
-	else
-		init_qsv=(-init_hw_device "vaapi=va:,driver=iHD" -init_hw_device qsv=qs@va)
-	fi
+	init_qsv=(-init_hw_device "vaapi=va:$gpu_device,driver=iHD${intel_kernel_driver:+,kernel_driver=$intel_kernel_driver}" -init_hw_device qsv=qs@va)
 	init_vaapi=(-init_hw_device vaapi)
 	init_vulkan=(-init_hw_device vulkan)
 	init_nvidia=(-init_hw_device cuda)
@@ -1578,8 +1585,9 @@ attempt_conversion() {
 	if [[ -n "$gpu_device" ]]; then
 		init_vaapi=(-init_hw_device "vaapi=va:$gpu_device")
 		init_vulkan=(-init_hw_device "vulkan=vk:$gpu_device")
-		init_nvidia=(-init_hw_device "cuda=cu:$gpu_device")
 	fi
+	# FFmpeg names a CUDA device by its index, never by a /dev/dri node.
+	[[ -z $cuda_index ]] || init_nvidia=(-init_hw_device "cuda=cu:$cuda_index")
 	decoder_qsv=(-filter_hw_device qs -hwaccel qsv -hwaccel_output_format qsv)
 	decoder_vaapi=(-hwaccel vaapi -hwaccel_output_format vaapi)
 	decoder_vulkan=(-hwaccel vulkan -hwaccel_output_format vulkan)
@@ -1731,7 +1739,7 @@ attempt_conversion() {
 	# The upload after system-memory filters: with OpenCL as the filter
 	# device, the generic one would pick OpenCL.
 	local uploader=hwupload
-	[[ $gpu_tonemap != *opencl* ]] || uploader="hwupload_cuda${gpu_device:+=device=$gpu_device}"
+	[[ $gpu_tonemap != *opencl* ]] || uploader="hwupload_cuda${cuda_index:+=device=$cuda_index}"
 
 	# What must run in system memory: CUDA deinterlaces on the GPU, and crop,
 	# turn and flip alone can stay there too (gpu_geometry_filters).

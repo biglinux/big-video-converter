@@ -152,3 +152,11 @@ def test_nvenc_av1_is_asked_of_the_card_and_vp9_does_not_exist(probes):
 def test_an_encoder_missing_from_the_ffmpeg_build_is_unsupported(probes):
     probes["encoders"] = ["h264_vaapi"]
     assert gs.supports(AMD, [AMD], "h265") is False
+
+
+def test_cuda_index_counts_nvidia_cards_in_pci_order():
+    second = {**gpu("nvidia", "renderD131"), "slot": "0000:01:00.0"}
+    first = {**gpu("nvidia", "renderD128"), "slot": "0000:00:02.0"}
+    cards = [second, INTEL, first]
+    assert gs.cuda_index(first, cards) == 0
+    assert gs.cuda_index(second, cards) == 1
