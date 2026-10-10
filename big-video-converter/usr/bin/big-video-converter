@@ -17,29 +17,6 @@ if [[ $show_executable == 1 ]]; then
 	exit 0
 fi
 
-# GPU detection helpers.
-#
-# lspci is optional: minimal installs (an AppImage's Ubuntu base, containers)
-# lack it, and then the PCI vendor IDs the kernel exports stand in, formatted
-# so the vendor matching below still works.
-detect_gpu_devices() {
-	if command -v lspci >/dev/null; then
-		lspci
-		return
-	fi
-
-	local vendor_file vendor
-	for vendor_file in /sys/class/drm/card[0-9]*/device/vendor; do
-		[[ -r $vendor_file ]] || continue
-		vendor=$(<"$vendor_file")
-		case $vendor in
-		0x10de) echo "VGA compatible controller: NVIDIA Corporation device" ;;
-		0x1002 | 0x1022) echo "VGA compatible controller: AMD/ATI device" ;;
-		0x8086) echo "VGA compatible controller: Intel Corporation device" ;;
-		esac
-	done | sort -u
-}
-
 if [[ $# -eq 0 || $1 == -h || $1 == --help ]]; then
 	cat <<EOF
 Usage: [variable=value ...] ${0##*/} input_file
@@ -70,7 +47,10 @@ Video
   force_copy_video=1        copy the video stream without encoding
 
 Hardware
-  gpu=NAME                  auto (default), nvidia, amd, intel, vulkan, software
+  gpu=NAME                  auto (default), nvidia, amd, intel, vulkan, software;
+                            auto takes, among the GPUs that encode the codec, the
+                            one that alone encodes AV1, else VP9, else NVIDIA,
+                            AMD, Intel in that order
   gpu_device=PATH           device to use, e.g. /dev/dri/renderD129
   gpu_partial=1             decode in software, encode on the GPU
   force_software=1          decode and encode in software
@@ -1279,22 +1259,27 @@ use_video_bitrate() { # <encoder array name>
 	sized_argv=("${kept[@]}")
 }
 
+gpu=${gpu,,}
 gpu=${gpu/auto/}
-# The GPU to encode on: the vendor asked for, else the first the system
-# reports, in the order NVIDIA, Intel, AMD (engine/gpu_selector.py ranks
-# encoder throughput the same way).
+# The GPU to encode on: the vendor asked for, the vendor of gpu_device, else
+# the one the GUI's rule picks (engine/gpu_selector.py): the card that alone
+# encodes AV1, else the one that alone encodes VP9, else NVIDIA, AMD, Intel
+# among those that encode the chosen codec.
 gpu_vendor=""
-gpu_devices=${gpu:+VGA $gpu}
-[[ -n $gpu_devices ]] || gpu_devices=$(detect_gpu_devices)
-if grep -qiE '(VGA|Display controller|3d).*nvidia' <<<"$gpu_devices"; then
-	gpu_vendor=nvidia
-elif grep -qiE '(VGA|Display controller).*intel' <<<"$gpu_devices"; then
-	gpu_vendor=intel
-elif grep -qiE '(VGA|Display controller).*(\bAMD\b|\bATI\b)' <<<"$gpu_devices"; then
-	gpu_vendor=amd
-elif [[ -z $gpu ]]; then
-	echo "No supported GPU detected - using software encoding"
-fi
+case $gpu in
+nvidia | amd | intel) gpu_vendor=$gpu ;;
+"")
+	if [[ $force_copy_video != 1 && ${video_encoder:-h264} != prores ]]; then
+		chosen_device=""
+		read -r gpu_vendor chosen_device < <(
+			ffmpeg_executable=$ffmpeg_executable python3 \
+				"$script_dir/../share/big-video-converter/engine/gpu_selector.py" "${video_encoder:-h264}" ${gpu_device:+"$gpu_device"}
+		) || true
+		gpu_device=$chosen_device
+		[[ -n $gpu_vendor ]] || echo "No GPU encodes ${video_encoder:-h264} here - using software encoding"
+	fi
+	;;
+esac
 
 # Encode to a staging file this job owns.
 ffmpeg_generic_options=(-y "$staged_output")

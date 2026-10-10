@@ -1,16 +1,29 @@
-"""Which GPU encodes the chosen codec, and which of several does it fastest."""
+"""Which GPU encodes a job: one rule for the GUI and the conversion script.
+
+Among the GPUs that can encode the chosen codec, the one that alone encodes
+AV1 wins, else the one that alone encodes VP9; with equal or unknown support
+the order is NVIDIA, AMD, Intel. Support is read from the device (VAAPI
+profiles, an NVENC test frame), never assumed from the vendor. Run as a
+script, it prints "<vendor> <device>" for the converter.
+"""
 
 import logging
 import os
 import subprocess
-from functools import cache, lru_cache
+import sys
+from functools import cache
 
-from engine.ffmpeg_path import get_ffmpeg_executable
+try:
+    from engine.ffmpeg_path import get_ffmpeg_executable
+except ImportError:  # run as a script: this directory is on sys.path
+    from ffmpeg_path import get_ffmpeg_executable
 
 logger = logging.getLogger(__name__)
 
-# Encoder names per GPU type per codec
-_ENCODER_MAP: dict[str, dict[str, str]] = {
+CODECS = ("h264", "h265", "av1", "vp9")
+
+# FFmpeg encoder per vendor and codec; "" where the vendor's API has none.
+_ENCODERS: dict[str, dict[str, str]] = {
     "nvidia": {
         "h264": "h264_nvenc",
         "h265": "hevc_nvenc",
@@ -31,37 +44,18 @@ _ENCODER_MAP: dict[str, dict[str, str]] = {
     },
 }
 
-# Performance ranking per codec (higher = faster).
-# Based on typical hardware encoder throughput.
-_PERF_RANK: dict[str, dict[str, int]] = {
-    "h264": {"nvidia": 3, "intel": 2, "amd": 1},
-    "h265": {"nvidia": 3, "intel": 2, "amd": 1},
-    "av1": {"nvidia": 3, "intel": 2, "amd": 1},
-    "vp9": {"intel": 2, "amd": 1, "nvidia": 0},
+_VENDOR_ORDER = ("nvidia", "amd", "intel")
+
+_VAAPI_PROFILES = {
+    "h264": "vaprofileh264",
+    "h265": "vaprofilehevc",
+    "av1": "vaprofileav1profile0",
+    "vp9": "vaprofilevp9profile0",
 }
 
-
-@lru_cache(maxsize=1)
-def _available_ffmpeg_encoders() -> frozenset[str]:
-    """Return the set of encoder names that ffmpeg reports as available."""
-    try:
-        result = subprocess.run(
-            [get_ffmpeg_executable(), "-hide_banner", "-encoders"],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
-        )
-        encoders: set[str] = set()
-        for line in result.stdout.splitlines():
-            parts = line.split()
-            if len(parts) >= 2 and parts[0].startswith("V"):
-                encoders.add(parts[1])
-        return frozenset(encoders)
-    except (subprocess.SubprocessError, OSError) as e:
-        logger.warning("Failed to query ffmpeg encoders: %s", e)
-        return frozenset()
-
+# What NVENC prints when the card lacks the codec, as opposed to a driver or
+# CUDA failure, which leaves the answer unknown.
+_NVENC_UNSUPPORTED = ("codec not supported", "no capable devices", "unsupported device")
 
 _PCI_VENDORS = {
     "0x10de": ("nvidia", "NVIDIA"),
@@ -70,7 +64,60 @@ _PCI_VENDORS = {
 }
 
 
-def _pci_name(slot: str, fallback_vendor: str, run) -> str:
+@cache
+def _available_ffmpeg_encoders() -> frozenset[str]:
+    """Video encoder names this FFmpeg build reports."""
+    try:
+        result = subprocess.run(
+            [get_ffmpeg_executable(), "-hide_banner", "-encoders"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (subprocess.SubprocessError, OSError) as error:
+        logger.warning("Failed to query ffmpeg encoders: %s", error)
+        return frozenset()
+    encoders = set()
+    for line in result.stdout.splitlines():
+        parts = line.split()
+        if len(parts) >= 2 and parts[0].startswith("V"):
+            encoders.add(parts[1])
+    return frozenset(encoders)
+
+
+def render_devices(drm_dir: str = "/sys/class/drm") -> list[dict]:
+    """Every render node with its vendor and PCI slot, read from sysfs.
+
+    The name is a placeholder until name_render_devices() reads lspci, which
+    can be slow and so runs on a worker.
+    """
+    try:
+        nodes = sorted(n for n in os.listdir(drm_dir) if n.startswith("renderD"))
+    except OSError:
+        return []
+    gpus = []
+    for node in nodes:
+        device_dir = os.path.join(drm_dir, node, "device")
+        try:
+            with open(os.path.join(device_dir, "vendor"), encoding="ascii") as f:
+                vendor = f.read().strip().lower()
+        except (OSError, UnicodeError):
+            vendor = ""
+        gpu_type, label = _PCI_VENDORS.get(vendor, ("unknown", ""))
+        gpus.append(
+            {
+                "name": f"{label} ({node})" if label else node,
+                "device": os.path.join("/dev/dri", node),
+                "type": gpu_type,
+                "slot": os.path.basename(os.path.realpath(device_dir)),
+                "label": label,
+            }
+        )
+    return gpus
+
+
+def _pci_name(slot: str, vendor_label: str, run) -> str:
     """Commercial name of one PCI device, e.g. "NVIDIA TU116 [GeForce GTX 1660 Ti]"."""
     try:
         out = run(
@@ -86,72 +133,44 @@ def _pci_name(slot: str, fallback_vendor: str, run) -> str:
     device = fields.get("Device", "").strip()
     if not device:
         return ""
-    name = f"{fallback_vendor or fields.get('Vendor', '').strip()} {device}".strip()
+    name = f"{vendor_label or fields.get('Vendor', '').strip()} {device}".strip()
     return name[:47].rstrip() + "..." if len(name) > 50 else name
 
 
-def detect_render_devices(
-    drm_dir: str = "/sys/class/drm", run=subprocess.run
-) -> list[dict]:
-    """Render nodes with the GPU vendor each belongs to, read from sysfs.
+def name_render_devices(gpus: list[dict], run=subprocess.run) -> list[str]:
+    """Display names for ``gpus``, from each node's own PCI device.
 
-    The vendor and the lspci name both come from the node's own PCI device,
-    so the pairing cannot drift the way the i-th lspci VGA line and the i-th
-    node did (a BMC VGA without a render node shifted every name). The short
-    `lspci -s` per node runs on the GTK thread. A single node needs no
-    choice: [].
+    Pairing by PCI slot keeps a name on its node; matching the i-th lspci VGA
+    line to the i-th node drifted when a BMC VGA had no render node. Names that
+    repeat get the node appended.
     """
-    try:
-        nodes = sorted(n for n in os.listdir(drm_dir) if n.startswith("renderD"))
-    except OSError:
-        return []
-    if len(nodes) <= 1:
-        return []
-    gpus = []
-    for node in nodes:
-        device_dir = os.path.join(drm_dir, node, "device")
-        try:
-            with open(os.path.join(device_dir, "vendor"), encoding="ascii") as f:
-                vendor = f.read().strip().lower()
-        except (OSError, UnicodeError):
-            vendor = ""
-        gpu_type, label = _PCI_VENDORS.get(vendor, ("unknown", ""))
-        slot = os.path.basename(os.path.realpath(device_dir))
-        gpus.append(
-            {
-                "name": _pci_name(slot, label, run)
-                or (f"{label} ({node})" if label else node),
-                "device": os.path.join("/dev/dri", node),
-                "type": gpu_type,
-            }
-        )
-    names = [g["name"] for g in gpus]
-    for gpu in gpus:
-        if names.count(gpu["name"]) > 1:
-            gpu["name"] += f" ({os.path.basename(gpu['device'])})"
-    return gpus
+    names = [_pci_name(gpu["slot"], gpu["label"], run) or gpu["name"] for gpu in gpus]
+    return [
+        f"{name} ({os.path.basename(gpu['device'])})" if names.count(name) > 1 else name
+        for name, gpu in zip(names, gpus, strict=True)
+    ]
 
 
 @cache
-def _vainfo_profiles(device_path: str) -> frozenset[str]:
-    """Lowercase encode profiles of one VAAPI device, e.g. 'vaprofilehevcmain'.
+def _vainfo_profiles(device_path: str) -> frozenset[str] | None:
+    """Lowercase encode profiles of one VAAPI device, or None if vainfo failed.
 
     Cached for the session: each vainfo call can take seconds, and a device's
     encoders do not change while the application runs.
     """
     try:
-        env = os.environ.copy()
-        env["DISPLAY"] = ""  # avoid X11 issues
         result = subprocess.run(
             ["vainfo", "--display", "drm", "--device", device_path],
             capture_output=True,
             text=True,
             timeout=5,
-            env=env,
+            env={**os.environ, "DISPLAY": ""},
             check=False,
         )
     except (subprocess.SubprocessError, OSError):
-        return frozenset()
+        return None
+    if result.returncode != 0:
+        return None
     profiles = set()
     for line in result.stdout.splitlines():
         low = line.strip().lower()
@@ -160,66 +179,106 @@ def _vainfo_profiles(device_path: str) -> frozenset[str]:
     return frozenset(profiles)
 
 
-def _vainfo_supports_codec(device_path: str, codec: str) -> bool:
-    """Check if a VAAPI device supports a specific codec for encoding."""
-    codec_profile_map = {
-        "h264": "vaprofileh264",
-        "h265": "vaprofilehevc",
-        "av1": "vaprofileav1profile0",
-        "vp9": "vaprofilevp9profile0",
-    }
-    prefix = codec_profile_map.get(codec, "")
-    if not prefix:
+@cache
+def _nvenc_encodes(encoder: str, cuda_index: int) -> bool | None:
+    """Whether one NVIDIA card encodes a test frame with ``encoder``."""
+    try:
+        result = subprocess.run(
+            [
+                get_ffmpeg_executable(),
+                "-hide_banner",
+                "-nostdin",
+                "-v",
+                "error",
+                "-f",
+                "lavfi",
+                "-i",
+                "color=c=gray:s=256x256:r=1",
+                "-frames:v",
+                "1",
+                "-c:v",
+                encoder,
+                "-gpu",
+                str(cuda_index),
+                "-f",
+                "null",
+                "-",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            # -gpu counts the cards in PCI order only with this set.
+            env={**os.environ, "CUDA_DEVICE_ORDER": "PCI_BUS_ID"},
+            check=False,
+        )
+    except (subprocess.SubprocessError, OSError):
+        return None
+    if result.returncode == 0:
+        return True
+    error = result.stderr.lower()
+    return False if any(text in error for text in _NVENC_UNSUPPORTED) else None
+
+
+def supports(gpu: dict, gpus: list[dict], codec: str) -> bool | None:
+    """Whether one of ``gpus`` encodes ``codec``; None when it cannot be told."""
+    encoder = _ENCODERS.get(gpu["type"], {}).get(codec, "")
+    if not encoder:
+        return None if gpu["type"] not in _ENCODERS else False
+    if encoder not in _available_ffmpeg_encoders():
         return False
-    profiles = _vainfo_profiles(device_path)
-    return any(prefix in p for p in profiles)
-
-
-def select_best_gpu(
-    detected_gpus: list[dict],
-    codec: str,
-) -> dict | None:
-    """The fastest of ``detect_render_devices()`` that encodes ``codec``.
-
-    Returns {"type", "device"}, or None to leave the choice to the script.
-    The first call runs ffmpeg and vainfo; call it from a worker first.
-    """
-    if not detected_gpus or len(detected_gpus) < 2:
+    if gpu["type"] == "nvidia":
+        if codec != "av1":
+            return True
+        # AV1 encoding exists only on recent cards: ask this one.
+        slots = sorted(g["slot"] for g in gpus if g["type"] == "nvidia")
+        return _nvenc_encodes(encoder, slots.index(gpu["slot"]))
+    profiles = _vainfo_profiles(gpu["device"])
+    if profiles is None:
         return None
+    return any(_VAAPI_PROFILES[codec] in profile for profile in profiles)
 
+
+def choose_gpu(gpus: list[dict], codec: str, supports=supports):
+    """The GPU of ``gpus`` that encodes ``codec``, by the rule above, or None."""
     codec = codec.lower()
-    available_encoders = _available_ffmpeg_encoders()
-    perf = _PERF_RANK.get(codec, {})
+    usable = [gpu for gpu in gpus if supports(gpu, gpus, codec) is True]
+    if len(usable) <= 1:
+        return usable[0] if usable else None
+    for feature in ("av1", "vp9"):
+        answers = [supports(gpu, gpus, feature) for gpu in usable]
+        # An unknown answer could be the second card that has it.
+        if None not in answers and answers.count(True) == 1:
+            return usable[answers.index(True)]
+    return min(usable, key=lambda gpu: _VENDOR_ORDER.index(gpu["type"]))
 
-    candidates: list[tuple[int, str, str, str]] = []  # (score, type, device, name)
 
-    for gpu in detected_gpus:
-        gpu_type = gpu["type"]
-        if gpu_type == "unknown":
-            continue
+def select_best_gpu(detected_gpus: list[dict], codec: str) -> dict | None:
+    """{"type", "device"} for the GUI's job, or None to let the script choose.
 
-        encoder_name = _ENCODER_MAP.get(gpu_type, {}).get(codec, "")
-        if not encoder_name:
-            continue
-
-        if encoder_name not in available_encoders:
-            continue
-
-        # For VAAPI/QSV GPUs, verify hardware actually supports the codec
-        if gpu_type in ("amd", "intel"):
-            device = gpu.get("device", "")
-            if device and not _vainfo_supports_codec(device, codec):
-                continue
-
-        score = perf.get(gpu_type, 0)
-        candidates.append((score, gpu_type, gpu.get("device", ""), gpu.get("name", "")))
-
-    if not candidates:
+    The first call runs ffmpeg, vainfo and an NVENC test frame; call it from a
+    worker first, which fills the caches.
+    """
+    if len(detected_gpus) < 2:
         return None
+    best = choose_gpu(detected_gpus, codec)
+    if best is None:
+        return None
+    logger.info("Selected GPU for %s: %s", codec, best["name"])
+    return {"type": best["type"], "device": best["device"]}
 
-    # Sort by score descending
-    candidates.sort(key=lambda c: c[0], reverse=True)
-    best = candidates[0]
 
-    logger.info("Selected GPU for %s: %s", codec, best[3])
-    return {"type": best[1], "device": best[2]}
+if __name__ == "__main__":
+    if len(sys.argv) not in (2, 3) or sys.argv[1] not in CODECS:
+        sys.exit(
+            f"usage: {os.path.basename(sys.argv[0])} {{{','.join(CODECS)}}} [DEVICE]"
+        )
+    gpus = render_devices()
+    if len(sys.argv) == 3:
+        # A device the caller named is used as asked; only its vendor is needed.
+        chosen = next((g for g in gpus if g["device"] == sys.argv[2]), None)
+        if chosen is not None and chosen["type"] == "unknown":
+            chosen = None
+    else:
+        chosen = choose_gpu(gpus, sys.argv[1])
+    if chosen is not None:
+        print(chosen["type"], chosen["device"])

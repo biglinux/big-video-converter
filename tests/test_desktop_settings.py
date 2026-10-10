@@ -325,7 +325,7 @@ def _fake_drm(tmp_path, nodes):
 
 
 def test_render_nodes_are_named_by_their_own_pci_device(tmp_path):
-    from engine.gpu_selector import detect_render_devices
+    from engine.gpu_selector import name_render_devices, render_devices
 
     drm = _fake_drm(
         tmp_path,
@@ -350,9 +350,10 @@ def test_render_nodes_are_named_by_their_own_pci_device(tmp_path):
         assert kwargs["timeout"] <= 2
         return subprocess.CompletedProcess(argv, 0, lspci[argv[-1]], "")
 
-    gpus = detect_render_devices(drm, run)
+    gpus = render_devices(drm)
+    names = name_render_devices(gpus, run)
     assert calls == [["lspci", "-vmm", "-s", slot] for slot in sorted(lspci)]
-    assert [(g["device"], g["type"], g["name"]) for g in gpus] == [
+    assert [(g["device"], g["type"], n) for g, n in zip(gpus, names, strict=True)] == [
         ("/dev/dri/renderD128", "intel", "Intel CoffeeLake-S GT2 [UHD Graphics 630]"),
         (
             "/dev/dri/renderD129",
@@ -376,7 +377,7 @@ def test_render_nodes_are_named_by_their_own_pci_device(tmp_path):
     "failure", [FileNotFoundError("lspci"), subprocess.TimeoutExpired("lspci", 2), None]
 )
 def test_render_nodes_fall_back_to_the_vendor_without_lspci(tmp_path, failure):
-    from engine.gpu_selector import detect_render_devices
+    from engine.gpu_selector import name_render_devices, render_devices
 
     drm = _fake_drm(
         tmp_path,
@@ -394,7 +395,7 @@ def test_render_nodes_fall_back_to_the_vendor_without_lspci(tmp_path, failure):
             argv, 1, "", "lspci: -s: Invalid slot number"
         )
 
-    assert [g["name"] for g in detect_render_devices(drm, run)] == [
+    assert name_render_devices(render_devices(drm), run) == [
         "Intel (renderD128)",
         "NVIDIA (renderD129)",
         "renderD130",

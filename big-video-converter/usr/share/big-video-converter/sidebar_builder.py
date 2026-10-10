@@ -11,7 +11,7 @@ from constants import (
     VIDEO_CODEC_VALUES,
     VIDEO_QUALITY_VALUES,
 )
-from engine.gpu_selector import detect_render_devices, select_best_gpu
+from engine.gpu_selector import name_render_devices, render_devices, select_best_gpu
 from gi.repository import Adw, Gdk, GLib, Gtk
 
 _ = gettext.gettext
@@ -219,16 +219,9 @@ class SidebarBuilderMixin:
         self.gpu_combo.set_subtitle(_("Speeds up conversion if supported"))
         self.gpu_combo.set_model(gpu_model)
 
-        # GPU Device
-        self.detected_gpus = detect_render_devices()
-        if len(self.detected_gpus) > 1:
-            # Ranking the GPUs runs ffmpeg and vainfo; their answers are cached.
-            threading.Thread(
-                target=select_best_gpu,
-                args=(self.detected_gpus, "h264"),
-                name="bvc-gpu-probe",
-                daemon=True,
-            ).start()
+        # GPU Device: offered only when there is a choice.
+        gpus = render_devices()
+        self.detected_gpus = gpus if len(gpus) > 1 else []
         self.gpu_device_combo = Adw.ComboRow(title=_("GPU Device"))
         self.gpu_device_combo.set_subtitle(_("Select which GPU to use"))
         gpu_device_model = Gtk.StringList()
@@ -236,6 +229,19 @@ class SidebarBuilderMixin:
         for gpu_info in self.detected_gpus:
             gpu_device_model.append(gpu_info["name"])
         self.gpu_device_combo.set_model(gpu_device_model)
+        if self.detected_gpus:
+            codec = self.settings_store.load_setting("video-codec", "h264")
+
+            def probe_gpus() -> None:
+                # lspci names each card; ranking runs ffmpeg, vainfo and an
+                # NVENC test frame, whose answers are cached for the jobs.
+                names = name_render_devices(gpus)
+                GLib.idle_add(self._name_gpu_devices, gpus, names, gpu_device_model)
+                select_best_gpu(gpus, codec)
+
+            threading.Thread(
+                target=probe_gpus, name="bvc-gpu-probe", daemon=True
+            ).start()
 
         # Output Format
         format_model = Gtk.StringList()
@@ -642,6 +648,20 @@ class SidebarBuilderMixin:
         self._load_left_pane_settings()
 
         return settings_box
+
+    def _name_gpu_devices(self, gpus, names, model) -> bool:
+        """Put lspci's names in place of the node placeholders, keeping the choice."""
+        if getattr(self, "_quitting", False):
+            return GLib.SOURCE_REMOVE
+        for gpu, name in zip(gpus, names, strict=True):
+            gpu["name"] = name
+        selected = self.gpu_device_combo.get_selected()
+        # Replacing the items moves the selection for a moment; that is not a
+        # choice to save.
+        with self.settings_store.suspend_writes():
+            model.splice(1, len(names), names)
+            self.gpu_device_combo.set_selected(selected)
+        return GLib.SOURCE_REMOVE
 
     def _connect_left_pane_signals(self):
         # GPU

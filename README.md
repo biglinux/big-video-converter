@@ -22,6 +22,8 @@ Launch **Big Video Converter** from the application menu. For other Arch-based s
 
 The package requires Python 3.11 or later, GTK4, libadwaita 1.5 or later, PyGObject, Cairo, FFmpeg, python-mpv, PyOpenGL, libva-utils and VTE4. Hardware encoding also depends on the GPU, its driver and the encoders included in FFmpeg. The Nautilus extension is optional.
 
+With **GPU** on Auto, the converter encodes on a GPU that supports the chosen codec. If several do, the one that alone encodes AV1 is chosen, else the one that alone encodes VP9; with equal support the order is NVIDIA, AMD, Intel. Support is read from each card (its VAAPI profiles, or a test frame on NVENC), and a card whose support cannot be read does not count as having it.
+
 To run a checkout with these dependencies installed:
 
 ```sh
