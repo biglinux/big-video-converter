@@ -119,8 +119,11 @@ class FileIntakeMixin:
                                 os.path.join(directory, name)
                                 for name in names
                                 if self.is_valid_video_file(name)
+                                and os.path.isfile(os.path.join(directory, name))
                             )
-                    elif selected_files or self.is_valid_video_file(path):
+                    elif os.path.isfile(path) and (
+                        selected_files or self.is_valid_video_file(path)
+                    ):
                         files.append(path)
             except OSError as caught:
                 error = caught

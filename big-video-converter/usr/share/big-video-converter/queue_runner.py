@@ -20,6 +20,7 @@ class QueueRunnerMixin:
     """Mixin providing conversion queue management and orchestration."""
 
     def add_file_to_queue(self, file_path: str) -> bool:
+        """Queue a path the caller found to be a file, off the main loop."""
         # A running queue already has one progress row per file; a file added
         # while it runs would have none.
         if (
@@ -28,7 +29,7 @@ class QueueRunnerMixin:
             or file_path in self.conversion_queue
         ):
             return False
-        if file_path and os.path.isfile(file_path):
+        if file_path:
             input_dir = os.path.dirname(file_path)
             self.last_accessed_directory = input_dir
             self.settings_store.save_setting("last-accessed-directory", input_dir)

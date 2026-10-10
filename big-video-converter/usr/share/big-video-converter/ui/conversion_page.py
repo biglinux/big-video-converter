@@ -154,15 +154,6 @@ class FileQueueRow(Gtk.ListBoxRow):
         self.meta_label.add_css_class("bvc-tabular")
         self.meta_label.add_css_class("bvc-meta-chip")
         self.meta_label.set_valign(Gtk.Align.CENTER)
-        try:
-            self._size_text = format_size(os.path.getsize(file_path))
-            self.meta_label.set_text(self._size_text)
-        except OSError:
-            # Moved or deleted since it was queued: say so instead of hiding
-            # a file the queue still counts and will report as failed.
-            self._size_text = None
-            self.meta_label.set_text(_("File not found"))
-            self.meta_label.add_css_class("error")
         metadata_row.append(self.meta_label)
         # Only a video with settings of its own carries a chip; the others
         # follow the sidebar, which already says what they use.
@@ -328,8 +319,8 @@ class FileQueueRow(Gtk.ListBoxRow):
         self.recipe_label.set_visible(custom)
 
     def _request_summary(self, pool) -> None:
-        """Probe duration, size and codec on a worker; the result is cached."""
-        if pool is None or self._size_text is None:
+        """Read size, duration and codec on a worker; the probe is cached."""
+        if pool is None:
             return
         row_ref = weakref.ref(self)
         expected = self.file_path
@@ -338,15 +329,13 @@ class FileQueueRow(Gtk.ListBoxRow):
             if future.cancelled():
                 return
             try:
-                summary = future.result()
+                answer = future.result()
             except Exception:
                 logger.exception("Queue probe failed")
-                summary = None
-            GLib.idle_add(_apply_summary, row_ref, expected, summary)
+                return
+            GLib.idle_add(_apply_summary, row_ref, expected, answer)
 
-        from engine.file_info import get_queue_summary
-
-        self._summary_future = pool.submit(get_queue_summary, expected)
+        self._summary_future = pool.submit(_queue_row_facts, expected)
         self._summary_future.add_done_callback(done)
 
     def dispose_thumbnail(self):
@@ -396,15 +385,29 @@ class FileQueueRow(Gtk.ListBoxRow):
         dialog.present(self.app.window)
 
 
-def _apply_summary(row_ref, expected, summary):
+def _queue_row_facts(file_path):
+    """The file's size and probe summary, or None once the file is gone."""
+    from engine.file_info import get_queue_summary
+
+    try:
+        size = os.path.getsize(file_path)
+    except OSError:
+        return None
+    return size, get_queue_summary(file_path)
+
+
+def _apply_summary(row_ref, expected, answer):
     row = row_ref()
-    if (
-        row is None
-        or row._thumbnail_disposed
-        or expected != row.file_path
-        or not summary
-    ):
+    if row is None or row._thumbnail_disposed or expected != row.file_path:
         return GLib.SOURCE_REMOVE
+    if answer is None:
+        # Moved or deleted since it was queued: say so instead of hiding a
+        # file the queue still counts and will report as failed.
+        row.meta_label.set_text(_("File not found"))
+        row.meta_label.add_css_class("error")
+        return GLib.SOURCE_REMOVE
+    size, summary = answer
+    summary = summary or {}
     duration = summary.get("duration")
     if duration and duration > 0:
         row.duration_badge.set_text(format_clock(duration))
@@ -415,7 +418,7 @@ def _apply_summary(row_ref, expected, summary):
     codec = summary.get("codec")
     if codec:
         facts.append(CODEC_NAMES.get(codec, codec.upper()))
-    facts.append(row._size_text)
+    facts.append(format_size(size))
     row.meta_label.set_text(" · ".join(facts))
     return GLib.SOURCE_REMOVE
 

@@ -1082,6 +1082,22 @@ def test_vanished_single_file_restores_the_queue_and_says_why(
         app.progress_page.reset()
 
 
+def test_opening_files_queues_only_the_ones_that_exist(
+    app, media, monkeypatch, tmp_path
+):
+    from collections import deque
+
+    from gi.repository import Gio
+
+    monkeypatch.setattr(app, "conversion_queue", deque())
+    video = str(media["video"])
+    gone = Gio.File.new_for_path(str(tmp_path / "gone.mp4"))
+    app.do_open([Gio.File.new_for_path(video), gone], 2, "")
+    pump_until(lambda: list(app.conversion_queue) == [video])
+    pump(0.05)
+    assert list(app.conversion_queue) == [video]
+
+
 def test_vanished_queued_file_stays_listed_as_not_found(app, monkeypatch, tmp_path):
     from collections import deque
 
@@ -1089,12 +1105,16 @@ def test_vanished_queued_file_stays_listed_as_not_found(app, monkeypatch, tmp_pa
     monkeypatch.setattr(app, "conversion_queue", deque([missing]))
     page = app.conversion_page
     page.update_queue_display()
-    pump(0.05)
-    assert [row.file_path for row in page.queue_rows] == [missing]
-    assert any(
-        isinstance(w, Gtk.Label) and w.get_label() == "File not found"
-        for w in widgets(page.queue_rows[0])
+    pump_until(
+        lambda: (
+            page.queue_rows
+            and any(
+                isinstance(w, Gtk.Label) and w.get_label() == "File not found"
+                for w in widgets(page.queue_rows[0])
+            )
+        )
     )
+    assert [row.file_path for row in page.queue_rows] == [missing]
 
 
 def test_launch_uses_the_answers_probed_on_the_worker(app, media, monkeypatch):

@@ -578,26 +578,24 @@ class VideoConverterApp(
         if not hasattr(self, "window") or self.window is None:
             self.activate()
 
-        files_added = 0
-        refused_busy = False
         # smb:// or sftp:// without a FUSE mount has no path FFmpeg can read.
         remote = [file.get_uri() for file in files if not file.get_path()]
-        for file in files:
-            file_path = file.get_path()
-            if (
-                file_path
-                and os.path.exists(file_path)
-                and self.is_valid_video_file(file_path)
-            ):
-                if self.add_file_to_queue(file_path):
-                    files_added += 1
-                elif self.currently_converting:
-                    refused_busy = True
-        if refused_busy:
+        local = [file.get_path() for file in files if file.get_path()]
+        if local and self.currently_converting:
             self.show_info_dialog(
                 _("Conversion in progress"),
                 _("New videos can be added when the current conversions finish."),
             )
+        elif local:
+
+            def opened(added):
+                if added:
+                    self.show_queue_view()
+                    # Files opened from another program bring the window up.
+                    if getattr(self, "window", None):
+                        self.window.present()
+
+            self.add_paths_to_queue(local, opened)
         if remote:
             self.show_error_dialog(
                 ngettext(
@@ -615,12 +613,6 @@ class VideoConverterApp(
                     len(remote),
                 ).format(files="\n".join(remote)),
             )
-
-        if files_added > 0:
-            GLib.idle_add(self.show_queue_view)
-            # Request window focus when files are added externally
-            if hasattr(self, "window") and self.window:
-                self.window.present()
 
     def do_command_line(self, command_line):
         args = command_line.get_arguments()
