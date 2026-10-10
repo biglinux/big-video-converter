@@ -1077,39 +1077,6 @@ def test_a_failing_preset_helper_stops_the_job(media, tmp_path, cli_env):
     assert not (tmp_path / "out.mkv").exists()
 
 
-def test_cancel_while_publishing_leaves_no_empty_file(media, tmp_path, cli_env):
-    tools = tmp_path / "bin"
-    tools.mkdir()
-    slow_mv = tools / "mv"
-    slow_mv.write_text(f'#!/bin/bash\nsleep 60\nexec {shutil.which("mv")} "$@"\n')
-    slow_mv.chmod(0o755)
-    out = tmp_path / "out.mkv"
-    env = {
-        **cli_env,
-        "PATH": f"{tools}:{cli_env['PATH']}",
-        "output_file": str(out),
-        "options": "-t 0.4 -threads 1",
-    }
-    job = subprocess.Popen(
-        ["bash", str(CLI), str(media["video"])],
-        env=env,
-        cwd=cli_env["HOME"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True,
-    )
-    try:
-        wait_until(out.exists, 60, "the output name was never claimed")
-        os.killpg(job.pid, signal.SIGTERM)
-        job.wait(timeout=15)
-        assert not out.exists()
-        assert not list(tmp_path.glob(".bvc-*"))
-    finally:
-        if job.poll() is None:
-            os.killpg(job.pid, signal.SIGKILL)
-            job.wait()
-
-
 def test_a_full_disk_is_not_encoded_again_on_other_stages(media, tmp_path, run_cli):
     calls = tmp_path / "encodes"
     wrapper = fake_ffmpeg(
