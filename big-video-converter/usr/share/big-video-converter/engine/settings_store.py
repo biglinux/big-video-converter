@@ -9,7 +9,7 @@ import tempfile
 from contextlib import contextmanager
 from typing import ClassVar
 
-from utils.media_validation import new_file_mode
+from engine.media_validation import new_file_mode
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ def config_dir() -> str:
     return os.path.join(home, "big-video-converter")
 
 
-class SettingsManager:
+class SettingsStore:
     """Simple settings manager using JSON file."""
 
     # Combined default values
@@ -53,7 +53,7 @@ class SettingsManager:
         # Output frame rate ("" keeps the source's), see constants.VIDEO_FPS_VALUES.
         "video-fps": "",
         # Fit every converted video under a size ("" = no limit): a target
-        # id from utils/size_target.TARGETS, or "custom" with size-target-mb.
+        # id from engine/size_target.TARGETS, or "custom" with size-target-mb.
         "size-target": "",
         "size-target-mb": 50.0,
         "size-strategy": "auto",
@@ -515,13 +515,13 @@ class SettingsManager:
         if key == "eq-preset" and not re.fullmatch(r"[\w -]{1,64}", value):
             raise ValueError("Invalid equalizer preset")
         if key == "additional-options":
-            from utils.ffmpeg_options import parse_additional_options
+            from engine.ffmpeg_options import parse_additional_options
 
             parse_additional_options(value)
 
 
 # Local preferences are not portable conversion recipes.
-SettingsManager._PROFILE_EXCLUDE_KEYS.update(
+SettingsStore._PROFILE_EXCLUDE_KEYS.update(
     {
         "active-preset",
         "delete-original",

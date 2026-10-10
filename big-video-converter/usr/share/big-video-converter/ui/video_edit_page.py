@@ -15,9 +15,9 @@ _ = gettext.gettext
 import logging
 
 from constants import NOISE_MODELS, noise_reduction_filter
-from utils.crop_geometry import ASPECT_RATIOS, centered_crop
-from utils.job_options import DEFAULT_METADATA, EFFECT_LEVELS, SOURCE_HDR_MODES
-from utils.video_settings import SHADER_SUFFIXES, effects_graph
+from engine.crop_geometry import ASPECT_RATIOS, centered_crop
+from engine.job_options import DEFAULT_METADATA, EFFECT_LEVELS, SOURCE_HDR_MODES
+from engine.video_settings import SHADER_SUFFIXES, effects_graph
 
 from ui.crop_overlay import display_to_source, displayed_size, source_to_display
 from ui.mpv_player import MPVPlayer
@@ -31,7 +31,7 @@ class VideoEditPage:
     def __init__(self, app, app_state):
         self.app = app
         self.app_state = app_state
-        self.settings = app.settings_manager
+        self.settings = app.settings_store
         self.current_video_path = None
         self.video_duration = 0
         self.current_position = 0
@@ -1240,7 +1240,7 @@ class VideoEditPage:
         if not (self.mpv_player):
             return False
 
-        sm = self.app.settings_manager
+        sm = self.app.settings_store
         filters = []
 
         if sm.get_boolean("hpf-enabled", False):

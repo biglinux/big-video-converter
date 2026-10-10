@@ -61,7 +61,7 @@ def test_tooltip_controller_releases_widget(app):
     for serial in range(1, 6):
         button = Gtk.Button()
         track(button, serial)
-        app.tooltip_helper.add_tooltip(button, "video-codec")
+        app.help_tooltips.add_tooltip(button, "video-codec")
         del button
         gc.collect()
     assert set(range(1, 6)) <= _finalized
@@ -71,7 +71,7 @@ def test_welcome_dialog_finalizes_after_close(app):
     from ui.welcome_dialog import WelcomeDialog
 
     for serial in range(20, 25):
-        welcome = WelcomeDialog(app.window, app.settings_manager)
+        welcome = WelcomeDialog(app.window, app.settings_store)
         track(welcome.dialog, serial)
         welcome.present()
         pump(0.6)

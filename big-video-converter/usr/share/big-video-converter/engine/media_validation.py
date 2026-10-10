@@ -16,7 +16,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+from engine.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
 
 
 @dataclass(frozen=True)

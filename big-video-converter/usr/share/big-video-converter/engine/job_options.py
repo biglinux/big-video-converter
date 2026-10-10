@@ -43,7 +43,7 @@ DEFAULT_METADATA = {
     "rotation": 0,
     "flip_h": False,
     "flip_v": False,
-    # Effects: noise reduction and sharpening levels (utils/video_settings),
+    # Effects: noise reduction and sharpening levels (engine/video_settings),
     # two-pass stabilization, and a color LUT (.cube/.3dl) or mpv shader
     # (.hook/.glsl) the user chose.
     "denoise": "off",
@@ -250,7 +250,7 @@ def freeze(settings: dict[str, Any], metadata: dict[str, Any] | None) -> dict[st
 def snapshot_preset(preset) -> dict[str, Any]:
     """Create a validated, self-contained snapshot of a preset object."""
 
-    from utils.presets import (
+    from engine.presets import (
         _MAX_TEXT,
         parse_preset_text,
         preset_settings,

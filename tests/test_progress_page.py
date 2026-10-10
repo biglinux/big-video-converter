@@ -19,7 +19,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from conftest import pump, pump_until
 from gi.repository import Adw, GLib, Gtk, Pango
-from queue_manager import QueueManagerMixin
+from queue_runner import QueueRunnerMixin
 from ui.progress_page import ProgressPage, TimeLeft, format_clock, format_time_left
 
 
@@ -248,7 +248,7 @@ class ProgressPageTests(unittest.TestCase):
         pump_until(lambda: row.source_size == 10000)
 
         def supervisor_finish():
-            # utils.conversion: settle the row, then record the result.
+            # engine.conversion: settle the row, then record the result.
             row.mark_success()
             self.app.completed_conversions.append(
                 {
@@ -575,7 +575,7 @@ class FakeProgressSummary:
         return ("Queue finished with issues", "1 conversion failed")
 
 
-class QueueCompletionHarness(QueueManagerMixin):
+class QueueCompletionHarness(QueueRunnerMixin):
     def __init__(self, shown=True):
         self.progress_page = FakeProgressSummary(shown)
         self.notifications = []

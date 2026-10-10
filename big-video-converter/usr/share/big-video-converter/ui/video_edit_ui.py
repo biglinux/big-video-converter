@@ -11,8 +11,8 @@ from gi.repository import Adw, Gdk, Gio, GLib, Graphene, Gtk, Pango
 
 _ = gettext.gettext
 
-from utils.job_options import EFFECT_LEVELS, SOURCE_HDR_MODES
-from utils.video_settings import available_filters
+from engine.job_options import EFFECT_LEVELS, SOURCE_HDR_MODES
+from engine.video_settings import available_filters
 
 from ui.crop_overlay import CropOverlay
 from ui.pause_panel import PausePanel
@@ -458,8 +458,8 @@ class VideoEditUI:
         self.crop_edit_btn.add_css_class("bvc-icon-button")
         crop_box.append(self.crop_edit_btn)
 
-        if hasattr(self.page.app, "tooltip_helper"):
-            self.page.app.tooltip_helper.add_tooltip(crop_grid, "crop")
+        if hasattr(self.page.app, "help_tooltips"):
+            self.page.app.help_tooltips.add_tooltip(crop_grid, "crop")
 
         toolbar_box.append(crop_box)
         # Info Display
@@ -800,8 +800,8 @@ class VideoEditUI:
         self.segments_stack.add_named(empty, "empty")
         self.segments_stack.set_visible_child_name("empty")
         trim_group.add(self.segments_stack)
-        if hasattr(self.page.app, "tooltip_helper"):
-            self.page.app.tooltip_helper.add_tooltip(trim_group, "segments")
+        if hasattr(self.page.app, "help_tooltips"):
+            self.page.app.help_tooltips.add_tooltip(trim_group, "segments")
         # The analysis of a long video runs where it can be followed.
         self.pause_panel = PausePanel(self.page)
         sidebar_box.append(self.pause_panel)
@@ -1396,20 +1396,20 @@ class VideoEditUI:
 
     def apply_tooltips(self) -> None:
         """Apply tooltips to all video edit UI elements"""
-        if not hasattr(self.page.app, "tooltip_helper"):
+        if not hasattr(self.page.app, "help_tooltips"):
             return
 
-        tooltip_helper = self.page.app.tooltip_helper
+        help_tooltips = self.page.app.help_tooltips
 
-        tooltip_helper.add_tooltip(self.crop_grid, "crop")
+        help_tooltips.add_tooltip(self.crop_grid, "crop")
         if hasattr(self, "brightness_row") and self.brightness_row:
-            tooltip_helper.add_tooltip(self.brightness_row, "brightness")
+            help_tooltips.add_tooltip(self.brightness_row, "brightness")
         if hasattr(self, "saturation_row") and self.saturation_row:
-            tooltip_helper.add_tooltip(self.saturation_row, "saturation")
+            help_tooltips.add_tooltip(self.saturation_row, "saturation")
         if hasattr(self, "hue_row") and self.hue_row:
-            tooltip_helper.add_tooltip(self.hue_row, "hue")
+            help_tooltips.add_tooltip(self.hue_row, "hue")
         if hasattr(self, "trim_group") and self.trim_group:
-            tooltip_helper.add_tooltip(self.trim_group, "segments")
+            help_tooltips.add_tooltip(self.trim_group, "segments")
         for widget, key in (
             (getattr(self, "denoise_combo", None), "denoise"),
             (getattr(self, "sharpen_combo", None), "sharpen"),
@@ -1418,7 +1418,7 @@ class VideoEditUI:
             (getattr(self, "source_hdr_combo", None), "source_hdr"),
         ):
             if widget is not None:
-                tooltip_helper.add_tooltip(widget, key)
+                help_tooltips.add_tooltip(widget, key)
 
     def disconnect_all_handlers(self) -> None:
         """Disconnect handlers and remove callbacks owned by the editor UI."""

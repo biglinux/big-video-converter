@@ -8,9 +8,9 @@ import tempfile
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
-from utils.conversion import TEXT_SUBTITLE_CODECS
-from utils.ffmpeg_path import get_ffmpeg_executable
-from utils.media_validation import (
+from engine.conversion import TEXT_SUBTITLE_CODECS
+from engine.ffmpeg_path import get_ffmpeg_executable
+from engine.media_validation import (
     new_file_mode,
     probe_media,
     publish_output,
@@ -85,8 +85,8 @@ def _clip(cues, start, end, offset):
     return result
 
 
-class SubtitleProcessor:
-    """Process subtitle intervals without using language as stream identity."""
+class SubtitleClipper:
+    """Clips subtitle tracks to the cut intervals, identifying streams by index, not language."""
 
     def __init__(
         self,
@@ -111,7 +111,7 @@ class SubtitleProcessor:
         self.failed = []
         self.cancel_event = cancel_event
 
-    def process(self):
+    def run(self):
         embedded = []
         # Same naming as the conversion script: "<lang>[N][.forced]", counted
         # per name so neither a repeated language nor two forced tracks of one

@@ -15,7 +15,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from conftest import CLI, pump, pump_until
 from gi.repository import Adw, GLib, Gtk
-from utils.signal_connections import SignalConnections
+from ui.signal_connections import SignalConnections
 
 
 def widgets(parent):
@@ -41,7 +41,7 @@ def app(tmp_path_factory):
     from main import VideoConverterApp
 
     application = VideoConverterApp()
-    application.settings_manager.save_setting("show-welcome-dialog", False)
+    application.settings_store.save_setting("show-welcome-dialog", False)
     application.register(None)
     application.activate()
     pump(0.5)
@@ -209,8 +209,8 @@ def test_individual_options_dialog_applies_and_restores_inheritance(
 ):
     from copy import deepcopy
 
-    from utils.job_options import RESOLUTION_MODES
-    from utils.presets import list_presets
+    from engine.job_options import RESOLUTION_MODES
+    from engine.presets import list_presets
 
     page = app.conversion_page
     source = str(media["video"])
@@ -219,7 +219,7 @@ def test_individual_options_dialog_applies_and_restores_inheritance(
         "other.mp4": {"contrast": -0.2},
     }
     monkeypatch.setattr(page, "file_metadata", deepcopy(metadata))
-    general = deepcopy(app.settings_manager.settings)
+    general = deepcopy(app.settings_store.settings)
     page.on_file_options_by_path(source)
     dialog = app.window.get_visible_dialog()
     profile = next(
@@ -252,7 +252,7 @@ def test_individual_options_dialog_applies_and_restores_inheritance(
     assert (chosen["custom_width"], chosen["custom_height"]) == (640, 360)
     assert chosen["contrast"] == 0.25 and chosen["crop_left"] == 2
     assert page.file_metadata["other.mp4"] == metadata["other.mp4"]
-    assert app.settings_manager.settings == general
+    assert app.settings_store.settings == general
     page.on_file_options_by_path(source)
     dialog = app.window.get_visible_dialog()
     rows = [w for w in widgets(dialog) if isinstance(w, Adw.ComboRow)]
@@ -273,7 +273,7 @@ def test_individual_options_dialog_applies_and_restores_inheritance(
     chosen = page.file_metadata[source]
     assert chosen["preset_snapshot"] is None and chosen["resolution_mode"] == "global"
     assert chosen["contrast"] == 0.25 and chosen["crop_left"] == 2
-    assert app.settings_manager.settings == general
+    assert app.settings_store.settings == general
 
 
 @pytest.mark.parametrize("mode", ["single", "split", "join"])
@@ -282,12 +282,12 @@ def test_individual_recipe_reaches_real_conversion(
 ):
     from copy import deepcopy
 
+    from engine.conversion import run_with_progress_dialog
+    from engine.job_options import snapshot_preset
+    from engine.media_validation import probe_media
+    from engine.presets import load_preset
     from test_presets import MINIMAL
     from test_supervisor import App as SupervisorApp
-    from utils.conversion import run_with_progress_dialog
-    from utils.job_options import snapshot_preset
-    from utils.media_validation import probe_media
-    from utils.presets import load_preset
 
     preset_path = tmp_path / "individual.toml"
     preset_path.write_text(
@@ -306,7 +306,7 @@ def test_individual_recipe_reaches_real_conversion(
         "output-format-index": 0,
         "additional-options": "-threads 1 -filter_threads 1",
     }
-    monkeypatch.setattr(app.settings_manager, "settings", general.copy())
+    monkeypatch.setattr(app.settings_store, "settings", general.copy())
     monkeypatch.setattr(app, "active_preset", lambda: None)
     page = app.conversion_page
     old_folder_mode = page.folder_combo.get_selected()
@@ -343,7 +343,7 @@ def test_individual_recipe_reaches_real_conversion(
     page.folder_combo.set_selected(1)
     page.output_folder_entry.set_text(str(tmp_path))
     page.delete_original_check.set_active(False)
-    saved = deepcopy(app.settings_manager.settings)
+    saved = deepcopy(app.settings_store.settings)
     contexts = []
     monkeypatch.setattr(
         page, "_continue_conversion", lambda context: contexts.append(context) or True
@@ -362,11 +362,11 @@ def test_individual_recipe_reaches_real_conversion(
     assert inherited["output_ext"] == ".mp4"
     assert inherited["env_vars"]["video_resolution"] == "64x36"
     assert inherited["env_vars"]["audio_handling"] == "copy"
-    assert app.settings_manager.settings == saved
+    assert app.settings_store.settings == saved
     edited_folder = tmp_path / "edited"
     edited_folder.mkdir()
     page.output_folder_entry.set_text(str(edited_folder))
-    app.settings_manager.settings["force-copy-video"] = True
+    app.settings_store.settings["force-copy-video"] = True
     page.file_metadata[source] = {
         **segments,
         "resolution_mode": "original",
@@ -376,10 +376,10 @@ def test_individual_recipe_reaches_real_conversion(
         "crop_left": 28,
         "crop_right": 28,
     }
-    from utils.file_info import launch_probes
+    from engine.file_info import launch_probes
 
     assert page.force_start_conversion(probes=launch_probes(source))
-    app.settings_manager.settings["video-resolution"] = "32x18"
+    app.settings_store.settings["video-resolution"] = "32x18"
     for index, context in enumerate(contexts):
         supervisor = SupervisorApp()
         if mode == "single":
@@ -394,7 +394,7 @@ def test_individual_recipe_reaches_real_conversion(
                 job_id=str(index),
             )
         else:
-            from utils.segment_batch import start_segment_batch
+            from engine.segment_batch import start_segment_batch
 
             batch_page = SimpleNamespace(
                 app=supervisor, _format_time_ffmpeg=page._format_time_ffmpeg
@@ -497,7 +497,7 @@ def test_first_manual_eq_change_preserves_other_nine_bands(app, monkeypatch):
 
     monkeypatch.setattr(SignalConnections, "__init__", capture)
     app.eq_preset_row.set_selected(1)
-    app.settings_manager.save_setting("eq-bands", "3,3,3,3,3,3,3,3,3,3")
+    app.settings_store.save_setting("eq-bands", "3,3,3,3,3,3,3,3,3,3")
     show_noise_dialog(app.window, app)
     pump(0.05)
     dialog = dialogs[-1]
@@ -511,9 +511,10 @@ def test_first_manual_eq_change_preserves_other_nine_bands(app, monkeypatch):
     bands[0].set_value(before[0] + 1)
     assert [w.get_value() for w in bands] == [before[0] + 1, *before[1:]]
     assert app.eq_preset_row.get_selected() == 9
-    assert list(
-        map(float, app.settings_manager.load_setting("eq-bands").split(","))
-    ) == [before[0] + 1, *before[1:]]
+    assert list(map(float, app.settings_store.load_setting("eq-bands").split(","))) == [
+        before[0] + 1,
+        *before[1:],
+    ]
     dialog.force_close()
     pump(0.03)
 
@@ -618,7 +619,7 @@ def test_crop_is_reapplied_after_preview_filter_clear():
 
 
 def test_native_progress_row_updates_and_completes(app, media, tmp_path, cli_env):
-    from utils.conversion import run_with_progress_dialog
+    from engine.conversion import run_with_progress_dialog
 
     completed = []
     original = app.conversion_completed
@@ -650,7 +651,7 @@ def test_queue_probes_off_the_main_thread_and_converts(
     import shutil
     import threading
 
-    from utils import file_info
+    from engine import file_info
 
     probe_threads = []
     original = file_info.launch_probes
@@ -662,8 +663,8 @@ def test_queue_probes_off_the_main_thread_and_converts(
     monkeypatch.setattr(file_info, "launch_probes", record)
     source = tmp_path / "queued.mkv"
     shutil.copyfile(media["silent"], source)
-    app.settings_manager.save_setting("gpu", "software")
-    app.settings_manager.save_setting("use-custom-output-folder", False)
+    app.settings_store.save_setting("gpu", "software")
+    app.settings_store.save_setting("use-custom-output-folder", False)
     assert app.add_file_to_queue(str(source))
     import gc
 
@@ -710,17 +711,17 @@ def test_presets_dialog_applies_searches_and_releases(app, tmp_path, monkeypatch
     )
     dialog.apply(dialog.presets[ids.index("whatsapp")])
     pump(0.2)
-    assert app.settings_manager.load_setting("active-preset") == "whatsapp"
+    assert app.settings_store.load_setting("active-preset") == "whatsapp"
     assert app.video_codec_combo.get_selected() == 1
-    assert app.settings_manager.load_setting("video-resolution") == "1280x720"
-    assert app.settings_manager.load_setting("audio-bitrate") == "96k"
+    assert app.settings_store.load_setting("video-resolution") == "1280x720"
+    assert app.settings_store.load_setting("audio-bitrate") == "96k"
     assert (
         app._radio_preset.get_active() and "WhatsApp" in app._presets_row.get_subtitle()
     )
     assert app.conversion_page.app.active_preset().id == "whatsapp"
     app.video_codec_combo.set_selected(2)
     pump(0.1)
-    assert app.settings_manager.load_setting("active-preset") == ""
+    assert app.settings_store.load_setting("active-preset") == ""
     assert app._radio_custom.get_active() and not app._radio_preset.get_active()
     ai = show_ai_preset_dialog(dialog.dialog, app)
     pump(0.1)
@@ -731,10 +732,10 @@ def test_presets_dialog_applies_searches_and_releases(app, tmp_path, monkeypatch
     )
     pump(0.2)
     assert saved is not None and saved.path.startswith(str(tmp_path))
-    assert app.settings_manager.load_setting("active-preset") == "ai-made"
+    assert app.settings_store.load_setting("active-preset") == "ai-made"
     assert (
         app.video_codec_combo.get_selected() == 3
-        and app.settings_manager.load_setting("output-format-index") == 1
+        and app.settings_store.load_setting("output-format-index") == 1
     )
     assert (
         ai.save('[preset]\nname="x"\n[video]\ncodec="zzz"') is None
@@ -743,7 +744,7 @@ def test_presets_dialog_applies_searches_and_releases(app, tmp_path, monkeypatch
     ai.dialog.force_close()
     dialog.dialog.force_close()
     pump(0.05)
-    app.settings_manager.save_setting("active-preset", "")
+    app.settings_store.save_setting("active-preset", "")
     app._apply_profile("universal")
 
 
@@ -756,7 +757,7 @@ def test_audio_mode_changes_preserve_noise_cleaning_preference(app):
         for mode in (0, 2, 1):
             app.audio_handling_combo.set_selected(mode)
             assert app.noise_reduction_switch.get_active()
-            assert app.settings_manager.get_boolean("noise-reduction", False)
+            assert app.settings_store.get_boolean("noise-reduction", False)
             assert app._audio_cleaning_row.get_sensitive() == (mode == 1)
     finally:
         app.audio_handling_combo.set_selected(original_mode)
@@ -766,7 +767,7 @@ def test_audio_mode_changes_preserve_noise_cleaning_preference(app):
 def test_folder_import_is_async_and_redraws_once(app, tmp_path, monkeypatch):
     import threading
 
-    import file_handler
+    import file_intake
 
     app.clear_queue()
     pump()
@@ -775,7 +776,7 @@ def test_folder_import_is_async_and_redraws_once(app, tmp_path, monkeypatch):
     (tmp_path / "not-video.txt").touch()
     scanned_on = []
     redraws = []
-    walk = file_handler.os.walk
+    walk = file_intake.os.walk
     update = app.conversion_page.update_queue_display
 
     def record_walk(*args, **kwargs):
@@ -786,7 +787,7 @@ def test_folder_import_is_async_and_redraws_once(app, tmp_path, monkeypatch):
         redraws.append(len(app.conversion_queue))
         update()
 
-    monkeypatch.setattr(file_handler.os, "walk", record_walk)
+    monkeypatch.setattr(file_intake.os, "walk", record_walk)
     monkeypatch.setattr(app.conversion_page, "update_queue_display", record_update)
     app.add_paths_to_queue([str(tmp_path)])
     pump_until(lambda: len(app.conversion_queue) == 100 and not app._pending_imports)
@@ -821,15 +822,15 @@ def test_an_unreadable_subfolder_is_skipped_and_reported(app, tmp_path, monkeypa
 def test_space_check_uses_selected_destinations(app, tmp_path, monkeypatch):
     from types import SimpleNamespace
 
-    import queue_manager
+    import queue_runner
 
     sources = [tmp_path / "one", tmp_path / "two"]
     for source in sources:
         source.mkdir()
         (source / "video.mp4").write_bytes(b"video")
-    app.settings_manager.save_setting("output-folder", str(tmp_path / "stale"))
-    app.settings_manager.save_setting("use-custom-output-folder", False)
-    original_stat = queue_manager.os.stat
+    app.settings_store.save_setting("output-folder", str(tmp_path / "stale"))
+    app.settings_store.save_setting("use-custom-output-folder", False)
+    original_stat = queue_runner.os.stat
     checked = []
 
     def different_volumes(path, *args, **kwargs):
@@ -839,15 +840,15 @@ def test_space_check_uses_selected_destinations(app, tmp_path, monkeypatch):
 
     from pathlib import Path
 
-    monkeypatch.setattr(queue_manager.os, "stat", different_volumes)
+    monkeypatch.setattr(queue_runner.os, "stat", different_volumes)
     monkeypatch.setattr(
-        queue_manager.shutil,
+        queue_runner.shutil,
         "disk_usage",
         lambda path: checked.append(path) or SimpleNamespace(free=100),
     )
     assert app._check_disk_space([str(path / "video.mp4") for path in sources])
     assert checked == list(map(str, sources))
-    app.settings_manager.save_setting("output-folder", "")
+    app.settings_store.save_setting("output-folder", "")
 
 
 def test_selected_file_survives_unusual_suffix_and_settings_write_failure(
@@ -860,7 +861,7 @@ def test_selected_file_survives_unusual_suffix_and_settings_write_failure(
     source = tmp_path / "selected-video-without-extension"
     source.touch()
     errors = []
-    monkeypatch.setattr(app.settings_manager, "save_to_disk", lambda: False)
+    monkeypatch.setattr(app.settings_store, "save_to_disk", lambda: False)
     monkeypatch.setattr(app, "show_error_dialog", errors.append)
     dialog = SimpleNamespace(
         open_multiple_finish=lambda result: [Gio.File.new_for_path(str(source))]
@@ -885,7 +886,7 @@ def test_presets_row_opens_one_dialog_from_another_profile(app, monkeypatch):
         "present",
         lambda self: (opened.append(self), original(self)),
     )
-    app.settings_manager.save_setting("active-preset", "")
+    app.settings_store.save_setting("active-preset", "")
     app._radio_universal.set_active(True)
     pump()
     app._presets_row.activate()
@@ -945,17 +946,17 @@ def test_editor_fullscreen_keeps_the_tools_reachable_and_restores_the_sidebar(ap
 def test_frame_rate_row_shows_a_preset_rate_the_list_lacks(app):
     page = app.settings_page
     try:
-        app.settings_manager.save_setting("video-fps", "30000/1001")
+        app.settings_store.save_setting("video-fps", "30000/1001")
         page._load_settings()
         combo = page.video_fps_combo
         assert combo.get_model().get_string(combo.get_selected()) == "29.97 fps"
-        app.settings_manager.save_setting("video-fps", "24")
+        app.settings_store.save_setting("video-fps", "24")
         page._load_settings()
         assert page._fps_values[combo.get_selected()] == "24"
         combo.set_selected(0)
-        assert app.settings_manager.load_setting("video-fps", None) == ""
+        assert app.settings_store.load_setting("video-fps", None) == ""
     finally:
-        app.settings_manager.save_setting("video-fps", "")
+        app.settings_store.save_setting("video-fps", "")
 
 
 def _reserved_jobs(app, monkeypatch, *paths):
@@ -977,10 +978,10 @@ def _reserved_jobs(app, monkeypatch, *paths):
 
 def _job_settings(app, monkeypatch, **overrides):
     monkeypatch.setattr(
-        app.settings_manager,
+        app.settings_store,
         "settings",
         {
-            **app.settings_manager.settings,
+            **app.settings_store.settings,
             "output-format-index": 0,
             "force-copy-video": False,
             "size-target": "",
@@ -1098,12 +1099,12 @@ def test_vanished_queued_file_stays_listed_as_not_found(app, monkeypatch, tmp_pa
 
 def test_launch_uses_the_answers_probed_on_the_worker(app, media, monkeypatch):
     """The queue probes on a worker; the launch on the main loop runs no ffprobe."""
-    from utils import file_info
+    from engine import file_info
 
     source = str(media["video"])
     page = app.conversion_page
     monkeypatch.setattr(
-        app.settings_manager,
+        app.settings_store,
         "settings",
         {
             "video-codec": "h264",
@@ -1143,7 +1144,7 @@ def test_skipped_reserved_job_never_launches(app, media, monkeypatch, tmp_path):
     import threading
     from collections import deque
 
-    from utils import file_info
+    from engine import file_info
 
     source = str(tmp_path / "reserved.mp4")
     shutil.copyfile(media["video"], source)
@@ -1513,7 +1514,7 @@ def test_reset_all_also_resets_the_queue_footer(app):
     page.delete_original_check.set_active(True)
     page.folder_combo.set_selected(1)
     app.tooltip_action.activate(None)
-    assert app.settings_manager.load_setting("delete-original", False)
+    assert app.settings_store.load_setting("delete-original", False)
     app.settings_page._reset_all_settings()
     assert not page.delete_original_check.get_active()
     assert page.folder_combo.get_selected() == 0

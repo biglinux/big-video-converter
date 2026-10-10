@@ -29,7 +29,7 @@ def _running_from_appimage() -> bool:
 
 
 def _prefix_candidate(name: str) -> str:
-    """<prefix>/share/big-video-converter/utils/ -> <prefix>/bin/<name>."""
+    """<prefix>/share/big-video-converter/engine/ -> <prefix>/bin/<name>."""
     module_dir = os.path.dirname(os.path.abspath(__file__))
     prefix = os.path.abspath(os.path.join(module_dir, "..", "..", ".."))
     return os.path.join(prefix, "bin", name)

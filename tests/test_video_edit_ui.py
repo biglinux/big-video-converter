@@ -234,7 +234,7 @@ class VideoEditPageTests(unittest.TestCase):
         self.errors = []
         self.window = Gtk.ApplicationWindow()
         app = SimpleNamespace(
-            settings_manager=Settings(),
+            settings_store=Settings(),
             split_view=Adw.OverlaySplitView(),
             window=self.window,
             conversion_page=object(),

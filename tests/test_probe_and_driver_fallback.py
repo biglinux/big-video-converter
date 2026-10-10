@@ -13,7 +13,7 @@ import time
 
 import pytest
 from conftest import CLI, cli_functions, fake_ffmpeg, media_command, wait_until
-from utils.media_validation import probe_media
+from engine.media_validation import probe_media
 
 
 def _streams(path, kind=None):
@@ -350,7 +350,7 @@ class TestGpuSmokeTest:
 
 class TestFileInfoFailures:
     def test_a_failed_probe_is_asked_again(self, media, monkeypatch):
-        from utils import file_info
+        from engine import file_info
 
         file_info.clear_probe_cache()
         real_run = subprocess.run
@@ -372,7 +372,7 @@ class TestFileInfoFailures:
 
     def test_latin1_metadata_is_read(self, tmp_path, monkeypatch):
         """Tags are copied into ffmpeg's and ffprobe's output as written."""
-        from utils import file_info
+        from engine import file_info
 
         (tmp_path / "stderr").write_bytes(
             b"Input #0, matroska,webm, from 'x.mkv':\n  Metadata:\n    title : Caf\xe9\n"

@@ -7,8 +7,8 @@ gi.require_version("Gtk", "4.0")
 import gettext
 import logging
 
+from engine.file_info import display_size, get_video_file_info
 from gi.repository import GLib
-from utils.file_info import display_size, get_video_file_info
 
 from ui.progress_page import format_size
 

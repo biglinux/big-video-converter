@@ -634,66 +634,66 @@ msgstr "Valitud kaustast ei leitud sobivaid videofaile."
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 100
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 216
+# converter/file_intake.py, line: 216
 msgid "Add Network File"
 msgstr "Lisa võrgufail"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 233
+# converter/file_intake.py, line: 233
 msgid ""
 "Connect to a remote server to browse and add video files.\n"
 "Files are accessed directly from the network without downloading."
 msgstr "Ühendu kaugserveriga videofailide sirvimiseks ja lisamiseks.\nFaile kasutatakse otse võrgust ilma alla laadimata."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 244
+# converter/file_intake.py, line: 244
 msgid "Connection"
 msgstr "Ühendus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 248
+# converter/file_intake.py, line: 248
 msgid "Protocol"
 msgstr "Protokoll"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 257
+# converter/file_intake.py, line: 257
 msgid "Server"
 msgstr "Server"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 263
+# converter/file_intake.py, line: 263
 msgid "Port"
 msgstr "Port"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 269
+# converter/file_intake.py, line: 269
 msgid "Username"
 msgstr "Kasutajanimi"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 275
+# converter/file_intake.py, line: 275
 msgid "Remote Path"
 msgstr "Kaugtee"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 289
+# converter/file_intake.py, line: 289
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 295
+# converter/file_intake.py, line: 295
 msgid "Connect and Browse"
 msgstr "Ühenda ja sirvi"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 308
+# converter/file_intake.py, line: 308
 msgid "Please enter a server address."
 msgstr "Sisesta serveri aadress."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 339
+# converter/file_intake.py, line: 339
 msgid "Connecting..."
 msgstr "Ühendamine..."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 376
+# converter/file_intake.py, line: 376
 #, python-brace-format
 msgid "Connection failed: {}"
 msgstr "Ühendus ebaõnnestus: {}"
@@ -704,12 +704,12 @@ msgid "Error"
 msgstr "Viga"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 399
+# converter/file_intake.py, line: 399
 msgid "Connected but could not resolve local path. Try browsing via file manager."
 msgstr "Ühendus loodud, kuid kohalikku failiteed ei saanud määrata. Proovi sirvida failihalduris."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 408
+# converter/file_intake.py, line: 408
 msgid "Select Network Video Files"
 msgstr "Vali võrgus olevad videofailid"
 
@@ -948,12 +948,12 @@ msgid "2160p"
 msgstr "2160p"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 140
+# converter/queue_runner.py, line: 140
 msgid "Low disk space"
 msgstr "Vähe kettaruumi"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 142
+# converter/queue_runner.py, line: 142
 #, python-brace-format
 msgid ""
 "The destination has {free:.1f} GB free but approximately {needed:.1f} GB may be needed.\n"
@@ -973,12 +973,12 @@ msgid "The additional FFmpeg options cannot be used"
 msgstr "FFmpegi lisavalikuid ei saa kasutada"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 335
+# converter/queue_runner.py, line: 335
 msgid "Batch Conversion Complete"
 msgstr "Pakettteisendamine lõpetatud"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 336
+# converter/queue_runner.py, line: 336
 msgid "All queued files have been processed."
 msgstr "Kõik järjekorras olevad failid on töödeldud."
 
@@ -1063,7 +1063,7 @@ msgid "Audio"
 msgstr "Heli"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 163
+# converter/engine/file_info.py, line: 163
 msgid "Subtitles"
 msgstr "Subtiitrid"
 
@@ -1503,7 +1503,7 @@ msgid "Video information"
 msgstr "Video teave"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 194
+# converter/engine/file_info.py, line: 194
 msgid "Open containing folder"
 msgstr "Ava sisaldav kaust"
 
@@ -1729,7 +1729,7 @@ msgstr "Kohandatud suurus"
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 326
+# converter/engine/file_info.py, line: 326
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 733
 msgid "Resolution"
@@ -2497,7 +2497,7 @@ msgid "Show technical details"
 msgstr "Näita tehnilisi üksikasju"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 246
+# converter/engine/conversion.py, line: 246
 msgid "Starting process..."
 msgstr "Protsessi käivitamine..."
 
@@ -2524,7 +2524,7 @@ msgid "Failed"
 msgstr "Nurjus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 766
+# converter/engine/conversion.py, line: 766
 msgid "Cancelled"
 msgstr "Tühistatud"
 
@@ -4264,7 +4264,7 @@ msgstr "Algsest suurem eraldusvõime ei paranda kvaliteeti. Eraldusvõime vähen
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 361
+# converter/engine/file_info.py, line: 361
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 764
 msgid "Frame Rate"
@@ -4446,22 +4446,22 @@ msgid "The file container could not be read. It may be a corrupted download or a
 msgstr "Faili konteinerit ei saanud lugeda. Allalaaditud fail võib olla rikutud või vorming toetamata."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 22
+# converter/engine/conversion.py, line: 22
 msgid "File or folder not found."
 msgstr "Faili või kausta ei leitud."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 21
+# converter/engine/conversion.py, line: 21
 msgid "Permission denied — check file/folder permissions."
 msgstr "Luba keelatud — kontrollige faili/kausta õigusi."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 20
+# converter/engine/conversion.py, line: 20
 msgid "There is no space left on the disk."
 msgstr "Kettal ei ole enam ruumi."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 23
+# converter/engine/conversion.py, line: 23
 msgid "The file appears to be corrupted or in an unsupported format."
 msgstr "Fail tundub olevat rikutud või toetamata formaadis."
 
@@ -4469,47 +4469,47 @@ msgid "A track of this file cannot be stored in the chosen container. Try MKV."
 msgstr "Selle faili rada ei saa valitud konteinerisse salvestada. Proovi MKV-d."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 24
+# converter/engine/conversion.py, line: 24
 msgid "This codec is not supported on your system."
 msgstr "Seda koodekit sinu süsteem ei toeta."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 25
+# converter/engine/conversion.py, line: 25
 msgid "A required decoder is not installed."
 msgstr "Nõutud dekooder ei ole installitud."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 26
+# converter/engine/conversion.py, line: 26
 msgid "A required encoder is not installed."
 msgstr "Nõutud kodeerijat ei ole installitud."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 27
+# converter/engine/conversion.py, line: 27
 msgid "Failed to initialize the encoder — the selected settings may be incompatible."
 msgstr "Kodeerija käivitamine nurjus — valitud sätted võivad olla ühildumatud."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 28
+# converter/engine/conversion.py, line: 28
 msgid "Hardware acceleration failed. Try disabling GPU encoding."
 msgstr "Riistvara kiirendamine ebaõnnestus. Proovige GPU kodeerimist keelata."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 29
+# converter/engine/conversion.py, line: 29
 msgid "Not enough memory to complete the conversion."
 msgstr "Mälu ei ole piisavalt, et teisendamine lõpetada."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 30
+# converter/engine/conversion.py, line: 30
 msgid "The file does not contain a valid media stream."
 msgstr "Fail ei sisalda sobivat meediavoogu."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 31
+# converter/engine/conversion.py, line: 31
 msgid "The video file is incomplete or damaged (missing metadata)."
 msgstr "Videofail on puudulik või kahjustatud (puuduvad metaandmed)."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 32
+# converter/engine/conversion.py, line: 32
 msgid "Could not decode the file — it may be corrupted."
 msgstr "Faili dekodeerimine ebaõnnestus — see võib olla rikutud."
 
@@ -4532,7 +4532,7 @@ msgid "The conversion finished without producing a file."
 msgstr "Teisendamine lõppes ilma faili loomata."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 968
+# converter/engine/conversion.py, line: 968
 #, python-brace-format
 msgid "Conversion failed with code {0}"
 msgstr "Teisendamine nurjus koodiga {0}"
@@ -4545,7 +4545,7 @@ msgid "Could not analyze the video stream with ffprobe"
 msgstr "Videovoogu ei saanud ffprobe'iga analüüsida"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 185
+# converter/engine/conversion.py, line: 185
 #, python-brace-format
 msgid "Error starting conversion: {0}"
 msgstr "Veateade konversiooni alustamisel: {0}"
@@ -4575,21 +4575,21 @@ msgid "Copying without re-encoding"
 msgstr "Kopeerimine ilma ümberkodeerimiseta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 214
+# converter/engine/conversion.py, line: 214
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 262
+# converter/engine/conversion.py, line: 262
 msgid "Full GPU acceleration"
 msgstr "Täielik GPU-kiirendus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 215
+# converter/engine/conversion.py, line: 215
 msgid "Software Decoding and GPU encoding"
 msgstr "Tarkvaraline dekodeerimine ja kodeerimine GPU abil"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 213
+# converter/engine/conversion.py, line: 213
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 216
+# converter/engine/conversion.py, line: 216
 msgid "Software encoding"
 msgstr "Tarkvaraline kodeerimine"
 
@@ -4601,7 +4601,7 @@ msgid "Input probe unavailable: {0}"
 msgstr "Sisendfaili analüüs pole saadaval: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 325
+# converter/engine/conversion.py, line: 325
 msgid "No progress detected. Process may be stuck."
 msgstr "Edenemist ei tuvastatud. Protsess võib olla kinni jäänud."
 
@@ -4626,11 +4626,11 @@ msgid "Original preserved: {0}"
 msgstr "Algfail säilitati: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 790
+# converter/engine/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 928
+# converter/engine/conversion.py, line: 928
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 942
+# converter/engine/conversion.py, line: 942
 msgid "Conversion completed successfully!"
 msgstr "Teisendamine õnnestus!"
 
@@ -4650,250 +4650,250 @@ msgid "Additional options contain characters that are not allowed: {0}"
 msgstr "Lisavalikud sisaldavad märke, mis pole lubatud: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 36
+# converter/engine/file_info.py, line: 36
 msgid "File Information"
 msgstr "Faili teave"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 95
+# converter/engine/file_info.py, line: 95
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 748
+# converter/engine/file_info.py, line: 748
 msgid "Analyzing video file..."
 msgstr "Videofaili analüüsitakse..."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 138
+# converter/engine/file_info.py, line: 138
 msgid "Could not retrieve file information."
 msgstr "Faili teavet ei õnnestunud hankida."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 157
+# converter/engine/file_info.py, line: 157
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 300
+# converter/engine/file_info.py, line: 300
 msgid "Video Streams"
 msgstr "Videovood"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 160
+# converter/engine/file_info.py, line: 160
 msgid "Audio Streams"
 msgstr "Helivood"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 171
+# converter/engine/file_info.py, line: 171
 msgid "General Information"
 msgstr "Üldine teave"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 176
+# converter/engine/file_info.py, line: 176
 msgid "File Name"
 msgstr "Faili nimi"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 181
+# converter/engine/file_info.py, line: 181
 msgid "Copy file name"
 msgstr "Kopeeri faili nimi"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 189
+# converter/engine/file_info.py, line: 189
 msgid "Location"
 msgstr "Asukoht"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 206
+# converter/engine/file_info.py, line: 206
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 752
 msgid "File Size"
 msgstr "Faili suurus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 211
+# converter/engine/file_info.py, line: 211
 msgid "Copy file size"
 msgstr "Kopeeri faili suurus"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 228
+# converter/engine/file_info.py, line: 228
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 758
 msgid "Duration"
 msgstr "Kestus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 233
+# converter/engine/file_info.py, line: 233
 msgid "Copy duration"
 msgstr "Kopeeri kestus"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 245
+# converter/engine/file_info.py, line: 245
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 657
+# converter/engine/file_info.py, line: 657
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 746
 msgid "Format"
 msgstr "Formaat"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 250
+# converter/engine/file_info.py, line: 250
 msgid "Copy format"
 msgstr "Kopeeri formaat"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 263
+# converter/engine/file_info.py, line: 263
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 401
+# converter/engine/file_info.py, line: 401
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 569
+# converter/engine/file_info.py, line: 569
 msgid "Bitrate"
 msgstr "Bitikiirus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 268
+# converter/engine/file_info.py, line: 268
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 406
+# converter/engine/file_info.py, line: 406
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 576
+# converter/engine/file_info.py, line: 576
 msgid "Copy bitrate"
 msgstr "Kopeeri bitikiirus"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 308
+# converter/engine/file_info.py, line: 308
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 476
+# converter/engine/file_info.py, line: 476
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 739
 msgid "Codec"
 msgstr "Koodek"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 313
+# converter/engine/file_info.py, line: 313
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 483
+# converter/engine/file_info.py, line: 483
 msgid "Copy codec"
 msgstr "Kopeeri koodek"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 345
+# converter/engine/file_info.py, line: 345
 msgid "Copy resolution"
 msgstr "Kopeeri eraldusvõime"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 368
+# converter/engine/file_info.py, line: 368
 msgid "Copy frame rate"
 msgstr "Kopeeri kaadrisagedus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 383
+# converter/engine/file_info.py, line: 383
 msgid "Pixel Format"
 msgstr "Pikseli formaat"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 388
+# converter/engine/file_info.py, line: 388
 msgid "Copy pixel format"
 msgstr "Kopeeri pikseli formaat"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 419
+# converter/engine/file_info.py, line: 419
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 592
+# converter/engine/file_info.py, line: 592
 msgid "Language"
 msgstr "Keel"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 424
+# converter/engine/file_info.py, line: 424
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 599
+# converter/engine/file_info.py, line: 599
 msgid "Copy language code"
 msgstr "Kopeeri keele kood"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 507
+# converter/engine/file_info.py, line: 507
 msgid "Sample Rate"
 msgstr "Diskreetimissagedus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 514
+# converter/engine/file_info.py, line: 514
 msgid "Copy sample rate"
 msgstr "Kopeeri diskreetimissagedus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 524
+# converter/engine/file_info.py, line: 524
 msgid "CD Quality"
 msgstr "CD kvaliteet"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 526
+# converter/engine/file_info.py, line: 526
 msgid "Hi-Res Audio"
 msgstr "Kõrge eraldusvõimega heli"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 539
+# converter/engine/file_info.py, line: 539
 msgid "(Mono)"
 msgstr "(Mono)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 541
+# converter/engine/file_info.py, line: 541
 msgid "(Stereo)"
 msgstr "(Stereo)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 543
+# converter/engine/file_info.py, line: 543
 msgid "(5.1 Surround)"
 msgstr "(5.1 ruumiline heli)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 545
+# converter/engine/file_info.py, line: 545
 msgid "(7.1 Surround)"
 msgstr "(7.1 ruumiline heli)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 548
+# converter/engine/file_info.py, line: 548
 msgid "Channels"
 msgstr "Kanalid"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 555
+# converter/engine/file_info.py, line: 555
 msgid "Copy channels"
 msgstr "Kopeeri kanalid"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 636
+# converter/engine/file_info.py, line: 636
 msgid "Copy value"
 msgstr "Kopeeri väärtus"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 653
+# converter/engine/file_info.py, line: 653
 msgid "Format Details"
 msgstr "Formaadi üksikasjad"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 658
+# converter/engine/file_info.py, line: 658
 msgid "Bitrate (bps)"
 msgstr "Bitikiirus (bps)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 659
+# converter/engine/file_info.py, line: 659
 msgid "Detection Score"
 msgstr "Tuvastamise skoor"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 671
+# converter/engine/file_info.py, line: 671
 msgid "Metadata"
 msgstr "Metaandmed"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 708
+# converter/engine/file_info.py, line: 708
 msgid "Error retrieving file information"
 msgstr "Viga faili teabe hankimisel"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 716
+# converter/engine/file_info.py, line: 716
 msgid "Retry"
 msgstr "Proovi uuesti"
 

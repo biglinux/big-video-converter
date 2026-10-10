@@ -6,9 +6,10 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
+from engine.size_target import TARGETS, shown_size
 from gi.repository import Adw, Gtk
-from utils.signal_connections import SignalConnections
-from utils.size_target import TARGETS, shown_size
+
+from ui.signal_connections import SignalConnections
 
 _ = gettext.gettext
 
@@ -63,7 +64,7 @@ def _radio_row(group, title, subtitle, first):
 
 
 def show_size_dialog(parent_window, app) -> None:
-    settings = app.settings_manager
+    settings = app.settings_store
     dialog = Adw.Dialog()
     connections = SignalConnections(dialog)
     dialog.set_title(_("Maximum size"))

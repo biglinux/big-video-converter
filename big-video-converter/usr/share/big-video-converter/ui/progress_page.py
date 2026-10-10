@@ -21,8 +21,8 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
+from engine.presets import CODEC_NAMES
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
-from utils.presets import CODEC_NAMES
 
 logger = logging.getLogger(__name__)
 
@@ -938,7 +938,7 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.current_progress = 0.0
         self._cancelled = False
 
-        # Job settings the supervisor (utils/conversion.py) fills in.
+        # Job settings the supervisor (engine/conversion.py) fills in.
         self.delete_original = False
         self.expected_duration = None
         self.is_segment_batch = False

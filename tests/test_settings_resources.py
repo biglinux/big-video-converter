@@ -1,13 +1,13 @@
 """Remembering an unchanged preference must not replace its on-disk copy."""
 
 import pytest
-from utils.settings_manager import SettingsManager
+from engine.settings_store import SettingsStore
 
 
 @pytest.mark.parametrize("repeats", [0, 5, 25])
 def test_unchanged_preference_does_not_write(tmp_path, repeats):
     path = tmp_path / "settings.json"
-    settings = SettingsManager(dev_mode=True, dev_settings_file=str(path))
+    settings = SettingsStore(dev_mode=True, dev_settings_file=str(path))
     assert settings.save_setting("output-folder", "/videos")
     before = path.stat()
     for _ in range(repeats):
@@ -46,9 +46,7 @@ def test_reset_failure_is_reported_not_hidden(monkeypatch):
 
 
 def test_a_dragged_slider_writes_the_file_once(tmp_path, monkeypatch):
-    settings = SettingsManager(
-        dev_mode=True, dev_settings_file=str(tmp_path / "s.json")
-    )
+    settings = SettingsStore(dev_mode=True, dev_settings_file=str(tmp_path / "s.json"))
     writes = []
     save = settings.save_to_disk
     monkeypatch.setattr(settings, "save_to_disk", lambda: writes.append(1) or save())
@@ -58,5 +56,5 @@ def test_a_dragged_slider_writes_the_file_once(tmp_path, monkeypatch):
     settings.flush()
     settings.flush()
     assert len(writes) == 1
-    reread = SettingsManager(dev_mode=True, dev_settings_file=str(tmp_path / "s.json"))
+    reread = SettingsStore(dev_mode=True, dev_settings_file=str(tmp_path / "s.json"))
     assert reread.get_value("noise-gate-intensity") == 49 / 50

@@ -671,12 +671,12 @@ msgstr "Δεν βρέθηκαν έγκυρα αρχεία βίντεο στον 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 100
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 216
+# converter/file_intake.py, line: 216
 msgid "Add Network File"
 msgstr "Προσθήκη αρχείου δικτύου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 233
+# converter/file_intake.py, line: 233
 msgid ""
 "Connect to a remote server to browse and add video files.\n"
 "Files are accessed directly from the network without downloading."
@@ -685,54 +685,54 @@ msgstr ""
 "Τα αρχεία προσπελάζονται απευθείας από το δίκτυο χωρίς λήψη."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 244
+# converter/file_intake.py, line: 244
 msgid "Connection"
 msgstr "Σύνδεση"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 248
+# converter/file_intake.py, line: 248
 msgid "Protocol"
 msgstr "Πρωτόκολλο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 257
+# converter/file_intake.py, line: 257
 msgid "Server"
 msgstr "Διακομιστής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 263
+# converter/file_intake.py, line: 263
 msgid "Port"
 msgstr "Θύρα"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 269
+# converter/file_intake.py, line: 269
 msgid "Username"
 msgstr "Όνομα χρήστη"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 275
+# converter/file_intake.py, line: 275
 msgid "Remote Path"
 msgstr "Απομακρυσμένη Διαδρομή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 289
+# converter/file_intake.py, line: 289
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 295
+# converter/file_intake.py, line: 295
 msgid "Connect and Browse"
 msgstr "Σύνδεση και Περιήγηση"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 308
+# converter/file_intake.py, line: 308
 msgid "Please enter a server address."
 msgstr "Παρακαλώ εισάγετε μια διεύθυνση διακομιστή."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 339
+# converter/file_intake.py, line: 339
 msgid "Connecting..."
 msgstr "Σύνδεση..."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 376
+# converter/file_intake.py, line: 376
 #, python-brace-format
 msgid "Connection failed: {}"
 msgstr "Η σύνδεση απέτυχε: {}"
@@ -743,12 +743,12 @@ msgid "Error"
 msgstr "Σφάλμα"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 399
+# converter/file_intake.py, line: 399
 msgid "Connected but could not resolve local path. Try browsing via file manager."
 msgstr "Συνδεδεμένο αλλά δεν μπόρεσε να επιλύσει τη τοπική διαδρομή. Δοκιμάστε να περιηγηθείτε μέσω του διαχειριστή αρχείων."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 408
+# converter/file_intake.py, line: 408
 msgid "Select Network Video Files"
 msgstr "Επιλογή αρχείων βίντεο δικτύου"
 
@@ -987,12 +987,12 @@ msgid "2160p"
 msgstr "2160p"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 140
+# converter/queue_runner.py, line: 140
 msgid "Low disk space"
 msgstr "Χαμηλός χώρος δίσκου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 142
+# converter/queue_runner.py, line: 142
 #, python-brace-format
 msgid ""
 "The destination has {free:.1f} GB free but approximately {needed:.1f} GB may be needed.\n"
@@ -1015,12 +1015,12 @@ msgid "The additional FFmpeg options cannot be used"
 msgstr "Δεν είναι δυνατή η χρήση των πρόσθετων επιλογών FFmpeg"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 335
+# converter/queue_runner.py, line: 335
 msgid "Batch Conversion Complete"
 msgstr "Η μαζική μετατροπή ολοκληρώθηκε"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 336
+# converter/queue_runner.py, line: 336
 msgid "All queued files have been processed."
 msgstr "Όλα τα αρχεία στην ουρά έχουν υποστεί επεξεργασία."
 
@@ -1105,7 +1105,7 @@ msgid "Audio"
 msgstr "Ήχος"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 163
+# converter/engine/file_info.py, line: 163
 msgid "Subtitles"
 msgstr "Υπότιτλοι"
 
@@ -1545,7 +1545,7 @@ msgid "Video information"
 msgstr "Πληροφορίες βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 194
+# converter/engine/file_info.py, line: 194
 msgid "Open containing folder"
 msgstr "Άνοιγμα φακέλου που περιέχει το αρχείο"
 
@@ -1771,7 +1771,7 @@ msgstr "Προσαρμοσμένο μέγεθος"
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 326
+# converter/engine/file_info.py, line: 326
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 733
 msgid "Resolution"
@@ -2539,7 +2539,7 @@ msgid "Show technical details"
 msgstr "Εμφάνιση τεχνικών λεπτομερειών"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 246
+# converter/engine/conversion.py, line: 246
 msgid "Starting process..."
 msgstr "Ξεκινώντας τη διαδικασία..."
 
@@ -2566,7 +2566,7 @@ msgid "Failed"
 msgstr "Απέτυχε"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 766
+# converter/engine/conversion.py, line: 766
 msgid "Cancelled"
 msgstr "Ακυρώθηκε"
 
@@ -4276,7 +4276,7 @@ msgstr "Η αύξηση πέρα από την αρχική ανάλυση δε�
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 361
+# converter/engine/file_info.py, line: 361
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 764
 msgid "Frame Rate"
@@ -4458,22 +4458,22 @@ msgid "The file container could not be read. It may be a corrupted download or a
 msgstr "Δεν ήταν δυνατή η ανάγνωση του περιέκτη του αρχείου. Μπορεί να πρόκειται για κατεστραμμένη λήψη ή μη υποστηριζόμενη μορφή."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 22
+# converter/engine/conversion.py, line: 22
 msgid "File or folder not found."
 msgstr "Το αρχείο ή ο φάκελος δεν βρέθηκε."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 21
+# converter/engine/conversion.py, line: 21
 msgid "Permission denied — check file/folder permissions."
 msgstr "Δεν επιτρέπεται η πρόσβαση — ελέγξτε τα δικαιώματα αρχείου/φακέλου."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 20
+# converter/engine/conversion.py, line: 20
 msgid "There is no space left on the disk."
 msgstr "Δεν υπάρχει ελεύθερος χώρος στον δίσκο."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 23
+# converter/engine/conversion.py, line: 23
 msgid "The file appears to be corrupted or in an unsupported format."
 msgstr "Το αρχείο φαίνεται να είναι κατεστραμμένο ή σε μη υποστηριζόμενη μορφή."
 
@@ -4481,47 +4481,47 @@ msgid "A track of this file cannot be stored in the chosen container. Try MKV."
 msgstr "Ένα κομμάτι αυτού του αρχείου δεν μπορεί να αποθηκευτεί στον επιλεγμένο περιέκτη. Δοκιμάστε MKV."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 24
+# converter/engine/conversion.py, line: 24
 msgid "This codec is not supported on your system."
 msgstr "Αυτός ο κωδικοποιητής δεν υποστηρίζεται στο σύστημά σας."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 25
+# converter/engine/conversion.py, line: 25
 msgid "A required decoder is not installed."
 msgstr "Δεν έχει εγκατασταθεί ο απαιτούμενος αποκωδικοποιητής."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 26
+# converter/engine/conversion.py, line: 26
 msgid "A required encoder is not installed."
 msgstr "Δεν είναι εγκατεστημένος ένας απαιτούμενος κωδικοποιητής."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 27
+# converter/engine/conversion.py, line: 27
 msgid "Failed to initialize the encoder — the selected settings may be incompatible."
 msgstr "Αποτυχία στην αρχικοποίηση του κωδικοποιητή — οι επιλεγμένες ρυθμίσεις ενδέχεται να είναι ασύμβατες."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 28
+# converter/engine/conversion.py, line: 28
 msgid "Hardware acceleration failed. Try disabling GPU encoding."
 msgstr "Η επιτάχυνση υλικού απέτυχε. Δοκιμάστε να απενεργοποιήσετε την κωδικοποίηση GPU."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 29
+# converter/engine/conversion.py, line: 29
 msgid "Not enough memory to complete the conversion."
 msgstr "Δεν υπάρχει αρκετή μνήμη για να ολοκληρωθεί η μετατροπή."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 30
+# converter/engine/conversion.py, line: 30
 msgid "The file does not contain a valid media stream."
 msgstr "Το αρχείο δεν περιέχει έγκυρη ροή πολυμέσων."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 31
+# converter/engine/conversion.py, line: 31
 msgid "The video file is incomplete or damaged (missing metadata)."
 msgstr "Το αρχείο βίντεο είναι ατελές ή κατεστραμμένο (λείπουν μεταδεδομένα)."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 32
+# converter/engine/conversion.py, line: 32
 msgid "Could not decode the file — it may be corrupted."
 msgstr "Δεν ήταν δυνατή η αποκωδικοποίηση του αρχείου — μπορεί να είναι κατεστραμμένο."
 
@@ -4544,7 +4544,7 @@ msgid "The conversion finished without producing a file."
 msgstr "Η μετατροπή ολοκληρώθηκε χωρίς να παραχθεί αρχείο."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 968
+# converter/engine/conversion.py, line: 968
 #, python-brace-format
 msgid "Conversion failed with code {0}"
 msgstr "Η μετατροπή απέτυχε με κωδικό {0}"
@@ -4557,7 +4557,7 @@ msgid "Could not analyze the video stream with ffprobe"
 msgstr "Δεν ήταν δυνατή η ανάλυση της ροής βίντεο με το ffprobe"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 185
+# converter/engine/conversion.py, line: 185
 #, python-brace-format
 msgid "Error starting conversion: {0}"
 msgstr "Σφάλμα κατά την εκκίνηση της μετατροπής: {0}"
@@ -4587,21 +4587,21 @@ msgid "Copying without re-encoding"
 msgstr "Αντιγραφή χωρίς επανακωδικοποίηση"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 214
+# converter/engine/conversion.py, line: 214
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 262
+# converter/engine/conversion.py, line: 262
 msgid "Full GPU acceleration"
 msgstr "Πλήρης επιτάχυνση GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 215
+# converter/engine/conversion.py, line: 215
 msgid "Software Decoding and GPU encoding"
 msgstr "Αποκωδικοποίηση μέσω λογισμικού και κωδικοποίηση μέσω GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 213
+# converter/engine/conversion.py, line: 213
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 216
+# converter/engine/conversion.py, line: 216
 msgid "Software encoding"
 msgstr "Κωδικοποίηση μέσω λογισμικού"
 
@@ -4613,7 +4613,7 @@ msgid "Input probe unavailable: {0}"
 msgstr "Η ανάλυση εισόδου δεν είναι διαθέσιμη: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 325
+# converter/engine/conversion.py, line: 325
 msgid "No progress detected. Process may be stuck."
 msgstr "Δεν ανιχνεύθηκε πρόοδος. Η διαδικασία μπορεί να έχει κολλήσει."
 
@@ -4638,11 +4638,11 @@ msgid "Original preserved: {0}"
 msgstr "Το αρχικό αρχείο διατηρήθηκε: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 790
+# converter/engine/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 928
+# converter/engine/conversion.py, line: 928
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 942
+# converter/engine/conversion.py, line: 942
 msgid "Conversion completed successfully!"
 msgstr "Η μετατροπή ολοκληρώθηκε με επιτυχία!"
 
@@ -4662,253 +4662,253 @@ msgid "Additional options contain characters that are not allowed: {0}"
 msgstr "Οι πρόσθετες επιλογές περιέχουν χαρακτήρες που δεν επιτρέπονται: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 36
+# converter/engine/file_info.py, line: 36
 msgid "File Information"
 msgstr "Πληροφορίες Αρχείου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 95
+# converter/engine/file_info.py, line: 95
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 748
+# converter/engine/file_info.py, line: 748
 msgid "Analyzing video file..."
 msgstr "Ανάλυση αρχείου βίντεο..."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 138
+# converter/engine/file_info.py, line: 138
 msgid "Could not retrieve file information."
 msgstr "Δεν ήταν δυνατή η ανάκτηση πληροφοριών αρχείου."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 157
+# converter/engine/file_info.py, line: 157
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 300
+# converter/engine/file_info.py, line: 300
 msgid "Video Streams"
 msgstr "Ροές Βίντεο"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 160
+# converter/engine/file_info.py, line: 160
 msgid "Audio Streams"
 msgstr "Ροές Ήχου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 171
+# converter/engine/file_info.py, line: 171
 msgid "General Information"
 msgstr "Γενικές Πληροφορίες"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 176
+# converter/engine/file_info.py, line: 176
 msgid "File Name"
 msgstr "Όνομα Αρχείου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 181
+# converter/engine/file_info.py, line: 181
 msgid "Copy file name"
 msgstr "Αντιγραφή ονόματος αρχείου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 189
+# converter/engine/file_info.py, line: 189
 msgid "Location"
 msgstr "Τοποθεσία"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 206
+# converter/engine/file_info.py, line: 206
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 752
 msgid "File Size"
 msgstr "Μέγεθος Αρχείου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 211
+# converter/engine/file_info.py, line: 211
 msgid "Copy file size"
 msgstr "Αντιγραφή μεγέθους αρχείου"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 228
+# converter/engine/file_info.py, line: 228
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 758
 msgid "Duration"
 msgstr "Διάρκεια"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 233
+# converter/engine/file_info.py, line: 233
 msgid "Copy duration"
 msgstr "Αντιγραφή διάρκειας"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 245
+# converter/engine/file_info.py, line: 245
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 657
+# converter/engine/file_info.py, line: 657
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 746
 msgid "Format"
 msgstr "Μορφή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 250
+# converter/engine/file_info.py, line: 250
 msgid "Copy format"
 msgstr "Αντιγραφή μορφής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 250
+# converter/engine/file_info.py, line: 250
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 263
+# converter/engine/file_info.py, line: 263
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 401
+# converter/engine/file_info.py, line: 401
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 569
+# converter/engine/file_info.py, line: 569
 msgid "Bitrate"
 msgstr "Ρυθμός bit"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 268
+# converter/engine/file_info.py, line: 268
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 406
+# converter/engine/file_info.py, line: 406
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 576
+# converter/engine/file_info.py, line: 576
 msgid "Copy bitrate"
 msgstr "Αντιγραφή ρυθμού bit"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 308
+# converter/engine/file_info.py, line: 308
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 476
+# converter/engine/file_info.py, line: 476
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 739
 msgid "Codec"
 msgstr "Κωδικοποιητής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 313
+# converter/engine/file_info.py, line: 313
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 483
+# converter/engine/file_info.py, line: 483
 msgid "Copy codec"
 msgstr "Αντιγραφή κωδικοποιητή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 345
+# converter/engine/file_info.py, line: 345
 msgid "Copy resolution"
 msgstr "Αντιγραφή ανάλυσης"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 368
+# converter/engine/file_info.py, line: 368
 msgid "Copy frame rate"
 msgstr "Αντιγραφή ρυθμού καρέ"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 383
+# converter/engine/file_info.py, line: 383
 msgid "Pixel Format"
 msgstr "Μορφή Πίξελ"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 388
+# converter/engine/file_info.py, line: 388
 msgid "Copy pixel format"
 msgstr "Αντιγραφή μορφής εικονοστοιχείου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 419
+# converter/engine/file_info.py, line: 419
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 592
+# converter/engine/file_info.py, line: 592
 msgid "Language"
 msgstr "Γλώσσα"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 424
+# converter/engine/file_info.py, line: 424
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 599
+# converter/engine/file_info.py, line: 599
 msgid "Copy language code"
 msgstr "Αντιγράψτε τον κωδικό γλώσσας"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 507
+# converter/engine/file_info.py, line: 507
 msgid "Sample Rate"
 msgstr "Ρυθμός δειγματοληψίας"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 514
+# converter/engine/file_info.py, line: 514
 msgid "Copy sample rate"
 msgstr "Αντιγραφή ρυθμού δειγματοληψίας"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 524
+# converter/engine/file_info.py, line: 524
 msgid "CD Quality"
 msgstr "Ποιότητα CD"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 526
+# converter/engine/file_info.py, line: 526
 msgid "Hi-Res Audio"
 msgstr "Ήχος Υψηλής Ανάλυσης"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 539
+# converter/engine/file_info.py, line: 539
 msgid "(Mono)"
 msgstr "(Μονο)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 541
+# converter/engine/file_info.py, line: 541
 msgid "(Stereo)"
 msgstr "(Στερεοφωνικό)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 543
+# converter/engine/file_info.py, line: 543
 msgid "(5.1 Surround)"
 msgstr "(5.1 Surround)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 545
+# converter/engine/file_info.py, line: 545
 msgid "(7.1 Surround)"
 msgstr "(7.1 Surround)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 548
+# converter/engine/file_info.py, line: 548
 msgid "Channels"
 msgstr "Κανάλια"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 555
+# converter/engine/file_info.py, line: 555
 msgid "Copy channels"
 msgstr "Αντιγραφή καναλιών"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 636
+# converter/engine/file_info.py, line: 636
 msgid "Copy value"
 msgstr "Αντιγραφή τιμής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 653
+# converter/engine/file_info.py, line: 653
 msgid "Format Details"
 msgstr "Λεπτομέρειες μορφής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 658
+# converter/engine/file_info.py, line: 658
 msgid "Bitrate (bps)"
 msgstr "Ρυθμός bit (bps)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 659
+# converter/engine/file_info.py, line: 659
 msgid "Detection Score"
 msgstr "Βαθμολογία Ανίχνευσης"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 671
+# converter/engine/file_info.py, line: 671
 msgid "Metadata"
 msgstr "Μεταδεδομένα"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 708
+# converter/engine/file_info.py, line: 708
 msgid "Error retrieving file information"
 msgstr "Σφάλμα κατά την ανάκτηση πληροφοριών αρχείου"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 716
+# converter/engine/file_info.py, line: 716
 msgid "Retry"
 msgstr "Δοκιμάστε ξανά"
 

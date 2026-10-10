@@ -635,66 +635,66 @@ msgstr "В выбранной папке не найдено подходящи�
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/header_bar.py, line: 100
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 216
+# converter/file_intake.py, line: 216
 msgid "Add Network File"
 msgstr "Добавить сетевой файл"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 233
+# converter/file_intake.py, line: 233
 msgid ""
 "Connect to a remote server to browse and add video files.\n"
 "Files are accessed directly from the network without downloading."
 msgstr "Подключитесь к удалённому серверу для просмотра и добавления видеофайлов.\nДоступ к файлам осуществляется напрямую по сети без скачивания."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 244
+# converter/file_intake.py, line: 244
 msgid "Connection"
 msgstr "Соединение"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 248
+# converter/file_intake.py, line: 248
 msgid "Protocol"
 msgstr "Протокол"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 257
+# converter/file_intake.py, line: 257
 msgid "Server"
 msgstr "Сервер"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 263
+# converter/file_intake.py, line: 263
 msgid "Port"
 msgstr "Порт"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 269
+# converter/file_intake.py, line: 269
 msgid "Username"
 msgstr "Имя пользователя"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 275
+# converter/file_intake.py, line: 275
 msgid "Remote Path"
 msgstr "Удаленный путь"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 289
+# converter/file_intake.py, line: 289
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 295
+# converter/file_intake.py, line: 295
 msgid "Connect and Browse"
 msgstr "Подключиться и просмотреть"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 308
+# converter/file_intake.py, line: 308
 msgid "Please enter a server address."
 msgstr "Пожалуйста, введите адрес сервера."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 339
+# converter/file_intake.py, line: 339
 msgid "Connecting..."
 msgstr "Подключение..."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 376
+# converter/file_intake.py, line: 376
 #, python-brace-format
 msgid "Connection failed: {}"
 msgstr "Ошибка подключения: {}"
@@ -705,12 +705,12 @@ msgid "Error"
 msgstr "Ошибка"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 399
+# converter/file_intake.py, line: 399
 msgid "Connected but could not resolve local path. Try browsing via file manager."
 msgstr "Соединение установлено, но не удалось определить локальный путь. Попробуйте открыть через файловый менеджер."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/file_handler.py, line: 408
+# converter/file_intake.py, line: 408
 msgid "Select Network Video Files"
 msgstr "Выберите сетевые видеофайлы"
 
@@ -951,12 +951,12 @@ msgid "2160p"
 msgstr "2160p"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 140
+# converter/queue_runner.py, line: 140
 msgid "Low disk space"
 msgstr "Нехватка дискового пространства"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 142
+# converter/queue_runner.py, line: 142
 #, python-brace-format
 msgid ""
 "The destination has {free:.1f} GB free but approximately {needed:.1f} GB may be needed.\n"
@@ -979,12 +979,12 @@ msgid "The additional FFmpeg options cannot be used"
 msgstr "Невозможно использовать дополнительные параметры FFmpeg"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 335
+# converter/queue_runner.py, line: 335
 msgid "Batch Conversion Complete"
 msgstr "Пакетное преобразование завершено"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/queue_manager.py, line: 336
+# converter/queue_runner.py, line: 336
 msgid "All queued files have been processed."
 msgstr "Все файлы в очереди были обработаны."
 
@@ -1069,7 +1069,7 @@ msgid "Audio"
 msgstr "Аудио"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 163
+# converter/engine/file_info.py, line: 163
 msgid "Subtitles"
 msgstr "Субтитры"
 
@@ -1509,7 +1509,7 @@ msgid "Video information"
 msgstr "Сведения о видео"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 194
+# converter/engine/file_info.py, line: 194
 msgid "Open containing folder"
 msgstr "Открыть папку с файлом"
 
@@ -1735,7 +1735,7 @@ msgstr "Свой размер"
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 326
+# converter/engine/file_info.py, line: 326
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 733
 msgid "Resolution"
@@ -2518,7 +2518,7 @@ msgid "Show technical details"
 msgstr "Показать технические подробности"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 246
+# converter/engine/conversion.py, line: 246
 msgid "Starting process..."
 msgstr "Запуск процесса..."
 
@@ -2545,7 +2545,7 @@ msgid "Failed"
 msgstr "Не удалось"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 766
+# converter/engine/conversion.py, line: 766
 msgid "Cancelled"
 msgstr "Отменено"
 
@@ -4252,7 +4252,7 @@ msgstr "Увеличение разрешения выше оригинальн�
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 361
+# converter/engine/file_info.py, line: 361
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 764
 msgid "Frame Rate"
@@ -4434,22 +4434,22 @@ msgid "The file container could not be read. It may be a corrupted download or a
 msgstr "Не удалось прочитать контейнер файла. Возможно, файл повреждён при загрузке или имеет неподдерживаемый формат."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 22
+# converter/engine/conversion.py, line: 22
 msgid "File or folder not found."
 msgstr "Файл или папка не найдены."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 21
+# converter/engine/conversion.py, line: 21
 msgid "Permission denied — check file/folder permissions."
 msgstr "Доступ запрещен — проверьте разрешения файла/папки."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 20
+# converter/engine/conversion.py, line: 20
 msgid "There is no space left on the disk."
 msgstr "На диске не осталось места."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 23
+# converter/engine/conversion.py, line: 23
 msgid "The file appears to be corrupted or in an unsupported format."
 msgstr "Файл, похоже, поврежден или имеет неподдерживаемый формат."
 
@@ -4457,47 +4457,47 @@ msgid "A track of this file cannot be stored in the chosen container. Try MKV."
 msgstr "Одна из дорожек этого файла не может быть сохранена в выбранном контейнере. Попробуйте MKV."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 24
+# converter/engine/conversion.py, line: 24
 msgid "This codec is not supported on your system."
 msgstr "Этот кодек не поддерживается вашей системой."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 25
+# converter/engine/conversion.py, line: 25
 msgid "A required decoder is not installed."
 msgstr "Необходимый декодер не установлен."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 26
+# converter/engine/conversion.py, line: 26
 msgid "A required encoder is not installed."
 msgstr "Необходимый кодировщик не установлен."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 27
+# converter/engine/conversion.py, line: 27
 msgid "Failed to initialize the encoder — the selected settings may be incompatible."
 msgstr "Не удалось инициализировать кодировщик — выбранные настройки могут быть несовместимы."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 28
+# converter/engine/conversion.py, line: 28
 msgid "Hardware acceleration failed. Try disabling GPU encoding."
 msgstr "Не удалось выполнить аппаратное ускорение. Попробуйте отключить кодирование с использованием GPU."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 29
+# converter/engine/conversion.py, line: 29
 msgid "Not enough memory to complete the conversion."
 msgstr "Недостаточно памяти для завершения преобразования."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 30
+# converter/engine/conversion.py, line: 30
 msgid "The file does not contain a valid media stream."
 msgstr "Файл не содержит допустимого медиапотока."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 31
+# converter/engine/conversion.py, line: 31
 msgid "The video file is incomplete or damaged (missing metadata)."
 msgstr "Видеофайл неполный или поврежден (отсутствуют метаданные)."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 32
+# converter/engine/conversion.py, line: 32
 msgid "Could not decode the file — it may be corrupted."
 msgstr "Не удалось декодировать файл — он может быть поврежден."
 
@@ -4520,7 +4520,7 @@ msgid "The conversion finished without producing a file."
 msgstr "Преобразование завершилось без создания файла."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 968
+# converter/engine/conversion.py, line: 968
 #, python-brace-format
 msgid "Conversion failed with code {0}"
 msgstr "Ошибка преобразования с кодом {0}"
@@ -4533,7 +4533,7 @@ msgid "Could not analyze the video stream with ffprobe"
 msgstr "Не удалось проанализировать видеопоток с помощью ffprobe"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 185
+# converter/engine/conversion.py, line: 185
 #, python-brace-format
 msgid "Error starting conversion: {0}"
 msgstr "Ошибка при запуске преобразования: {0}"
@@ -4563,21 +4563,21 @@ msgid "Copying without re-encoding"
 msgstr "Копирование без перекодирования"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 214
+# converter/engine/conversion.py, line: 214
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 262
+# converter/engine/conversion.py, line: 262
 msgid "Full GPU acceleration"
 msgstr "Полное ускорение на GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 215
+# converter/engine/conversion.py, line: 215
 msgid "Software Decoding and GPU encoding"
 msgstr "Программное декодирование и кодирование на GPU"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 213
+# converter/engine/conversion.py, line: 213
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 216
+# converter/engine/conversion.py, line: 216
 msgid "Software encoding"
 msgstr "Программное кодирование"
 
@@ -4589,7 +4589,7 @@ msgid "Input probe unavailable: {0}"
 msgstr "Анализ входного файла недоступен: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 325
+# converter/engine/conversion.py, line: 325
 msgid "No progress detected. Process may be stuck."
 msgstr "Не обнаружен прогресс. Процесс может быть зависшим."
 
@@ -4614,11 +4614,11 @@ msgid "Original preserved: {0}"
 msgstr "Оригинал сохранён: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 790
+# converter/engine/conversion.py, line: 790
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 928
+# converter/engine/conversion.py, line: 928
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/conversion.py, line: 942
+# converter/engine/conversion.py, line: 942
 msgid "Conversion completed successfully!"
 msgstr "Преобразование успешно завершено!"
 
@@ -4638,250 +4638,250 @@ msgid "Additional options contain characters that are not allowed: {0}"
 msgstr "Дополнительные параметры содержат недопустимые символы: {0}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 36
+# converter/engine/file_info.py, line: 36
 msgid "File Information"
 msgstr "Информация о файле"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 95
+# converter/engine/file_info.py, line: 95
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 748
+# converter/engine/file_info.py, line: 748
 msgid "Analyzing video file..."
 msgstr "Анализ видеофайла..."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 138
+# converter/engine/file_info.py, line: 138
 msgid "Could not retrieve file information."
 msgstr "Не удалось получить информацию о файле."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 157
+# converter/engine/file_info.py, line: 157
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 300
+# converter/engine/file_info.py, line: 300
 msgid "Video Streams"
 msgstr "Видеопотоки"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 160
+# converter/engine/file_info.py, line: 160
 msgid "Audio Streams"
 msgstr "Аудиопотоки"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 171
+# converter/engine/file_info.py, line: 171
 msgid "General Information"
 msgstr "Общая информация"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 176
+# converter/engine/file_info.py, line: 176
 msgid "File Name"
 msgstr "Имя файла"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 181
+# converter/engine/file_info.py, line: 181
 msgid "Copy file name"
 msgstr "Скопировать имя файла"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 189
+# converter/engine/file_info.py, line: 189
 msgid "Location"
 msgstr "Местоположение"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 206
+# converter/engine/file_info.py, line: 206
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 752
 msgid "File Size"
 msgstr "Размер файла"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 211
+# converter/engine/file_info.py, line: 211
 msgid "Copy file size"
 msgstr "Копировать размер файла"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 228
+# converter/engine/file_info.py, line: 228
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 758
 msgid "Duration"
 msgstr "Длительность"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 233
+# converter/engine/file_info.py, line: 233
 msgid "Copy duration"
 msgstr "Копировать продолжительность"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 245
+# converter/engine/file_info.py, line: 245
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 657
+# converter/engine/file_info.py, line: 657
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 746
 msgid "Format"
 msgstr "Формат"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 250
+# converter/engine/file_info.py, line: 250
 msgid "Copy format"
 msgstr "Копировать формат"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 263
+# converter/engine/file_info.py, line: 263
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 401
+# converter/engine/file_info.py, line: 401
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 569
+# converter/engine/file_info.py, line: 569
 msgid "Bitrate"
 msgstr "Битрейт"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 268
+# converter/engine/file_info.py, line: 268
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 406
+# converter/engine/file_info.py, line: 406
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 576
+# converter/engine/file_info.py, line: 576
 msgid "Copy bitrate"
 msgstr "Копировать битрейт"
 
 # #-#-#-#-#  big-video-converter.pot (big-video-converter)  #-#-#-#-#
 #
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 308
+# converter/engine/file_info.py, line: 308
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 476
+# converter/engine/file_info.py, line: 476
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 739
 msgid "Codec"
 msgstr "Кодек"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 313
+# converter/engine/file_info.py, line: 313
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 483
+# converter/engine/file_info.py, line: 483
 msgid "Copy codec"
 msgstr "Копировать кодек"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 345
+# converter/engine/file_info.py, line: 345
 msgid "Copy resolution"
 msgstr "Копировать разрешение"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 368
+# converter/engine/file_info.py, line: 368
 msgid "Copy frame rate"
 msgstr "Копировать частоту кадров"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 383
+# converter/engine/file_info.py, line: 383
 msgid "Pixel Format"
 msgstr "Формат пикселей"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 388
+# converter/engine/file_info.py, line: 388
 msgid "Copy pixel format"
 msgstr "Копировать формат пикселей"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 419
+# converter/engine/file_info.py, line: 419
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 592
+# converter/engine/file_info.py, line: 592
 msgid "Language"
 msgstr "Язык"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 424
+# converter/engine/file_info.py, line: 424
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 599
+# converter/engine/file_info.py, line: 599
 msgid "Copy language code"
 msgstr "Скопировать код языка"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 507
+# converter/engine/file_info.py, line: 507
 msgid "Sample Rate"
 msgstr "Частота дискретизации"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 514
+# converter/engine/file_info.py, line: 514
 msgid "Copy sample rate"
 msgstr "Копировать частоту дискретизации"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 524
+# converter/engine/file_info.py, line: 524
 msgid "CD Quality"
 msgstr "Качество CD"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 526
+# converter/engine/file_info.py, line: 526
 msgid "Hi-Res Audio"
 msgstr "Hi-Res Аудио"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 539
+# converter/engine/file_info.py, line: 539
 msgid "(Mono)"
 msgstr "(Моно)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 541
+# converter/engine/file_info.py, line: 541
 msgid "(Stereo)"
 msgstr "(Стерео)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 543
+# converter/engine/file_info.py, line: 543
 msgid "(5.1 Surround)"
 msgstr "(Объёмный звук 5.1)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 545
+# converter/engine/file_info.py, line: 545
 msgid "(7.1 Surround)"
 msgstr "(Объёмный звук 7.1)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 548
+# converter/engine/file_info.py, line: 548
 msgid "Channels"
 msgstr "Каналы"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 555
+# converter/engine/file_info.py, line: 555
 msgid "Copy channels"
 msgstr "Копировать каналы"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 636
+# converter/engine/file_info.py, line: 636
 msgid "Copy value"
 msgstr "Скопировать значение"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 653
+# converter/engine/file_info.py, line: 653
 msgid "Format Details"
 msgstr "Подробности формата"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 658
+# converter/engine/file_info.py, line: 658
 msgid "Bitrate (bps)"
 msgstr "Битрейт (бит в секунду)"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 659
+# converter/engine/file_info.py, line: 659
 msgid "Detection Score"
 msgstr "Оценка обнаружения"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 671
+# converter/engine/file_info.py, line: 671
 msgid "Metadata"
 msgstr "Метаданные"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 708
+# converter/engine/file_info.py, line: 708
 msgid "Error retrieving file information"
 msgstr "Ошибка при получении информации о файле"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/utils/file_info.py, line: 716
+# converter/engine/file_info.py, line: 716
 msgid "Retry"
 msgstr "Повторить"
 

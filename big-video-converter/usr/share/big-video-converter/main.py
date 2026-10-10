@@ -19,22 +19,22 @@ import gettext
 import big_gtk_kit
 from audio_settings import AudioSettingsMixin
 from constants import APP_ID
-from file_handler import FileHandlerMixin
+from engine.dependency_checker import DependencyChecker
+from engine.job_options import SOURCE_HDR_MODES, parse_segments_arg
+from engine.settings_store import SettingsStore
+from file_intake import FileIntakeMixin
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
-from profile_manager import ProfileManagerMixin
-from queue_manager import QueueManagerMixin
+from queue_runner import QueueRunnerMixin
 from sidebar_builder import SidebarBuilderMixin
 from ui.conversion_page import ConversionPage
 from ui.dependency_dialog import InstallDependencyDialog
 from ui.header_bar import HeaderBar
+from ui.help_tooltips import HelpTooltips
 from ui.progress_page import ProgressPage
 from ui.style import install as install_style
 from ui.video_edit_page import VideoEditPage
 from ui.welcome_dialog import WelcomeDialog
-from utils.dependency_checker import DependencyChecker
-from utils.job_options import SOURCE_HDR_MODES, parse_segments_arg
-from utils.settings_manager import SettingsManager
-from utils.tooltip_helper import TooltipHelper
+from video_profiles import VideoProfilesMixin
 
 _ = gettext.gettext
 ngettext = gettext.ngettext
@@ -44,9 +44,9 @@ MIN_WIDTH, MIN_HEIGHT = 640, 480
 
 class VideoConverterApp(
     AudioSettingsMixin,
-    ProfileManagerMixin,
-    QueueManagerMixin,
-    FileHandlerMixin,
+    VideoProfilesMixin,
+    QueueRunnerMixin,
+    FileIntakeMixin,
     SidebarBuilderMixin,
     Adw.Application,
 ):
@@ -118,20 +118,20 @@ class VideoConverterApp(
         self.connect("startup", lambda _app: big_gtk_kit.install())
         self.connect("activate", self.on_activate)
 
-        self.settings_manager = SettingsManager()
+        self.settings_store = SettingsStore()
         self.dependency_checker = DependencyChecker()
-        self.last_accessed_directory = self.settings_manager.load_setting(
+        self.last_accessed_directory = self.settings_store.load_setting(
             "last-accessed-directory", os.path.expanduser("~")
         )
 
-        self.tooltip_helper = TooltipHelper(self.settings_manager)
+        self.help_tooltips = HelpTooltips(self.settings_store)
 
         self.logger = logging.getLogger(__name__)
 
         # Indices: 0=MP4, 1=MKV, 2=MOV, 3=WebM
-        current_format = self.settings_manager.load_setting("output-format-index", 0)
+        current_format = self.settings_store.load_setting("output-format-index", 0)
         if current_format > 3:
-            self.settings_manager.save_setting("output-format-index", 0)  # Reset to MP4
+            self.settings_store.save_setting("output-format-index", 0)  # Reset to MP4
 
         self.conversions_running = 0
         self.conversion_queue = deque()
@@ -174,7 +174,7 @@ class VideoConverterApp(
             self.add_action(action)
 
         # Stateful toggle for tooltips (used in hamburger menu)
-        show_tooltips = self.settings_manager.load_setting("show-tooltips", True)
+        show_tooltips = self.settings_store.load_setting("show-tooltips", True)
         self.tooltip_action = Gio.SimpleAction.new_stateful(
             "toggle-tooltips",
             None,
@@ -218,13 +218,13 @@ class VideoConverterApp(
             return
 
         if is_first_activation and WelcomeDialog.should_show_welcome(
-            self.settings_manager
+            self.settings_store
         ):
             GLib.idle_add(self._show_welcome_dialog_startup)
 
     def _show_welcome_dialog_startup(self):
         """Show welcome dialog on startup (called via idle_add)"""
-        self.welcome_dialog = WelcomeDialog(self.window, self.settings_manager)
+        self.welcome_dialog = WelcomeDialog(self.window, self.settings_store)
         self.welcome_dialog.present()
         return False  # Remove idle callback
 
@@ -240,15 +240,15 @@ class VideoConverterApp(
         self.window.set_size_request(MIN_WIDTH, MIN_HEIGHT)
 
         # Restore window size from settings
-        width = self.settings_manager.load_setting("window-width", 1200)
-        height = self.settings_manager.load_setting("window-height", 720)
+        width = self.settings_store.load_setting("window-width", 1200)
+        height = self.settings_store.load_setting("window-height", 720)
 
         width = max(width, MIN_WIDTH)
         height = max(height, MIN_HEIGHT)
         self.window.set_default_size(width, height)
 
         # Restore maximized state
-        is_maximized = self.settings_manager.load_setting("window-maximized", False)
+        is_maximized = self.settings_store.load_setting("window-maximized", False)
         if is_maximized:
             self.window.maximize()
 
@@ -301,7 +301,7 @@ class VideoConverterApp(
         self._create_left_pane()
         self._create_right_pane()
 
-        sidebar_position = self.settings_manager.load_setting("sidebar-position", 430)
+        sidebar_position = self.settings_store.load_setting("sidebar-position", 430)
         self.split_view.set_sidebar_width_fraction(
             min(0.5, max(0.2, sidebar_position / width))
         )
@@ -317,7 +317,7 @@ class VideoConverterApp(
         )
         self.subtitle_banner.add_css_class("warning-banner")
         self.subtitle_banner.set_revealed(
-            self.settings_manager.get_boolean("only-extract-subtitles", False)
+            self.settings_store.get_boolean("only-extract-subtitles", False)
         )
 
         # Wrap toast overlay + banner in a vertical box
@@ -362,7 +362,7 @@ class VideoConverterApp(
         if getattr(self, "_quitting", False):
             return
         self._quitting = True
-        self.settings_manager.flush()
+        self.settings_store.flush()
         if getattr(self, "conversion_page", None) is not None:
             self.conversion_page.thumbnail_manager.shutdown()
         self.is_cancellation_requested = True
@@ -390,17 +390,17 @@ class VideoConverterApp(
     def _save_window_state(self):
         """Save current window size, position and maximized state"""
         is_maximized = self.window.is_maximized()
-        self.settings_manager.save_setting("window-maximized", is_maximized)
+        self.settings_store.save_setting("window-maximized", is_maximized)
 
         # Only save size if not maximized
         if not is_maximized:
             width = self.window.get_width()
             height = self.window.get_height()
-            self.settings_manager.save_setting("window-width", width)
-            self.settings_manager.save_setting("window-height", height)
+            self.settings_store.save_setting("window-width", width)
+            self.settings_store.save_setting("window-height", height)
 
         if self.split_view.get_show_sidebar():
-            self.settings_manager.save_setting(
+            self.settings_store.save_setting(
                 "sidebar-position", self.split_view.get_sidebar().get_width()
             )
 
@@ -446,7 +446,7 @@ class VideoConverterApp(
         self.video_edit_page.ui.populate_sidebar(self.editing_tools_box)
         # The left pane loaded its settings before the editor existed.
         self.video_edit_page.ui.update_for_force_copy_state(
-            self.settings_manager.get_boolean("force-copy-video", False)
+            self.settings_store.get_boolean("force-copy-video", False)
         )
 
         self.right_stack.add_titled(
@@ -469,8 +469,8 @@ class VideoConverterApp(
         current = action.get_state().get_boolean()
         new_state = not current
         action.set_state(GLib.Variant.new_boolean(new_state))
-        self.settings_manager.save_setting("show-tooltips", new_state)
-        self.tooltip_helper.refresh()
+        self.settings_store.save_setting("show-tooltips", new_state)
+        self.help_tooltips.refresh()
 
     # UI Navigation
     def show_queue_view(self) -> None:
@@ -536,7 +536,7 @@ class VideoConverterApp(
         about.present(self.window)
 
     def on_welcome_action(self, action, param) -> None:
-        self.welcome_dialog = WelcomeDialog(self.window, self.settings_manager)
+        self.welcome_dialog = WelcomeDialog(self.window, self.settings_store)
         self.welcome_dialog.present()
 
     def _on_restore_settings(self) -> None:

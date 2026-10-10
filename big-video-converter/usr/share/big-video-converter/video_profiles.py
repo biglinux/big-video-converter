@@ -1,7 +1,7 @@
 """Profile manager mixin — video mode radios and user presets.
 
 Four built-in modes are triples of (codec, quality, copy) applied to the
-data-holder widgets. A preset is a TOML recipe (utils/presets.py) applied to
+data-holder widgets. A preset is a TOML recipe (engine/presets.py) applied to
 many settings at once; it stays "active" while the widgets still agree with
 it, so the per-encoder arguments it carries reach the script. The moment the
 user changes codec, quality or copy mode by hand, the preset is released and
@@ -15,7 +15,7 @@ _ = gettext.gettext
 logger = logging.getLogger(__name__)
 
 
-class ProfileManagerMixin:
+class VideoProfilesMixin:
     """Mixin providing video encoding profile management."""
 
     def _on_profile_toggled(self, btn):
@@ -55,7 +55,7 @@ class ProfileManagerMixin:
             "quality": (3, 0, False),  # AV1
         }
         codec_idx, quality_idx, force_copy = profiles[profile]
-        self.settings_manager.save_setting("active-preset", "")
+        self.settings_store.save_setting("active-preset", "")
         self.video_codec_combo.set_selected(codec_idx)
         self.video_quality_combo.set_selected(quality_idx)
         self.force_copy_video_check.set_active(force_copy)
@@ -89,7 +89,7 @@ class ProfileManagerMixin:
             # The user walked away from the recipe: release it, otherwise its
             # encoder arguments would keep shaping a conversion that no longer
             # looks like the preset on screen.
-            self.settings_manager.save_setting("active-preset", "")
+            self.settings_store.save_setting("active-preset", "")
             self._update_presets_subtitle()
         if force_copy or codec_idx == 0:
             return "copy"
@@ -105,15 +105,15 @@ class ProfileManagerMixin:
 
     def active_preset(self):
         """The Preset selected in the sidebar, or None."""
-        preset_id = self.settings_manager.load_setting("active-preset", "")
+        preset_id = self.settings_store.load_setting("active-preset", "")
         if not preset_id:
             return None
-        from utils.presets import find_preset
+        from engine.presets import find_preset
 
         preset = find_preset(preset_id)
         if preset is None:
             # The file is gone; forget it rather than failing every conversion.
-            self.settings_manager.save_setting("active-preset", "")
+            self.settings_store.save_setting("active-preset", "")
         return preset
 
     def _widgets_match_preset(self, preset, codec_idx, quality_idx, force_copy) -> bool:
@@ -131,16 +131,16 @@ class ProfileManagerMixin:
 
     def apply_preset(self, preset) -> None:
         """Write a preset into the settings and refresh every widget from them."""
-        from utils.presets import preset_settings
+        from engine.presets import preset_settings
 
         values = preset_settings(preset)
-        with self.settings_manager.batch_update():
+        with self.settings_store.batch_update():
             for key, value in values.items():
-                self.settings_manager.save_setting(key, value)
-            self.settings_manager.save_setting("active-preset", preset.id)
+                self.settings_store.save_setting(key, value)
+            self.settings_store.save_setting("active-preset", preset.id)
         force_copy = values.get(
             "force-copy-video",
-            self.settings_manager.load_setting("force-copy-video", False),
+            self.settings_store.load_setting("force-copy-video", False),
         )
         self._load_left_pane_settings()
         self.settings_page._load_settings()

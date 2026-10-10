@@ -1,7 +1,7 @@
 """Presets: a searchable grid of recipes, plus import and AI-assisted creation.
 
 The grid shows bundled presets and the user's own files side by side. A click
-applies the preset through the application (ProfileManagerMixin.apply_preset),
+applies the preset through the application (VideoProfilesMixin.apply_preset),
 which writes the settings and refreshes every widget, so what the user sees in
 the sidebar and the dialogs is exactly what the preset asked for.
 """
@@ -17,12 +17,12 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
+from engine import presets as preset_store
+from engine.ffmpeg_path import get_ffmpeg_executable
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
-from utils import presets as preset_store
-from utils.ffmpeg_path import get_ffmpeg_executable
-from utils.signal_connections import SignalConnections
 
 from ui.progress_page import launch_file
+from ui.signal_connections import SignalConnections
 
 logger = logging.getLogger(__name__)
 
@@ -289,7 +289,7 @@ class PresetsDialog:
             following = child.get_next_sibling()
             self.flowbox.remove(child)
             child = following
-        active_id = self.app.settings_manager.load_setting("active-preset", "")
+        active_id = self.app.settings_store.load_setting("active-preset", "")
         self.presets = preset_store.list_presets()
         for preset in self.presets:
             self.flowbox.append(
@@ -387,8 +387,8 @@ class PresetsDialog:
         except (preset_store.PresetError, OSError) as error:
             self._toast(str(error))
             return
-        if self.app.settings_manager.load_setting("active-preset", "") == preset.id:
-            self.app.settings_manager.save_setting("active-preset", "")
+        if self.app.settings_store.load_setting("active-preset", "") == preset.id:
+            self.app.settings_store.save_setting("active-preset", "")
             if hasattr(self.app, "_select_profile_radio"):
                 self.app._select_profile_radio(self.app._detect_current_profile())
             if hasattr(self.app, "_update_presets_subtitle"):
@@ -557,7 +557,7 @@ def _ffmpeg_version() -> str:
 
 def build_prompt(request: str) -> str:
     """The text placed on the clipboard for a chat assistant."""
-    from utils.gpu_selector import _available_ffmpeg_encoders
+    from engine.gpu_selector import _available_ffmpeg_encoders
 
     return preset_store.build_ai_prompt(
         request,

@@ -8,10 +8,10 @@ import pytest
 gi = pytest.importorskip("gi")
 gi.require_version("Adw", "1")
 
-from queue_manager import QueueManagerMixin
+from engine import conversion, file_info
+from engine.media_validation import terminate_process_group
+from queue_runner import QueueRunnerMixin
 from test_supervisor import App, pump_until
-from utils import conversion, file_info
-from utils.media_validation import terminate_process_group
 
 ISSUE_27_STDERR = [
     "ffmpeg version n8.0 Copyright (c) 2000-2025 the FFmpeg developers",
@@ -154,12 +154,12 @@ class TestDiskSpaceDialog:
 
     def test_cancel_hands_the_convert_button_back(self):
         queue = self._queue()
-        QueueManagerMixin._on_disk_space_response(queue, "cancel")
+        QueueRunnerMixin._on_disk_space_response(queue, "cancel")
         assert queue.calls == [True] and not queue.started
 
     def test_continue_starts_the_queue(self):
         queue = self._queue()
-        QueueManagerMixin._on_disk_space_response(queue, "continue")
+        QueueRunnerMixin._on_disk_space_response(queue, "continue")
         assert queue.started == [True] and not queue.calls
 
 

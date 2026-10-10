@@ -8,7 +8,8 @@ import logging
 import os
 
 import gi
-from utils.signal_connections import SignalConnections
+
+from ui.signal_connections import SignalConnections
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -298,7 +299,7 @@ def _export_profile(dialog, parent_window, app) -> None:
         filepath = gfile.get_path()
         if not filepath:
             return
-        ok = app.settings_manager.export_profile(filepath)
+        ok = app.settings_store.export_profile(filepath)
         msg = Gtk.AlertDialog()
         if ok:
             msg.set_message(_("Profile Exported"))
@@ -332,11 +333,11 @@ def _import_profile(dialog, parent_window, app) -> None:
         filepath = gfile.get_path()
         if not filepath:
             return
-        updates = app.settings_manager.read_profile(filepath)
+        updates = app.settings_store.read_profile(filepath)
         if updates is None:
             _finish(filepath, False)
             return
-        from utils.ffmpeg_options import file_access_settings
+        from engine.ffmpeg_options import file_access_settings
 
         from ui.presets_dialog import confirm_file_access
 
@@ -347,10 +348,10 @@ def _import_profile(dialog, parent_window, app) -> None:
                 parent_window,
                 _("This profile can read or write files"),
                 settings,
-                lambda: _finish(filepath, app.settings_manager.apply_profile(updates)),
+                lambda: _finish(filepath, app.settings_store.apply_profile(updates)),
             )
         else:
-            _finish(filepath, app.settings_manager.apply_profile(updates))
+            _finish(filepath, app.settings_store.apply_profile(updates))
 
     def _finish(filepath, ok):
         msg = Gtk.AlertDialog()
@@ -362,7 +363,7 @@ def _import_profile(dialog, parent_window, app) -> None:
                 app.settings_page._load_settings()
             if hasattr(app, "_load_left_pane_settings"):
                 app._load_left_pane_settings()
-            force_copy = app.settings_manager.load_setting("force-copy-video", False)
+            force_copy = app.settings_store.load_setting("force-copy-video", False)
             if hasattr(app, "settings_page"):
                 app.settings_page.update_for_force_copy_state(force_copy)
             if hasattr(app, "_update_encoding_options_state"):

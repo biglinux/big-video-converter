@@ -24,8 +24,8 @@ import math
 from dataclasses import dataclass
 from itertools import pairwise
 
-from utils.ffmpeg_path import get_ffprobe_executable
-from utils.media_validation import probe_media, run_cancellable
+from engine.ffmpeg_path import get_ffprobe_executable
+from engine.media_validation import probe_media, run_cancellable
 
 _ = gettext.gettext
 
@@ -392,7 +392,7 @@ def prepare_size_job(context: dict) -> dict:
         )
     )
     if copy_ok and context["output_ext"] == ".mp4":
-        from utils.file_info import check_mp4_compatibility
+        from engine.file_info import check_mp4_compatibility
 
         copy_ok = check_mp4_compatibility(source_path)[0]
     audio_bps, audio_streams = _audio_cost(data, encode_env)

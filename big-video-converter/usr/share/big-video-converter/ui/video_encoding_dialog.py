@@ -9,7 +9,8 @@ import os
 import sys
 
 import gi
-from utils.signal_connections import SignalConnections
+
+from ui.signal_connections import SignalConnections
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")

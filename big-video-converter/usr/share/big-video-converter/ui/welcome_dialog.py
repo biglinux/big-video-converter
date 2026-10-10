@@ -16,9 +16,9 @@ _ = gettext.gettext
 class WelcomeDialog:
     """Welcome dialog explaining video converter features and benefits"""
 
-    def __init__(self, parent_window, settings_manager):
+    def __init__(self, parent_window, settings_store):
         self.parent_window = parent_window
-        self.settings_manager = settings_manager
+        self.settings_store = settings_store
         self.dialog = None
         self.show_switch = None
 
@@ -147,7 +147,7 @@ class WelcomeDialog:
         switch_box.append(switch_label)
         switch_box.append(self.show_switch)
 
-        current_pref = self.settings_manager.load_setting("show-welcome-dialog", True)
+        current_pref = self.settings_store.load_setting("show-welcome-dialog", True)
         self.show_switch.set_active(current_pref)
 
         content_box.append(switch_box)
@@ -201,12 +201,12 @@ class WelcomeDialog:
     def on_close_clicked(self, button) -> None:
         if self.show_switch:
             show_on_startup = self.show_switch.get_active()
-            self.settings_manager.save_setting("show-welcome-dialog", show_on_startup)
+            self.settings_store.save_setting("show-welcome-dialog", show_on_startup)
         # Close the dialog
         if self.dialog:
             self.dialog.close()
 
     @staticmethod
-    def should_show_welcome(settings_manager):
+    def should_show_welcome(settings_store):
         """Check if the welcome dialog should be shown"""
-        return settings_manager.load_setting("show-welcome-dialog", True)
+        return settings_store.load_setting("show-welcome-dialog", True)

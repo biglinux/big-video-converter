@@ -6,8 +6,8 @@ import subprocess
 import time
 
 import pytest
+from engine.pauses import KEEP, STEP, PauseFinder, find_pauses
 from gi.repository import GLib
-from utils.pauses import KEEP, STEP, PauseFinder, find_pauses
 
 
 def levels(*runs):

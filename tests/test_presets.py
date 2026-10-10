@@ -6,8 +6,8 @@ import subprocess
 
 import pytest
 from conftest import APP, pump
-from utils import presets
-from utils.media_validation import probe_media
+from engine import presets
+from engine.media_validation import probe_media
 
 BUNDLED = APP / "presets"
 
@@ -91,12 +91,12 @@ class TestContract:
             presets.validate_preset(presets.parse_preset_text(text))
 
     def test_frame_rate_limit_matches_the_script(self, media, tmp_path, run_cli):
-        from utils.settings_manager import SettingsManager
+        from engine.settings_store import SettingsStore
 
         preset = presets.validate_preset(
             presets.parse_preset_text('[preset]\nname="x"\n[video]\nfps=240')
         )
-        SettingsManager._validate_profile_value("video-fps", presets.preset_fps(preset))
+        SettingsStore._validate_profile_value("video-fps", presets.preset_fps(preset))
         top = run_cli(
             media["silent"],
             tmp_path / "top.mkv",
@@ -229,16 +229,14 @@ def presets_window(user_presets, tmp_path):
     gi.require_version("Adw", "1")
     from types import SimpleNamespace
 
+    from engine.settings_store import SettingsStore
     from gi.repository import Adw
     from ui.presets_dialog import PresetsDialog
-    from utils.settings_manager import SettingsManager
 
     Adw.init()
     window = Adw.Window()
     window.present()
-    app = SimpleNamespace(
-        settings_manager=SettingsManager(True, str(tmp_path / "s.json"))
-    )
+    app = SimpleNamespace(settings_store=SettingsStore(True, str(tmp_path / "s.json")))
     dialog = PresetsDialog(window, app)
     dialog.present()
     yield window, dialog
@@ -503,7 +501,7 @@ class TestScript:
     def test_helper_cli_speaks_nul_separated(self, user_presets):
         preset = presets.save_user_preset(MINIMAL)
         env = subprocess.run(
-            ["python3", str(APP / "utils" / "presets.py"), "--env", preset.path],
+            ["python3", str(APP / "engine" / "presets.py"), "--env", preset.path],
             capture_output=True,
             timeout=20,
             check=False,
@@ -513,7 +511,7 @@ class TestScript:
         args = subprocess.run(
             [
                 "python3",
-                str(APP / "utils" / "presets.py"),
+                str(APP / "engine" / "presets.py"),
                 "--encoder-args",
                 preset.path,
                 "h264_nvenc",

@@ -10,16 +10,16 @@ import tempfile
 import threading
 from pathlib import Path
 
-from utils.conversion import (
+from engine.conversion import (
     TEXT_ONLY_CONTAINERS,
     TEXT_SUBTITLE_CODECS,
     _failure_reason,
     call_on_main,
     run_with_progress_dialog,
 )
-from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
-from utils.job_options import joined_cuts
-from utils.media_validation import (
+from engine.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+from engine.job_options import joined_cuts
+from engine.media_validation import (
     ConversionResult,
     FileIdentity,
     probe_media,
@@ -27,7 +27,7 @@ from utils.media_validation import (
     remove_original,
     run_cancellable,
 )
-from utils.size_target import describe_plan, keyframe_cuts, probe_packets
+from engine.size_target import describe_plan, keyframe_cuts, probe_packets
 
 _ = gettext.gettext
 
@@ -254,7 +254,7 @@ def _bitmap_timeline(cuts):
 
     A PGS or DVD subtitle is a picture: it cannot be rewritten cue by cue like
     text, so each packet is kept whole with its timestamps clamped to the cut
-    (see utils/subtitle_timing.py for a single cut). A zero duration, common
+    (see engine/subtitle_timing.py for a single cut). A zero duration, common
     in PGS, still counts as touching its own instant.
     """
     keep, pts, dts, length = [], "PTS", "DTS", "DURATION"
@@ -278,23 +278,23 @@ def _bitmap_timeline(cuts):
     )
 
 
-def _process_subtitles(row, processor):
-    """Run the processor; return its tracks and how many could not be read.
+def _clip_subtitles(row, clipper):
+    """Run the clipper; return its tracks and how many could not be read.
 
     A track that fails to extract is reported on the row and left out, so the
     job keeps the parts it already finished.
     """
-    tracks = processor.process()
-    if processor.failed:
+    tracks = clipper.run()
+    if clipper.failed:
         call_on_main(
             row.add_output_text,
             ngettext(
                 "{0} subtitle track could not be extracted and was left out.",
                 "{0} subtitle tracks could not be extracted and were left out.",
-                len(processor.failed),
-            ).format(len(processor.failed)),
+                len(clipper.failed),
+            ).format(len(clipper.failed)),
         )
-    return tracks, len(processor.failed)
+    return tracks, len(clipper.failed)
 
 
 def _embed_subtitles(app, row, context, cuts, joined, work_dir, duration, cancel_event):
@@ -304,12 +304,12 @@ def _embed_subtitles(app, row, context, cuts, joined, work_dir, duration, cancel
     packet by packet, and only Matroska can hold them. Returns the file and
     the number of tracks that could not be extracted.
     """
-    from utils.subtitle_processor import SubtitleProcessor
+    from engine.subtitle_clipping import SubtitleClipper
 
     source = context["input_file"]
-    tracks, failed = _process_subtitles(
+    tracks, failed = _clip_subtitles(
         row,
-        SubtitleProcessor(
+        SubtitleClipper(
             source,
             work_dir,
             "merged",
@@ -440,7 +440,7 @@ def start_segment_batch(page, context):
                 prefix=".bvc-segments-", dir=context["output_folder"]
             ) as work_dir:
                 if context["env_vars"].get("only_extract_subtitles") == "1":
-                    from utils.subtitle_processor import SubtitleProcessor
+                    from engine.subtitle_clipping import SubtitleClipper
 
                     groups = (
                         [segments]
@@ -455,7 +455,7 @@ def start_segment_batch(page, context):
                             if mode == "join" or single
                             else f"{context['input_basename']}-part{index + 1}{context['output_ext']}"
                         )
-                        processor = SubtitleProcessor(
+                        clipper = SubtitleClipper(
                             source,
                             context["output_folder"],
                             name,
@@ -464,8 +464,8 @@ def start_segment_batch(page, context):
                             "extract",
                             cancel_event=cancel_event,
                         )
-                        failed_subtitles += _process_subtitles(row, processor)[1]
-                        outputs.extend(processor.created_files)
+                        failed_subtitles += _clip_subtitles(row, clipper)[1]
+                        outputs.extend(clipper.created_files)
                     if not outputs:
                         raise ValueError(
                             "The subtitles could not be extracted"
@@ -729,9 +729,9 @@ def start_segment_batch(page, context):
                         _publish_available(joined, context["full_output_path"])
                     )
                     if env_vars.get("subtitle_extract") == "extract":
-                        from utils.subtitle_processor import SubtitleProcessor
+                        from engine.subtitle_clipping import SubtitleClipper
 
-                        processor = SubtitleProcessor(
+                        clipper = SubtitleClipper(
                             source,
                             context["output_folder"],
                             os.path.basename(outputs[0]),
@@ -740,7 +740,7 @@ def start_segment_batch(page, context):
                             "extract",
                             cancel_event=cancel_event,
                         )
-                        failed_subtitles += _process_subtitles(row, processor)[1]
+                        failed_subtitles += _clip_subtitles(row, clipper)[1]
                 else:
                     for index, path in enumerate(paths):
                         if cancel_event.is_set():
@@ -757,9 +757,9 @@ def start_segment_batch(page, context):
                         final = _publish_available(path, desired)
                         outputs.append(final)
                         if env_vars.get("subtitle_extract") == "extract":
-                            from utils.subtitle_processor import SubtitleProcessor
+                            from engine.subtitle_clipping import SubtitleClipper
 
-                            processor = SubtitleProcessor(
+                            clipper = SubtitleClipper(
                                 source,
                                 context["output_folder"],
                                 os.path.basename(final),
@@ -768,7 +768,7 @@ def start_segment_batch(page, context):
                                 "extract",
                                 cancel_event=cancel_event,
                             )
-                            failed_subtitles += _process_subtitles(row, processor)[1]
+                            failed_subtitles += _clip_subtitles(row, clipper)[1]
                 if context["delete_original"]:
                     try:
                         if identity is None:

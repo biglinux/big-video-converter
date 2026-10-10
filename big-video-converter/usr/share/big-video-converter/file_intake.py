@@ -6,7 +6,7 @@ import threading
 
 from constants import VIDEO_FILE_EXTENSIONS
 from gi.repository import Gdk, Gio, GLib, Gtk
-from utils.signal_connections import SignalConnections
+from ui.signal_connections import SignalConnections
 
 _ = gettext.gettext
 ngettext = gettext.ngettext
@@ -36,7 +36,7 @@ def network_uri(
     ).to_string()
 
 
-class FileHandlerMixin:
+class FileIntakeMixin:
     """Mixin providing file selection, drag-and-drop, and network mount support."""
 
     def _setup_drag_and_drop(self):
@@ -71,7 +71,7 @@ class FileHandlerMixin:
                 return False
             added = 0
             try:
-                with self.settings_manager.batch_update():
+                with self.settings_store.batch_update():
                     for file_path in files:
                         added += self.add_file_to_queue(file_path)
                 if error is not None:

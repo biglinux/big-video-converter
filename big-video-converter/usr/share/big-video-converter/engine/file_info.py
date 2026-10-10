@@ -7,7 +7,7 @@ import re
 import subprocess
 import threading
 
-from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+from engine.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
 
 logger = logging.getLogger(__name__)
 

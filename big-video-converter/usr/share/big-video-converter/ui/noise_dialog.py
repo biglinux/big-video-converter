@@ -8,8 +8,9 @@ import os
 
 import gi
 from constants import NOISE_MODELS
-from utils.contextual_controls import bind_details_to_switch
-from utils.signal_connections import SignalConnections
+
+from ui.contextual_controls import bind_details_to_switch
+from ui.signal_connections import SignalConnections
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -558,9 +559,7 @@ def show_noise_dialog(parent_window, app) -> bool:
     EQ_FREQS = [31, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
     _eq_slider_guard = {"active": False}
 
-    saved_bands_str = app.settings_manager.load_setting(
-        "eq-bands", "0,0,0,0,0,0,0,0,0,0"
-    )
+    saved_bands_str = app.settings_store.load_setting("eq-bands", "0,0,0,0,0,0,0,0,0,0")
     try:
         saved_bands = [float(v) for v in saved_bands_str.split(",")]
     except (ValueError, AttributeError):
@@ -591,7 +590,7 @@ def show_noise_dialog(parent_window, app) -> bool:
             app.eq_preset_row.set_selected(9)
             _eq_slider_guard["active"] = False
         bands = [s.get_value() for s in eq_scales]
-        app.settings_manager.save_setting("eq-bands", ",".join(str(b) for b in bands))
+        app.settings_store.save_setting("eq-bands", ",".join(str(b) for b in bands))
         # Refresh mpv preview
         if (
             hasattr(app, "video_edit_page")

@@ -9,14 +9,14 @@ import uuid
 from collections import deque
 from copy import deepcopy
 
+from engine.job_options import DEFAULT_METADATA
 from gi.repository import Adw, GLib
-from utils.job_options import DEFAULT_METADATA
 
 _ = gettext.gettext
 logger = logging.getLogger(__name__)
 
 
-class QueueManagerMixin:
+class QueueRunnerMixin:
     """Mixin providing conversion queue management and orchestration."""
 
     def add_file_to_queue(self, file_path: str) -> bool:
@@ -31,7 +31,7 @@ class QueueManagerMixin:
         if file_path and os.path.isfile(file_path):
             input_dir = os.path.dirname(file_path)
             self.last_accessed_directory = input_dir
-            self.settings_manager.save_setting("last-accessed-directory", input_dir)
+            self.settings_store.save_setting("last-accessed-directory", input_dir)
 
             self.conversion_queue.append(file_path)
 
@@ -95,9 +95,9 @@ class QueueManagerMixin:
         Estimates required space as 1.5x total input size to account for
         transcoding overhead. Returns True if enough space, False otherwise.
         """
-        custom = self.settings_manager.get_boolean("use-custom-output-folder", False)
+        custom = self.settings_store.get_boolean("use-custom-output-folder", False)
         output_folder = (
-            self.settings_manager.load_setting("output-folder", "") if custom else ""
+            self.settings_store.load_setting("output-folder", "") if custom else ""
         )
         volumes = {}
         for file_path in files:
@@ -303,8 +303,8 @@ class QueueManagerMixin:
         # Determine max concurrent conversions based on settings/hardware
         max_concurrent = 1
 
-        gpu_mode = self.settings_manager.load_setting("gpu", "auto")
-        force_copy = self.settings_manager.get_boolean("force-copy-video", False)
+        gpu_mode = self.settings_store.load_setting("gpu", "auto")
+        force_copy = self.settings_store.get_boolean("force-copy-video", False)
 
         if (
             gpu_mode == "auto"
@@ -328,9 +328,9 @@ class QueueManagerMixin:
 
                 # Reorder slots so the best GPU for the target codec comes first
                 try:
-                    from utils.gpu_selector import select_best_gpu
+                    from engine.gpu_selector import select_best_gpu
 
-                    codec = self.settings_manager.load_setting("video-codec", "h264")
+                    codec = self.settings_store.load_setting("video-codec", "h264")
                     best = select_best_gpu(self.detected_gpus, codec)
                     if best:
                         best_type = best["type"]
@@ -428,12 +428,12 @@ class QueueManagerMixin:
             return False
 
         gpus = getattr(self, "detected_gpus", [])
-        codec = self.settings_manager.load_setting("video-codec", "h264")
+        codec = self.settings_store.load_setting("video-codec", "h264")
 
         def warm_then_launch() -> None:
             try:
-                from utils.file_info import launch_probes
-                from utils.gpu_selector import select_best_gpu
+                from engine.file_info import launch_probes
+                from engine.gpu_selector import select_best_gpu
 
                 probes.update(launch_probes(next_file))
                 # Fills the encoder and vainfo caches the launch reads.

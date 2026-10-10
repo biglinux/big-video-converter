@@ -13,8 +13,8 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk
 from ui.audio_dialog import AudioDialog
-from utils.contextual_controls import bind_details_to_switch
-from utils.signal_connections import SignalConnections
+from ui.contextual_controls import bind_details_to_switch
+from ui.signal_connections import SignalConnections
 
 
 def combo(values, selected=0):

@@ -11,8 +11,8 @@ from constants import (
     VIDEO_CODEC_VALUES,
     VIDEO_QUALITY_VALUES,
 )
+from engine.gpu_selector import detect_render_devices, select_best_gpu
 from gi.repository import Adw, Gdk, GLib, Gtk
-from utils.gpu_selector import detect_render_devices, select_best_gpu
 
 _ = gettext.gettext
 
@@ -305,7 +305,7 @@ class SidebarBuilderMixin:
         self.noise_strength_row.add_suffix(self.noise_strength_scale)
         self.noise_strength_row.add_suffix(self._noise_strength_label)
         self.noise_reduction_expander.add_row(self.noise_strength_row)
-        self.tooltip_helper.add_tooltip(
+        self.help_tooltips.add_tooltip(
             self.noise_strength_row, "noise_reduction_strength"
         )
 
@@ -332,7 +332,7 @@ class SidebarBuilderMixin:
         self.gate_expander.add_suffix(self.gate_switch)
         self.gate_expander.set_enable_expansion(False)
         self.gate_expander.set_expanded(False)
-        self.tooltip_helper.add_tooltip(self.gate_expander, "noise_gate")
+        self.help_tooltips.add_tooltip(self.gate_expander, "noise_gate")
 
         self.gate_intensity_row = Adw.ActionRow(title=_("Intensity"))
         self.gate_intensity_adj = Gtk.Adjustment(
@@ -526,7 +526,7 @@ class SidebarBuilderMixin:
         self._copy_row.add_prefix(self._radio_copy)
         self._copy_row.set_activatable_widget(self._radio_copy)
         video_group.add(self._copy_row)
-        self.tooltip_helper.add_tooltip(self._copy_row, "profile_copy")
+        self.help_tooltips.add_tooltip(self._copy_row, "profile_copy")
 
         self._universal_row = Adw.ActionRow(title=_("Universal"))
         self._universal_row.set_subtitle(_("H.264, compatible with all devices"))
@@ -539,21 +539,21 @@ class SidebarBuilderMixin:
         recommended_label.set_valign(Gtk.Align.CENTER)
         self._universal_row.add_suffix(recommended_label)
         video_group.add(self._universal_row)
-        self.tooltip_helper.add_tooltip(self._universal_row, "profile_universal")
+        self.help_tooltips.add_tooltip(self._universal_row, "profile_universal")
 
         self._efficient_row = Adw.ActionRow(title=_("More Efficient"))
         self._efficient_row.set_subtitle(_("H.265, better compression"))
         self._efficient_row.add_prefix(self._radio_smaller)
         self._efficient_row.set_activatable_widget(self._radio_smaller)
         video_group.add(self._efficient_row)
-        self.tooltip_helper.add_tooltip(self._efficient_row, "profile_efficient")
+        self.help_tooltips.add_tooltip(self._efficient_row, "profile_efficient")
 
         self._smallest_row = Adw.ActionRow(title=_("Smaller File"))
         self._smallest_row.set_subtitle(_("AV1, best compression"))
         self._smallest_row.add_prefix(self._radio_quality)
         self._smallest_row.set_activatable_widget(self._radio_quality)
         video_group.add(self._smallest_row)
-        self.tooltip_helper.add_tooltip(self._smallest_row, "profile_smaller")
+        self.help_tooltips.add_tooltip(self._smallest_row, "profile_smaller")
 
         self._customize_row = Adw.ActionRow(title=_("Customize encoding..."))
         self._customize_row.add_prefix(self._radio_custom)
@@ -657,9 +657,7 @@ class SidebarBuilderMixin:
         self.gpu_device_combo.connect(
             "notify::selected",
             lambda w, p: (
-                self.settings_manager.save_setting(
-                    "gpu-device-index", w.get_selected()
-                ),
+                self.settings_store.save_setting("gpu-device-index", w.get_selected()),
                 self._update_customize_subtitle(),
             ),
         )
@@ -667,7 +665,7 @@ class SidebarBuilderMixin:
         # Output Format — save, sync with settings_page, update subtitle
         def _on_sidebar_format_changed(w, p):
             idx = w.get_selected()
-            self.settings_manager.save_setting("output-format-index", idx)
+            self.settings_store.save_setting("output-format-index", idx)
             if (
                 hasattr(self, "settings_page")
                 and self.settings_page.output_format_combo.get_selected() != idx
@@ -711,7 +709,7 @@ class SidebarBuilderMixin:
 
         # Subtitle — save + update sidebar subtitle
         def _on_subtitle_changed(w, p):
-            self.settings_manager.save_setting(
+            self.settings_store.save_setting(
                 "subtitle-extract", SUBTITLE_VALUES.get(w.get_selected(), "embedded")
             )
             self._update_subtitles_subtitle()
@@ -720,7 +718,7 @@ class SidebarBuilderMixin:
 
         def _nr_save_and_preview(key, value):
             """Save NR setting and update MPV preview if active."""
-            self.settings_manager.save_setting(key, value)
+            self.settings_store.save_setting(key, value)
             if hasattr(self, "video_edit_page") and self.video_edit_page:
                 self.video_edit_page._apply_audio_filters()
 
@@ -778,13 +776,13 @@ class SidebarBuilderMixin:
 
     def _save_slider(self, key, value):
         """Write the settings file once the slider has stopped for 300 ms."""
-        self.settings_manager.set_value_soon(key, value)
+        self.settings_store.set_value_soon(key, value)
         if not getattr(self, "_slider_flush_id", 0):
             self._slider_flush_id = GLib.timeout_add(300, self._flush_slider_settings)
 
     def _flush_slider_settings(self):
         self._slider_flush_id = 0
-        self.settings_manager.flush()
+        self.settings_store.flush()
         return GLib.SOURCE_REMOVE
 
     def _load_left_pane_settings(self):
@@ -795,36 +793,36 @@ class SidebarBuilderMixin:
         halfway through cannot leave the user's configuration replaced by the
         widgets' default values.
         """
-        with self.settings_manager.suspend_writes():
+        with self.settings_store.suspend_writes():
             self._load_left_pane_settings_inner()
 
     def _load_left_pane_settings_inner(self):
         """Actual widget restore; never writes settings (see caller)."""
         # GPU
-        gpu_value = self.settings_manager.load_setting("gpu", "auto")
+        gpu_value = self.settings_store.load_setting("gpu", "auto")
         gpu_index = self._find_gpu_index(gpu_value)
         self.gpu_combo.set_selected(gpu_index)
 
         # GPU Device
-        gpu_device_index = self.settings_manager.load_setting("gpu-device-index", 0)
+        gpu_device_index = self.settings_store.load_setting("gpu-device-index", 0)
         if gpu_device_index <= len(self.detected_gpus):
             self.gpu_device_combo.set_selected(gpu_device_index)
 
         # Output Format
-        format_index = self.settings_manager.load_setting("output-format-index", 0)
+        format_index = self.settings_store.load_setting("output-format-index", 0)
         self.output_format_combo.set_selected(format_index)
 
         # Video Quality
-        quality_value = self.settings_manager.load_setting("video-quality", "default")
+        quality_value = self.settings_store.load_setting("video-quality", "default")
         quality_index = self._find_quality_index(quality_value)
         self.video_quality_combo.set_selected(quality_index)
 
         # Video Codec (index 0 = Copy, 1 = H.264, ...)
-        force_copy = self.settings_manager.load_setting("force-copy-video", False)
+        force_copy = self.settings_store.load_setting("force-copy-video", False)
         if force_copy:
             self.video_codec_combo.set_selected(0)
         else:
-            codec_value = self.settings_manager.load_setting("video-codec", "h264")
+            codec_value = self.settings_store.load_setting("video-codec", "h264")
             codec_index = self._find_codec_index(codec_value)
             # Avoid accidentally selecting "Copy" when loading a real codec
             if codec_index == 0:
@@ -834,7 +832,7 @@ class SidebarBuilderMixin:
         self._update_encoding_options_state(force_copy)
 
         # Audio Handling - Use reverse lookup
-        audio_value = self.settings_manager.load_setting("audio-handling", "copy")
+        audio_value = self.settings_store.load_setting("audio-handling", "copy")
         audio_index = 0  # Default
         for index, internal_value in AUDIO_VALUES.items():
             if internal_value == audio_value:
@@ -847,7 +845,7 @@ class SidebarBuilderMixin:
         self._audio_cleaning_row.set_sensitive(audio_will_reencode)
 
         # Subtitle - Use reverse lookup
-        subtitle_value = self.settings_manager.load_setting(
+        subtitle_value = self.settings_store.load_setting(
             "subtitle-extract", "embedded"
         )
         subtitle_index = 0  # Default
@@ -858,59 +856,57 @@ class SidebarBuilderMixin:
         self.subtitle_combo.set_selected(subtitle_index)
 
         # Noise Reduction
-        noise_reduction = self.settings_manager.load_setting("noise-reduction", False)
+        noise_reduction = self.settings_store.load_setting("noise-reduction", False)
         self.noise_reduction_switch.set_active(noise_reduction)
         self.noise_reduction_expander.set_enable_expansion(noise_reduction)
 
         # Noise Reduction Strength
-        noise_strength = self.settings_manager.load_setting(
+        noise_strength = self.settings_store.load_setting(
             "noise-reduction-strength", 1.0
         )
         self.noise_strength_scale.set_value(noise_strength)
 
         self.noise_model_row.set_selected(
-            self.settings_manager.load_setting("noise-model", 0)
+            self.settings_store.load_setting("noise-model", 0)
         )
 
         # Noise Gate
-        gate_enabled = self.settings_manager.load_setting("noise-gate-enabled", False)
+        gate_enabled = self.settings_store.load_setting("noise-gate-enabled", False)
         self.gate_switch.set_active(gate_enabled)
         self.gate_expander.set_enable_expansion(gate_enabled)
         self.gate_intensity_scale.set_value(
-            self.settings_manager.load_setting("noise-gate-intensity", 0.5)
+            self.settings_store.load_setting("noise-gate-intensity", 0.5)
         )
         self.gate_intensity_scale.set_sensitive(gate_enabled)
 
         # Compressor
-        comp_enabled = self.settings_manager.load_setting("compressor-enabled", False)
+        comp_enabled = self.settings_store.load_setting("compressor-enabled", False)
         self.compressor_switch.set_active(comp_enabled)
         self.compressor_expander.set_enable_expansion(comp_enabled)
         self.compressor_intensity_scale.set_value(
-            self.settings_manager.load_setting("compressor-intensity", 1.0)
+            self.settings_store.load_setting("compressor-intensity", 1.0)
         )
         self.compressor_intensity_scale.set_sensitive(comp_enabled)
 
         # HPF
-        hpf_enabled = self.settings_manager.load_setting("hpf-enabled", False)
+        hpf_enabled = self.settings_store.load_setting("hpf-enabled", False)
         self.hpf_row.set_active(hpf_enabled)
         self.hpf_freq_scale.set_value(
-            self.settings_manager.load_setting("hpf-frequency", 80)
+            self.settings_store.load_setting("hpf-frequency", 80)
         )
         self.hpf_freq_row.set_visible(hpf_enabled)
 
         # EQ
-        eq_enabled = self.settings_manager.load_setting("eq-enabled", False)
+        eq_enabled = self.settings_store.load_setting("eq-enabled", False)
         self.eq_switch.set_active(eq_enabled)
         self.eq_expander.set_enable_expansion(eq_enabled)
         self.eq_preset_row.set_sensitive(eq_enabled)
-        eq_preset = self.settings_manager.load_setting("eq-preset", "flat")
+        eq_preset = self.settings_store.load_setting("eq-preset", "flat")
         if eq_preset in self._eq_preset_keys:
             self.eq_preset_row.set_selected(self._eq_preset_keys.index(eq_preset))
 
         # Loudness Normalization
-        normalize_enabled = self.settings_manager.load_setting(
-            "normalize-enabled", False
-        )
+        normalize_enabled = self.settings_store.load_setting("normalize-enabled", False)
         self.normalize_row.set_active(normalize_enabled)
 
         # Show tooltips — state loaded via tooltip_action in _setup_actions
@@ -1093,7 +1089,7 @@ class SidebarBuilderMixin:
     def _update_size_subtitle(self):
         from ui.size_dialog import size_summary
 
-        self._size_row.set_subtitle(size_summary(self.settings_manager))
+        self._size_row.set_subtitle(size_summary(self.settings_store))
         if getattr(self, "conversion_page", None) is not None:
             self.conversion_page.refresh_recipe_summaries()
 
@@ -1110,11 +1106,11 @@ class SidebarBuilderMixin:
 
     def _save_gpu_setting(self, index):
         if index in GPU_VALUES:
-            self.settings_manager.save_setting("gpu", GPU_VALUES[index])
+            self.settings_store.save_setting("gpu", GPU_VALUES[index])
 
     def _save_quality_setting(self, index):
         if index in VIDEO_QUALITY_VALUES:
-            self.settings_manager.save_setting(
+            self.settings_store.save_setting(
                 "video-quality", VIDEO_QUALITY_VALUES[index]
             )
 
@@ -1124,8 +1120,8 @@ class SidebarBuilderMixin:
             return
         value = VIDEO_CODEC_VALUES[index]
         is_copy = value == "copy"
-        self.settings_manager.save_setting("video-codec", value)
-        self.settings_manager.save_setting("force-copy-video", is_copy)
+        self.settings_store.save_setting("video-codec", value)
+        self.settings_store.save_setting("force-copy-video", is_copy)
         # Keep hidden data-holder in sync
         if self.force_copy_video_check.get_active() != is_copy:
             self.force_copy_video_check.set_active(is_copy)
@@ -1150,7 +1146,7 @@ class SidebarBuilderMixin:
     def _on_force_copy_toggled(self, switch, param):
         """Sync force-copy data-holder with codec combo."""
         is_active = switch.get_active()
-        self.settings_manager.save_setting("force-copy-video", is_active)
+        self.settings_store.save_setting("force-copy-video", is_active)
         # Sync codec combo: select "Copy" (0) or fallback to H.264 (1)
         if is_active and self.video_codec_combo.get_selected() != 0:
             self.video_codec_combo.set_selected(0)
@@ -1161,7 +1157,7 @@ class SidebarBuilderMixin:
     def _on_audio_handling_changed(self, combo, _pspec):
         """Change audio applicability without erasing cleaning preferences."""
         selected = combo.get_selected()
-        self.settings_manager.save_setting(
+        self.settings_store.save_setting(
             "audio-handling", AUDIO_VALUES.get(selected, "copy")
         )
         audio_will_reencode = selected == 1  # index 1 = "reencode"

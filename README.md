@@ -66,7 +66,7 @@ python3 -m pytest -q tests
 
 Tests generate their own media. The suite starts its own hidden Xvfb display and D-Bus session bus, so test windows never open on your desktop and never reach a converter you have running; set `BVC_TESTS_KEEP_SESSION=1` only inside an already isolated session. Without Xvfb the GTK tests are skipped. The [regression workflow](.github/workflows/backend-tests.yml) lists the CI dependencies and commands.
 
-The GUI entry point is `main.py` under `usr/share/big-video-converter`. Queue scheduling prepares each job; `ui/conversion_page.py` resolves its settings and destination; `utils/conversion.py` supervises the shell converter under `usr/bin`. The supervisor publishes successful results and reports completion to the queue.
+The GUI entry point is `main.py` under `usr/share/big-video-converter`. Queue scheduling prepares each job; `ui/conversion_page.py` resolves its settings and destination; `engine/conversion.py` supervises the shell converter under `usr/bin`. The supervisor publishes successful results and reports completion to the queue.
 
 Thumbnails are made off the GTK thread, and shutdown waits for workers and conversions to finish before it leaves the main loop.
 

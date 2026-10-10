@@ -12,7 +12,8 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from constants import AUDIO_VALUES
 from gi.repository import Adw, Gtk
-from utils.signal_connections import SignalConnections
+
+from ui.signal_connections import SignalConnections
 
 _ = gettext.gettext
 

@@ -4,7 +4,7 @@ import math
 from itertools import pairwise
 
 import pytest
-from utils.size_target import (
+from engine.size_target import (
     INDEX_BYTES_PER_PACKET,
     PART_RESERVE,
     SizeTargetError,
@@ -130,7 +130,7 @@ def test_targets():
 
 
 def _context(source, target, strategy="auto", **extra):
-    from utils.size_target import prepare_size_job
+    from engine.size_target import prepare_size_job
 
     context = {
         "size_target": {"bytes": target, "strategy": strategy},
@@ -194,7 +194,7 @@ def test_parts_are_copied_into_a_folder_named_with_percent(media, tmp_path):
     """The segment muxer reads its output path as a template."""
     import threading
 
-    from utils.segment_batch import _copy_parts, _split_to_size
+    from engine.segment_batch import _copy_parts, _split_to_size
 
     work = tmp_path / "100% done"
     work.mkdir()

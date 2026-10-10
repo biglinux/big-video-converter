@@ -42,11 +42,11 @@ def get_render_mode_setting():
     """The preview renderer the user chose: 'auto', 'opengl' or 'software'.
 
     Read straight from the settings file: the choice must be known before the
-    first window exists, which is earlier than the SettingsManager.
+    first window exists, which is earlier than the SettingsStore.
     """
     import json
 
-    from utils.settings_manager import config_dir
+    from engine.settings_store import config_dir
 
     try:
         with open(

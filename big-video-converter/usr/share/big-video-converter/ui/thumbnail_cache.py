@@ -24,9 +24,8 @@ from pathlib import Path
 import gi
 
 gi.require_version("GdkPixbuf", "2.0")
+from engine.ffmpeg_path import get_ffmpeg_executable
 from gi.repository import GdkPixbuf, GLib
-
-from utils.ffmpeg_path import get_ffmpeg_executable
 
 logger = logging.getLogger(__name__)
 _SHARED_SIZES = ("xx-large", "x-large", "large", "normal")

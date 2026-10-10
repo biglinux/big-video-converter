@@ -16,7 +16,7 @@ import threading
 from array import array
 from collections import OrderedDict, deque
 
-from utils.media_validation import terminate_process_group
+from engine.media_validation import terminate_process_group
 
 logger = logging.getLogger(__name__)
 

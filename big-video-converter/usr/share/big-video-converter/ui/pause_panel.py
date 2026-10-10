@@ -11,9 +11,9 @@ import shutil
 import weakref
 from typing import NamedTuple
 
+from engine.ffmpeg_path import get_ffmpeg_executable
+from engine.pauses import PAUSE_LENGTHS, STEP, PauseFinder, find_pauses
 from gi.repository import Adw, Gtk
-from utils.ffmpeg_path import get_ffmpeg_executable
-from utils.pauses import PAUSE_LENGTHS, STEP, PauseFinder, find_pauses
 
 _ = gettext.gettext
 

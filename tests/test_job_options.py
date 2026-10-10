@@ -1,7 +1,7 @@
 """Per-video choices must resolve independently of the general recipe."""
 
 import pytest
-from utils.job_options import freeze
+from engine.job_options import freeze
 
 
 @pytest.mark.parametrize(
@@ -49,7 +49,7 @@ def test_invalid_custom_dimensions_cannot_start_a_job(width):
 
 
 def test_segments_arg_parses_ordered_ranges():
-    from utils.job_options import parse_segments_arg
+    from engine.job_options import parse_segments_arg
 
     assert parse_segments_arg("1-3,3-5") == [
         {"start": 1.0, "end": 3.0},
@@ -66,7 +66,7 @@ def test_segments_arg_parses_ordered_ranges():
     ["", "5", "3-1", "2-2", "-1-4", "a-b", "1-inf", "nan-3", "10-12,1-3", "1-5,4-6"],
 )
 def test_segments_arg_rejects_malformed_ranges(text):
-    from utils.job_options import parse_segments_arg
+    from engine.job_options import parse_segments_arg
 
     with pytest.raises(ValueError):
         parse_segments_arg(text)
@@ -97,7 +97,7 @@ def test_an_invalid_size_limit_falls_back_to_the_general_one(metadata):
 
 
 def test_effects_are_normalized_and_count_as_picture_edits():
-    from utils.job_options import has_picture_edits, normalize_metadata
+    from engine.job_options import has_picture_edits, normalize_metadata
 
     clean = normalize_metadata(
         {"denoise": "extreme", "sharpen": 3, "stabilize": "yes", "effect_file": "x\0y"}
@@ -121,7 +121,7 @@ def test_effects_are_normalized_and_count_as_picture_edits():
 
 
 def test_a_join_shows_overlapping_or_unordered_cuts_once():
-    from utils.job_options import joined_cuts
+    from engine.job_options import joined_cuts
 
     cuts = [
         {"start": 5, "end": 8},

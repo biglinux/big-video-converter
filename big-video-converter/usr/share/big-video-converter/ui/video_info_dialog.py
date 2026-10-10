@@ -9,11 +9,11 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
+from engine.file_info import get_video_file_info
 from gi.repository import Adw, Gdk, GLib, Gtk
-from utils.file_info import get_video_file_info
-from utils.signal_connections import SignalConnections
 
 from ui.progress_page import format_size, launch_file
+from ui.signal_connections import SignalConnections
 
 logger = logging.getLogger(__name__)
 

@@ -5,14 +5,14 @@ import weakref
 from constants import get_tooltips
 
 
-class TooltipHelper:
-    def __init__(self, settings_manager):
-        self.settings_manager = settings_manager
+class HelpTooltips:
+    def __init__(self, settings_store):
+        self.settings_store = settings_store
         self.tooltips = get_tooltips()
         self.widgets = weakref.WeakKeyDictionary()
 
     def is_enabled(self):
-        return self.settings_manager.load_setting("show-tooltips", True)
+        return self.settings_store.load_setting("show-tooltips", True)
 
     def add_tooltip(self, widget, tooltip_key) -> None:
         """big_gtk_kit.tooltip draws the card; GTK keeps the accessible text."""

@@ -14,9 +14,9 @@ from collections import deque
 
 from gi.repository import GLib
 
-from utils.ffmpeg_options import parse_additional_options
-from utils.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
-from utils.media_validation import (
+from engine.ffmpeg_options import parse_additional_options
+from engine.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
+from engine.media_validation import (
     ConversionResult,
     FileIdentity,
     OutputDurationMismatch,

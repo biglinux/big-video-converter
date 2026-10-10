@@ -14,30 +14,30 @@ import logging
 import re
 
 from constants import CONVERT_SCRIPT_PATH
-from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
-from utils.conversion import run_with_progress_dialog
-from utils.ffmpeg_options import validate_additional_options
-from utils.job_options import (
+from engine.conversion import run_with_progress_dialog
+from engine.ffmpeg_options import validate_additional_options
+from engine.job_options import (
     RESOLUTION_MODES,
     freeze,
     has_picture_edits,
     normalize_metadata,
     snapshot_preset,
 )
-from utils.presets import CODEC_NAMES, PresetError, output_container
-from utils.segment_batch import start_segment_batch
-from utils.signal_connections import SignalConnections
-from utils.size_target import (
+from engine.presets import CODEC_NAMES, PresetError, output_container
+from engine.segment_batch import start_segment_batch
+from engine.size_target import (
     TARGETS,
     describe_plan,
     prepare_size_job,
     shown_size,
     target_bytes,
 )
-from utils.thumbnail_cache import ThumbnailManager
-from utils.video_settings import CropError, SettingsOverride, get_ffmpeg_filter_string
+from engine.video_settings import CropError, SettingsOverride, get_ffmpeg_filter_string
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango
 
 from ui.progress_page import format_clock, format_size, launch_file
+from ui.signal_connections import SignalConnections
+from ui.thumbnail_cache import ThumbnailManager
 
 logger = logging.getLogger(__name__)
 
@@ -344,7 +344,7 @@ class FileQueueRow(Gtk.ListBoxRow):
                 summary = None
             GLib.idle_add(_apply_summary, row_ref, expected, summary)
 
-        from utils.file_info import get_queue_summary
+        from engine.file_info import get_queue_summary
 
         self._summary_future = pool.submit(get_queue_summary, expected)
         self._summary_future.add_done_callback(done)
@@ -594,14 +594,14 @@ class ConversionPage:
         )
         self.delete_original_check.connect(
             "notify::active",
-            lambda w, p: self.app.settings_manager.save_setting(
+            lambda w, p: self.app.settings_store.save_setting(
                 "delete-original", w.get_active()
             ),
         )
 
     def show_output_settings(self):
         """Show the saved destination and delete-original choice."""
-        settings = self.app.settings_manager
+        settings = self.app.settings_store
         output_folder = settings.load_setting("output-folder", "")
         delete_original = settings.load_setting("delete-original", False)
         # Check the stored dict directly: a missing key must be told apart from
@@ -635,7 +635,7 @@ class ConversionPage:
             return  # dismissed
         if folder and folder.get_path():
             self.output_folder_entry.set_text(folder.get_path())
-            self.app.settings_manager.save_setting("output-folder", folder.get_path())
+            self.app.settings_store.save_setting("output-folder", folder.get_path())
 
     def on_queue_item_activated(self, listbox, row) -> None:
         """Open the selected video without conflating row and button actions."""
@@ -841,7 +841,7 @@ class ConversionPage:
         instead of copying does, and it must land on the accelerator the user
         actually chose rather than falling back to the processor.
         """
-        settings = settings or self.app.settings_manager
+        settings = settings or self.app.settings_store
         env = {}
 
         if gpu_override:
@@ -873,7 +873,7 @@ class ConversionPage:
                 and hasattr(self.app, "detected_gpus")
                 and len(self.app.detected_gpus) > 1
             ):
-                from utils.gpu_selector import select_best_gpu
+                from engine.gpu_selector import select_best_gpu
 
                 codec = settings.load_setting("video-codec", "h264")
                 best = select_best_gpu(self.app.detected_gpus, codec)
@@ -913,8 +913,8 @@ class ConversionPage:
                 gpu_override = None
             if preset_snapshot is None and active_preset is not None:
                 preset_snapshot = snapshot_preset(active_preset)
-            resolved = freeze(self.app.settings_manager.settings, file_metadata)
-            settings = SettingsOverride(self.app.settings_manager, resolved["settings"])
+            resolved = freeze(self.app.settings_store.settings, file_metadata)
+            settings = SettingsOverride(self.app.settings_store, resolved["settings"])
         except (OSError, ValueError, PresetError) as error:
             self.app.show_error_dialog(str(error))
             return False
@@ -1205,7 +1205,7 @@ class ConversionPage:
         # Re-encoding uses the settings copy mode had skipped, the accelerator
         # included: choosing "re-encode" is not a request to fall back to the
         # processor. Offered when MP4 refuses the copied tracks, and taken by
-        # a trim whose cut is not on a keyframe (utils/segment_batch.py).
+        # a trim whose cut is not on a keyframe (engine/segment_batch.py).
         reencode_env = None
         if force_copy_video:
             reencode_env = dict(env_vars)
@@ -1328,12 +1328,12 @@ class ConversionPage:
         for path in files:
             try:
                 resolved = freeze(
-                    self.app.settings_manager.settings,
+                    self.app.settings_store.settings,
                     deepcopy(self.file_metadata.get(path, {})),
                 )
             except (OSError, ValueError, PresetError):
                 continue  # The job reports its own recipe error.
-            settings = SettingsOverride(self.app.settings_manager, resolved["settings"])
+            settings = SettingsOverride(self.app.settings_store, resolved["settings"])
             accepted, message = validate_additional_options(
                 settings.load_setting("additional-options", "")
             )
@@ -1519,7 +1519,7 @@ class ConversionPage:
         """Persist the destination folder while "In one folder" is selected."""
         if self.folder_combo.get_selected() != 1:
             return
-        self.app.settings_manager.save_setting("output-folder", entry.get_text())
+        self.app.settings_store.save_setting("output-folder", entry.get_text())
 
     def _on_folder_type_changed(self, combo, param):
         selected = combo.get_selected()
@@ -1527,7 +1527,7 @@ class ConversionPage:
 
         self.folder_entry_box.set_visible(use_custom_folder)
 
-        self.app.settings_manager.save_setting(
+        self.app.settings_store.save_setting(
             "use-custom-output-folder", use_custom_folder
         )
 
@@ -1559,7 +1559,7 @@ class ConversionPage:
 
     def file_recipe_summary(self, metadata) -> str:
         metadata = normalize_metadata(metadata)
-        settings = freeze(self.app.settings_manager.settings, metadata)["settings"]
+        settings = freeze(self.app.settings_store.settings, metadata)["settings"]
         preset = metadata.get("preset_snapshot") or {}
         name = preset.get("name") or _("General settings")
         resolution = settings.get("video-resolution") or _("Original resolution")
@@ -1576,7 +1576,7 @@ class ConversionPage:
     def on_file_options_by_path(self, file_path: str) -> None:
         """Choose a preset and resolution for one queue item."""
 
-        from utils.presets import list_presets
+        from engine.presets import list_presets
 
         metadata = normalize_metadata(self.file_metadata.get(file_path))
         try:
@@ -1739,7 +1739,7 @@ class ConversionPage:
         def refresh_size_result(temporary):
             size_generation[0] += 1
             generation = size_generation[0]
-            settings = freeze(self.app.settings_manager.settings, temporary)["settings"]
+            settings = freeze(self.app.settings_store.settings, temporary)["settings"]
             if not settings.get("size-target"):
                 size_result.set_visible(False)
                 return
@@ -1748,7 +1748,7 @@ class ConversionPage:
             output_ext = "." + output_container(settings.get("output-format-index", 0))
             context = {
                 "size_target": self._size_target(
-                    SettingsOverride(self.app.settings_manager, settings)
+                    SettingsOverride(self.app.settings_store, settings)
                 ),
                 "input_file": file_path,
                 "output_ext": output_ext,

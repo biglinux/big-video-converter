@@ -55,7 +55,7 @@ class DependencyChecker:
     """FFmpeg for conversions and the preview's python-mpv and PyOpenGL."""
 
     def __init__(self):
-        from utils.ffmpeg_path import get_ffmpeg_executable
+        from engine.ffmpeg_path import get_ffmpeg_executable
 
         self.distro = get_distro_info()
         # Resolve the same way conversions do, so a bundled or jellyfin build

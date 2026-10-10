@@ -3,9 +3,9 @@ import subprocess
 import threading
 
 import pytest
-from utils import media_validation as mv
-from utils.subtitle_processor import (
-    SubtitleProcessor,
+from engine import media_validation as mv
+from engine.subtitle_clipping import (
+    SubtitleClipper,
     _clip,
     _format_timecode,
     _milliseconds,
@@ -41,7 +41,7 @@ def test_srt_rounding_carries_to_next_minute_and_renumbers(tmp_path):
 def test_same_language_tracks_have_distinct_sidecars_and_one_extraction(
     media, tmp_path, monkeypatch
 ):
-    processor = SubtitleProcessor(
+    clipper = SubtitleClipper(
         str(media["multi"]),
         str(tmp_path),
         "joined.mkv",
@@ -50,7 +50,7 @@ def test_same_language_tracks_have_distinct_sidecars_and_one_extraction(
         "extract",
     )
     calls = []
-    import utils.subtitle_processor as module
+    import engine.subtitle_clipping as module
 
     run = module.subprocess.Popen
 
@@ -60,7 +60,7 @@ def test_same_language_tracks_have_distinct_sidecars_and_one_extraction(
         return run(cmd, *args, **kwargs)
 
     monkeypatch.setattr(module.subprocess, "Popen", record)
-    processor.process()
+    clipper.run()
     files = sorted(tmp_path.glob("joined.por*.srt"))
     assert [path.name for path in files] == ["joined.por.forced.srt", "joined.por.srt"]
     assert len(calls) == 2
@@ -83,7 +83,7 @@ def test_same_language_tracks_have_distinct_sidecars_and_one_extraction(
 def test_container_bound_subtitle_expectation(destination, expected):
     """A bitmap track the script skips in MP4 must not be expected in the
     output, or a good conversion is reported as failed."""
-    from utils.conversion import _expected_subtitles
+    from engine.conversion import _expected_subtitles
 
     data = {
         "streams": [
@@ -256,7 +256,7 @@ def test_sampled_windows_stay_bounded_for_long_media():
     ],
 )
 def test_packet_clip_uses_only_parsed_timestamps(options, limit):
-    from utils.subtitle_timing import clipping_options
+    from engine.subtitle_timing import clipping_options
 
     end, filters = clipping_options(options)
     assert end == limit and "noise=amount=0:" in filters and "setts=pts=" in filters
@@ -266,7 +266,7 @@ def test_packet_clip_uses_only_parsed_timestamps(options, limit):
     "value", ["nan", "inf", "-1", "00:99:00", "1+2", "0');movie=evil(", ""]
 )
 def test_timestamp_expressions_are_not_accepted(value):
-    from utils.subtitle_timing import seconds
+    from engine.subtitle_timing import seconds
 
     with pytest.raises(ValueError):
         seconds(value)
@@ -381,7 +381,7 @@ def test_cancel_during_packet_count_reaps_probe(tmp_path, monkeypatch):
 def test_existing_segment_sidecar_is_kept_and_the_track_numbered(media, tmp_path):
     existing = tmp_path / "joined.por.srt"
     existing.write_text("Manually corrected subtitles", encoding="utf-8")
-    processor = SubtitleProcessor(
+    clipper = SubtitleClipper(
         str(media["multi"]),
         str(tmp_path),
         "joined.mkv",
@@ -389,9 +389,9 @@ def test_existing_segment_sidecar_is_kept_and_the_track_numbered(media, tmp_path
         str(tmp_path),
         "extract",
     )
-    processor.process()
+    clipper.run()
     assert existing.read_text() == "Manually corrected subtitles"
-    assert sorted(path.rpartition("/")[2] for path in processor.created_files) == [
+    assert sorted(path.rpartition("/")[2] for path in clipper.created_files) == [
         "joined.por.forced.srt",
         "joined.por2.srt",
     ]
@@ -416,8 +416,8 @@ def test_cancel_ends_a_helper_at_once():
 
 
 def test_left_out_picture_subtitles_block_the_batch_deletion(tmp_path):
+    from engine.segment_batch import _left_out_subtitles
     from test_cli import pgs_source
-    from utils.segment_batch import _left_out_subtitles
 
     source = str(pgs_source(tmp_path))
     embedded, extract, none = (
@@ -433,7 +433,7 @@ def test_left_out_picture_subtitles_block_the_batch_deletion(tmp_path):
 def test_a_track_that_fails_to_extract_is_left_out_and_the_rest_kept(
     media, tmp_path, monkeypatch
 ):
-    processor = SubtitleProcessor(
+    clipper = SubtitleClipper(
         str(media["multi"]),
         str(tmp_path),
         "joined.mkv",
@@ -441,13 +441,13 @@ def test_a_track_that_fails_to_extract_is_left_out_and_the_rest_kept(
         str(tmp_path),
         "extract",
     )
-    extract = processor._extract_segment_subtitle
-    first = processor._get_subtitle_streams()[0]["index"]
+    extract = clipper._extract_segment_subtitle
+    first = clipper._get_subtitle_streams()[0]["index"]
     monkeypatch.setattr(
-        processor,
+        clipper,
         "_extract_segment_subtitle",
         lambda path, index: index != first and extract(path, index),
     )
-    processor.process()
-    assert processor.failed == [first]
-    assert len(processor.created_files) == 1
+    clipper.run()
+    assert clipper.failed == [first]
+    assert len(clipper.created_files) == 1

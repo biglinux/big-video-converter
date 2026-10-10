@@ -13,11 +13,11 @@ import pytest
 gi = pytest.importorskip("gi")
 gi.require_version("Adw", "1")
 from conftest import CLI, fake_ffmpeg, pump_until
+from engine import conversion
+from engine.media_validation import ConversionResult
+from engine.segment_batch import start_segment_batch
 from gi.repository import GLib
-from queue_manager import QueueManagerMixin
-from utils import conversion
-from utils.media_validation import ConversionResult
-from utils.segment_batch import start_segment_batch
+from queue_runner import QueueRunnerMixin
 
 
 class Widget:
@@ -407,7 +407,7 @@ def test_updates_are_bounded_and_one_shot():
     assert not updates.lines
 
 
-class QueueApp(QueueManagerMixin):
+class QueueApp(QueueRunnerMixin):
     def __init__(self):
         self.logger = logging.getLogger("queue-test")
         self.conversions_lock = threading.Lock()
@@ -496,7 +496,7 @@ def test_real_segment_batch_has_one_parent_completion(media, tmp_path, cli_env, 
     assert not list(tmp_path.glob(".bvc-segments-*"))
     if mode == "join":
         # One encode of both cuts: no keyframe pre-roll or priming gap at the seam.
-        from utils.media_validation import media_duration, probe_media
+        from engine.media_validation import media_duration, probe_media
 
         data = probe_media(outputs[0])
         assert (
@@ -508,7 +508,7 @@ def test_real_segment_batch_has_one_parent_completion(media, tmp_path, cli_env, 
 def test_first_failed_segment_prevents_following_stages(
     media, tmp_path, cli_env, monkeypatch
 ):
-    import utils.segment_batch as module
+    import engine.segment_batch as module
 
     calls = []
 
@@ -533,7 +533,7 @@ def test_first_failed_segment_prevents_following_stages(
 def test_failed_segment_batch_shows_the_friendly_reason(
     media, tmp_path, cli_env, monkeypatch
 ):
-    import utils.segment_batch as module
+    import engine.segment_batch as module
 
     raw = "ERROR: Input file is corrupted or not a valid video file: /x/broken.mp4"
     monkeypatch.setattr(
@@ -555,7 +555,7 @@ def test_failed_segment_batch_shows_the_friendly_reason(
 
 
 def test_cancel_between_segments_stops_the_batch(media, tmp_path, cli_env, monkeypatch):
-    import utils.segment_batch as module
+    import engine.segment_batch as module
 
     calls = []
     context = batch_context(media, tmp_path, cli_env, "join")
@@ -578,7 +578,7 @@ def test_cancel_between_segments_stops_the_batch(media, tmp_path, cli_env, monke
 def test_subtitle_only_batch_never_converts_or_removes_video(
     media, tmp_path, cli_env, mode, monkeypatch
 ):
-    import utils.segment_batch as module
+    import engine.segment_batch as module
 
     def forbidden(*a, **k):
         raise AssertionError("Subtitle extraction must not encode/remove video")
@@ -640,9 +640,9 @@ def test_subtitle_pass_never_drives_the_bar_or_claims_software_encoding(
 
 
 def test_frozen_preset_survives_gpu_fallback(media, tmp_path, cli_env):
+    from engine.conversion import run_with_progress_dialog
+    from engine.media_validation import probe_media
     from test_presets import MINIMAL
-    from utils.conversion import run_with_progress_dialog
-    from utils.media_validation import probe_media
 
     wrapper = fake_ffmpeg(
         tmp_path,
@@ -809,15 +809,15 @@ def test_job_runs_in_a_private_directory_removed_with_it(
 def test_failed_subtitle_extraction_keeps_the_parts_and_the_original(
     media, tmp_path, cli_env, monkeypatch
 ):
-    import utils.segment_batch as module
-    from utils.subtitle_processor import SubtitleProcessor
+    import engine.segment_batch as module
+    from engine.subtitle_clipping import SubtitleClipper
 
     def forbidden(*a, **k):
         raise AssertionError("an original missing subtitles must be kept")
 
     monkeypatch.setattr(module, "remove_original", forbidden)
     monkeypatch.setattr(
-        SubtitleProcessor, "_extract_segment_subtitle", lambda *a, **k: False
+        SubtitleClipper, "_extract_segment_subtitle", lambda *a, **k: False
     )
     app = App()
     page = SimpleNamespace(app=app, _format_time_ffmpeg=lambda v: f"{v:.6f}")

@@ -1,4 +1,4 @@
-from utils.crop_geometry import centered_crop
+from engine.crop_geometry import centered_crop
 
 
 def output_size(width, height, margins):
@@ -111,7 +111,7 @@ def test_dragging_the_visible_edge_crops_the_matching_source_edge():
 
 def test_crop_that_cannot_be_applied_is_an_error_not_an_uncropped_video():
     import pytest
-    from utils.video_settings import CropError, get_ffmpeg_filter_string
+    from engine.video_settings import CropError, get_ffmpeg_filter_string
 
     class Settings:
         def __init__(self, **values):

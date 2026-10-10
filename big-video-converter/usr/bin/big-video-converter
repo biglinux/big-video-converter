@@ -209,13 +209,13 @@ if [[ -z ${ffprobe_executable:-} ]]; then
 	fi
 fi
 
-# A preset file (TOML, read by utils/presets.py) fills in whatever the caller
+# A preset file (TOML, read by engine/presets.py) fills in whatever the caller
 # left unset and prepends its own FFmpeg options; an explicit variable always
 # wins, so the GUI's widgets stay the truth when both are present. The helper
 # validates the file and answers NUL-separated, never as shell text.
-preset_helper="$script_dir/../share/big-video-converter/utils/presets.py"
+preset_reader="$script_dir/../share/big-video-converter/engine/presets.py"
 if [[ -n ${preset_file:-} ]]; then
-	python3 "$preset_helper" --validate "$preset_file" >/dev/null || exit 2
+	python3 "$preset_reader" --validate "$preset_file" >/dev/null || exit 2
 	while IFS= read -r -d '' pair; do
 		name=${pair%%=*}
 		value=${pair#*=}
@@ -225,7 +225,7 @@ if [[ -n ${preset_file:-} ]]; then
 		elif [[ ${BVC_PRESET_SETTINGS_RESOLVED:-0} != 1 && -z ${!name:-} ]]; then
 			printf -v "$name" '%s' "$value"
 		fi
-	done < <(python3 "$preset_helper" --env "$preset_file")
+	done < <(python3 "$preset_reader" --env "$preset_file")
 	echo "Preset: $preset_file"
 fi
 
@@ -240,7 +240,7 @@ append_preset_encoder_args() { # <encoder array name>
 	done
 	[[ -n $name && $name != copy ]] || return 0
 	local -a extra=()
-	if ! python3 "$preset_helper" --encoder-args "$preset_file" "$name" >"$output_stage_dir/encoder-args"; then
+	if ! python3 "$preset_reader" --encoder-args "$preset_file" "$name" >"$output_stage_dir/encoder-args"; then
 		echo "ERROR: Cannot read the encoder arguments of $preset_file" >&2
 		exit 2
 	fi
@@ -691,7 +691,7 @@ output_stage_dir=$(mktemp -d -- "${output_file%/*}/.bvc-XXXXXXXXXX") || exit 1
 printf 'Job workspace: %s\n' "$output_stage_dir"
 staged_output="$output_stage_dir/video.${output_file##*.}"
 
-option_parser="$script_dir/../share/big-video-converter/utils/ffmpeg_options.py"
+option_parser="$script_dir/../share/big-video-converter/engine/ffmpeg_options.py"
 if ! python3 "$option_parser" --null "${options:-}" >"$output_stage_dir/options"; then
 	echo "ERROR: Invalid additional FFmpeg options" >&2
 	exit 2
@@ -777,7 +777,7 @@ subtitle_input_options=()
 subtitle_packet_options=()
 defer_subtitles=false
 if [[ -n $subtitle_codec_info && ($subtitle_extract != none || $only_extract_subtitles == 1) ]]; then
-	if ! python3 "$script_dir/../share/big-video-converter/utils/subtitle_timing.py" "${options:-}" >"$output_stage_dir/subtitle-timing"; then
+	if ! python3 "$script_dir/../share/big-video-converter/engine/subtitle_timing.py" "${options:-}" >"$output_stage_dir/subtitle-timing"; then
 		echo "ERROR: Invalid subtitle trim interval" >&2
 		exit 2
 	fi
@@ -1281,7 +1281,7 @@ use_video_bitrate() { # <encoder array name>
 
 gpu=${gpu/auto/}
 # The GPU to encode on: the vendor asked for, else the first the system
-# reports, in the order NVIDIA, Intel, AMD (utils/gpu_selector.py ranks
+# reports, in the order NVIDIA, Intel, AMD (engine/gpu_selector.py ranks
 # encoder throughput the same way).
 gpu_vendor=""
 gpu_devices=${gpu:+VGA $gpu}

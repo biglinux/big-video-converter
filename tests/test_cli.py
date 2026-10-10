@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from conftest import APP, CLI, fake_ffmpeg, group_members, media_command, wait_until
 from constants import NOISE_MODELS, noise_reduction_filter
-from utils.media_validation import media_duration, probe_media, stream_count
+from engine.media_validation import media_duration, probe_media, stream_count
 
 
 @pytest.mark.parametrize(
@@ -757,7 +757,7 @@ def test_stabilization_analyses_first_in_any_folder(media, tmp_path, run_cli):
 
 
 def test_effect_file_path_survives_the_filter_graph(media, tmp_path, run_cli):
-    from utils.video_settings import effect_file_filter
+    from engine.video_settings import effect_file_filter
 
     folder = tmp_path / "look ,:'[];\\ ç"
     folder.mkdir()

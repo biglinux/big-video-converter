@@ -1,6 +1,6 @@
 """Translatable texts of the bundled presets. GENERATED, do not edit.
 
-Regenerate with:  python3 utils/presets.py --strings > presets/bundled_strings.py
+Regenerate with:  python3 engine/presets.py --strings > presets/bundled_strings.py
 """
 import gettext
 

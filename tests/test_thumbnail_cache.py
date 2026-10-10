@@ -6,7 +6,7 @@ import threading
 import time
 import zlib
 
-from utils.thumbnail_cache import FileIdentity, ThumbnailManager
+from ui.thumbnail_cache import FileIdentity, ThumbnailManager
 
 PNG = b"\x89PNG\r\n\x1a\n"
 
@@ -145,7 +145,7 @@ def test_shutdown_reaps_active_thumbnail_process(tmp_path, monkeypatch):
     manager = ThumbnailManager(cache_home=tmp_path, max_workers=1)
     started = threading.Event()
     processes = []
-    from utils import thumbnail_cache
+    from ui import thumbnail_cache
 
     original_popen = thumbnail_cache.subprocess.Popen
 

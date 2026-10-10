@@ -173,7 +173,7 @@ class Preset:
     def size_limit_text(self) -> str:
         if not self.size.get("target"):
             return ""
-        from utils.size_target import TARGETS
+        from engine.size_target import TARGETS
 
         return _("up to {size}").format(
             size=next(t[3] for t in TARGETS if t[0] == self.size["target"])
@@ -191,7 +191,7 @@ def bundled_dir() -> str:
 
 
 def user_dir() -> str:
-    # The same rule as settings_manager.config_dir; this module also runs as
+    # The same rule as settings_store.config_dir; this module also runs as
     # the script's helper, outside the application's package.
     home = os.environ.get("XDG_CONFIG_HOME", "")
     if not os.path.isabs(home):
@@ -283,7 +283,7 @@ def _boolean(table: dict, section: str, key: str):
 
 def _options_text(table: dict, section: str, key: str) -> str:
     """Free FFmpeg options go through the same grammar as the GUI field."""
-    from utils.ffmpeg_options import parse_additional_options
+    from engine.ffmpeg_options import parse_additional_options
 
     text = _text(table, section, key)
     if not text:
@@ -295,7 +295,7 @@ def _options_text(table: dict, section: str, key: str) -> str:
 
 
 def _encoder_args(name: str, table) -> list[str]:
-    from utils.ffmpeg_options import parse_additional_options
+    from engine.ffmpeg_options import parse_additional_options
 
     if not isinstance(table, dict):
         raise PresetError(
@@ -479,7 +479,7 @@ def validate_preset(
             _("[ffmpeg] has unknown key(s): {0}").format(", ".join(sorted(unknown)))
         )
 
-    from utils.size_target import TARGETS
+    from engine.size_target import TARGETS
 
     size_in = _table(data, "size")
     size: dict = {}
@@ -532,7 +532,7 @@ def validate_preset(
 
 def preset_file_access(preset: Preset) -> list[str]:
     """Settings in a validated preset that may reach files or the network."""
-    from utils.ffmpeg_options import file_access_settings
+    from engine.ffmpeg_options import file_access_settings
 
     texts = [
         *preset.ffmpeg.values(),
@@ -713,7 +713,7 @@ def _toml_string(value: str) -> str:
 
 def _new_file_mode() -> int:
     """media_validation.new_file_mode; the converter script runs this module
-    on its own, without the utils package."""
+    on its own, without the engine package."""
     try:
         with open("/proc/self/status", encoding="ascii") as status:
             for line in status:
@@ -846,7 +846,7 @@ def preset_environment(preset: Preset) -> dict[str, str]:
     if options:
         env["preset_options"] = options
     if "target" in preset.size:
-        from utils.size_target import target_bytes
+        from engine.size_target import target_bytes
 
         env["size_limit"] = str(target_bytes(preset.size["target"]))
     return env
@@ -992,8 +992,8 @@ def build_ai_prompt(
     ffmpeg_version: str = "unknown",
     language: str | None = None,
 ) -> str:
-    from utils.ffmpeg_options import ALLOWED_FFMPEG_FLAGS
-    from utils.size_target import TARGETS
+    from engine.ffmpeg_options import ALLOWED_FFMPEG_FLAGS
+    from engine.size_target import TARGETS
 
     request = (
         (request or "").strip()
@@ -1034,7 +1034,7 @@ def bundled_strings_source() -> str:
     lines = [
         '"""Translatable texts of the bundled presets. GENERATED, do not edit.',
         "",
-        "Regenerate with:  python3 utils/presets.py --strings > presets/bundled_strings.py",
+        "Regenerate with:  python3 engine/presets.py --strings > presets/bundled_strings.py",
         '"""',
         "import gettext",
         "",

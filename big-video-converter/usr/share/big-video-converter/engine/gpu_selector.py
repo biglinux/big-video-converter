@@ -5,7 +5,7 @@ import os
 import subprocess
 from functools import cache, lru_cache
 
-from utils.ffmpeg_path import get_ffmpeg_executable
+from engine.ffmpeg_path import get_ffmpeg_executable
 
 logger = logging.getLogger(__name__)
 

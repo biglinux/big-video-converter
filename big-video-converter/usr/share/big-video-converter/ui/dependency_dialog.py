@@ -12,7 +12,8 @@ gi.require_version("Vte", "3.91")
 import gettext
 
 from gi.repository import Adw, GLib, Gtk, Pango, Vte
-from utils.signal_connections import SignalConnections
+
+from ui.signal_connections import SignalConnections
 
 _ = gettext.gettext
 

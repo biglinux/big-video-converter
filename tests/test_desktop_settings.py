@@ -121,7 +121,7 @@ def test_real_application_opens_with_no_gnome_schemas(tmp_path):
         from main import VideoConverterApp
         assert VideoConverterApp._window_buttons_on_left(None) is False
         application = VideoConverterApp()
-        application.settings_manager.save_setting("show-welcome-dialog", False)
+        application.settings_store.save_setting("show-welcome-dialog", False)
         assert application.register(None)
         application.activate()
         try:
@@ -181,9 +181,9 @@ def test_exit_waits_for_conversion_cleanup(tmp_path, exit_action):
         sys.path.insert(0, sys.argv[1])
         from main import VideoConverterApp
         from gi.repository import GLib
-        from utils.conversion import run_with_progress_dialog
+        from engine.conversion import run_with_progress_dialog
         app = VideoConverterApp()
-        app.settings_manager.save_setting('show-welcome-dialog', False)
+        app.settings_store.save_setting('show-welcome-dialog', False)
         rows = []
         def activate(app):
             run_with_progress_dialog(app,
@@ -251,7 +251,7 @@ def test_exit_waits_for_conversion_cleanup(tmp_path, exit_action):
 def test_dependency_transaction_is_visible_and_interactive(base):
     import shlex
 
-    from utils.dependency_checker import DependencyChecker
+    from engine.dependency_checker import DependencyChecker
 
     checker = DependencyChecker.__new__(DependencyChecker)
     checker.distro = {"base": base}
@@ -277,7 +277,7 @@ def test_dependency_transaction_is_visible_and_interactive(base):
 def test_only_an_ffmpeg_free_owner_needs_replacement(
     monkeypatch, returncode, owner, available
 ):
-    from utils import dependency_checker
+    from engine import dependency_checker
 
     checker = dependency_checker.DependencyChecker.__new__(
         dependency_checker.DependencyChecker
@@ -297,7 +297,7 @@ def test_only_an_ffmpeg_free_owner_needs_replacement(
 
 def test_the_preview_needs_the_python_modules_not_the_mpv_command(monkeypatch):
     """The editor plays through python-mpv and PyOpenGL; the mpv program is unused."""
-    from utils import dependency_checker
+    from engine import dependency_checker
 
     real_import = dependency_checker.importlib.import_module
 
@@ -325,7 +325,7 @@ def _fake_drm(tmp_path, nodes):
 
 
 def test_render_nodes_are_named_by_their_own_pci_device(tmp_path):
-    from utils.gpu_selector import detect_render_devices
+    from engine.gpu_selector import detect_render_devices
 
     drm = _fake_drm(
         tmp_path,
@@ -376,7 +376,7 @@ def test_render_nodes_are_named_by_their_own_pci_device(tmp_path):
     "failure", [FileNotFoundError("lspci"), subprocess.TimeoutExpired("lspci", 2), None]
 )
 def test_render_nodes_fall_back_to_the_vendor_without_lspci(tmp_path, failure):
-    from utils.gpu_selector import detect_render_devices
+    from engine.gpu_selector import detect_render_devices
 
     drm = _fake_drm(
         tmp_path,
@@ -407,7 +407,7 @@ def test_every_integration_offers_the_same_video_files():
     import configparser
 
     import constants
-    from file_handler import FileHandlerMixin
+    from file_intake import FileIntakeMixin
 
     share = APP_DIR.parent
     tree = ast.parse(
@@ -423,7 +423,7 @@ def test_every_integration_offers_the_same_video_files():
     )
     assert ast.literal_eval(literal) == constants.VIDEO_FILE_EXTENSIONS
     for suffix in (".mpg", ".3gp", ".ogv", ".m2ts", ".mts"):
-        assert FileHandlerMixin.is_valid_video_file(None, "clip" + suffix.upper())
+        assert FileIntakeMixin.is_valid_video_file(None, "clip" + suffix.upper())
     for path in [
         share / "kio/servicemenus/big-video-converter.desktop",
         share / "applications/br.com.biglinux.converter.desktop",
@@ -454,14 +454,14 @@ def test_every_integration_offers_the_same_video_files():
     ],
 )
 def test_network_locations_are_escaped(parts, uri):
-    from file_handler import network_uri
+    from file_intake import network_uri
 
     assert network_uri(*parts) == uri
 
 
 @pytest.mark.parametrize("port", ["http", "0", "70000"])
 def test_an_invalid_port_is_refused(port):
-    from file_handler import network_uri
+    from file_intake import network_uri
 
     with pytest.raises(ValueError):
         network_uri("sftp", "server", "", port, "/")
