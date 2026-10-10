@@ -1584,7 +1584,8 @@ attempt_conversion() {
 
 	if [[ -n "$gpu_device" ]]; then
 		init_vaapi=(-init_hw_device "vaapi=va:$gpu_device")
-		init_vulkan=(-init_hw_device "vulkan=vk:$gpu_device")
+		# Vulkan names a device by index or name; a render node goes through DRM.
+		init_vulkan=(-init_hw_device "drm=dr:$gpu_device" -init_hw_device vulkan=vk@dr)
 	fi
 	# FFmpeg names a CUDA device by its index, never by a /dev/dri node.
 	[[ -z $cuda_index ]] || init_nvidia=(-init_hw_device "cuda=cu:$cuda_index")

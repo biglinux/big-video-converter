@@ -448,6 +448,31 @@ def test_qsv_opens_the_chosen_intel_device(media, tmp_path, run_cli):
     )
 
 
+def test_vulkan_opens_the_chosen_device_through_drm(media, tmp_path, run_cli):
+    wrapper = fake_ffmpeg(
+        tmp_path,
+        "no-gpu",
+        'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done',
+    )
+    result = run_cli(
+        media["video"],
+        tmp_path / "out.mkv",
+        gpu="vulkan",
+        gpu_device="/dev/dri/renderD129",
+        force_software="",
+        gpu_smoke_test="0",
+        ffmpeg_executable=wrapper,
+        options="-t 0.4 -threads 1",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    commands = hardware_commands(result.stdout, "h264_vulkan")
+    assert commands, result.stdout
+    assert all(
+        device_options(argv) == ["drm=dr:/dev/dri/renderD129", "vulkan=vk@dr"]
+        for argv in commands
+    )
+
+
 @pytest.mark.parametrize("target", ["group", "script"])
 def test_cancel_during_gpu_check_ends_the_job_at_once(media, tmp_path, cli_env, target):
     """The GPU check runs in the job's process group and does not delay the
