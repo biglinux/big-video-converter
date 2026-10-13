@@ -462,7 +462,10 @@ def test_first_eq_change_keeps_other_bands(app, monkeypatch):
     bands = [
         w
         for w in widgets(dialog)
-        if isinstance(w, Gtk.Scale) and w.get_orientation() == Gtk.Orientation.VERTICAL
+        if isinstance(w, Gtk.Scale)
+        and w.get_orientation() == Gtk.Orientation.VERTICAL
+        # The bands are in dB; the cleaning strength beside them runs 0 to 1.
+        and w.get_adjustment().get_upper() > 1
     ]
     assert len(bands) == 10
     before = [w.get_value() for w in bands]

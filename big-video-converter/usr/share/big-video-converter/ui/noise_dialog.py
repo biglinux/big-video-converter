@@ -207,7 +207,7 @@ def show_noise_dialog(parent_window, app) -> bool:
         )
     )
 
-    # Strength slider, synced with the sidebar.
+    # The cleaning's settings beside its strength, as in the BigLinux players.
     strength_adj = Gtk.Adjustment(
         value=app.noise_strength_adj.get_value(),
         lower=0.0,
@@ -215,7 +215,27 @@ def show_noise_dialog(parent_window, app) -> bool:
         step_increment=0.05,
         page_increment=0.1,
     )
-    card1.append(_slider_row(_("Strength"), strength_adj))
+    strength_scale = Gtk.Scale(
+        orientation=Gtk.Orientation.VERTICAL,
+        adjustment=strength_adj,
+        inverted=True,
+        draw_value=False,
+        vexpand=True,
+        halign=Gtk.Align.CENTER,
+        height_request=180,
+    )
+    strength_scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Strength")])
+    strength_value = Gtk.Label(css_classes=["numeric", "dim-label"])
+    strength_column = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+    strength_column.append(Gtk.Label(label=_("Strength"), css_classes=["heading"]))
+    strength_column.append(strength_scale)
+    strength_column.append(strength_value)
+
+    def _show_strength(adj, _pspec=None):
+        strength_value.set_text(f"{adj.get_value() * 100:.0f}%")
+
+    _show_strength(strength_adj)
+    strength_adj.connect("notify::value", _show_strength)
 
     def _sync_strength_to_sidebar(adj, _pspec):
         v = adj.get_value()
@@ -232,63 +252,45 @@ def show_noise_dialog(parent_window, app) -> bool:
         app.noise_strength_adj, "notify::value", _sync_strength_from_sidebar
     )
 
-    # AI Model dropdown
-    model_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
-    model_box.set_margin_start(16)
-    model_box.set_margin_end(16)
-    model_box.set_margin_bottom(12)
+    settings = Gtk.Box(
+        orientation=Gtk.Orientation.VERTICAL,
+        spacing=10,
+        hexpand=True,
+        valign=Gtk.Align.CENTER,
+    )
+    settings.append(
+        Gtk.Label(label=_("Cleaning quality"), xalign=0, css_classes=["heading"])
+    )
+    # DeepFilterNet3 and DPDFNet-2, named by what the choice changes.
+    model_group = Adw.ToggleGroup(homogeneous=True, hexpand=True)
+    for label in (_("Faster"), _("Better, slower")):
+        model_group.add(Adw.Toggle(label=label))
+    model_group.update_property([Gtk.AccessibleProperty.LABEL], [_("Cleaning quality")])
+    model_group.set_active(app.noise_model_row.get_selected())
+    settings.append(model_group)
 
-    model_lbl = Gtk.Label(label=_("AI Model"))
-    model_lbl.set_xalign(0)
-    model_lbl.set_size_request(120, -1)
-    model_box.append(model_lbl)
-
-    model_dd = Gtk.DropDown()
-    model_list = Gtk.StringList()
-    for item in app._noise_model_list:
-        model_list.append(item)
-    model_dd.set_model(model_list)
-    model_dd.set_selected(app.noise_model_row.get_selected())
-    model_dd.set_hexpand(True)
-    model_box.append(model_dd)
-    card1.append(model_box)
-
-    def _sync_model_to_sidebar(dd, _pspec):
-        sel = dd.get_selected()
+    def _sync_model_to_sidebar(group, _pspec):
+        sel = group.get_active()
         if app.noise_model_row.get_selected() != sel:
             app.noise_model_row.set_selected(sel)
 
     def _sync_model_from_sidebar(row, _pspec):
         sel = row.get_selected()
-        if model_dd.get_selected() != sel:
-            model_dd.set_selected(sel)
+        if model_group.get_active() != sel:
+            model_group.set_active(sel)
 
-    # What the chosen model is for, or the package it still needs: the
-    # conversion runs without a missing model, so say so before it does.
-    model_note = Gtk.Label(xalign=0, wrap=True)
-    model_note.add_css_class("caption")
-    model_note.set_margin_start(16)
-    model_note.set_margin_end(16)
-    model_note.set_margin_bottom(12)
-    card1.append(model_note)
+    # The package a missing model still needs: the conversion runs without
+    # it, so say so before it does.
+    model_note = Gtk.Label(xalign=0, wrap=True, css_classes=["caption", "warning"])
+    settings.append(model_note)
 
     def _show_model_note(model):
         plugin, package = NOISE_MODELS[model][0], NOISE_MODELS[model][4]
-        installed = os.path.exists(plugin)
-        if not installed:
-            text = _("Unavailable: install {package}").format(package=package)
-        elif model == 0:
-            text = _("For speech. Uses less processing.")
-        else:
-            text = _("For speech. Higher quality, more processing.")
-        model_note.set_text(text)
-        for css_class, wanted in (("warning", not installed), ("dim-label", installed)):
-            if wanted:
-                model_note.add_css_class(css_class)
-            else:
-                model_note.remove_css_class(css_class)
+        model_note.set_text(_("Unavailable: install {package}").format(package=package))
+        model_note.set_visible(not os.path.exists(plugin))
 
-    _show_model_note(model_dd.get_selected())
+    _show_model_note(model_group.get_active())
+    settings.append(Gtk.Separator())
 
     # The denoiser mutes what its voice detector does not take for a voice:
     # music, noise and the silence between words. Saved at once, like the
@@ -313,12 +315,9 @@ def show_noise_dialog(parent_window, app) -> bool:
         [Gtk.AccessibleProperty.LABEL], [voice_label.get_label()]
     )
     voice_row = Gtk.Box(spacing=12)
-    voice_row.set_margin_start(16)
-    voice_row.set_margin_end(16)
-    voice_row.set_margin_bottom(12)
     voice_row.append(voice_label)
     voice_row.append(voice_only)
-    card1.append(voice_row)
+    settings.append(voice_row)
     level_names = (
         _("Very sensitive"),
         _("Sensitive"),
@@ -333,14 +332,27 @@ def show_noise_dialog(parent_window, app) -> bool:
         step_increment=1,
         page_increment=1,
     )
-    level_row = _slider_row(
-        _("Voice detection"), level_adj, lambda v: level_names[round(v) - 1]
-    )
-    # Its name says the level, so the label column fits it.
-    level_row.get_last_child().set_size_request(110, -1)
-    card1.append(level_row)
+    level_name = Gtk.Label(css_classes=["dim-label"])
+    level_heading = Gtk.Box(spacing=12)
+    level_heading.append(Gtk.Label(label=_("Voice detection"), xalign=0, hexpand=True))
+    level_heading.append(level_name)
+    level_scale = Gtk.Scale(adjustment=level_adj, round_digits=0, draw_value=False)
+    for level in range(1, 6):
+        level_scale.add_mark(level, Gtk.PositionType.BOTTOM, None)
+    level_scale.update_property([Gtk.AccessibleProperty.LABEL], [_("Voice detection")])
+    level_row = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+    level_row.append(level_heading)
+    level_row.append(level_scale)
+    settings.append(level_row)
+
+    body = Gtk.Box(spacing=16, margin_start=16, margin_end=16, margin_bottom=16)
+    body.append(strength_column)
+    body.append(Gtk.Separator(orientation=Gtk.Orientation.VERTICAL))
+    body.append(settings)
+    card1.append(body)
 
     def _show_voice_only():
+        level_name.set_text(level_names[round(level_adj.get_value()) - 1])
         voice_row.set_sensitive(nr_switch.get_active())
         level_row.set_sensitive(nr_switch.get_active() and voice_only.get_active())
 
@@ -354,9 +366,11 @@ def show_noise_dialog(parent_window, app) -> bool:
     voice_only.connect("notify::active", _on_voice_only)
     level_adj.connect("value-changed", _on_voice_only)
     nr_switch.connect("notify::active", lambda *_a: _show_voice_only())
-    model_dd.connect("notify::selected", _sync_model_to_sidebar)
+    model_group.connect("notify::active", _sync_model_to_sidebar)
     connections.connect(
-        model_dd, "notify::selected", lambda dd, _p: _show_model_note(dd.get_selected())
+        model_group,
+        "notify::active",
+        lambda group, _p: _show_model_note(group.get_active()),
     )
     connections.connect(
         app.noise_model_row, "notify::selected", _sync_model_from_sidebar

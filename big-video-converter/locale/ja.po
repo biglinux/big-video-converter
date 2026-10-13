@@ -2114,12 +2114,6 @@ msgstr "音声とノイズを分離するためにニューラルネットワー
 msgid "Unavailable: install {package}"
 msgstr "利用できません: {package} をインストールしてください"
 
-msgid "For speech. Uses less processing."
-msgstr "音声向け。処理負荷が少なめです。"
-
-msgid "For speech. Higher quality, more processing."
-msgstr "音声向け。より高品質ですが、処理負荷が大きくなります。"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/noise_dialog.py, line: 348
 msgid "Silence Low Sounds"
@@ -5218,6 +5212,15 @@ msgstr "プリセットのファイルが削除されます: {0}"
 msgid "{0} subtitle track could not be extracted and was left out."
 msgid_plural "{0} subtitle tracks could not be extracted and were left out."
 msgstr[0] "{0} 個の字幕トラックを抽出できなかったため、除外しました。"
+
+msgid "Cleaning quality"
+msgstr "ノイズ除去の品質"
+
+msgid "Faster"
+msgstr "高速"
+
+msgid "Better, slower"
+msgstr "高品質（低速）"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
