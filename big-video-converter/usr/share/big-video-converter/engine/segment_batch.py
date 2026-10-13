@@ -30,18 +30,16 @@ from engine.media_validation import (
 from engine.size_target import describe_plan, keyframe_cuts, probe_packets
 
 _ = gettext.gettext
+ngettext = gettext.ngettext
+logger = logging.getLogger(__name__)
 
 
 class SegmentBatchError(RuntimeError):
     """A batch failure whose message is already a sentence for the user."""
 
 
-ngettext = gettext.ngettext
-logger = logging.getLogger(__name__)
-
-
 def _publish_available(staged: str, desired: str) -> str:
-    """Reserve the final name with link(), not an exists()/overwrite sequence."""
+    """Publish under ``desired`` or the first free ``name_N``, never over a file."""
     base, extension = os.path.splitext(desired)
     for counter in range(10000):
         candidate = desired if counter == 0 else f"{base}_{counter}{extension}"

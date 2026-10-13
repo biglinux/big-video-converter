@@ -11,8 +11,6 @@ import hashlib
 import logging
 import os
 import queue
-import signal
-import subprocess
 import tempfile
 import threading
 import time
@@ -25,6 +23,7 @@ import gi
 
 gi.require_version("GdkPixbuf", "2.0")
 from engine.ffmpeg_path import get_ffmpeg_executable
+from engine.media_validation import run_cancellable
 from gi.repository import GdkPixbuf, GLib
 
 logger = logging.getLogger(__name__)
@@ -83,7 +82,6 @@ class _Job:
     identity: FileIdentity | None = None
     callbacks: dict[str, Callable[[str | None], None]] = field(default_factory=dict)
     cancel_event: threading.Event = field(default_factory=threading.Event)
-    process: subprocess.Popen | None = None
 
 
 class ThumbnailCache:
@@ -281,48 +279,13 @@ class ThumbnailCache:
             temporary.unlink(missing_ok=True)
 
     def _supervise(self, job: _Job, command: list[str]) -> bool:
-        process = subprocess.Popen(
-            command,
-            stdin=subprocess.DEVNULL,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True,
-        )
-        with self._lock:
-            job.process = process
-        deadline = time.monotonic() + self._timeout
         try:
-            while process.poll() is None:
-                if job.cancel_event.wait(0.05) or time.monotonic() >= deadline:
-                    self._terminate(process)
-                    return False
-            return process.returncode == 0
-        finally:
-            with self._lock:
-                if job.process is process:
-                    job.process = None
-            if process.poll() is None:
-                self._terminate(process)
-
-    @staticmethod
-    def _terminate(process) -> None:
-        if process is None or process.poll() is not None:
-            return
-        try:
-            os.killpg(process.pid, signal.SIGTERM)
-        except (ProcessLookupError, PermissionError):
-            try:
-                process.terminate()
-            except ProcessLookupError:
-                return
-        try:
-            process.wait(timeout=0.5)
-        except subprocess.TimeoutExpired:
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except (ProcessLookupError, PermissionError):
-                process.kill()
-            process.wait(timeout=1)
+            process = run_cancellable(
+                command, job.cancel_event, timeout=self._timeout, task="thumbnailing"
+            )
+        except (InterruptedError, TimeoutError):
+            return False
+        return process.returncode == 0
 
     def _prune_once(self) -> None:
         with self._lock:

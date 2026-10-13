@@ -1,6 +1,7 @@
 import hashlib
 import os
 import struct
+import subprocess
 import sys
 import threading
 import time
@@ -145,9 +146,7 @@ def test_shutdown_reaps_active_thumbnail_process(tmp_path, monkeypatch):
     manager = ThumbnailCache(cache_home=tmp_path, max_workers=1)
     started = threading.Event()
     processes = []
-    from ui import thumbnail_cache
-
-    original_popen = thumbnail_cache.subprocess.Popen
+    original_popen = subprocess.Popen
 
     def launch(command, **kwargs):
         process = original_popen(
@@ -157,7 +156,7 @@ def test_shutdown_reaps_active_thumbnail_process(tmp_path, monkeypatch):
         started.set()
         return process
 
-    monkeypatch.setattr(thumbnail_cache.subprocess, "Popen", launch)
+    monkeypatch.setattr(subprocess, "Popen", launch)
     values = []
     manager.request(video, values.append)
     wait(started)

@@ -453,7 +453,8 @@ class PresetsDialog:
                 return
             try:
                 with open(gfile.get_path(), "r", encoding="utf-8") as handle:
-                    self.import_text(handle.read())
+                    # One character over the limit is enough to refuse it.
+                    self.import_text(handle.read(preset_store._MAX_TEXT + 1))
             except (OSError, UnicodeDecodeError) as error:
                 self._toast(str(error))
 

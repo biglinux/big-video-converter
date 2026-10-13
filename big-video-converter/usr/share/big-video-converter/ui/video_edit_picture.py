@@ -245,16 +245,6 @@ class VideoEditPictureMixin:
         self.ui.update_source_hdr(mode)
         self._apply_video_effects()
 
-    def on_reset_effects(self) -> None:
-        self.denoise, self.sharpen, self.stabilize, self.effect_file = (
-            "off",
-            "off",
-            False,
-            "",
-        )
-        self._save_file_metadata()
-        self._update_ui_from_metadata()
-
     def _apply_video_effects(self) -> None:
         """Show the effects in the preview; stabilization needs the whole
         file analyzed first, so only the conversion applies it."""

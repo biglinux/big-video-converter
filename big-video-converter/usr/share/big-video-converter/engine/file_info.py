@@ -1,3 +1,4 @@
+import functools
 import gettext
 import json
 import logging
@@ -44,6 +45,7 @@ class _ProbeFailed(Exception):
 def _cached_probe(func):
     """Memoize a probe by file identity; failures are not cached."""
 
+    @functools.wraps(func)
     def wrapper(file_path: str, *args, **kwargs):
         identity = _file_identity(file_path)
         key = (func.__name__, identity)
@@ -62,9 +64,6 @@ def _cached_probe(func):
                 _PROBE_CACHE[key] = value
         return value
 
-    wrapper.__name__ = func.__name__
-    wrapper.__doc__ = func.__doc__
-    wrapper.__wrapped__ = func
     return wrapper
 
 
