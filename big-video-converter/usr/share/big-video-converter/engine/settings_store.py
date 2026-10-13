@@ -32,7 +32,6 @@ class SettingsStore:
         "output-folder": "",
         "delete-original": False,
         "skip-trash": False,
-        "show-tooltips": True,
         # Window state
         "window-width": 1200,
         "window-height": 720,
@@ -533,7 +532,6 @@ SettingsStore._PROFILE_EXCLUDE_KEYS.update(
         "gpu",
         "gpu-partial",
         "use-custom-output-folder",
-        "show-tooltips",
         "show-welcome-dialog",
         "video-preview-render-mode",
     }

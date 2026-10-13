@@ -152,12 +152,23 @@ def test_reset_all_resets_the_queue_footer(app):
     page = app.conversion_page
     page.delete_original_check.set_active(True)
     page.folder_combo.set_selected(1)
-    app.tooltip_action.activate(None)
     assert app.settings_store.load_setting("delete-original", False)
     app.settings_page._reset_all_settings()
     assert not page.delete_original_check.get_active()
     assert page.folder_combo.get_selected() == 0
-    assert app.tooltip_action.get_state().get_boolean()
+
+
+def test_window_state_saves_once(app, monkeypatch):
+    store = app.settings_store
+    writes = []
+    monkeypatch.setattr(store, "save_to_disk", lambda: writes.append(1) or True)
+    monkeypatch.setattr(app.window, "is_maximized", lambda: False)
+    monkeypatch.setattr(app.window, "get_width", lambda: 1234)
+    monkeypatch.setattr(app.window, "get_height", lambda: 789)
+    app._save_window_state()
+    store.flush()
+    assert writes == [1]
+    assert store.get_value("window-width") == 1234
 
 
 def test_only_inactive_window_gets_notified(app, monkeypatch):

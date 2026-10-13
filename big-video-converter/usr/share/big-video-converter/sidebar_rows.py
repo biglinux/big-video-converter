@@ -148,8 +148,6 @@ class SidebarRowsMixin:
         normalize_enabled = self.settings_store.load_setting("normalize-enabled", False)
         self.normalize_row.set_active(normalize_enabled)
 
-        # The tooltip setting is loaded by tooltip_action in _setup_actions.
-
         self._select_profile_radio(self._detect_current_profile())
         self._update_customize_subtitle()
         self._update_presets_subtitle()

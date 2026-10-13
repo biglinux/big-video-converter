@@ -1,25 +1,12 @@
-"""Help tooltips by key, shown as the shared BigLinux card while enabled."""
-
-import weakref
+"""Help tooltips by key, shown as the shared BigLinux card."""
 
 from constants import get_tooltips
 
 
 class HelpTooltips:
-    def __init__(self, settings_store):
-        self.settings_store = settings_store
+    def __init__(self):
         self.tooltips = get_tooltips()
-        self.widgets = weakref.WeakKeyDictionary()
-
-    def is_enabled(self):
-        return self.settings_store.load_setting("show-tooltips", True)
 
     def add_tooltip(self, widget, tooltip_key) -> None:
         """big_gtk_kit.tooltip draws the card; GTK keeps the accessible text."""
-        self.widgets[widget] = self.tooltips.get(tooltip_key) or None
-        widget.set_tooltip_text(self.widgets[widget] if self.is_enabled() else None)
-
-    def refresh(self) -> None:
-        enabled = self.is_enabled()
-        for widget, text in list(self.widgets.items()):
-            widget.set_tooltip_text(text if enabled else None)
+        widget.set_tooltip_text(self.tooltips.get(tooltip_key) or None)

@@ -133,7 +133,7 @@ class VideoConverterApp(
             "last-accessed-directory", os.path.expanduser("~")
         )
 
-        self.help_tooltips = HelpTooltips(self.settings_store)
+        self.help_tooltips = HelpTooltips()
 
         self.logger = logging.getLogger(__name__)
 
@@ -185,16 +185,6 @@ class VideoConverterApp(
             action = Gio.SimpleAction.new(name, None)
             action.connect("activate", callback)
             self.add_action(action)
-
-        # Stateful toggle for tooltips (used in hamburger menu)
-        show_tooltips = self.settings_store.load_setting("show-tooltips", True)
-        self.tooltip_action = Gio.SimpleAction.new_stateful(
-            "toggle-tooltips",
-            None,
-            GLib.Variant.new_boolean(show_tooltips),
-        )
-        self.tooltip_action.connect("activate", self._on_tooltip_action_activated)
-        self.add_action(self.tooltip_action)
 
         # Deleting is a preference of the person: a queue row's delete action
         # and deleting originals after a conversion both follow it.
@@ -396,6 +386,8 @@ class VideoConverterApp(
         if getattr(self, "_quitting", False):
             return
         self._quitting = True
+        if getattr(self, "window", None) is not None and self.window.get_realized():
+            self._save_window_state()
         self.settings_store.flush()
         if getattr(self, "conversion_page", None) is not None:
             self.conversion_page.thumbnail_cache.shutdown()
@@ -405,8 +397,6 @@ class VideoConverterApp(
             self.progress_page._do_cancel_all()
         if getattr(self, "conversion_page", None) is not None:
             self.conversion_page.close_decision_dialogs()
-        if getattr(self, "window", None) is not None and self.window.get_realized():
-            self._save_window_state()
         if self._finish_quit():
             GLib.timeout_add(100, self._finish_quit)
 
@@ -423,19 +413,15 @@ class VideoConverterApp(
         return GLib.SOURCE_REMOVE
 
     def _save_window_state(self):
-        """Save current window size, position and maximized state"""
+        """Keep the window's size and sidebar width for the flush at quit."""
+        store = self.settings_store
         is_maximized = self.window.is_maximized()
-        self.settings_store.save_setting("window-maximized", is_maximized)
-
-        # Only save size if not maximized
+        store.set_value_soon("window-maximized", is_maximized)
         if not is_maximized:
-            width = self.window.get_width()
-            height = self.window.get_height()
-            self.settings_store.save_setting("window-width", width)
-            self.settings_store.save_setting("window-height", height)
-
+            store.set_value_soon("window-width", self.window.get_width())
+            store.set_value_soon("window-height", self.window.get_height())
         if self.split_view.get_show_sidebar():
-            self.settings_store.save_setting(
+            store.set_value_soon(
                 "sidebar-position", self.split_view.get_sidebar().get_width()
             )
 
@@ -506,13 +492,6 @@ class VideoConverterApp(
         self.settings_store.save_setting("skip-trash", skip)
         if hasattr(self, "conversion_page"):
             self.conversion_page.show_delete_mode()
-
-    def _on_tooltip_action_activated(self, action, _param):
-        current = action.get_state().get_boolean()
-        new_state = not current
-        action.set_state(GLib.Variant.new_boolean(new_state))
-        self.settings_store.save_setting("show-tooltips", new_state)
-        self.help_tooltips.refresh()
 
     # UI Navigation
     def show_queue_view(self) -> None:

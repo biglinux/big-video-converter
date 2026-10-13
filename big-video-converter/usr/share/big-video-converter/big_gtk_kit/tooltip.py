@@ -44,6 +44,9 @@ _ENGINE = "_big_gtk_kit_tooltip_engine"
 _SILENCED = "_big_gtk_kit_tooltip_silenced"
 
 _installed = False
+# Off, no card shows; the widgets keep their tooltip text, which screen
+# readers read as the description.
+_enabled = True
 
 
 def install():
@@ -84,6 +87,13 @@ def install():
     for window in Gtk.Window.list_toplevels():
         if window.get_realized():
             _attach(window)
+
+
+def set_enabled(enabled):
+    """Show the cards, or none, as the person chose; a card on screen goes at
+    the next pointer move."""
+    global _enabled
+    _enabled = enabled
 
 
 def _on_realize(widget):
@@ -178,6 +188,9 @@ class _Engine:
         if owner is not None:
             # Before GTK's own hover timer can fire for it.
             _silence(owner)
+        if not _enabled:
+            self.hide()
+            return
         if owner is self.owner_widget():
             return
         browsing = self.shown or (
@@ -206,7 +219,7 @@ class _Engine:
         return GLib.SOURCE_REMOVE
 
     def show(self, instant):
-        if not self._present(instant):
+        if not _enabled or not self._present(instant):
             self._popdown()
 
     def _present(self, instant):

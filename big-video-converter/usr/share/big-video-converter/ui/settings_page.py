@@ -663,9 +663,6 @@ class SettingsPage:
         self._load_settings()
         self.app._load_left_pane_settings()
         self.app.conversion_page.show_output_settings()
-        show_tooltips = self.settings_store.load_setting("show-tooltips", True)
-        self.app.tooltip_action.set_state(GLib.Variant.new_boolean(show_tooltips))
-        self.app.help_tooltips.refresh()
 
         force_copy = self.settings_store.load_setting("force-copy-video", False)
         self.update_for_force_copy_state(force_copy)
