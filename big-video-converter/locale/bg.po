@@ -748,9 +748,6 @@ msgstr "Файлът не е намерен"
 msgid "Edit video"
 msgstr "Редактиране на видео"
 
-msgid "Changes apply only to the selected video"
-msgstr "Промените се прилагат само към избраното видео"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1359,9 +1356,6 @@ msgstr "Допълнително"
 msgid "SW Decode"
 msgstr "Софтуерно декодиране"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Готови рецепти: YouTube, Instagram, монтаж…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1596,9 +1590,6 @@ msgstr "Избор на изходна папка"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Изтриване на оригиналните файлове"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Оригиналите се запазват, докато всички резултати от преобразуването не преминат проверката"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2852,24 +2843,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Настройте обработката на субтитрите при преобразуване."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Обработка на субтитри"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Изберете как да се добавят субтитрите към резултата. „Вградени“ ги запазва във видеофайла. „Извличане в .srt“ създава отделни файлове със субтитри."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Само извличане на субтитри"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Пропуснете конвертирането на видео изцяло и само извлечете субтитрите в .srt файлове."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -4006,12 +3982,6 @@ msgstr "Сила на звука"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Видеото се копира без прекодиране. Изрязването, настройването, завъртането или добавянето на ефекти към изображението ще прекодират това видео."
 
-msgid "Image"
-msgstr "Изображение"
-
-msgid "Reset image adjustments"
-msgstr "Нулиране на настройките на изображението"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -4044,16 +4014,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Стандартни (SDR)"
-
-msgid "Orientation"
-msgstr "Ориентация"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Нулиране на трансформацията"
 
 msgid "Rotation"
 msgstr "Завъртане"
@@ -4125,9 +4085,6 @@ msgstr "Изберете как да се запазват маркиранит�
 msgid "Effects"
 msgstr "Ефекти"
 
-msgid "Reset effects"
-msgstr "Нулиране на ефектите"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -4168,10 +4125,6 @@ msgstr "Избор на цветови стил или шейдър"
 
 msgid "Looks and shaders"
 msgstr "Цветови стилове и шейдъри"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Възстановяване на стандартната стойност на {setting}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -5132,9 +5085,6 @@ msgstr "Неуспешно стартиране на Big Video Converter: {0}"
 msgid "Remove pauses"
 msgstr "Премахване на паузите"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "За реч. Паузите се търсят в гласа, изчистен от DPDFNet."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Отнема около минута за всеки час звук."
 
@@ -5410,3 +5360,86 @@ msgstr[1] "{0} писти със субтитри не можаха да бъд�
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Предварителен преглед (мс)"
+
+msgid "The output holds only part of the original"
+msgstr "Резултатът съдържа само част от оригинала"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Оригиналът е преместен в кошчето след проверка на резултата"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Обновете dpdfnet-native, за да търсите паузи."
+
+msgid "Video mode"
+msgstr "Режим на видеото"
+
+msgid "How the video is encoded."
+msgstr "Как се кодира видеото."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Кодек, битрейт и канали…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Изключено при само извличане на субтитри"
+
+msgid "Not used with Fast Copy"
+msgstr "Не се използва при бързо копиране"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Оригиналите се изтриват окончателно, без кошчето, едва след като всички резултати от преобразуването преминат проверката"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Оригиналите се преместват в кошчето едва след като всички резултати от преобразуването преминат проверката"
+
+msgid "Move this video to the Trash?"
+msgstr "Преместване на това видео в кошчето?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "Файлът „{}“ ще бъде преместен в кошчето."
+
+msgid "Move to Trash"
+msgstr "Преместване в кошчето"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Видеото не можа да се премести в кошчето: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Изтриване без използване на кошчето"
+
+msgid "Audio only when a voice is detected"
+msgstr "Звук само при откриване на глас"
+
+msgid "Very sensitive"
+msgstr "Много чувствително"
+
+msgid "Sensitive"
+msgstr "Чувствително"
+
+msgid "Normal"
+msgstr "Нормално"
+
+msgid "Strict"
+msgstr "Строго"
+
+msgid "Very strict"
+msgstr "Много строго"
+
+msgid "Voice detection"
+msgstr "Откриване на глас"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Чувствителното откриване запазва тихите или необичайни гласове и пропуска повече шум и музика; строгото премахва повече музика и може да отреже тихи думи."
+
+msgid "On"
+msgstr "Вкл."
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} активен"
+msgstr[1] "{count} активни"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "За реч: паузите се търсят, след като фоновият шум бъде премахнат."

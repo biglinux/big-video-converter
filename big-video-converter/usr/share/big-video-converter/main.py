@@ -7,6 +7,7 @@ import os
 import sys
 import threading
 from collections import deque
+from copy import deepcopy
 
 import gi
 
@@ -18,6 +19,7 @@ import gettext
 
 import big_gtk_kit
 from audio_settings import AudioSettingsMixin
+from big_gtk_kit.hover_cards import CardLayer
 from constants import APP_ID
 from engine.dependency_checker import DependencyChecker
 from engine.job_options import SOURCE_HDR_MODES, parse_segments_arg
@@ -26,6 +28,7 @@ from file_intake import FileIntakeMixin
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk
 from queue_runner import QueueRunnerMixin
 from sidebar_builder import SidebarBuilderMixin
+from sidebar_rows import SidebarRowsMixin
 from ui.conversion_page import ConversionPage
 from ui.dependency_dialog import InstallDependencyDialog
 from ui.header_bar import HeaderBar
@@ -48,6 +51,7 @@ class VideoConverterApp(
     QueueRunnerMixin,
     FileIntakeMixin,
     SidebarBuilderMixin,
+    SidebarRowsMixin,
     Adw.Application,
 ):
     def _window_buttons_on_left(self):
@@ -115,6 +119,11 @@ class VideoConverterApp(
         )
 
         GLib.set_prgname("big-video-converter")
+        # libmpv names its PipeWire stream's icon after the client name; set before
+        # any thread starts, since setenv races getenv.
+        os.environ.setdefault(
+            "PIPEWIRE_PROPS", "{ application.icon-name = big-video-converter }"
+        )
         self.connect("startup", lambda _app: big_gtk_kit.install())
         self.connect("activate", self.on_activate)
 
@@ -138,9 +147,13 @@ class VideoConverterApp(
         # Track active conversions for parallel processing
         self.active_conversions = []  # List of dictionaries with conversion info
         self.gpu_slots = deque()  # Queue of available GPU slots for parallel processing
+        # Jobs at once: one per GPU slot the queue start found, else one.
+        self.parallel_jobs = 1
         self.is_cancellation_requested = False
         # From queue start until it settles, between its jobs too.
         self.currently_converting = False
+        # From a queue start until its disk-space answer: a second start waits.
+        self.checking_space = False
         # Output paths reserved by jobs that have not finished yet, so two
         # parallel jobs never pick the same free name.
         self.claimed_outputs = set()
@@ -182,6 +195,18 @@ class VideoConverterApp(
         )
         self.tooltip_action.connect("activate", self._on_tooltip_action_activated)
         self.add_action(self.tooltip_action)
+
+        # Deleting is a preference of the person: a queue row's delete action
+        # and deleting originals after a conversion both follow it.
+        skip_trash = Gio.SimpleAction.new_stateful(
+            "skip_trash",
+            None,
+            GLib.Variant.new_boolean(
+                bool(self.settings_store.load_setting("skip-trash", False))
+            ),
+        )
+        skip_trash.connect("activate", self._on_skip_trash_activated)
+        self.add_action(skip_trash)
 
         # Keyboard shortcuts
         self.set_accels_for_action("app.add_files", ["<Control>o"])
@@ -298,8 +323,15 @@ class VideoConverterApp(
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
+        # Above the whole window: a setting's card opens beside the sidebar,
+        # over the content, and reaches back into the sidebar to its row.
+        self.card_layer = CardLayer()
         self._create_left_pane()
         self._create_right_pane()
+        for name in ("notify::show-sidebar", "notify::collapsed"):
+            self.split_view.connect(name, self.setting_cards.close)
+        # The progress page covers the sidebar a card belongs to.
+        self.main_stack.connect("notify::visible-child", self.setting_cards.close)
 
         sidebar_position = self.settings_store.load_setting("sidebar-position", 430)
         self.split_view.set_sidebar_width_fraction(
@@ -325,7 +357,9 @@ class VideoConverterApp(
         content_box.append(self.subtitle_banner)
         content_box.append(self.toast_overlay)
         self.toast_overlay.set_vexpand(True)
-        self.window.set_content(content_box)
+        root = Gtk.Overlay(child=content_box)
+        root.add_overlay(self.card_layer)
+        self.window.set_content(root)
 
         self._create_pages()
 
@@ -364,7 +398,7 @@ class VideoConverterApp(
         self._quitting = True
         self.settings_store.flush()
         if getattr(self, "conversion_page", None) is not None:
-            self.conversion_page.thumbnail_manager.shutdown()
+            self.conversion_page.thumbnail_cache.shutdown()
         self.is_cancellation_requested = True
         self.conversion_queue.clear()
         if getattr(self, "progress_page", None) is not None:
@@ -380,10 +414,11 @@ class VideoConverterApp(
         if self.active_conversions or self.conversions_running:
             return GLib.SOURCE_CONTINUE
         page = getattr(self, "conversion_page", None)
-        if page is not None and not page.thumbnail_manager.shutdown_complete:
+        if page is not None and not page.thumbnail_cache.shutdown_complete:
             return GLib.SOURCE_CONTINUE
         if getattr(self, "video_edit_page", None) is not None:
             self.video_edit_page.cleanup()
+        self.setting_cards.cleanup()
         super().quit()
         return GLib.SOURCE_REMOVE
 
@@ -465,6 +500,13 @@ class VideoConverterApp(
             self.progress_page.get_page(), "progress_view", _("Progress")
         )
 
+    def _on_skip_trash_activated(self, action, _param):
+        skip = not action.get_state().get_boolean()
+        action.set_state(GLib.Variant.new_boolean(skip))
+        self.settings_store.save_setting("skip-trash", skip)
+        if hasattr(self, "conversion_page"):
+            self.conversion_page.show_delete_mode()
+
     def _on_tooltip_action_activated(self, action, _param):
         current = action.get_state().get_boolean()
         new_state = not current
@@ -477,8 +519,8 @@ class VideoConverterApp(
         self.right_stack.set_visible_child_name("queue_view")
         self.header_bar.set_view("queue")
         self.left_stack.set_visible_child_name("conversion_settings")
+        self.sidebar_header.set_visible(True)
         self.sidebar_title.set_title("Big Video Converter")
-        self.sidebar_title.set_subtitle("")
         # Collapsed, the settings would cover the queue; the header's
         # toggle brings them over it.
         self.split_view.set_show_sidebar(not self.split_view.get_collapsed())
@@ -496,8 +538,8 @@ class VideoConverterApp(
         self.right_stack.set_visible_child_name("editor_view")
         self.header_bar.set_view("editor")
         self.left_stack.set_visible_child_name("editing_tools")
-        self.sidebar_title.set_title(_("Edit video"))
-        self.sidebar_title.set_subtitle(_("Changes apply only to the selected video"))
+        self.sidebar_header.set_visible(self.sidebar_header_holds_buttons)
+        self.sidebar_title.set_title("")
 
         def load_video_action() -> None:
             if not self.video_edit_page.set_video(file_path):
@@ -573,8 +615,9 @@ class VideoConverterApp(
         notification.set_body(body)
         self.send_notification(None, notification)
 
-    def do_open(self, files: str, n_files: str, hint) -> None:
-        """Handle files opened via file association or from another instance"""
+    def do_open(self, files, n_files, hint, edits=None) -> None:
+        """Queue files opened by association or from another instance, with
+        the ``edits`` a player sent for them."""
         if not hasattr(self, "window") or self.window is None:
             self.activate()
 
@@ -589,6 +632,13 @@ class VideoConverterApp(
         elif local:
 
             def opened(added):
+                # The queue fills after a scan, so the edits wait for it.
+                for path in local if edits else ():
+                    metadata = self.conversion_page.file_metadata.get(path)
+                    if metadata is not None:
+                        metadata.update(deepcopy(edits))
+                if edits:
+                    self.conversion_page.update_queue_display()
                 if added:
                     self.show_queue_view()
                     # Files opened from another program bring the window up.
@@ -641,15 +691,12 @@ class VideoConverterApp(
         files = [command_line.create_file_for_arg(arg) for arg in args[1:]]
         files = [f for f in files if not f.get_path() or os.path.isfile(f.get_path())]
         if files:
-            self.do_open(files, len(files), "")
-            for path in filter(None, (f.get_path() for f in files)):
-                metadata = self.conversion_page.file_metadata.get(path)
-                if metadata is None:
-                    continue
-                if segments is not None:
-                    metadata["trim_segments"] = [dict(s) for s in segments]
-                if source_hdr is not None:
-                    metadata["source_hdr"] = source_hdr
+            edits = {}
+            if segments is not None:
+                edits["trim_segments"] = [dict(s) for s in segments]
+            if source_hdr is not None:
+                edits["source_hdr"] = source_hdr
+            self.do_open(files, len(files), "", edits)
 
         self.activate()
         return 0

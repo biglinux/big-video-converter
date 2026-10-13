@@ -815,9 +815,6 @@ msgstr "文件未找到"
 msgid "Edit video"
 msgstr "编辑视频"
 
-msgid "Changes apply only to the selected video"
-msgstr "更改仅应用于选中的视频"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1429,9 +1426,6 @@ msgstr "附加选项"
 msgid "SW Decode"
 msgstr "软件解码"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "现成方案：YouTube、Instagram、剪辑……"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1666,9 +1660,6 @@ msgstr "选择输出文件夹"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "删除原始文件"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "只有所有转换结果通过验证后才会删除原始文件"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2912,24 +2903,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "配置转换过程中字幕的处理方式。"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "字幕处理"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "选择字幕在输出中的包含方式。“嵌入”将它们保留在视频文件内。“提取到 .srt”会创建单独的字幕文件。"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "仅提取字幕"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "完全跳过视频转换，仅提取字幕轨道为 .srt 文件。"
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -4078,12 +4054,6 @@ msgstr "音量"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "正在复制视频，不重新编码。裁剪、调整、旋转画面或添加效果会使此视频重新编码。"
 
-msgid "Image"
-msgstr "图像"
-
-msgid "Reset image adjustments"
-msgstr "重置图像调整"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -4116,16 +4086,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "标准 (SDR)"
-
-msgid "Orientation"
-msgstr "方向"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "重置变换"
 
 msgid "Rotation"
 msgstr "旋转"
@@ -4197,9 +4157,6 @@ msgstr "选择标记的片段如何保存"
 msgid "Effects"
 msgstr "效果"
 
-msgid "Reset effects"
-msgstr "重置效果"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -4240,10 +4197,6 @@ msgstr "选择色彩效果或着色器"
 
 msgid "Looks and shaders"
 msgstr "色彩效果和着色器"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "将{setting}重置为默认值"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -5262,9 +5215,6 @@ msgstr "无法启动 Big Video Converter：{0}"
 msgid "Remove pauses"
 msgstr "移除停顿"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "适用于语音。在经 DPDFNet 降噪的人声中查找停顿。"
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "每小时音频约需一分钟。"
 
@@ -5533,3 +5483,85 @@ msgstr[0] "有 {0} 条字幕轨道无法提取，已略过。"
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "前瞻 (毫秒)"
+
+msgid "The output holds only part of the original"
+msgstr "输出只包含原始文件的一部分"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "输出验证通过后已将原始文件移至回收站"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "请更新 dpdfnet-native 以查找停顿。"
+
+msgid "Video mode"
+msgstr "视频模式"
+
+msgid "How the video is encoded."
+msgstr "视频的编码方式。"
+
+msgid "Codec, bitrate and channels…"
+msgstr "编码格式、比特率和声道…"
+
+msgid "Off while only extracting subtitles"
+msgstr "仅提取字幕时关闭"
+
+msgid "Not used with Fast Copy"
+msgstr "快速复制时不使用"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "只有所有转换结果通过验证后，才会永久删除原始文件，不经过回收站"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "只有所有转换结果通过验证后，才会将原始文件移至回收站"
+
+msgid "Move this video to the Trash?"
+msgstr "将此视频移至回收站？"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "“{}”将被移至回收站。"
+
+msgid "Move to Trash"
+msgstr "移至回收站"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "无法将视频移至回收站：{}"
+
+msgid "Delete Without Using the Trash"
+msgstr "删除时不使用回收站"
+
+msgid "Audio only when a voice is detected"
+msgstr "仅在检测到人声时输出声音"
+
+msgid "Very sensitive"
+msgstr "非常灵敏"
+
+msgid "Sensitive"
+msgstr "灵敏"
+
+msgid "Normal"
+msgstr "标准"
+
+msgid "Strict"
+msgstr "严格"
+
+msgid "Very strict"
+msgstr "非常严格"
+
+msgid "Voice detection"
+msgstr "人声检测"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "设为灵敏时会保留轻柔或特殊的人声，但也会让更多噪音和音乐通过；设为严格时会去除更多音乐，但可能截断轻声说出的字词。"
+
+msgid "On"
+msgstr "开"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} 个已启用"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "适用于语音：去除背景噪音后再查找停顿。"

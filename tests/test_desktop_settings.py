@@ -94,7 +94,7 @@ NO_PORTALS = {"ADW_DISABLE_PORTAL": "1", "GDK_DEBUG": "no-portals"}
     not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")),
     reason="Requires an X11 or Wayland display",
 )
-def test_real_application_opens_with_no_gnome_schemas(tmp_path):
+def test_application_opens_without_gnome_schemas(tmp_path):
     """Use a fresh process because GLib caches the schema source globally."""
     empty = tmp_path / "empty-schemas"
     home = tmp_path / "home"
@@ -217,7 +217,7 @@ def test_exit_waits_for_conversion_cleanup(tmp_path, exit_action):
         assert process.poll() is not None
         assert app.conversions_running == 0
         assert not app.progress_page.active_conversions
-        assert app.conversion_page.thumbnail_manager.shutdown_complete
+        assert app.conversion_page.thumbnail_cache.shutdown_complete
     """)
     env = dict(
         os.environ,
@@ -274,7 +274,7 @@ def test_dependency_transaction_is_visible_and_interactive(base):
         (1, "file /usr/local/bin/ffmpeg is not owned by any package\n", True),
     ],
 )
-def test_only_an_ffmpeg_free_owner_needs_replacement(
+def test_only_ffmpeg_free_owner_needs_replacement(
     monkeypatch, returncode, owner, available
 ):
     from engine import dependency_checker
@@ -295,7 +295,7 @@ def test_only_an_ffmpeg_free_owner_needs_replacement(
     assert checker.are_dependencies_available() is available
 
 
-def test_the_preview_needs_the_python_modules_not_the_mpv_command(monkeypatch):
+def test_preview_needs_python_mpv_modules(monkeypatch):
     """The editor plays through python-mpv and PyOpenGL; the mpv program is unused."""
     from engine import dependency_checker
 
@@ -324,7 +324,7 @@ def _fake_drm(tmp_path, nodes):
     return str(tmp_path / "drm")
 
 
-def test_render_nodes_are_named_by_their_own_pci_device(tmp_path):
+def test_render_nodes_named_by_pci_device(tmp_path):
     from engine.gpu_selector import name_render_devices, render_devices
 
     drm = _fake_drm(
@@ -376,7 +376,7 @@ def test_render_nodes_are_named_by_their_own_pci_device(tmp_path):
 @pytest.mark.parametrize(
     "failure", [FileNotFoundError("lspci"), subprocess.TimeoutExpired("lspci", 2), None]
 )
-def test_render_nodes_fall_back_to_the_vendor_without_lspci(tmp_path, failure):
+def test_render_nodes_without_lspci_show_vendor(tmp_path, failure):
     from engine.gpu_selector import name_render_devices, render_devices
 
     drm = _fake_drm(
@@ -402,7 +402,7 @@ def test_render_nodes_fall_back_to_the_vendor_without_lspci(tmp_path, failure):
     ]
 
 
-def test_every_integration_offers_the_same_video_files():
+def test_integrations_offer_the_same_video_files():
     """Nautilus cannot import the application, so it keeps its own copy."""
     import ast
     import configparser

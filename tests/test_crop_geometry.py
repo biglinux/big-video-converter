@@ -14,13 +14,13 @@ def test_square_crop_is_centered_and_even():
     assert abs(margins[0] - margins[1]) <= 1
 
 
-def test_vertical_ratio_is_interpreted_in_rotated_output_orientation():
+def test_vertical_ratio_follows_rotated_output():
     margins = centered_crop(1920, 1080, "9:16", rotation=90)
     width, height = output_size(1920, 1080, margins)
     assert abs(width / height - 16 / 9) < 0.01
 
 
-def test_original_and_free_keep_the_whole_frame():
+def test_original_and_free_keep_full_frame():
     assert centered_crop(1920, 1080, "original") == (0, 0, 0, 0)
     assert centered_crop(1920, 1080, "free") == (0, 0, 0, 0)
 
@@ -66,7 +66,7 @@ TRANSFORMS = [
 ]
 
 
-def test_displayed_crop_is_the_crop_the_conversion_makes():
+def test_displayed_crop_matches_the_conversion():
     from ui.crop_overlay import displayed_size, source_to_display
 
     source = _picture(7, 4)
@@ -80,7 +80,7 @@ def test_displayed_crop_is_the_crop_the_conversion_makes():
         )
 
 
-def test_display_margins_map_back_to_the_same_source_margins():
+def test_display_margins_round_trip_to_source():
     from ui.crop_overlay import display_to_source, source_to_display
 
     for transform in TRANSFORMS:
@@ -89,7 +89,7 @@ def test_display_margins_map_back_to_the_same_source_margins():
         ) == (1, 2, 3, 4)
 
 
-def test_dragging_the_visible_edge_crops_the_matching_source_edge():
+def test_visible_edge_drag_crops_source_edge():
     import gi
 
     gi.require_version("Gtk", "4.0")
@@ -109,7 +109,7 @@ def test_dragging_the_visible_edge_crops_the_matching_source_edge():
     assert (overlay._crop_left, overlay._crop_right) == (0, 20)
 
 
-def test_crop_that_cannot_be_applied_is_an_error_not_an_uncropped_video():
+def test_impossible_crop_raises_an_error():
     import pytest
     from engine.video_settings import CropError, get_ffmpeg_filter_string
 
@@ -132,3 +132,26 @@ def test_crop_that_cannot_be_applied_is_an_error_not_an_uncropped_video():
     with pytest.raises(CropError):
         get_ffmpeg_filter_string(crop)
     assert get_ffmpeg_filter_string(Settings()) == ""
+
+
+def test_file_view_reads_hue_and_refuses_writes():
+    import pytest
+    from engine.video_settings import SettingsOverride, get_ffmpeg_filter_string
+
+    saved = []
+
+    class Store:
+        def get_value(self, key, default=None):
+            return default
+
+        def get_boolean(self, key, default=False):
+            return default
+
+        def save_setting(self, key, value):
+            saved.append(key)
+
+    view = SettingsOverride(Store(), {"preview-hue": 0.5})
+    assert get_ffmpeg_filter_string(view) == "hue=h=90.000"
+    with pytest.raises(AttributeError):
+        view.save_setting("preview-hue", 0)
+    assert saved == []

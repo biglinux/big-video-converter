@@ -1048,9 +1048,6 @@ msgstr "Tiedostoa ei löytynyt"
 msgid "Edit video"
 msgstr "Muokkaa videota"
 
-msgid "Changes apply only to the selected video"
-msgstr "Muutokset koskevat vain valittua videota"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1662,9 +1659,6 @@ msgstr "Lisäasetukset"
 msgid "SW Decode"
 msgstr "Ohjelmistodekoodaus"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Valmiit muunnosasetukset: YouTube, Instagram, editointi…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1899,9 +1893,6 @@ msgstr "Valitse tulostuskansio"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Poista alkuperäiset tiedostot"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Alkuperäiset säilytetään, elleivät kaikki muunnetut tulokset läpäise tarkistusta"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -3155,24 +3146,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Määritä, miten tekstityksiä käsitellään muunnon aikana."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Tekstityksen käsittely"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Valitse, miten tekstitykset sisällytetään tulokseen. 'Upotettu' pitää ne videotiedoston sisällä. 'Vie .srt:ksi' luo erilliset tekstitystiedostot."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Vain poimi tekstitykset"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Ohita videomuunnos kokonaan ja vie vain tekstitysradat .srt-tiedostoiksi."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -4321,12 +4297,6 @@ msgstr "Äänenvoimakkuus"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Video kopioidaan ilman uudelleenkoodausta. Kuvan rajaaminen, säätäminen, kääntäminen tai tehosteiden lisääminen koodaa videon uudelleen."
 
-msgid "Image"
-msgstr "Kuva"
-
-msgid "Reset image adjustments"
-msgstr "Palauta kuvan säädöt"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -4359,16 +4329,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Tavallinen (SDR)"
-
-msgid "Orientation"
-msgstr "Suunta"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Nollaa muunnos"
 
 msgid "Rotation"
 msgstr "Kierto"
@@ -4440,9 +4400,6 @@ msgstr "Valitse merkittyjen osien tallennustapa"
 msgid "Effects"
 msgstr "Tehosteet"
 
-msgid "Reset effects"
-msgstr "Palauta tehosteet"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -4483,10 +4440,6 @@ msgstr "Valitse värityyli tai varjostin"
 
 msgid "Looks and shaders"
 msgstr "Värityylit ja varjostimet"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Palauta {setting} oletusarvoon"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -5485,9 +5438,6 @@ msgstr "Big Video Converterin käynnistys epäonnistui: {0}"
 msgid "Remove pauses"
 msgstr "Poista tauot"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Tarkoitettu puheelle. Tauot etsitään DPDFNetin puhdistamasta äänestä."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Kestää noin minuutin jokaista äänitunti kohden."
 
@@ -5764,3 +5714,86 @@ msgstr[1] "{0} tekstitysraitaa jäi pois, koska niitä ei voitu purkaa."
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Ennakoiminen (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "Tulos sisältää vain osan alkuperäisestä"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Alkuperäinen siirretty roskakoriin tuloksen tarkistamisen jälkeen"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Päivitä dpdfnet-native taukojen etsimistä varten."
+
+msgid "Video mode"
+msgstr "Videotila"
+
+msgid "How the video is encoded."
+msgstr "Miten video koodataan."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Koodekki, bittinopeus ja kanavat…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Pois päältä, kun vain poimitaan tekstityksiä"
+
+msgid "Not used with Fast Copy"
+msgstr "Ei käytössä nopeassa kopioinnissa"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Alkuperäiset poistetaan pysyvästi ilman roskakoria vasta, kun kaikki muunnetut tulokset läpäisevät tarkistuksen"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Alkuperäiset siirretään roskakoriin vasta, kun kaikki muunnetut tulokset läpäisevät tarkistuksen"
+
+msgid "Move this video to the Trash?"
+msgstr "Siirretäänkö tämä video roskakoriin?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "”{}” siirretään roskakoriin."
+
+msgid "Move to Trash"
+msgstr "Siirrä roskakoriin"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Videota ei voitu siirtää roskakoriin: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Poista käyttämättä roskakoria"
+
+msgid "Audio only when a voice is detected"
+msgstr "Ääni vain, kun puhetta havaitaan"
+
+msgid "Very sensitive"
+msgstr "Erittäin herkkä"
+
+msgid "Sensitive"
+msgstr "Herkkä"
+
+msgid "Normal"
+msgstr "Normaali"
+
+msgid "Strict"
+msgstr "Tiukka"
+
+msgid "Very strict"
+msgstr "Erittäin tiukka"
+
+msgid "Voice detection"
+msgstr "Puheen havaitseminen"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Herkkä asetus säilyttää hiljaiset tai epätavalliset puheäänet ja päästää läpi enemmän kohinaa ja musiikkia; tiukka poistaa enemmän musiikkia ja voi leikata pois hiljaisia sanoja."
+
+msgid "On"
+msgstr "Päällä"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} aktiivinen"
+msgstr[1] "{count} aktiivista"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Tarkoitettu puheelle: tauot etsitään, kun taustamelu on poistettu."

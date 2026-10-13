@@ -29,20 +29,20 @@ CONVERT_SCRIPT_PATH = os.path.abspath(
 
 # AI noise reduction models, by the "noise-model" setting: LADSPA plugin,
 # label, output delay in samples at 48 kHz, extra controls, the package that
-# installs it, and the attenuation at full strength. The export script keeps
-# the same table.
+# installs it, the attenuation at full strength, and the voice gate's depth,
+# detector and sensitivity controls. The export script keeps the same table.
 # Full strength is where the model stops removing more noise from speech, so
 # no part of the slider does nothing.
 NOISE_MODELS = (
-    # DFN3 mutes its first second and gates what it takes for no voice by
-    # default, both meant for a live microphone.
+    # DFN3 mutes its first second by default, meant for a live microphone.
     (
         "/usr/lib/ladspa/libdfn3_ladspa.so",
         "deep_filter_net3_rs_mono",
         1919,
-        "|c6=0|c17=0",
+        "|c6=0",
         "deepfilternet3-native",
         24,
+        (17, 18, 19),
     ),
     (
         "/usr/lib/ladspa/libdpdfnet_native.so",
@@ -51,11 +51,16 @@ NOISE_MODELS = (
         "",
         "dpdfnet-native",
         48,
+        (1, 2, 3),
     ),
 )
+# Either plugin's output delay while its voice gate runs.
+VOICE_GATE_DELAY = 3168
 
 
-def noise_reduction_filter(model: int, strength: float) -> str:
+def noise_reduction_filter(
+    model: int, strength: float, voice_only: int | None = None
+) -> str:
     """FFmpeg chain for the AI noise reduction; the export script builds the same.
 
     The plugins are mono 48 kHz and FFmpeg runs one per channel. The end is
@@ -64,8 +69,17 @@ def noise_reduction_filter(model: int, strength: float) -> str:
     the first ~150 ms, so it first runs over the opening half second played
     backwards, which is cut away again; that lead-in ends at timestamp 0, so
     concat keeps the stream's own timeline across seeks and offset starts.
+
+    ``voice_only``, a sensitivity from 1 to 5, mutes what FireRedVAD does not
+    hear as a voice. DFN3's gate is on by default, so off it is switched off.
     """
-    plugin, plugin_label, delay, extra, _package, full_db = NOISE_MODELS[model]
+    plugin, plugin_label, delay, extra, _package, full_db, gate = NOISE_MODELS[model]
+    depth, detector, sensitivity = gate
+    if voice_only:
+        extra += f"|c{depth}=60|c{detector}=1|c{sensitivity}={voice_only}"
+        delay = VOICE_GATE_DELAY
+    elif model == 0:
+        extra += f"|c{depth}=0"
     # Linear in dB, so every step of the slider changes what is heard.
     attenuation = min(max(strength, 0.0), 1.0) * full_db
     return (

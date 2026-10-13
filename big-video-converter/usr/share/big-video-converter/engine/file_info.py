@@ -68,11 +68,6 @@ def _cached_probe(func):
     return wrapper
 
 
-def clear_probe_cache() -> None:
-    with _PROBE_CACHE_LOCK:
-        _PROBE_CACHE.clear()
-
-
 def launch_probes(file_path: str) -> dict:
     """Every answer a launch needs, probed on a worker thread for the main loop."""
     return {
@@ -323,15 +318,7 @@ def _probe_with_ffmpeg(file_path: str):
 
 
 def get_video_file_info(file_path: str):
-    """
-    Get detailed information about a video file using ffprobe
-
-    Args:
-        file_path: Path to the video file
-
-    Returns:
-        Dictionary containing file information or None on error
-    """
+    """The file's format, streams and chapters as ffprobe reports them, or None."""
     try:
         if not os.path.exists(file_path):
             return None
@@ -368,7 +355,7 @@ def get_video_file_info(file_path: str):
             info = None
 
         if not info or not info.get("streams"):
-            # ffprobe gave up on this file — read the metadata from ffmpeg.
+            # ffprobe gave up on this file: read the metadata from ffmpeg.
             logger.debug(
                 "ffprobe returned no usable data for %s; falling back to ffmpeg",
                 os.path.basename(file_path),
@@ -451,15 +438,7 @@ def normalize_probe(info: dict) -> dict:
 
 @_cached_probe
 def has_audio_streams(file_path: str):
-    """
-    Check if a video file has audio streams.
-
-    Args:
-        file_path: Path to the video file
-
-    Returns:
-        bool: True if the file has at least one audio stream, False otherwise
-    """
+    """Whether the file has an audio stream; True when ffprobe cannot tell."""
     try:
         if not os.path.exists(file_path):
             return False
@@ -487,7 +466,7 @@ def has_audio_streams(file_path: str):
         if result.returncode != 0:
             # ffprobe could not analyze the file at all (it bails out when a
             # decoder for an unrelated stream cannot be opened). An empty
-            # answer here means "unknown", not "no audio" — assume there is
+            # answer here means "unknown", not "no audio"; assume there is
             # audio so we never silently drop the audio tracks.
             logger.warning(
                 "ffprobe failed while checking audio streams; assuming the file has audio"
@@ -504,18 +483,11 @@ def has_audio_streams(file_path: str):
 
 @_cached_probe
 def check_mp4_compatibility(file_path: str):
-    """
-    Check if video/audio codecs are compatible with MP4 container when copying without reencoding.
+    """(compatible, streams): whether a stream copy into MP4 keeps every stream.
 
-    Args:
-        file_path: Path to the video file
-
-    Returns:
-        tuple: (is_compatible: bool, incompatible_streams: list of dict)
-
-        Each dict describes one offending stream so the UI can label it
-        properly: ``codec_type``, ``codec_name``, ``index``, ``language``
-        and ``title``. Translation is left to the caller.
+    Each dict in ``streams`` describes one offending stream for the UI:
+    ``codec_type``, ``codec_name``, ``index``, ``language`` and ``title``.
+    Translation is left to the caller.
     """
     try:
         if not os.path.exists(file_path):

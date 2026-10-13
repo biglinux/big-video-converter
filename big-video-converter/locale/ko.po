@@ -791,9 +791,6 @@ msgstr "파일을 찾을 수 없습니다."
 msgid "Edit video"
 msgstr "동영상 편집"
 
-msgid "Changes apply only to the selected video"
-msgstr "변경 사항은 선택한 동영상에만 적용됩니다"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1405,9 +1402,6 @@ msgstr "추가"
 msgid "SW Decode"
 msgstr "소프트웨어 디코딩"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "용도별 변환 설정: YouTube, Instagram, 편집…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1620,9 +1614,6 @@ msgstr "출력 폴더 선택"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "원본 파일 삭제"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "변환 결과가 모두 검증을 통과해야 원본을 삭제합니다"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2777,24 +2768,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "변환 중 자막 처리 방식을 구성합니다."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "자막 처리"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "자막이 출력에 포함되는 방식을 선택하세요. '임베디드'는 비디오 파일 내에 자막을 유지합니다. '.srt로 추출'은 별도의 자막 파일을 생성합니다."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "자막만 추출하기"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "비디오 변환을 완전히 건너뛰고 자막 트랙만 .srt 파일로 추출합니다."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -3090,12 +3066,6 @@ msgstr "볼륨"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "동영상을 재인코딩 없이 복사합니다. 화면 자르기, 조정, 회전 또는 효과 추가 시 이 동영상을 재인코딩합니다."
 
-msgid "Image"
-msgstr "화면"
-
-msgid "Reset image adjustments"
-msgstr "화면 조정 초기화"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -3128,16 +3098,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "표준 (SDR)"
-
-msgid "Orientation"
-msgstr "방향"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "회전과 뒤집기 초기화"
 
 msgid "Rotation"
 msgstr "회전"
@@ -3209,9 +3169,6 @@ msgstr "표시한 구간의 저장 방식 선택"
 msgid "Effects"
 msgstr "효과"
 
-msgid "Reset effects"
-msgstr "효과 초기화"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -3252,10 +3209,6 @@ msgstr "색상 스타일 또는 셰이더 선택"
 
 msgid "Looks and shaders"
 msgstr "색상 스타일과 셰이더"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "{setting} 기본값으로 초기화"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4207,9 +4160,6 @@ msgstr "Big Video Converter를 시작하지 못했습니다: {0}"
 msgid "Remove pauses"
 msgstr "공백 제거"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "음성용입니다. DPDFNet으로 정리한 목소리에서 공백을 찾습니다."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "오디오 1시간당 약 1분이 걸립니다."
 
@@ -4478,3 +4428,85 @@ msgstr[0] "자막 트랙 {0}개를 추출할 수 없어 제외했습니다."
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "전방 탐색 (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "출력에 원본의 일부만 포함되어 있습니다"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "출력 검증 후 원본을 휴지통으로 이동함"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "공백을 찾으려면 dpdfnet-native를 업데이트하세요."
+
+msgid "Video mode"
+msgstr "비디오 모드"
+
+msgid "How the video is encoded."
+msgstr "비디오를 인코딩하는 방식입니다."
+
+msgid "Codec, bitrate and channels…"
+msgstr "코덱, 비트 전송률, 채널…"
+
+msgid "Off while only extracting subtitles"
+msgstr "자막만 추출하는 동안 꺼짐"
+
+msgid "Not used with Fast Copy"
+msgstr "빠른 복사에서는 사용되지 않음"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "변환 결과가 모두 검증을 통과한 후에만 원본을 휴지통을 거치지 않고 영구 삭제합니다"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "변환 결과가 모두 검증을 통과한 후에만 원본을 휴지통으로 이동합니다"
+
+msgid "Move this video to the Trash?"
+msgstr "이 동영상을 휴지통으로 이동할까요?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "“{}”을(를) 휴지통으로 이동합니다."
+
+msgid "Move to Trash"
+msgstr "휴지통으로 이동"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "동영상을 휴지통으로 이동할 수 없습니다: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "휴지통을 사용하지 않고 삭제"
+
+msgid "Audio only when a voice is detected"
+msgstr "음성이 감지될 때만 소리 출력"
+
+msgid "Very sensitive"
+msgstr "매우 민감"
+
+msgid "Sensitive"
+msgstr "민감"
+
+msgid "Normal"
+msgstr "보통"
+
+msgid "Strict"
+msgstr "엄격"
+
+msgid "Very strict"
+msgstr "매우 엄격"
+
+msgid "Voice detection"
+msgstr "음성 감지"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "민감하게 하면 작거나 특이한 목소리도 남지만 소음과 음악도 더 많이 통과합니다. 엄격하게 하면 음악을 더 많이 제거하지만 작게 말한 단어가 잘릴 수 있습니다."
+
+msgid "On"
+msgstr "켬"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count}개 켜짐"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "음성용입니다. 배경 소음을 제거한 뒤 공백을 찾습니다."

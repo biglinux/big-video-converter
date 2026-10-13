@@ -207,7 +207,7 @@ def show_noise_dialog(parent_window, app) -> bool:
         )
     )
 
-    # Strength slider — synced with sidebar
+    # Strength slider, synced with the sidebar.
     strength_adj = Gtk.Adjustment(
         value=app.noise_strength_adj.get_value(),
         lower=0.0,
@@ -289,6 +289,71 @@ def show_noise_dialog(parent_window, app) -> bool:
                 model_note.remove_css_class(css_class)
 
     _show_model_note(model_dd.get_selected())
+
+    # The denoiser mutes what its voice detector does not take for a voice:
+    # music, noise and the silence between words. Saved at once, like the
+    # pause finder's choice it mirrors.
+    store = app.settings_store
+
+    def _refresh_preview():
+        page = getattr(app, "video_edit_page", None)
+        if page:
+            page._apply_audio_filters()
+
+    voice_label = Gtk.Label(
+        label=_("Audio only when a voice is detected"),
+        xalign=0,
+        wrap=True,
+        hexpand=True,
+    )
+    voice_only = Gtk.Switch(
+        active=store.get_boolean("voice-only", False), valign=Gtk.Align.CENTER
+    )
+    voice_only.update_property(
+        [Gtk.AccessibleProperty.LABEL], [voice_label.get_label()]
+    )
+    voice_row = Gtk.Box(spacing=12)
+    voice_row.set_margin_start(16)
+    voice_row.set_margin_end(16)
+    voice_row.set_margin_bottom(12)
+    voice_row.append(voice_label)
+    voice_row.append(voice_only)
+    card1.append(voice_row)
+    level_names = (
+        _("Very sensitive"),
+        _("Sensitive"),
+        _("Normal"),
+        _("Strict"),
+        _("Very strict"),
+    )
+    level_adj = Gtk.Adjustment(
+        value=store.load_setting("voice-only-sensitivity", 3),
+        lower=1,
+        upper=5,
+        step_increment=1,
+        page_increment=1,
+    )
+    level_row = _slider_row(
+        _("Voice detection"), level_adj, lambda v: level_names[round(v) - 1]
+    )
+    # Its name says the level, so the label column fits it.
+    level_row.get_last_child().set_size_request(110, -1)
+    card1.append(level_row)
+
+    def _show_voice_only():
+        voice_row.set_sensitive(nr_switch.get_active())
+        level_row.set_sensitive(nr_switch.get_active() and voice_only.get_active())
+
+    def _on_voice_only(*_args):
+        store.save_setting("voice-only", voice_only.get_active())
+        store.save_setting("voice-only-sensitivity", round(level_adj.get_value()))
+        _show_voice_only()
+        _refresh_preview()
+
+    _show_voice_only()
+    voice_only.connect("notify::active", _on_voice_only)
+    level_adj.connect("value-changed", _on_voice_only)
+    nr_switch.connect("notify::active", lambda *_a: _show_voice_only())
     model_dd.connect("notify::selected", _sync_model_to_sidebar)
     connections.connect(
         model_dd, "notify::selected", lambda dd, _p: _show_model_note(dd.get_selected())

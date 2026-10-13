@@ -176,10 +176,9 @@ def _failure_reason(stderr_tail, error_hints=()) -> str:
 def _failure_message(returncode: int, stderr_tail, error_hints=()) -> str:
     """The message a user sees for a failed job: the cause, then the evidence.
 
-    "Conversion failed with code 127" on its own sent a user to ChatGPT with
-    the full log (issue #27). The friendly text is derived from every hint
-    collected across the script's retries, and the last lines FFmpeg printed
-    are appended so the actual error is never hidden behind a number.
+    The friendly text is derived from every hint collected across the
+    script's retries, and the last lines FFmpeg printed are appended so the
+    error is never reduced to an exit code.
     """
     hints = [_ANSI_RE.sub("", line).strip() for line in error_hints]
     tail = [_ANSI_RE.sub("", line).strip() for line in stderr_tail]
@@ -300,6 +299,11 @@ def detect_bit_depth_info(file_path: str):
         return _("Could not analyze the video stream with ffprobe")
 
 
+def _unescape_line(text: str) -> str:
+    """A path the script printed with backslash, newline and return escaped."""
+    return re.sub(r"\\(.)", lambda m: {"n": "\n", "r": "\r"}.get(m[1], m[1]), text)
+
+
 def _time_value(value: str) -> float:
     parts = value.split(":")
     result = 0.0
@@ -382,6 +386,8 @@ def run_with_progress_dialog(
     source_file=None,
     output_file=None,
     preset_source=None,
+    partial=False,
+    skip_trash=False,
 ):
     """Launch one stage; synchronous callers receive its validated result.
 
@@ -422,6 +428,8 @@ def run_with_progress_dialog(
             progress_item.is_segment_batch = is_segment_batch
             progress_item.expected_duration = segment_duration
             progress_item.delete_original = bool(delete_original)
+            progress_item.partial_output = bool(partial)
+            progress_item.skip_trash = bool(skip_trash)
             progress_item.expected_output = destination
             copying = "1" in (
                 env.get("force_copy_video"),
@@ -559,9 +567,8 @@ def monitor_progress(
     expected_streams = None
     result = ConversionResult(False, -1, destination)
     # Until the script announces an encode mode the job is preparing: probing,
-    # checking the GPU, extracting subtitles. Showing "Software encoding" and
-    # a racing progress bar in that phase made a user with a working GPU
-    # conclude the GPU was not used (the subtitle pass runs at 200x).
+    # checking the GPU, extracting subtitles. That phase names no encoder and
+    # moves no progress bar: the subtitle pass runs far faster than the encode.
     stage_mode = _("Preparing…")
     encoding = False
     warning_shown = False
@@ -596,15 +603,12 @@ def monitor_progress(
         updates.push(text=text)
         # The script announces the directory it owns, so a job killed before
         # its own cleanup leaves nothing for the user to find and wonder about.
-        if text.startswith("Job workspace:"):
-            workspace = text.partition(":")[2].strip()
-        if text.startswith("Output file:"):
-            # One line: the script escapes backslash, newline and return.
-            published = re.sub(
-                r"\\(.)",
-                lambda m: {"n": "\n", "r": "\r"}.get(m[1], m[1]),
-                text.partition(": ")[2],
-            )
+        # Both lines come on stdout; FFmpeg's stderr can echo a title or path.
+        # Both are one line: the script escapes backslash, newline and return.
+        if source == "stdout" and text.startswith("Job workspace:"):
+            workspace = _unescape_line(text.partition(": ")[2])
+        if source == "stdout" and text.startswith("Output file:"):
+            published = _unescape_line(text.partition(": ")[2])
         if text.startswith(
             ("Warning: skipping subtitle stream", "Warning: Subtitle extraction failed")
         ):
@@ -780,9 +784,18 @@ def monitor_progress(
                     updates.push(
                         text=_("Output duration not verified: {0}").format(mismatch)
                     )
-            result = ConversionResult(True, 0, None if extraction_only else destination)
+            result = ConversionResult(
+                True,
+                0,
+                None if extraction_only else destination,
+                verified=duration_verified and not extraction_only,
+            )
             if progress_item.delete_original and source_file and not extraction_only:
                 try:
+                    if progress_item.partial_output:
+                        raise ValueError(
+                            _("The output holds only part of the original")
+                        )
                     if identity is None or not duration_verified:
                         raise ValueError(
                             _("The output could not be verified against the input")
@@ -802,8 +815,13 @@ def monitor_progress(
                         expected_frames=encoded_frames,
                         ffmpeg=env.get("ffmpeg_executable"),
                         ffprobe=env.get("ffprobe_executable"),
+                        permanent=progress_item.skip_trash,
                     )
-                    updates.push(text=_("Original deleted after output validation"))
+                    updates.push(
+                        text=_("Original deleted after output validation")
+                        if progress_item.skip_trash
+                        else _("Original moved to the Trash after output validation")
+                    )
                 except InterruptedError:
                     raise
                 except (
@@ -824,7 +842,11 @@ def monitor_progress(
         result = ConversionResult(False, -1, destination, error=str(error))
     finally:
         try:
-            if process.poll() is None or cancelled.is_set() or monitor_error:
+            # A reaped leader whose pipes reached EOF left no group to end, and
+            # its pid may already belong to someone else's.
+            if process.poll() is None or (
+                selector.get_map() and (cancelled.is_set() or monitor_error)
+            ):
                 terminate_process_group(process)
         except (OSError, subprocess.SubprocessError):
             logger.exception("Could not reap conversion process group")

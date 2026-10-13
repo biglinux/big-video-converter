@@ -4,8 +4,8 @@ import ctypes
 import gc
 import os
 
+import conftest
 import pytest
-import test_gtk
 from conftest import pump, pump_until
 
 
@@ -16,7 +16,7 @@ def app(tmp_path_factory):
     # The ordinary GTK fixture may have already exported its application in this process.
     with pytest.MonkeyPatch.context() as patch:
         patch.setattr(main, "APP_ID", "br.com.biglinux.converter.ResourceTests")
-        yield from test_gtk.app.__wrapped__(tmp_path_factory)
+        yield from conftest.app.__wrapped__(tmp_path_factory)
 
 
 pytestmark = pytest.mark.skipif(
@@ -111,7 +111,7 @@ def test_info_window_finalizes_after_close(app, media):
 def test_dialog_tree_finalizes(app, module, entry):
     import importlib
 
-    from test_gtk import widgets
+    from conftest import widgets
 
     created = set()
     for cycle in range(3):
@@ -133,7 +133,7 @@ def test_dialog_tree_finalizes(app, module, entry):
     )
 
 
-def test_prompt_probe_does_not_block_gtk_or_publish_after_close(app, monkeypatch):
+def test_threaded_prompt_probe_ends_with_dialog(app, monkeypatch):
     import threading
 
     from ui import presets_dialog
@@ -164,7 +164,7 @@ def test_prompt_probe_does_not_block_gtk_or_publish_after_close(app, monkeypatch
 
 @pytest.mark.parametrize("surface", ["network", "individual", "dependency"])
 def test_additional_surface_finalizes(app, media, surface):
-    from test_gtk import widgets
+    from conftest import widgets
     from ui.dependency_dialog import InstallDependencyDialog
 
     created = set()
@@ -200,7 +200,7 @@ def test_additional_surface_finalizes(app, media, surface):
 
 
 @pytest.mark.parametrize("missing", [False, True])
-def test_dependency_window_waits_for_child_and_handles_spawn_failure(app, missing):
+def test_dependency_window_waits_for_its_installer(app, missing):
     import sys
 
     from ui.dependency_dialog import InstallDependencyDialog
@@ -226,7 +226,7 @@ def test_dependency_window_waits_for_child_and_handles_spawn_failure(app, missin
     assert window._connections._closed
 
 
-def test_player_keeps_native_render_callback_while_inactive(monkeypatch):
+def test_inactive_player_keeps_render_callback(monkeypatch):
     from types import SimpleNamespace
 
     from gi.repository import GLib

@@ -791,9 +791,6 @@ msgstr "Archivo no encontrado"
 msgid "Edit video"
 msgstr "Editar vídeo"
 
-msgid "Changes apply only to the selected video"
-msgstr "Los cambios solo se aplican al vídeo seleccionado"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1405,9 +1402,6 @@ msgstr "Extra"
 msgid "SW Decode"
 msgstr "Decodificación por software"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Configuraciones listas para usar: YouTube, Instagram, edición…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1642,9 +1636,6 @@ msgstr "Elegir carpeta de salida"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Eliminar archivos originales"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Los originales se conservan a menos que todos los resultados convertidos superen la validación"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2898,24 +2889,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Configura cómo se manejan los subtítulos durante la conversión."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Manejo de subtítulos"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Elige cómo se incluyen los subtítulos en la salida. 'Incrustado' los mantiene dentro del archivo de video. 'Extraer a .srt' crea archivos de subtítulos separados."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Solo extraer subtítulos"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Omitir la conversión de video por completo y solo extraer las pistas de subtítulos a archivos .srt."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -4064,12 +4040,6 @@ msgstr "Volumen"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "El vídeo se copia sin recodificar. Si recorta, ajusta, gira o añade efectos a la imagen, este vídeo se recodificará."
 
-msgid "Image"
-msgstr "Imagen"
-
-msgid "Reset image adjustments"
-msgstr "Restablecer los ajustes de imagen"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -4102,16 +4072,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Estándar (SDR)"
-
-msgid "Orientation"
-msgstr "Orientación"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Restablecer transformación"
 
 msgid "Rotation"
 msgstr "Rotación"
@@ -4183,9 +4143,6 @@ msgstr "Elige cómo se guardan los segmentos marcados"
 msgid "Effects"
 msgstr "Efectos"
 
-msgid "Reset effects"
-msgstr "Restablecer efectos"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -4226,10 +4183,6 @@ msgstr "Elegir un estilo de color o un shader"
 
 msgid "Looks and shaders"
 msgstr "Estilos de color y shaders"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Restablecer {setting} al valor predeterminado"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -5190,9 +5143,6 @@ msgstr "Error al iniciar Big Video Converter: {0}"
 msgid "Remove pauses"
 msgstr "Quitar pausas"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Pensado para el habla. Las pausas se buscan en la voz limpiada por DPDFNet."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Tarda alrededor de un minuto por cada hora de audio."
 
@@ -5468,3 +5418,86 @@ msgstr[1] "No se pudieron extraer {0} pistas de subtítulos y se omitieron."
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Anticipación (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "La salida contiene solo una parte del original"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Original movido a la papelera tras validar la salida"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Actualiza dpdfnet-native para buscar pausas."
+
+msgid "Video mode"
+msgstr "Modo de video"
+
+msgid "How the video is encoded."
+msgstr "Cómo se codifica el video."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Códec, tasa de bits y canales…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Desactivado mientras solo se extraen subtítulos"
+
+msgid "Not used with Fast Copy"
+msgstr "No se usa con Copia rápida"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Los originales se eliminan permanentemente, sin pasar por la papelera, solo después de que todos los resultados convertidos superen la validación"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Los originales van a la papelera solo después de que todos los resultados convertidos superen la validación"
+
+msgid "Move this video to the Trash?"
+msgstr "¿Mover este vídeo a la papelera?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "«{}» se moverá a la papelera."
+
+msgid "Move to Trash"
+msgstr "Mover a la papelera"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "No se ha podido mover el vídeo a la papelera: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Eliminar sin usar la papelera"
+
+msgid "Audio only when a voice is detected"
+msgstr "Audio solo al detectar voz"
+
+msgid "Very sensitive"
+msgstr "Muy sensible"
+
+msgid "Sensitive"
+msgstr "Sensible"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Strict"
+msgstr "Estricta"
+
+msgid "Very strict"
+msgstr "Muy estricta"
+
+msgid "Voice detection"
+msgstr "Detección de voz"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "La detección sensible conserva las voces bajas o poco comunes y deja pasar más ruido y música; la estricta elimina más música y puede cortar palabras dichas en voz baja."
+
+msgid "On"
+msgstr "Activado"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} activo"
+msgstr[1] "{count} activos"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Pensado para el habla: las pausas se buscan una vez eliminado el ruido de fondo."

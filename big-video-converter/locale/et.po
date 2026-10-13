@@ -753,9 +753,6 @@ msgstr "Faili ei leitud"
 msgid "Edit video"
 msgstr "Muuda videot"
 
-msgid "Changes apply only to the selected video"
-msgstr "Muudatused kehtivad ainult valitud videole"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1364,9 +1361,6 @@ msgstr "Lisa"
 msgid "SW Decode"
 msgstr "Tarkvaraline dekodeerimine"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Valmis teisendusseaded: YouTube, Instagram, muutmine…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1601,9 +1595,6 @@ msgstr "Vali väljundkaust"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Kustuta originaalfailid"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Algfailid säilitatakse, kui kõik teisendatud tulemused ei läbi kontrolli"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2857,24 +2848,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Määra, kuidas subtiitreid teisendamisel käsitletakse."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Subtiitrite haldamine"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Vali, kuidas subtiitrid väljundisse lisatakse. „Manustatud“ jätab need videofaili sisse. „Eralda .srt-faili“ loob eraldi subtiitrifailid."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Eralda ainult subtiitrid"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Jäta video teisendamine täielikult vahele ja eralda ainult subtiitrirajad .srt-failidesse."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -4023,12 +3999,6 @@ msgstr "Helitugevus"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Video kopeeritakse ilma ümberkodeerimiseta. Pildi kärpimine, kohandamine, pööramine või efektide lisamine kodeerib video uuesti."
 
-msgid "Image"
-msgstr "Pilt"
-
-msgid "Reset image adjustments"
-msgstr "Lähtesta pildi kohandused"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -4061,16 +4031,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Tavaline (SDR)"
-
-msgid "Orientation"
-msgstr "Suund"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Lähtesta teisendus"
 
 msgid "Rotation"
 msgstr "Pööramine"
@@ -4172,9 +4132,6 @@ msgstr "Vali märgitud lõikude salvestamise viis"
 msgid "Effects"
 msgstr "Efektid"
 
-msgid "Reset effects"
-msgstr "Lähtesta efektid"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -4215,10 +4172,6 @@ msgstr "Vali värvistiil või varjutaja"
 
 msgid "Looks and shaders"
 msgstr "Värvistiilid ja varjutajad"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Lähtesta {setting} vaikeväärtusele"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -5179,9 +5132,6 @@ msgstr "Big Video Converter'i käivitamine ebaõnnestus: {0}"
 msgid "Remove pauses"
 msgstr "Eemalda pausid"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Mõeldud kõne jaoks. Pausid leitakse DPDFNeti puhastatud häälest."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Võtab umbes minuti iga helitunni kohta."
 
@@ -5458,3 +5408,86 @@ msgstr[1] "{0} subtiitrirada jäeti välja, sest neid ei õnnestunud eraldada."
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Eesvaade (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "Väljund sisaldab ainult osa algfailist"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Algfail teisaldati pärast väljundi kontrollimist prügikasti"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Uuenda paketti dpdfnet-native, et pause leida."
+
+msgid "Video mode"
+msgstr "Videorežiim"
+
+msgid "How the video is encoded."
+msgstr "Kuidas videot kodeeritakse."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Koodek, bitikiirus ja kanalid…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Väljas, kui eraldatakse ainult subtiitreid"
+
+msgid "Not used with Fast Copy"
+msgstr "Kiire koopiaga ei kasutata"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Algfailid kustutatakse jäädavalt, prügikasti kasutamata, alles siis, kui kõik teisendatud tulemused läbivad kontrolli"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Algfailid teisaldatakse prügikasti alles siis, kui kõik teisendatud tulemused läbivad kontrolli"
+
+msgid "Move this video to the Trash?"
+msgstr "Kas teisaldada see video prügikasti?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "„{}“ teisaldatakse prügikasti."
+
+msgid "Move to Trash"
+msgstr "Teisalda prügikasti"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Videot ei saanud prügikasti teisaldada: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Kustuta prügikasti kasutamata"
+
+msgid "Audio only when a voice is detected"
+msgstr "Heli ainult hääle tuvastamisel"
+
+msgid "Very sensitive"
+msgstr "Väga tundlik"
+
+msgid "Sensitive"
+msgstr "Tundlik"
+
+msgid "Normal"
+msgstr "Tavaline"
+
+msgid "Strict"
+msgstr "Range"
+
+msgid "Very strict"
+msgstr "Väga range"
+
+msgid "Voice detection"
+msgstr "Hääle tuvastamine"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Tundlik tuvastamine säilitab vaiksed või ebatavalised hääled ja laseb läbi rohkem müra ja muusikat; range tuvastamine eemaldab rohkem muusikat ja võib vaikseid sõnu ära lõigata."
+
+msgid "On"
+msgstr "Sees"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} aktiivne"
+msgstr[1] "{count} aktiivset"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Mõeldud kõne jaoks: pausid leitakse pärast taustamüra eemaldamist."

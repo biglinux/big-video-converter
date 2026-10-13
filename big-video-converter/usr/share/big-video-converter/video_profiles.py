@@ -1,4 +1,4 @@
-"""Profile manager mixin — video mode radios and user presets.
+"""Profile manager mixin: video mode radios and user presets.
 
 Four built-in modes are triples of (codec, quality, copy) applied to the
 data-holder widgets. A preset is a TOML recipe (engine/presets.py) applied to
@@ -87,8 +87,8 @@ class VideoProfilesMixin:
             if self._widgets_match_preset(preset, codec_idx, quality_idx, force_copy):
                 return "preset"
             # The user walked away from the recipe: release it, otherwise its
-            # encoder arguments would keep shaping a conversion that no longer
-            # looks like the preset on screen.
+            # encoder arguments would keep shaping a conversion that differs
+            # from the preset on screen.
             self.settings_store.save_setting("active-preset", "")
             self._update_presets_subtitle()
         if force_copy or codec_idx == 0:

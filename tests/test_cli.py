@@ -1,16 +1,12 @@
 import os
 import re
-import shlex
 import shutil
 import signal
 import subprocess
 import time
-from array import array
-from pathlib import Path
 
 import pytest
 from conftest import APP, CLI, fake_ffmpeg, group_members, media_command, wait_until
-from constants import NOISE_MODELS, noise_reduction_filter
 from engine.media_validation import media_duration, probe_media, stream_count
 
 
@@ -63,7 +59,7 @@ def test_output_is_never_the_input(media, tmp_path, run_cli, mode):
 
 def test_existing_destination_is_never_replaced(media, tmp_path, run_cli):
     """A taken name gets a counter, and the script names the file it wrote:
-    the GUI validates, reports and deletes the original by that line."""
+    the GUI validates, reports and moves the original to the Trash by that line."""
     source = tmp_path / "original.mp4"
     shutil.copyfile(media["video"], source)
     dest = tmp_path / "out.mkv"
@@ -128,172 +124,7 @@ def test_embedded_subtitle_and_audio_inventory(media, tmp_path, run_cli, extensi
         assert subs[1]["disposition"]["forced"] == 1
 
 
-def test_noise_reduction_never_blocks_the_conversion(media, tmp_path, run_cli):
-    """The noise model is optional. Installed, it filters the audio; missing,
-    it warns — either way the conversion the user asked for still happens."""
-    out = tmp_path / "denoised.mkv"
-    result = run_cli(
-        media["video"],
-        out,
-        noise_reduction="1",
-        noise_strength="0.5",
-        audio_handling="reencode",
-        options="-t 0.5 -threads 1",
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    if not Path(NOISE_MODELS[0][0]).exists():
-        assert "WARNING: Noise reduction requested" in result.stdout
-    assert stream_count(probe_media(str(out)), "audio") == 1
-
-
-def _installed_noise_models():
-    return [
-        pytest.param(
-            model,
-            marks=pytest.mark.skipif(
-                not Path(entry[0]).exists(), reason=f"{entry[4]} not installed"
-            ),
-        )
-        for model, entry in enumerate(NOISE_MODELS)
-    ]
-
-
-@pytest.mark.parametrize("model", _installed_noise_models())
-def test_noise_reduction_keeps_every_channel_of_surround_audio(
-    media, tmp_path, run_cli, model
-):
-    """The plugins are mono; FFmpeg runs one instance per channel."""
-    source = tmp_path / "surround.mkv"
-    media_command(
-        "-f",
-        "lavfi",
-        "-i",
-        "testsrc2=size=128x72:rate=25",
-        "-f",
-        "lavfi",
-        "-i",
-        "sine=frequency=440:sample_rate=48000",
-        "-t",
-        "1",
-        "-c:v",
-        "libx264",
-        "-threads",
-        "1",
-        "-c:a",
-        "aac",
-        "-ac",
-        "6",
-        "-y",
-        source,
-    )
-    out = tmp_path / "denoised.mkv"
-    result = run_cli(
-        source, out, noise_reduction="1", noise_model=model, audio_handling="reencode"
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    assert "Noise reduction enabled" in result.stdout
-    audio = [s for s in probe_media(str(out))["streams"] if s["codec_type"] == "audio"]
-    assert [s["channels"] for s in audio] == [6]
-
-
-@pytest.mark.parametrize("model", _installed_noise_models())
-def test_the_preview_denoises_with_the_export_chain(media, tmp_path, run_cli, model):
-    """The editor's mpv preview builds the chain in Python; the export script
-    builds it in shell. What is heard must be what is exported."""
-    result = run_cli(
-        media["video"],
-        tmp_path / "out.mkv",
-        noise_reduction="1",
-        noise_model=model,
-        noise_strength="0.7",
-        audio_handling="reencode",
-        options="-t 0.2 -threads 1",
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    assert noise_reduction_filter(model, 0.7) in result.stdout
-
-
-def test_noise_strength_is_linear_up_to_each_models_cap():
-    """Past 24 dB DFN3 removes no more noise; a squared 0-100 dB curve left
-    the top half of the slider doing nothing."""
-    assert "controls=c0=12.00|c6=0|c17=0," in noise_reduction_filter(0, 0.5)
-    assert "controls=c0=24.00|c6=0|c17=0," in noise_reduction_filter(0, 1.0)
-    assert "controls=c0=24.00," in noise_reduction_filter(1, 0.5)
-    assert "controls=c0=48.00," in noise_reduction_filter(1, 3.0)
-
-
-def _pcm(path, *options):
-    raw = subprocess.run(
-        [
-            "ffmpeg",
-            "-v",
-            "error",
-            "-i",
-            str(path),
-            *options,
-            "-ac",
-            "1",
-            "-ar",
-            "48000",
-            "-f",
-            "f32le",
-            "-",
-        ],
-        capture_output=True,
-        check=True,
-    )
-    return array("f", raw.stdout)
-
-
-@pytest.mark.parametrize("model", _installed_noise_models())
-@pytest.mark.parametrize("seconds", [0.3, 2])
-def test_noise_reduction_keeps_timing_and_the_whole_audio(tmp_path, model, seconds):
-    """At strength 0 the plugin passes its input through, only delayed: the
-    chain must give back every sample in place, including a clip shorter than
-    its half-second lead-in, and keep a stream's starting timestamp."""
-    source = tmp_path / "tone.wav"
-    media_command(
-        "-f",
-        "lavfi",
-        "-i",
-        "sine=frequency=330:sample_rate=48000",
-        "-af",
-        "volume=0.5",
-        "-t",
-        str(seconds),
-        "-c:a",
-        "pcm_f32le",
-        "-y",
-        source,
-    )
-    chain = noise_reduction_filter(model, 0.0)
-    original = _pcm(source)
-    filtered = _pcm(source, "-af", chain)
-    assert len(filtered) == len(original)
-    assert max(abs(a - b) for a, b in zip(original, filtered)) < 1e-4
-
-    shown = subprocess.run(
-        [
-            "ffmpeg",
-            "-v",
-            "info",
-            "-i",
-            str(source),
-            "-af",
-            f"asetpts=PTS+2.5/TB,{chain},ashowinfo",
-            "-f",
-            "null",
-            "-",
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    ).stderr
-    start = float(re.search(r"n:0 pts:\S+ pts_time:(\S+)", shown).group(1))
-    assert abs(start - 2.5) < 1e-3
-
-
-def test_webm_with_default_codecs_encodes_legal_ones_once(media, tmp_path, run_cli):
+def test_webm_encodes_legal_codecs_once(media, tmp_path, run_cli):
     """WebM holds neither H.264 nor AAC; the legal codecs are chosen before encoding."""
     out = tmp_path / "web.webm"
     result = run_cli(media["video"], out, video_encoder="h264", audio_handling="copy")
@@ -305,7 +136,7 @@ def test_webm_with_default_codecs_encodes_legal_ones_once(media, tmp_path, run_c
     ]
 
 
-def test_audio_is_retried_only_for_an_audio_failure(media, tmp_path, run_cli):
+def test_only_audio_failures_retry_audio(media, tmp_path, run_cli):
     """A full disk or a missing encoder is no reason to try another audio codec."""
     failed = run_cli(
         media["video"], tmp_path / "broken.mkv", options="-c:v no_such_encoder"
@@ -325,209 +156,14 @@ def test_audio_is_retried_only_for_an_audio_failure(media, tmp_path, run_cli):
     ]
 
 
-@pytest.mark.parametrize("bitrate", ["", "500000"])
-def test_amd_hevc_keeps_bitrate_keyframes_and_tag(media, tmp_path, run_cli, bitrate):
-    """AMD's constant-QP HEVC command was rebuilt after the bitrate, GOP and
-    hvc1 tag had been applied, dropping all three."""
-    wrapper = fake_ffmpeg(
-        tmp_path,
-        "no-gpu",
-        'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done',
-    )
-    result = run_cli(
-        media["video"],
-        tmp_path / "out.mp4",
-        gpu="amd",
-        force_software="",
-        gpu_smoke_test="0",
-        video_encoder="h265",
-        video_bitrate=bitrate,
-        keyframe_interval="2",
-        ffmpeg_executable=wrapper,
-        options="-t 1 -threads 1",
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    vaapi = [
-        line
-        for line in result.stdout.splitlines()
-        if line.startswith("Running command:") and "hevc_vaapi" in line
-    ]
-    assert vaapi, result.stdout
-    for line in vaapi:
-        assert " -g 50 " in line and " -tag:v hvc1 " in line and "ICQ" not in line
-        assert (
-            (" -rc_mode VBR -b:v 500000 " in line)
-            if bitrate
-            else (" -rc_mode CQP " in line)
-        )
-
-
-def fake_gpu_selector(directory, answer):
-    """A python3 that answers ``answer`` for the GPU selector and runs the rest."""
-    wrapper = directory / "python3"
-    wrapper.write_text(
-        "#!/bin/bash\n"
-        f'[[ $1 == */gpu_selector.py ]] && {{ echo "{answer}"; exit 0; }}\n'
-        f'exec {shutil.which("python3")} "$@"\n'
-    )
-    wrapper.chmod(0o755)
-    return directory
-
-
-def hardware_commands(stdout, encoder):
-    """The argv of each logged command that encodes with ``encoder`` on a GPU."""
-    commands = []
-    for line in stdout.splitlines():
-        if line.startswith("Running command:") and "-init_hw_device" in line:
-            argv = shlex.split(line.removeprefix("Running command:"))
-            if encoder in argv:
-                commands.append(argv)
-    return commands
-
-
-def device_options(argv):
-    return [argv[i + 1] for i, arg in enumerate(argv) if arg == "-init_hw_device"]
-
-
-@pytest.mark.parametrize(
-    "settings",
-    [{"gpu": "auto"}, {"gpu": "nvidia", "gpu_device": "/dev/dri/renderD129"}],
-)
-def test_nvidia_is_initialized_by_its_cuda_index_in_pci_order(
-    media, tmp_path, run_cli, cli_env, settings
-):
-    """FFmpeg's cuda device is an index; a /dev/dri path made it fail on any
-    machine and fall back to a slower stage."""
-    order = tmp_path / "order"
-    wrapper = fake_ffmpeg(
-        tmp_path,
-        "no-gpu",
-        f'echo "$CUDA_DEVICE_ORDER" > {order}\n'
-        'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done',
-    )
-    tools = fake_gpu_selector(tmp_path, "nvidia /dev/dri/renderD129 1")
-    result = run_cli(
-        media["video"],
-        tmp_path / "out.mkv",
-        PATH=f"{tools}:{cli_env['PATH']}",
-        force_software="",
-        gpu_smoke_test="0",
-        ffmpeg_executable=wrapper,
-        options="-t 0.4 -threads 1",
-        **settings,
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    commands = hardware_commands(result.stdout, "h264_nvenc")
-    assert commands, result.stdout
-    assert all(device_options(argv) == ["cuda=cu:1"] for argv in commands)
-    assert order.read_text().strip() == "PCI_BUS_ID"
-
-
-def test_qsv_opens_the_chosen_intel_device(media, tmp_path, run_cli):
-    wrapper = fake_ffmpeg(
-        tmp_path,
-        "no-gpu",
-        'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done',
-    )
-    result = run_cli(
-        media["video"],
-        tmp_path / "out.mkv",
-        gpu="intel",
-        gpu_device="/dev/dri/renderD129",
-        force_software="",
-        gpu_smoke_test="0",
-        ffmpeg_executable=wrapper,
-        options="-t 0.4 -threads 1",
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    commands = hardware_commands(result.stdout, "h264_qsv")
-    assert commands, result.stdout
-    assert all(
-        device_options(argv)[0].startswith("vaapi=va:/dev/dri/renderD129,driver=iHD")
-        for argv in commands
-    )
-
-
-def test_vulkan_opens_the_chosen_device_through_drm(media, tmp_path, run_cli):
-    wrapper = fake_ffmpeg(
-        tmp_path,
-        "no-gpu",
-        'for arg in "$@"; do [[ $arg == -init_hw_device ]] && exit 1; done',
-    )
-    result = run_cli(
-        media["video"],
-        tmp_path / "out.mkv",
-        gpu="vulkan",
-        gpu_device="/dev/dri/renderD129",
-        force_software="",
-        gpu_smoke_test="0",
-        ffmpeg_executable=wrapper,
-        options="-t 0.4 -threads 1",
-    )
-    assert result.returncode == 0, result.stdout + result.stderr
-    commands = hardware_commands(result.stdout, "h264_vulkan")
-    assert commands, result.stdout
-    assert all(
-        device_options(argv) == ["drm=dr:/dev/dri/renderD129", "vulkan=vk@dr"]
-        for argv in commands
-    )
-
-
-@pytest.mark.parametrize("target", ["group", "script"])
-def test_cancel_during_gpu_check_ends_the_job_at_once(media, tmp_path, cli_env, target):
-    """The GPU check runs in the job's process group and does not delay the
-    TERM trap, so a cancel leaves no FFmpeg and no workspace behind."""
-    wrapper = fake_ffmpeg(
-        tmp_path,
-        "hanging-gpu",
-        'for arg in "$@"; do [[ $arg == color=c=gray* ]] && exec sleep 60; done',
-    )
-    env = {
-        **cli_env,
-        "gpu": "nvidia",
-        "force_software": "",
-        "ffmpeg_executable": str(wrapper),
-        "output_file": str(tmp_path / "out.mkv"),
-    }
-    log = tmp_path / "log"
-    with log.open("wb") as output:
-        job = subprocess.Popen(
-            ["bash", str(CLI), str(media["video"])],
-            env=env,
-            stdout=output,
-            stderr=output,
-            start_new_session=True,
-        )
-    try:
-        wait_until(lambda: "Checking GPU encoder" in log.read_text(), 20)
-        wait_until(
-            lambda: len(group_members(job.pid)) > 2, 10, "the GPU check never started"
-        )
-        started = time.monotonic()
-        if target == "group":
-            os.killpg(job.pid, signal.SIGTERM)
-        else:
-            job.send_signal(signal.SIGTERM)
-        assert job.wait(timeout=10) == 143
-        assert time.monotonic() - started < 7
-        wait_until(lambda: not group_members(job.pid), 5, "part of the job survived")
-        assert not list(tmp_path.glob(".bvc-*"))
-    finally:
-        if job.poll() is None:
-            os.killpg(job.pid, signal.SIGKILL)
-            job.wait()
-
-
-def test_no_audio_does_not_duplicate_video(media, tmp_path, run_cli):
+def test_silent_source_yields_one_video_stream(media, tmp_path, run_cli):
     out = tmp_path / "silent.mp4"
     result = run_cli(media["silent"], out, options="-t 0.5 -threads 1")
     assert result.returncode == 0, result.stdout + result.stderr
     assert [s["codec_type"] for s in probe_media(str(out))["streams"]] == ["video"]
 
 
-def test_only_extract_preserves_original_and_distinguishes_languages(
-    media, tmp_path, run_cli
-):
+def test_extract_only_writes_distinct_sidecars(media, tmp_path, run_cli):
     out = tmp_path / "extract.mp4"
     before = media["multi"].read_bytes()
     result = run_cli(
@@ -574,7 +210,7 @@ def test_encoding_failure_never_publishes_partial_output(media, tmp_path, run_cl
     assert not list(tmp_path.glob(".bvc*"))
 
 
-def test_two_jobs_on_one_destination_keep_both_files(media, tmp_path, cli_env):
+def test_concurrent_jobs_keep_both_files(media, tmp_path, cli_env):
     """The name is claimed exclusively, so the second job to finish takes the
     next free one instead of replacing the first job's file."""
     out = tmp_path / "shared.mp4"
@@ -598,9 +234,7 @@ def test_two_jobs_on_one_destination_keep_both_files(media, tmp_path, cli_env):
 
 
 @pytest.mark.parametrize("only_subtitles", ["0", "1"])
-def test_existing_sidecar_is_kept_and_the_track_numbered(
-    media, tmp_path, run_cli, only_subtitles
-):
+def test_taken_sidecar_name_gets_next_number(media, tmp_path, run_cli, only_subtitles):
     """The video is already published when a sidecar name turns out taken:
     the track takes the next number instead of failing the job."""
     existing = tmp_path / "extract.por.srt"
@@ -657,7 +291,7 @@ def test_every_text_subtitle_codec_is_extracted(media, tmp_path, run_cli, name, 
     assert "Segunda fala" in (tmp_path / "out.und.srt").read_text()
 
 
-def test_mov_text_is_stored_as_subrip_in_matroska(media, tmp_path, run_cli):
+def test_mov_text_becomes_subrip_in_matroska(media, tmp_path, run_cli):
     source = _with_subtitle(media, tmp_path / "phone.mp4", "mov_text")
     out = tmp_path / "out.mkv"
     result = run_cli(source, out)
@@ -868,7 +502,7 @@ def test_stabilization_analyses_first_in_any_folder(media, tmp_path, run_cli):
     assert _frames(out) == _frames(media["video"])
 
 
-def test_effect_file_path_survives_the_filter_graph(media, tmp_path, run_cli):
+def test_effect_file_path_survives_filter_graph(media, tmp_path, run_cli):
     from engine.video_settings import effect_file_filter
 
     folder = tmp_path / "look ,:'[];\\ ç"
@@ -940,7 +574,7 @@ def _color(path):
     ).stdout.strip()
 
 
-def test_user_declared_hdr_is_tone_mapped_or_kept_tagged(tmp_path, run_cli):
+def test_declared_hdr_is_mapped_or_tagged(tmp_path, run_cli):
     source = _untagged_pq(tmp_path)
     plain = run_cli(source, tmp_path / "plain.mkv", video_encoder="h264")
     assert plain.returncode == 0 and "Detected HDR" not in plain.stdout
@@ -983,9 +617,7 @@ def _audio_seconds(path):
     )
 
 
-def test_close_cuts_share_one_input_and_keep_sound_with_picture(
-    media, tmp_path, run_cli
-):
+def test_many_close_cuts_stay_in_sync(media, tmp_path, run_cli):
     """Removed pauses are hundreds of cuts a moment apart. An input each
     decoded them all at once, queueing frames until the join reached them."""
     # 34 cuts of two frames (25 fps), each starting between frames: more than
@@ -1022,7 +654,7 @@ def test_close_cuts_share_one_input_and_keep_sound_with_picture(
     assert _frames(single) == 3
 
 
-def test_cuts_keep_their_length_where_the_audio_starts_late(tmp_path, run_cli):
+def test_cuts_keep_length_with_late_audio(tmp_path, run_cli):
     """Video and audio are joined apart; a cut short of audio must not pull
     the sound of every later cut ahead of its picture."""
     source = tmp_path / "late.mp4"
@@ -1066,9 +698,7 @@ def test_keyframe_interval_counts_output_frames(media, tmp_path, run_cli):
     assert " -g 20 " in result.stdout
 
 
-def test_size_limit_counts_the_subtitles_added_after_the_encode(
-    media, tmp_path, run_cli
-):
+def test_size_limit_counts_added_subtitles(media, tmp_path, run_cli):
     """Embedded subtitles of a trimmed job are added after the encode."""
     cue = "x" * 200
     srt = tmp_path / "long.srt"
@@ -1101,7 +731,7 @@ def test_size_limit_counts_the_subtitles_added_after_the_encode(
     assert result.returncode != 0 or out.stat().st_size <= 1000000
 
 
-def test_a_hung_opencl_probe_does_not_hang_the_job(media, tmp_path, run_cli):
+def test_hung_opencl_probe_times_out(media, tmp_path, run_cli):
     wrapper = fake_ffmpeg(
         tmp_path,
         "hanging-opencl",
@@ -1160,7 +790,7 @@ def test_cancel_ends_subtitle_extraction_at_once(media, tmp_path, cli_env):
             job.wait()
 
 
-def test_a_failing_preset_helper_stops_the_job(media, tmp_path, cli_env):
+def test_failing_preset_helper_stops_the_job(media, tmp_path, cli_env):
     preset = APP / "presets/whatsapp.toml"
     tools = tmp_path / "bin"
     tools.mkdir()
@@ -1189,7 +819,7 @@ def test_a_failing_preset_helper_stops_the_job(media, tmp_path, cli_env):
     assert not (tmp_path / "out.mkv").exists()
 
 
-def test_a_full_disk_is_not_encoded_again_on_other_stages(media, tmp_path, run_cli):
+def test_full_disk_stops_stage_fallback(media, tmp_path, run_cli):
     calls = tmp_path / "encodes"
     wrapper = fake_ffmpeg(
         tmp_path,
@@ -1210,9 +840,7 @@ def test_a_full_disk_is_not_encoded_again_on_other_stages(media, tmp_path, run_c
     assert calls.read_text().count("x") == 1, result.stdout
 
 
-def test_job_stops_when_the_application_that_started_it_is_gone(
-    media, tmp_path, cli_env
-):
+def test_job_stops_when_its_application_exits(media, tmp_path, cli_env):
     application = subprocess.Popen(["sleep", "60"])
     stalled = fake_ffmpeg(
         tmp_path, "ffmpeg", '[[ " $* " == *" -progress "* ]] && exec sleep 30'

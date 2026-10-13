@@ -70,6 +70,8 @@ Audio
   normalize_enabled=1       even out the speech volume
   noise_reduction=1         AI noise reduction: noise_model 0 (DeepFilterNet3) or 1 (DPDFNet),
                             noise_strength 0..1 (default 1)
+  voice_only=1              with noise_reduction, audio only while a voice is heard;
+                            voice_only_sensitivity 1 (keeps faint voices) to 5 (default 3)
   noise_gate=1              noise gate, gate_intensity 0..1 (default 0.5)
   eq_enabled=1              equalizer, eq_bands = ten gains in dB, 31 Hz to 16 kHz
 
@@ -236,6 +238,10 @@ for name in hpf_frequency compressor_intensity gate_intensity noise_strength noi
 		exit 2
 	fi
 done
+if [[ -n ${voice_only_sensitivity:-} && ! $voice_only_sensitivity =~ ^[1-5]$ ]]; then
+	echo "ERROR: Invalid voice sensitivity (1 to 5): $voice_only_sensitivity" >&2
+	exit 2
+fi
 if [[ -n ${video_bitrate:-} && ! $video_bitrate =~ ^[1-9][0-9]{4,9}$ ]]; then
 	echo "ERROR: Invalid video bitrate (bits per second): $video_bitrate" >&2
 	exit 2
@@ -509,9 +515,9 @@ elif [[ -n $video_resolution ]]; then
 fi
 
 # Output frame rate (video_fps, "24" or "30000/1001"). Fewer frames drop the
-# extra ones; more frames blend neighbors, because FFmpeg's motion
-# interpolation (minterpolate) ran at 6 frames per second on 1080p -- hours
-# for a film. Within half a percent (29.97 against 30) nothing changes.
+# extra ones; more frames blend neighbors, since FFmpeg's motion interpolation
+# (minterpolate) takes hours for a 1080p film. Within half a percent (29.97
+# against 30) nothing changes.
 output_fps_num=$source_fps_num output_fps_den=$source_fps_den
 fps_filter=""
 if [[ -n ${video_fps:-} ]]; then
@@ -567,9 +573,9 @@ if [[ $output_file -ef $input_file ]]; then
 	exit 1
 fi
 
-# WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio. With this
-# tool's defaults (H.264, AAC) FFmpeg refused the file after the whole encode,
-# and again after the audio retry. The legal codecs are chosen up front.
+# WebM holds only VP8, VP9 or AV1 video and Vorbis or Opus audio, and FFmpeg
+# rejects any other codec only after the whole encode, so the legal codecs are
+# chosen up front.
 if [[ ${output_file,,} == *.webm ]]; then
 	if [[ $force_copy_video != 1 && $video_encoder != vp9 && $video_encoder != av1 ]]; then
 		echo "WebM output: encoding the video as VP9 instead of ${video_encoder:-h264}"
@@ -668,7 +674,9 @@ fi
 # which is RAM on most systems. mktemp creates a directory owned only by this
 # invocation; a stale workspace must never be deleted to claim its name.
 output_stage_dir=$(mktemp -d -- "${output_file%/*}/.bvc-XXXXXXXXXX") || exit 1
-printf 'Job workspace: %s\n' "$output_stage_dir"
+# One line, escaped as the "Output file:" line below.
+escaped=${output_stage_dir//\\/\\\\} escaped=${escaped//$'\n'/\\n} escaped=${escaped//$'\r'/\\r}
+printf 'Job workspace: %s\n' "$escaped"
 staged_output="$output_stage_dir/video.${output_file##*.}"
 
 option_parser="$script_dir/../share/big-video-converter/engine/ffmpeg_options.py"
@@ -696,8 +704,8 @@ done
 
 # A join of several cuts (the GUI's segment batch) is one encode: every cut is
 # its own input, trimmed exactly while decoding, and the concat filter joins
-# them. Cuts copied or encoded one by one and joined afterwards carried a
-# keyframe's worth of extra frames or an AAC priming gap into every seam.
+# them. Joining cuts copied or encoded one by one would put a keyframe's worth
+# of extra frames or an AAC priming gap into every seam.
 # segments="START+DURATION,..." in seconds; the caller handles subtitles.
 # Each duration is cut to whole frames: the concat filter pads a cut whose
 # audio ends before its last frame with silence, an audible gap at the seam.
@@ -915,15 +923,24 @@ if [[ $noise_reduction == "1" ]]; then
 	case ${noise_model:-0} in
 	1)
 		nr_plugin=/usr/lib/ladspa/libdpdfnet_native.so nr_label=dpdfnet_native_48hr
-		nr_delay=2880 nr_extra="" nr_full_db=48
+		nr_delay=2880 nr_extra="" nr_full_db=48 nr_gate=(1 2 3)
 		;;
 	*)
 		# DFN3 mutes its first second and gates what it takes for no voice by
 		# default, both meant for a live microphone.
 		nr_plugin=/usr/lib/ladspa/libdfn3_ladspa.so nr_label=deep_filter_net3_rs_mono
-		nr_delay=1919 nr_extra="|c6=0|c17=0" nr_full_db=24
+		nr_delay=1919 nr_extra="|c6=0" nr_full_db=24 nr_gate=(17 18 19)
 		;;
 	esac
+	# The voice gate: depth, detector and sensitivity controls. On, it mutes
+	# what FireRedVAD does not hear as a voice and holds either plugin's
+	# output to 3168 samples.
+	if [[ ${voice_only:-0} == "1" ]]; then
+		nr_extra+="|c${nr_gate[0]}=60|c${nr_gate[1]}=1|c${nr_gate[2]}=${voice_only_sensitivity:-3}"
+		nr_delay=3168
+	elif [[ ${noise_model:-0} != "1" ]]; then
+		nr_extra+="|c${nr_gate[0]}=0"
+	fi
 	if [[ -e $nr_plugin ]]; then
 		# Strength 0..1 is linear in dB up to where the model stops removing
 		# more (see constants.NOISE_MODELS).
@@ -1429,6 +1446,15 @@ hw_encoder_smoke_test() {
 		-c:v "$encoder" -frames:v 2 -f null -
 }
 
+# A GPU decodes only the codecs its hardware has (no AV1 before NVIDIA's RTX
+# 30 series): FFmpeg then fails every packet, one error per frame, and the
+# GPU stage would run through the whole file before falling back. One frame
+# of the source is decoded first; -xerror ends the check at the first error.
+hw_decoder_smoke_test() {
+	run_gpu_check "$ffmpeg_executable" -nostdin -v error -xerror "${init_hardware[@]}" \
+		"${decoder_format[@]}" -i "$input_file" -map 0:v:0 -frames:v 1 -f null -
+}
+
 # Crop, turn and flip without leaving GPU memory when they are the only
 # edits, which is faster and gives the same pixels. Each API keeps only what
 # it gets right:
@@ -1826,6 +1852,11 @@ attempt_conversion() {
 			force_software=1
 		fi
 	fi
+	if [[ $force_copy_video != 1 && $detected_encoder_var != encoder_software && $gpu_partial != 1 &&
+		${#decoder_format[@]} -gt 0 && ${gpu_smoke_test:-1} == 1 ]] && ! hw_decoder_smoke_test; then
+		gpu_partial=1
+		echo "GPU cannot decode this video: forcing software decode (Stage 2)"
+	fi
 
 	# Sidecar subtitles are written once, by a command of their own.
 	if [[ ${#subtitle_cmd[@]} -gt 0 && "$subtitle_extract" == "extract" && "$subtitles_already_extracted" != "true" ]]; then
@@ -1912,7 +1943,7 @@ attempt_conversion() {
 			partial_filter_parts+=("zscale=min=709:m=709:tin=709:t=709:pin=709:p=709:r=tv")
 		fi
 
-		# User video filters (crop, rotation, flip, etc) — must run in software space
+		# User video filters (crop, rotation, flip, etc.) must run in software space
 		[[ -z $stabilize_filter ]] || partial_filter_parts+=("$stabilize_filter")
 		if [[ -n "$video_filter" ]]; then
 			partial_filter_parts+=("$video_filter")

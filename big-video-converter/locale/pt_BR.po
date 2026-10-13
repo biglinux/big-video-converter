@@ -776,9 +776,6 @@ msgstr "Arquivo não encontrado"
 msgid "Edit video"
 msgstr "Editar vídeo"
 
-msgid "Changes apply only to the selected video"
-msgstr "As alterações se aplicam apenas ao vídeo selecionado"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1390,9 +1387,6 @@ msgstr "Extra"
 msgid "SW Decode"
 msgstr "Decodificação por software"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Receitas prontas: YouTube, Instagram, edição…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py
 msgid "Requires audio set to re-encode"
@@ -1605,9 +1599,6 @@ msgstr "Escolha a pasta de saída"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Excluir arquivos originais"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Os originais só são excluídos se todos os resultados da conversão passarem pela validação"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2767,24 +2758,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Configure como as legendas são tratadas durante a conversão."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Manipulação de Legendas"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Escolha como as legendas são incluídas na saída. 'Incorporado' mantém-as dentro do arquivo de vídeo. 'Extrair para .srt' cria arquivos de legenda separados."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Somente Extrair Legendas"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Pule a conversão de vídeo completamente e extraia apenas as faixas de legendas para arquivos .srt."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -3933,12 +3909,6 @@ msgstr "Volume"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "O vídeo está sendo copiado sem recodificação. Recortar, ajustar, girar ou aplicar efeitos à imagem faz este vídeo ser recodificado."
 
-msgid "Image"
-msgstr "Imagem"
-
-msgid "Reset image adjustments"
-msgstr "Redefinir ajustes de imagem"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -3971,16 +3941,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Padrão (SDR)"
-
-msgid "Orientation"
-msgstr "Orientação"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Redefinir Transformação"
 
 msgid "Rotation"
 msgstr "Rotação"
@@ -4052,9 +4012,6 @@ msgstr "Escolha como salvar os segmentos marcados"
 msgid "Effects"
 msgstr "Efeitos"
 
-msgid "Reset effects"
-msgstr "Restaurar efeitos"
-
 msgid "Off"
 msgstr "Desligado"
 
@@ -4093,10 +4050,6 @@ msgstr "Escolher um Estilo ou Shader"
 
 msgid "Looks and shaders"
 msgstr "Estilos e shaders"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Restaurar {setting} ao padrão"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -5120,9 +5073,6 @@ msgstr "Falha ao iniciar o Big Video Converter: {0}"
 msgid "Remove pauses"
 msgstr "Remover pausas"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Feito para fala. As pausas são encontradas na voz limpa pelo DPDFNet."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Leva cerca de um minuto para cada hora de áudio."
 
@@ -5398,3 +5348,86 @@ msgstr[1] "Não foi possível extrair {0} faixas de legendas, que ficaram de for
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Antecipação (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "A saída contém apenas parte do original"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Original movido para a lixeira após validação da saída"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Atualize o dpdfnet-native para encontrar pausas."
+
+msgid "Video mode"
+msgstr "Modo de vídeo"
+
+msgid "How the video is encoded."
+msgstr "Como o vídeo é codificado."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Codec, taxa de bits e canais…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Desligado ao extrair somente legendas"
+
+msgid "Not used with Fast Copy"
+msgstr "Não usado com Cópia Rápida"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Os originais só são excluídos permanentemente, sem passar pela lixeira, depois que todos os resultados da conversão passarem pela validação"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Os originais só vão para a lixeira depois que todos os resultados da conversão passarem pela validação"
+
+msgid "Move this video to the Trash?"
+msgstr "Mover este vídeo para a lixeira?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "“{}” será movido para a lixeira."
+
+msgid "Move to Trash"
+msgstr "Mover para a lixeira"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Não foi possível mover o vídeo para a lixeira: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Excluir sem Usar a Lixeira"
+
+msgid "Audio only when a voice is detected"
+msgstr "Áudio apenas ao detectar voz"
+
+msgid "Very sensitive"
+msgstr "Muito sensível"
+
+msgid "Sensitive"
+msgstr "Sensível"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Strict"
+msgstr "Rigorosa"
+
+msgid "Very strict"
+msgstr "Muito rigorosa"
+
+msgid "Voice detection"
+msgstr "Detecção de voz"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "A detecção sensível mantém vozes baixas ou incomuns e deixa passar mais ruído e música; a rigorosa remove mais música e pode cortar palavras ditas em voz baixa."
+
+msgid "On"
+msgstr "Ligado"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} ativo"
+msgstr[1] "{count} ativos"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Feito para fala: as pausas são encontradas depois que o ruído de fundo é removido."

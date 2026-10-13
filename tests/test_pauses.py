@@ -6,7 +6,13 @@ import subprocess
 import time
 
 import pytest
-from engine.pauses import KEEP, STEP, PauseFinder, find_pauses
+from engine.pauses import (
+    DEFAULT_VOICE_SENSITIVITY,
+    KEEP,
+    STEP,
+    PauseFinder,
+    find_pauses,
+)
 from gi.repository import GLib
 
 
@@ -15,7 +21,7 @@ def levels(*runs):
     return [level for level, seconds in runs for _ in range(round(seconds / STEP))]
 
 
-def test_pauses_keep_air_beside_speech_but_not_at_the_ends():
+def test_pauses_pad_speech_and_reach_ends():
     envelope = levels((-80, 1), (-6, 2), (-70, 1.5), (-6, 2), (-80, 1))
     assert find_pauses(envelope, 0.5) == [
         {"start": 0.0, "stop": 1 - KEEP},
@@ -24,13 +30,13 @@ def test_pauses_keep_air_beside_speech_but_not_at_the_ends():
     ]
 
 
-def test_short_gaps_and_silence_free_audio_are_not_pauses():
+def test_short_or_absent_gaps_yield_nothing():
     assert find_pauses(levels((-6, 1), (-70, 0.4), (-6, 1)), 0.5) == []
     assert find_pauses(levels((-6, 3)), 0.5) == []
     assert find_pauses([], 0.5) == []
 
 
-def test_the_threshold_follows_the_speech_level_within_bounds():
+def test_threshold_tracks_speech_within_bounds():
     # Quiet speech at -40 dBFS keeps a -65 dBFS floor: DPDFNet's residue
     # (about -70) is a pause, a -60 dBFS murmur is not.
     assert find_pauses(levels((-40, 2), (-60, 1), (-40, 2)), 0.5) == []
@@ -60,11 +66,22 @@ def wait_for(predicate, timeout=60):
         time.sleep(0.01)
 
 
+def denoiser_with_voice_sensitivity():
+    denoiser = shutil.which("dpdfnet-enhance")
+    return (
+        denoiser
+        and "--voice-sensitivity"
+        in subprocess.run(
+            [denoiser, "--help"], capture_output=True, text=True, check=False
+        ).stdout
+    )
+
+
 @pytest.mark.skipif(
-    not (shutil.which("dpdfnet-enhance") and shutil.which("espeak-ng")),
-    reason="needs dpdfnet-enhance and espeak-ng",
+    not (denoiser_with_voice_sensitivity() and shutil.which("espeak-ng")),
+    reason="needs dpdfnet-enhance with --voice-sensitivity, and espeak-ng",
 )
-def test_a_pause_in_a_noisy_video_is_found_at_its_edges(tmp_path):
+def test_noisy_video_pause_found_at_edges(tmp_path):
     for name, text in (
         ("one", "The quick brown fox jumps over the lazy dog."),
         ("two", "Then it runs back into the forest."),
@@ -120,7 +137,7 @@ def test_a_pause_in_a_noisy_video_is_found_at_its_edges(tmp_path):
     found = []
     finder = PauseFinder()
     finder.start(
-        PauseFinder.identity(str(video), 1),
+        PauseFinder.identity(str(video), 1, DEFAULT_VOICE_SENSITIVITY),
         "ffmpeg",
         shutil.which("dpdfnet-enhance"),
         0,
@@ -138,7 +155,7 @@ def test_a_pause_in_a_noisy_video_is_found_at_its_edges(tmp_path):
     assert stop - KEEP - 0.05 <= pauses[0]["stop"] < stop
 
 
-def test_cancel_stops_the_analysis_and_drops_its_result(media, tmp_path):
+def test_cancel_stops_analysis_and_drops_result(media, tmp_path):
     # A denoiser that never answers keeps the analysis running until cancelled.
     stalled = tmp_path / "stalled-denoiser"
     stalled.write_text("#!/bin/sh\nexec sleep 30\n")
@@ -146,7 +163,7 @@ def test_cancel_stops_the_analysis_and_drops_its_result(media, tmp_path):
     reached = []
     finder = PauseFinder()
     finder.start(
-        PauseFinder.identity(str(media["video"]), 0),
+        PauseFinder.identity(str(media["video"]), 0, 3),
         "ffmpeg",
         str(stalled),
         3,
@@ -164,3 +181,42 @@ def test_cancel_stops_the_analysis_and_drops_its_result(media, tmp_path):
     while context.pending():
         context.iteration(False)
     assert reached == []
+
+
+def measure(media, tmp_path, script, sensitivity=3):
+    """Run the analysis of the test video with a fake dpdfnet-enhance."""
+    denoiser = tmp_path / "dpdfnet-enhance"
+    denoiser.write_text("#!/bin/sh\n" + script)
+    denoiser.chmod(0o755)
+    outcome = []
+    PauseFinder().start(
+        PauseFinder.identity(str(media["video"]), 0, sensitivity),
+        "ffmpeg",
+        str(denoiser),
+        3,
+        lambda _f: None,
+        lambda _key, levels: outcome.append(levels),
+        lambda message: outcome.append(message),
+    )
+    wait_for(lambda: outcome)
+    return outcome[0]
+
+
+def test_voice_sensitivity_reaches_denoiser(media, tmp_path):
+    args = tmp_path / "args"
+    # Records its options and lets the audio through.
+    levels = measure(media, tmp_path, f'echo "$@" > "{args}"\nexec cat\n', 5)
+    assert len(levels) == pytest.approx(3 / STEP, abs=5)
+    assert "--speech-only --voice-sensitivity 5" in args.read_text()
+
+
+@pytest.mark.parametrize(
+    "refusal",
+    [
+        "dpdfnet-enhance: usage: dpdfnet-enhance [--channels N]",
+        'dpdfnet-enhance: unknown argument "--voice-sensitivity"',
+    ],
+)
+def test_old_denoiser_asks_for_update(media, tmp_path, refusal):
+    script = f"echo '{refusal}' >&2\nexit 2\n"
+    assert measure(media, tmp_path, script) == "Update dpdfnet-native to find pauses."

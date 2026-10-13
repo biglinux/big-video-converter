@@ -17,13 +17,13 @@ from engine.size_target import (
 HD = Source(duration=600, size=400_000_000, width=1920, height=1080, fps=30)
 
 
-def test_a_file_that_already_fits_is_copied_or_kept_at_quality():
+def test_fitting_file_is_copied_or_kept():
     small = Source(60, 5_000_000, 1920, 1080, 30)
     assert plan_size(small, 16_000_000, copy_ok=True).kind == "copy"
     assert plan_size(small, 16_000_000, copy_ok=False).kind == "quality"
 
 
-def test_small_targets_lower_the_bitrate_then_the_resolution():
+def test_small_targets_lower_bitrate_then_resolution():
     # 10 min into 200 MB: ~2.3 Mbit/s, too thin for 1080p H.264, fine at 720p.
     plan = plan_size(HD, 200_000_000, audio_bps=128_000)
     assert plan.kind == "bitrate"
@@ -35,7 +35,7 @@ def test_small_targets_lower_the_bitrate_then_the_resolution():
     assert plan_size(HD, 100_000_000, audio_bps=128_000).resolution == "854x480"
 
 
-def test_keep_resolution_never_scales_and_refuses_the_impossible():
+def test_keep_resolution_refuses_impossible_targets():
     plan = plan_size(HD, 100_000_000, strategy="keep_resolution", audio_bps=128_000)
     assert plan.kind == "bitrate" and plan.resolution == ""
     with pytest.raises(SizeTargetError):
@@ -47,14 +47,14 @@ def test_vertical_video_scales_its_short_side():
     assert plan_size(phone, 200_000_000, audio_bps=128_000).resolution == "720x1280"
 
 
-def test_heavy_audio_is_reduced_before_the_picture_starves():
+def test_heavy_audio_is_reduced_first():
     plan = plan_size(
         Source(120, 90_000_000, 1920, 1080, 30), 16_000_000, audio_bps=320_000
     )
     assert plan.kind == "bitrate" and plan.audio_bitrate == 64_000
 
 
-def test_a_long_video_into_a_chat_limit_is_split_instead_of_ruined():
+def test_long_video_over_chat_limit_splits():
     movie = Source(7200, 3_000_000_000, 1920, 1080, 24)
     plan = plan_size(movie, 16_000_000)
     assert plan.kind == "split"
@@ -75,7 +75,7 @@ def _packets(seconds, video_bytes_a_second, gop=2.0, fps=25):
     return packets
 
 
-def test_large_targets_split_on_keyframes_without_re_encoding():
+def test_large_targets_copy_split_on_keyframes():
     packets = _packets(600, 5_000_000 // 8)
     source = Source(600, sum(p[1] for p in packets), 1920, 1080, 25)
     target = 100_000_000
@@ -93,7 +93,7 @@ def test_large_targets_split_on_keyframes_without_re_encoding():
     assert all(a[1] == b[0] for a, b in pairwise(plan.cuts))
 
 
-def test_a_keyframe_interval_bigger_than_the_target_cannot_be_copied():
+def test_oversized_keyframe_interval_forces_reencode():
     assert keyframe_cuts(_packets(60, 5_000_000, gop=30), 2_000_000) is None
     # Planning then falls back to splitting with a re-encode.
     packets = _packets(60, 5_000_000, gop=30)
@@ -106,7 +106,7 @@ def test_a_keyframe_interval_bigger_than_the_target_cannot_be_copied():
     )
 
 
-def test_parts_come_out_even_with_no_stub_at_the_end():
+def test_split_parts_come_out_even_sized():
     # 21 keyframe intervals of 1.18 MB into 5 MB: filling parts in turn gives
     # 4,4,4,4,4,1 intervals; the even cuts give 4,3,4,3,4,3.
     packets = _packets(21, 1_000_000, gop=1)
@@ -148,7 +148,7 @@ def _context(source, target, strategy="auto", **extra):
     return prepare_size_job(context)
 
 
-def test_the_job_carries_what_the_script_needs(media):
+def test_job_carries_what_the_script_needs(media):
     size = media["video"].stat().st_size
     copied = _context(media["video"], size * 2)
     assert copied["route"] == "single" and copied["env_vars"]["force_copy_video"] == "1"
@@ -163,6 +163,12 @@ def test_the_job_carries_what_the_script_needs(media):
         edited["plan"].kind == "quality"
         and edited["env_vars"]["video_encoder"] == "h264"
     )
+    extras = _context(
+        media["video"],
+        size * 2,
+        encode_env={"video_encoder": "h264", "options": "-vf negate"},
+    )
+    assert extras["plan"].kind == "quality"
     squeezed = _context(media["video"], size // 2)
     assert squeezed["plan"].kind == "bitrate"
     assert int(squeezed["env_vars"]["video_bitrate"]) == squeezed["plan"].video_bitrate
@@ -171,7 +177,7 @@ def test_the_job_carries_what_the_script_needs(media):
     assert split["plan"].kind in ("split", "copy_split")
 
 
-def test_joined_cuts_split_but_separate_cuts_do_not(media):
+def test_only_joined_cuts_can_split(media):
     joined = _context(
         media["video"],
         50_000,
@@ -190,7 +196,7 @@ def test_joined_cuts_split_but_separate_cuts_do_not(media):
         )
 
 
-def test_parts_are_copied_into_a_folder_named_with_percent(media, tmp_path):
+def test_parts_copy_into_percent_named_folder(media, tmp_path):
     """The segment muxer reads its output path as a template."""
     import threading
 

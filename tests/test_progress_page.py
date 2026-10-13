@@ -66,7 +66,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertTrue(self.page.show_completion_summary())
         return paths
 
-    def test_decorative_parts_leave_other_labels_and_icons_readable(self):
+    def test_decorative_parts_keep_labels_readable(self):
         # An instance's set_accessible_role() is GtkWidgetClass's: it once
         # hid every label made after this page from screen readers.
         self.settle(["completed", "failed"])
@@ -77,7 +77,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(Gtk.Label().get_accessible_role(), Gtk.AccessibleRole.LABEL)
         self.assertEqual(Gtk.Image().get_accessible_role(), Gtk.AccessibleRole.IMG)
 
-    def test_skip_cancels_a_job_reserved_before_its_row_started(self):
+    def test_skip_cancels_a_reserved_job(self):
         import threading
 
         path = "/tmp/reserved.mp4"
@@ -97,7 +97,7 @@ class ProgressPageTests(unittest.TestCase):
             (row.status, row.status_label.get_text()), ("failed", "File not found")
         )
 
-    def test_strip_counts_failed_and_cancelled_as_finished(self):
+    def test_strip_counts_every_settled_job(self):
         paths = ["/tmp/failed.mp4", "/tmp/skipped.mp4", "/tmp/waiting.mp4"]
         self.page.initialize_queue(paths)
 
@@ -128,13 +128,13 @@ class ProgressPageTests(unittest.TestCase):
             window.destroy()
             manager.set_color_scheme(original)
 
-    def test_duplicate_paths_create_one_row_and_one_total(self):
+    def test_duplicate_paths_share_one_row(self):
         path = "/tmp/duplicate.mp4"
         self.page.initialize_queue([path, path])
         self.assertEqual(len(self.page.queue_items), 1)
         self.assertFalse(self.page.summary_strip.get_visible())
 
-    def test_single_job_shows_exactly_one_progress_bar(self):
+    def test_single_job_shows_one_progress_bar(self):
         path = "/tmp/single.mp4"
         self.page.initialize_queue([path])
         row = self.page.add_conversion("single", path, None)
@@ -146,7 +146,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertFalse(self.page.cancel_all_button.get_visible())
         self.assertEqual(row.percent_label.get_text(), "40%")
 
-    def test_summary_strip_appears_only_with_two_or_more_jobs(self):
+    def test_summary_strip_needs_two_jobs(self):
         paths = ["/tmp/one.mp4", "/tmp/two.mp4"]
         self.page.initialize_queue(paths)
         row = self.page.add_conversion("one", paths[0], None)
@@ -162,7 +162,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(waiting.cancel_label.get_label(), "Skip")
         self.assertEqual(row.cancel_label.get_label(), "Cancel")
 
-    def test_time_left_is_gated_smoothed_and_formatted(self):
+    def test_time_left_is_gated_and_smoothed(self):
         estimate = TimeLeft()
         self.assertIsNone(estimate.update(0.0, now=0))
         self.assertIsNone(estimate.update(0.01, now=1))  # origin
@@ -183,7 +183,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(format_clock(8), "0:08")
         self.assertEqual(format_clock(3725), "1:02:05")
 
-    def test_hero_shows_time_left_and_metrics_on_the_bar(self):
+    def test_hero_bar_shows_time_and_metrics(self):
         path = "/tmp/timed.mp4"
         self.page.initialize_queue([path])
         row = self.page.add_conversion("timed", path, None)
@@ -198,7 +198,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(row.metrics_label.get_text(), "68 fps · 0:12")
         self.assertNotRegex(row.metrics_label.get_text(), r"\d\d:\d\d:\d\d")
 
-    def test_only_the_running_video_estimates_its_time_left(self):
+    def test_only_running_video_estimates_time(self):
         paths = ["/tmp/running.mp4", "/tmp/waiting.mp4"]
         self.page.initialize_queue(paths)
         row = self.page.add_conversion("running", paths[0], None)
@@ -209,7 +209,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(self.page.strip_label.get_text(), "0 of 2 finished · 25%")
         self.assertEqual(self.page.queue_items[paths[1]].time_left_label.get_text(), "")
 
-    def test_completion_summary_is_scheduled_only_once_and_reset_cancels_it(self):
+    def test_completion_summary_schedules_once_until_reset(self):
         path = "/tmp/only.mp4"
         self.page.initialize_queue([path])
         self.page.finish_pending(path, success=True)
@@ -235,7 +235,7 @@ class ProgressPageTests(unittest.TestCase):
         )
         self.assertIsNone(self.page._completion_source_id)
 
-    def test_completed_summary_reports_published_name_time_and_sizes(self):
+    def test_summary_reports_published_name_and_sizes(self):
         directory = Path(tempfile.mkdtemp(dir=os.environ.get("TMPDIR")))
         self.addCleanup(shutil.rmtree, directory)
         source = directory / "holiday.mp4"
@@ -280,7 +280,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertTrue(row.open_button.get_visible())
         self.assertEqual(row.open_button.get_tooltip_text(), "Open video")
 
-    def test_primary_action_returns_to_the_queue_and_takes_focus(self):
+    def test_primary_action_takes_focus_and_returns(self):
         window = Adw.Window()
         window.set_content(self.page.get_page())
         try:
@@ -295,7 +295,7 @@ class ProgressPageTests(unittest.TestCase):
         finally:
             window.destroy()
 
-    def test_all_failed_is_not_reported_as_complete(self):
+    def test_all_failed_reports_failure(self):
         self.settle(["failed", "failed"])
         self.assertEqual(self.page.result_heading.get_text(), "Conversions failed")
         self.assertEqual(self.page.result_stats.get_text(), "2 conversions failed")
@@ -349,7 +349,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(self.page.result_stats.get_text(), "2 conversions cancelled")
         self.assertFalse(self.page.result_badge.has_css_class("failed"))
 
-    def test_mixed_result_omits_zero_categories_and_reports_issues(self):
+    def test_mixed_result_lists_nonzero_categories(self):
         self.settle(["completed", "failed", "cancelled"])
         detail = self.page.result_stats.get_text()
         self.assertEqual(
@@ -361,14 +361,14 @@ class ProgressPageTests(unittest.TestCase):
         self.assertNotIn("0 ", detail)
         self.assertTrue(self.page.result_badge.has_css_class("mixed"))
 
-    def test_empty_or_unsettled_queue_cannot_show_a_summary(self):
+    def test_unsettled_queue_shows_no_summary(self):
         self.assertFalse(self.page.show_completion_summary())
         self.assertFalse(self.page.result_box.get_visible())
         self.page.initialize_queue(["/tmp/pending.mp4"])
         self.assertFalse(self.page.show_completion_summary())
         self.assertIsNone(self.page.completion_notification())
 
-    def test_pending_and_active_actions_have_visible_precise_labels(self):
+    def test_row_actions_have_precise_labels(self):
         path = "/tmp/long descriptive video name.mp4"
         self.page.initialize_queue([path])
         row = self.page.queue_items[path]
@@ -386,7 +386,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(row.details_label.get_label(), "FFmpeg output")
         self.assertIs(row.actions.get_parent(), row.footer)
 
-    def test_bar_exposes_percent_and_time_left_to_assistive_technology(self):
+    def test_bar_announces_percent_and_time_left(self):
         path = "/tmp/announced.mp4"
         self.page.initialize_queue([path])
         row = self.page.add_conversion("announced", path, None)
@@ -411,7 +411,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertFalse(label.get_wrap())
         self.assertEqual(label.get_tooltip_text(), path)
 
-    def test_pending_cancel_is_counted_once_by_progress_page(self):
+    def test_pending_cancel_counts_once(self):
         path = "/tmp/pending.mp4"
         self.app.conversion_queue.append(path)
         self.page.initialize_queue([path])
@@ -422,7 +422,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(self.page._result_counts()["cancelled"], 1)
         self.assertNotIn(path, self.app.conversion_queue)
 
-    def test_active_cancellation_waits_for_supervisor_before_summary(self):
+    def test_active_cancel_waits_for_the_supervisor(self):
         active = "/tmp/active.mp4"
         pending = "/tmp/pending.mp4"
         self.page.initialize_queue([active, pending])
@@ -437,7 +437,7 @@ class ProgressPageTests(unittest.TestCase):
         )
         self.assertIsNotNone(self.page._completion_source_id)
 
-    def test_progress_fraction_is_clamped_before_storage_and_display(self):
+    def test_progress_fraction_is_clamped(self):
         path = "/tmp/clamped.mp4"
         self.page.initialize_queue([path])
         row = self.page.queue_items[path]
@@ -452,7 +452,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertEqual(row.progress_bar.get_fraction(), 1.0)
         self.assertEqual(row.percent_label.get_text(), "100%")
 
-    def test_row_progress_coalesces_and_updates_the_overall_fraction(self):
+    def test_row_progress_coalesces_into_overall_fraction(self):
         paths = ["/tmp/aggregate.mp4", "/tmp/next.mp4"]
         self.page.initialize_queue(paths)
         row = self.page.queue_items[paths[0]]
@@ -484,7 +484,7 @@ class ProgressPageTests(unittest.TestCase):
         self.assertIsNone(self.page._output_source_id)
         self.assertIsNone(self.page._completion_source_id)
 
-    def test_details_toggle_exposes_expanded_state_and_keeps_its_name(self):
+    def test_details_toggle_exposes_expanded_state(self):
         path = "/tmp/details.mp4"
         self.page.initialize_queue([path])
         row = self.page.queue_items[path]
@@ -503,9 +503,27 @@ class ProgressPageTests(unittest.TestCase):
         row.details_button.set_active(False)
         self.assertFalse(row.details_revealer.get_reveal_child())
 
-    def test_reset_finalizes_rows_and_ignores_late_thumbnails(self):
+    def test_long_command_scrolls_past_five_lines(self):
+        path = "/tmp/long-command.mp4"
+        self.page.initialize_queue([path])
+        row = self.page.queue_items[path]
+        row.start_conversion(None, "demo")
+        row.cmd_text.set_text(" ".join(f"-ss {index}" for index in range(2000)))
+        window = Gtk.Window(child=self.page.toolbar_view, default_height=2000)
+        window.present()
+        try:
+            row.details_button.set_active(True)
+            pump(0.5)
+            line = row.cmd_text.create_pango_layout("X").get_pixel_size()[1]
+            scroll = row.cmd_text.get_ancestor(Gtk.ScrolledWindow)
+            self.assertLess(scroll.get_height(), 6 * line + 30)
+        finally:
+            window.set_child(None)
+            window.destroy()
+
+    def test_reset_frees_rows_and_ignores_thumbnails(self):
         manager = FakeThumbnails()
-        self.app.conversion_page = SimpleNamespace(thumbnail_manager=manager)
+        self.app.conversion_page = SimpleNamespace(thumbnail_cache=manager)
         paths = ["/tmp/thumb-a.mp4", "/tmp/thumb-b.mp4"]
         self.page.initialize_queue(paths)
         row = self.page.add_conversion("a", paths[0], None)
@@ -585,7 +603,7 @@ class QueueCompletionHarness(QueueRunnerMixin):
 
 
 class QueueCompletionTests(unittest.TestCase):
-    def test_completion_is_presented_and_notified_once_per_generation(self):
+    def test_completion_is_announced_once_per_generation(self):
         harness = QueueCompletionHarness()
         self.assertTrue(harness._present_queue_completion())
         self.assertFalse(harness._present_queue_completion())
@@ -595,7 +613,7 @@ class QueueCompletionTests(unittest.TestCase):
             [("Queue finished with issues", "1 conversion failed")],
         )
 
-    def test_unsettled_progress_does_not_consume_completion_generation(self):
+    def test_unsettled_progress_keeps_completion_generation(self):
         harness = QueueCompletionHarness(shown=False)
         self.assertFalse(harness._present_queue_completion())
         self.assertFalse(getattr(harness, "_queue_completion_presented", False))

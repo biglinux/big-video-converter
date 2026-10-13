@@ -1,4 +1,4 @@
-"""Queue manager mixin — queue operations and conversion orchestration."""
+"""Queue manager mixin: queue operations and running the conversions."""
 
 import gettext
 import logging
@@ -14,6 +14,29 @@ from gi.repository import Adw, GLib
 
 _ = gettext.gettext
 logger = logging.getLogger(__name__)
+
+
+def disk_shortage(files: list[str], output_folder: str):
+    """(free, required) bytes of the first destination without room for
+    about 1.5 times its inputs, or None when every one has it."""
+    volumes = {}
+    for file_path in files:
+        target = os.path.abspath(output_folder or os.path.dirname(file_path))
+        try:
+            device = os.stat(target).st_dev
+            size = os.path.getsize(file_path)
+        except OSError:
+            continue
+        volumes.setdefault(device, [target, 0])[1] += size
+    for target_dir, size in volumes.values():
+        required = int(size * 1.5)
+        try:
+            free = shutil.disk_usage(target_dir).free
+        except OSError:
+            continue
+        if free < required:
+            return free, required
+    return None
 
 
 class QueueRunnerMixin:
@@ -57,7 +80,8 @@ class QueueRunnerMixin:
         return GLib.SOURCE_REMOVE
 
     def clear_queue(self) -> None:
-        # Clearing a running queue left its progress rows pending forever.
+        # Each file of a running queue has a progress row that clearing would
+        # leave pending.
         if self.currently_converting or self.active_conversions:
             return
         self.conversion_queue.clear()
@@ -90,41 +114,16 @@ class QueueRunnerMixin:
         return False
 
     # Conversion processing
-    def _check_disk_space(self, files: list[str]) -> bool:
-        """Check if there's enough disk space for conversion.
-
-        Estimates required space as 1.5x total input size to account for
-        transcoding overhead. Returns True if enough space, False otherwise.
-        """
-        custom = self.settings_store.get_boolean("use-custom-output-folder", False)
-        output_folder = (
-            self.settings_store.load_setting("output-folder", "") if custom else ""
-        )
-        volumes = {}
-        for file_path in files:
-            target = os.path.abspath(output_folder or os.path.dirname(file_path))
-            try:
-                device = os.stat(target).st_dev
-                size = os.path.getsize(file_path)
-                if device not in volumes:
-                    volumes[device] = [target, 0]
-                volumes[device][1] += size
-            except OSError:
-                continue
-
-        for target_dir, size in volumes.values():
-            required = int(size * 1.5)
-            try:
-                usage = shutil.disk_usage(target_dir)
-            except OSError:
-                continue
-            if usage.free < required:
-                break
-        else:
-            return True
-
-        # Not enough space — show warning dialog
-        free_gb = usage.free / (1024**3)
+    def _ask_about_disk_space(self, shortage) -> bool:
+        """Start the queue, or ask first when a destination looks too full."""
+        if getattr(self, "_quitting", False):
+            return GLib.SOURCE_REMOVE
+        if shortage is None:
+            self.checking_space = False
+            self._do_start_queue_processing()
+            return GLib.SOURCE_REMOVE
+        free, required = shortage
+        free_gb = free / (1024**3)
         needed_gb = required / (1024**3)
         dialog = Adw.AlertDialog(
             heading=_("Low disk space"),
@@ -149,7 +148,7 @@ class QueueRunnerMixin:
 
         window = self.get_active_window()
         dialog.choose(window, None, on_response)
-        return False  # the dialog's response continues the queue
+        return GLib.SOURCE_REMOVE
 
     def _on_disk_space_response(self, response: str) -> None:
         """Continue the queue, or hand the buttons back after a cancel.
@@ -157,6 +156,7 @@ class QueueRunnerMixin:
         The header disabled Convert before asking, so a cancel enables it
         again.
         """
+        self.checking_space = False
         if response == "continue":
             self._do_start_queue_processing()
             return
@@ -168,6 +168,7 @@ class QueueRunnerMixin:
             getattr(self, "_quitting", False)
             or self.active_conversions
             or self.currently_converting
+            or self.checking_space
             or getattr(self, "_pending_imports", 0)
         ):
             self._restore_queue_after_single_file(False)
@@ -188,10 +189,17 @@ class QueueRunnerMixin:
             self.header_bar.set_buttons_sensitive(True)
             return
 
-        if not self._check_disk_space(list(self.conversion_queue)):
-            return  # Dialog will call _do_start_queue_processing if user confirms
+        custom = self.settings_store.get_boolean("use-custom-output-folder", False)
+        folder = self.settings_store.load_setting("output-folder", "") if custom else ""
+        files = list(self.conversion_queue)
+        self.checking_space = True
+        self.header_bar.set_buttons_sensitive(False)
 
-        self._do_start_queue_processing()
+        # stat and disk_usage block for as long as a dead network mount does.
+        def measure() -> None:
+            GLib.idle_add(self._ask_about_disk_space, disk_shortage(files, folder))
+
+        threading.Thread(target=measure, name="bvc-disk-space", daemon=True).start()
 
     def _do_start_queue_processing(self):
         """Internal: actually start queue processing after checks pass."""
@@ -207,6 +215,7 @@ class QueueRunnerMixin:
             self.progress_page.initialize_queue(list(self.conversion_queue))
 
         self.main_stack.set_visible_child_name("progress_view")
+        self.parallel_jobs = 1
         if self._gpu_concurrency() > 1:
             # Ranking runs ffmpeg, vainfo and an NVENC test frame on the first
             # call, so it happens on a worker before the first job starts.
@@ -214,14 +223,16 @@ class QueueRunnerMixin:
             codec = self.settings_store.load_setting("video-codec", "h264")
 
             def rank() -> None:
-                from engine.gpu_selector import select_best_gpu
+                from engine.gpu_selector import select_best_gpu, supports
 
                 try:
                     best = select_best_gpu(gpus, codec)
+                    # A card that cannot encode the codec gets no job of its own.
+                    capable = [g for g in gpus if supports(g, gpus, codec) is True]
                 except Exception:
                     self.logger.exception("Could not rank the GPUs")
-                    best = None
-                GLib.idle_add(self._start_on_gpu_slots, gpus, best)
+                    best, capable = None, []
+                GLib.idle_add(self._start_on_gpu_slots, capable, best)
 
             threading.Thread(target=rank, name="bvc-gpu-rank", daemon=True).start()
         else:
@@ -257,6 +268,7 @@ class QueueRunnerMixin:
             }
             for i, gpu in enumerate(gpus[: self._gpu_concurrency()])
         )
+        self.parallel_jobs = max(1, len(self.gpu_slots))
         self.process_next_in_queue()
         return GLib.SOURCE_REMOVE
 
@@ -352,7 +364,7 @@ class QueueRunnerMixin:
                 self._finish_queue_generation(False)
             return False
 
-        max_concurrent = self._gpu_concurrency()
+        max_concurrent = self.parallel_jobs
 
         if len(self.active_conversions) >= max_concurrent:
             # We're full, wait for a completion
@@ -366,15 +378,6 @@ class QueueRunnerMixin:
             return False
 
         next_file = self.conversion_queue.popleft()
-
-        # Verify file exists
-        if not os.path.exists(next_file):
-            self.progress_page.finish_pending(
-                next_file, success=False, reason=_("File not found")
-            )
-            # Try next one immediately
-            GLib.idle_add(self.process_next_in_queue)
-            return False
 
         # Allocate a GPU slot if using parallel processing
         gpu_slot = None
@@ -401,9 +404,11 @@ class QueueRunnerMixin:
 
         # Preparing a job asks ffprobe about the file (audio tracks, size,
         # MP4 compatibility), each call up to ten seconds on slow storage.
-        # Those answers are collected on a worker thread first, so the
-        # main loop never blocks; the launch itself stays on the main loop.
+        # Those answers, and whether the file is still there, are collected on
+        # a worker thread first, so the main loop never blocks; the launch
+        # itself stays on the main loop.
         probes = {}
+        found = []
 
         def launch() -> bool:
             # A row skipped during the pre-flight probe set its job's event.
@@ -413,6 +418,14 @@ class QueueRunnerMixin:
                 or conversion_info["cancel_event"].is_set()
             ):
                 conversion_info["cancel_event"].set()
+                self.conversion_completed(
+                    False, file_path=next_file, job_id=conversion_info["job_id"]
+                )
+                return False
+            if not found:
+                self.progress_page.finish_pending(
+                    next_file, success=False, reason=_("File not found")
+                )
                 self.conversion_completed(
                     False, file_path=next_file, job_id=conversion_info["job_id"]
                 )
@@ -436,6 +449,10 @@ class QueueRunnerMixin:
         codec = self.settings_store.load_setting("video-codec", "h264")
 
         def warm_then_launch() -> None:
+            if not os.path.exists(next_file):
+                GLib.idle_add(launch)
+                return
+            found.append(True)
             try:
                 from engine.file_info import launch_probes
                 from engine.gpu_selector import select_best_gpu

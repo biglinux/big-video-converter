@@ -24,7 +24,7 @@ def pump():
     Gdk.Display.get_default().__gtype__.name != "GdkWaylandDisplay",
     reason="the fix covers Wayland only",
 )
-def test_windows_that_showed_a_popover_release_their_surface():
+def test_popover_windows_release_their_surface():
     surface.install()
     freed = {"surfaces": 0}
 

@@ -5,7 +5,7 @@ from engine.settings_store import SettingsStore
 
 
 @pytest.mark.parametrize("repeats", [0, 5, 25])
-def test_unchanged_preference_does_not_write(tmp_path, repeats):
+def test_unchanged_preference_skips_the_write(tmp_path, repeats):
     path = tmp_path / "settings.json"
     settings = SettingsStore(dev_mode=True, dev_settings_file=str(path))
     assert settings.save_setting("output-folder", "/videos")
@@ -17,7 +17,7 @@ def test_unchanged_preference_does_not_write(tmp_path, repeats):
     assert not path.with_suffix(".json.bak").exists()
 
 
-def test_reset_failure_is_reported_not_hidden(monkeypatch):
+def test_reset_failure_is_reported(monkeypatch):
     """A settings file that cannot be written must not look like a reset."""
     from types import SimpleNamespace
 
@@ -45,7 +45,7 @@ def test_reset_failure_is_reported_not_hidden(monkeypatch):
     assert shown[0] == "Settings Could Not Be Reset" and "disk full" in shown[1]
 
 
-def test_a_dragged_slider_writes_the_file_once(tmp_path, monkeypatch):
+def test_dragged_slider_writes_once(tmp_path, monkeypatch):
     settings = SettingsStore(dev_mode=True, dev_settings_file=str(tmp_path / "s.json"))
     writes = []
     save = settings.save_to_disk

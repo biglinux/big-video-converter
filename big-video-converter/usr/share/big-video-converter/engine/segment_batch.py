@@ -170,8 +170,8 @@ def _copy_parts(full, cuts, work_dir, extension, cancel_event):
     """Copy the cuts of ``full`` out as separate files, in one pass.
 
     The segment muxer starts each file at the keyframe itself. Seeking with
-    -ss/-t instead cuts by decode time, so the next keyframe and its B-frames
-    (decoded before they are shown) ended the previous part as well.
+    -ss/-t cuts by decode time and would also end the previous part with the
+    next keyframe and its B-frames, which are decoded before they are shown.
     """
     if cancel_event.is_set():
         raise InterruptedError("Segment batch cancelled")
@@ -527,6 +527,8 @@ def start_segment_batch(page, context):
                             )
                 duration = sum(cut["end"] - cut["start"] for cut in cuts)
                 paths = []
+                # Every encode this batch ran, for the check before the Trash.
+                stages = []
                 if split_size:
                     full = str(Path(work_dir) / f"encoded{context['output_ext']}")
                     env = dict(env_vars)
@@ -566,6 +568,7 @@ def start_segment_batch(page, context):
                         progress_item=row,
                         source_file=source,
                     )
+                    stages.append(result)
                     if not result.success:
                         if result.cancelled:
                             raise InterruptedError(result.error)
@@ -611,6 +614,7 @@ def start_segment_batch(page, context):
                         progress_item=row,
                         source_file=source,
                     )
+                    stages.append(result)
                     if not result.success:
                         if result.cancelled:
                             raise InterruptedError(result.error)
@@ -627,6 +631,9 @@ def start_segment_batch(page, context):
                         )
                         env = dict(env_vars)
                         env["output_file"] = path
+                        if env.get("subtitle_extract") == "extract":
+                            # SubtitleClipper extracts once the parts exist.
+                            env["subtitle_extract"] = "none"
                         length = cut["end"] - cut["start"]
                         trim = f"-ss {page._format_time_ffmpeg(cut['start'])} -t {page._format_time_ffmpeg(length)}"
                         env["options"] = " ".join(
@@ -648,6 +655,7 @@ def start_segment_batch(page, context):
                             progress_item=row,
                             source_file=source,
                         )
+                        stages.append(stage)
                         if not stage.success:
                             result = stage
                             if stage.cancelled:
@@ -708,6 +716,7 @@ def start_segment_batch(page, context):
                             source_file=paths[0],
                             output_file=joined,
                         )
+                        stages.append(result)
                         if not result.success:
                             if result.cancelled:
                                 raise InterruptedError(result.error)
@@ -771,8 +780,14 @@ def start_segment_batch(page, context):
                             failed_subtitles += _clip_subtitles(row, clipper)[1]
                 if context["delete_original"]:
                     try:
-                        if identity is None:
-                            raise ValueError("Source identity cannot authorize removal")
+                        if context.get("cut"):
+                            raise ValueError(
+                                _("The output holds only part of the original")
+                            )
+                        if identity is None or not all(s.verified for s in stages):
+                            raise ValueError(
+                                _("The output could not be verified against the input")
+                            )
                         if failed_subtitles or _left_out_subtitles(
                             source, context["env_vars"], env_vars, context["output_ext"]
                         ):
@@ -781,7 +796,13 @@ def start_segment_batch(page, context):
                                     "The output does not carry every subtitle track of the original"
                                 )
                             )
-                        remove_original(source, identity, outputs, cancel_event)
+                        remove_original(
+                            source,
+                            identity,
+                            outputs,
+                            cancel_event,
+                            permanent=context.get("skip_trash", False),
+                        )
                     except InterruptedError:
                         raise
                     except Exception as error:  # noqa: BLE001 - any failure must keep the original and be reported without failing the finished batch

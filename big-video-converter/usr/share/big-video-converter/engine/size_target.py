@@ -1,17 +1,14 @@
 """Fit a video under a byte limit: copy, split, or encode at a bitrate.
 
-The rules below come from measurements on real footage (a 1080p music video):
-
-* Encoders asked for an average bitrate miss it: two-pass x264/x265 by up to
-  4 %, NVENC and Vulkan by up to 22 %, and AAC "96k" writes about 10 % more.
-  A bitrate job therefore aims 8 % under the limit and is re-encoded with a
-  corrected bitrate only when the result is still over it.
+* Encoders asked for an average bitrate overshoot it, hardware encoders and
+  AAC the most. A bitrate job therefore aims 8 % under the limit and is
+  re-encoded with a corrected bitrate only when the result is still over it.
 * Parts are cut by a stream copy on keyframes, from the source or from one
   encode made with a short GOP, so every byte of a part is known before it is
   written; only the container index (~16 bytes a packet) is added. The cuts
   are balanced: the parts come out about the same size, never a stub at the
-  end. (FFmpeg's -fs was measured and dropped: it overshoots by a varying
-  60-340 KB and leaves the flushed audio of the next part in each one.)
+  end. FFmpeg's -fs cannot do this: it overshoots by a varying amount and
+  leaves the flushed audio of the next part in each one.
 * Below ~0.06 bits per pixel H.264 looks worse than the same bitrate at a
   lower resolution (0.035 for H.265/VP9, 0.025 for AV1).
 """
@@ -381,9 +378,11 @@ def prepare_size_job(context: dict) -> dict:
             source.height,
             source.fps,
         )
+    # Extra FFmpeg options may filter or re-time the video, which a copy cannot.
     copy_ok = not cuts and not any(
         encode_env.get(key)
         for key in (
+            "options",
             "video_filter",
             "video_resolution",
             "video_fps",

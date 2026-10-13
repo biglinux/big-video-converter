@@ -32,7 +32,13 @@ class FakePlayer:
 
 class FakePage:
     def __init__(self):
-        self.app = SimpleNamespace()
+        from big_gtk_kit.hover_cards import CardLayer
+        from ui.setting_cards import SettingCards
+
+        self.app = SimpleNamespace(
+            setting_cards=SettingCards(Gtk.ScrolledWindow(), CardLayer()),
+            audio_cleaning_summary=lambda: None,
+        )
         self.position_changed_handler_id = None
         self.video_fps = 30
         self.is_playing = False
@@ -79,7 +85,7 @@ class VideoEditUITests(unittest.TestCase):
         self.page.trim_segments = [{"start": 1.0, "end": 3.0}]
         self.assertIsNone(self.ui._edge_at(0))
 
-    def test_segment_edges_work_before_the_player_knows_the_length(self):
+    def test_segment_edges_use_the_probed_length(self):
         # mpv knows the length only after loading, late on big or remote files;
         # the editor uses the probed one.
         self.page.current_video_path = "/tmp/video.mp4"
@@ -87,7 +93,7 @@ class VideoEditUITests(unittest.TestCase):
         self.ui.cuts_track.get_width = lambda: 600
         self.assertEqual(self.ui._edge_at(150), (0, "start"))
 
-    def test_disconnect_cancels_hide_timer_and_restores_controls(self):
+    def test_disconnect_restores_controls_and_cancels_timer(self):
         self.ui._schedule_hide_controls(delay=60000)
         self.assertIsNotNone(self.ui.hide_timer_id)
         self.ui.overlay_controls.set_visible(False)
@@ -95,7 +101,7 @@ class VideoEditUITests(unittest.TestCase):
         self.assertIsNone(self.ui.hide_timer_id)
         self.assertTrue(self.ui.overlay_controls.get_visible())
 
-    def test_controls_have_contextual_names_and_output_row(self):
+    def test_controls_have_contextual_names(self):
         sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.ui.populate_sidebar(sidebar)
 
@@ -127,7 +133,7 @@ class VideoEditUITests(unittest.TestCase):
             "Playback speed: 1.5x",
         )
 
-    def test_seeking_never_moves_a_cut_and_the_track_moves_the_nearest_edge(self):
+    def test_only_the_track_moves_cut_edges(self):
         self.page.video_duration = 100.0
         self.page.current_video_path = __file__
         self.page.trim_segments = [
@@ -144,7 +150,7 @@ class VideoEditUITests(unittest.TestCase):
         self.assertEqual(self.ui._edge_at(414), (20, "end"))
         self.assertIsNone(self.ui._edge_at(428))
 
-    def test_page_cleanup_removes_seek_timer_and_transient_mark(self):
+    def test_cleanup_removes_seek_timer_and_mark(self):
         page = VideoEditPage.__new__(VideoEditPage)
         page.cleanup_called = False
         page.current_video_path = None
@@ -263,7 +269,7 @@ class VideoEditPageTests(unittest.TestCase):
             info or probe_answer(), path, processor._generation
         )
 
-    def test_leaving_while_loading_keeps_the_previous_edits_out_of_the_new_video(self):
+    def test_loading_video_starts_without_previous_edits(self):
         first, second = self.videos
         self.assertTrue(self.page.set_video(first))
         self.finish_loading(first)
@@ -290,14 +296,14 @@ class VideoEditPageTests(unittest.TestCase):
             self.metadata[second]["trim_segments"], self.page.trim_segments
         )
 
-    def test_second_activation_of_the_loading_row_is_the_same_load(self):
+    def test_reactivating_loading_row_reuses_the_load(self):
         first, _second = self.videos
         self.assertTrue(self.page.set_video(first))
         self.assertTrue(self.page.set_video(first))
         self.assertEqual(self.loads, [first])
         self.assertTrue(self.page.loading_video)
 
-    def test_unreadable_probe_answers_never_leave_the_editor_loading(self):
+    def test_unreadable_probe_answers_finish_loading(self):
         first, _second = self.videos
         self.page.set_video(first)
         self.finish_loading(first, probe_answer(duration="N/A", size="N/A"))
@@ -357,7 +363,7 @@ class VideoEditPageTests(unittest.TestCase):
         self.assertFalse(self.page.ui.audio_track_button.get_visible())
         self.assertFalse(self.page.ui.subtitle_button.get_visible())
 
-    def test_crop_spins_show_visible_edges_within_the_frame(self):
+    def test_crop_spins_follow_visible_edges(self):
         page = self.page
         page.video_width, page.video_height = 640, 360
         page.crop_left, page.crop_top = 10, 4
@@ -393,7 +399,7 @@ class VideoEditPageTests(unittest.TestCase):
 
 
 class MPVPlayerTrackTests(unittest.TestCase):
-    def test_tracks_are_reset_per_file_and_reported_when_loaded(self):
+    def test_tracks_reset_and_report_per_file(self):
         player = MPVPlayer.__new__(MPVPlayer)
         player._reset_tracks()
         player.audio_tracks = [{"index": 1, "label": "old"}]
@@ -434,6 +440,9 @@ class FakeMpv(dict):
         if args[:2] == ("vf", "set"):
             self.vf.append(args[2])
 
+    def command_async(self, *args, callback=None):
+        self.command(*args)
+
 
 class MPVPlayerTransformTests(unittest.TestCase):
     """The GL renderer mirrors the rendered picture; mpv crops and turns it.
@@ -450,7 +459,7 @@ class MPVPlayerTransformTests(unittest.TestCase):
         player.crop_left = player.crop_right = player.crop_top = player.crop_bottom = 0
         return player
 
-    def test_a_crop_set_before_the_first_frame_is_applied_on_reconfig(self):
+    def test_early_crop_applies_on_reconfig(self):
         for render_context in (None, object()):
             player = self.player(render_context=render_context)
             player.mpv_instance.width = player.mpv_instance.height = 0
@@ -460,7 +469,7 @@ class MPVPlayerTransformTests(unittest.TestCase):
             player._on_video_reconfig()
             self.assertEqual(player.mpv_instance["video-crop"], "118x68+10+4")
 
-    def test_flips_never_become_filters_or_move_the_crop(self):
+    def test_flips_leave_filters_and_crop_alone(self):
         player = self.player(render_context=object())
         player.set_crop(10, 0, 4, 0)
         player.set_video_effects("hqdn3d=4", "", "pq")
@@ -483,7 +492,7 @@ class MPVPlayerTransformTests(unittest.TestCase):
 
 
 class SegmentPlaybackTests(unittest.TestCase):
-    def test_playing_only_the_segments_skips_the_parts_between_them(self):
+    def test_segment_playback_skips_the_gaps(self):
         segments = [{"start": 5.0, "end": 8.0}, {"start": 1.0, "end": 3.0}]
         where = VideoEditPage.next_segment_stop
         self.assertEqual(where(segments, 0.0), (None, 1.0))  # before: go to the first
@@ -492,7 +501,7 @@ class SegmentPlaybackTests(unittest.TestCase):
         self.assertEqual(where(segments, 8.5), (None, None))  # after the last: stop
         self.assertEqual(where([], 2.0), (None, None))
 
-    def test_the_position_timer_stops_on_the_last_frame(self):
+    def test_position_timer_stops_on_last_frame(self):
         page = VideoEditPage.__new__(VideoEditPage)
         paused = []
         page.mpv_player = SimpleNamespace(
@@ -546,7 +555,7 @@ class PausePanelTests(unittest.TestCase):
             ),
         )
 
-    def test_installing_the_denoiser_is_noticed_without_a_restart(self):
+    def test_denoiser_install_is_noticed_live(self):
         with mock.patch.object(self.module.shutil, "which", return_value=None):
             panel = self.module.PausePanel(self.page)
         self.assertIn("dpdfnet-native", panel.status_row.get_title())
@@ -556,7 +565,7 @@ class PausePanelTests(unittest.TestCase):
         self.assertTrue(panel.actions.get_visible())
         self.assertEqual(panel.actions.get_visible_child_name(), "find")
 
-    def test_the_analysis_shows_its_progress_in_the_panel(self):
+    def test_analysis_shows_progress_in_panel(self):
         with mock.patch.object(self.module.shutil, "which", return_value="/usr/bin/x"):
             panel = self.module.PausePanel(self.page)
             with (
@@ -576,7 +585,7 @@ class PausePanelTests(unittest.TestCase):
         self.assertFalse(panel.progress_row.get_visible())
         self.assertEqual(panel.actions.get_visible_child_name(), "find")
 
-    def test_found_speech_becomes_the_segments_at_once(self):
+    def test_found_speech_becomes_the_segments(self):
         self.page.trim_segments = [{"start": 1.0, "end": 2.0}]
         with mock.patch.object(self.module.shutil, "which", return_value="/usr/bin/x"):
             panel = self.module.PausePanel(self.page)
@@ -607,7 +616,54 @@ class PausePanelTests(unittest.TestCase):
         self.assertTrue(panel.actions.get_visible())
         self.assertEqual(panel.actions.get_visible_child_name(), "find")
 
-    def test_an_edit_after_marking_keeps_the_segments(self):
+    def test_voice_detection_step_measures_again(self):
+        saved = {}
+        self.page.settings.save_setting = saved.__setitem__
+        self.page.trim_segments = [{"start": 1.0, "end": 2.0}]
+        with mock.patch.object(self.module.shutil, "which", return_value="/usr/bin/x"):
+            panel = self.module.PausePanel(self.page)
+            self.assertEqual(panel.sensitivity.get_value(), 3)
+            self.assertEqual(panel.sensitivity_label.get_text(), "Normal")
+            levels = [-6.0] * 300 + [-80.0] * 150 + [-6.0] * 300
+            panel._on_found(levels)
+            self.assertEqual(len(self.page.trim_segments), 2)
+            with (
+                mock.patch.object(self.module.PauseFinder, "start") as start,
+                mock.patch.object(
+                    type(panel.finder), "busy", new_callable=mock.PropertyMock
+                ) as busy,
+            ):
+                busy.return_value = True
+                # The levels were heard at Normal: another step gives the
+                # segments back and measures the video at that step.
+                panel.sensitivity.set_value(1)
+                self.assertEqual(saved["voice-sensitivity"], 1)
+                self.assertEqual(panel.sensitivity_label.get_text(), "Very sensitive")
+                self.assertEqual(self.page.trim_segments, [{"start": 1.0, "end": 2.0}])
+                self.assertEqual(start.call_args.args[0][-1], 1)
+                self.assertTrue(panel.progress_row.get_visible())
+                # Each step has its own cache entry: Normal marks again
+                # without measuring.
+                key = self.module.PauseFinder.identity(__file__, 0, 3)
+                panel.finder._cache[key] = levels
+                panel.sensitivity.set_value(3)
+                self.assertEqual(start.call_count, 1)
+        self.assertEqual(len(self.page.trim_segments), 2)
+
+    def test_reset_choices_show_on_opening(self):
+        values = {"pause-length": 2.0, "voice-sensitivity": 5}
+        self.page.settings.get_value = lambda key, default=None: values.get(
+            key, default
+        )
+        with mock.patch.object(self.module.shutil, "which", return_value="/usr/bin/x"):
+            panel = self.module.PausePanel(self.page)
+            self.assertEqual(panel.sensitivity_label.get_text(), "Very strict")
+            values.clear()
+            panel._on_map()
+        self.assertEqual(panel.sensitivity.get_value(), 3)
+        self.assertTrue(panel.length_buttons[1].get_active())
+
+    def test_edit_after_marking_keeps_segments(self):
         with mock.patch.object(self.module.shutil, "which", return_value="/usr/bin/x"):
             panel = self.module.PausePanel(self.page)
         panel._on_found([-6.0] * 300 + [-80.0] * 200 + [-6.0] * 300)

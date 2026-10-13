@@ -19,6 +19,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from engine import presets as preset_store
 from engine.ffmpeg_path import get_ffmpeg_executable
+from engine.preset_prompt import build_ai_prompt
 from gi.repository import Adw, Gdk, Gio, GLib, Gtk, Pango
 
 from ui.progress_page import launch_file
@@ -516,11 +517,8 @@ _open_presets_dialog = None
 
 
 def show_presets_dialog(parent_window, app) -> PresetsDialog:
-    """Open the grid, or bring back the one already open.
-
-    Clicking the Presets row both ticks its radio and activates the row, and
-    each path asks for the grid: the second request gets the open one.
-    """
+    """Open the grid, or bring back the one already open: a second request
+    while it shows, such as a double click on the row, gets the open one."""
     global _open_presets_dialog
     if _open_presets_dialog is not None:
         return _open_presets_dialog
@@ -559,7 +557,7 @@ def build_prompt(request: str) -> str:
     """The text placed on the clipboard for a chat assistant."""
     from engine.gpu_selector import _available_ffmpeg_encoders
 
-    return preset_store.build_ai_prompt(
+    return build_ai_prompt(
         request,
         available_encoders=_available_ffmpeg_encoders(),
         ffmpeg_version=_ffmpeg_version(),

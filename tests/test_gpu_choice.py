@@ -28,7 +28,7 @@ def table(answers):
     return lambda g, _gpus, codec: answers[g["device"][-10:]].get(codec)
 
 
-def test_the_only_card_that_encodes_av1_wins_over_the_vendor_order():
+def test_sole_av1_encoder_beats_vendor_order():
     answers = {
         "renderD128": {"h264": True, "av1": False, "vp9": False},
         "renderD130": {"h264": True, "av1": True, "vp9": True},
@@ -36,7 +36,7 @@ def test_the_only_card_that_encodes_av1_wins_over_the_vendor_order():
     assert gs.choose_gpu([NVIDIA, INTEL], "h264", table(answers)) is INTEL
 
 
-def test_with_equal_av1_the_only_card_that_encodes_vp9_wins():
+def test_av1_tie_goes_to_vp9_encoder():
     answers = {
         "renderD128": {"h264": True, "av1": True, "vp9": False},
         "renderD130": {"h264": True, "av1": True, "vp9": True},
@@ -51,7 +51,7 @@ def test_equal_support_follows_nvidia_amd_intel():
     assert gs.choose_gpu([INTEL, AMD], "h264", table(answers)) is AMD
 
 
-def test_an_unknown_answer_does_not_count_as_the_other_card_lacking_it():
+def test_unknown_answer_keeps_vendor_order():
     answers = {
         "renderD129": {"h264": True, "av1": None, "vp9": True},
         "renderD130": {"h264": True, "av1": True, "vp9": True},
@@ -60,7 +60,7 @@ def test_an_unknown_answer_does_not_count_as_the_other_card_lacking_it():
     assert gs.choose_gpu([INTEL, AMD], "h264", table(answers)) is AMD
 
 
-def test_a_card_that_cannot_encode_the_codec_is_never_chosen():
+def test_incapable_card_is_never_chosen():
     answers = {
         "renderD128": {"vp9": False, "av1": True},
         "renderD130": {"vp9": True, "av1": False},
@@ -121,7 +121,7 @@ def probes(monkeypatch):
         cached.cache_clear()
 
 
-def test_vaapi_support_comes_from_the_device_encode_entrypoints(probes):
+def test_vaapi_support_reads_encode_entrypoints(probes):
     gpus = [AMD]
     assert [gs.supports(AMD, gpus, c) for c in ("h264", "h265", "av1", "vp9")] == [
         True,
@@ -131,12 +131,12 @@ def test_vaapi_support_comes_from_the_device_encode_entrypoints(probes):
     ]
 
 
-def test_a_failed_vainfo_leaves_vaapi_support_unknown(probes):
+def test_failed_vainfo_leaves_support_unknown(probes):
     probes["vainfo"] = (1, "")
     assert gs.supports(AMD, [AMD], "av1") is None
 
 
-def test_nvenc_av1_is_asked_of_the_card_and_vp9_does_not_exist(probes):
+def test_nvenc_probes_av1_and_lacks_vp9(probes):
     gpus = [NVIDIA, INTEL]
     assert gs.supports(NVIDIA, gpus, "vp9") is False
     probes["nvenc"] = (1, "[av1_nvenc] Codec not supported")
@@ -149,12 +149,12 @@ def test_nvenc_av1_is_asked_of_the_card_and_vp9_does_not_exist(probes):
     assert gs.supports(NVIDIA, gpus, "av1") is True
 
 
-def test_an_encoder_missing_from_the_ffmpeg_build_is_unsupported(probes):
+def test_encoder_missing_from_ffmpeg_is_unsupported(probes):
     probes["encoders"] = ["h264_vaapi"]
     assert gs.supports(AMD, [AMD], "h265") is False
 
 
-def test_cuda_index_counts_nvidia_cards_in_pci_order():
+def test_cuda_index_follows_nvidia_pci_order():
     second = {**gpu("nvidia", "renderD131"), "slot": "0000:01:00.0"}
     first = {**gpu("nvidia", "renderD128"), "slot": "0000:00:02.0"}
     cards = [second, INTEL, first]

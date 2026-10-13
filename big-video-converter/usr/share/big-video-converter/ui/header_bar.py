@@ -126,6 +126,7 @@ class HeaderBar(Gtk.Box):
         )
         menu = Gio.Menu()
         menu.append(_("Welcome Screen"), "app.welcome")
+        menu.append(_("Delete Without Using the Trash"), "app.skip_trash")
         menu.append(_("Restore Settings"), "app.restore_settings")
         menu.append(_("About"), "app.about")
         menu.append(_("Quit"), "app.quit")

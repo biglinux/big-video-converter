@@ -799,9 +799,6 @@ msgstr "Dosya bulunamadı"
 msgid "Edit video"
 msgstr "Videoyu düzenle"
 
-msgid "Changes apply only to the selected video"
-msgstr "Değişiklikler yalnızca seçili videoya uygulanır"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1411,9 +1408,6 @@ msgstr "Ekstra"
 msgid "SW Decode"
 msgstr "Yazılımla çözümleme"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Hazır dönüştürme ayarları: YouTube, Instagram, kurgu…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1626,9 +1620,6 @@ msgstr "Çıktı klasörünü seçin"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Orijinal dosyaları silin"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Dönüştürülen tüm sonuçlar doğrulanmadıkça özgün dosyalar korunur"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2789,24 +2780,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Dönüşüm sırasında altyazıların nasıl işleneceğini yapılandırın."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Altyazı Yönetimi"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Altyazıların çıktıya nasıl ekleneceğini seçin. “Gömülü”, altyazıları video dosyasının içinde tutar. “.srt olarak çıkar”, ayrı altyazı dosyaları oluşturur."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Sadece Altyazıları Çıkar"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Video dönüştürmeyi tamamen atlayın ve yalnızca altyazı parçalarını .srt dosyalarına çıkarın."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -3165,12 +3141,6 @@ msgstr "Ses Seviyesi"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Video yeniden kodlanmadan kopyalanıyor. Görüntüyü kırpmak, ayarlamak, döndürmek veya efekt eklemek bu videonun yeniden kodlanmasına neden olur."
 
-msgid "Image"
-msgstr "Görüntü"
-
-msgid "Reset image adjustments"
-msgstr "Görüntü ayarlarını sıfırla"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -3203,16 +3173,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Standart (SDR)"
-
-msgid "Orientation"
-msgstr "Yön"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Döndürme ve çevirme ayarlarını sıfırla"
 
 msgid "Rotation"
 msgstr "Döndürme"
@@ -3284,9 +3244,6 @@ msgstr "İşaretlenen bölümlerin nasıl kaydedileceğini seçin"
 msgid "Effects"
 msgstr "Efektler"
 
-msgid "Reset effects"
-msgstr "Efektleri sıfırla"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -3327,10 +3284,6 @@ msgstr "Renk Görünümü veya Gölgelendirici Seç"
 
 msgid "Looks and shaders"
 msgstr "Renk görünümleri ve gölgelendiriciler"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "{setting} ayarını varsayılana sıfırla"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4394,9 +4347,6 @@ msgstr "Big Video Converter başlatılamadı: {0}"
 msgid "Remove pauses"
 msgstr "Duraklamaları kaldır"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Konuşma için tasarlandı. Duraklamalar, DPDFNet ile temizlenen seste aranır."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Her saatlik ses için yaklaşık bir dakika sürer."
 
@@ -4665,3 +4615,85 @@ msgstr[0] "{0} altyazı parçası çıkarılamadı ve dışarıda bırakıldı."
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Önizleme (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "Çıktı, özgün dosyanın yalnızca bir kısmını içeriyor"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Çıktı doğrulandıktan sonra özgün dosya Çöp Kutusuna taşındı"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Duraklamaları bulmak için dpdfnet-native paketini güncelleyin."
+
+msgid "Video mode"
+msgstr "Video modu"
+
+msgid "How the video is encoded."
+msgstr "Videonun nasıl kodlandığı."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Kodek, bit hızı ve kanallar…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Yalnızca altyazı çıkarılırken kapalı"
+
+msgid "Not used with Fast Copy"
+msgstr "Hızlı Kopyala ile kullanılmaz"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Özgün dosyalar ancak dönüştürülen tüm sonuçlar doğrulamayı geçtikten sonra, Çöp Kutusuna taşınmadan kalıcı olarak silinir"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Özgün dosyalar ancak dönüştürülen tüm sonuçlar doğrulamayı geçtikten sonra Çöp Kutusuna taşınır"
+
+msgid "Move this video to the Trash?"
+msgstr "Bu video Çöp Kutusuna taşınsın mı?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "“{}” Çöp Kutusuna taşınacak."
+
+msgid "Move to Trash"
+msgstr "Çöp Kutusuna Taşı"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Video Çöp Kutusuna taşınamadı: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Çöp Kutusunu Kullanmadan Sil"
+
+msgid "Audio only when a voice is detected"
+msgstr "Yalnızca konuşma algılandığında ses"
+
+msgid "Very sensitive"
+msgstr "Çok hassas"
+
+msgid "Sensitive"
+msgstr "Hassas"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Strict"
+msgstr "Sıkı"
+
+msgid "Very strict"
+msgstr "Çok sıkı"
+
+msgid "Voice detection"
+msgstr "Konuşma algılama"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Hassas ayar kısık ya da alışılmadık sesleri korur ve daha fazla gürültü ile müziğin geçmesine izin verir; sıkı ayar daha fazla müziği kaldırır ve alçak sesle söylenen sözcükleri kesebilir."
+
+msgid "On"
+msgstr "Açık"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} etkin"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Konuşma için tasarlandı: duraklamalar, arka plan gürültüsü kaldırıldıktan sonra aranır."

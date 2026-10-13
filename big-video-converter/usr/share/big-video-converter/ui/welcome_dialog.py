@@ -146,6 +146,9 @@ class WelcomeDialog:
 
         switch_box.append(switch_label)
         switch_box.append(self.show_switch)
+        self.show_switch.update_property(
+            [Gtk.AccessibleProperty.LABEL], [switch_label.get_label()]
+        )
 
         current_pref = self.settings_store.load_setting("show-welcome-dialog", True)
         self.show_switch.set_active(current_pref)
@@ -168,12 +171,15 @@ class WelcomeDialog:
 
         scrolled.set_child(content_box)
 
-        self.dialog = Adw.Dialog()
+        self.dialog = Adw.Dialog(title=_("Welcome to Big Video Converter"))
         self.dialog.connect("closed", lambda dialog: dialog.set_child(None))
         self.dialog.set_content_width(900)
         self.dialog.set_content_height(650)
 
         self.dialog.set_child(scrolled)
+        # Enter closes the welcome instead of flipping the first focusable switch.
+        self.dialog.set_default_widget(close_button)
+        self.dialog.set_focus(close_button)
 
     def present(self) -> None:
         if self.dialog and self.parent_window:

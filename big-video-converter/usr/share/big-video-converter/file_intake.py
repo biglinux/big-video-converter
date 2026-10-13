@@ -1,4 +1,4 @@
-"""File handler mixin — drag & drop, file dialogs, network mount."""
+"""File handler mixin: drag and drop, file dialogs and network mounts."""
 
 import gettext
 import os

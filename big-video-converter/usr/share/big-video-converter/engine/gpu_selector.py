@@ -140,9 +140,8 @@ def _pci_name(slot: str, vendor_label: str, run) -> str:
 def name_render_devices(gpus: list[dict], run=subprocess.run) -> list[str]:
     """Display names for ``gpus``, from each node's own PCI device.
 
-    Pairing by PCI slot keeps a name on its node; matching the i-th lspci VGA
-    line to the i-th node drifted when a BMC VGA had no render node. Names that
-    repeat get the node appended.
+    Pairing by PCI slot keeps each name on its node when a VGA device, such
+    as a BMC's, has no render node. Names that repeat get the node appended.
     """
     names = [_pci_name(gpu["slot"], gpu["label"], run) or gpu["name"] for gpu in gpus]
     return [

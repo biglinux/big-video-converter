@@ -577,9 +577,6 @@ msgstr "Файл не знойдзены"
 msgid "Edit video"
 msgstr "Рэдагаваць відэа"
 
-msgid "Changes apply only to the selected video"
-msgstr "Змены датычацца толькі выбранага відэа"
-
 msgid "Could not load video file"
 msgstr "Не ўдалося загрузіць відэафайл"
 
@@ -989,9 +986,6 @@ msgstr "Дадаткова"
 msgid "SW Decode"
 msgstr "Праграмнае дэкадаванне"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Гатовыя наборы: YouTube, Instagram, мантаж…"
-
 msgid "Requires audio set to re-encode"
 msgstr "Патрабуе перакадавання аўдыя"
 
@@ -1156,9 +1150,6 @@ msgstr "Выбраць выніковую папку"
 
 msgid "Delete original files"
 msgstr "Выдаляць зыходныя файлы"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Арыгіналы захоўваюцца, пакуль усе вынікі пераўтварэння не пройдуць праверку"
 
 msgid "Select the output folder"
 msgstr "Выберыце выніковую папку"
@@ -2115,17 +2106,8 @@ msgstr "Як укласціся ў памер"
 msgid "Configure how subtitles are handled during conversion."
 msgstr "Наладзьце апрацоўку субцітраў пры пераўтварэнні."
 
-msgid "Subtitle Handling"
-msgstr "Апрацоўка субцітраў"
-
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Выберыце, як дадаваць субцітры ў вынік. «Убудаваныя» пакідае іх у відэафайле. «Выняць у .srt» стварае асобныя файлы субцітраў."
-
 msgid "Only Extract Subtitles"
 msgstr "Толькі выняць субцітры"
-
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Цалкам прапусціць пераўтварэнне відэа і толькі выняць дарожкі субцітраў у файлы .srt."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -2312,12 +2294,6 @@ msgstr "Гучнасць"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Відэа капіюецца без перакадавання. Абрэзка, наладжванне, паварот або даданне эфектаў да выявы выкліча перакадаванне гэтага відэа."
 
-msgid "Image"
-msgstr "Выява"
-
-msgid "Reset image adjustments"
-msgstr "Скінуць налады выявы"
-
 msgid "Brightness"
 msgstr "Яркасць"
 
@@ -2344,12 +2320,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Стандартныя (SDR)"
-
-msgid "Orientation"
-msgstr "Арыентацыя"
-
-msgid "Reset Transform"
-msgstr "Скінуць пераўтварэнні"
 
 msgid "Rotation"
 msgstr "Паварот"
@@ -2393,9 +2363,6 @@ msgstr "Выберыце, як захоўваць пазначаныя адрэ�
 msgid "Effects"
 msgstr "Эфекты"
 
-msgid "Reset effects"
-msgstr "Скінуць эфекты"
-
 msgid "Off"
 msgstr "Выключана"
 
@@ -2434,10 +2401,6 @@ msgstr "Выбар каляровага стылю або шэйдара"
 
 msgid "Looks and shaders"
 msgstr "Каляровыя стылі і шэйдары"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Вярнуць стандартнае значэнне: {setting}"
 
 msgid "Video Encoding"
 msgstr "Кадаванне відэа"
@@ -3155,9 +3118,6 @@ msgstr "Не ўдалося запусціць Big Video Converter: {0}"
 msgid "Remove pauses"
 msgstr "Прыбраць паўзы"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Для маўлення. Паўзы шукаюцца ў голасе, ачышчаным DPDFNet."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Займае каля хвіліны на кожную гадзіну гуку."
 
@@ -3330,3 +3290,87 @@ msgstr[2] "{0} дарожак субцітраў не ўдалося выняц�
 #~ msgstr[0] "Выразана {count} паўза"
 #~ msgstr[1] "Выразаны {count} паўзы"
 #~ msgstr[2] "Выразана {count} паўз"
+
+msgid "The output holds only part of the original"
+msgstr "Вынік змяшчае толькі частку арыгіналу"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Арыгінал перамешчаны ў сметніцу пасля праверкі выніку"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Абнавіце dpdfnet-native, каб шукаць паўзы."
+
+msgid "Video mode"
+msgstr "Рэжым відэа"
+
+msgid "How the video is encoded."
+msgstr "Як кадуецца відэа."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Кодэк, бітрэйт і каналы…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Выключана, пакуль выймаюцца толькі субцітры"
+
+msgid "Not used with Fast Copy"
+msgstr "Не выкарыстоўваецца пры хуткім капіяванні"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Арыгіналы выдаляюцца назаўсёды, абмінаючы сметніцу, толькі пасля таго, як усе вынікі пераўтварэння пройдуць праверку"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Арыгіналы перамяшчаюцца ў сметніцу толькі пасля таго, як усе вынікі пераўтварэння пройдуць праверку"
+
+msgid "Move this video to the Trash?"
+msgstr "Перамясціць гэтае відэа ў сметніцу?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "Файл «{}» будзе перамешчаны ў сметніцу."
+
+msgid "Move to Trash"
+msgstr "Перамясціць у сметніцу"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Не ўдалося перамясціць відэа ў сметніцу: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Выдаляць без выкарыстання сметніцы"
+
+msgid "Audio only when a voice is detected"
+msgstr "Гук толькі пры выяўленні голасу"
+
+msgid "Very sensitive"
+msgstr "Вельмі адчувальнае"
+
+msgid "Sensitive"
+msgstr "Адчувальнае"
+
+msgid "Normal"
+msgstr "Звычайнае"
+
+msgid "Strict"
+msgstr "Строгае"
+
+msgid "Very strict"
+msgstr "Вельмі строгае"
+
+msgid "Voice detection"
+msgstr "Выяўленне голасу"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Адчувальнае выяўленне захоўвае ціхія ці незвычайныя галасы і прапускае больш шуму і музыкі; строгае прыбірае больш музыкі і можа абрэзаць ціхія словы."
+
+msgid "On"
+msgstr "Укл."
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} актыўны"
+msgstr[1] "{count} актыўныя"
+msgstr[2] "{count} актыўных"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Для маўлення: паўзы шукаюцца пасля выдалення фонавага шуму."

@@ -118,7 +118,7 @@ class App:
         self.system_notifications.append((title, body))
 
 
-def test_real_cli_supervisor_validates_and_finishes_once(media, tmp_path, cli_env):
+def test_cli_supervisor_validates_and_finishes_once(media, tmp_path, cli_env):
     app = App()
     out = tmp_path / "out.mp4"
     env = {**cli_env, "output_file": str(out)}
@@ -141,7 +141,7 @@ def test_real_cli_supervisor_validates_and_finishes_once(media, tmp_path, cli_en
     assert out.exists()
 
 
-def test_log_opens_with_the_source_codec_and_pixel_format(media, tmp_path, cli_env):
+def test_log_opens_with_source_codec_details(media, tmp_path, cli_env):
     app = App()
     out = tmp_path / "logged.mkv"
     conversion.run_with_progress_dialog(
@@ -158,7 +158,7 @@ def test_log_opens_with_the_source_codec_and_pixel_format(media, tmp_path, cli_e
     assert "codec=h264" in lines and "pixel format=yuv420p" in lines
 
 
-def test_a_finished_job_leaves_the_notification_to_its_queue(media, tmp_path, cli_env):
+def test_queue_sends_the_finish_notification(media, tmp_path, cli_env):
     # One summary per queue, not one per file.
     app = App()
     out = tmp_path / "notified.mkv"
@@ -176,9 +176,7 @@ def test_a_finished_job_leaves_the_notification_to_its_queue(media, tmp_path, cl
     assert not app.system_notifications and not app.errors
 
 
-def test_failed_job_notifies_without_a_dialog_over_the_summary(
-    media, tmp_path, cli_env
-):
+def test_failed_job_notifies_without_a_dialog(media, tmp_path, cli_env):
     # The progress page's summary explains the failure; a modal would repeat it.
     for queued, dialogs in ((False, 0), (True, 0)):
         app = App()
@@ -199,9 +197,7 @@ def test_failed_job_notifies_without_a_dialog_over_the_summary(
         assert not app.system_notifications and len(app.errors) == dialogs
 
 
-def test_real_conversion_deletes_the_original_after_validation(
-    media, tmp_path, cli_env
-):
+def test_validated_original_goes_to_trash(media, tmp_path, cli_env):
     source = tmp_path / "source.mp4"
     shutil.copyfile(media["video"], source)
     app = App()
@@ -218,10 +214,86 @@ def test_real_conversion_deletes_the_original_after_validation(
     pump_until(lambda: bool(app.notifications))
     assert app.notifications[0][0] is True
     assert out.exists() and not source.exists()
-    assert any("Original deleted" in line for line in app.progress_page.rows[0].lines)
+    from conftest import DATA_HOME
+
+    assert (Path(DATA_HOME) / "Trash/files/source.mp4").exists()
+    assert any(
+        "Original moved to the Trash" in line
+        for line in app.progress_page.rows[0].lines
+    )
 
 
-def test_output_shorter_than_requested_keeps_the_original(media, tmp_path, cli_env):
+def test_stderr_cannot_name_the_workspace(media, tmp_path, cli_env):
+    decoy = tmp_path / ".bvc-decoy"
+    decoy.mkdir()
+    wrapper = fake_ffmpeg(
+        tmp_path, "announcing", f"echo 'Job workspace: {decoy}' >&2; exit 1"
+    )
+    app = App()
+    conversion.run_with_progress_dialog(
+        app,
+        [str(CLI), str(media["video"])],
+        "decoy",
+        str(media["video"]),
+        False,
+        {
+            **cli_env,
+            "ffmpeg_executable": str(wrapper),
+            "output_file": str(tmp_path / "out.mkv"),
+        },
+        job_id="decoy",
+    )
+    pump_until(lambda: bool(app.notifications))
+    assert app.notifications[0][0] is False
+    assert decoy.is_dir()
+
+
+def test_skip_trash_deletes_the_original(media, tmp_path, cli_env):
+    from conftest import DATA_HOME
+
+    source = tmp_path / "gone.mp4"
+    shutil.copyfile(media["video"], source)
+    app = App()
+    conversion.run_with_progress_dialog(
+        app,
+        [str(CLI), str(source)],
+        "skip",
+        str(source),
+        True,
+        {**cli_env, "output_file": str(tmp_path / "kept.mkv")},
+        job_id="skip",
+        skip_trash=True,
+    )
+    pump_until(lambda: bool(app.notifications))
+    lines = app.progress_page.rows[0].lines
+    assert app.notifications[0][0] is True, lines
+    assert not source.exists() and (tmp_path / "kept.mkv").exists()
+    assert not (Path(DATA_HOME) / "Trash/files/gone.mp4").exists()
+    assert any("Original deleted after output validation" in line for line in lines)
+
+
+def test_cut_output_keeps_the_original(media, tmp_path, cli_env):
+    source = tmp_path / "source.mp4"
+    shutil.copyfile(media["video"], source)
+    app = App()
+    conversion.run_with_progress_dialog(
+        app,
+        [str(CLI), str(source)],
+        "cut",
+        str(source),
+        True,
+        {**cli_env, "output_file": str(tmp_path / "cut.mkv")},
+        job_id="cut",
+        partial=True,
+    )
+    pump_until(lambda: bool(app.notifications))
+    lines = app.progress_page.rows[0].lines
+    assert app.notifications[0][0] is True, lines
+    assert source.exists()
+    assert any("only part of the original" in line for line in lines)
+
+
+def test_short_output_keeps_the_original(media, tmp_path, cli_env):
     """A file that plays but misses part of the requested interval is still a
     success for the user; it just never authorizes deleting the source."""
     source = tmp_path / "source.mp4"
@@ -292,7 +364,7 @@ def test_explicit_false_never_inherits_delete_preference(
 
 
 @pytest.mark.parametrize("closed_pipes", [False, True])
-def test_cancel_silent_process_even_after_pipe_eof(tmp_path, cli_env, closed_pipes):
+def test_cancel_stops_silent_process_after_eof(tmp_path, cli_env, closed_pipes):
     app = App()
     event = threading.Event()
     script = (
@@ -374,7 +446,7 @@ def test_start_failure_completes_row_once(tmp_path, cli_env):
     assert "no/such/executable" in row.status_text
 
 
-def test_friendly_reason_never_carries_the_path_or_code():
+def test_friendly_reason_omits_path_and_code():
     lines = [
         "ERROR: Input file is corrupted or not a valid video file: /home/u/Vídeos/broken.mp4",
         "The file container could not be read. It may be a corrupted download or an unsupported format.",
@@ -430,7 +502,20 @@ class QueueApp(QueueRunnerMixin):
         self.system_notifications.append((title, body))
 
 
-def test_queue_completion_matches_identity_and_ignores_duplicates():
+def test_one_capable_gpu_runs_one_job():
+    app = QueueApp()
+    app.detected_gpus = [{"type": "intel"}, {"type": "nvidia"}]
+    app.settings_store = SimpleNamespace(
+        load_setting=lambda key, default: default, get_boolean=lambda *a: False
+    )
+    nvidia = {"type": "nvidia", "device": "/dev/dri/renderD129", "name": "GPU"}
+    app._start_on_gpu_slots([nvidia], None)
+    assert app.parallel_jobs == 1 and len(app.gpu_slots) == 1
+    app._start_on_gpu_slots([], None)
+    assert app.parallel_jobs == 1 and not app.gpu_slots
+
+
+def test_queue_completion_matches_job_identity():
     app = QueueApp()
     app.active_conversions = [
         {"file_path": "same", "job_id": identity, "gpu_slot": {"name": identity}}
@@ -446,7 +531,7 @@ def test_queue_completion_matches_identity_and_ignores_duplicates():
     assert len(app.progress_page.pending) == 1
 
 
-def test_cancel_all_releases_slots_only_when_each_job_finishes():
+def test_cancel_all_waits_for_each_job():
     app = QueueApp()
     app.is_cancellation_requested = True
     app.active_conversions = [
@@ -479,7 +564,7 @@ def batch_context(media, tmp_path, cli_env, mode):
 
 
 @pytest.mark.parametrize("mode", ["split", "join"])
-def test_real_segment_batch_has_one_parent_completion(media, tmp_path, cli_env, mode):
+def test_segment_batch_completes_once(media, tmp_path, cli_env, mode):
     app = App()
     page = SimpleNamespace(app=app, _format_time_ffmpeg=lambda v: f"{v:.6f}")
     context = batch_context(media, tmp_path, cli_env, mode)
@@ -503,6 +588,41 @@ def test_real_segment_batch_has_one_parent_completion(media, tmp_path, cli_env, 
             abs(media_duration(data) - 1.5) < 0.1
             and abs(media_duration(data, "audio") - 1.5) < 0.1
         )
+
+
+@pytest.mark.parametrize(
+    ("verified", "cut"), [(True, False), (False, False), (True, True)]
+)
+def test_segment_batch_trashes_only_verified(
+    media, tmp_path, cli_env, monkeypatch, verified, cut
+):
+    import dataclasses
+
+    import engine.segment_batch as module
+
+    source = tmp_path / "cut source.mkv"
+    shutil.copyfile(media["multi"], source)
+    run = module.run_with_progress_dialog
+
+    def stage(*args, **kwargs):
+        result = run(*args, **kwargs)
+        return dataclasses.replace(result, verified=result.verified and verified)
+
+    monkeypatch.setattr(module, "run_with_progress_dialog", stage)
+    app = App()
+    page = SimpleNamespace(app=app, _format_time_ffmpeg=lambda v: f"{v:.6f}")
+    context = batch_context(media, tmp_path, cli_env, "split")
+    context.update(
+        input_file=str(source),
+        cmd=[str(CLI), str(source)],
+        delete_original=True,
+        cut=cut,
+    )
+    start_segment_batch(page, context)
+    pump_until(lambda: bool(app.notifications), timeout=25)
+    lines = app.progress_page.rows[0].lines
+    assert app.notifications[0][0] is True, lines
+    assert source.exists() != (verified and not cut), lines
 
 
 def test_first_failed_segment_prevents_following_stages(
@@ -530,7 +650,7 @@ def test_first_failed_segment_prevents_following_stages(
     assert row.failure_reason is None  # unknown cause: the row's generic sentence
 
 
-def test_failed_segment_batch_shows_the_friendly_reason(
+def test_failed_segment_batch_shows_friendly_reason(
     media, tmp_path, cli_env, monkeypatch
 ):
     import engine.segment_batch as module
@@ -575,7 +695,7 @@ def test_cancel_between_segments_stops_the_batch(media, tmp_path, cli_env, monke
 
 
 @pytest.mark.parametrize("mode", ["split", "join"])
-def test_subtitle_only_batch_never_converts_or_removes_video(
+def test_subtitle_only_batch_leaves_video_alone(
     media, tmp_path, cli_env, mode, monkeypatch
 ):
     import engine.segment_batch as module
@@ -598,9 +718,7 @@ def test_subtitle_only_batch_never_converts_or_removes_video(
     assert all(Path(path).suffix == ".srt" for path in outputs)
 
 
-def test_subtitle_pass_never_drives_the_bar_or_claims_software_encoding(
-    tmp_path, cli_env
-):
+def test_subtitle_pass_stays_out_of_progress(tmp_path, cli_env):
     """A user with a working GPU read "Software encoding" plus a racing bar
     during the subtitle extraction and concluded the GPU was unused."""
     app = App()
@@ -687,9 +805,7 @@ def test_frozen_preset_survives_gpu_fallback(media, tmp_path, cli_env):
     assert audio["sample_rate"] == "22050" and audio["channels"] == 1
 
 
-def test_published_name_is_validated_reported_and_authorizes_deletion(
-    media, tmp_path, cli_env
-):
+def test_supervisor_follows_the_published_name(media, tmp_path, cli_env):
     """The script never replaces a file: the supervisor follows it to the name
     it published instead of validating, or deleting against, someone else's."""
     source = tmp_path / "source.mp4"
@@ -715,7 +831,7 @@ def test_published_name_is_validated_reported_and_authorizes_deletion(
     assert (tmp_path / "converted_1.mkv").exists() and not source.exists()
 
 
-def test_left_out_subtitle_track_keeps_the_original(tmp_path, cli_env):
+def test_dropped_subtitle_track_keeps_original(tmp_path, cli_env):
     from test_cli import pgs_source
 
     source = pgs_source(tmp_path)
@@ -737,7 +853,7 @@ def test_left_out_subtitle_track_keeps_the_original(tmp_path, cli_env):
     )
 
 
-def test_two_pass_encode_fills_the_bar_once(tmp_path, cli_env):
+def test_two_pass_encode_fills_bar_once(tmp_path, cli_env):
     """The analysis pass drove the bar to 99 % and the sized pass restarted it."""
     app = App()
     progress = []
@@ -771,9 +887,7 @@ def test_two_pass_encode_fills_the_bar_once(tmp_path, cli_env):
     assert max(progress) > 0.9 and min(progress) < 0.2
 
 
-def test_job_runs_in_a_private_directory_removed_with_it(
-    media, tmp_path, cli_env, monkeypatch
-):
+def test_job_runs_in_private_temporary_directory(media, tmp_path, cli_env, monkeypatch):
     """A filter writing a relative file (vidstabdetect's result=.bashrc once
     overwrote ~/.bashrc) writes into the job's own directory, not the caller's."""
     caller = tmp_path / "caller"
@@ -806,7 +920,7 @@ def test_job_runs_in_a_private_directory_removed_with_it(
     assert [p.name for p in folder.iterdir()] == ["out.mkv"]
 
 
-def test_failed_subtitle_extraction_keeps_the_parts_and_the_original(
+def test_failed_extraction_keeps_parts_and_original(
     media, tmp_path, cli_env, monkeypatch
 ):
     import engine.segment_batch as module

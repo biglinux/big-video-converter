@@ -402,7 +402,7 @@ class SettingsPage:
             entry.remove_css_class("error")
             entry.set_tooltip_text(None)
         else:
-            # Only a hint here — the conversion refuses these options anyway.
+            # Only a hint here: the conversion refuses these options anyway.
             entry.add_css_class("error")
             entry.set_tooltip_text(message)
 

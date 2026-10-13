@@ -125,7 +125,7 @@ REACHES_FILES = [
 
 
 @pytest.mark.parametrize("text", REACHES_FILES)
-def test_any_filter_is_accepted_and_file_access_is_reported(text):
+def test_file_filters_are_accepted_and_flagged(text):
     """Users customise conversions with every filter FFmpeg has; imported text
     naming files, libraries or the network is only confirmed, never refused."""
     parse_additional_options(text)
@@ -170,7 +170,7 @@ def test_options_outside_the_grammar_stay_rejected(text):
         "-x264-params keyint=60:bframes=3:no-scenecut=1 -x265-params aq-mode=3:psy-rd=2.0",
     ],
 )
-def test_ordinary_options_do_not_ask(text):
+def test_ordinary_options_need_no_confirmation(text):
     parse_additional_options(text)
     assert file_access_settings(text) == []
 
@@ -190,9 +190,13 @@ def write_profile(tmp_path, **values):
     return path
 
 
-def test_export_import_roundtrip_without_local_or_destructive_options(
-    settings, tmp_path
-):
+def import_profile(store, path):
+    """The Import Profile dialog's steps, with no file access to confirm."""
+    updates = store.read_profile(path)
+    return updates is not None and store.apply_profile(updates)
+
+
+def test_roundtrip_omits_local_and_destructive_options(settings, tmp_path):
     settings.settings.update(
         {
             "delete-original": True,
@@ -207,7 +211,7 @@ def test_export_import_roundtrip_without_local_or_destructive_options(
     for key in ["delete-original", "gpu-device-index", "preview-hue"]:
         assert key not in data
     other = SettingsStore(True, str(tmp_path / "other.json"))
-    assert other.import_profile(str(path))
+    assert import_profile(other, str(path))
     assert other.get_string("video-codec") == "h265"
     assert not other.get_boolean("delete-original")
 
@@ -217,23 +221,21 @@ def test_legacy_profile_cannot_enable_deletion(settings, tmp_path):
         tmp_path,
         **{"delete-original": True, "gpu-device-index": 8, "video-codec": "h265"},
     )
-    assert settings.import_profile(str(path))
+    assert import_profile(settings, str(path))
     assert not settings.get_boolean("delete-original")
     assert settings.get_value("gpu-device-index") == 0
     assert settings.get_string("video-codec") == "h265"
 
 
-def test_import_ignores_a_setting_this_build_does_not_know(settings, tmp_path):
+def test_import_skips_unknown_settings(settings, tmp_path):
     """A profile from a newer build still imports the keys both versions share."""
     path = write_profile(tmp_path, **{"audio-codec": "opus", "future-setting": 1})
-    assert settings.import_profile(str(path))
+    assert import_profile(settings, str(path))
     assert settings.get_string("audio-codec") == "opus"
     assert "future-setting" not in settings.settings
 
 
-def test_profile_that_reaches_files_is_read_before_anything_is_committed(
-    settings, tmp_path, monkeypatch
-):
+def test_reading_a_profile_commits_nothing(settings, tmp_path, monkeypatch):
     """The GUI asks between read_profile and apply_profile; Cancel leaves no trace."""
     options = "-vf vidstabdetect=result=.bashrc"
     before = settings.settings.copy()
@@ -252,7 +254,7 @@ def test_profile_that_reaches_files_is_read_before_anything_is_committed(
     assert settings.apply_profile(updates)
 
 
-def test_filters_refused_by_older_builds_are_accepted_again(tmp_path):
+def test_saved_file_filters_load_unchanged(tmp_path):
     options = "-vf subtitles=subs.srt,lut3d=file=/abs/x.cube -af ass=a.ass"
     path = tmp_path / "settings.json"
     path.write_text(json.dumps({"additional-options": options}))
@@ -261,9 +263,9 @@ def test_filters_refused_by_older_builds_are_accepted_again(tmp_path):
     assert validate_additional_options(options)[0]
 
 
-def test_import_maps_a_noise_model_the_plugin_lacks_to_the_default(settings, tmp_path):
+def test_unknown_noise_model_imports_as_default(settings, tmp_path):
     """Older builds accepted model 2; there are only models 0 and 1."""
-    assert settings.import_profile(str(write_profile(tmp_path, **{"noise-model": 2})))
+    assert import_profile(settings, str(write_profile(tmp_path, **{"noise-model": 2})))
     assert settings.get_value("noise-model") == 0
 
 
@@ -294,7 +296,7 @@ def test_import_invalid_is_transactional(settings, tmp_path, key, value):
     before_disk = Path(settings.settings_file).read_bytes()
     before_memory = settings.settings.copy()
     path = write_profile(tmp_path, **{"audio-codec": "opus", key: value})
-    assert not settings.import_profile(str(path))
+    assert not import_profile(settings, str(path))
     assert settings.settings == before_memory
     assert Path(settings.settings_file).read_bytes() == before_disk
 
@@ -302,13 +304,13 @@ def test_import_invalid_is_transactional(settings, tmp_path, key, value):
 def test_failed_persistence_rolls_back_import(settings, tmp_path, monkeypatch):
     before = settings.settings.copy()
     monkeypatch.setattr(settings, "save_to_disk", lambda: False)
-    assert not settings.import_profile(
-        str(write_profile(tmp_path, **{"video-codec": "h265"}))
+    assert not import_profile(
+        settings, str(write_profile(tmp_path, **{"video-codec": "h265"}))
     )
     assert settings.settings == before
 
 
-def test_corrupt_primary_does_not_destroy_known_good_backup(tmp_path):
+def test_corrupt_primary_restores_from_backup(tmp_path):
     path = tmp_path / "settings.json"
     path.write_text("{invalid")
     backup = path.with_suffix(".json.bak")
@@ -346,7 +348,7 @@ def test_nested_suspension_and_batch_rollback(settings):
         ("-vsync -1", "-fps_mode auto"),
     ],
 )
-def test_old_vsync_option_is_read_as_fps_mode(tmp_path, old, new):
+def test_vsync_option_reads_as_fps_mode(tmp_path, old, new):
     """FFmpeg 7 removed -vsync, so the options grammar refuses it."""
     path = tmp_path / "settings.json"
     path.write_text(json.dumps({"additional-options": old}))
@@ -355,7 +357,7 @@ def test_old_vsync_option_is_read_as_fps_mode(tmp_path, old, new):
     parse_additional_options(new)
 
 
-def test_out_of_range_number_falls_back_to_the_default(tmp_path):
+def test_out_of_range_number_uses_default(tmp_path):
     path = tmp_path / "settings.json"
     path.write_text('{"window-width": 1e400}')
     settings = SettingsStore(True, str(path))

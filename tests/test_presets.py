@@ -6,7 +6,7 @@ import subprocess
 
 import pytest
 from conftest import APP, pump
-from engine import presets
+from engine import preset_prompt, presets
 from engine.media_validation import probe_media
 
 BUNDLED = APP / "presets"
@@ -46,7 +46,7 @@ def user_presets(tmp_path, monkeypatch):
 
 
 class TestContract:
-    def test_fenced_answer_from_a_chat_bot_is_accepted(self):
+    def test_fenced_chat_bot_answer_is_accepted(self):
         data = presets.parse_preset_text(
             "Here you go:\n```toml\n" + MINIMAL + "```\nEnjoy!"
         )
@@ -107,7 +107,7 @@ class TestContract:
         over = run_cli(media["silent"], tmp_path / "over.mkv", video_fps="241")
         assert over.returncode == 2 and "Invalid frame rate" in over.stderr
 
-    def test_deeply_nested_toml_is_a_preset_error(self, user_presets):
+    def test_deeply_nested_toml_is_rejected(self, user_presets):
         deep = "a = " + "[" * 5000 + "]" * 5000
         with pytest.raises(presets.PresetError, match="TOML"):
             presets.parse_preset_text(deep)
@@ -118,11 +118,11 @@ class TestContract:
             str(user_presets / "deep.toml")
         ]
 
-    def test_not_toml_is_reported(self):
+    def test_malformed_toml_is_reported(self):
         with pytest.raises(presets.PresetError, match="TOML"):
             presets.parse_preset_text("this is: not = toml [")
 
-    def test_environment_and_options_follow_the_script_contract(self):
+    def test_environment_follows_the_script_contract(self):
         preset = presets.validate_preset(presets.parse_preset_text(MINIMAL))
         env = presets.preset_environment(preset)
         assert (
@@ -162,7 +162,7 @@ class TestContract:
         assert presets.preset_environment(preset)["video_fps"] == "30000/1001"
         assert presets.preset_settings(preset)["video-fps"] == "30000/1001"
 
-    def test_size_target_reaches_the_gui_and_the_script(self):
+    def test_size_target_reaches_gui_and_script(self):
         telegram = presets.load_preset(
             str(BUNDLED / "telegram-premium.toml"), bundled=True
         )
@@ -191,7 +191,7 @@ RISKY = MINIMAL.replace(
 
 
 class TestFileAccess:
-    def test_file_reading_filters_validate_and_are_reported(self):
+    def test_file_reading_filters_are_reported(self):
         preset = presets.validate_preset(
             presets.parse_preset_text(
                 '[preset]\nname="x"\n[ffmpeg]\ninput_options="-hwaccel vaapi"\n'
@@ -214,7 +214,7 @@ class TestFileAccess:
             == []
         )
 
-    def test_a_file_in_the_presets_folder_is_the_users_own(self, user_presets):
+    def test_presets_folder_files_belong_to_user(self, user_presets):
         user_presets.mkdir(parents=True)
         (user_presets / "mine.toml").write_text(RISKY)
         assert "mine" in {p.id for p in presets.list_presets()}
@@ -266,9 +266,7 @@ def _answer(window, label):
 
 
 class TestDeleteConfirmation:
-    def test_a_preset_is_deleted_only_after_confirming(
-        self, presets_window, user_presets
-    ):
+    def test_preset_deletion_needs_confirmation(self, presets_window, user_presets):
         window, dialog = presets_window
         preset = presets.save_user_preset(MINIMAL)
         dialog._delete(preset)
@@ -282,9 +280,7 @@ class TestDeleteConfirmation:
 
 
 class TestImportConfirmation:
-    def test_cancel_saves_nothing_and_import_anyway_saves(
-        self, presets_window, user_presets
-    ):
+    def test_risky_import_saves_only_when_confirmed(self, presets_window, user_presets):
         window, dialog = presets_window
         assert dialog.import_text(RISKY) is None
         pump(0.3)
@@ -310,7 +306,7 @@ class TestImportConfirmation:
 
 
 class TestBundled:
-    def test_every_bundled_preset_is_valid_with_a_unique_id(self):
+    def test_bundled_presets_are_valid_and_unique(self):
         files = sorted(BUNDLED.glob("*.toml"))
         assert len(files) >= 6
         loaded = [presets.load_preset(str(f), bundled=True) for f in files]
@@ -325,9 +321,7 @@ class TestBundled:
             "davinci-resolve",
         } <= set(ids)
 
-    def test_listing_hides_a_bundled_preset_behind_a_user_file_of_the_same_id(
-        self, user_presets
-    ):
+    def test_user_file_shadows_bundled_preset(self, user_presets):
         presets.save_user_preset(
             '[preset]\nname="Mine"\n[video]\ncodec="vp9"',
             preset_id="whatsapp",
@@ -339,7 +333,7 @@ class TestBundled:
 
 
 class TestUserFiles:
-    def test_save_never_overwrites_and_keeps_the_text(self, user_presets):
+    def test_save_keeps_text_under_free_id(self, user_presets):
         first = presets.save_user_preset(MINIMAL)
         second = presets.save_user_preset(MINIMAL)
         assert first.id == "tiny-test" and second.id == "tiny-test-2"
@@ -358,9 +352,7 @@ class TestUserFiles:
         text = (user_presets / "tiny-test.toml").read_text()
         assert "```" not in text and preset.name == "Tiny test"
 
-    def test_duplicate_makes_an_editable_copy_and_bundled_cannot_be_deleted(
-        self, user_presets
-    ):
+    def test_bundled_preset_is_copyable_and_permanent(self, user_presets):
         bundled = next(p for p in presets.list_presets() if p.id == "whatsapp")
         copy = presets.duplicate_preset(bundled)
         assert (
@@ -374,7 +366,7 @@ class TestUserFiles:
         presets.delete_user_preset(copy)
         assert not os.path.exists(copy.path)
 
-    def test_import_never_takes_the_name_of_a_broken_file(self, user_presets):
+    def test_import_leaves_a_broken_file_intact(self, user_presets):
         user_presets.mkdir(parents=True)
         broken = user_presets / "tiny-test.toml"
         broken.write_text(
@@ -384,9 +376,7 @@ class TestUserFiles:
         assert saved.id == "tiny-test-2"
         assert "hand edit in progress" in broken.read_text()
 
-    def test_export_copies_atomically_and_onto_itself_changes_nothing(
-        self, user_presets, tmp_path
-    ):
+    def test_export_is_atomic_even_onto_itself(self, user_presets, tmp_path):
         preset = presets.save_user_preset(MINIMAL)
         with open(preset.path) as file:
             before = file.read()
@@ -398,7 +388,7 @@ class TestUserFiles:
         presets.export_preset(preset, str(target))
         assert target.read_text() == before
 
-    def test_broken_user_file_is_reported_not_fatal(self, user_presets):
+    def test_broken_user_file_is_reported(self, user_presets):
         user_presets.mkdir(parents=True)
         (user_presets / "broken.toml").write_text(
             '[preset]\nname = "x"\n[video]\ncodec = "nope"\n'
@@ -409,11 +399,9 @@ class TestUserFiles:
 
 
 class TestAiPrompt:
-    def test_prompt_carries_request_format_language_and_machine_encoders(
-        self, monkeypatch
-    ):
+    def test_prompt_carries_request_language_and_encoders(self, monkeypatch):
         monkeypatch.setenv("LC_ALL", "pt_BR.UTF-8")
-        prompt = presets.build_ai_prompt(
+        prompt = preset_prompt.build_ai_prompt(
             "Vídeo vertical para TikTok",
             available_encoders={"libx264", "h264_vaapi", "libmp3lame"},
             ffmpeg_version="n9.0.1",
@@ -424,11 +412,11 @@ class TestAiPrompt:
         assert "available on this machine right now: h264_vaapi, libx264." in prompt
         assert "-crf" in prompt and "n9.0.1" in prompt
 
-    def test_language_falls_back_to_english_for_the_c_locale(self, monkeypatch):
+    def test_c_locale_falls_back_to_english(self, monkeypatch):
         for var in ("LC_ALL", "LC_MESSAGES", "LANG", "LANGUAGE"):
             monkeypatch.setenv(var, "C")
-        monkeypatch.setattr(presets.locale, "getlocale", lambda: (None, None))
-        assert presets.system_language() == "en_US (English)"
+        monkeypatch.setattr(preset_prompt.locale, "getlocale", lambda: (None, None))
+        assert preset_prompt.system_language() == "en_US (English)"
 
 
 class TestScript:
@@ -524,7 +512,7 @@ class TestScript:
 
 
 class TestTranslatableTexts:
-    def test_bundled_strings_file_is_in_step_with_the_toml_files(self):
+    def test_bundled_strings_match_the_toml_files(self):
         """presets/bundled_strings.py feeds gettext; it must list every current text."""
         generated = presets.bundled_strings_source()
         assert (BUNDLED / "bundled_strings.py").read_text() == generated
@@ -542,7 +530,7 @@ class TestTranslatableTexts:
         assert preset.display_name == "Meu preset" and preset.display_tags == ["meu"]
 
 
-def test_an_exported_preset_is_readable_like_any_new_file(user_presets, tmp_path):
+def test_exported_preset_follows_the_umask(user_presets, tmp_path):
     preset = presets.save_user_preset(MINIMAL)
     target = tmp_path / "shared.toml"
     umask = os.umask(0o022)

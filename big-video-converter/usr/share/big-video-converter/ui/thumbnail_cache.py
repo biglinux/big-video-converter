@@ -86,8 +86,8 @@ class _Job:
     process: subprocess.Popen | None = None
 
 
-class ThumbnailManager:
-    """Deduplicated service with a small fixed worker pool."""
+class ThumbnailCache:
+    """Thumbnails made once per file by a small fixed pool of workers."""
 
     def __init__(self, *, cache_home=None, ffmpeg=None, max_workers=2, timeout=20.0):
         if not 1 <= int(max_workers) <= 4:

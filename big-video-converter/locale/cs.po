@@ -766,9 +766,6 @@ msgstr "Soubor nebyl nalezen"
 msgid "Edit video"
 msgstr "Upravit video"
 
-msgid "Changes apply only to the selected video"
-msgstr "Změny se použijí pouze na vybrané video"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1382,9 +1379,6 @@ msgstr "Extra"
 msgid "SW Decode"
 msgstr "SW Dekódování"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Hotové recepty: YouTube, Instagram, střih…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1597,9 +1591,6 @@ msgstr "Vyberte výstupní složku"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Smazat původní soubory"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Originály se zachovají, dokud všechny převedené výsledky neprojdou ověřením"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2786,24 +2777,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Nastavte, jak se titulky zpracovávají během konverze."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Zpracování titulků"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Vyberte, jak budou titulky zahrnuty do výstupu. 'Vložené' je uchovává uvnitř video souboru. 'Extrahovat do .srt' vytváří samostatné soubory s titulky."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Pouze extrahovat titulky"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Přeskočte převod videa úplně a pouze extrahujte titulkové stopy do souborů .srt."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -3097,12 +3073,6 @@ msgstr "Hlasitost"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Video se kopíruje bez překódování. Ořez, úpravy, otočení nebo přidání obrazových efektů toto video překódují."
 
-msgid "Image"
-msgstr "Obraz"
-
-msgid "Reset image adjustments"
-msgstr "Obnovit úpravy obrazu"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -3135,16 +3105,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Standardní (SDR)"
-
-msgid "Orientation"
-msgstr "Orientace"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Obnovit transformaci"
 
 msgid "Rotation"
 msgstr "Otočení"
@@ -3216,9 +3176,6 @@ msgstr "Vyberte způsob uložení označených úseků"
 msgid "Effects"
 msgstr "Efekty"
 
-msgid "Reset effects"
-msgstr "Obnovit efekty"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -3259,10 +3216,6 @@ msgstr "Vybrat barevný vzhled nebo shader"
 
 msgid "Looks and shaders"
 msgstr "Barevné vzhledy a shadery"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Obnovit výchozí nastavení: {setting}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -5227,9 +5180,6 @@ msgstr "Nepodařilo se spustit Big Video Converter: {0}"
 msgid "Remove pauses"
 msgstr "Odstranit pauzy"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Určeno pro řeč. Pauzy se hledají v hlase vyčištěném pomocí DPDFNet."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Trvá zhruba minutu na každou hodinu zvuku."
 
@@ -5513,3 +5463,87 @@ msgstr[2] "{0} titulkových stop nebylo možné extrahovat, a proto byly vynech�
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Předstih (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "Výstup obsahuje jen část originálu"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Originál přesunut do koše po ověření výstupu"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Aktualizujte dpdfnet-native, aby bylo možné hledat pauzy."
+
+msgid "Video mode"
+msgstr "Režim videa"
+
+msgid "How the video is encoded."
+msgstr "Jak se video kóduje."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Kodek, datový tok a kanály…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Vypnuto při pouhé extrakci titulků"
+
+msgid "Not used with Fast Copy"
+msgstr "Nepoužívá se s rychlým kopírováním"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Originály se trvale smažou bez použití koše, až když všechny převedené výsledky projdou ověřením"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Originály se přesunou do koše, až když všechny převedené výsledky projdou ověřením"
+
+msgid "Move this video to the Trash?"
+msgstr "Přesunout toto video do koše?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "Soubor „{}“ bude přesunut do koše."
+
+msgid "Move to Trash"
+msgstr "Přesunout do koše"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Video se nepodařilo přesunout do koše: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Smazat bez použití koše"
+
+msgid "Audio only when a voice is detected"
+msgstr "Zvuk jen při detekci hlasu"
+
+msgid "Very sensitive"
+msgstr "Velmi citlivá"
+
+msgid "Sensitive"
+msgstr "Citlivá"
+
+msgid "Normal"
+msgstr "Normální"
+
+msgid "Strict"
+msgstr "Přísná"
+
+msgid "Very strict"
+msgstr "Velmi přísná"
+
+msgid "Voice detection"
+msgstr "Detekce hlasu"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Citlivá detekce zachová tiché nebo neobvyklé hlasy a propustí více šumu a hudby; přísná odstraní více hudby a může useknout tichá slova."
+
+msgid "On"
+msgstr "Zapnuto"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} aktivní"
+msgstr[1] "{count} aktivní"
+msgstr[2] "{count} aktivních"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Určeno pro řeč: pauzy se hledají po odstranění šumu na pozadí."

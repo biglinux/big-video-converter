@@ -773,9 +773,6 @@ msgstr "Fil hittades inte"
 msgid "Edit video"
 msgstr "Redigera video"
 
-msgid "Changes apply only to the selected video"
-msgstr "Ändringarna gäller endast den valda videon"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1384,9 +1381,6 @@ msgstr "Extra"
 msgid "SW Decode"
 msgstr "Programvaruavkodning"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Färdiga konfigurationer: YouTube, Instagram, redigering…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1599,9 +1593,6 @@ msgstr "Välj utdatamapp"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Ta bort originalfiler"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Originalen behålls om inte alla konverterade resultat klarar kontrollen"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2777,24 +2768,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Konfigurera hur undertexter hanteras under konvertering."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Undertextshantering"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Välj hur undertexter inkluderas i utdata. 'Inbäddad' behåller dem i videofilen. 'Extrahera till .srt' skapar separata undertextfiler."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Endast extrahera undertexter"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Hoppa över videokonvertering helt och hållet och extrahera endast undertextspåren till .srt-filer."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -3109,12 +3085,6 @@ msgstr "Volym"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Videon kopieras utan omkodning. Om du beskär, justerar, roterar eller lägger till effekter på bilden kodas videon om."
 
-msgid "Image"
-msgstr "Bild"
-
-msgid "Reset image adjustments"
-msgstr "Återställ bildjusteringar"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -3147,16 +3117,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Standard (SDR)"
-
-msgid "Orientation"
-msgstr "Orientering"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Återställ transformering"
 
 msgid "Rotation"
 msgstr "Rotation"
@@ -3228,9 +3188,6 @@ msgstr "Välj hur markerade segment sparas"
 msgid "Effects"
 msgstr "Effekter"
 
-msgid "Reset effects"
-msgstr "Återställ effekter"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -3271,10 +3228,6 @@ msgstr "Välj en färgstil eller shader"
 
 msgid "Looks and shaders"
 msgstr "Färgstilar och shaders"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Återställ {setting} till standardvärdet"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4235,9 +4188,6 @@ msgstr "Misslyckades med att starta Big Video Converter: {0}"
 msgid "Remove pauses"
 msgstr "Ta bort pauser"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Gjord för tal. Pauserna hittas i rösten som DPDFNet har rensat."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Tar ungefär en minut per timme ljud."
 
@@ -4514,3 +4464,86 @@ msgstr[1] "{0} undertextspår kunde inte extraheras och utelämnades."
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Förhandsgranskning (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "Utdata innehåller bara en del av originalet"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Originalet flyttades till papperskorgen efter kontroll av utdata"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Uppdatera dpdfnet-native för att hitta pauser."
+
+msgid "Video mode"
+msgstr "Videoläge"
+
+msgid "How the video is encoded."
+msgstr "Hur videon kodas."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Kodek, bithastighet och kanaler…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Av medan endast undertexter extraheras"
+
+msgid "Not used with Fast Copy"
+msgstr "Används inte med Snabb kopiering"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Originalen tas bort permanent, utan papperskorgen, först när alla konverterade resultat klarar kontrollen"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Originalen flyttas till papperskorgen först när alla konverterade resultat klarar kontrollen"
+
+msgid "Move this video to the Trash?"
+msgstr "Flytta den här videon till papperskorgen?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "“{}” flyttas till papperskorgen."
+
+msgid "Move to Trash"
+msgstr "Flytta till papperskorgen"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Videon kunde inte flyttas till papperskorgen: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Ta bort utan att använda papperskorgen"
+
+msgid "Audio only when a voice is detected"
+msgstr "Ljud bara när en röst upptäcks"
+
+msgid "Very sensitive"
+msgstr "Mycket känslig"
+
+msgid "Sensitive"
+msgstr "Känslig"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Strict"
+msgstr "Strikt"
+
+msgid "Very strict"
+msgstr "Mycket strikt"
+
+msgid "Voice detection"
+msgstr "Röstdetektering"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "En känslig inställning behåller svaga eller ovanliga röster och släpper igenom mer brus och musik; en strikt tar bort mer musik och kan klippa bort svaga ord."
+
+msgid "On"
+msgstr "På"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} aktiv"
+msgstr[1] "{count} aktiva"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Gjord för tal: pauserna hittas när bakgrundsljudet har tagits bort."

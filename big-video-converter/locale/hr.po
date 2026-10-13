@@ -775,9 +775,6 @@ msgstr "Datoteka nije pronađena"
 msgid "Edit video"
 msgstr "Uredi video"
 
-msgid "Changes apply only to the selected video"
-msgstr "Promjene se primjenjuju samo na odabrani video"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1391,9 +1388,6 @@ msgstr "Ekstra"
 msgid "SW Decode"
 msgstr "SW Dekodiraj"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Gotovi recepti: YouTube, Instagram, montaža…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1606,9 +1600,6 @@ msgstr "Odaberite izlaznu mapu"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Izbriši izvorne datoteke"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Izvornici se zadržavaju dok svi rezultati pretvorbe ne prođu provjeru"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2795,24 +2786,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Konfigurirajte kako se titlovi obrađuju tijekom konverzije."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Rukovanje titlovima"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Odaberite kako će titlovi biti uključeni u izlaz. 'Ugrađeni' ih zadržava unutar video datoteke. 'Izvuci u .srt' stvara odvojene datoteke s titlovima."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Samo izdvojite titlove"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Preskoči cijeli postupak konverzije videa i samo izvuci titlove u .srt datoteke."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -3101,12 +3077,6 @@ msgstr "Jedinica glasnoće"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Video se kopira bez ponovnog kodiranja. Obrezivanje, prilagodba, okretanje ili dodavanje efekata slici ponovno kodiraju ovaj video."
 
-msgid "Image"
-msgstr "Slika"
-
-msgid "Reset image adjustments"
-msgstr "Vrati prilagodbe slike"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -3139,16 +3109,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Standardno (SDR)"
-
-msgid "Orientation"
-msgstr "Orijentacija"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Resetiraj transformaciju"
 
 msgid "Rotation"
 msgstr "Rotacija"
@@ -3220,9 +3180,6 @@ msgstr "Odaberite kako spremiti označene odsječke"
 msgid "Effects"
 msgstr "Efekti"
 
-msgid "Reset effects"
-msgstr "Vrati efekte"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -3263,10 +3220,6 @@ msgstr "Odaberi izgled boja ili shader"
 
 msgid "Looks and shaders"
 msgstr "Izgledi boja i shaderi"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Vrati zadanu postavku: {setting}"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4236,9 +4189,6 @@ msgstr "Neuspjeh pri pokretanju Big Video Convertera: {0}"
 msgid "Remove pauses"
 msgstr "Ukloni stanke"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Namijenjeno govoru. Stanke se traže u glasu koji je očistio DPDFNet."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Traje oko minutu za svaki sat zvuka."
 
@@ -4521,3 +4471,87 @@ msgstr[2] "{0} zapisa titlova nije bilo moguće izdvojiti pa su izostavljeni."
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Predviđanje (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "Izlaz sadrži samo dio izvornika"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Izvornik premješten u smeće nakon provjere izlaza"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Ažurirajte dpdfnet-native za pronalaženje stanki."
+
+msgid "Video mode"
+msgstr "Način videa"
+
+msgid "How the video is encoded."
+msgstr "Kako se video kodira."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Kodek, brzina prijenosa i kanali…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Isključeno dok se samo izdvajaju titlovi"
+
+msgid "Not used with Fast Copy"
+msgstr "Ne koristi se uz Brzu Kopiju"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Izvornici se trajno brišu, bez smeća, tek nakon što svi rezultati pretvorbe prođu provjeru"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Izvornici idu u smeće tek nakon što svi rezultati pretvorbe prođu provjeru"
+
+msgid "Move this video to the Trash?"
+msgstr "Premjestiti ovaj video u smeće?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "Datoteka „{}” bit će premještena u smeće."
+
+msgid "Move to Trash"
+msgstr "Premjesti u smeće"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Video se nije mogao premjestiti u smeće: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Izbriši bez korištenja smeća"
+
+msgid "Audio only when a voice is detected"
+msgstr "Zvuk samo kad se otkrije glas"
+
+msgid "Very sensitive"
+msgstr "Vrlo osjetljivo"
+
+msgid "Sensitive"
+msgstr "Osjetljivo"
+
+msgid "Normal"
+msgstr "Normalno"
+
+msgid "Strict"
+msgstr "Strogo"
+
+msgid "Very strict"
+msgstr "Vrlo strogo"
+
+msgid "Voice detection"
+msgstr "Otkrivanje glasa"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Osjetljivo otkrivanje zadržava tihe ili neobične glasove i propušta više šuma i glazbe, a strogo uklanja više glazbe i može odrezati tihe riječi."
+
+msgid "On"
+msgstr "Uključeno"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} aktivan"
+msgstr[1] "{count} aktivna"
+msgstr[2] "{count} aktivnih"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Namijenjeno govoru: stanke se traže nakon uklanjanja pozadinske buke."

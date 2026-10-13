@@ -13,49 +13,9 @@ pytestmark = pytest.mark.skipif(
 gi = pytest.importorskip("gi")
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from conftest import CLI, pump, pump_until
+from conftest import CLI, pump, pump_until, widgets
 from gi.repository import Adw, GLib, Gtk
 from ui.signal_connections import SignalConnections
-
-
-def widgets(parent):
-    yield parent
-    child = parent.get_first_child()
-    while child is not None:
-        yield from widgets(child)
-        child = child.get_next_sibling()
-
-
-@pytest.fixture(scope="module")
-def app(tmp_path_factory):
-    home = tmp_path_factory.mktemp("gui-home")
-    old = {k: os.environ.get(k) for k in ("HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME")}
-    os.environ.update(
-        HOME=str(home),
-        XDG_CONFIG_HOME=str(home / "config"),
-        XDG_DATA_HOME=str(home / "data"),
-    )
-    import constants
-
-    constants.CONVERT_SCRIPT_PATH = str(CLI)
-    from main import VideoConverterApp
-
-    application = VideoConverterApp()
-    application.settings_store.save_setting("show-welcome-dialog", False)
-    application.register(None)
-    application.activate()
-    pump(0.5)
-    yield application
-    if application.video_edit_page:
-        application.video_edit_page.cleanup()
-    application.window.destroy()
-    application.quit()
-    pump(0.1)
-    for k, v in old.items():
-        if v is None:
-            os.environ.pop(k, None)
-        else:
-            os.environ[k] = v
 
 
 def test_real_application_opens_without_redesign(app):
@@ -65,9 +25,7 @@ def test_real_application_opens_without_redesign(app):
     assert app.conversion_page and app.progress_page and app.video_edit_page
 
 
-def test_editor_restores_individual_crop_and_contrast_without_changing_other_video(
-    app, monkeypatch
-):
+def test_editor_restores_each_videos_own_edits(app, monkeypatch):
     from copy import deepcopy
 
     editor = app.video_edit_page
@@ -100,9 +58,12 @@ def test_editor_restores_individual_crop_and_contrast_without_changing_other_vid
         assert editor.crop_aspect == values[path]["crop_aspect"]
         assert editor.contrast == values[path]["contrast"]
     assert app.conversion_page.file_metadata == values
+    # A file without edits leaves the editor at its defaults for later tests.
+    editor.current_video_path = "unedited.mp4"
+    editor._load_file_metadata("unedited.mp4")
 
 
-def test_crop_choices_apply_to_rotated_odd_and_portrait_sources(app, monkeypatch):
+def test_crop_choices_fit_any_source_shape(app, monkeypatch):
     editor = app.video_edit_page
     monkeypatch.setattr(editor, "mpv_player", None)
     monkeypatch.setattr(editor, "current_video_path", "crop-test.mp4")
@@ -161,7 +122,7 @@ def test_replacing_queue_cancels_pending_row_creation(
     assert page._queue_render_id is None
 
 
-def test_close_confirmation_preserves_running_job_when_declined(app, monkeypatch):
+def test_declined_close_keeps_the_running_job(app, monkeypatch):
     monkeypatch.setattr(app, "active_conversions", [{"job_id": "unfinished"}])
     stopped = []
     monkeypatch.setattr(app, "quit", lambda: stopped.append(True))
@@ -191,7 +152,7 @@ def test_close_confirmation_preserves_running_job_when_declined(app, monkeypatch
         "_quitting",
     ],
 )
-def test_view_changes_cannot_reenable_conversion_while_busy(app, monkeypatch, busy):
+def test_busy_app_keeps_conversion_disabled(app, monkeypatch, busy):
     with monkeypatch.context() as patch:
         patch.setattr(app, busy, True, raising=False)
         app.header_bar.set_view("editor")
@@ -204,9 +165,7 @@ def test_view_changes_cannot_reenable_conversion_while_busy(app, monkeypatch, bu
     app.header_bar.set_view("queue")
 
 
-def test_individual_options_dialog_applies_and_restores_inheritance(
-    app, media, monkeypatch
-):
+def test_individual_options_apply_and_restore_inheritance(app, media, monkeypatch):
     from copy import deepcopy
 
     from engine.job_options import RESOLUTION_MODES
@@ -458,7 +417,6 @@ def test_individual_recipe_reaches_real_conversion(
         ("video_encoding_dialog", "show_video_encoding_dialog"),
         ("extra_dialog", "show_extra_dialog"),
         ("noise_dialog", "show_noise_dialog"),
-        ("subtitles_dialog", "show_subtitles_dialog"),
     ],
 )
 def test_dialog_disconnects_all_long_lived_subscriptions(
@@ -485,7 +443,7 @@ def test_dialog_disconnects_all_long_lived_subscriptions(
         assert all(not emitter.handler_is_connected(i) for emitter, i in saved)
 
 
-def test_first_manual_eq_change_preserves_other_nine_bands(app, monkeypatch):
+def test_first_eq_change_keeps_other_bands(app, monkeypatch):
     from ui.noise_dialog import show_noise_dialog
 
     dialogs = []
@@ -519,7 +477,51 @@ def test_first_manual_eq_change_preserves_other_nine_bands(app, monkeypatch):
     pump(0.03)
 
 
-def test_editor_saves_adjustment_before_next_main_loop_tick(app, media):
+def test_voice_only_saves_and_follows_cleaning(app, monkeypatch):
+    from ui.noise_dialog import show_noise_dialog
+
+    dialogs = []
+    original = SignalConnections.__init__
+
+    def capture(self, dialog):
+        original(self, dialog)
+        dialogs.append(dialog)
+
+    monkeypatch.setattr(SignalConnections, "__init__", capture)
+    app.noise_reduction_switch.set_active(False)
+    show_noise_dialog(app.window, app)
+    pump(0.05)
+    dialog = dialogs[-1]
+    try:
+        label = next(
+            w
+            for w in widgets(dialog)
+            if isinstance(w, Gtk.Label)
+            and w.get_label() == "Audio only when a voice is detected"
+        )
+        switch = label.get_next_sibling()
+        scale = next(
+            w
+            for w in widgets(dialog)
+            if isinstance(w, Gtk.Scale) and w.get_adjustment().get_upper() == 5
+        )
+        assert not switch.get_parent().get_sensitive()
+        app.noise_reduction_switch.set_active(True)
+        pump(0.03)
+        assert switch.get_parent().get_sensitive()
+        assert not scale.get_parent().get_sensitive()
+        scale.set_value(5)
+        switch.set_active(True)
+        assert app.settings_store.get_boolean("voice-only")
+        assert app.settings_store.load_setting("voice-only-sensitivity") == 5
+    finally:
+        app.settings_store.save_setting("voice-only", False)
+        app.noise_reduction_switch.set_active(False)
+        dialog.force_close()
+        pump(0.03)
+
+
+def test_editor_saves_adjustments_immediately(app, media):
     page = app.video_edit_page
     page.current_video_path = str(media["video"])
     page.brightness = 0.1
@@ -530,7 +532,7 @@ def test_editor_saves_adjustment_before_next_main_loop_tick(app, media):
     assert page.app_state.file_metadata[str(media["video"])]["hue"] == 0.75
 
 
-def test_remove_only_selected_segment_with_duplicate_start(app):
+def test_remove_targets_the_selected_segment(app):
     page = app.video_edit_page
     first = {"start": 0, "end": 1}
     second = {"start": 0, "end": 2}
@@ -539,7 +541,7 @@ def test_remove_only_selected_segment_with_duplicate_start(app):
     assert len(page.trim_segments) == 1 and page.trim_segments[0] is second
 
 
-def test_stale_editor_metadata_and_error_are_ignored(app, monkeypatch):
+def test_stale_editor_results_are_ignored(app, monkeypatch):
     processor = app.video_edit_page.processor
     errors = []
     monkeypatch.setattr(app, "show_error_dialog", lambda *a: errors.append(a))
@@ -550,7 +552,7 @@ def test_stale_editor_metadata_and_error_are_ignored(app, monkeypatch):
     assert not errors
 
 
-def test_mpv_colors_are_sent_coalesced_and_cached_only_after_success():
+def test_coalesced_mpv_colors_cache_on_success():
     from ui.mpv_player import MPVPlayer
 
     player = MPVPlayer(Gtk.GLArea())
@@ -574,7 +576,7 @@ def test_mpv_colors_are_sent_coalesced_and_cached_only_after_success():
     assert player._applied_colors["hue"] == 100
 
 
-def test_seek_waits_for_a_file_and_position_reads_playback_time():
+def test_seek_waits_for_a_loaded_file():
     """Writing time-pos before a file loaded froze it at 0 for the next video."""
     from ui.mpv_player import MPVPlayer
 
@@ -590,7 +592,7 @@ def test_seek_waits_for_a_file_and_position_reads_playback_time():
     assert player.get_position() == 12.5
 
 
-def test_crop_is_reapplied_after_preview_filter_clear():
+def test_crop_survives_preview_filter_clear():
     from ui.mpv_player import MPVPlayer
 
     player = MPVPlayer.__new__(MPVPlayer)
@@ -644,9 +646,7 @@ def test_native_progress_row_updates_and_completes(app, media, tmp_path, cli_env
         app.conversion_completed = original
 
 
-def test_queue_probes_off_the_main_thread_and_converts(
-    app, media, tmp_path, monkeypatch
-):
+def test_queue_probes_on_worker_and_converts(app, media, tmp_path, monkeypatch):
     """The real queue: ffprobe pre-flight on a worker, launch and completion on the main loop."""
     import shutil
     import threading
@@ -693,6 +693,8 @@ def test_queue_probes_off_the_main_thread_and_converts(
 def test_presets_dialog_applies_searches_and_releases(app, tmp_path, monkeypatch):
     """The grid, its search, applying a preset and leaving it by hand."""
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
+    store = app.settings_store
+    before = dict(store.settings)
     from ui.presets_dialog import (
         build_prompt,
         show_ai_preset_dialog,
@@ -716,7 +718,8 @@ def test_presets_dialog_applies_searches_and_releases(app, tmp_path, monkeypatch
     assert app.settings_store.load_setting("video-resolution") == "1280x720"
     assert app.settings_store.load_setting("audio-bitrate") == "96k"
     assert (
-        app._radio_preset.get_active() and "WhatsApp" in app._presets_row.get_subtitle()
+        app._radio_preset.get_active()
+        and "WhatsApp" in app._presets_row.value_label.get_text()
     )
     assert app.conversion_page.app.active_preset().id == "whatsapp"
     app.video_codec_combo.set_selected(2)
@@ -746,9 +749,15 @@ def test_presets_dialog_applies_searches_and_releases(app, tmp_path, monkeypatch
     pump(0.05)
     app.settings_store.save_setting("active-preset", "")
     app._apply_profile("universal")
+    # The presets wrote format, resolution and audio settings the next tests read.
+    for key in set(store.settings) | set(before):
+        if key not in before:
+            del store.settings[key]
+        elif store.settings[key] != before[key]:
+            store.save_setting(key, before[key])
 
 
-def test_audio_mode_changes_preserve_noise_cleaning_preference(app):
+def test_audio_mode_keeps_noise_cleaning_preference(app):
     original_mode = app.audio_handling_combo.get_selected()
     original_noise = app.noise_reduction_switch.get_active()
     try:
@@ -764,7 +773,7 @@ def test_audio_mode_changes_preserve_noise_cleaning_preference(app):
         app.noise_reduction_switch.set_active(original_noise)
 
 
-def test_folder_import_is_async_and_redraws_once(app, tmp_path, monkeypatch):
+def test_async_folder_import_redraws_once(app, tmp_path, monkeypatch):
     import threading
 
     import file_intake
@@ -798,7 +807,7 @@ def test_folder_import_is_async_and_redraws_once(app, tmp_path, monkeypatch):
     app.clear_queue()
 
 
-def test_an_unreadable_subfolder_is_skipped_and_reported(app, tmp_path, monkeypatch):
+def test_unreadable_subfolder_is_skipped_and_reported(app, tmp_path, monkeypatch):
     app.clear_queue()
     pump()
     (tmp_path / "ok").mkdir()
@@ -846,14 +855,13 @@ def test_space_check_uses_selected_destinations(app, tmp_path, monkeypatch):
         "disk_usage",
         lambda path: checked.append(path) or SimpleNamespace(free=100),
     )
-    assert app._check_disk_space([str(path / "video.mp4") for path in sources])
+    files = [str(path / "video.mp4") for path in sources]
+    assert queue_runner.disk_shortage(files, "") is None
     assert checked == list(map(str, sources))
     app.settings_store.save_setting("output-folder", "")
 
 
-def test_selected_file_survives_unusual_suffix_and_settings_write_failure(
-    app, tmp_path, monkeypatch
-):
+def test_selected_odd_file_survives_save_failure(app, tmp_path, monkeypatch):
     from gi.repository import Gio
 
     app.clear_queue()
@@ -875,8 +883,8 @@ def test_selected_file_survives_unusual_suffix_and_settings_write_failure(
     app.clear_queue()
 
 
-def test_presets_row_opens_one_dialog_from_another_profile(app, monkeypatch):
-    """Clicking the row both ticks its radio and activates it: one dialog, not two."""
+def test_presets_row_opens_one_dialog(app, monkeypatch):
+    """Activating the Presets row opens one dialog."""
     from ui import presets_dialog
 
     opened = []
@@ -901,7 +909,7 @@ def test_presets_row_opens_one_dialog_from_another_profile(app, monkeypatch):
     assert app._radio_universal.get_active()
 
 
-def test_only_the_editor_can_hide_the_sidebar(app, media):
+def test_only_editor_can_hide_sidebar(app, media):
     split = app.split_view
     toggle = app.lookup_action("toggle_sidebar")
     app.show_queue_view()
@@ -922,7 +930,7 @@ def test_only_the_editor_can_hide_the_sidebar(app, media):
     assert split.get_show_sidebar()
 
 
-def test_editor_fullscreen_keeps_the_tools_reachable_and_restores_the_sidebar(app):
+def test_fullscreen_keeps_tools_and_restores_sidebar(app):
     editor = app.video_edit_page
     split = app.split_view
     split.set_show_sidebar(True)
@@ -943,7 +951,7 @@ def test_editor_fullscreen_keeps_the_tools_reachable_and_restores_the_sidebar(ap
     )
 
 
-def test_frame_rate_row_shows_a_preset_rate_the_list_lacks(app):
+def test_frame_rate_row_shows_unlisted_rates(app):
     page = app.settings_page
     try:
         app.settings_store.save_setting("video-fps", "30000/1001")
@@ -957,611 +965,3 @@ def test_frame_rate_row_shows_a_preset_rate_the_list_lacks(app):
         assert app.settings_store.load_setting("video-fps", None) == ""
     finally:
         app.settings_store.save_setting("video-fps", "")
-
-
-def _reserved_jobs(app, monkeypatch, *paths):
-    """Jobs as process_next_in_queue reserves them, without launching anything."""
-    import threading
-
-    jobs = [
-        {
-            "file_path": path,
-            "job_id": f"job-{index}",
-            "cancel_event": threading.Event(),
-            "gpu_slot": None,
-        }
-        for index, path in enumerate(paths)
-    ]
-    monkeypatch.setattr(app, "active_conversions", list(jobs))
-    return jobs
-
-
-def _job_settings(app, monkeypatch, **overrides):
-    monkeypatch.setattr(
-        app.settings_store,
-        "settings",
-        {
-            **app.settings_store.settings,
-            "output-format-index": 0,
-            "force-copy-video": False,
-            "size-target": "",
-            "additional-options": "",
-            "gpu": "software",
-            **overrides,
-        },
-    )
-    monkeypatch.setattr(app, "active_preset", lambda: None)
-    monkeypatch.setattr(app, "claimed_outputs", set())
-
-
-def test_parallel_jobs_reserve_distinct_output_names(
-    app, media, tmp_path, monkeypatch, request
-):
-    import shutil
-
-    page = app.conversion_page
-    sources = []
-    for folder, name in (("a", "clip.mkv"), ("b", "clip.avi")):
-        (tmp_path / folder).mkdir()
-        shutil.copyfile(media["video"], tmp_path / folder / name)
-        sources.append(str(tmp_path / folder / name))
-    out = tmp_path / "out"
-    out.mkdir()
-    _reserved_jobs(app, monkeypatch, *sources)
-    _job_settings(app, monkeypatch)
-    monkeypatch.setattr(page, "file_metadata", {})
-    old = (page.folder_combo.get_selected(), page.output_folder_entry.get_text())
-    request.addfinalizer(
-        lambda: (
-            page.folder_combo.set_selected(old[0]),
-            page.output_folder_entry.set_text(old[1]),
-        )
-    )
-    page.folder_combo.set_selected(1)
-    page.output_folder_entry.set_text(str(out))
-    contexts = []
-    monkeypatch.setattr(
-        page, "_continue_conversion", lambda context: contexts.append(context) or True
-    )
-    for source in sources:
-        monkeypatch.setattr(page, "current_file_path", source, raising=False)
-        assert page.force_start_conversion()
-    outputs = [context["full_output_path"] for context in contexts]
-    assert outputs == [str(out / "clip.mp4"), str(out / "clip_1.mp4")]
-    assert app.claimed_outputs == set(outputs)
-    monkeypatch.setattr(app, "process_next_in_queue", lambda: False)
-    app.conversion_completed(True, job_id="job-0")
-    assert app.claimed_outputs == {outputs[1]}
-
-
-def test_cancelled_single_file_run_restores_the_queue(app, monkeypatch):
-    from collections import deque
-
-    queue = ["/videos/A.mp4", "/videos/B.mp4", "/videos/C.mp4"]
-    monkeypatch.setattr(app, "conversion_queue", deque())
-    monkeypatch.setattr(
-        app, "_original_queue_before_single_conversion", list(queue), raising=False
-    )
-    monkeypatch.setattr(app, "_single_file_conversion", True, raising=False)
-    monkeypatch.setattr(app, "_single_file_to_convert", queue[1], raising=False)
-    monkeypatch.setattr(app, "currently_converting", True)
-    monkeypatch.setattr(app, "is_cancellation_requested", True)
-    _reserved_jobs(app, monkeypatch, queue[1])
-    app.conversion_completed(False, job_id="job-0")
-    assert list(app.conversion_queue) == queue and not app._single_file_conversion
-    assert not app.currently_converting and not app.is_cancellation_requested
-
-
-def test_vanished_single_file_restores_the_queue_and_says_why(
-    app, monkeypatch, tmp_path
-):
-    from collections import deque
-
-    missing, other = str(tmp_path / "gone.mp4"), str(tmp_path / "other.mp4")
-    monkeypatch.setattr(app, "conversion_queue", deque([missing]))
-    monkeypatch.setattr(
-        app, "_original_queue_before_single_conversion", [other, missing], raising=False
-    )
-    monkeypatch.setattr(app, "_single_file_conversion", True, raising=False)
-    monkeypatch.setattr(app, "_single_file_to_convert", missing, raising=False)
-    monkeypatch.setattr(app, "active_conversions", [])
-    monkeypatch.setattr(app, "currently_converting", True)
-    app.progress_page.initialize_queue([missing])
-    try:
-        app.process_next_in_queue()
-        pump_until(lambda: not app._single_file_conversion)
-        assert (
-            list(app.conversion_queue) == [other, missing]
-            and not app.currently_converting
-        )
-        row = app.progress_page.queue_items[missing]
-        assert (
-            row.status == "failed" and row.status_label.get_text() == "File not found"
-        )
-    finally:
-        app.progress_page.reset()
-
-
-def test_opening_files_queues_only_the_ones_that_exist(
-    app, media, monkeypatch, tmp_path
-):
-    from collections import deque
-
-    from gi.repository import Gio
-
-    monkeypatch.setattr(app, "conversion_queue", deque())
-    video = str(media["video"])
-    gone = Gio.File.new_for_path(str(tmp_path / "gone.mp4"))
-    app.do_open([Gio.File.new_for_path(video), gone], 2, "")
-    pump_until(lambda: list(app.conversion_queue) == [video])
-    pump(0.05)
-    assert list(app.conversion_queue) == [video]
-
-
-def test_vanished_queued_file_stays_listed_as_not_found(app, monkeypatch, tmp_path):
-    from collections import deque
-
-    missing = str(tmp_path / "moved.mp4")
-    monkeypatch.setattr(app, "conversion_queue", deque([missing]))
-    page = app.conversion_page
-    page.update_queue_display()
-    pump_until(
-        lambda: (
-            page.queue_rows
-            and any(
-                isinstance(w, Gtk.Label) and w.get_label() == "File not found"
-                for w in widgets(page.queue_rows[0])
-            )
-        )
-    )
-    assert [row.file_path for row in page.queue_rows] == [missing]
-
-
-def test_launch_uses_the_answers_probed_on_the_worker(app, media, monkeypatch):
-    """The queue probes on a worker; the launch on the main loop runs no ffprobe."""
-    from engine import file_info
-
-    source = str(media["video"])
-    page = app.conversion_page
-    monkeypatch.setattr(
-        app.settings_store,
-        "settings",
-        {
-            "video-codec": "h264",
-            "gpu": "software",
-            "force-copy-video": True,
-            "output-format-index": 0,
-            "audio-handling": "copy",
-        },
-    )
-    monkeypatch.setattr(app, "active_preset", lambda: None)
-    monkeypatch.setattr(page, "current_file_path", source, raising=False)
-    monkeypatch.setattr(
-        page, "file_metadata", {source: {"crop_left": 8, "crop_right": 8}}
-    )
-
-    def forbidden(*_args, **_kwargs):
-        raise AssertionError("probed on the main loop")
-
-    for name in (
-        "has_audio_streams",
-        "get_video_dimensions",
-        "check_mp4_compatibility",
-    ):
-        monkeypatch.setattr(file_info, name, forbidden)
-    contexts = []
-    monkeypatch.setattr(
-        page, "_continue_conversion", lambda context: contexts.append(context) or True
-    )
-    assert page.force_start_conversion(
-        probes={"audio": False, "size": (128, 72), "mp4": (True, [])}
-    )
-    assert contexts[-1]["env_vars"]["audio_handling"] == "none"
-
-
-def test_skipped_reserved_job_never_launches(app, media, monkeypatch, tmp_path):
-    import shutil
-    import threading
-    from collections import deque
-
-    from engine import file_info
-
-    source = str(tmp_path / "reserved.mp4")
-    shutil.copyfile(media["video"], source)
-    probing = threading.Event()
-    monkeypatch.setattr(file_info, "launch_probes", lambda path: probing.wait(5) and {})
-    launched = []
-    monkeypatch.setattr(
-        app.conversion_page,
-        "force_start_conversion",
-        lambda **kw: launched.append(kw) or True,
-    )
-    monkeypatch.setattr(app, "conversion_queue", deque([source]))
-    monkeypatch.setattr(app, "active_conversions", [])
-    monkeypatch.setattr(app, "is_cancellation_requested", False)
-    monkeypatch.setattr(app, "currently_converting", True)
-    app.progress_page.initialize_queue([source])
-    try:
-        app.process_next_in_queue()
-        assert app.active_conversions
-        app.progress_page.queue_items[source].cancel()
-        probing.set()
-        pump_until(lambda: not app.currently_converting)
-        assert not launched and not app.active_conversions
-        assert app.progress_page.queue_items[source].status == "cancelled"
-    finally:
-        probing.set()
-        app.progress_page.reset()
-
-
-def test_queue_actions_are_off_while_a_queue_runs(app, monkeypatch, tmp_path):
-    from collections import deque
-
-    names = (
-        "add_files",
-        "add_folder",
-        "add_network_file",
-        "clear_queue",
-        "start_conversion",
-        "restore_settings",
-    )
-    kept = tmp_path / "kept.mp4"
-    dropped = tmp_path / "dropped.mp4"
-    kept.write_bytes(b"")
-    dropped.write_bytes(b"")
-    monkeypatch.setattr(app, "conversion_queue", deque([str(kept)]))
-    with monkeypatch.context() as patch:
-        patch.setattr(app, "currently_converting", True)
-        app.header_bar.set_buttons_sensitive(True)
-        assert not any(app.lookup_action(name).get_enabled() for name in names)
-        app.clear_queue()
-        assert not app.add_file_to_queue(str(dropped))
-        assert list(app.conversion_queue) == [str(kept)]
-    app.header_bar.set_buttons_sensitive(True)
-    assert all(app.lookup_action(name).get_enabled() for name in names)
-
-
-def test_invalid_additional_options_stop_the_queue_with_one_message(app, monkeypatch):
-    from collections import deque
-
-    queue = ["/videos/a.mp4", "/videos/b.mp4"]
-    _job_settings(app, monkeypatch, **{"additional-options": "-vf 'unclosed"})
-    monkeypatch.setattr(app, "conversion_queue", deque(queue))
-    monkeypatch.setattr(app.conversion_page, "file_metadata", {})
-    errors = []
-    monkeypatch.setattr(app, "show_error_dialog", lambda *args: errors.append(args))
-    monkeypatch.setattr(
-        app, "_check_disk_space", lambda files: pytest.fail("the queue started")
-    )
-    app.start_queue_processing()
-    assert len(errors) == 1 and "No closing quotation" in errors[0][1]
-    assert list(app.conversion_queue) == queue and not app.currently_converting
-
-
-def test_queue_drop_accepts_only_its_own_rows_and_moves_to_the_end(app, monkeypatch):
-    from collections import deque
-
-    paths = ["/videos/a.mp4", "/videos/b.mp4", "/videos/c.mp4"]
-    monkeypatch.setattr(app, "conversion_queue", deque(paths))
-    page = app.conversion_page
-    monkeypatch.setattr(page, "dragged_row", None)
-    # Text dragged from another application is not a row index.
-    assert not page.on_drop_listbox(None, "0", 0, 10**6)
-    page.dragged_row = object()
-    assert not page.on_drop_listbox(None, "5", 0, 10**6)
-    assert not page.on_drop_listbox(None, "-1", 0, 10**6)
-    assert list(app.conversion_queue) == paths
-    assert page.on_drop_listbox(None, "0", 0, 10**6)
-    assert list(app.conversion_queue) == paths[1:] + paths[:1]
-
-
-def test_closing_the_mp4_question_completes_its_job(app, media, monkeypatch):
-
-    page = app.conversion_page
-    source = str(media["video"])
-    jobs = _reserved_jobs(app, monkeypatch, source)
-    _job_settings(app, monkeypatch, **{"force-copy-video": True})
-    monkeypatch.setattr(page, "file_metadata", {})
-    monkeypatch.setattr(page, "current_file_path", source, raising=False)
-    completed = []
-    monkeypatch.setattr(
-        app, "conversion_completed", lambda ok, **kwargs: completed.append((ok, kwargs))
-    )
-    pcm = [{"codec_type": "audio", "codec_name": "pcm_s16le", "index": 1}]
-    assert page.force_start_conversion(probes={"mp4": (False, pcm)})
-    pump_until(lambda: bool(page._decision_dialogs))
-    # What quit() does: the job it waits for must settle.
-    page.close_decision_dialogs()
-    pump(0.3)
-    assert completed == [(False, {"file_path": source, "job_id": "job-0"})]
-    assert jobs[0]["cancel_event"].is_set() and not page._decision_dialogs
-
-
-def test_job_environment_ignores_inherited_script_settings(app, media, monkeypatch):
-    for name, value in (
-        ("options", "-an"),
-        ("size_limit", "1"),
-        ("video_filter", "hflip"),
-        ("http_proxy", "http://proxy.invalid:3128"),
-    ):
-        monkeypatch.setenv(name, value)
-    page = app.conversion_page
-    source = str(media["video"])
-    _reserved_jobs(app, monkeypatch, source)
-    _job_settings(app, monkeypatch)
-    monkeypatch.setattr(page, "file_metadata", {})
-    monkeypatch.setattr(page, "current_file_path", source, raising=False)
-    contexts = []
-    monkeypatch.setattr(
-        page, "_continue_conversion", lambda context: contexts.append(context) or True
-    )
-    assert page.force_start_conversion()
-    env = contexts[-1]["env_vars"]
-    assert (
-        env["options"] == "" and env["video_filter"] == "" and "size_limit" not in env
-    )
-    assert (
-        env["http_proxy"] == "http://proxy.invalid:3128"
-        and env["PATH"] == os.environ["PATH"]
-    )
-
-
-@pytest.mark.parametrize("size", [(None, None), (56, 72)])
-def test_crop_that_cannot_be_applied_fails_the_job(app, media, monkeypatch, size):
-
-    page = app.conversion_page
-    source = str(media["video"])
-    _reserved_jobs(app, monkeypatch, source)
-    _job_settings(app, monkeypatch)
-    monkeypatch.setattr(
-        page, "file_metadata", {source: {"crop_left": 28, "crop_right": 28}}
-    )
-    monkeypatch.setattr(page, "current_file_path", source, raising=False)
-    errors, contexts = [], []
-    monkeypatch.setattr(app, "show_error_dialog", lambda *args: errors.append(args))
-    monkeypatch.setattr(
-        page, "_continue_conversion", lambda context: contexts.append(context) or True
-    )
-    assert page.force_start_conversion(probes={"size": size}) is False
-    assert not contexts and len(errors) == 1 and not app.claimed_outputs
-
-
-def test_size_estimate_waits_for_the_spin_and_stops_on_close(app, media, monkeypatch):
-    import ui.conversion_page as module
-
-    calls = []
-
-    def plan(context):
-        calls.append(context)
-        raise ValueError("planned")
-
-    monkeypatch.setattr(module, "prepare_size_job", plan)
-    page = app.conversion_page
-    source = str(media["video"])
-    monkeypatch.setattr(page, "file_metadata", {source: {}})
-    page.on_file_options_by_path(source)
-    dialog = app.window.get_visible_dialog()
-    size_row = next(
-        w
-        for w in widgets(dialog)
-        if isinstance(w, Adw.ComboRow) and w.get_title() == "Maximum size"
-    )
-    size_row.set_selected(size_row.get_model().get_n_items() - 1)
-    spin = next(
-        w
-        for w in widgets(dialog)
-        if isinstance(w, Adw.ActionRow) and w.get_title() == "Size in megabytes"
-    ).get_activatable_widget()
-    for value in range(60, 66):
-        spin.set_value(value)
-    pump(0.6)
-    assert len(calls) == 1
-    spin.set_value(80)
-    dialog.force_close()
-    pump(0.6)
-    assert len(calls) == 1
-
-
-def test_second_instance_arguments_use_its_directory_and_report_uris(
-    app, media, monkeypatch, tmp_path
-):
-    import shutil
-
-    from gi.repository import Gio
-
-    shutil.copyfile(media["video"], tmp_path / "relative.mp4")
-    line = Gio.ApplicationCommandLine(
-        arguments=GLib.Variant(
-            "aay",
-            [
-                b"big-video-converter\0",
-                b"relative.mp4\0",
-                b"bvc-test://host/share/remote.mp4\0",
-            ],
-        ),
-        platform_data=GLib.Variant(
-            "a{sv}", {"cwd": GLib.Variant("ay", str(tmp_path).encode() + b"\0")}
-        ),
-    )
-    opened = []
-    real_open = app.do_open
-    monkeypatch.setattr(app, "do_open", lambda files, count, hint: opened.extend(files))
-    monkeypatch.setattr(app, "activate", lambda: None)
-    assert app.do_command_line(line) == 0
-    assert [f.get_path() for f in opened] == [str(tmp_path / "relative.mp4"), None]
-    errors = []
-    monkeypatch.setattr(app, "show_error_dialog", lambda *args: errors.append(args))
-    real_open(opened[1:] + [Gio.File.new_for_uri("bvc-test://host/other.mp4")], 2, "")
-    assert len(errors) == 1 and "bvc-test://host/share/remote.mp4" in errors[0][1]
-
-
-def test_missing_dependencies_open_one_install_dialog(app, monkeypatch):
-    import main
-
-    created = []
-
-    class Dialog:
-        installation_success = False
-
-        def __init__(self, *args):
-            created.append(self)
-
-        def connect(self, *args):
-            pass
-
-        def present(self):
-            pass
-
-    monkeypatch.setattr(main, "InstallDependencyDialog", Dialog)
-    monkeypatch.setattr(
-        app.dependency_checker, "are_dependencies_available", lambda: False
-    )
-    monkeypatch.setattr(
-        app.dependency_checker,
-        "get_install_command",
-        lambda: {"command": ["true"], "display": "true"},
-    )
-    monkeypatch.setattr(app, "_dependency_prompted", False, raising=False)
-    try:
-        app.on_activate(app)
-        app.on_activate(app)
-    finally:
-        app.window.set_sensitive(True)
-    assert len(created) == 1
-
-
-def test_collapsed_split_puts_the_settings_behind_a_header_toggle(app):
-    split, header = app.split_view, app.header_bar
-    toggle = app.lookup_action("toggle_sidebar")
-    app.show_queue_view()
-    pump()
-    split.set_collapsed(True)
-    try:
-        assert header.sidebar_button.get_visible() and toggle.get_enabled()
-        assert (
-            header.sidebar_button.get_tooltip_text() == "Show conversion settings (F9)"
-        )
-        app.show_queue_view()
-        pump()
-        assert not split.get_show_sidebar()
-        toggle.activate(None)
-        assert split.get_show_sidebar()
-    finally:
-        split.set_collapsed(False)
-        app.show_queue_view()
-        pump()
-    assert (
-        split.get_show_sidebar()
-        and not header.sidebar_button.get_visible()
-        and not toggle.get_enabled()
-    )
-
-
-def test_queue_count_uses_plural_forms(app):
-    header = app.header_bar
-    header.update_queue_size(2)
-    assert header.queue_size_label.get_text() == "2 files"
-    header.update_queue_size(1)
-    assert header.queue_size_label.get_text() == "1 file"
-    header.update_queue_size(len(app.conversion_queue))
-
-
-def test_queue_rows_show_facts_and_own_settings_only_where_set(
-    app, media, monkeypatch, tmp_path
-):
-    import shutil
-    from collections import deque
-
-    from ui.progress_page import format_size
-
-    plain, custom = str(tmp_path / "plain.mp4"), str(tmp_path / "custom.mp4")
-    shutil.copyfile(media["video"], plain)
-    shutil.copyfile(media["video"], custom)
-    monkeypatch.setattr(app, "conversion_queue", deque([plain, custom]))
-    page = app.conversion_page
-    monkeypatch.setitem(page.file_metadata, custom, {"resolution_mode": "1280x720"})
-    page.update_queue_display()
-    pump_until(
-        lambda: (
-            len(page.queue_rows) == 2
-            and all(r.duration_badge.get_visible() for r in page.queue_rows)
-        )
-    )
-    rows = {row.file_path: row for row in page.queue_rows}
-    assert not rows[plain].recipe_label.get_visible()
-    assert rows[custom].recipe_label.get_visible()
-    assert rows[custom].recipe_label.get_text().startswith("Own: ")
-    size = format_size(os.path.getsize(plain))
-    assert rows[plain].meta_label.get_text() == f"128 × 72 · H.264 · {size}"
-    assert rows[plain].duration_badge.get_text() == "0:03"
-    # Adding and converting both keep the theme's accent in the header.
-    header = app.header_bar
-    assert header.add_button.has_css_class("suggested-action")
-    assert header.convert_button.has_css_class("suggested-action")
-
-
-def test_sizes_follow_the_numeric_locale_despite_mpv(monkeypatch):
-    import locale
-
-    from ui import progress_page
-
-    monkeypatch.setenv("LC_NUMERIC", "pt_BR.UTF-8")
-    monkeypatch.setattr(progress_page, "_DECIMAL_POINT", None)
-    locale.setlocale(locale.LC_NUMERIC, "C")  # what python-mpv does on import
-    if progress_page._user_decimal_point() != ",":
-        pytest.skip("pt_BR locale is not installed")
-    assert progress_page.format_size(10_800_000).replace("\xa0", " ") == "10,8 MB"
-    assert progress_page.format_size(53_546).replace("\xa0", " ") == "53,5 kB"
-
-
-def test_empty_queue_is_a_quiet_hint_under_the_header_action(app, monkeypatch):
-    from collections import deque
-
-    monkeypatch.setattr(app, "conversion_queue", deque())
-    app.conversion_page.update_queue_display()
-    pump(0.1)
-    empty = app.conversion_page.placeholder
-    assert isinstance(empty, Adw.StatusPage) and empty.has_css_class("card")
-    # The header already offers adding files; the empty page adds no buttons.
-    assert not [w for w in widgets(empty) if isinstance(w, Gtk.Button)]
-    assert app.header_bar.add_button.get_visible()
-    assert app.header_bar.add_button.has_css_class("suggested-action")
-
-
-def test_reset_all_also_resets_the_queue_footer(app):
-    """Conversions read the footer switches, so a reset must reach them too."""
-    page = app.conversion_page
-    page.delete_original_check.set_active(True)
-    page.folder_combo.set_selected(1)
-    app.tooltip_action.activate(None)
-    assert app.settings_store.load_setting("delete-original", False)
-    app.settings_page._reset_all_settings()
-    assert not page.delete_original_check.get_active()
-    assert page.folder_combo.get_selected() == 0
-    assert app.tooltip_action.get_state().get_boolean()
-
-
-def test_only_a_window_out_of_sight_gets_the_queue_notification(app, monkeypatch):
-    sent = []
-    monkeypatch.setattr(
-        app, "send_notification", lambda _id, notification: sent.append(notification)
-    )
-    monkeypatch.setattr(app.window, "is_active", lambda: True)
-    app.send_system_notification("Done", "All queued files have been processed.")
-    assert sent == []
-    monkeypatch.setattr(app.window, "is_active", lambda: False)
-    app.send_system_notification("Done", "All queued files have been processed.")
-    assert len(sent) == 1
-
-
-def test_cancelling_the_folder_chooser_changes_nothing(app):
-    from gi.repository import Gio, GLib
-
-    class Cancelled:
-        def select_folder_finish(self, _result):
-            raise GLib.Error.new_literal(Gio.io_error_quark(), "Dismissed by user", 0)
-
-    page = app.conversion_page
-    before = page.output_folder_entry.get_text()
-    page._on_folder_chosen(Cancelled(), None)
-    assert page.output_folder_entry.get_text() == before

@@ -1,4 +1,4 @@
-"""Audio settings mixin — noise reduction, gate, compressor, EQ, normalize handlers."""
+"""Audio settings mixin: noise reduction, gate, compressor, EQ and normalize handlers."""
 
 
 class AudioSettingsMixin:
@@ -12,8 +12,8 @@ class AudioSettingsMixin:
     def _on_noise_reduction_toggled(self, switch, state):
         """Handle noise reduction toggle.
 
-        Sub-filters (gate, compressor, HPF, EQ, normalize) are NOT disabled
-        when NR is toggled off — they work independently.
+        The other filters (gate, compressor, HPF, EQ, normalize) keep their
+        state when NR is turned off: they work on their own.
         """
         self.settings_store.save_setting("noise-reduction", state)
         self._update_audio_cleaning_subtitle()

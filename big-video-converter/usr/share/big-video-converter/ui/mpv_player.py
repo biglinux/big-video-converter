@@ -9,6 +9,7 @@ import locale
 import logging
 import math
 import os
+from functools import partial
 from typing import ClassVar
 
 import gi
@@ -149,6 +150,16 @@ def get_proc_address_wrapper():
     return wrapper
 
 
+def _report_effects(error, _result):
+    """Runs on mpv's event thread once an effects command finished."""
+    if error:
+        logger.warning("MPV could not preview the effects: %s", error)
+
+
+# The system's volume mixer lists the preview's stream under these.
+_MIXER_NAMES = {"audio_client_name": "Big Video Converter", "title": "${media-title}"}
+
+
 class MPVPlayer:
     """
     Real-time video player using MPV's OpenGL render API in a Gtk.GLArea,
@@ -243,6 +254,7 @@ class MPVPlayer:
                 osc="no",
                 input_default_bindings="no",
                 input_vo_keyboard="no",
+                **_MIXER_NAMES,
                 # Software rendering options
                 gpu_sw="yes",  # Force software GPU rendering
                 opengl_swapinterval=0,  # Disable vsync
@@ -293,6 +305,7 @@ class MPVPlayer:
                 osc="no",
                 input_default_bindings="no",
                 input_vo_keyboard="no",
+                **_MIXER_NAMES,
                 # Software rendering fallbacks for VMs
                 gpu_sw="yes",  # Use software rendering for GPU operations
                 opengl_swapinterval=0,  # Disable vsync for better performance in VMs
@@ -306,6 +319,7 @@ class MPVPlayer:
                 osc="no",
                 input_default_bindings="no",
                 input_vo_keyboard="no",
+                **_MIXER_NAMES,
             )
 
         opengl_init_params = {
@@ -611,22 +625,22 @@ class MPVPlayer:
         """
         if not self.mpv_instance:
             return
+        # Each change reconfigures the video, and mpv waits for a frame this
+        # thread renders: a synchronous command here would wait forever and
+        # freeze the window. mpv runs queued commands in order.
+        run = partial(self.mpv_instance.command_async, callback=_report_effects)
         try:
             if self._base_hwdec is None:
                 self._base_hwdec = str(self.mpv_instance["hwdec"])
             if self._base_hwdec != "no":
-                self.mpv_instance["hwdec"] = "auto-copy" if graph else self._base_hwdec
+                run("set", "hwdec", "auto-copy" if graph else self._base_hwdec)
             size = len(graph.encode())
             chain = [self._SOURCE_HDR_FORMATS.get(source_hdr, "")]
             chain.append(f"lavfi=graph=%{size}%{graph}" if graph else "")
-            self.mpv_instance.command(
-                "vf", "set", ",".join(part for part in chain if part)
-            )
-            self.mpv_instance.command("change-list", "glsl-shaders", "clr", "")
+            run("vf", "set", ",".join(part for part in chain if part))
+            run("change-list", "glsl-shaders", "clr", "")
             if shader:
-                self.mpv_instance.command(
-                    "change-list", "glsl-shaders", "append", shader
-                )
+                run("change-list", "glsl-shaders", "append", shader)
         except _MPV_ERRORS as error:
             logger.warning("MPV could not preview the effects: %s", error)
 

@@ -1,7 +1,6 @@
 """FFmpeg video filters built from one file's crop, color and transform edits."""
 
 import logging
-import math
 import os
 import subprocess
 from functools import lru_cache
@@ -15,7 +14,7 @@ VIDEO_ADJUSTMENT_DEFAULTS = {
     "brightness": 0.0,  # Preview player: -1.0 to 1.0, FFmpeg: -1.0 to 1.0 (direct map)
     "contrast": 0.0,  # Preview: -1.0 to 1.0; FFmpeg eq neutral is 1.0
     "saturation": 1.0,  # Preview player: 0.0 to 2.0, FFmpeg: 0.0 to 16.0 (needs conversion)
-    "hue": 0.0,  # Preview player: -1.0 to 1.0, FFmpeg: -3.14 to 3.14 radians (needs conversion)
+    "hue": 0.0,  # -1.0 to 1.0: half a turn each way
     "crop_left": 0,
     "crop_right": 0,
     "crop_top": 0,
@@ -131,7 +130,7 @@ class SettingsOverride:
     wrong filters. Wrapping the manager keeps the per-file values local to the
     conversion that owns them.
 
-    Only reads are overridden; anything else is delegated to the real manager.
+    Reads fall through to the real manager; writes are refused.
     """
 
     def __init__(self, settings, overrides: dict):
@@ -156,7 +155,8 @@ class SettingsOverride:
         return self._settings.get_boolean(key, default)
 
     def __getattr__(self, name):
-        # Delegate everything else (set_*, save_setting, ...) to the manager.
+        if name.startswith(("set_", "save_")):
+            raise AttributeError(f"{name}: per-file settings are read-only")
         return getattr(self._settings, name)
 
 
@@ -182,25 +182,6 @@ def preview_saturation_to_ffmpeg(saturation):
     else:
         # Direct 1:1 map for values below neutral
         return saturation
-
-
-def preview_hue_to_ffmpeg(hue):
-    """
-    Preview player hue: -1.0 to 1.0 (0.0 is neutral)
-    FFmpeg hue filter: -3.14 to 3.14 radians / -π to π (0.0 is neutral)
-
-    The preview player supports hue in the range [-1.0, 1.0].
-    We need to convert this normalized range to FFmpeg's radian range.
-
-    Mapping: Preview [-1.0, 1.0] → FFmpeg [-π, π] radians
-    Formula: ffmpeg_hue = preview_hue * π
-
-    This ensures:
-    - Preview hue = -1.0 → FFmpeg hue = -π (-180°)
-    - Preview hue =  0.0 → FFmpeg hue =  0  (0°)
-    - Preview hue = +1.0 → FFmpeg hue = +π (+180°)
-    """
-    return hue * math.pi
 
 
 #
@@ -281,8 +262,8 @@ def get_ffmpeg_filter_string(
     # eq has no hue; FFmpeg's hue filter takes it.
     hue = get_adjustment_value(settings, "hue")
     if abs(hue) > FLOAT_THRESHOLD:
-        ffmpeg_hue = preview_hue_to_ffmpeg(hue) * 180 / math.pi
-        filters.append(f"hue=h={ffmpeg_hue:.3f}")
+        # The preview's -1 to 1 is half a turn each way; hue=h= takes degrees.
+        filters.append(f"hue=h={hue * 180:.3f}")
 
     rotation = int(settings.load_setting("preview-rotation", 0))
     rotation = rotation % 360

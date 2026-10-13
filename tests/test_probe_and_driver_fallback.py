@@ -99,7 +99,7 @@ class TestFfprobeStreamGroups:
         )
         assert out.stdout.split() == ["3,subrip", "4,subrip"], out.stdout
 
-    def test_reencode_keeps_channel_count_and_drops_timecode_track(
+    def test_reencode_keeps_channels_and_drops_timecode(
         self, timecode_mov, tmp_path, run_cli
     ):
         out = tmp_path / "camera.mp4"
@@ -131,7 +131,7 @@ class TestFfprobeStreamGroups:
 
 
 class TestStallWatchdog:
-    def test_silent_encoder_is_killed_and_the_job_fails(self, media, tmp_path, run_cli):
+    def test_stalled_encoder_fails_the_job(self, media, tmp_path, run_cli):
         """Only the encode (the call carrying -progress) hangs; probes are real."""
         pid_file = tmp_path / "encoder.pid"
         wrapper = fake_ffmpeg(
@@ -168,7 +168,7 @@ class TestStallWatchdog:
         assert result.returncode == 0, result.stdout + result.stderr
         assert "-progress" not in result.stdout
 
-    def test_sigterm_ends_the_script_and_its_ffmpeg(self, media, tmp_path, cli_env):
+    def test_sigterm_ends_script_and_ffmpeg(self, media, tmp_path, cli_env):
         """The GUI cancels with SIGTERM to the process group; nothing may survive it."""
         pid_file = tmp_path / "encoder.pid"
         wrapper = fake_ffmpeg(
@@ -246,9 +246,7 @@ class TestGpuSmokeTest:
         assert "Encode mode: Decode Software, Encode Software" in result.stdout
         assert _streams(tmp_path / "out.mp4", "video")[0]["codec_name"] == "h264"
 
-    def test_check_can_be_skipped_and_the_stage_chain_still_recovers(
-        self, media, tmp_path, cli_env
-    ):
+    def test_stage_chain_recovers_without_gpu_check(self, media, tmp_path, cli_env):
         wrapper = fake_ffmpeg(
             tmp_path,
             "broken-gpu-ffmpeg",
@@ -277,9 +275,7 @@ class TestGpuSmokeTest:
         assert "Encode mode: Decode GPU, encode GPU" in result.stdout
         assert "Encode mode: Decode Software, Encode Software" in result.stdout
 
-    def test_vulkan_scales_in_software_before_the_upload(
-        self, media, tmp_path, cli_env
-    ):
+    def test_vulkan_scales_in_software_before_upload(self, media, tmp_path, cli_env):
         """scale_vulkan garbles 1280x720 and 1920x1080; it must never be used."""
         wrapper = fake_ffmpeg(
             tmp_path,
@@ -318,7 +314,7 @@ class TestGpuSmokeTest:
         )
         assert _streams(tmp_path / "out.mp4", "video")[0]["width"] == 64
 
-    def test_exit_255_is_an_error_and_still_falls_back(self, media, tmp_path, cli_env):
+    def test_exit_255_errors_and_falls_back(self, media, tmp_path, cli_env):
         """ffmpeg returns 255 for AVERROR(EPERM), an error and not a cancel."""
         wrapper = fake_ffmpeg(
             tmp_path,
@@ -352,7 +348,7 @@ class TestFileInfoFailures:
     def test_a_failed_probe_is_asked_again(self, media, monkeypatch):
         from engine import file_info
 
-        file_info.clear_probe_cache()
+        monkeypatch.setattr(file_info, "_PROBE_CACHE", {})
         real_run = subprocess.run
         calls = []
 
@@ -368,7 +364,6 @@ class TestFileInfoFailures:
         assert answer[0] and answer[1]
         assert file_info.get_video_dimensions(str(media["video"])) == answer
         assert len(calls) == 2
-        file_info.clear_probe_cache()
 
     def test_latin1_metadata_is_read(self, tmp_path, monkeypatch):
         """Tags are copied into ffmpeg's and ffprobe's output as written."""
@@ -396,9 +391,7 @@ class TestFileInfoFailures:
         info = file_info.get_video_file_info(str(video))
         assert info["streams"][0]["tags"]["title"] == "Caf\ufffd"
 
-    def test_info_dialog_reports_any_failure_and_opens_escaped_folders(
-        self, monkeypatch
-    ):
+    def test_info_failure_shows_and_folders_open(self, monkeypatch):
         from ui import video_info_dialog
 
         shown = []

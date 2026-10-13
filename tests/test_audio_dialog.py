@@ -72,7 +72,7 @@ class AudioDialogTests(unittest.TestCase):
         self.assertFalse(self.dialog.details_group.get_visible())
         self.assertIn("no audio", self.dialog.result_label.get_label())
 
-    def test_custom_rows_require_reencode_and_custom_selection(self):
+    def test_custom_rows_need_custom_reencode(self):
         self.assertFalse(self.dialog.custom_bitrate_row.get_visible())
         self.dialog.operation_row.set_selected(1)
         self.assertTrue(self.dialog.custom_bitrate_row.get_visible())
@@ -118,7 +118,7 @@ class AudioDialogTests(unittest.TestCase):
         self.assertEqual(self.dialog.scroll.get_min_content_width(), 568)
         self.assertEqual(self.dialog.scroll.get_max_content_height(), 620)
 
-    def test_compact_operation_labels_do_not_change_saved_model(self):
+    def test_compact_labels_keep_the_saved_model(self):
         local_model = self.dialog.operation_row.get_model()
         self.assertEqual(
             [local_model.get_string(i) for i in range(local_model.get_n_items())],
@@ -138,7 +138,7 @@ class NoiseDetailsTests(unittest.TestCase):
     def setUpClass(cls):
         Adw.init()
 
-    def test_disabled_operation_keeps_header_and_hides_details(self):
+    def test_disabled_operation_hides_its_details(self):
         owner = Adw.Dialog()
         connections = SignalConnections(owner)
         switch = Gtk.Switch()

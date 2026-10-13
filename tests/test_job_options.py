@@ -30,7 +30,7 @@ def test_resolution_modes_have_distinct_precedence(mode, expected):
     assert general["video-codec"] == "h265"
 
 
-def test_copy_ignores_stale_general_size_but_individual_resize_reencodes():
+def test_only_individual_resize_disables_copy():
     general = {"force-copy-video": True, "video-resolution": "1920x1080"}
     assert freeze(general, {})["settings"]["force-copy-video"] is True
     assert (
@@ -40,7 +40,7 @@ def test_copy_ignores_stale_general_size_but_individual_resize_reencodes():
 
 
 @pytest.mark.parametrize("width", [0, 15, 16385, "invalid"])
-def test_invalid_custom_dimensions_cannot_start_a_job(width):
+def test_invalid_custom_dimensions_are_rejected(width):
     with pytest.raises(ValueError):
         freeze(
             {},
@@ -72,7 +72,7 @@ def test_segments_arg_rejects_malformed_ranges(text):
         parse_segments_arg(text)
 
 
-def test_a_video_can_have_its_own_size_limit():
+def test_video_has_its_own_size_limit():
     general = {"size-target": "whatsapp", "size-target-mb": 50.0}
     assert freeze(general, {})["settings"]["size-target"] == "whatsapp"
     assert freeze(general, {"size_mode": "none"})["settings"]["size-target"] == ""
@@ -90,13 +90,13 @@ def test_a_video_can_have_its_own_size_limit():
         {"size_mode": "custom", "size_mb": float("nan")},
     ],
 )
-def test_an_invalid_size_limit_falls_back_to_the_general_one(metadata):
+def test_invalid_size_limit_uses_general_one(metadata):
     assert (
         freeze({"size-target": "email"}, metadata)["settings"]["size-target"] == "email"
     )
 
 
-def test_effects_are_normalized_and_count_as_picture_edits():
+def test_effects_normalize_and_count_as_edits():
     from engine.job_options import has_picture_edits, normalize_metadata
 
     clean = normalize_metadata(
@@ -120,7 +120,7 @@ def test_effects_are_normalized_and_count_as_picture_edits():
         assert has_picture_edits(normalize_metadata(edit)), edit
 
 
-def test_a_join_shows_overlapping_or_unordered_cuts_once():
+def test_join_merges_overlapping_unordered_cuts():
     from engine.job_options import joined_cuts
 
     cuts = [

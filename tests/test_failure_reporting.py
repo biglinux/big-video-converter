@@ -22,19 +22,19 @@ ISSUE_27_STDERR = [
 
 
 class TestFailureMessage:
-    def test_the_real_error_is_shown_not_just_the_code(self):
+    def test_failure_shows_the_real_error(self):
         message = conversion._failure_message(127, ISSUE_27_STDERR)
         assert "Missing argument for option 'ac:a:0'." in message
         assert "Error splitting the argument list" in message
         assert "configuration:" not in message
 
-    def test_a_bare_code_is_still_reported_without_evidence(self):
+    def test_bare_exit_code_is_still_reported(self):
         message = conversion._failure_message(
             3, ["frame=   10 fps=0.0 q=28.0 size=       0KiB"]
         )
         assert "3" in message and "frame=" not in message
 
-    def test_an_earlier_attempt_explains_the_last_failure(self):
+    def test_earlier_attempt_explains_last_failure(self):
         hints = [
             "\x1b[33mCould not find tag for codec none in stream #3, codec not currently supported in container\x1b[0m"
         ]
@@ -72,7 +72,7 @@ class TestFailureMessage:
 
 class TestProbeCache:
     def test_warm_cache_answers_without_running_ffprobe(self, media, monkeypatch):
-        file_info.clear_probe_cache()
+        monkeypatch.setattr(file_info, "_PROBE_CACHE", {})
         path = str(media["video"])
         assert file_info.launch_probes(path)["audio"] is True
 
@@ -88,7 +88,7 @@ class TestProbeCache:
         assert compatible is True and offending == []
 
     def test_a_changed_file_is_probed_again(self, media, tmp_path, monkeypatch):
-        file_info.clear_probe_cache()
+        monkeypatch.setattr(file_info, "_PROBE_CACHE", {})
         copy = tmp_path / "copy.mp4"
         copy.write_bytes(media["video"].read_bytes())
         assert file_info.get_video_dimensions(str(copy)) == (128, 72)
@@ -126,7 +126,7 @@ class TestProbeCache:
 
 
 class TestProcessGroupGuard:
-    def test_a_child_in_our_own_group_is_refused(self):
+    def test_child_in_own_group_is_refused(self):
         process = subprocess.Popen(["sleep", "30"])
         try:
             with pytest.raises(ValueError, match="process group"):
@@ -163,7 +163,7 @@ class TestDiskSpaceDialog:
         assert queue.started == [True] and not queue.calls
 
 
-def test_unusable_probe_values_never_reach_the_information_dialog():
+def test_info_dialog_skips_unusable_probe_values():
     """ffprobe writes "N/A" or leaves fields out; the dialog renders on the main loop."""
     info = file_info.normalize_probe(
         {

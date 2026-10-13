@@ -488,9 +488,6 @@ msgstr ""
 msgid "Edit video"
 msgstr ""
 
-msgid "Changes apply only to the selected video"
-msgstr ""
-
 msgid "Could not load video file"
 msgstr ""
 
@@ -891,9 +888,6 @@ msgstr ""
 msgid "SW Decode"
 msgstr ""
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr ""
-
 msgid "Requires audio set to re-encode"
 msgstr ""
 
@@ -1057,9 +1051,6 @@ msgid "Choose output folder"
 msgstr ""
 
 msgid "Delete original files"
-msgstr ""
-
-msgid "Originals are kept unless every converted result passes validation"
 msgstr ""
 
 msgid "Select the output folder"
@@ -1448,9 +1439,6 @@ msgid "Shape the sound spectrum: boost clarity, cut rumble or apply ready-made p
 msgstr ""
 
 msgid "Remove pauses"
-msgstr ""
-
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
 msgstr ""
 
 msgid "Pauses longer than"
@@ -2061,16 +2049,7 @@ msgstr ""
 msgid "Configure how subtitles are handled during conversion."
 msgstr ""
 
-msgid "Subtitle Handling"
-msgstr ""
-
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr ""
-
 msgid "Only Extract Subtitles"
-msgstr ""
-
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
 msgstr ""
 
 msgid "Hours"
@@ -2247,12 +2226,6 @@ msgstr ""
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr ""
 
-msgid "Image"
-msgstr ""
-
-msgid "Reset image adjustments"
-msgstr ""
-
 msgid "Brightness"
 msgstr ""
 
@@ -2278,12 +2251,6 @@ msgid "HDR (HLG)"
 msgstr ""
 
 msgid "Standard (SDR)"
-msgstr ""
-
-msgid "Orientation"
-msgstr ""
-
-msgid "Reset Transform"
 msgstr ""
 
 msgid "Rotation"
@@ -2329,9 +2296,6 @@ msgid "Choose how marked segments are saved"
 msgstr ""
 
 msgid "Effects"
-msgstr ""
-
-msgid "Reset effects"
 msgstr ""
 
 msgid "Off"
@@ -2388,10 +2352,6 @@ msgstr ""
 
 #, python-brace-format
 msgid "{start} → {end} ({duration})"
-msgstr ""
-
-#, python-brace-format
-msgid "Reset {setting} to default"
 msgstr ""
 
 msgid "Video Encoding"
@@ -3094,4 +3054,87 @@ msgstr ""
 
 #, python-brace-format
 msgid "Failed to start Big Video Converter: {0}"
+msgstr ""
+
+msgid "The output holds only part of the original"
+msgstr ""
+
+msgid "Original moved to the Trash after output validation"
+msgstr ""
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr ""
+
+msgid "Video mode"
+msgstr ""
+
+msgid "How the video is encoded."
+msgstr ""
+
+msgid "Codec, bitrate and channels…"
+msgstr ""
+
+msgid "Off while only extracting subtitles"
+msgstr ""
+
+msgid "Not used with Fast Copy"
+msgstr ""
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr ""
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr ""
+
+msgid "Move this video to the Trash?"
+msgstr ""
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr ""
+
+msgid "Move to Trash"
+msgstr ""
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr ""
+
+msgid "Delete Without Using the Trash"
+msgstr ""
+
+msgid "Audio only when a voice is detected"
+msgstr ""
+
+msgid "Very sensitive"
+msgstr ""
+
+msgid "Sensitive"
+msgstr ""
+
+msgid "Normal"
+msgstr ""
+
+msgid "Strict"
+msgstr ""
+
+msgid "Very strict"
+msgstr ""
+
+msgid "Voice detection"
+msgstr ""
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr ""
+
+msgid "On"
+msgstr ""
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
 msgstr ""

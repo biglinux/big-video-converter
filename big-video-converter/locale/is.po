@@ -718,9 +718,6 @@ msgstr "Skrá fannst ekki"
 msgid "Edit video"
 msgstr "Breyta myndskeiði"
 
-msgid "Changes apply only to the selected video"
-msgstr "Breytingar gilda aðeins fyrir valið myndskeið"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1329,9 +1326,6 @@ msgstr "Viðbót"
 msgid "SW Decode"
 msgstr "Afkóðun með hugbúnaði"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Tilbúnar umbreytingarstillingar: YouTube, Instagram, klipping…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1566,9 +1560,6 @@ msgstr "Veldu úttaksmöppu"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Eyða upprunalegum skrám"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Frumskrám er haldið nema allar umbreyttar niðurstöður standist sannprófun"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2822,24 +2813,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Stilltu hvernig skjátextar eru meðhöndlaðir við umbreytingu."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Meðhöndlun skjátexta"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Veldu hvernig skjátextar eru settir í úttakið. „Innbyggðir“ heldur þeim í myndskeiðaskránni. „Draga út í .srt“ býr til aðskildar skjátextaskrár."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Draga aðeins út skjátexta"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Sleppa umbreytingu myndskeiðsins alveg og draga aðeins skjátextarásirnar út í .srt-skrár."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -3988,12 +3964,6 @@ msgstr "Hljóðstyrkur"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Myndskeiðið er afritað án endurkóðunar. Skurður, stillingar, snúningur eða áhrif á myndina valda endurkóðun þess."
 
-msgid "Image"
-msgstr "Mynd"
-
-msgid "Reset image adjustments"
-msgstr "Endurstilla myndstillingar"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -4026,16 +3996,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Venjulegt (SDR)"
-
-msgid "Orientation"
-msgstr "Stefna"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Endurstilla snúning og speglun"
 
 msgid "Rotation"
 msgstr "Snúningur"
@@ -4107,9 +4067,6 @@ msgstr "Veldu hvernig merktir bútar eru vistaðir"
 msgid "Effects"
 msgstr "Áhrif"
 
-msgid "Reset effects"
-msgstr "Endurstilla áhrif"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -4150,10 +4107,6 @@ msgstr "Veldu litaútlit eða skyggni"
 
 msgid "Looks and shaders"
 msgstr "Litaútlit og skyggnar"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Endurstilla {setting} á sjálfgefið gildi"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -6723,9 +6676,6 @@ msgstr "Ekki tókst að hefja Big Video Converter: {0}"
 msgid "Remove pauses"
 msgstr "Fjarlægja hlé"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Ætlað fyrir tal. Hlé eru fundin í röddinni sem DPDFNet hefur hreinsað."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Tekur um eina mínútu fyrir hverja klukkustund af hljóði."
 
@@ -7002,3 +6952,86 @@ msgstr[1] "Ekki tókst að draga út {0} skjátextarásir og þeim var sleppt."
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Fyrirfram (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "Úttakið inniheldur aðeins hluta frumskrárinnar"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Frumskrá færð í ruslið eftir sannprófun úttaks"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Uppfærðu dpdfnet-native til að finna hlé."
+
+msgid "Video mode"
+msgstr "Myndskeiðshamur"
+
+msgid "How the video is encoded."
+msgstr "Hvernig myndskeiðið er kóðað."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Merkjamál, bitahraði og rásir…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Slökkt meðan aðeins skjátextar eru dregnir út"
+
+msgid "Not used with Fast Copy"
+msgstr "Ekki notað með hraðri afritun"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Frumskrám er aðeins eytt varanlega, framhjá ruslinu, eftir að allar umbreyttar niðurstöður standast sannprófun"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Frumskrár fara aðeins í ruslið eftir að allar umbreyttar niðurstöður standast sannprófun"
+
+msgid "Move this video to the Trash?"
+msgstr "Færa þetta myndskeið í ruslið?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "Skráin „{}“ verður færð í ruslið."
+
+msgid "Move to Trash"
+msgstr "Færa í ruslið"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Ekki tókst að færa myndskeiðið í ruslið: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Eyða án þess að nota ruslið"
+
+msgid "Audio only when a voice is detected"
+msgstr "Hljóð aðeins þegar rödd greinist"
+
+msgid "Very sensitive"
+msgstr "Mjög næm"
+
+msgid "Sensitive"
+msgstr "Næm"
+
+msgid "Normal"
+msgstr "Venjuleg"
+
+msgid "Strict"
+msgstr "Ströng"
+
+msgid "Very strict"
+msgstr "Mjög ströng"
+
+msgid "Voice detection"
+msgstr "Raddgreining"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Næm greining heldur lágværum eða óvenjulegum röddum og hleypir meira suði og tónlist í gegn; ströng greining fjarlægir meiri tónlist og getur klippt burt lágvær orð."
+
+msgid "On"
+msgstr "Kveikt"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} virkt"
+msgstr[1] "{count} virk"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Ætlað fyrir tal: hlé eru fundin þegar bakgrunnssuðið hefur verið fjarlægt."

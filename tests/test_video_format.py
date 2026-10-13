@@ -104,7 +104,7 @@ class TestHdrToSdr:
         assert v.get("color_transfer") == "bt709"
         assert v.get("color_primaries") == "bt709"
 
-    def test_h265_output_keeps_hdr_and_10_bits(self, hdr_source, tmp_path, run_cli):
+    def test_h265_keeps_hdr_and_10_bits(self, hdr_source, tmp_path, run_cli):
         """10-bit target: HDR is legitimate there, so nothing is mapped away."""
         if not _has_encoder("libx265"):
             pytest.skip("libx265 required")
@@ -136,9 +136,7 @@ class TestUhdCodec:
         assert v["codec_name"] == "hevc"
         assert v["width"] == 3840
 
-    def test_strict_keeps_h264_with_an_honest_level(
-        self, uhd_source, tmp_path, run_cli
-    ):
+    def test_strict_keeps_h264_and_raises_level(self, uhd_source, tmp_path, run_cli):
         out = tmp_path / "uhd-h264.mp4"
         result = run_cli(
             uhd_source,

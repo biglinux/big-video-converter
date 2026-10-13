@@ -16,6 +16,8 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from gi.repository import Gio, GLib
+
 from engine.ffmpeg_path import get_ffmpeg_executable, get_ffprobe_executable
 
 
@@ -41,6 +43,8 @@ class ConversionResult:
     output_file: str | None = None
     cancelled: bool = False
     error: str = ""
+    # The output was checked against the duration it was asked for.
+    verified: bool = False
 
 
 class OutputDurationMismatch(ValueError):
@@ -147,10 +151,9 @@ def validate_output(
 def terminate_process_group(process: subprocess.Popen, grace: float = 20.0) -> None:
     """Reap our child and terminate its entire private session, never the GUI.
 
-    The grace period has to cover what the child does on SIGTERM: FFmpeg
-    finalizes the container it was writing and the script then deletes a
-    partial file that can be gigabytes. Two seconds cut that short and left
-    the debris behind; the caller still verifies and removes what survived.
+    The grace period covers what the child does on SIGTERM: FFmpeg finalizes
+    the container it was writing and the script then deletes a partial file
+    that can be gigabytes. The caller still verifies and removes what survived.
     """
     # Children start with start_new_session=True, so their group id equals
     # their pid; a child that shares our group was started some other way and
@@ -180,9 +183,9 @@ def terminate_process_group(process: subprocess.Popen, grace: float = 20.0) -> N
 def run_cancellable(argv, cancelled, *, timeout, task):
     """Run a helper in a session of its own, ended at once by cancel or deadline.
 
-    subprocess.run with a timeout made cancel and quit wait for a probe or a
-    stream copy nobody wanted any more, for up to an hour. Returns the
-    CompletedProcess with text output; the caller judges the exit status.
+    ``cancelled`` is polled while the helper runs, so cancel and quit do not
+    wait for ``timeout``. Returns the CompletedProcess with text output; the
+    caller judges the exit status.
     """
     with subprocess.Popen(
         argv,
@@ -375,13 +378,16 @@ def remove_original(
     expected_frames: int | None = None,
     ffmpeg: str | None = None,
     ffprobe: str | None = None,
+    permanent: bool = False,
 ) -> None:
-    """Delete the unchanged input, only after validating outputs this job owns.
+    """Move the unchanged input to the Trash, or delete it when
+    ``permanent``, only after validating outputs this job owns.
 
-    The deletion is permanent, so every precondition is re-checked after the
-    checks that take time: the source must still be the file that was
-    converted, and each output must still be the file that was validated. A
-    source symlink is refused; its target must not be deleted accidentally.
+    Every precondition is re-checked after the checks that take time: the
+    source must still be the file that was converted, and each output must
+    still be the file that was validated. A source symlink is refused; its
+    target must not be moved accidentally. A failure to reach the Trash keeps
+    the original; it is never deleted instead.
     """
     if not outputs:
         raise ValueError("No validated output authorizes removing the original")
@@ -396,19 +402,20 @@ def remove_original(
             ffmpeg=ffmpeg,
             expected_frames=expected_frames if len(outputs) == 1 else None,
         )
-        # Readable cached data is not yet durable. Both the contents and the
-        # published name must survive a power loss before removing the source.
-        with open(path, "rb") as output:
-            os.fsync(output.fileno())
-        directory = os.open(
-            os.path.dirname(os.path.abspath(path)), os.O_RDONLY | os.O_DIRECTORY
-        )
-        try:
-            os.fsync(directory)
-        finally:
-            os.close(directory)
+        if permanent:
+            # Readable cached data is not yet durable. Without the Trash, the
+            # contents and the published name must survive a power cut first.
+            with open(path, "rb") as output:
+                os.fsync(output.fileno())
+            directory = os.open(
+                os.path.dirname(os.path.abspath(path)), os.O_RDONLY | os.O_DIRECTORY
+            )
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
     if cancelled.is_set():
-        raise InterruptedError("Cancelled before deleting the original")
+        raise InterruptedError("Cancelled before removing the original")
     if FileIdentity.capture(source) != identity:
         raise ValueError("The original changed while the conversion was running")
     if any(
@@ -416,7 +423,13 @@ def remove_original(
         for p, expected in zip(outputs, output_identities, strict=True)
     ):
         raise ValueError("An output changed after validation")
-    os.unlink(source)
+    if permanent:
+        os.unlink(source)
+        return
+    try:
+        Gio.File.new_for_path(source).trash(None)
+    except GLib.Error as error:
+        raise OSError(f"It could not be moved to the Trash: {error.message}") from error
 
 
 def new_file_mode() -> int:

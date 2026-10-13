@@ -569,9 +569,6 @@ msgstr "File not found"
 msgid "Edit video"
 msgstr "Edit video"
 
-msgid "Changes apply only to the selected video"
-msgstr "Changes apply only to the selected video"
-
 msgid "Could not load video file"
 msgstr "Could not load video file"
 
@@ -977,9 +974,6 @@ msgstr "Extra"
 msgid "SW Decode"
 msgstr "SW Decode"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Ready-made recipes: YouTube, Instagram, editing…"
-
 msgid "Requires audio set to re-encode"
 msgstr "Requires audio set to re-encode"
 
@@ -1144,9 +1138,6 @@ msgstr "Choose output folder"
 
 msgid "Delete original files"
 msgstr "Delete original files"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Originals are kept unless every converted result passes validation"
 
 msgid "Select the output folder"
 msgstr "Select the output folder"
@@ -2088,17 +2079,8 @@ msgstr "How to fit it"
 msgid "Configure how subtitles are handled during conversion."
 msgstr "Configure how subtitles are handled during conversion."
 
-msgid "Subtitle Handling"
-msgstr "Subtitle Handling"
-
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-
 msgid "Only Extract Subtitles"
 msgstr "Only Extract Subtitles"
-
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -2285,12 +2267,6 @@ msgstr "Volume"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 
-msgid "Image"
-msgstr "Image"
-
-msgid "Reset image adjustments"
-msgstr "Reset image adjustments"
-
 msgid "Brightness"
 msgstr "Brightness"
 
@@ -2317,12 +2293,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Standard (SDR)"
-
-msgid "Orientation"
-msgstr "Orientation"
-
-msgid "Reset Transform"
-msgstr "Reset Transform"
 
 msgid "Rotation"
 msgstr "Rotation"
@@ -2366,9 +2336,6 @@ msgstr "Choose how marked segments are saved"
 msgid "Effects"
 msgstr "Effects"
 
-msgid "Reset effects"
-msgstr "Reset effects"
-
 msgid "Off"
 msgstr "Off"
 
@@ -2407,10 +2374,6 @@ msgstr "Choose a Look or Shader"
 
 msgid "Looks and shaders"
 msgstr "Looks and shaders"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Reset {setting} to default"
 
 msgid "Video Encoding"
 msgstr "Video Encoding"
@@ -3119,9 +3082,6 @@ msgstr "Failed to start Big Video Converter: {0}"
 msgid "Remove pauses"
 msgstr "Remove pauses"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Takes about a minute for each hour of audio."
 
@@ -3287,3 +3247,86 @@ msgstr[1] "{0} subtitle tracks could not be extracted and were left out."
 #~ msgid_plural "{count} pauses cut out"
 #~ msgstr[0] "{count} pause cut out"
 #~ msgstr[1] "{count} pauses cut out"
+
+msgid "The output holds only part of the original"
+msgstr "The output holds only part of the original"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Original moved to the Trash after output validation"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Update dpdfnet-native to find pauses."
+
+msgid "Video mode"
+msgstr "Video mode"
+
+msgid "How the video is encoded."
+msgstr "How the video is encoded."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Codec, bitrate and channels…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Off while only extracting subtitles"
+
+msgid "Not used with Fast Copy"
+msgstr "Not used with Fast Copy"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Originals go to the Trash only after every converted result passes validation"
+
+msgid "Move this video to the Trash?"
+msgstr "Move this video to the Trash?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "“{}” will be moved to the Trash."
+
+msgid "Move to Trash"
+msgstr "Move to Trash"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Could not move the video to the Trash: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Delete Without Using the Trash"
+
+msgid "Audio only when a voice is detected"
+msgstr "Audio only when a voice is detected"
+
+msgid "Very sensitive"
+msgstr "Very sensitive"
+
+msgid "Sensitive"
+msgstr "Sensitive"
+
+msgid "Normal"
+msgstr "Normal"
+
+msgid "Strict"
+msgstr "Strict"
+
+msgid "Very strict"
+msgstr "Very strict"
+
+msgid "Voice detection"
+msgstr "Voice detection"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+
+msgid "On"
+msgstr "On"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} active"
+msgstr[1] "{count} active"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Made for speech: the pauses are found once the background noise is removed."

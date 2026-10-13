@@ -13,11 +13,20 @@ from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
+from gi.repository import GLib
 
 ROOT = Path(__file__).resolve().parents[1]
 APP = ROOT / "big-video-converter/usr/share/big-video-converter"
 CLI = ROOT / "big-video-converter/usr/bin/big-video-converter"
 sys.path.insert(0, str(APP))
+# The Trash lives under XDG_DATA_HOME, which GLib reads once per process: a
+# test that moves an original there must never reach the person's Trash.
+DATA_HOME = tempfile.mkdtemp(prefix="bvc-test-data-")
+atexit.register(shutil.rmtree, DATA_HOME, True)
+os.environ["XDG_DATA_HOME"] = DATA_HOME
+# Read once here, so a fixture that later points XDG_DATA_HOME at its own
+# home cannot move the Trash out from under the tests that check it.
+GLib.get_user_data_dir()
 
 
 def _private_session():
@@ -342,3 +351,43 @@ def run_cli(cli_env):
         )
 
     return run
+
+
+def widgets(parent):
+    yield parent
+    child = parent.get_first_child()
+    while child is not None:
+        yield from widgets(child)
+        child = child.get_next_sibling()
+
+
+@pytest.fixture(scope="session")
+def app(tmp_path_factory):
+    home = tmp_path_factory.mktemp("gui-home")
+    old = {k: os.environ.get(k) for k in ("HOME", "XDG_CONFIG_HOME", "XDG_DATA_HOME")}
+    os.environ.update(
+        HOME=str(home),
+        XDG_CONFIG_HOME=str(home / "config"),
+        XDG_DATA_HOME=str(home / "data"),
+    )
+    import constants
+
+    constants.CONVERT_SCRIPT_PATH = str(CLI)
+    from main import VideoConverterApp
+
+    application = VideoConverterApp()
+    application.settings_store.save_setting("show-welcome-dialog", False)
+    application.register(None)
+    application.activate()
+    pump(0.5)
+    yield application
+    if application.video_edit_page:
+        application.video_edit_page.cleanup()
+    application.window.destroy()
+    application.quit()
+    pump(0.1)
+    for k, v in old.items():
+        if v is None:
+            os.environ.pop(k, None)
+        else:
+            os.environ[k] = v

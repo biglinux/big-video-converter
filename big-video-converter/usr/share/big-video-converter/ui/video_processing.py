@@ -60,7 +60,7 @@ class VideoProcessor:
             GLib.idle_add(self._on_video_info_error, error_message, generation)
 
     def _on_video_info_error(self, error_message, generation):
-        """Ignore errors from an editor session that is no longer current."""
+        """Ignore errors from an earlier editor session."""
         if generation != self._generation:
             return False
         self.page.app.show_error_dialog(error_message)

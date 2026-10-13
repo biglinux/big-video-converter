@@ -1,8 +1,8 @@
 """Application-wide visual system for Big Video Converter.
 
-The CSS intentionally relies on libadwaita semantic colors so it remains
-readable in light, dark and high-contrast themes.  Spacing and radii follow a
-small set of reusable classes instead of per-widget one-off styling.
+The CSS uses libadwaita's semantic colors, so it stays readable in light,
+dark and high-contrast themes. Spacing and radii come from a few reusable
+classes.
 """
 
 from __future__ import annotations

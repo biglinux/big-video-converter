@@ -2,11 +2,16 @@
 
 Background noise fills the pauses of a raw recording. DPDFNet at full strength
 leaves it near -70 dBFS, so a threshold set from the speech level separates the
-words from the pauses between them. The analysis is mono: a pause on one
-channel only, such as an interview recorded on separate channels, reads as
-sound.
+words from the pauses between them. DPDFNet also lets music and sound effects
+through as if they were a voice; with --speech-only, dpdfnet-enhance silences
+what its voice detector does not hear as speech, as strictly as the voice
+sensitivity asks: 1 keeps quiet or unusual voices and lets more music through,
+5 removes more music and may cut faint words. The analysis is mono: a pause
+on one channel only, such as an interview recorded on separate channels, reads
+as sound.
 """
 
+import gettext
 import logging
 import math
 import os
@@ -18,21 +23,28 @@ from collections import OrderedDict, deque
 
 from engine.media_validation import terminate_process_group
 
+_ = gettext.gettext
 logger = logging.getLogger(__name__)
 
 STEP = 0.01  # seconds per level: 480 samples at 48 kHz
 KEEP = 0.15  # seconds of each pause kept beside speech, so words do not collide
 PAUSE_LENGTHS = (0.5, 1.0, 2.0)
+DEFAULT_VOICE_SENSITIVITY = 3
 
 LEVEL = b"lavfi.astats.Overall.Peak_level="
-# One peak level per 10 ms of mono audio, cleaned at the model's full strength.
+# One peak level per 10 ms of the speech in mono audio, cleaned at the model's
+# full strength.
 PIPELINE = (
-    '"$@" | "$DENOISER" --channels 1 --attenuation 48 | '
+    '"$@" | "$DENOISER" --channels 1 --attenuation 48 --speech-only '
+    '--voice-sensitivity "$SENSITIVITY" | '
     '"$FFMPEG" -hide_banner -nostdin -v error -f f32le -ar 48000 -ac 1 -i pipe:0 '
     "-af asetnsamples=n=480:p=0,astats=metadata=1:reset=1:measure_perchannel=none:"
     "measure_overall=Peak_level,ametadata=mode=print:"
     "key=lavfi.astats.Overall.Peak_level:file=- -f null -"
 )
+# How dpdfnet-enhance before its voice detector or its sensitivity rejects the
+# option: with its usage or, in later builds, by name.
+OLD_DENOISER = ("dpdfnet-enhance: usage", "--speech-only", "--voice-sensitivity")
 
 
 class LevelReader:
@@ -106,7 +118,7 @@ class PauseFinder:
         self._cache = OrderedDict()
 
     @staticmethod
-    def identity(path, audio_index):
+    def identity(path, audio_index, sensitivity):
         stat = os.stat(path)
         return (
             path,
@@ -115,6 +127,7 @@ class PauseFinder:
             stat.st_size,
             stat.st_mtime_ns,
             audio_index,
+            sensitivity,
         )
 
     def cached(self, key):
@@ -133,7 +146,8 @@ class PauseFinder:
         )
 
     def start(self, key, ffmpeg, denoiser, duration, progress, done, failed):
-        """Measure audio track ``key[-1]`` (0-based) of the file ``key[0]``."""
+        """Measure audio track ``key[-2]`` (0-based) of the file ``key[0]``
+        at voice sensitivity ``key[-1]``."""
         self.cancel()
         with self._lock:
             generation = self._generation
@@ -154,7 +168,7 @@ class PauseFinder:
             "-i",
             key[0],
             "-map",
-            f"0:a:{key[-1]}",
+            f"0:a:{key[-2]}",
             "-vn",
             "-sn",
             "-dn",
@@ -169,6 +183,12 @@ class PauseFinder:
             "pipe:1",
         ]
 
+        env = os.environ | {
+            "DENOISER": denoiser,
+            "FFMPEG": ffmpeg,
+            "SENSITIVITY": str(key[-1]),
+        }
+
         def work():
             reader = LevelReader(duration, report)
             errors = deque(maxlen=16)  # the last 64 KiB of diagnostics
@@ -182,7 +202,7 @@ class PauseFinder:
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                         start_new_session=True,
-                        env=os.environ | {"DENOISER": denoiser, "FFMPEG": ffmpeg},
+                        env=env,
                     )
                 # The diagnostics are drained apart, so a chatty error cannot
                 # fill its pipe and stall the levels.
@@ -211,6 +231,8 @@ class PauseFinder:
                     message = (
                         b"".join(errors)[-4096:].decode("utf-8", "replace").strip()
                     )
+                    if any(text in message for text in OLD_DENOISER):
+                        message = _("Update dpdfnet-native to find pauses.")
                     raise OSError(message or f"exit status {returncode}")
             except Exception as exc:  # any failure must end the busy state it reports
                 if not isinstance(exc, (OSError, ValueError)):

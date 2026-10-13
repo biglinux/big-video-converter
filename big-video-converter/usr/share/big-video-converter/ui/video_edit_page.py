@@ -8,26 +8,26 @@ gi.require_version("Adw", "1")
 gi.require_version("GdkPixbuf", "2.0")
 import gettext
 
-from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk
+from gi.repository import Gdk, Gio, GLib, GObject, Gtk
 
 _ = gettext.gettext
 
 import logging
 
 from constants import NOISE_MODELS, noise_reduction_filter
-from engine.crop_geometry import ASPECT_RATIOS, centered_crop
-from engine.job_options import DEFAULT_METADATA, EFFECT_LEVELS, SOURCE_HDR_MODES
-from engine.video_settings import SHADER_SUFFIXES, effects_graph
+from engine.crop_geometry import ASPECT_RATIOS
+from engine.job_options import DEFAULT_METADATA
 
-from ui.crop_overlay import display_to_source, displayed_size, source_to_display
 from ui.mpv_player import MPVPlayer
+from ui.video_edit_picture import VideoEditPictureMixin
+from ui.video_edit_segments import VideoEditSegmentsMixin
 from ui.video_edit_ui import VideoEditUI
 from ui.video_processing import VideoProcessor
 
 logger = logging.getLogger(__name__)
 
 
-class VideoEditPage:
+class VideoEditPage(VideoEditPictureMixin, VideoEditSegmentsMixin):
     def __init__(self, app, app_state):
         self.app = app
         self.app_state = app_state
@@ -175,8 +175,8 @@ class VideoEditPage:
         self._sync_pauses()
 
     def _sync_pauses(self):
-        # The pause finder sits in the trim group, which main.py puts into the
-        # app's sidebar after this page exists.
+        # The pause finder lives in the editing sidebar, which main.py fills
+        # after this page exists.
         if hasattr(self.ui, "pause_panel"):
             self.ui.pause_panel.sync()
 
@@ -361,277 +361,6 @@ class VideoEditPage:
 
         logger.debug("VideoEditPage: Cleanup complete")
 
-    def on_brightness_changed(self, scale) -> None:
-        self.brightness = scale.get_value()
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_brightness(self.brightness)
-
-    def on_contrast_changed(self, scale) -> None:
-        self.contrast = scale.get_value()
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_contrast(self.contrast)
-
-    def on_crop_value_changed(self, spinbutton) -> None:
-        """Handle crop value changes - ensures preview updates immediately"""
-        if self._updating_crop_spins:
-            return
-        if not self.mpv_player or not hasattr(self.ui, "crop_left_spin"):
-            return
-
-        # The spins name the edges as the preview shows them.
-        left, right, top, bottom = display_to_source(
-            (
-                int(self.ui.crop_left_spin.get_value()),
-                int(self.ui.crop_right_spin.get_value()),
-                int(self.ui.crop_top_spin.get_value()),
-                int(self.ui.crop_bottom_spin.get_value()),
-            ),
-            self.rotation,
-            self.flip_h,
-            self.flip_v,
-        )
-
-        self.crop_aspect = "free"
-        if hasattr(self.ui, "crop_aspect_combo"):
-            self.ui.crop_aspect_combo.set_selected(0)
-
-        self.crop_left = left
-        self.crop_right = right
-        self.crop_top = top
-        self.crop_bottom = bottom
-
-        self._save_file_metadata()
-        # The opposite edge's bound follows this one.
-        self.update_crop_spinbuttons()
-
-        if self.crop_edit_mode:
-            self.ui.crop_overlay.set_crop_values(
-                int(left), int(right), int(top), int(bottom)
-            )
-        else:
-            # Apply crop to MPV only when not in edit mode
-            self.mpv_player.set_crop(left, right, top, bottom)
-
-    def on_crop_aspect_changed(self, combo, _pspec=None) -> None:
-        if self._updating_crop_aspect:
-            return
-        values = tuple(ASPECT_RATIOS)
-        selected = combo.get_selected()
-        if selected >= len(values):
-            return
-        self.crop_aspect = values[selected]
-        if self.crop_aspect in {"free", "original"}:
-            if self.crop_aspect == "original":
-                self.crop_left = self.crop_right = 0
-                self.crop_top = self.crop_bottom = 0
-                self._apply_crop_state()
-            self._save_file_metadata()
-            return
-        if self.video_width <= 1 or self.video_height <= 1:
-            return
-        margins = centered_crop(
-            self.video_width,
-            self.video_height,
-            self.crop_aspect,
-            rotation=self.rotation,
-        )
-        (
-            self.crop_left,
-            self.crop_right,
-            self.crop_top,
-            self.crop_bottom,
-        ) = margins
-        self._apply_crop_state()
-        self._save_file_metadata()
-
-    def _apply_crop_state(self) -> None:
-        self._updating_crop_spins = True
-        try:
-            self.update_crop_spinbuttons()
-        finally:
-            self._updating_crop_spins = False
-        if self.crop_edit_mode:
-            self.ui.crop_overlay.set_crop_values(
-                int(self.crop_left),
-                int(self.crop_right),
-                int(self.crop_top),
-                int(self.crop_bottom),
-            )
-        elif self.mpv_player:
-            self.mpv_player.set_crop(
-                self.crop_left,
-                self.crop_right,
-                self.crop_top,
-                self.crop_bottom,
-            )
-
-    def _reapply_crop_aspect(self) -> None:
-        if self.crop_aspect in {"free", "original"}:
-            return
-        if hasattr(self.ui, "crop_aspect_combo"):
-            self.on_crop_aspect_changed(self.ui.crop_aspect_combo)
-
-    def on_crop_edit_toggled(self, active: bool) -> None:
-        """Toggle visual crop editor mode."""
-        self.crop_edit_mode = active
-        self.ui.crop_overlay.set_visible(active)
-
-        _CROP_MARGIN = 20
-
-        if active:
-            if hasattr(self.ui, "overlay_controls"):
-                self.ui.overlay_controls.set_visible(False)
-
-            # Add margin around the video area to prevent accidental window resize
-            self.ui.video_overlay.set_margin_start(_CROP_MARGIN)
-            self.ui.video_overlay.set_margin_end(_CROP_MARGIN)
-            self.ui.video_overlay.set_margin_top(_CROP_MARGIN)
-            self.ui.video_overlay.set_margin_bottom(_CROP_MARGIN)
-
-            # Enter crop edit mode: remove crop from MPV, show overlay
-            self.mpv_player.clear_crop()
-
-            # The overlay maps crop margins in displayed pixels (display_size),
-            # not mpv's decoded size, which is sideways for phone recordings,
-            # and shows them turned and mirrored like the preview.
-            self.ui.crop_overlay.set_video_dimensions(
-                self.video_width, self.video_height
-            )
-            self.ui.crop_overlay.set_transform(self.rotation, self.flip_h, self.flip_v)
-
-            self.ui.crop_overlay.set_crop_values(
-                int(self.crop_left),
-                int(self.crop_right),
-                int(self.crop_top),
-                int(self.crop_bottom),
-            )
-
-            self.ui.crop_overlay.set_on_crop_changed(self._on_crop_overlay_changed)
-        else:
-            self.ui.video_overlay.set_margin_start(0)
-            self.ui.video_overlay.set_margin_end(0)
-            self.ui.video_overlay.set_margin_top(0)
-            self.ui.video_overlay.set_margin_bottom(0)
-
-            # Restore overlay controls
-            if hasattr(self.ui, "overlay_controls"):
-                self.ui.overlay_controls.set_visible(True)
-
-            # Exit crop edit mode: re-apply crop to MPV
-            self.ui.crop_overlay.set_on_crop_changed(None)
-            self.mpv_player.set_crop(
-                self.crop_left,
-                self.crop_right,
-                self.crop_top,
-                self.crop_bottom,
-            )
-
-    def _on_crop_overlay_changed(
-        self, left: int, right: int, top: int, bottom: int
-    ) -> None:
-        """Called when user drags crop boundaries on the overlay."""
-        self.crop_aspect = "free"
-        if hasattr(self.ui, "crop_aspect_combo"):
-            self.ui.crop_aspect_combo.set_selected(0)
-        self.crop_left = left
-        self.crop_right = right
-        self.crop_top = top
-        self.crop_bottom = bottom
-        self._save_file_metadata()
-        self.update_crop_spinbuttons()
-
-    def on_rotate(self, degrees: int) -> None:
-        """Rotate video preview by given degrees (cumulative)."""
-        self.rotation = (self.rotation + degrees) % 360
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_rotation(self.rotation)
-        self._update_transform_state()
-        self._reapply_crop_aspect()
-
-    def on_flip(self, direction: str) -> None:
-        """Toggle horizontal or vertical flip."""
-        if direction == "horizontal":
-            self.flip_h = not self.flip_h
-        else:
-            self.flip_v = not self.flip_v
-        self._save_file_metadata()
-        self._update_transform_state()
-        self._apply_video_flip()
-
-    def on_reset_transform(self) -> None:
-        """Reset rotation and flip to default."""
-        self.rotation = 0
-        self.flip_h = False
-        self.flip_v = False
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_rotation(0)
-            self.mpv_player.set_video_flip(False, False)
-        self._update_transform_state()
-        self._reapply_crop_aspect()
-
-    def on_effect_changed(self, name: str, value) -> None:
-        """Noise reduction, sharpening, stabilization or the effect file."""
-        if self._restoring_metadata:
-            return
-        if name in ("denoise", "sharpen") and value not in EFFECT_LEVELS:
-            return
-        setattr(self, name, value)
-        self._save_file_metadata()
-        self.ui.update_effects_state(
-            self.denoise, self.sharpen, self.stabilize, self.effect_file
-        )
-        self._apply_video_effects()
-
-    def on_source_hdr_changed(self, mode: str) -> None:
-        if self._restoring_metadata or mode not in SOURCE_HDR_MODES:
-            return
-        self.source_hdr = mode
-        self._save_file_metadata()
-        self.ui.update_source_hdr(mode)
-        self._apply_video_effects()
-
-    def on_reset_effects(self) -> None:
-        self.denoise, self.sharpen, self.stabilize, self.effect_file = (
-            "off",
-            "off",
-            False,
-            "",
-        )
-        self._save_file_metadata()
-        self._update_ui_from_metadata()
-
-    def _apply_video_effects(self) -> None:
-        """Show the effects in the preview; stabilization needs the whole
-        file analyzed first, so only the conversion applies it."""
-        if not self.mpv_player:
-            return
-        shader = (
-            self.effect_file
-            if os.path.splitext(self.effect_file)[1].lower() in SHADER_SUFFIXES
-            else ""
-        )
-        self.mpv_player.set_video_effects(
-            effects_graph(self.denoise, self.sharpen, self.effect_file),
-            shader,
-            self.source_hdr,
-        )
-
-    def _update_transform_state(self) -> None:
-        if hasattr(self.ui, "rotation_row"):
-            self.ui.update_transform_state(self.rotation, self.flip_h, self.flip_v)
-        # The crop controls name the edges as the preview shows them.
-        if hasattr(self.ui, "crop_overlay"):
-            self.ui.crop_overlay.set_transform(self.rotation, self.flip_h, self.flip_v)
-        self.update_crop_spinbuttons()
-
-    def _apply_video_flip(self) -> None:
-        if self.mpv_player:
-            self.mpv_player.set_video_flip(self.flip_h, self.flip_v)
-
     def format_time_precise(self, seconds):
         # Rounded to the nearest millisecond as a whole: 2.92 is stored as
         # 2.9199…, which truncation showed as 2.919.
@@ -639,393 +368,6 @@ class VideoEditPage:
         hours, total = divmod(total, 3600)
         minutes, seconds_remainder = divmod(total, 60)
         return f"{hours}:{minutes:02d}:{seconds_remainder:02d}.{milliseconds:03d}"
-
-    def on_mark_segment_point(self, button) -> None:
-        if self.first_segment_point is None:
-            # First click: store point and show feedback
-            self.first_segment_point = self.current_position
-            self.ui.mark_time_label.set_text(
-                self.format_time_precise(self.first_segment_point)
-            )
-            self.ui.mark_time_label.set_visible(True)
-            self.ui.mark_cancel_button.set_visible(True)
-            self.ui.update_segment_markers()  # Show first mark immediately
-        else:
-            # Second click: create segment
-            second_point = self.current_position
-            start_time = min(self.first_segment_point, second_point)
-            end_time = max(self.first_segment_point, second_point)
-            # mpv's clock can run a little past the probed duration.
-            if self.video_duration > 0:
-                end_time = min(end_time, self.video_duration)
-
-            if end_time > start_time:
-                new_segment = {"start": start_time, "end": end_time}
-                self.trim_segments.append(new_segment)
-                self.trim_segments.sort(key=lambda s: s["start"])
-                self._save_file_metadata()
-                self._update_segments_listbox()
-                self.ui.update_segment_markers()
-
-            self.on_mark_cancel(None)
-
-    def on_mark_cancel(self, button) -> None:
-        self.first_segment_point = None
-        self.ui.mark_time_label.set_visible(False)
-        self.ui.mark_cancel_button.set_visible(False)
-        self.ui.update_segment_markers()  # Hide first mark line
-
-    def _update_segments_listbox(self):
-        if not hasattr(self.ui, "segment_items"):
-            return
-        # The rows read their segment by position when they come on screen.
-        items = self.ui.segment_items
-        items.splice(
-            0, items.get_n_items(), [str(i) for i in range(len(self.trim_segments))]
-        )
-        self.ui.fit_segment_list(len(self.trim_segments))
-        self.ui.segments_stack.set_visible_child_name(
-            "list" if self.trim_segments else "empty"
-        )
-        self.ui.update_segment_actions(len(self.trim_segments))
-        self.ui.update_segment_markers()
-        if hasattr(self.ui, "pause_panel"):
-            self.ui.pause_panel.segments_changed()
-
-    def _on_goto_segment_clicked(self, button, start_time):
-        self.ui.position_scale.set_value(start_time)
-
-    def _create_time_input_fields(self, time_seconds=0):
-        """Hours, minutes, seconds and milliseconds fields showing ``time_seconds``.
-
-        Rounded as a whole, like format_time_precise: 3.3 is stored as 3.2999…,
-        and truncating each part would move an untouched cut.
-        """
-        total, milliseconds = divmod(round(time_seconds * 1000), 1000)
-        hours, total = divmod(total, 3600)
-        minutes, seconds = divmod(total, 60)
-
-        fields_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-
-        # Hours
-        fields_box.append(Gtk.Label(label="h"))
-        h_spin = Gtk.SpinButton()
-        h_spin.set_range(0, 99)
-        h_spin.set_increments(1, 1)
-        h_spin.set_value(hours)
-        h_spin.set_width_chars(3)
-        h_spin.set_tooltip_text(_("Hours"))
-        h_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Hours")])
-        fields_box.append(h_spin)
-
-        # Minutes
-        fields_box.append(Gtk.Label(label="m"))
-        m_spin = Gtk.SpinButton()
-        m_spin.set_range(0, 59)
-        m_spin.set_increments(1, 1)
-        m_spin.set_value(minutes)
-        m_spin.set_width_chars(3)
-        m_spin.set_tooltip_text(_("Minutes"))
-        m_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Minutes")])
-        fields_box.append(m_spin)
-
-        # Seconds
-        fields_box.append(Gtk.Label(label="s"))
-        s_spin = Gtk.SpinButton()
-        s_spin.set_range(0, 59)
-        s_spin.set_increments(1, 1)
-        s_spin.set_value(seconds)
-        s_spin.set_width_chars(3)
-        s_spin.set_tooltip_text(_("Seconds"))
-        s_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Seconds")])
-        fields_box.append(s_spin)
-
-        fields_box.append(Gtk.Label(label="ms"))
-        ms_spin = Gtk.SpinButton()
-        ms_spin.set_range(0, 999)
-        ms_spin.set_increments(1, 100)
-        ms_spin.set_value(milliseconds)
-        ms_spin.set_width_chars(4)
-        ms_spin.set_tooltip_text(_("Milliseconds"))
-        ms_spin.update_property([Gtk.AccessibleProperty.LABEL], [_("Milliseconds")])
-        fields_box.append(ms_spin)
-
-        return fields_box, (h_spin, m_spin, s_spin, ms_spin)
-
-    def _get_time_from_spinbuttons(self, spinbuttons):
-        hours, minutes, seconds, milliseconds = (
-            spin.get_value_as_int() for spin in spinbuttons
-        )
-        return ((hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds) / 1000
-
-    def _on_edit_segment_clicked(self, button, segment_index):
-        """Show dialog to edit segment start and end times"""
-        if segment_index >= len(self.trim_segments):
-            return
-
-        segment = self.trim_segments[segment_index]
-
-        dialog = Adw.AlertDialog.new(_("Edit Segment"), None)
-        dialog.set_body(_("Edit start and end times for this segment"))
-
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        content_box.set_margin_top(12)
-        content_box.set_margin_bottom(12)
-        content_box.set_margin_start(12)
-        content_box.set_margin_end(12)
-
-        start_label = Gtk.Label(label=_("Start Time:"), xalign=0)
-        content_box.append(start_label)
-        start_fields_box, start_spinbuttons = self._create_time_input_fields(
-            segment["start"]
-        )
-        content_box.append(start_fields_box)
-
-        # End time fields
-        end_label = Gtk.Label(label=_("End Time:"), xalign=0)
-        end_label.set_margin_top(6)
-        content_box.append(end_label)
-        end_fields_box, end_spinbuttons = self._create_time_input_fields(segment["end"])
-        content_box.append(end_fields_box)
-
-        dialog.set_extra_child(content_box)
-
-        dialog.add_response("cancel", _("Cancel"))
-        dialog.add_response("save", _("Save"))
-        dialog.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
-        dialog.set_default_response("save")
-
-        dialog.connect(
-            "response",
-            self._on_edit_segment_dialog_response_spinbuttons,
-            segment_index,
-            start_spinbuttons,
-            end_spinbuttons,
-        )
-        dialog.present(self.app.window)
-
-    def _on_edit_segment_dialog_response_spinbuttons(
-        self, dialog, response, segment_index, start_spinbuttons, end_spinbuttons
-    ):
-        if response == "save":
-            try:
-                times = self._segment_times(start_spinbuttons, end_spinbuttons)
-                if times is None:
-                    return
-
-                self.trim_segments[segment_index]["start"] = times[0]
-                self.trim_segments[segment_index]["end"] = times[1]
-                self.trim_segments.sort(key=lambda s: s["start"])
-                self._update_segments_listbox()
-                self._save_file_metadata()
-
-            except (ValueError, IndexError) as e:
-                self._show_error_dialog(_("Error"), str(e))
-
-    def _segment_times(self, start_spinbuttons, end_spinbuttons):
-        """(start, end) typed into a segment dialog, the end clamped to the
-        video, or None after telling the user why the times cannot be used."""
-        start_time = self._get_time_from_spinbuttons(start_spinbuttons)
-        end_time = self._get_time_from_spinbuttons(end_spinbuttons)
-        if start_time < 0 or end_time < 0:
-            self._show_error_dialog(
-                _("Invalid Time"), _("Time values cannot be negative")
-            )
-            return None
-        if self.video_duration > 0:
-            # A cut past the end never reaches 100%, so the conversion
-            # would not count as finished.
-            if start_time >= self.video_duration:
-                self._show_error_dialog(
-                    _("Invalid Time Range"),
-                    _(
-                        "Start time must be before the end of the video ({duration})"
-                    ).format(duration=self.format_time_precise(self.video_duration)),
-                )
-                return None
-            end_time = min(end_time, self.video_duration)
-        if start_time >= end_time:
-            self._show_error_dialog(
-                _("Invalid Time Range"), _("Start time must be before end time")
-            )
-            return None
-        return start_time, end_time
-
-    def _show_error_dialog(self, title, message):
-        error_dialog = Adw.AlertDialog.new(title, None)
-        error_dialog.set_body(message)
-        error_dialog.add_response("ok", _("OK"))
-        error_dialog.set_default_response("ok")
-        error_dialog.present(self.app.window)
-
-    def _on_remove_segment_clicked(self, button, segment):
-        # Equal start times do not make two selections the same segment.
-        self.trim_segments = [s for s in self.trim_segments if s is not segment]
-        self._save_file_metadata()
-        self._update_segments_listbox()
-
-    def _on_clear_all_segments_with_confirmation(self, button):
-        if not self.trim_segments:
-            return  # Nothing to clear
-
-        dialog = Adw.AlertDialog.new(_("Clear All Segments?"), None)
-        dialog.set_body(
-            _("This will remove all trim segments. This action cannot be undone.")
-        )
-
-        dialog.add_response("cancel", _("Cancel"))
-        dialog.add_response("clear", _("Clear All"))
-        dialog.set_response_appearance("clear", Adw.ResponseAppearance.DESTRUCTIVE)
-        dialog.set_default_response("cancel")
-
-        dialog.connect("response", self._on_clear_confirmation_response)
-        dialog.present(self.app.window)
-
-    def _on_clear_confirmation_response(self, dialog, response):
-        if response == "clear":
-            self.trim_segments = []
-            self._save_file_metadata()
-            self._update_segments_listbox()
-
-    def _on_add_manual_segment_clicked(self, button):
-        dialog = Adw.AlertDialog.new(_("Add Segment Manually"), None)
-        dialog.set_body(_("Enter start and end times for the new segment"))
-
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        content_box.set_margin_top(12)
-        content_box.set_margin_bottom(12)
-        content_box.set_margin_start(12)
-        content_box.set_margin_end(12)
-
-        start_label = Gtk.Label(label=_("Start Time:"), xalign=0)
-        content_box.append(start_label)
-        start_fields_box, start_spinbuttons = self._create_time_input_fields(0)
-        content_box.append(start_fields_box)
-
-        # End time fields
-        end_label = Gtk.Label(label=_("End Time:"), xalign=0)
-        end_label.set_margin_top(6)
-        content_box.append(end_label)
-        end_fields_box, end_spinbuttons = self._create_time_input_fields(0)
-        content_box.append(end_fields_box)
-
-        dialog.set_extra_child(content_box)
-
-        dialog.add_response("cancel", _("Cancel"))
-        dialog.add_response("add", _("Add Segment"))
-        dialog.set_response_appearance("add", Adw.ResponseAppearance.SUGGESTED)
-        dialog.set_default_response("add")
-
-        dialog.connect(
-            "response",
-            self._on_add_manual_segment_response_spinbuttons,
-            start_spinbuttons,
-            end_spinbuttons,
-        )
-        dialog.present(self.app.window)
-
-    def _on_add_manual_segment_response_spinbuttons(
-        self, dialog, response, start_spinbuttons, end_spinbuttons
-    ):
-        if response == "add":
-            try:
-                times = self._segment_times(start_spinbuttons, end_spinbuttons)
-                if times is None:
-                    return
-
-                new_segment = {"start": times[0], "end": times[1]}
-                self.trim_segments.append(new_segment)
-                self.trim_segments.sort(key=lambda s: s["start"])
-                self._update_segments_listbox()
-                self._save_file_metadata()
-
-            except (ValueError, IndexError) as e:
-                self._show_error_dialog(_("Error"), str(e))
-
-    def update_crop_spinbuttons(self) -> None:
-        """Show the crop as displayed, each edge bounded so that at least
-        two pixels of the loaded video remain between it and its opposite."""
-        if not hasattr(self.ui, "crop_left_spin"):
-            return
-        transform = (self.rotation, self.flip_h, self.flip_v)
-        width, height = displayed_size(
-            self.video_width, self.video_height, self.rotation
-        )
-        left, right, top, bottom = source_to_display(
-            (self.crop_left, self.crop_right, self.crop_top, self.crop_bottom),
-            *transform,
-        )
-        previous = self._updating_crop_spins
-        self._updating_crop_spins = True
-        try:
-            for spin, value, extent, opposite in (
-                (self.ui.crop_left_spin, left, width, right),
-                (self.ui.crop_right_spin, right, width, left),
-                (self.ui.crop_top_spin, top, height, bottom),
-                (self.ui.crop_bottom_spin, bottom, height, top),
-            ):
-                # Before a video is loaded its size is unknown.
-                upper = max(0, extent - 2 - opposite) if extent > 2 else 9999
-                spin.set_range(0, max(upper, value))
-                spin.set_value(value)
-        finally:
-            self._updating_crop_spins = previous
-
-    def on_saturation_changed(self, scale) -> None:
-        self.saturation = scale.get_value()
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_saturation(self.saturation)
-
-    def on_hue_changed(self, scale) -> None:
-        self.hue = scale.get_value()
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_hue(self.hue)
-
-    def _on_output_mode_changed(self, combo, pspec):
-        selected = combo.get_selected()
-        self.output_mode = "join" if selected == 0 else "split"
-        self._save_file_metadata()
-        # Save to global settings as the new default for future videos
-        if not self._restoring_metadata:
-            self.settings.save_setting("multi-segment-output-mode", self.output_mode)
-
-    def reset_brightness(self) -> None:
-        self.brightness = 0.0
-        self.ui.brightness_scale.set_value(self.brightness)
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_brightness(self.brightness)
-            if not self.is_playing:
-                self._refresh_preview()
-
-    def reset_contrast(self) -> None:
-        self.contrast = 0.0
-        self.ui.contrast_scale.set_value(self.contrast)
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_contrast(self.contrast)
-            if not self.is_playing:
-                self._refresh_preview()
-
-    def reset_saturation(self) -> None:
-        self.saturation = 1.0
-        self.ui.saturation_scale.set_value(self.saturation)
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_saturation(self.saturation)
-            if not self.is_playing:
-                self._refresh_preview()
-
-    def reset_hue(self) -> None:
-        self.hue = 0.0
-        self.ui.hue_scale.set_value(self.hue)
-        self._save_file_metadata()
-        if self.mpv_player:
-            self.mpv_player.set_hue(self.hue)
-            if not self.is_playing:
-                self._refresh_preview()
 
     def update_position_display(self, position) -> None:
         if self.video_duration > 0:
@@ -1211,8 +553,8 @@ class VideoEditPage:
 
         The group is visible when the audio handling is set to re-encode,
         giving the user access to audio cleaning configuration from the editor.
-        Audio filters are applied whenever any filter is enabled and audio
-        is set to re-encode — NR is just one optional filter in the chain.
+        Audio filters apply whenever one is on and the audio is re-encoded;
+        noise reduction is one of them.
         """
         if not hasattr(self.ui, "nr_sidebar_group"):
             return
@@ -1226,7 +568,7 @@ class VideoEditPage:
                 self.mpv_player.set_audio_filter("")
 
     def _apply_audio_filters(self) -> None:
-        """Debounced wrapper — schedules actual filter rebuild after 150ms.
+        """Rebuilds the filters 150 ms after the last change.
 
         Prevents rapid-fire micro-seeks that can break the mpv audio pipeline.
         """
@@ -1274,7 +616,11 @@ class VideoEditPage:
         ):
             filters.append(
                 noise_reduction_filter(
-                    model, sm.load_setting("noise-reduction-strength", 1.0)
+                    model,
+                    sm.load_setting("noise-reduction-strength", 1.0),
+                    sm.load_setting("voice-only-sensitivity", 3)
+                    if sm.get_boolean("voice-only", False)
+                    else None,
                 )
             )
 

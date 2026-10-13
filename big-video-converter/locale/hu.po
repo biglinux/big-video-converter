@@ -737,9 +737,6 @@ msgstr "A fájl nem található"
 msgid "Edit video"
 msgstr "Videó szerkesztése"
 
-msgid "Changes apply only to the selected video"
-msgstr "A módosítások csak a kijelölt videóra vonatkoznak"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1351,9 +1348,6 @@ msgstr "Extra"
 msgid "SW Decode"
 msgstr "SW Dekódolás"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Kész receptek: YouTube, Instagram, szerkesztés…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1566,9 +1560,6 @@ msgstr "Válassza ki a kimeneti mappát"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Eredeti fájlok törlése"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Az eredeti fájlok megmaradnak, amíg az összes átalakított eredmény ellenőrzése sikeres nem lesz"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2740,24 +2731,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Állítsa be, hogyan kezeljék a feliratokat a konverzió során."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Feliratkezelés"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Válassza ki, hogyan kerüljenek a feliratok a kimenetbe. A „Beágyazott” a videófájlon belül tartja meg őket. A „Kinyerés .srt-be” külön feliratfájlokat hoz létre."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Csak feliratok kinyerése"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Teljesen kihagyja a videó átalakítását, és csak a feliratsávokat nyeri ki .srt fájlokba."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -3046,12 +3022,6 @@ msgstr "Hangerősség"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "A videó újrakódolás nélkül kerül másolásra. A kép körülvágása, módosítása, elforgatása vagy effektusok hozzáadása újrakódolja ezt a videót."
 
-msgid "Image"
-msgstr "Kép"
-
-msgid "Reset image adjustments"
-msgstr "Képbeállítások visszaállítása"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -3084,16 +3054,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Szabványos (SDR)"
-
-msgid "Orientation"
-msgstr "Tájolás"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Transformálás visszaállítása"
 
 msgid "Rotation"
 msgstr "Forgatás"
@@ -3165,9 +3125,6 @@ msgstr "Válassza ki a megjelölt szakaszok mentési módját"
 msgid "Effects"
 msgstr "Effektusok"
 
-msgid "Reset effects"
-msgstr "Effektusok visszaállítása"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -3208,10 +3165,6 @@ msgstr "Színvilág vagy shader kiválasztása"
 
 msgid "Looks and shaders"
 msgstr "Színvilágok és shaderek"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "{setting} visszaállítása az alapértékre"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -4174,9 +4127,6 @@ msgstr "Nem sikerült elindítani a Big Video Converter-t: {0}"
 msgid "Remove pauses"
 msgstr "Szünetek eltávolítása"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Beszédhez készült. A szüneteket a DPDFNet által megtisztított hangban keresi."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Óránként körülbelül egy percig tart."
 
@@ -4452,3 +4402,86 @@ msgstr[1] "{0} feliratsávot nem sikerült kinyerni, ezért ezek kimaradtak."
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Előretekintés (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "A kimenet az eredeti fájlnak csak egy részét tartalmazza"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Eredeti fájl a Kukába helyezve a kimenet ellenőrzése után"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Frissítse a dpdfnet-native csomagot a szünetek kereséséhez."
+
+msgid "Video mode"
+msgstr "Videó mód"
+
+msgid "How the video is encoded."
+msgstr "A videó kódolásának módja."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Kodek, bitráta és csatornák…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Kikapcsolva, amíg csak feliratok kinyerése történik"
+
+msgid "Not used with Fast Copy"
+msgstr "Gyors Másolás esetén nem használatos"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Az eredeti fájlok csak akkor törlődnek véglegesen, a Kuka megkerülésével, ha az összes átalakított eredmény ellenőrzése sikeres"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Az eredeti fájlok csak akkor kerülnek a Kukába, ha az összes átalakított eredmény ellenőrzése sikeres"
+
+msgid "Move this video to the Trash?"
+msgstr "Áthelyezi ezt a videót a Kukába?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "„{}” a Kukába kerül."
+
+msgid "Move to Trash"
+msgstr "Áthelyezés a Kukába"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Nem sikerült a Kukába helyezni a videót: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Törlés a Kuka használata nélkül"
+
+msgid "Audio only when a voice is detected"
+msgstr "Hang csak beszéd észlelésekor"
+
+msgid "Very sensitive"
+msgstr "Nagyon érzékeny"
+
+msgid "Sensitive"
+msgstr "Érzékeny"
+
+msgid "Normal"
+msgstr "Normál"
+
+msgid "Strict"
+msgstr "Szigorú"
+
+msgid "Very strict"
+msgstr "Nagyon szigorú"
+
+msgid "Voice detection"
+msgstr "Beszédészlelés"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Az érzékeny beállítás megtartja a halk vagy szokatlan hangú beszédet, és több zajt és zenét enged át. A szigorú több zenét eltávolít, és levághatja a halk szavakat."
+
+msgid "On"
+msgstr "Be"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} aktív"
+msgstr[1] "{count} aktív"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Beszédhez készült: a szüneteket a háttérzaj eltávolítása után keresi."

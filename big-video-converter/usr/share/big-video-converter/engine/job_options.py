@@ -198,7 +198,7 @@ def effective_resolution(metadata: dict[str, Any], global_value: str = "") -> st
 
 
 def has_picture_edits(metadata: dict[str, Any]) -> bool:
-    """Cropped, adjusted or turned: a video that can no longer be copied."""
+    """Cropped, adjusted or turned: a video that must be re-encoded."""
     return any(
         (
             metadata.get("crop_left"),

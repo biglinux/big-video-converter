@@ -31,6 +31,7 @@ class SettingsStore:
         "last-accessed-directory": "",
         "output-folder": "",
         "delete-original": False,
+        "skip-trash": False,
         "show-tooltips": True,
         # Window state
         "window-width": 1200,
@@ -68,6 +69,9 @@ class SettingsStore:
         "noise-reduction-strength": 1.0,
         # Index into constants.NOISE_MODELS: 0 DeepFilterNet3, 1 DPDFNet-2.
         "noise-model": 0,
+        # Audio only while the denoiser's voice detector hears a voice.
+        "voice-only": False,
+        "voice-only-sensitivity": 3,
         "noise-gate-enabled": False,
         "noise-gate-intensity": 0.5,
         # Compressor settings
@@ -91,6 +95,8 @@ class SettingsStore:
         "multi-segment-output-mode": "join",  # Options: "join", "split"
         # Shortest pause the editor offers to remove, in seconds
         "pause-length": 1.0,
+        # How strictly the pause finder's voice detector hears a voice, 1-5
+        "voice-sensitivity": 3,
         # Video preview rendering mode
         "video-preview-render-mode": "auto",  # Options: "auto", "opengl", "software"
     }
@@ -309,11 +315,6 @@ class SettingsStore:
             logger.error("Error exporting profile: %s", error)
             return False
 
-    def import_profile(self, filepath: str) -> bool:
-        """Validate all fields before committing; never import local/destructive state."""
-        updates = self.read_profile(filepath)
-        return updates is not None and self.apply_profile(updates)
-
     def read_profile(self, filepath: str):
         """The validated portable settings of a profile file, or None."""
         try:
@@ -482,6 +483,8 @@ class SettingsStore:
             "hpf-frequency": (20, 20000),
             "size-target-mb": (1, 1_000_000),
             "pause-length": (0.5, 2),
+            "voice-sensitivity": (1, 5),
+            "voice-only-sensitivity": (1, 5),
         }
         if key in ranges and not ranges[key][0] <= value <= ranges[key][1]:
             raise ValueError("Out-of-range value for " + key)
@@ -525,6 +528,7 @@ SettingsStore._PROFILE_EXCLUDE_KEYS.update(
     {
         "active-preset",
         "delete-original",
+        "skip-trash",
         "gpu-device-index",
         "gpu",
         "gpu-partial",

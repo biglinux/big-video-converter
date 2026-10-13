@@ -1,18 +1,13 @@
-"""Sidebar builder mixin — left pane UI creation, signals, and settings loading."""
+"""Sidebar builder mixin: the left pane and its signals."""
 
 import gettext
 import logging
 import threading
 
-from constants import (
-    AUDIO_VALUES,
-    GPU_VALUES,
-    SUBTITLE_VALUES,
-    VIDEO_CODEC_VALUES,
-    VIDEO_QUALITY_VALUES,
-)
+from constants import SUBTITLE_VALUES
 from engine.gpu_selector import name_render_devices, render_devices, select_best_gpu
-from gi.repository import Adw, Gdk, GLib, Gtk
+from gi.repository import Adw, Gdk, GLib, GObject, Gtk
+from ui.setting_cards import ChoiceRow, SettingCards, SettingRow, option_tile
 
 _ = gettext.gettext
 
@@ -20,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class SidebarBuilderMixin:
-    """Mixin providing sidebar (left pane) construction, signal wiring, and settings loading."""
+    """Mixin providing sidebar (left pane) construction and signal wiring."""
 
     def _create_left_pane(self):
         left_toolbar_view = Adw.ToolbarView()
@@ -50,11 +45,17 @@ class SidebarBuilderMixin:
             title_box.append(expander)
             left_header.set_title_widget(title_box)
         left_toolbar_view.add_top_bar(left_header)
+        # The editor's options start at the top: it keeps this header only for
+        # window buttons on the left (show_editor_for_file).
+        self.sidebar_header = left_header
+        self.sidebar_header_holds_buttons = window_buttons_left
 
-        left_scroll = Gtk.ScrolledWindow()
+        left_scroll = Gtk.ScrolledWindow(css_classes=["sidebar"])
         left_scroll.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         left_scroll.set_min_content_width(300)
         left_scroll.set_max_content_width(400)
+        # One set of cards for both pages: one opens at a time.
+        self.setting_cards = SettingCards(left_scroll, self.card_layer)
 
         self.left_stack = Adw.ViewStack()
         self.left_stack.set_hhomogeneous(False)
@@ -72,7 +73,7 @@ class SidebarBuilderMixin:
         self.editing_tools_box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL,
             spacing=12,
-            margin_top=6,
+            margin_top=12,
             margin_bottom=12,
             margin_start=12,
             margin_end=12,
@@ -81,8 +82,10 @@ class SidebarBuilderMixin:
             self.editing_tools_box, "editing_tools", _("Editing")
         )
 
+        self.left_stack.connect("notify::visible-child", self.setting_cards.close)
         left_scroll.set_child(self.left_stack)
-        left_toolbar_view.set_content(left_scroll)
+        # Without the header, empty space still moves the window.
+        left_toolbar_view.set_content(Gtk.WindowHandle(child=left_scroll))
 
         left_toolbar_view.set_size_request(300, -1)
 
@@ -142,6 +145,8 @@ class SidebarBuilderMixin:
             return handle.translate_coordinates(split, x + dx, 0)[0]
 
         def on_begin(gesture, _x, _y):
+            # An open card's bridge lies over the handle and would trail the edge.
+            self.setting_cards.close()
             start[:] = [split.get_sidebar().get_width(), pointer_x(gesture, 0)]
             handle.add_css_class("dragging")
             handle.grab_focus()
@@ -179,7 +184,7 @@ class SidebarBuilderMixin:
         return handle
 
     def _create_conversion_settings(self):
-        """Create conversion settings sidebar with ActionRows that open dialogs."""
+        """The conversion settings: rows with cards, or that open a dialog."""
         from constants import (
             AUDIO_OPTIONS,
             GPU_OPTIONS,
@@ -268,7 +273,7 @@ class SidebarBuilderMixin:
         self.subtitle_combo = Adw.ComboRow(title=_("Subtitles"))
         self.subtitle_combo.set_model(subtitle_model)
 
-        # Audio Noise Reduction (hidden expander — holds all sub-controls)
+        # Audio noise reduction: a hidden expander holding its controls.
         self.noise_reduction_expander = Adw.ExpanderRow(title=_("Noise Cleaning (AI)"))
         self.noise_reduction_expander.set_subtitle(_("Remove background noise"))
         self.noise_reduction_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
@@ -515,9 +520,15 @@ class SidebarBuilderMixin:
         self.normalize_row.connect("notify::active", self._on_normalize_toggled)
         self.noise_reduction_expander.add_row(self.normalize_row)
 
-        # Group 1: Video Mode Profiles
-        video_group = Adw.PreferencesGroup()
+        # Each setting is a row saying what it applies: the simple choices
+        # open a card beside the sidebar and come first, the rows below them
+        # open a whole dialog on a click.
+        cards = self.setting_cards
+        video_box, video_list = cards.add_group(None)
+        dialog_box, dialog_list = cards.add_group(None)
 
+        # The mode radios stay the source of truth: the four built-in modes
+        # are tiles in a card, Customize and Presets are rows of their own.
         self._radio_copy = Gtk.CheckButton()
         self._radio_universal = Gtk.CheckButton(group=self._radio_copy)
         self._radio_smaller = Gtk.CheckButton(group=self._radio_copy)
@@ -527,57 +538,68 @@ class SidebarBuilderMixin:
 
         self._profile_guard = False  # Prevent recursive signal loops
 
-        self._copy_row = Adw.ActionRow(title=_("Fast Copy"))
-        self._copy_row.set_subtitle(_("No re-encoding, fastest"))
-        self._copy_row.add_prefix(self._radio_copy)
-        self._copy_row.set_activatable_widget(self._radio_copy)
-        video_group.add(self._copy_row)
-        self.help_tooltips.add_tooltip(self._copy_row, "profile_copy")
+        modes = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        for radio, name, detail, tooltip in (
+            (
+                self._radio_copy,
+                _("Fast Copy"),
+                _("No re-encoding, fastest"),
+                "profile_copy",
+            ),
+            (
+                self._radio_universal,
+                _("Universal"),
+                _("H.264, compatible with all devices"),
+                "profile_universal",
+            ),
+            (
+                self._radio_smaller,
+                _("More Efficient"),
+                _("H.265, better compression"),
+                "profile_efficient",
+            ),
+            (
+                self._radio_quality,
+                _("Smaller File"),
+                _("AV1, best compression"),
+                "profile_smaller",
+            ),
+        ):
+            modes.append(option_tile(name, detail, radio))
+            self.help_tooltips.add_tooltip(radio, tooltip)
+        self._radio_universal.get_child().append(
+            Gtk.Label(
+                label=_("Recommended"), xalign=0, css_classes=["caption", "success"]
+            )
+        )
+        self._video_mode_row = SettingRow(
+            "video-x-generic-symbolic",
+            _("Video mode"),
+            _("How the video is encoded."),
+            modes,
+        )
+        self._video_mode_row.focus_target = self._active_mode_radio
+        cards.add_row(video_list, self._video_mode_row)
 
-        self._universal_row = Adw.ActionRow(title=_("Universal"))
-        self._universal_row.set_subtitle(_("H.264, compatible with all devices"))
-        self._universal_row.add_prefix(self._radio_universal)
-        self._universal_row.set_activatable_widget(self._radio_universal)
-        # Visual badge indicating recommended profile
-        recommended_label = Gtk.Label(label=_("Recommended"))
-        recommended_label.add_css_class("caption")
-        recommended_label.add_css_class("success")
-        recommended_label.set_valign(Gtk.Align.CENTER)
-        self._universal_row.add_suffix(recommended_label)
-        video_group.add(self._universal_row)
-        self.help_tooltips.add_tooltip(self._universal_row, "profile_universal")
-
-        self._efficient_row = Adw.ActionRow(title=_("More Efficient"))
-        self._efficient_row.set_subtitle(_("H.265, better compression"))
-        self._efficient_row.add_prefix(self._radio_smaller)
-        self._efficient_row.set_activatable_widget(self._radio_smaller)
-        video_group.add(self._efficient_row)
-        self.help_tooltips.add_tooltip(self._efficient_row, "profile_efficient")
-
-        self._smallest_row = Adw.ActionRow(title=_("Smaller File"))
-        self._smallest_row.set_subtitle(_("AV1, best compression"))
-        self._smallest_row.add_prefix(self._radio_quality)
-        self._smallest_row.set_activatable_widget(self._radio_quality)
-        video_group.add(self._smallest_row)
-        self.help_tooltips.add_tooltip(self._smallest_row, "profile_smaller")
-
-        self._customize_row = Adw.ActionRow(title=_("Customize encoding..."))
-        self._customize_row.add_prefix(self._radio_custom)
-        self._customize_row.set_activatable_widget(self._radio_custom)
-        self._customize_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
-        self._customize_row.set_activatable(True)
-        self._customize_row.connect("activated", self._on_video_encoding_activated)
-        video_group.add(self._customize_row)
+        self._customize_row = SettingRow(
+            "emblem-system-symbolic",
+            _("Customize encoding..."),
+            None,
+            None,
+            on_activate=self._on_video_encoding_activated,
+        )
+        cards.add_row(dialog_list, self._customize_row)
 
         # One row for every preset: the list itself lives in a dialog with a
         # grid and a search box, so dozens of presets never crowd the sidebar.
-        self._presets_row = Adw.ActionRow(title=_("Presets"))
-        self._presets_row.add_prefix(self._radio_preset)
-        self._presets_row.set_activatable_widget(self._radio_preset)
-        self._presets_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
-        self._presets_row.set_activatable(True)
-        self._presets_row.connect("activated", self._on_presets_activated)
-        video_group.add(self._presets_row)
+        self._presets_row = SettingRow(
+            "view-grid-symbolic",
+            _("Presets"),
+            None,
+            None,
+            on_activate=self._on_presets_activated,
+        )
+        cards.add_row(dialog_list, self._presets_row)
 
         self._radio_copy.connect("toggled", self._on_profile_toggled)
         self._radio_universal.connect("toggled", self._on_profile_toggled)
@@ -585,63 +607,90 @@ class SidebarBuilderMixin:
         self._radio_quality.connect("toggled", self._on_profile_toggled)
         self._radio_preset.connect("toggled", self._on_profile_toggled)
 
-        settings_box.append(video_group)
-
-        # Group 2: Audio / Subtitles / Extra
-        other_group = Adw.PreferencesGroup()
-
-        self._audio_row = Adw.ActionRow(title=_("Audio Encoding"))
-        self._audio_row.add_prefix(
-            Gtk.Image.new_from_icon_name("audio-x-generic-symbolic")
+        self._audio_options_button = Gtk.Button(
+            label=_("Codec, bitrate and channels…"), halign=Gtk.Align.START
         )
-        self._audio_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
-        self._audio_row.set_activatable(True)
-        self._audio_row.connect("activated", self._on_audio_activated)
-        other_group.add(self._audio_row)
-
-        self._audio_cleaning_row = Adw.ActionRow(title=_("Audio Settings"))
-        self._audio_cleaning_row.add_prefix(
-            Gtk.Image.new_from_icon_name("audio-volume-high-symbolic")
+        self._audio_options_button.connect("clicked", self._on_audio_activated)
+        self._audio_row = ChoiceRow(
+            "audio-x-generic-symbolic",
+            _("Audio Encoding"),
+            _("Choose what the converted video should contain."),
+            AUDIO_OPTIONS,
+            extra=[self._audio_options_button],
         )
-        self._audio_cleaning_row.add_suffix(
-            Gtk.Image.new_from_icon_name("go-next-symbolic")
+        self.audio_handling_combo.bind_property(
+            "selected",
+            self._audio_row,
+            "selected",
+            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
         )
-        self._audio_cleaning_row.set_activatable(True)
-        self._audio_cleaning_row.connect("activated", self._on_noise_options_activated)
-        other_group.add(self._audio_cleaning_row)
+        cards.add_row(video_list, self._audio_row)
 
-        self._subtitles_row = Adw.ActionRow(title=_("Subtitles"))
-        self._subtitles_row.add_prefix(
-            Gtk.Image.new_from_icon_name("insert-text-symbolic")
+        self._audio_cleaning_row = SettingRow(
+            "audio-volume-high-symbolic",
+            _("Audio Settings"),
+            None,
+            None,
+            on_activate=self._on_noise_options_activated,
         )
-        self._subtitles_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
-        self._subtitles_row.set_activatable(True)
-        self._subtitles_row.connect("activated", self._on_subtitles_activated)
-        other_group.add(self._subtitles_row)
+        cards.add_row(dialog_list, self._audio_cleaning_row)
 
-        self._size_row = Adw.ActionRow(title=_("Maximum size"))
-        self._size_row.add_prefix(
-            Gtk.Image.new_from_icon_name("drive-harddisk-symbolic")
+        # Bound to the extraction setting once the settings page exists below.
+        self._extract_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
+        extract_label = Gtk.Label(
+            label=_("Only Extract Subtitles"), xalign=0, hexpand=True, wrap=True
         )
-        self._size_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
-        self._size_row.set_activatable(True)
-        self._size_row.connect("activated", self._on_size_activated)
-        other_group.add(self._size_row)
-
-        self._extra_row = Adw.ActionRow(title=_("Extra"))
-        self._extra_row.add_prefix(
-            Gtk.Image.new_from_icon_name("preferences-system-symbolic")
+        self._extract_switch.update_property(
+            [Gtk.AccessibleProperty.LABEL], [extract_label.get_label()]
         )
-        self._extra_row.add_suffix(Gtk.Image.new_from_icon_name("go-next-symbolic"))
-        self._extra_row.set_activatable(True)
-        self._extra_row.connect("activated", self._on_extra_activated)
-        other_group.add(self._extra_row)
+        extract_box = Gtk.Box(spacing=12)
+        extract_box.append(extract_label)
+        extract_box.append(self._extract_switch)
+        self._subtitles_row = ChoiceRow(
+            "insert-text-symbolic",
+            _("Subtitles"),
+            _("Configure how subtitles are handled during conversion."),
+            SUBTITLE_OPTIONS,
+            extra=[extract_box],
+        )
+        self.subtitle_combo.bind_property(
+            "selected",
+            self._subtitles_row,
+            "selected",
+            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
+        )
+        cards.add_row(video_list, self._subtitles_row)
 
-        settings_box.append(other_group)
+        self._size_row = SettingRow(
+            "drive-harddisk-symbolic",
+            _("Maximum size"),
+            None,
+            None,
+            on_activate=self._on_size_activated,
+        )
+        cards.add_row(dialog_list, self._size_row)
+
+        self._extra_row = SettingRow(
+            "preferences-system-symbolic",
+            _("Extra"),
+            None,
+            None,
+            on_activate=self._on_extra_activated,
+        )
+        cards.add_row(dialog_list, self._extra_row)
+
+        settings_box.append(video_box)
+        settings_box.append(dialog_box)
 
         from ui.settings_page import SettingsPage
 
         self.settings_page = SettingsPage(self)
+        self.settings_page.only_extract_subtitles_check.bind_property(
+            "active",
+            self._extract_switch,
+            "active",
+            GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE,
+        )
         self._update_sidebar_for_extract_mode()
 
         self._connect_left_pane_signals()
@@ -682,7 +731,7 @@ class SidebarBuilderMixin:
             ),
         )
 
-        # Output Format — save, sync with settings_page, update subtitle
+        # Output format: saved, mirrored on the settings page, summarized.
         def _on_sidebar_format_changed(w, p):
             idx = w.get_selected()
             self.settings_store.save_setting("output-format-index", idx)
@@ -727,7 +776,7 @@ class SidebarBuilderMixin:
             self._on_audio_handling_changed,
         )
 
-        # Subtitle — save + update sidebar subtitle
+        # Subtitles: saved and summarized on their row.
         def _on_subtitle_changed(w, p):
             self.settings_store.save_setting(
                 "subtitle-extract", SUBTITLE_VALUES.get(w.get_selected(), "embedded")
@@ -793,416 +842,3 @@ class SidebarBuilderMixin:
             "notify::active",
             lambda w, p: self._update_customize_subtitle(),
         )
-
-    def _save_slider(self, key, value):
-        """Write the settings file once the slider has stopped for 300 ms."""
-        self.settings_store.set_value_soon(key, value)
-        if not getattr(self, "_slider_flush_id", 0):
-            self._slider_flush_id = GLib.timeout_add(300, self._flush_slider_settings)
-
-    def _flush_slider_settings(self):
-        self._slider_flush_id = 0
-        self.settings_store.flush()
-        return GLib.SOURCE_REMOVE
-
-    def _load_left_pane_settings(self):
-        """Load settings for left pane controls.
-
-        Restoring widgets emits their signals, whose handlers write back to the
-        settings. Writes are suspended for the whole restore so that a failure
-        halfway through cannot leave the user's configuration replaced by the
-        widgets' default values.
-        """
-        with self.settings_store.suspend_writes():
-            self._load_left_pane_settings_inner()
-
-    def _load_left_pane_settings_inner(self):
-        """Actual widget restore; never writes settings (see caller)."""
-        # GPU
-        gpu_value = self.settings_store.load_setting("gpu", "auto")
-        gpu_index = self._find_gpu_index(gpu_value)
-        self.gpu_combo.set_selected(gpu_index)
-
-        # GPU Device
-        gpu_device_index = self.settings_store.load_setting("gpu-device-index", 0)
-        if gpu_device_index <= len(self.detected_gpus):
-            self.gpu_device_combo.set_selected(gpu_device_index)
-
-        # Output Format
-        format_index = self.settings_store.load_setting("output-format-index", 0)
-        self.output_format_combo.set_selected(format_index)
-
-        # Video Quality
-        quality_value = self.settings_store.load_setting("video-quality", "default")
-        quality_index = self._find_quality_index(quality_value)
-        self.video_quality_combo.set_selected(quality_index)
-
-        # Video Codec (index 0 = Copy, 1 = H.264, ...)
-        force_copy = self.settings_store.load_setting("force-copy-video", False)
-        if force_copy:
-            self.video_codec_combo.set_selected(0)
-        else:
-            codec_value = self.settings_store.load_setting("video-codec", "h264")
-            codec_index = self._find_codec_index(codec_value)
-            # Avoid accidentally selecting "Copy" when loading a real codec
-            if codec_index == 0:
-                codec_index = 1
-            self.video_codec_combo.set_selected(codec_index)
-        self.force_copy_video_check.set_active(force_copy)
-        self._update_encoding_options_state(force_copy)
-
-        # Audio Handling - Use reverse lookup
-        audio_value = self.settings_store.load_setting("audio-handling", "copy")
-        audio_index = 0  # Default
-        for index, internal_value in AUDIO_VALUES.items():
-            if internal_value == audio_value:
-                audio_index = index
-                break
-        self.audio_handling_combo.set_selected(audio_index)
-
-        # Disable audio cleaning ActionRow when audio is copy/none
-        audio_will_reencode = audio_index == 1
-        self._audio_cleaning_row.set_sensitive(audio_will_reencode)
-
-        # Subtitle - Use reverse lookup
-        subtitle_value = self.settings_store.load_setting(
-            "subtitle-extract", "embedded"
-        )
-        subtitle_index = 0  # Default
-        for index, internal_value in SUBTITLE_VALUES.items():
-            if internal_value == subtitle_value:
-                subtitle_index = index
-                break
-        self.subtitle_combo.set_selected(subtitle_index)
-
-        # Noise Reduction
-        noise_reduction = self.settings_store.load_setting("noise-reduction", False)
-        self.noise_reduction_switch.set_active(noise_reduction)
-        self.noise_reduction_expander.set_enable_expansion(noise_reduction)
-
-        # Noise Reduction Strength
-        noise_strength = self.settings_store.load_setting(
-            "noise-reduction-strength", 1.0
-        )
-        self.noise_strength_scale.set_value(noise_strength)
-
-        self.noise_model_row.set_selected(
-            self.settings_store.load_setting("noise-model", 0)
-        )
-
-        # Noise Gate
-        gate_enabled = self.settings_store.load_setting("noise-gate-enabled", False)
-        self.gate_switch.set_active(gate_enabled)
-        self.gate_expander.set_enable_expansion(gate_enabled)
-        self.gate_intensity_scale.set_value(
-            self.settings_store.load_setting("noise-gate-intensity", 0.5)
-        )
-        self.gate_intensity_scale.set_sensitive(gate_enabled)
-
-        # Compressor
-        comp_enabled = self.settings_store.load_setting("compressor-enabled", False)
-        self.compressor_switch.set_active(comp_enabled)
-        self.compressor_expander.set_enable_expansion(comp_enabled)
-        self.compressor_intensity_scale.set_value(
-            self.settings_store.load_setting("compressor-intensity", 1.0)
-        )
-        self.compressor_intensity_scale.set_sensitive(comp_enabled)
-
-        # HPF
-        hpf_enabled = self.settings_store.load_setting("hpf-enabled", False)
-        self.hpf_row.set_active(hpf_enabled)
-        self.hpf_freq_scale.set_value(
-            self.settings_store.load_setting("hpf-frequency", 80)
-        )
-        self.hpf_freq_row.set_visible(hpf_enabled)
-
-        # EQ
-        eq_enabled = self.settings_store.load_setting("eq-enabled", False)
-        self.eq_switch.set_active(eq_enabled)
-        self.eq_expander.set_enable_expansion(eq_enabled)
-        self.eq_preset_row.set_sensitive(eq_enabled)
-        eq_preset = self.settings_store.load_setting("eq-preset", "flat")
-        if eq_preset in self._eq_preset_keys:
-            self.eq_preset_row.set_selected(self._eq_preset_keys.index(eq_preset))
-
-        # Loudness Normalization
-        normalize_enabled = self.settings_store.load_setting("normalize-enabled", False)
-        self.normalize_row.set_active(normalize_enabled)
-
-        # Show tooltips — state loaded via tooltip_action in _setup_actions
-
-        self._select_profile_radio(self._detect_current_profile())
-        self._update_customize_subtitle()
-        self._update_presets_subtitle()
-        self._update_audio_subtitle()
-        self._update_audio_cleaning_subtitle()
-        self._update_subtitles_subtitle()
-        self._update_extra_subtitle()
-        self._update_size_subtitle()
-
-    def _update_customize_subtitle(self):
-        """Update the 'Customize encoding...' row subtitle with current settings."""
-        profile = self._detect_current_profile()
-        parts = []
-        if profile == "custom":
-            codec_model = self.video_codec_combo.get_model()
-            if codec_model:
-                val = (
-                    codec_model.get_string(self.video_codec_combo.get_selected()) or ""
-                )
-                if val:
-                    parts.append(val)
-        quality_idx = self.video_quality_combo.get_selected()
-        if quality_idx > 0:
-            quality_model = self.video_quality_combo.get_model()
-            if quality_model:
-                val = quality_model.get_string(quality_idx) or ""
-                if val:
-                    parts.append(val)
-        fmt_model = self.output_format_combo.get_model()
-        if fmt_model:
-            val = fmt_model.get_string(self.output_format_combo.get_selected()) or ""
-            if val:
-                parts.append(val)
-        gpu_idx = self.gpu_combo.get_selected()
-        if gpu_idx > 0:
-            gpu_model = self.gpu_combo.get_model()
-            if gpu_model:
-                val = gpu_model.get_string(gpu_idx) or ""
-                if val:
-                    parts.append(val)
-        if hasattr(self, "settings_page"):
-            res_idx = self.settings_page.video_resolution_combo.get_selected()
-            if res_idx > 0:
-                res_model = self.settings_page.video_resolution_combo.get_model()
-                if res_model:
-                    val = res_model.get_string(res_idx) or ""
-                    if val:
-                        parts.append(val)
-            if self.settings_page.gpu_partial_check.get_active():
-                parts.append(_("SW Decode"))
-        self._customize_row.set_subtitle(" · ".join(parts) if parts else "")
-        if getattr(self, "conversion_page", None) is not None:
-            self.conversion_page.refresh_recipe_summaries()
-
-    def _on_video_encoding_activated(self, _row):
-        from ui.video_encoding_dialog import show_video_encoding_dialog
-
-        show_video_encoding_dialog(self.window, self)
-
-    def _on_audio_activated(self, _row):
-        from ui.audio_dialog import show_audio_dialog
-
-        show_audio_dialog(self.window, self)
-
-    def _on_noise_options_activated(self, _row):
-        """Open the audio cleaning dialog."""
-        from ui.noise_dialog import show_noise_dialog
-
-        show_noise_dialog(self.window, self)
-
-    def _on_subtitles_activated(self, _row):
-        from ui.subtitles_dialog import show_subtitles_dialog
-
-        show_subtitles_dialog(self.window, self)
-
-    def _on_presets_activated(self, _row):
-        from ui.presets_dialog import show_presets_dialog
-
-        show_presets_dialog(self.window, self)
-
-    def _update_presets_subtitle(self):
-        """Name of the preset in use, or an invitation to browse them."""
-        preset = self.active_preset()
-        if preset is None:
-            self._presets_row.set_subtitle(
-                _("Ready-made recipes: YouTube, Instagram, editing…")
-            )
-        else:
-            summary = preset.summary
-            name = preset.display_name
-            self._presets_row.set_subtitle(f"{name} · {summary}" if summary else name)
-
-    def _on_extra_activated(self, _row):
-        from ui.extra_dialog import show_extra_dialog
-
-        show_extra_dialog(self.window, self)
-
-    # Sidebar subtitle update methods
-
-    def _update_audio_subtitle(self):
-        parts = []
-        audio_model = self.audio_handling_combo.get_model()
-        if audio_model:
-            idx = self.audio_handling_combo.get_selected()
-            item = audio_model.get_string(idx)
-            if item:
-                parts.append(item)
-        if hasattr(self, "settings_page"):
-            codec_model = self.settings_page.audio_codec_combo.get_model()
-            if codec_model:
-                idx = self.settings_page.audio_codec_combo.get_selected()
-                item = codec_model.get_string(idx)
-                if item and self.audio_handling_combo.get_selected() == 1:
-                    parts.append(item)
-        self._audio_row.set_subtitle(" · ".join(parts) if parts else "")
-
-    def _update_audio_cleaning_subtitle(self):
-        """Update the Audio Settings ActionRow subtitle with active features."""
-        audio_will_reencode = self.audio_handling_combo.get_selected() == 1
-        if not audio_will_reencode:
-            self._audio_cleaning_row.set_subtitle(_("Requires audio set to re-encode"))
-        else:
-            active = []
-            if self.noise_reduction_switch.get_active():
-                active.append(_("AI noise removal"))
-            if self.gate_switch.get_active():
-                active.append(_("gate"))
-            if self.compressor_switch.get_active():
-                active.append(_("compressor"))
-            if self.hpf_row.get_active():
-                active.append(_("low cut"))
-            if self.eq_switch.get_active():
-                active.append(_("equalizer"))
-            if self.normalize_row.get_active():
-                active.append(_("normalize"))
-            if active:
-                self._audio_cleaning_row.set_subtitle(", ".join(active))
-            else:
-                self._audio_cleaning_row.set_subtitle(_("Disabled"))
-        # Sync editor's Audio Cleaning row if present
-        if (
-            hasattr(self, "video_edit_page")
-            and self.video_edit_page
-            and hasattr(self.video_edit_page, "ui")
-        ):
-            self.video_edit_page.ui._sync_nr_subtitle()
-
-    def _update_subtitles_subtitle(self):
-        model = self.subtitle_combo.get_model()
-        if model:
-            idx = self.subtitle_combo.get_selected()
-            item = model.get_string(idx)
-            self._subtitles_row.set_subtitle(item or "")
-
-    def _update_sidebar_for_extract_mode(self):
-        """Disable all sidebar options except Subtitles when only-extract-subtitles is active."""
-        is_extract = self.settings_page.only_extract_subtitles_check.get_active()
-        enable = not is_extract
-        for row in (
-            self._copy_row,
-            self._universal_row,
-            self._efficient_row,
-            self._smallest_row,
-            self._customize_row,
-            self._audio_row,
-            self._audio_cleaning_row,
-            self._extra_row,
-        ):
-            row.set_sensitive(enable)
-
-    def _on_size_activated(self, _row):
-        from ui.size_dialog import show_size_dialog
-
-        show_size_dialog(self.window, self)
-
-    def _update_size_subtitle(self):
-        from ui.size_dialog import size_summary
-
-        self._size_row.set_subtitle(size_summary(self.settings_store))
-        if getattr(self, "conversion_page", None) is not None:
-            self.conversion_page.refresh_recipe_summaries()
-
-    def _update_extra_subtitle(self):
-        parts = []
-        if (
-            hasattr(self, "settings_page")
-            and self.settings_page.options_entry.get_text().strip()
-        ):
-            parts.append(_("Custom FFmpeg flags"))
-        self._extra_row.set_subtitle(
-            " · ".join(parts) if parts else _("No customizations")
-        )
-
-    def _save_gpu_setting(self, index):
-        if index in GPU_VALUES:
-            self.settings_store.save_setting("gpu", GPU_VALUES[index])
-
-    def _save_quality_setting(self, index):
-        if index in VIDEO_QUALITY_VALUES:
-            self.settings_store.save_setting(
-                "video-quality", VIDEO_QUALITY_VALUES[index]
-            )
-
-    def _save_codec_setting(self, index):
-        """Save video codec setting — index 0 means copy (no re-encoding)."""
-        if index not in VIDEO_CODEC_VALUES:
-            return
-        value = VIDEO_CODEC_VALUES[index]
-        is_copy = value == "copy"
-        self.settings_store.save_setting("video-codec", value)
-        self.settings_store.save_setting("force-copy-video", is_copy)
-        # Keep hidden data-holder in sync
-        if self.force_copy_video_check.get_active() != is_copy:
-            self.force_copy_video_check.set_active(is_copy)
-        self._update_encoding_options_state(is_copy)
-
-    def _find_gpu_index(self, value):
-        value = value.lower()
-        reverse_map = {v: k for k, v in GPU_VALUES.items()}
-        return reverse_map.get(value, 0)
-
-    def _find_quality_index(self, value):
-        value = value.lower()
-        reverse_map = {v: k for k, v in VIDEO_QUALITY_VALUES.items()}
-        return reverse_map.get(value, 0)
-
-    def _find_codec_index(self, value):
-        """Find index of codec value (default: 1 = H.264)"""
-        value = value.lower()
-        reverse_map = {v: k for k, v in VIDEO_CODEC_VALUES.items()}
-        return reverse_map.get(value, 1)
-
-    def _on_force_copy_toggled(self, switch, param):
-        """Sync force-copy data-holder with codec combo."""
-        is_active = switch.get_active()
-        self.settings_store.save_setting("force-copy-video", is_active)
-        # Sync codec combo: select "Copy" (0) or fallback to H.264 (1)
-        if is_active and self.video_codec_combo.get_selected() != 0:
-            self.video_codec_combo.set_selected(0)
-        elif not is_active and self.video_codec_combo.get_selected() == 0:
-            self.video_codec_combo.set_selected(1)
-        self._update_encoding_options_state(is_active)
-
-    def _on_audio_handling_changed(self, combo, _pspec):
-        """Change audio applicability without erasing cleaning preferences."""
-        selected = combo.get_selected()
-        self.settings_store.save_setting(
-            "audio-handling", AUDIO_VALUES.get(selected, "copy")
-        )
-        audio_will_reencode = selected == 1  # index 1 = "reencode"
-        self._audio_cleaning_row.set_sensitive(audio_will_reencode)
-        self._update_audio_subtitle()
-        self._update_audio_cleaning_subtitle()
-        if hasattr(self, "video_edit_page") and self.video_edit_page:
-            self.video_edit_page.update_nr_button_visibility()
-
-    def _update_encoding_options_state(self, force_copy_enabled):
-        """Enable/disable encoding options based on force copy state"""
-        enable = not force_copy_enabled
-
-        self.gpu_combo.set_sensitive(enable)
-        self.video_quality_combo.set_sensitive(enable)
-        self.video_codec_combo.set_sensitive(enable)
-
-        # Disable customize row when copy is active
-        self._customize_row.set_sensitive(enable)
-
-        if (
-            hasattr(self, "video_edit_page")
-            and self.video_edit_page
-            and hasattr(self.video_edit_page, "ui")
-        ):
-            self.video_edit_page.ui.update_for_force_copy_state(force_copy_enabled)
-
-        self._update_customize_subtitle()

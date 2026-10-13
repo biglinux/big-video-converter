@@ -6,7 +6,7 @@ import threading
 import time
 import zlib
 
-from ui.thumbnail_cache import FileIdentity, ThumbnailManager
+from ui.thumbnail_cache import FileIdentity, ThumbnailCache
 
 PNG = b"\x89PNG\r\n\x1a\n"
 
@@ -50,7 +50,7 @@ def test_shared_desktop_thumbnail_is_reused(tmp_path):
     )
     event = threading.Event()
     values = []
-    manager = ThumbnailManager(cache_home=tmp_path, ffmpeg="/missing")
+    manager = ThumbnailCache(cache_home=tmp_path, ffmpeg="/missing")
     manager.request(video, lambda value: (values.append(value), event.set()))
     wait(event)
     manager.shutdown()
@@ -60,7 +60,7 @@ def test_shared_desktop_thumbnail_is_reused(tmp_path):
 def test_identical_requests_are_deduplicated(tmp_path, monkeypatch):
     video = tmp_path / "video.mp4"
     video.write_bytes(b"video")
-    manager = ThumbnailManager(cache_home=tmp_path, ffmpeg="/missing", max_workers=1)
+    manager = ThumbnailCache(cache_home=tmp_path, ffmpeg="/missing", max_workers=1)
     calls = []
 
     def generate(job, target):
@@ -89,7 +89,7 @@ def test_identical_requests_are_deduplicated(tmp_path, monkeypatch):
 def test_last_cancelled_subscriber_suppresses_callback(tmp_path, monkeypatch):
     video = tmp_path / "video.mp4"
     video.write_bytes(b"video")
-    manager = ThumbnailManager(cache_home=tmp_path, ffmpeg="/missing", max_workers=1)
+    manager = ThumbnailCache(cache_home=tmp_path, ffmpeg="/missing", max_workers=1)
     started = threading.Event()
     release = threading.Event()
 
@@ -112,10 +112,10 @@ def test_last_cancelled_subscriber_suppresses_callback(tmp_path, monkeypatch):
     assert values == []
 
 
-def test_reinserted_video_does_not_reuse_a_cancelled_request(tmp_path, monkeypatch):
+def test_reinserted_video_gets_a_fresh_request(tmp_path, monkeypatch):
     video = tmp_path / "video.mp4"
     video.write_bytes(b"video")
-    manager = ThumbnailManager(cache_home=tmp_path, max_workers=1)
+    manager = ThumbnailCache(cache_home=tmp_path, max_workers=1)
     started, release, finished = threading.Event(), threading.Event(), threading.Event()
 
     def generate(job, target):
@@ -142,7 +142,7 @@ def test_reinserted_video_does_not_reuse_a_cancelled_request(tmp_path, monkeypat
 def test_shutdown_reaps_active_thumbnail_process(tmp_path, monkeypatch):
     video = tmp_path / "video.mp4"
     video.write_bytes(b"video")
-    manager = ThumbnailManager(cache_home=tmp_path, max_workers=1)
+    manager = ThumbnailCache(cache_home=tmp_path, max_workers=1)
     started = threading.Event()
     processes = []
     from ui import thumbnail_cache

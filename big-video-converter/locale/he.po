@@ -790,9 +790,6 @@ msgstr "הקובץ לא נמצא"
 msgid "Edit video"
 msgstr "עריכת סרטון"
 
-msgid "Changes apply only to the selected video"
-msgstr "השינויים חלים רק על הסרטון שנבחר"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1405,9 +1402,6 @@ msgstr "נוסף"
 msgid "SW Decode"
 msgstr "פענוח באמצעות תוכנה"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "תבניות מוכנות: YouTube, Instagram, עריכה…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1620,9 +1614,6 @@ msgstr "בחר תיקיית פלט"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "מחק קבצים מקוריים"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "קובצי המקור נשמרים אלא אם כל תוצאות ההמרה עוברות אימות"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2826,24 +2817,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "הגדרת אופן הטיפול בכתוביות במהלך ההמרה."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "טיפול בכתוביות"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "בחר כיצד כתוביות ייכללו בפלט. 'מוטמע' שומר אותן בתוך קובץ הווידאו. 'חלץ ל-.srt' יוצר קבצי כתוביות נפרדים."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "חילוץ כתוביות בלבד"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "דילוג על המרת הסרטון וחילוץ רצועות הכתוביות בלבד לקובצי .srt."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -3224,12 +3200,6 @@ msgstr "עוצמה"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "הסרטון מועתק ללא קידוד מחדש. חיתוך, התאמה, סיבוב או הוספת אפקטים לתמונה יגרמו לקידוד מחדש של סרטון זה."
 
-msgid "Image"
-msgstr "תמונה"
-
-msgid "Reset image adjustments"
-msgstr "איפוס התאמות התמונה"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -3262,16 +3232,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "רגיל (SDR)"
-
-msgid "Orientation"
-msgstr "כיוון"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "איפוס סיבוב ושיקוף"
 
 msgid "Rotation"
 msgstr "סיבוב"
@@ -3352,9 +3312,6 @@ msgstr "בחירת אופן השמירה של הקטעים המסומנים"
 msgid "Effects"
 msgstr "אפקטים"
 
-msgid "Reset effects"
-msgstr "איפוס אפקטים"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -3395,10 +3352,6 @@ msgstr "בחירת סגנון צבע או מצלל"
 
 msgid "Looks and shaders"
 msgstr "סגנונות צבע ומצללים"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "איפוס {setting} לברירת המחדל"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -5447,9 +5400,6 @@ msgstr "הפעלת Big Video Converter נכשלה: {0}"
 msgid "Remove pauses"
 msgstr "הסרת הפסקות"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "מיועד לדיבור. ההפסקות מאותרות בקול שנוקה על ידי DPDFNet."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "נמשך כדקה לכל שעת שמע."
 
@@ -5739,3 +5689,88 @@ msgstr[3] "לא ניתן היה לחלץ {0} רצועות כתוביות והן 
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "הסתכלות קדימה (מילישניות)"
+
+msgid "The output holds only part of the original"
+msgstr "הפלט כולל רק חלק מהמקור"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "המקור הועבר לאשפה לאחר אימות הפלט"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "יש לעדכן את dpdfnet-native כדי לאתר הפסקות."
+
+msgid "Video mode"
+msgstr "מצב וידאו"
+
+msgid "How the video is encoded."
+msgstr "אופן קידוד הווידאו."
+
+msgid "Codec, bitrate and channels…"
+msgstr "קודק, קצב סיביות וערוצים…"
+
+msgid "Off while only extracting subtitles"
+msgstr "כבוי בזמן חילוץ כתוביות בלבד"
+
+msgid "Not used with Fast Copy"
+msgstr "לא בשימוש בהעתקה מהירה"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "קובצי המקור נמחקים לצמיתות, ללא מעבר באשפה, רק לאחר שכל תוצאות ההמרה עוברות אימות"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "קובצי המקור מועברים לאשפה רק לאחר שכל תוצאות ההמרה עוברות אימות"
+
+msgid "Move this video to the Trash?"
+msgstr "להעביר את הסרטון הזה לאשפה?"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "“{}” יועבר לאשפה."
+
+msgid "Move to Trash"
+msgstr "העברה לאשפה"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "לא ניתן להעביר את הסרטון לאשפה: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "מחיקה ללא שימוש באשפה"
+
+msgid "Audio only when a voice is detected"
+msgstr "שמע רק כאשר מזוהה קול"
+
+msgid "Very sensitive"
+msgstr "רגיש מאוד"
+
+msgid "Sensitive"
+msgstr "רגיש"
+
+msgid "Normal"
+msgstr "רגיל"
+
+msgid "Strict"
+msgstr "קפדני"
+
+msgid "Very strict"
+msgstr "קפדני מאוד"
+
+msgid "Voice detection"
+msgstr "זיהוי קול"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "במצב רגיש נשמרים קולות שקטים או חריגים, אך עוברים יותר רעש ומוזיקה. במצב קפדני מוסרת יותר מוזיקה, ומילים שנאמרו בשקט עלולות להיקטע."
+
+msgid "On"
+msgstr "פועל"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} פעיל"
+msgstr[1] "{count} פעילים"
+msgstr[2] "{count} פעילים"
+msgstr[3] "{count} פעילים"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "מיועד לדיבור: ההפסקות מאותרות לאחר הסרת רעש הרקע."

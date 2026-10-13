@@ -18,7 +18,7 @@ def pump():
         time.sleep(0.002)
 
 
-def test_closed_windows_release_their_card_and_owner():
+def test_closed_windows_free_card_and_owner():
     """GObject weak notifications fire on finalization, which Python's
     collection of a wrapper alone does not prove."""
     tooltip.install()

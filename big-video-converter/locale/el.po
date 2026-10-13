@@ -792,9 +792,6 @@ msgstr "Το αρχείο δεν βρέθηκε"
 msgid "Edit video"
 msgstr "Επεξεργασία βίντεο"
 
-msgid "Changes apply only to the selected video"
-msgstr "Οι αλλαγές εφαρμόζονται μόνο στο επιλεγμένο βίντεο"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 1238
 msgid "Could not load video file"
@@ -1406,9 +1403,6 @@ msgstr "Επιπλέον"
 msgid "SW Decode"
 msgstr "Αποκωδικοποίηση Λογισμικού"
 
-msgid "Ready-made recipes: YouTube, Instagram, editing…"
-msgstr "Έτοιμες συνταγές: YouTube, Instagram, επεξεργασία…"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/sidebar_builder.py, line: 940
 msgid "Requires audio set to re-encode"
@@ -1643,9 +1637,6 @@ msgstr "Επιλέξτε φάκελο εξόδου"
 # converter/ui/conversion_page.py, line: 315
 msgid "Delete original files"
 msgstr "Διαγραφή αρχικών αρχείων"
-
-msgid "Originals are kept unless every converted result passes validation"
-msgstr "Τα αρχικά αρχεία διατηρούνται μέχρι να επαληθευτούν όλα τα αποτελέσματα της μετατροπής"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/conversion_page.py, line: 561
@@ -2899,24 +2890,9 @@ msgid "Configure how subtitles are handled during conversion."
 msgstr "Ρυθμίστε τον τρόπο που διαχειρίζονται οι υπότιτλοι κατά τη διάρκεια της μετατροπής."
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 148
-msgid "Subtitle Handling"
-msgstr "Διαχείριση Υποτίτλων"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 150
-msgid "Choose how subtitles are included in the output. 'Embedded' keeps them inside the video file. 'Extract to .srt' creates separate subtitle files."
-msgstr "Επιλέξτε πώς θα συμπεριληφθούν οι υπότιτλοι στην έξοδο. 'Ενσωματωμένοι' τους διατηρεί μέσα στο αρχείο βίντεο. 'Εξαγωγή σε .srt' δημιουργεί ξεχωριστά αρχεία υποτίτλων."
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/subtitles_dialog.py, line: 167
 msgid "Only Extract Subtitles"
 msgstr "Μόνο Εξαγωγή Υποτίτλων"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/subtitles_dialog.py, line: 169
-msgid "Skip video conversion entirely and only extract the subtitle tracks to .srt files."
-msgstr "Παραλείπει εντελώς τη μετατροπή βίντεο και εξάγει μόνο τα κομμάτια υποτίτλων σε αρχεία .srt."
 
 #, python-brace-format
 msgid "Segment {num}"
@@ -4065,12 +4041,6 @@ msgstr "Ένταση"
 msgid "The video is being copied without re-encoding. Cropping, adjusting, turning or adding effects to the picture re-encodes this video."
 msgstr "Το βίντεο αντιγράφεται χωρίς επανακωδικοποίηση. Η περικοπή, η προσαρμογή, η περιστροφή ή η προσθήκη εφέ στην εικόνα προκαλούν επανακωδικοποίηση αυτού του βίντεο."
 
-msgid "Image"
-msgstr "Εικόνα"
-
-msgid "Reset image adjustments"
-msgstr "Επαναφορά προσαρμογών εικόνας"
-
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_edit_ui.py, line: 334
 msgid "Brightness"
@@ -4103,16 +4073,6 @@ msgstr "HDR (HLG)"
 
 msgid "Standard (SDR)"
 msgstr "Τυπικά (SDR)"
-
-msgid "Orientation"
-msgstr "Προσανατολισμός"
-
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 605
-# File: big-video-converter/big-video-converter/usr/share/big-video-
-# converter/ui/video_edit_ui.py, line: 609
-msgid "Reset Transform"
-msgstr "Επαναφορά Μετασχηματισμού"
 
 msgid "Rotation"
 msgstr "Περιστροφή"
@@ -4184,9 +4144,6 @@ msgstr "Επιλέξτε πώς θα αποθηκευτούν τα επισημ�
 msgid "Effects"
 msgstr "Εφέ"
 
-msgid "Reset effects"
-msgstr "Επαναφορά εφέ"
-
 # File: big-audio-converter/big-audio-converter/usr/share/biglinux/audio-
 # converter/app/ui/main_window.py, line: 769
 msgid "Off"
@@ -4227,10 +4184,6 @@ msgstr "Επιλογή χρωματικού ύφους ή shader"
 
 msgid "Looks and shaders"
 msgstr "Χρωματικά ύφη και shader"
-
-#, python-brace-format
-msgid "Reset {setting} to default"
-msgstr "Επαναφορά της ρύθμισης {setting} στην προεπιλογή"
 
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/ui/video_encoding_dialog.py, line: 125
@@ -5194,9 +5147,6 @@ msgstr "Αποτυχία εκκίνησης του Big Video Converter: {0}"
 msgid "Remove pauses"
 msgstr "Αφαίρεση παύσεων"
 
-msgid "Made for speech. Pauses are found on the voice cleaned by DPDFNet."
-msgstr "Για ομιλία. Οι παύσεις εντοπίζονται στη φωνή που έχει καθαρίσει το DPDFNet."
-
 msgid "Takes about a minute for each hour of audio."
 msgstr "Διαρκεί περίπου ένα λεπτό για κάθε ώρα ήχου."
 
@@ -5472,3 +5422,86 @@ msgstr[1] "Δεν ήταν δυνατή η εξαγωγή {0} κομματιών
 # converter/ui/noise_dialog.py, line: 285
 #~ msgid "Lookahead (ms)"
 #~ msgstr "Προβολή (ms)"
+
+msgid "The output holds only part of the original"
+msgstr "Η έξοδος περιέχει μόνο μέρος του αρχικού αρχείου"
+
+msgid "Original moved to the Trash after output validation"
+msgstr "Το αρχικό αρχείο μετακινήθηκε στα απορρίμματα μετά την επαλήθευση της εξόδου"
+
+msgid "Update dpdfnet-native to find pauses."
+msgstr "Ενημερώστε το dpdfnet-native για να εντοπίζονται παύσεις."
+
+msgid "Video mode"
+msgstr "Λειτουργία βίντεο"
+
+msgid "How the video is encoded."
+msgstr "Πώς κωδικοποιείται το βίντεο."
+
+msgid "Codec, bitrate and channels…"
+msgstr "Κωδικοποιητής, ρυθμός bit και κανάλια…"
+
+msgid "Off while only extracting subtitles"
+msgstr "Απενεργοποιημένο κατά την εξαγωγή μόνο υποτίτλων"
+
+msgid "Not used with Fast Copy"
+msgstr "Δεν χρησιμοποιείται με τη Γρήγορη Αντιγραφή"
+
+msgid "Originals are deleted permanently, without the Trash, only after every converted result passes validation"
+msgstr "Τα αρχικά αρχεία διαγράφονται οριστικά, χωρίς τα απορρίμματα, μόνο αφού επαληθευτούν όλα τα αποτελέσματα της μετατροπής"
+
+msgid "Originals go to the Trash only after every converted result passes validation"
+msgstr "Τα αρχικά αρχεία μεταφέρονται στα απορρίμματα μόνο αφού επαληθευτούν όλα τα αποτελέσματα της μετατροπής"
+
+msgid "Move this video to the Trash?"
+msgstr "Μετακίνηση αυτού του βίντεο στα απορρίμματα;"
+
+#, python-brace-format
+msgid "“{}” will be moved to the Trash."
+msgstr "Το “{}” θα μετακινηθεί στα απορρίμματα."
+
+msgid "Move to Trash"
+msgstr "Μετακίνηση στα απορρίμματα"
+
+#, python-brace-format
+msgid "Could not move the video to the Trash: {}"
+msgstr "Δεν ήταν δυνατή η μετακίνηση του βίντεο στα απορρίμματα: {}"
+
+msgid "Delete Without Using the Trash"
+msgstr "Διαγραφή Χωρίς Χρήση των Απορριμμάτων"
+
+msgid "Audio only when a voice is detected"
+msgstr "Ήχος μόνο όταν ανιχνεύεται φωνή"
+
+msgid "Very sensitive"
+msgstr "Πολύ ευαίσθητη"
+
+msgid "Sensitive"
+msgstr "Ευαίσθητη"
+
+msgid "Normal"
+msgstr "Κανονική"
+
+msgid "Strict"
+msgstr "Αυστηρή"
+
+msgid "Very strict"
+msgstr "Πολύ αυστηρή"
+
+msgid "Voice detection"
+msgstr "Ανίχνευση φωνής"
+
+msgid "Sensitive keeps quiet or unusual voices and lets more noise and music through; strict removes more music and may cut faint words."
+msgstr "Η ευαίσθητη ανίχνευση κρατά τις σιγανές ή ασυνήθιστες φωνές και αφήνει να περάσει περισσότερος θόρυβος και μουσική. Η αυστηρή αφαιρεί περισσότερη μουσική και μπορεί να κόψει σιγανές λέξεις."
+
+msgid "On"
+msgstr "Ενεργό"
+
+#, python-brace-format
+msgid "{count} active"
+msgid_plural "{count} active"
+msgstr[0] "{count} ενεργό"
+msgstr[1] "{count} ενεργά"
+
+msgid "Made for speech: the pauses are found once the background noise is removed."
+msgstr "Για ομιλία: οι παύσεις εντοπίζονται αφού αφαιρεθεί ο θόρυβος φόντου."
