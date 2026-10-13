@@ -177,6 +177,8 @@ class MPVPlayer:
         self.video_widget = video_widget
         self.mpv_instance = None
         self.render_context = None
+        # Set on mpv's thread, cleared on the GTK thread.
+        self._frame_pending = False
 
         # State
         self.is_playing = False
@@ -350,11 +352,16 @@ class MPVPlayer:
         # Safety check - don't process if cleanup has been called
         if not self.render_context or self.current_file is None:
             return
-        # One idle callback coalesces the update requests mpv sends.
+        # One idle callback serves every request mpv sends before it runs.
+        if self._frame_pending:
+            return
+        self._frame_pending = True
         GLib.idle_add(self._update_frame, priority=GLib.PRIORITY_HIGH_IDLE)
 
     def _update_frame(self):
         """Update frame rendering - only queue if render context indicates update needed"""
+        # Cleared first: a request that arrives during update() queues again.
+        self._frame_pending = False
         if (
             self.render_context
             and self.current_file is not None

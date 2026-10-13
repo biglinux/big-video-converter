@@ -101,6 +101,12 @@ class VideoEditUITests(unittest.TestCase):
         self.assertIsNone(self.ui.hide_timer_id)
         self.assertTrue(self.ui.overlay_controls.get_visible())
 
+    def test_open_popover_stops_hide_timer(self):
+        self.ui._any_popover_visible = lambda: True
+        self.assertFalse(self.ui._hide_controls())
+        self.assertIsNone(self.ui.hide_timer_id)
+        self.assertTrue(self.ui.overlay_controls.get_visible())
+
     def test_controls_have_contextual_names(self):
         sidebar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.ui.populate_sidebar(sidebar)

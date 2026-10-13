@@ -246,6 +246,26 @@ def test_inactive_player_keeps_render_callback(monkeypatch):
     assert not queued
 
 
+def test_render_requests_share_one_idle(monkeypatch):
+    from types import SimpleNamespace
+
+    from gi.repository import GLib
+    from ui.mpv_player import MPVPlayer
+
+    player = MPVPlayer.__new__(MPVPlayer)
+    player.render_context = SimpleNamespace(update=lambda: False)
+    player.current_file = "video.mp4"
+    player._frame_pending = False
+    queued = []
+    monkeypatch.setattr(GLib, "idle_add", lambda *args, **kwargs: queued.append(args))
+    player._on_mpv_render_update()
+    player._on_mpv_render_update()
+    assert len(queued) == 1
+    player._update_frame()
+    player._on_mpv_render_update()
+    assert len(queued) == 2
+
+
 def test_segment_rows_finalize_with_their_list(app):
     from gi.repository import Gtk
 

@@ -717,10 +717,10 @@ class VideoEditUI(VideoEditSidebarMixin):
         self.hide_timer_id = GLib.timeout_add(delay, self._hide_controls)
 
     def _hide_controls(self):
-        if self._any_popover_visible():
-            return True
-        self.overlay_controls.set_visible(False)
         self.hide_timer_id = None
+        # The next pointer motion over the video schedules the hide again.
+        if not self._any_popover_visible():
+            self.overlay_controls.set_visible(False)
         return False
 
     def cancel_scheduled_sources(self) -> None:
