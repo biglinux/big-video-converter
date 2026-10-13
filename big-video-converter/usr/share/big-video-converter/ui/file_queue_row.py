@@ -354,7 +354,7 @@ class FileQueueRow(Gtk.ListBoxRow):
                 self.on_remove_callback(self.file_path)
             except OSError as error:
                 self.app.show_error_dialog(
-                    _("Could not delete the video: {} ").format(error)
+                    _("Could not delete the video: {}").format(error)
                 )
 
         dialog.connect("response", response)
