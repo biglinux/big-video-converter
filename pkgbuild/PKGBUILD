@@ -60,10 +60,6 @@ package() {
     install -Dm644 big-video-converter/usr/share/big-video-converter/big_gtk_kit/LICENSE \
         "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE.big-gtk-kit"
     printf '%s\n' "${pkgver}-${pkgrel}" > "${pkgdir}/usr/share/big-video-converter/VERSION"
-    # /usr/share is read-only at run time: without bytecode here every launch
-    # compiles every module again.
-    python -m compileall -q -d /usr/share/big-video-converter \
-        "${pkgdir}/usr/share/big-video-converter"
     # Add this version as the AppStream release.
     local metainfo="${pkgdir}/usr/share/metainfo/br.com.biglinux.converter.metainfo.xml"
     sed -i "s|^</component>|  <releases>\n    <release version=\"${pkgver}-${pkgrel}\" date=\"$(date -u +%F)\"/>\n  </releases>\n</component>|" "$metainfo"
