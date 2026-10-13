@@ -115,6 +115,10 @@ def format_clock(seconds: float) -> str:
 
 def format_duration(seconds: float) -> str:
     mins, secs = divmod(round(seconds), 60)
+    hours, mins = divmod(mins, 60)
+    if hours:
+        # A night-long queue reads as "7h 42m", not "462m 5s".
+        return _("{hours}h {mins}m").format(hours=hours, mins=mins)
     if mins:
         return _("{mins}m {secs}s").format(mins=mins, secs=secs)
     return _("{secs}s").format(secs=secs)

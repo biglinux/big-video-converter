@@ -19,6 +19,7 @@ from ui.progress_page import (
     TERMINAL_STATES,
     TimeLeft,
     format_clock,
+    format_duration,
     format_percent,
     format_size,
     format_time_left,
@@ -500,6 +501,13 @@ class QueueItemRow(Gtk.ListBoxRow):
         self.details_revealer.set_reveal_child(is_active)
         self._set_details_action(is_active)
 
+    def set_video_codec(self, codec: str) -> bool:
+        """The encoder the script really chose (it may replace the requested one)."""
+        self.video_codec = codec
+        if self.status == "active":
+            self._show_stage()
+        return False
+
     def _show_stage(self) -> None:
         codec = CODEC_NAMES.get(self.video_codec, "")
         text = self._stage or _("Starting process...")
@@ -620,7 +628,16 @@ class QueueItemRow(Gtk.ListBoxRow):
         if success:
             self.status = "completed"
             self._set_state("completed")
-            self.status_label.set_text(_("Completed"))
+            if self.started_at is not None:
+                # How long this file took: a slow one overnight points at a
+                # performance problem the queue total would hide.
+                self.status_label.set_text(
+                    _("Completed in {duration}").format(
+                        duration=format_duration(self.ended_at - self.started_at)
+                    )
+                )
+            else:
+                self.status_label.set_text(_("Completed"))
             if self.progress_page:
                 self.progress_page.request_output_lookup()
         else:

@@ -5284,6 +5284,32 @@ msgstr "Rýchlejšie"
 msgid "Better, slower"
 msgstr "Lepšie, pomalšie"
 
+msgid ""
+"Televisions play 4K video only in H.265 (or VP9/AV1), never in H.264.\n"
+"\n"
+"When enabled, an H.264 conversion whose output is wider than 1920 px is encoded as H.265 instead. Other codecs and smaller outputs are not changed."
+msgstr ""
+"Televízory prehrávajú video 4K iba v H.265 (alebo VP9/AV1), nikdy v H.264.\n"
+"\n"
+"Ak je zapnuté, prevod H.264, ktorého výstup je širší ako 1920 px, sa namiesto toho zakóduje ako H.265. Ostatné kodeky a menšie výstupy sa nemenia."
+
+#, python-brace-format
+msgid "{hours}h {mins}m"
+msgstr "{hours}h {mins}m"
+
+#, python-brace-format
+msgid "Completed in {duration}"
+msgstr "Dokončené za {duration}"
+
+msgid "Switch 4K H.264 output to H.265 automatically"
+msgstr "Automaticky prepnúť výstup 4K v H.264 na H.265"
+
+msgid "Encode H.264 videos wider than 1920 px as H.265, so televisions can play them"
+msgstr "Kódovať videá H.264 širšie ako 1920 px ako H.265, aby ich televízory dokázali prehrať"
+
+msgid "Televisions do not play 4K video in H.264. When enabled, H.264 videos wider than 1920 px are converted to H.265 instead."
+msgstr "Televízory neprehrávajú video 4K v H.264. Ak je zapnuté, videá H.264 širšie ako 1920 px sa namiesto toho prevedú do H.265."
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format

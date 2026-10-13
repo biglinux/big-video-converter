@@ -61,6 +61,9 @@ class SettingsStore:
         "output-format-index": 0,
         # Feature toggles
         "gpu-partial": False,
+        # Encode an H.264 output wider than 1920 px as H.265 (uhd_h265 in the
+        # script): televisions do not play 4K H.264.
+        "uhd-h265": False,
         "force-copy-video": False,
         "only-extract-subtitles": False,
         # Noise reduction settings

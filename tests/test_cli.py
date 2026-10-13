@@ -869,3 +869,35 @@ def test_job_stops_when_its_application_exits(media, tmp_path, cli_env):
         application.kill()
     assert job.returncode == 143, err[-2000:]
     assert not destination.exists() and not list(tmp_path.glob(".bvc-*"))
+
+
+def test_old_ffmpeg_sizes_h265_in_two_passes(media, tmp_path, run_cli):
+    """FFmpeg 7.1 (Debian 13) has no -x265-stats and ignores -pass for
+    libx265: the sized encode failed there with "Unrecognized option"."""
+    real = shutil.which("ffmpeg")
+    wrapper = fake_ffmpeg(
+        tmp_path,
+        "ffmpeg7",
+        'for arg in "$@"; do [[ $arg == -x265-stats ]] && '
+        '{ echo "Unrecognized option" >&2; exit 8; }; done\n'
+        f'if [[ $* == *encoder=libx265* ]]; then {real} "$@" | grep -v -- -x265-stats; exit 0; fi',
+    )
+    out = tmp_path / "sized.mp4"
+    result = run_cli(
+        media["video"],
+        out,
+        force_software="1",
+        video_encoder="h265",
+        video_bitrate="500000",
+        ffmpeg_executable=wrapper,
+        options="-t 1 -threads 1",
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    commands = [
+        line
+        for line in result.stdout.splitlines()
+        if line.startswith("Running command:")
+    ]
+    assert any(":pass=1:stats=" in line for line in commands), result.stdout
+    assert any(":pass=2:stats=" in line for line in commands), result.stdout
+    assert out.stat().st_size > 0

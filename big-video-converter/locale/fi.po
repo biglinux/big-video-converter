@@ -5558,6 +5558,32 @@ msgstr "Nopeampi"
 msgid "Better, slower"
 msgstr "Parempi, hitaampi"
 
+msgid ""
+"Televisions play 4K video only in H.265 (or VP9/AV1), never in H.264.\n"
+"\n"
+"When enabled, an H.264 conversion whose output is wider than 1920 px is encoded as H.265 instead. Other codecs and smaller outputs are not changed."
+msgstr ""
+"Televisiot toistavat 4K-videota vain H.265- (tai VP9/AV1-) muodossa, eivät koskaan H.264-muodossa.\n"
+"\n"
+"Kun tämä on käytössä, H.264-muunnos, jonka tulos on yli 1920 px leveä, koodataan sen sijaan H.265-muotoon. Muita koodekkeja ja pienempiä tuloksia ei muuteta."
+
+#, python-brace-format
+msgid "{hours}h {mins}m"
+msgstr "{hours}h {mins}m"
+
+#, python-brace-format
+msgid "Completed in {duration}"
+msgstr "Valmis ajassa {duration}"
+
+msgid "Switch 4K H.264 output to H.265 automatically"
+msgstr "Vaihda H.264-muotoinen 4K-tulos automaattisesti H.265-muotoon"
+
+msgid "Encode H.264 videos wider than 1920 px as H.265, so televisions can play them"
+msgstr "Koodaa yli 1920 px leveät H.264-videot H.265-muotoon, jotta televisiot voivat toistaa ne"
+
+msgid "Televisions do not play 4K video in H.264. When enabled, H.264 videos wider than 1920 px are converted to H.265 instead."
+msgstr "Televisiot eivät toista 4K-videota H.264-muodossa. Kun tämä on käytössä, yli 1920 px leveät H.264-videot muunnetaan sen sijaan H.265-muotoon."
+
 # File: big-video-converter/big-video-converter/usr/share/big-video-
 # converter/main.py, line: 911
 #, python-brace-format

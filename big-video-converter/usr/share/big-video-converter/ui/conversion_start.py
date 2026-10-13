@@ -183,6 +183,8 @@ class ConversionStartMixin:
 
             if settings.get_boolean("gpu-partial", False):
                 env_vars["gpu_partial"] = "1"
+            if settings.get_boolean("uhd-h265", False):
+                env_vars["uhd_h265"] = "1"
             if force_copy_video_enabled:
                 env_vars["force_copy_video"] = "1"
             if settings.get_boolean("only-extract-subtitles", False):

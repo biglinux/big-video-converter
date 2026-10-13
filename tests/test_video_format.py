@@ -119,7 +119,9 @@ class TestHdrToSdr:
 
 
 class TestUhdCodec:
-    def test_default_h264_becomes_h265_above_1080p(self, uhd_source, tmp_path, run_cli):
+    def test_opt_in_turns_h264_into_h265_above_1080p(
+        self, uhd_source, tmp_path, run_cli
+    ):
         if not _has_encoder("libx265"):
             pytest.skip("libx265 required")
         out = tmp_path / "uhd-out.mp4"
@@ -127,6 +129,7 @@ class TestUhdCodec:
             uhd_source,
             out,
             video_encoder="h264",
+            uhd_h265=1,
             options="-t 0.2 -threads 2",
             timeout=180,
         )
@@ -136,13 +139,13 @@ class TestUhdCodec:
         assert v["codec_name"] == "hevc"
         assert v["width"] == 3840
 
-    def test_strict_keeps_h264_and_raises_level(self, uhd_source, tmp_path, run_cli):
+    def test_default_keeps_h264_and_raises_level(self, uhd_source, tmp_path, run_cli):
+        """The switch is opt-in: without uhd_h265=1 the chosen codec stays."""
         out = tmp_path / "uhd-h264.mp4"
         result = run_cli(
             uhd_source,
             out,
             video_encoder="h264",
-            video_encoder_strict=1,
             options="-t 0.2 -threads 2",
             timeout=180,
         )
@@ -159,6 +162,7 @@ class TestUhdCodec:
             uhd_source,
             out,
             video_encoder="h264",
+            uhd_h265=1,
             video_resolution="1920x1080",
             options="-t 0.2 -threads 2",
             timeout=180,
