@@ -2,14 +2,13 @@
 
 pkgname=big-video-converter
 pkgdesc="Video converter and editor with GTK4 and FFmpeg"
-depends=('python>=3.11' 'python-gobject' 'gtk4' 'ffmpeg' 'python-cairo' 'python-mpv' 'libadwaita>=1.5' 'libva-utils' 'python-opengl' 'vte4')
+depends=('python>=3.11' 'python-gobject' 'gtk4' 'ffmpeg' 'python-cairo' 'python-mpv' 'libadwaita>=1.7' 'libva-utils' 'python-opengl' 'vte4')
 makedepends=('git' 'gettext' 'desktop-file-utils' 'appstream')
 optdepends=('deepfilternet3-native: light AI noise reduction for speech (DeepFilterNet3)'
             'dpdfnet-native: higher-quality AI noise reduction and pause removal for speech (DPDFNet-2 48 kHz)'
             'pciutils: graphics card names in the GPU choice'
             'render-menu-options: the software rendering launcher action'
-            'nautilus-python: the Nautilus context menu extension'
-            'libnautilus-extension: Nautilus API used by the context menu extension')
+            'nautilus-python: the Nautilus context menu extension')
 conflicts=('comm-video-converter')
 replaces=('comm-video-converter')
 pkgver=$(date +%y.%m.%d)

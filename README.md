@@ -20,7 +20,7 @@ sudo pacman -S big-video-converter
 
 Launch **Big Video Converter** from the application menu. For other Arch-based systems, the package must be available in your configured repositories; the source recipe is in [pkgbuild/PKGBUILD](pkgbuild/PKGBUILD).
 
-The package requires Python 3.11 or later, GTK4, libadwaita 1.5 or later, PyGObject, Cairo, FFmpeg, python-mpv, PyOpenGL, libva-utils and VTE4. Hardware encoding also depends on the GPU, its driver and the encoders included in FFmpeg. The Nautilus extension is optional.
+The package requires Python 3.11 or later, GTK4, libadwaita 1.7 or later, PyGObject, Cairo, FFmpeg, python-mpv, PyOpenGL, libva-utils and VTE4. Hardware encoding also depends on the GPU, its driver and the encoders included in FFmpeg. The Nautilus extension is optional.
 
 With **GPU** on Auto, the converter encodes on a GPU that supports the chosen codec. If several do, the one that alone encodes AV1 is chosen, else the one that alone encodes VP9; with equal support the order is NVIDIA, AMD, Intel. Support is read from each card (its VAAPI profiles, or a test frame on NVENC), and a card whose support cannot be read does not count as having it.
 
@@ -95,7 +95,7 @@ makepkg
 
 Inside a checkout the recipe builds the working tree: tracked files and new, unignored ones, uncommitted changes included. Commit new files before relying on a build from Git, which only the repository's history reaches. Outside a checkout it fetches the GitHub repository. The [package workflow](.github/workflows/build-package.yml) instead archives the checked-out revision, builds that exact source, runs Namcap and metadata checks, and retains the package and checksum as artifacts.
 
-The desktop file, the metainfo, the icon and the launcher share the identifier `br.com.biglinux.converter`.
+The desktop file and the metainfo share the identifier `br.com.biglinux.converter`.
 
 ## Contributing, support and license
 
