@@ -1,15 +1,15 @@
 name: Build Package
 
 on:
-  workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, "testing-*", "stable-*"]
+  workflow_dispatch:
 
 jobs:
   build:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
       - name: Send Hooks BigLinux Build Package
         shell: bash
         run: |
