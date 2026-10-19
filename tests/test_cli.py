@@ -6,7 +6,16 @@ import subprocess
 import time
 
 import pytest
-from conftest import APP, CLI, fake_ffmpeg, group_members, media_command, wait_until
+from conftest import (
+    APP,
+    CLI,
+    fake_ffmpeg,
+    group_members,
+    media_command,
+    pump,
+    pump_until,
+    wait_until,
+)
 from engine.media_validation import media_duration, probe_media, stream_count
 
 
@@ -105,6 +114,49 @@ def test_successful_run_leaves_no_workspace_behind(media, tmp_path, run_cli):
     assert [
         path.name for path in tmp_path.iterdir() if path.name.startswith(".bvc")
     ] == []
+
+
+def test_file_managers_reread_the_published_file(media, tmp_path, cli_env):
+    """The name is claimed by an empty file, which a file manager reads as
+    application/x-zerosize. Nautilus re-reads a file it already lists only on
+    a change or attribute event, not when another file is renamed over it, so
+    the finished video kept opening in the text editor."""
+    from gi.repository import Gio
+
+    out = tmp_path / "watched.mp4"
+    events = []
+    monitor = Gio.File.new_for_path(str(tmp_path)).monitor_directory(
+        Gio.FileMonitorFlags.WATCH_MOUNTS | Gio.FileMonitorFlags.WATCH_MOVES, None
+    )
+
+    def record(_monitor, child, _other, event):
+        if child.get_basename() == out.name:
+            events.append(event)
+
+    monitor.connect("changed", record)
+    env = {**cli_env, "output_file": str(out), "options": "-t 0.4 -threads 1"}
+    log = tmp_path / "job.log"
+    with log.open("wb") as output:
+        job = subprocess.Popen(
+            ["bash", str(CLI), str(media["video"])],
+            env=env,
+            stdout=output,
+            stderr=output,
+        )
+        pump_until(lambda: job.poll() is not None, timeout=40)
+    assert job.returncode == 0, log.read_text()
+    pump(0.3)
+    monitor.cancel()
+    appeared = {Gio.FileMonitorEvent.CREATED, Gio.FileMonitorEvent.MOVED_IN}
+    reread = {
+        Gio.FileMonitorEvent.CHANGES_DONE_HINT,
+        Gio.FileMonitorEvent.ATTRIBUTE_CHANGED,
+    }
+    last = max(i for i, event in enumerate(events) if event in appeared)
+    if any(event in appeared for event in events[:last]):
+        # Already listed when the video took the name: it must be re-read.
+        assert reread & set(events[last + 1 :]), [e.value_nick for e in events]
+    assert out.stat().st_size > 0
 
 
 @pytest.mark.parametrize("extension", ["mp4", "mkv", "mov"])
