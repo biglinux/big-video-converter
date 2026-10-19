@@ -140,6 +140,11 @@ trap 'exit 143' TERM
 # finished file is then renamed over that empty placeholder. Renaming needs no
 # free space and, unlike link(2), works on FAT, exFAT and most FUSE mounts.
 # -T keeps a destination that became a directory from receiving the file.
+# A file manager may already list the empty placeholder, typed by its size
+# as application/x-zerosize, and Nautilus does not read a listed file again
+# when another is renamed over it: it would open the video in a text editor.
+# Setting the file's own times once more raises the attribute change event
+# it does re-read on, and leaves the times as they were.
 # Returns 0 when published, 1 when the name is taken, 2 on any other failure.
 publish_as() { # <staged file> <destination>
 	[[ ! -e $2 && ! -L $2 ]] || return 1
@@ -154,6 +159,7 @@ publish_as() { # <staged file> <destination>
 	claimed_name=$2
 	if mv -fT -- "$1" "$2"; then
 		claimed_name=""
+		touch -c -r "$2" -- "$2" 2>/dev/null
 		return 0
 	fi
 	rm -f -- "$2"
