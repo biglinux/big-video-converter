@@ -668,7 +668,7 @@ def test_queue_probes_on_worker_and_converts(app, media, tmp_path, monkeypatch):
     shutil.copyfile(media["silent"], source)
     app.settings_store.save_setting("gpu", "software")
     app.settings_store.save_setting("use-custom-output-folder", False)
-    assert app.add_file_to_queue(str(source))
+    assert app.add_files_to_queue([str(source)])
     import gc
 
     gc.collect()

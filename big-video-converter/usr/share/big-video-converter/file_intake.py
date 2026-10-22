@@ -69,11 +69,9 @@ class FileIntakeMixin:
             self._pending_imports -= 1
             if getattr(self, "_quitting", False):
                 return False
-            added = 0
             try:
                 with self.settings_store.batch_update():
-                    for file_path in files:
-                        added += self.add_file_to_queue(file_path)
+                    added = self.add_files_to_queue(files)
                 if error is not None:
                     self.show_error_dialog(str(error))
                 else:
