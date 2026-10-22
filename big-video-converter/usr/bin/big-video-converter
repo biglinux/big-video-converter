@@ -96,13 +96,21 @@ input_file="$1"
 # that would strip a trailing newline from an otherwise valid filename.
 [[ $input_file == /* ]] || input_file="$PWD/$input_file"
 
+# The GUI reads "Job workspace:" and "Output file:" lines from stdout, so a path
+# printed there stays on one line: backslash, newline and return are escaped.
+one_line() {
+	local text=${1//\\/\\\\}
+	text=${text//$'\n'/\\n}
+	printf '%s' "${text//$'\r'/\\r}"
+}
+
 if [[ ! -f "$input_file" ]]; then
-	echo "ERROR: Input file not found: $input_file"
+	echo "ERROR: Input file not found: $(one_line "$input_file")"
 	exit 1
 fi
 
 if [[ ! -r "$input_file" ]]; then
-	echo "ERROR: Input file is not readable: $input_file"
+	echo "ERROR: Input file is not readable: $(one_line "$input_file")"
 	exit 1
 fi
 
@@ -375,7 +383,7 @@ fi
 # Validate the input: only reject the file when ffmpeg itself sees no video.
 if [[ $ffprobe_usable == false ]]; then
 	if ! grep -qE 'Stream #0:[0-9]+.*: Video:' <<<"$(ffmpeg_probe_input_block)"; then
-		echo "ERROR: Input file is corrupted or not a valid video file: $input_file"
+		echo "ERROR: Input file is corrupted or not a valid video file: $(one_line "$input_file")"
 		echo "The file container could not be read. It may be a corrupted download or an unsupported format."
 		exit 2
 	fi
@@ -677,9 +685,7 @@ fi
 # which is RAM on most systems. mktemp creates a directory owned only by this
 # invocation; a stale workspace must never be deleted to claim its name.
 output_stage_dir=$(mktemp -d -- "${output_file%/*}/.bvc-XXXXXXXXXX") || exit 1
-# One line, escaped as the "Output file:" line below.
-escaped=${output_stage_dir//\\/\\\\} escaped=${escaped//$'\n'/\\n} escaped=${escaped//$'\r'/\\r}
-printf 'Job workspace: %s\n' "$escaped"
+printf 'Job workspace: %s\n' "$(one_line "$output_stage_dir")"
 staged_output="$output_stage_dir/video.${output_file##*.}"
 
 option_parser="$script_dir/../share/big-video-converter/engine/ffmpeg_options.py"
@@ -2234,8 +2240,5 @@ if [[ ! -s $staged_output ]]; then
 fi
 # The video first: sidecars belong to a file that exists.
 publish "$staged_output" "$output_file" || exit 1
-# The GUI takes the published name from this line, so it must stay one line:
-# a backslash, carriage return or newline in the path is written escaped.
-escaped=${published_file//\\/\\\\} escaped=${escaped//$'\n'/\\n} escaped=${escaped//$'\r'/\\r}
-printf 'Output file: %s\n' "$escaped"
+printf 'Output file: %s\n' "$(one_line "$published_file")"
 publish_subtitles "$published_file" || exit 1
