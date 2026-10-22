@@ -134,6 +134,51 @@ def test_no_clobber_publication(tmp_path):
     assert dest.read_bytes() == b"new"
 
 
+def test_swapped_parent_keeps_other_files(tmp_path, monkeypatch):
+    """A destination folder renamed and replaced by a symlink mid-publication."""
+    folder, private = tmp_path / "out", tmp_path / "private"
+    folder.mkdir()
+    private.mkdir()
+    (private / "dest").write_bytes(b"private")
+    staged = tmp_path / "stage"
+    staged.write_bytes(b"new")
+
+    def swap_then_fail(*_args, **_kwargs):
+        folder.rename(tmp_path / "moved")
+        folder.symlink_to(private)
+        raise OSError("replace failed")
+
+    monkeypatch.setattr(mv.os, "replace", swap_then_fail)
+    with pytest.raises(OSError):
+        mv.publish_output(str(staged), str(folder / "dest"))
+    assert (private / "dest").read_bytes() == b"private"
+    assert not (tmp_path / "moved" / "dest").exists()
+
+
+def test_permanent_removal_keeps_other_files(tmp_path, media, monkeypatch):
+    """The source folder renamed and replaced by a symlink just before deletion."""
+    folder, private = tmp_path / "in", tmp_path / "private"
+    folder.mkdir()
+    private.mkdir()
+    source, output = folder / "clip.mp4", tmp_path / "clip-out.mp4"
+    for path in (source, output, private / "clip.mp4"):
+        shutil.copy(media["video"], path)
+    identity = mv.FileIdentity.capture(str(source))
+    real_unlink = mv.os.unlink
+
+    def swap_then_unlink(*args, **kwargs):
+        folder.rename(tmp_path / "moved")
+        folder.symlink_to(private)
+        real_unlink(*args, **kwargs)
+
+    monkeypatch.setattr(mv.os, "unlink", swap_then_unlink)
+    mv.remove_original(
+        str(source), identity, [str(output)], threading.Event(), permanent=True
+    )
+    assert (private / "clip.mp4").exists()
+    assert not (tmp_path / "moved" / "clip.mp4").exists()
+
+
 def test_only_job_workspaces_are_discarded(tmp_path):
     workspace = tmp_path / ".bvc-12345"
     workspace.mkdir()

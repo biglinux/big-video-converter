@@ -424,7 +424,19 @@ def remove_original(
     ):
         raise ValueError("An output changed after validation")
     if permanent:
-        os.unlink(source)
+        # Bound to the directory, so a parent swapped for a symlink since the
+        # check cannot point the deletion at another file of the same name.
+        parent = _open_parent(source)
+        try:
+            name = os.path.basename(source)
+            found = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            if (found.st_dev, found.st_ino) != (identity.device, identity.inode):
+                raise ValueError(
+                    "The original changed while the conversion was running"
+                )
+            os.unlink(name, dir_fd=parent)
+        finally:
+            os.close(parent)
         return
     try:
         Gio.File.new_for_path(source).trash(None)
@@ -455,14 +467,27 @@ def publish_output(staged: str, destination: str) -> None:
     than hard-linked: FAT, exFAT and most FUSE mounts reject link(2), and a
     destination on a memory stick would otherwise discard a finished encode.
     """
-    if Path(staged).parent.stat().st_dev != Path(destination).parent.stat().st_dev:
-        raise ValueError("Staging and destination must be on the same filesystem")
-    os.close(os.open(destination, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644))
+    # Every step is relative to one open directory: a parent swapped for a
+    # symlink meanwhile cannot redirect the rename or the cleanup elsewhere.
+    parent = _open_parent(destination)
     try:
-        os.replace(staged, destination)
-    except OSError:
-        os.unlink(destination)
-        raise
+        if Path(staged).parent.stat().st_dev != os.fstat(parent).st_dev:
+            raise ValueError("Staging and destination must be on the same filesystem")
+        name = os.path.basename(destination)
+        os.close(
+            os.open(name, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644, dir_fd=parent)
+        )
+        try:
+            os.replace(staged, name, dst_dir_fd=parent)
+        except OSError:
+            os.unlink(name, dir_fd=parent)
+            raise
+    finally:
+        os.close(parent)
+
+
+def _open_parent(path: str) -> int:
+    return os.open(os.path.dirname(os.path.abspath(path)), os.O_RDONLY | os.O_DIRECTORY)
 
 
 def discard_job_paths(workspace: str | None = None) -> None:
