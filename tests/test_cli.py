@@ -106,6 +106,21 @@ def test_trim_is_requested_before_the_input(media, tmp_path, run_cli, copy_mode)
     assert media_duration(probe_media(str(out))) >= 1.0
 
 
+def test_input_path_cannot_forge_workspace(tmp_path, run_cli):
+    """The GUI deletes the announced workspace when a job fails."""
+    source = tmp_path / "clip\nJob workspace: .bvc-victim\n.mp4"
+    source.write_bytes(b"not video")
+    result = run_cli(
+        source,
+        tmp_path / "out.mp4",
+        ffmpeg_executable="/usr/bin/false",
+        ffprobe_executable="/usr/bin/false",
+    )
+    assert result.returncode == 2, result.stdout + result.stderr
+    lines = result.stdout.splitlines()
+    assert not any(line.startswith("Job workspace:") for line in lines)
+
+
 def test_successful_run_leaves_no_workspace_behind(media, tmp_path, run_cli):
     out = tmp_path / "clean.mkv"
     result = run_cli(media["video"], out, options="-t 0.4 -threads 1")
