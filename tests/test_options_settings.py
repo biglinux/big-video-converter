@@ -143,6 +143,54 @@ def test_file_access_names_the_setting_itself():
     assert file_access_settings("-x264-params keyint=60:pass=1") == ["pass=1"]
 
 
+@pytest.mark.parametrize("flag", ["-vf", "-af", "-filter:v:0", "-filter_complex", "-lavfi"])
+@pytest.mark.parametrize(
+    "graph",
+    [
+        "metadata=mode='print:file=out.txt'",
+        "metadata=mode='print:fi''le=out.txt'",
+        "metadata=mode='print: file = out.txt'",
+        "drawtext=text='hello:fontfile=font.ttf'",
+        "hue=h='0:/text=private.txt'",
+    ],
+)
+def test_quoted_colon_still_exposes_file_options(flag, graph):
+    assert file_access_settings(f'{flag} "{graph}"') == [graph]
+
+
+@pytest.mark.parametrize("graph", ["drawtext=bad key=value", "metadata=bad?key=value"])
+def test_malformed_option_key_is_treated_as_positional(graph):
+    assert file_access_settings(f'-vf "{graph}"') == [graph]
+
+
+@pytest.mark.parametrize(
+    "graph",
+    [
+        "[in]scale=640:-2[out]",
+        " [left] [right] scale@resize=w=640:h=-2 [small] [preview] ",
+        "[in]drawtext=text='hello, world':fontsize=20[out]",
+        "[in]scale=w='640':h='-2'[out]",
+        "[in]hue=h=0[safe], [safe]hflip[out]",
+    ],
+)
+def test_labels_and_quoted_commas_do_not_flag_safe_filters(graph):
+    assert file_access_settings(f'-vf "{graph}"') == []
+
+
+def test_labeled_file_filter_is_reported_whole_and_deduplicated():
+    graph = "[in]metadata@log=mode='print:file=out.txt'[out]"
+    assert file_access_settings(
+        f'-vf "scale=640:-2,{graph},hflip,{graph}" -af "{graph}"'
+    ) == [graph]
+
+
+@pytest.mark.parametrize("suffix", ["", "[out]", "[out"])
+def test_long_filter_argument_does_not_hide_a_file_option(suffix):
+    # A long run without a closing bracket used to trigger repeated suffix scans.
+    graph = "metadata=key=" + "x" * 16000 + ":file=out.txt" + suffix
+    assert file_access_settings(f'-vf "{graph}"') == [graph]
+
+
 @pytest.mark.parametrize("text", ["-vsync 0", "-init_hw_device vaapi=x:/dev/sda"])
 def test_options_outside_the_grammar_stay_rejected(text):
     with pytest.raises(ValueError):

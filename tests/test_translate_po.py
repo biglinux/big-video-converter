@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import polib
+import pytest
 
 spec = importlib.util.spec_from_file_location(
     "translate_po", Path(__file__).resolve().parents[1] / "tools/translate-po.py"
@@ -61,3 +62,41 @@ def test_unencodable_translation_is_skipped(tmp_path):
     entry = polib.pofile(str(po))[0]
     assert "fuzzy" in entry.flags
     assert entry.msgstr_plural == {0: "old", 1: "old"}
+
+
+@pytest.mark.parametrize("surrogate", ["\ud800", "\udbff", "\udc00", "\udfff"])
+@pytest.mark.parametrize("plural", [False, True])
+def test_invalid_entry_does_not_block_other_translations(tmp_path, capsys, surrogate, plural):
+    po, answers = tmp_path / "pt.po", tmp_path / "pt.json"
+    po.write_text(CATALOG, encoding="utf-8")
+    catalog = polib.pofile(str(po))
+    catalog.append(polib.POEntry(msgid="Hello", msgstr="old hello", flags=["fuzzy"]))
+    catalog.append(polib.POEntry(msgid="Smile", msgstr="old smile", flags=["fuzzy"]))
+    catalog.save(str(po))
+    plural_id = catalog[0].msgid
+    translations = {
+        plural_id: ["{0} pasta", "{0} pastas"],
+        "Hello": "Olá",
+        "Smile": "Sorriso \U0001f600",
+    }
+    invalid_id = plural_id if plural else "Hello"
+    # An invalid last form must preserve *all* existing plural forms.
+    translations[invalid_id] = ["{0} pasta", "{0} " + surrogate] if plural else surrogate
+    answers.write_text(json.dumps(translations), encoding="utf-8")
+
+    translate_po.apply(str(po), str(answers))
+
+    entries = {entry.msgid: entry for entry in polib.pofile(str(po))}
+    invalid = entries[invalid_id]
+    assert "fuzzy" in invalid.flags
+    if plural:
+        assert invalid.msgstr_plural == {0: "old", 1: "old"}
+        assert entries["Hello"].msgstr == "Olá"
+        assert "fuzzy" not in entries["Hello"].flags
+    else:
+        assert invalid.msgstr == "old hello"
+        assert entries[plural_id].msgstr_plural == {0: "{0} pasta", 1: "{0} pastas"}
+        assert "fuzzy" not in entries[plural_id].flags
+    assert entries["Smile"].msgstr == "Sorriso \U0001f600"
+    assert "fuzzy" not in entries["Smile"].flags
+    assert "2 applied, 1 skipped" in capsys.readouterr().out

@@ -1,5 +1,6 @@
 """User presets: the TOML contract, the bundled files, the script and the AI prompt."""
 
+import json
 import os
 import shlex
 import subprocess
@@ -46,6 +47,22 @@ def user_presets(tmp_path, monkeypatch):
 
 
 class TestContract:
+    @pytest.mark.parametrize("header", ["```", "```toml", "```toml \t", "```\t\r"])
+    def test_fence_accepts_horizontal_whitespace_and_blank_lines(self, header):
+        data = presets.parse_preset_text(f"A preset:\n{header}\n\n\n{MINIMAL}```\nDone.")
+        assert data == presets.parse_preset_text(MINIMAL)
+
+    def test_long_unterminated_fence_is_rejected(self):
+        # Stay within the public input limit while exercising the old
+        # overlapping whitespace matches on an unsuccessful fence search.
+        text = "```toml\n" + "\n" * 60000
+        with pytest.raises(presets.PresetError, match="TOML"):
+            presets.parse_preset_text(text)
+
+    def test_long_blank_prefix_inside_fence_preserves_preset(self):
+        data = presets.parse_preset_text("```toml\n" + "\n" * 60000 + MINIMAL + "```")
+        assert data == presets.parse_preset_text(MINIMAL)
+
     def test_fenced_chat_bot_answer_is_accepted(self):
         data = presets.parse_preset_text(
             "Here you go:\n```toml\n" + MINIMAL + "```\nEnjoy!"
@@ -191,6 +208,17 @@ RISKY = MINIMAL.replace(
 
 
 class TestFileAccess:
+    @pytest.mark.parametrize("section", ["input_options", "output_options", "encoder"])
+    def test_import_reports_file_options_hidden_inside_quotes(self, section):
+        graph = "metadata=mode='print:file=out.txt'"
+        text = '[preset]\nname="Quoted file option"\n'
+        if section == "encoder":
+            text += f'[encoder.libx264]\nargs=["-vf", "{graph}"]'
+        else:
+            text += f"[ffmpeg]\n{section}=" + json.dumps(f'-vf "{graph}"')
+        preset = presets.validate_preset(presets.parse_preset_text(text))
+        assert presets.preset_file_access(preset) == [graph]
+
     def test_file_reading_filters_are_reported(self):
         preset = presets.validate_preset(
             presets.parse_preset_text(

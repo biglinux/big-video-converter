@@ -1,6 +1,10 @@
+import errno
+import os
 import shutil
 import subprocess
 import threading
+from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 from engine import media_validation as mv
@@ -177,6 +181,183 @@ def test_permanent_removal_keeps_other_files(tmp_path, media, monkeypatch):
     )
     assert (private / "clip.mp4").exists()
     assert not (tmp_path / "moved" / "clip.mp4").exists()
+
+
+class TestBoundPublication:
+    def test_success_stays_in_opened_directory_after_parent_swap(self, tmp_path, monkeypatch):
+        folder, private, moved = tmp_path / "out", tmp_path / "private", tmp_path / "moved"
+        folder.mkdir()
+        private.mkdir()
+        (private / "dest").write_bytes(b"private")
+        staged = tmp_path / "stage"
+        staged.write_bytes(b"new")
+        opened = []
+        real_open_parent = mv._open_parent
+
+        def swap_after_open(path):
+            parent = real_open_parent(path)
+            opened.append(parent)
+            folder.rename(moved)
+            folder.symlink_to(private, target_is_directory=True)
+            return parent
+
+        monkeypatch.setattr(mv, "_open_parent", swap_after_open)
+        mv.publish_output(str(staged), str(folder / "dest"))
+        assert (moved / "dest").read_bytes() == b"new"
+        assert (private / "dest").read_bytes() == b"private"
+        assert not staged.exists()
+        with pytest.raises(OSError) as error:
+            os.fstat(opened[0])
+        assert error.value.errno == errno.EBADF
+
+    @pytest.mark.parametrize("failure", ["different-device", "replace", "missing-stage", "claimed"])
+    def test_failure_preserves_files_and_closes_parent(self, tmp_path, monkeypatch, failure):
+        staged, dest = tmp_path / "stage", tmp_path / "dest"
+        if failure != "missing-stage":
+            staged.write_bytes(b"new")
+        opened = []
+        real_open_parent = mv._open_parent
+
+        def record_open(path):
+            parent = real_open_parent(path)
+            opened.append(parent)
+            return parent
+
+        monkeypatch.setattr(mv, "_open_parent", record_open)
+        expected_error = OSError
+        if failure == "different-device":
+            device = tmp_path.stat().st_dev
+            monkeypatch.setattr(mv.os, "fstat", lambda fd: SimpleNamespace(st_dev=device + 1))
+            expected_error = ValueError
+        elif failure == "replace":
+            monkeypatch.setattr(mv.os, "replace", Mock(side_effect=OSError("replace failed")))
+        elif failure == "claimed":
+            dest.write_bytes(b"existing")
+            expected_error = FileExistsError
+
+        with pytest.raises(expected_error):
+            mv.publish_output(str(staged), str(dest))
+        if failure == "claimed":
+            assert dest.read_bytes() == b"existing"
+        else:
+            assert not dest.exists()
+        if failure != "missing-stage":
+            assert staged.read_bytes() == b"new"
+        assert len(opened) == 1
+        with pytest.raises(OSError) as error:
+            os.stat(opened[0])
+        assert error.value.errno == errno.EBADF
+
+    def test_destination_symlink_is_not_followed_or_replaced(self, tmp_path):
+        staged, destination, target = tmp_path / "stage", tmp_path / "dest", tmp_path / "target"
+        staged.write_bytes(b"new")
+        target.write_bytes(b"private")
+        destination.symlink_to(target)
+        with pytest.raises(FileExistsError):
+            mv.publish_output(str(staged), str(destination))
+        assert destination.is_symlink()
+        assert target.read_bytes() == b"private"
+        assert staged.read_bytes() == b"new"
+
+    def test_relative_destination_uses_current_directory(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        staged = tmp_path / "stage"
+        staged.write_bytes(b"new")
+        mv.publish_output("stage", "dest")
+        assert (tmp_path / "dest").read_bytes() == b"new"
+        assert not staged.exists()
+
+
+class TestPermanentDirectoryRemoval:
+    @pytest.fixture
+    def paths(self, tmp_path, monkeypatch):
+        folder = tmp_path / "input"
+        folder.mkdir()
+        source, output = folder / "source", tmp_path / "output"
+        source.write_bytes(b"original")
+        output.write_bytes(b"converted")
+        # Isolate directory-bound deletion from the unchanged FFmpeg checks.
+        monkeypatch.setattr(mv, "validate_output", Mock())
+        monkeypatch.setattr(mv, "verify_integrity", Mock())
+        return source, output, mv.FileIdentity.capture(str(source))
+
+    @pytest.mark.parametrize("swap_parent", [False, True])
+    def test_deletion_stays_in_opened_directory(self, paths, monkeypatch, swap_parent):
+        source, output, identity = paths
+        private = output.with_name("private")
+        private.mkdir()
+        (private / source.name).write_bytes(b"private")
+        moved = output.with_name("moved")
+        opened = []
+        real_open_parent = mv._open_parent
+
+        def open_then_swap(path):
+            parent = real_open_parent(path)
+            opened.append(parent)
+            if swap_parent:
+                source.parent.rename(moved)
+                source.parent.symlink_to(private, target_is_directory=True)
+            return parent
+
+        monkeypatch.setattr(mv, "_open_parent", open_then_swap)
+        mv.remove_original(str(source), identity, [str(output)], threading.Event(), permanent=True)
+        assert not ((moved / source.name) if swap_parent else source).exists()
+        assert (private / source.name).read_bytes() == b"private"
+        assert output.read_bytes() == b"converted"
+        with pytest.raises(OSError) as error:
+            os.fstat(opened[0])
+        assert error.value.errno == errno.EBADF
+
+    @pytest.mark.parametrize("replacement", ["file", "symlink", "missing"])
+    def test_source_changed_before_open_is_preserved(self, paths, monkeypatch, replacement):
+        source, output, identity = paths
+        saved = source.with_name("saved")
+        opened = []
+        real_open_parent = mv._open_parent
+
+        def change_before_open(path):
+            source.rename(saved)
+            if replacement == "file":
+                source.write_bytes(b"replacement")
+            elif replacement == "symlink":
+                source.symlink_to(output)
+            parent = real_open_parent(path)
+            opened.append(parent)
+            return parent
+
+        monkeypatch.setattr(mv, "_open_parent", change_before_open)
+        expected = FileNotFoundError if replacement == "missing" else ValueError
+        with pytest.raises(expected):
+            mv.remove_original(str(source), identity, [str(output)], threading.Event(), permanent=True)
+        assert saved.read_bytes() == b"original"
+        assert output.read_bytes() == b"converted"
+        if replacement == "file":
+            assert source.read_bytes() == b"replacement"
+        elif replacement == "symlink":
+            assert source.is_symlink()
+        with pytest.raises(OSError) as error:
+            os.fstat(opened[0])
+        assert error.value.errno == errno.EBADF
+
+    def test_unlink_failure_keeps_original_and_closes_parent(self, paths, monkeypatch):
+        source, output, identity = paths
+        real_open_parent = mv._open_parent
+        opened = []
+
+        def record_open(path):
+            parent = real_open_parent(path)
+            opened.append(parent)
+            return parent
+
+        monkeypatch.setattr(mv, "_open_parent", record_open)
+        monkeypatch.setattr(mv.os, "unlink", Mock(side_effect=PermissionError("denied")))
+        with pytest.raises(PermissionError, match="denied"):
+            mv.remove_original(str(source), identity, [str(output)], threading.Event(), permanent=True)
+        assert source.read_bytes() == b"original"
+        assert output.read_bytes() == b"converted"
+        with pytest.raises(OSError) as error:
+            os.fstat(opened[0])
+        assert error.value.errno == errno.EBADF
 
 
 def test_only_job_workspaces_are_discarded(tmp_path):
