@@ -252,7 +252,10 @@ _FILE_KEYS = {
 }
 _FILTER_NAME = re.compile(r"([A-Za-z0-9_]+)(?:@[A-Za-z0-9_]+)?")
 _OPTION_KEY = re.compile(r"\s*[A-Za-z0-9_./-]*\s*")
-_LABELS = re.compile(r"^(?:\s*\[[^\]]*\])*\s*|(?:\s*\[[^\]]*\])*\s*$")
+# Link labels before and after a filter. The trailing ones are matched on the
+# reversed text: an unanchored search for them is quadratic.
+_LABELS = re.compile(r"(?:\s*\[[^\]]*\])*\s*")
+_REVERSED_LABELS = re.compile(r"(?:\s*\][^\]]*\[)*\s*")
 _URL = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:\S")
 # libx264/libx265 read these from, or write them to, a named file (or, for
 # "pass", a default log in the working directory). x264 and x265 treat "_" as
@@ -366,7 +369,7 @@ def file_access_settings(text: str) -> list[str]:
         i += 2
         if base in _FILTERGRAPH_FLAGS:
             found += [
-                f for f in _split(value, ",") if _filter_reaches_out(_LABELS.sub("", f))
+                f for f in _split(value, ",") if _filter_reaches_out(_strip_labels(f))
             ]
         elif base in _ENCODER_PARAM_FLAGS:
             listed = (
@@ -380,6 +383,11 @@ def file_access_settings(text: str) -> list[str]:
                 if key in listed or _names_file(key) or _reaches_out(option):
                     found.append(item)
     return list(dict.fromkeys(f.strip() for f in found))
+
+
+def _strip_labels(text: str) -> str:
+    text = text[_LABELS.match(text).end() :][::-1]
+    return text[_REVERSED_LABELS.match(text).end() :][::-1]
 
 
 def _filter_reaches_out(text: str) -> bool:
