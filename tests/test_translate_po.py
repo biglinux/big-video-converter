@@ -48,3 +48,16 @@ def test_a_plural_entry_takes_every_form(tmp_path):
         0: "{0} pasta não pôde ser lida.",
         1: "{0} pastas não puderam ser lidas.",
     }
+
+
+def test_unencodable_translation_is_skipped(tmp_path):
+    """json.load accepts a lone surrogate escape, which UTF-8 cannot store."""
+    po, answers = tmp_path / "pt.po", tmp_path / "pt.json"
+    po.write_text(CATALOG, encoding="utf-8")
+    answers.write_text(
+        '{"{0} folder could not be read.": ["{0} \\ud83d", "{0} b"]}', encoding="utf-8"
+    )
+    translate_po.apply(str(po), str(answers))
+    entry = polib.pofile(str(po))[0]
+    assert "fuzzy" in entry.flags
+    assert entry.msgstr_plural == {0: "old", 1: "old"}

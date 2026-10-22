@@ -18,6 +18,8 @@ import sys
 import polib
 
 _PLACEHOLDER = re.compile(r"\{[^{}]*\}|%\([^)]*\)[sd]|%[sd]|\\n")
+# json.load accepts a lone surrogate escape, which a UTF-8 catalog cannot store.
+_SURROGATE = re.compile("[\ud800-\udfff]")
 
 
 def placeholders(text: str) -> list:
@@ -56,7 +58,10 @@ def apply(po_path: str, in_path: str) -> None:
         if (
             not isinstance(texts, list)
             or len(texts) != (forms if entry.msgid_plural else 1)
-            or not all(isinstance(t, str) and t.strip() for t in texts)
+            or not all(
+                isinstance(t, str) and t.strip() and not _SURROGATE.search(t)
+                for t in texts
+            )
         ):
             skipped += 1
             continue
