@@ -267,7 +267,7 @@ def test_queue_actions_disabled_while_running(app, monkeypatch, tmp_path):
         app.header_bar.set_buttons_sensitive(True)
         assert not any(app.lookup_action(name).get_enabled() for name in names)
         app.clear_queue()
-        assert not app.add_file_to_queue(str(dropped))
+        assert not app.add_files_to_queue([str(dropped)])
         assert list(app.conversion_queue) == [str(kept)]
     app.header_bar.set_buttons_sensitive(True)
     assert all(app.lookup_action(name).get_enabled() for name in names)
