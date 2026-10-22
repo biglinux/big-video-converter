@@ -10,3 +10,28 @@ reviews:
         docs/security.md states the trust boundaries and the accepted risks.
         Do not report what it accepts or places out of scope; report a change
         that breaks one of its boundaries.
+  # Comments explain invariants and reasons, so most functions rightly have
+  # no docstring; coverage would ask for text that restates the code.
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+code_generation:
+  docstrings:
+    path_instructions:
+      - path: "**/*.py"
+        instructions: |
+          Add a docstring only where the code alone does not tell a reader
+          an invariant, a constraint or a surprise, and keep existing ones.
+          One or two sentences on why; no Args, Returns or Raises sections,
+          no restating the body, no listing exceptions that simply propagate.
+  unit_tests:
+    path_instructions:
+      - path: "tests/**/*.py"
+        instructions: |
+          Use pytest with the fixtures in tests/conftest.py: media for real
+          FFmpeg files, run_cli and cli_env for the CLI, app for the GTK
+          window, pump_until to wait on the main loop. Exercise real objects;
+          do not mock the application, GLib or the settings store.
+          Cover behavior the existing tests miss, not private call order.
+          Name each test after the behavior in three to six words.
+          Wait for events with a bounded pump_until, never a fixed sleep.
