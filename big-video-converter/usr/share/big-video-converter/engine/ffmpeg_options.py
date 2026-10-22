@@ -351,11 +351,14 @@ def parse_additional_options(text: str) -> list[str]:
 def file_access_settings(text: str) -> list[str]:
     """The settings in valid option text that may reach files or the network.
 
-    Each filter is returned whole, each encoder parameter as key=value.
+    Each filter is returned whole, each encoder parameter as one item.
+    Results are stripped and deduplicated in encounter order.
     FFmpeg splits a graph at commas outside single quotes and drops those
     quotes before a filter splits its options at colons, so a quoted colon
     still separates options; backslashes and semicolons never get this far
     (_FORBIDDEN).
+
+    Invalid option text raises ValueError from parse_additional_options().
     """
     tokens = parse_additional_options(text)
     found = []
@@ -386,11 +389,16 @@ def file_access_settings(text: str) -> list[str]:
 
 
 def _strip_labels(text: str) -> str:
+    """Return filter text without surrounding link labels and whitespace."""
     text = text[_LABELS.match(text).end() :][::-1]
     return text[_REVERSED_LABELS.match(text).end() :][::-1]
 
 
 def _filter_reaches_out(text: str) -> bool:
+    """Flag possible file or network access in a filter without link labels.
+
+    A filter name that cannot be parsed is conservatively flagged too.
+    """
     name, args = (_split(text, "=", 1) + [""])[:2]
     match = _FILTER_NAME.fullmatch(_unquote(name))
     if not match or match[1] in _FILE_ACCESS_FILTERS:

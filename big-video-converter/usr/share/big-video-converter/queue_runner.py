@@ -43,9 +43,12 @@ class QueueRunnerMixin:
     """Mixin providing conversion queue management and orchestration."""
 
     def add_files_to_queue(self, file_paths: list[str]) -> int:
-        """Queue paths the caller found to be files, off the main loop.
+        """Queue a batch on the GTK thread after the caller checks file existence.
 
-        Returns how many were not queued yet.
+        Skip empty paths and exact path duplicates, including within the batch.
+        Return the number added, or zero while quitting or converting. Save the
+        last added file's directory, preserve existing per-file edits, and
+        schedule a display refresh if one is needed and not already pending.
         """
         # A running queue already has one progress row per file; a file added
         # while it runs would have none.

@@ -388,6 +388,17 @@ def remove_original(
     still be the file that was validated. A source symlink is refused; its
     target must not be moved accidentally. A failure to reach the Trash keeps
     the original; it is never deleted instead.
+
+    ``identity`` is the source identity captured before conversion.
+    ``expected_frames`` checks the video packet count with one frame of slack
+    only when there is a single output. Permanent deletion first syncs each
+    output and its directory, then checks and unlinks the source relative to
+    an open parent directory.
+
+    ValueError rejects an empty output list, invalid media, or changed identities.
+    InterruptedError reports cancellation; TimeoutError and
+    subprocess.SubprocessError from media checks propagate. Filesystem errors
+    propagate as OSError, and Trash errors are converted to OSError.
     """
     if not outputs:
         raise ValueError("No validated output authorizes removing the original")
@@ -461,11 +472,17 @@ def new_file_mode() -> int:
 
 
 def publish_output(staged: str, destination: str) -> None:
-    """Atomic, no-clobber publication on the same filesystem.
+    """Move a staged file to a newly claimed destination on the same filesystem.
 
     The name is claimed with an exclusive create and then renamed over, rather
     than hard-linked: FAT, exFAT and most FUSE mounts reject link(2), and a
     destination on a memory stick would otherwise discard a finished encode.
+
+    The empty placeholder is visible until the rename completes. Destination
+    creation, replacement and cleanup use the same open parent directory.
+    FileExistsError rejects an occupied destination; ValueError rejects
+    different filesystems. Other filesystem errors propagate as OSError.
+    If replacement fails, removal of the placeholder is attempted.
     """
     # Every step is relative to one open directory: a parent swapped for a
     # symlink meanwhile cannot redirect the rename or the cleanup elsewhere.
@@ -487,6 +504,11 @@ def publish_output(staged: str, destination: str) -> None:
 
 
 def _open_parent(path: str) -> int:
+    """Open the parent directory; the caller must close the returned descriptor.
+
+    Relative paths use the current working directory. Open failures propagate
+    as OSError.
+    """
     return os.open(os.path.dirname(os.path.abspath(path)), os.O_RDONLY | os.O_DIRECTORY)
 
 

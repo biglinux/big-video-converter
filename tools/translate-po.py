@@ -45,6 +45,17 @@ def export(po_path: str, out_path: str) -> None:
 
 
 def apply(po_path: str, in_path: str) -> None:
+    """Apply JSON translations keyed by exact msgid and save the catalog in place.
+
+    Singular entries take a string; plurals take a list with one string per
+    language form.
+    Skip obsolete entries and leave existing translations and flags unchanged
+    for missing answers, blank or non-string values, surrogate characters,
+    wrong plural counts, or placeholder mismatches. Accepted entries lose
+    their fuzzy flag. Print applied and skipped counts.
+
+    File access errors and JSON or catalog parsing errors propagate.
+    """
     po = polib.pofile(po_path, wrapwidth=0)
     with open(in_path, encoding="utf-8") as handle:
         translations = json.load(handle)

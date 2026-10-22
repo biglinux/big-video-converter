@@ -66,6 +66,12 @@ class FileIntakeMixin:
         self.header_bar.set_buttons_sensitive(False)
 
         def finish(files, error, skipped):
+            """Queue scanned files on the GTK thread and end this idle callback.
+
+            Report scan and persistence errors in dialogs. On success, pass the
+            number added to on_complete, if supplied. Return False, including
+            when quitting, so GLib does not repeat the callback.
+            """
             self._pending_imports -= 1
             if getattr(self, "_quitting", False):
                 return False
