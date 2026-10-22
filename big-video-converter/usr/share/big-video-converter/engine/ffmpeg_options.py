@@ -251,6 +251,7 @@ _FILE_KEYS = {
     "fontsdir",
 }
 _FILTER_NAME = re.compile(r"([A-Za-z0-9_]+)(?:@[A-Za-z0-9_]+)?")
+_OPTION_KEY = re.compile(r"\s*[A-Za-z0-9_./-]*\s*")
 _LABELS = re.compile(r"^(?:\s*\[[^\]]*\])*\s*|(?:\s*\[[^\]]*\])*\s*$")
 _URL = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*:\S")
 # libx264/libx265 read these from, or write them to, a named file (or, for
@@ -348,9 +349,10 @@ def file_access_settings(text: str) -> list[str]:
     """The settings in valid option text that may reach files or the network.
 
     Each filter is returned whole, each encoder parameter as key=value.
-    FFmpeg splits a graph at commas and an argument list at colons outside
-    single quotes, then drops the quotes; backslashes and semicolons never get
-    this far (_FORBIDDEN).
+    FFmpeg splits a graph at commas outside single quotes and drops those
+    quotes before a filter splits its options at colons, so a quoted colon
+    still separates options; backslashes and semicolons never get this far
+    (_FORBIDDEN).
     """
     tokens = parse_additional_options(text)
     found = []
@@ -385,12 +387,13 @@ def _filter_reaches_out(text: str) -> bool:
     match = _FILTER_NAME.fullmatch(_unquote(name))
     if not match or match[1] in _FILE_ACCESS_FILTERS:
         return True
-    for item in _split(args, ":") if args else ():
-        parts = _split(item, "=", 1)
-        if len(parts) == 1:
+    for item in args.replace("'", "").split(":") if args else ():
+        key, sep, value = item.partition("=")
+        # FFmpeg takes an item without a well-formed key as positional.
+        if not sep or not _OPTION_KEY.fullmatch(key):
             if match[1] in _POSITIONAL_FILE_FILTERS or _reaches_out(item):
                 return True
-        elif _names_file(_unquote(parts[0])) or _reaches_out(parts[1]):
+        elif _names_file(key.strip()) or _reaches_out(value):
             return True
     return False
 

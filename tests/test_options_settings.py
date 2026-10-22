@@ -106,6 +106,7 @@ REACHES_FILES = [
     """-vf "movie='file:/etc/passwd'" """,
     "-vf movie=http://x",
     """-vf "hue=h='http://x'" """,
+    """-vf "metadata=mode='4:file=out.txt'" """,
     "-x264-params stats=/tmp/x.log",
     "-x264-params keyint=60:pass=1",
     "-x264opts qpfile=frames.txt",
