@@ -4,6 +4,7 @@ import subprocess
 import threading
 
 import pytest
+from conftest import pump, pump_until
 from engine import media_validation as mv
 from engine.subtitle_clipping import (
     SubtitleClipper,
@@ -13,6 +14,7 @@ from engine.subtitle_clipping import (
     _read_cues,
     _serialize,
 )
+from gi.repository import Gio
 
 
 @pytest.mark.parametrize(
@@ -133,6 +135,39 @@ def test_no_clobber_publication(tmp_path):
     dest.unlink()
     mv.publish_output(str(staged), str(dest))
     assert dest.read_bytes() == b"new"
+
+
+def test_file_managers_reread_published_file(tmp_path):
+    """A file manager typed the empty placeholder as application/x-zerosize and
+    re-reads it only on a change or attribute event, not on a rename over it."""
+    workspace = tmp_path / ".bvc-job"
+    workspace.mkdir()
+    staged, dest = workspace / "video.mp4", tmp_path / "clip.mp4"
+    staged.write_bytes(b"video")
+    events = []
+    monitor = Gio.File.new_for_path(str(tmp_path)).monitor_directory(
+        Gio.FileMonitorFlags.WATCH_MOVES, None
+    )
+    monitor.connect(
+        "changed",
+        lambda _monitor, child, _other, event: (
+            child.get_basename() == dest.name and events.append(event)
+        ),
+    )
+    pump(0.1)
+    mv.publish_output(str(staged), str(dest))
+
+    def reread():
+        last = {event: i for i, event in enumerate(events)}
+        moved = last.get(Gio.FileMonitorEvent.MOVED_IN, len(events))
+        return last.get(Gio.FileMonitorEvent.ATTRIBUTE_CHANGED, -1) > moved
+
+    try:
+        pump_until(reread, timeout=5)
+    except AssertionError:
+        pytest.fail(f"Not re-read after the rename: {[e.value_nick for e in events]}")
+    finally:
+        monitor.cancel()
 
 
 def test_swapped_parent_keeps_other_files(tmp_path, monkeypatch):
