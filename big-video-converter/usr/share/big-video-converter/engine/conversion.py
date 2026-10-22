@@ -553,6 +553,7 @@ def monitor_progress(
     env = env_vars or {}
     cancelled = progress_item.cancel_event
     destination = progress_item.expected_output
+    output_folder = os.path.dirname(destination or "")
     updates = _Updates(progress_item)
     # The script runs ffmpeg up to five times per job (GPU stages, audio
     # retries) and each run prints a banner, so a short tail can lose the
@@ -605,10 +606,15 @@ def monitor_progress(
         # its own cleanup leaves nothing for the user to find and wonder about.
         # Both lines come on stdout; FFmpeg's stderr can echo a title or path.
         # Both are one line: the script escapes backslash, newline and return.
-        if source == "stdout" and text.startswith("Job workspace:"):
-            workspace = _unescape_line(text.partition(": ")[2])
-        if source == "stdout" and text.startswith("Output file:"):
-            published = _unescape_line(text.partition(": ")[2])
+        # Both name entries of the output folder, so a forged line naming
+        # anything else is ignored rather than deleted or validated.
+        if source == "stdout" and text.startswith(("Job workspace:", "Output file:")):
+            path = _unescape_line(text.partition(": ")[2])
+            if os.path.dirname(path) == output_folder:
+                if text.startswith("Job workspace:"):
+                    workspace = path
+                else:
+                    published = path
         if text.startswith(
             ("Warning: skipping subtitle stream", "Warning: Subtitle extraction failed")
         ):

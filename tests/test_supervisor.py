@@ -248,6 +248,26 @@ def test_stderr_cannot_name_the_workspace(media, tmp_path, cli_env):
     assert decoy.is_dir()
 
 
+def test_workspace_outside_output_folder_is_kept(media, tmp_path, cli_env):
+    """Only a workspace beside the output can be the script's own."""
+    decoy = tmp_path / "elsewhere" / ".bvc-decoy"
+    decoy.mkdir(parents=True)
+    (tmp_path / "out").mkdir()
+    app = App()
+    conversion.run_with_progress_dialog(
+        app,
+        ["/bin/sh", "-c", f"echo 'Job workspace: {decoy}'; exit 1"],
+        "decoy",
+        str(media["video"]),
+        False,
+        {**cli_env, "output_file": str(tmp_path / "out" / "out.mkv")},
+        job_id="decoy-stdout",
+    )
+    pump_until(lambda: bool(app.notifications))
+    assert app.notifications[0][0] is False
+    assert decoy.is_dir()
+
+
 def test_skip_trash_deletes_the_original(media, tmp_path, cli_env):
     from conftest import DATA_HOME
 
