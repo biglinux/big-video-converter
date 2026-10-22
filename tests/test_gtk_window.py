@@ -384,7 +384,7 @@ def test_skip_trash_menu_switches_row_delete(app, media, monkeypatch, tmp_path):
     video = tmp_path / "row.mp4"
     shutil.copyfile(media["video"], video)
     app.clear_queue()
-    app.add_file_to_queue(str(video))
+    app.add_files_to_queue([str(video)])
     page = app.conversion_page
     pump_until(lambda: page.queue_rows and page.queue_rows[0].file_path == str(video))
     dialogs = []

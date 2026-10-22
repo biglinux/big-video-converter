@@ -42,22 +42,27 @@ def disk_shortage(files: list[str], output_folder: str):
 class QueueRunnerMixin:
     """Mixin providing conversion queue management and orchestration."""
 
-    def add_file_to_queue(self, file_path: str) -> bool:
-        """Queue a path the caller found to be a file, off the main loop."""
+    def add_files_to_queue(self, file_paths: list[str]) -> int:
+        """Queue paths the caller found to be files, off the main loop.
+
+        Returns how many were not queued yet.
+        """
         # A running queue already has one progress row per file; a file added
         # while it runs would have none.
-        if (
-            getattr(self, "_quitting", False)
-            or self.currently_converting
-            or file_path in self.conversion_queue
-        ):
-            return False
-        if file_path:
+        if getattr(self, "_quitting", False) or self.currently_converting:
+            return 0
+        queued = set(self.conversion_queue)
+        added = 0
+        for file_path in file_paths:
+            if not file_path or file_path in queued:
+                continue
+            queued.add(file_path)
             input_dir = os.path.dirname(file_path)
             self.last_accessed_directory = input_dir
             self.settings_store.save_setting("last-accessed-directory", input_dir)
 
             self.conversion_queue.append(file_path)
+            added += 1
 
             # Initialize new files without discarding edits when a file is added again
             if hasattr(self, "conversion_page"):
@@ -65,13 +70,13 @@ class QueueRunnerMixin:
                     file_path, deepcopy(DEFAULT_METADATA)
                 )
 
-            if (
-                hasattr(self, "conversion_page")
-                and getattr(self, "_queue_refresh_id", None) is None
-            ):
-                self._queue_refresh_id = GLib.idle_add(self._refresh_queue_display)
-            return True
-        return False
+        if (
+            added
+            and hasattr(self, "conversion_page")
+            and getattr(self, "_queue_refresh_id", None) is None
+        ):
+            self._queue_refresh_id = GLib.idle_add(self._refresh_queue_display)
+        return added
 
     def _refresh_queue_display(self):
         self._queue_refresh_id = None
