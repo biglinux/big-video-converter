@@ -4,6 +4,7 @@ A successful exit and a non-empty file are necessary, not sufficient. In
 particular, deletion must never discover an output by guessing its filename.
 """
 
+import contextlib
 import json
 import math
 import os
@@ -482,6 +483,18 @@ def publish_output(staged: str, destination: str) -> None:
         except OSError:
             os.unlink(name, dir_fd=parent)
             raise
+        # A file manager may have typed the empty placeholder as
+        # application/x-zerosize and does not read a listed file again after
+        # a rename over it. Setting the file's own times raises the attribute
+        # event it re-reads on; failing to set them does not undo the publication.
+        with contextlib.suppress(OSError):
+            published = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            os.utime(
+                name,
+                ns=(published.st_atime_ns, published.st_mtime_ns),
+                dir_fd=parent,
+                follow_symlinks=False,
+            )
     finally:
         os.close(parent)
 
