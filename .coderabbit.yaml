@@ -1,0 +1,12 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+knowledge_base:
+  code_guidelines:
+    filePatterns:
+      - docs/security.md
+reviews:
+  path_instructions:
+    - path: "**"
+      instructions: |
+        docs/security.md states the trust boundaries and the accepted risks.
+        Do not report what it accepts or places out of scope; report a change
+        that breaks one of its boundaries.
