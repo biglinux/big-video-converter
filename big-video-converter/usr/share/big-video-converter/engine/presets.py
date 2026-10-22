@@ -107,7 +107,7 @@ _RESOLUTION_RE = re.compile(r"^([1-9]\d{1,4})x([1-9]\d{1,4})$")
 _BITRATE_RE = re.compile(r"^[1-9][0-9]*[kKmM]?$")
 _PIX_FMT_RE = re.compile(r"^[a-z0-9_]{3,32}$")
 _ENCODER_RE = re.compile(r"^[a-z0-9_-]{2,32}$")
-_FENCE_RE = re.compile(r"```(?:toml)?\s*\n(.*?)```", re.DOTALL)
+_FENCE_RE = re.compile(r"```(?:toml)?[^\S\n]*\n(.*?)```", re.DOTALL)
 _MAX_TEXT = 65536
 
 
