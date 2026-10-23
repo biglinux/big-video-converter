@@ -5487,3 +5487,28 @@ msgstr[0] "{count} 件オン"
 
 msgid "Made for speech: the pauses are found once the background noise is removed."
 msgstr "話し声向けです。バックグラウンドノイズを除去してから間を探します。"
+
+msgid "Remove segments and keep the rest"
+msgstr "区間を削除して残りを保持"
+
+msgid "Play without the removed segments"
+msgstr "削除する区間を飛ばして再生"
+
+msgid "The marked segments are cut out of the converted video."
+msgstr "指定した区間は変換後の動画から切り取られます。"
+
+msgid "The segments cannot be removed"
+msgstr "区間を削除できません"
+
+#, python-brace-format
+msgid "“{name}” was not converted: {reason}"
+msgstr "「{name}」は変換されませんでした。{reason}"
+
+msgid "The length of the video is unknown, so the segments cannot be removed. Open the video in the editor and try again."
+msgstr "動画の長さが不明なため、区間を削除できません。エディターで動画を開いて、やり直してください。"
+
+msgid "The segments to remove cover the whole video: nothing would be left."
+msgstr "削除する区間が動画全体を覆っているため、何も残りません。"
+
+msgid "Or remove the selected parts and keep the rest of the video in one file."
+msgstr "または、選択した部分を削除し、動画の残りを1つのファイルにします。"

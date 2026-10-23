@@ -419,11 +419,14 @@ def get_tooltips():
             "• Default: 0 (no change)"
         ),
         "crop": _("Crop the video's edges to keep only the part you need."),
+        # Two strings, so the first keeps its translations.
         "segments": _(
             "Select parts of the video to keep.\n\n"
             "Add sections with the + button or directly in the video using the markers button above the video.\n\n"
             "You can export selected parts as one file or as multiple clips\n ideal for creating short videos for social media."
-        ),
+        )
+        + "\n\n"
+        + _("Or remove the selected parts and keep the rest of the video in one file."),
         # Advanced Settings - additional options
         "gpu_partial": _(
             "Run decode on the CPU and encode on the GPU.\n\n"

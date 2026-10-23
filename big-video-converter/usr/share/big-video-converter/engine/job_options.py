@@ -53,7 +53,10 @@ DEFAULT_METADATA = {
     # How to read the source's colors when its file does not say (see the
     # script's source_hdr): "auto" trusts the file.
     "source_hdr": "auto",
+    # What the marked segments are: "join" and "split" keep them, "remove"
+    # keeps the rest of the video, which needs its probed length.
     "output_mode": "join",
+    "duration": None,
     "preset_id": None,
     "preset_snapshot": None,
     "resolution_mode": "global",
@@ -64,6 +67,7 @@ DEFAULT_METADATA = {
     "size_mb": None,
 }
 
+OUTPUT_MODES = ("join", "split", "remove")
 EFFECT_LEVELS = ("off", "light", "medium", "strong")
 SOURCE_HDR_MODES = ("auto", "pq", "hlg", "sdr")
 
@@ -81,6 +85,16 @@ SIZE_MODES = (
 )
 
 
+def _is_length(value) -> bool:
+    """A probed length in seconds: a finite number above zero."""
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+        and value > 0
+    )
+
+
 def normalize_metadata(value: dict[str, Any] | None) -> dict[str, Any]:
     result = deepcopy(DEFAULT_METADATA)
     if isinstance(value, dict):
@@ -89,6 +103,10 @@ def normalize_metadata(value: dict[str, Any] | None) -> dict[str, Any]:
         result["resolution_mode"] = "global"
     if result.get("size_mode") not in SIZE_MODES:
         result["size_mode"] = "global"
+    if result.get("output_mode") not in OUTPUT_MODES:
+        result["output_mode"] = "join"
+    if not _is_length(result.get("duration")):
+        result["duration"] = None
     for key in ("denoise", "sharpen"):
         if result.get(key) not in EFFECT_LEVELS:
             result[key] = "off"
@@ -171,6 +189,56 @@ def joined_cuts(segments) -> list[dict[str, float]]:
         else:
             joined.append({"start": segment["start"], "end": segment["end"]})
     return joined
+
+
+# A part left between two removed segments shorter than this is a slip of
+# the mark, not something to keep: about one frame at 25 fps.
+MIN_KEPT_PART = 0.04
+
+
+def parts_left(removed, duration: float) -> list[dict[str, float]]:
+    """What stays of a video of ``duration`` seconds without ``removed``."""
+    kept: list[dict[str, float]] = []
+    cursor = 0.0
+    for segment in joined_cuts(removed):
+        start = min(max(segment["start"], 0.0), duration)
+        if start - cursor >= MIN_KEPT_PART:
+            kept.append({"start": cursor, "end": start})
+        cursor = max(cursor, min(segment["end"], duration))
+    if duration - cursor >= MIN_KEPT_PART:
+        kept.append({"start": cursor, "end": duration})
+    return kept
+
+
+def segments_to_convert(metadata: dict[str, Any]) -> tuple[list, str]:
+    """The cuts a conversion makes and how it saves them ("join" or "split").
+
+    Removing segments converts what is left, joined. Raises ``ValueError``
+    when nothing would be left or the video's length is unknown, rather than
+    convert the whole file as if nothing had been removed.
+    """
+    segments = [dict(s) for s in metadata.get("trim_segments") or []]
+    mode = metadata.get("output_mode", "join")
+    if mode != "remove":
+        return segments, "split" if mode == "split" else "join"
+    if not segments:
+        return [], "join"
+    duration = metadata.get("duration")
+    if not _is_length(duration):
+        raise ValueError(
+            _(
+                "The length of the video is unknown, so the segments cannot be "
+                "removed. Open the video in the editor and try again."
+            )
+        )
+    kept = parts_left(segments, float(duration))
+    if not kept:
+        raise ValueError(
+            _("The segments to remove cover the whole video: nothing would be left.")
+        )
+    if len(kept) == 1 and kept[0]["start"] == 0 and kept[0]["end"] == duration:
+        return [], "join"
+    return kept, "join"
 
 
 def effective_resolution(metadata: dict[str, Any], global_value: str = "") -> str:

@@ -17,6 +17,7 @@ from engine.job_options import (
     freeze,
     has_picture_edits,
     normalize_metadata,
+    segments_to_convert,
     snapshot_preset,
 )
 from engine.presets import PresetError, output_container
@@ -699,14 +700,19 @@ class ConversionPage(ConversionStartMixin):
             size_result.set_visible(True)
             size_result.set_subtitle(_("Checking the video…"))
             output_ext = "." + output_container(settings.get("output-format-index", 0))
+            try:
+                cuts, cuts_mode = segments_to_convert(temporary)
+            except ValueError as error:
+                size_result.set_subtitle(str(error))
+                return
             context = {
                 "size_target": self._size_target(
                     SettingsOverride(self.app.settings_store, settings)
                 ),
                 "input_file": file_path,
                 "output_ext": output_ext,
-                "trim_segments": temporary.get("trim_segments") or [],
-                "output_mode": temporary.get("output_mode", "join"),
+                "trim_segments": cuts,
+                "output_mode": cuts_mode,
                 "encode_env": {
                     "video_encoder": settings.get("video-codec", "h264"),
                     "audio_handling": settings.get("audio-handling", "copy"),

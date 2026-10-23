@@ -16,7 +16,7 @@ import logging
 
 from constants import NOISE_MODELS, noise_reduction_filter
 from engine.crop_geometry import ASPECT_RATIOS
-from engine.job_options import DEFAULT_METADATA
+from engine.job_options import DEFAULT_METADATA, OUTPUT_MODES
 
 from ui.mpv_player import MPVPlayer
 from ui.video_edit_picture import VideoEditPictureMixin
@@ -202,8 +202,11 @@ class VideoEditPage(VideoEditPictureMixin, VideoEditSegmentsMixin):
                 self.ui.update_source_hdr(self.source_hdr)
 
             if hasattr(self.ui, "output_mode_combo"):
-                output_mode_index = {"join": 0, "split": 1}.get(self.output_mode, 0)
-                self.ui.output_mode_combo.set_selected(output_mode_index)
+                self.ui.output_mode_combo.set_selected(
+                    OUTPUT_MODES.index(self.output_mode)
+                    if self.output_mode in OUTPUT_MODES
+                    else 0
+                )
 
             if hasattr(self.ui, "crop_aspect_combo"):
                 aspect_values = tuple(ASPECT_RATIOS)
@@ -266,6 +269,8 @@ class VideoEditPage(VideoEditPictureMixin, VideoEditSegmentsMixin):
                 "source_hdr": self.source_hdr,
                 "crop_aspect": self.crop_aspect,
                 "output_mode": self.output_mode,
+                # Removing segments keeps up to the end of the video.
+                "duration": self.video_duration or None,
             }
         )
         self.app_state.file_metadata[self.current_video_path] = metadata
@@ -430,12 +435,11 @@ class VideoEditPage(VideoEditPictureMixin, VideoEditSegmentsMixin):
             if self.mpv_player.at_end():
                 self.ui.position_scale.set_value(0)
             if self.segments_only:
-                end, later = self.next_segment_stop(
-                    self.trim_segments, self.current_position
-                )
+                kept = self.preview_segments()
+                end, later = self.next_segment_stop(kept, self.current_position)
                 if end is None:
                     # Outside the segments: start at the next one, or the first.
-                    first = min((s["start"] for s in self.trim_segments), default=0)
+                    first = min((s["start"] for s in kept), default=0)
                     self.ui.position_scale.set_value(first if later is None else later)
             self.mpv_player.play()
             self.is_playing = True
@@ -496,7 +500,7 @@ class VideoEditPage(VideoEditPictureMixin, VideoEditSegmentsMixin):
 
     def _follow_segments(self, position):
         """Jump over what the segments leave out; stop after the last one."""
-        end, later = self.next_segment_stop(self.trim_segments, position)
+        end, later = self.next_segment_stop(self.preview_segments(), position)
         if end is None:
             if later is None:
                 self.on_play_pause_clicked(None)
@@ -514,7 +518,7 @@ class VideoEditPage(VideoEditPictureMixin, VideoEditSegmentsMixin):
     def _jump_past_segment(self, end):
         self._segment_jump_id = None
         if self.segments_only and self.is_playing:
-            inside, later = self.next_segment_stop(self.trim_segments, end)
+            inside, later = self.next_segment_stop(self.preview_segments(), end)
             if inside is None:
                 if later is None:
                     self.on_play_pause_clicked(None)

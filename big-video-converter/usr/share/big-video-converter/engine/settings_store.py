@@ -94,7 +94,7 @@ class SettingsStore:
         "gpu-device-index": 0,
         "show-welcome-dialog": True,
         # Multi-segment output mode
-        "multi-segment-output-mode": "join",  # Options: "join", "split"
+        "multi-segment-output-mode": "join",  # Options: "join", "split", "remove"
         # Shortest pause the editor offers to remove, in seconds
         "pause-length": 1.0,
         # How strictly the pause finder's voice detector hears a voice, 1-5
@@ -460,7 +460,7 @@ class SettingsStore:
             "audio-codec": {"aac", "opus", "ac3"},
             "audio-handling": {"copy", "reencode", "none"},
             "subtitle-extract": {"extract", "embedded", "none"},
-            "multi-segment-output-mode": {"join", "split"},
+            "multi-segment-output-mode": {"join", "split", "remove"},
             "size-target": {
                 "",
                 "custom",

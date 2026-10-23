@@ -235,6 +235,34 @@ def test_individual_options_apply_and_restore_inheritance(app, media, monkeypatc
     assert app.settings_store.settings == general
 
 
+def test_removed_segments_convert_what_is_left(app, monkeypatch, media):
+    page = app.conversion_page
+    source = str(media["video"])
+    contexts, errors = [], []
+    monkeypatch.setattr(page, "current_file_path", source, raising=False)
+    monkeypatch.setattr(
+        page, "_continue_conversion", lambda context: contexts.append(context) or True
+    )
+    monkeypatch.setattr(app, "show_error_dialog", lambda *args: errors.append(args))
+    removed = {
+        "output_mode": "remove",
+        "duration": 3.0,
+        "trim_segments": [{"start": 1.0, "end": 1.5}],
+    }
+    monkeypatch.setattr(page, "file_metadata", {source: removed})
+    assert page.force_start_conversion()
+    assert contexts[-1]["output_mode"] == "join"
+    assert contexts[-1]["trim_segments"] == [
+        {"start": 0.0, "end": 1.0},
+        {"start": 1.5, "end": 3.0},
+    ]
+    # Removing the whole video is refused, not converted in full.
+    removed["trim_segments"] = [{"start": 0.0, "end": 3.0}]
+    assert page.force_start_conversion() is False
+    assert errors[-1][0] == "The segments cannot be removed"
+    assert len(contexts) == 1
+
+
 @pytest.mark.parametrize("mode", ["single", "split", "join"])
 def test_individual_recipe_reaches_real_conversion(
     app, monkeypatch, media, tmp_path, request, mode

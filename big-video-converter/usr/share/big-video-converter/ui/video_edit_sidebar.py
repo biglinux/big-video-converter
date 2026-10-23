@@ -263,12 +263,14 @@ class VideoEditSidebarMixin:
             self.page.app.help_tooltips.add_tooltip(trim_group, "segments")
         sidebar_box.append(trim_group)
 
-        # Join/split only means something with two or more segments.
+        # Shown once a segment is marked: keep it (joined or apart) or remove
+        # it from the video. The order is OUTPUT_MODES'.
         self.output_group = Adw.PreferencesGroup(visible=False)
         output_mode_model = Gtk.StringList.new(
             [
                 _("Join segments into a single file"),
                 _("Save each segment as a separate file"),
+                _("Remove segments and keep the rest"),
             ]
         )
         self.output_mode_combo = Adw.ComboRow(
@@ -517,7 +519,22 @@ class VideoEditSidebarMixin:
         self.segments_only_button.set_visible(count > 0)
         if not count:
             self.segments_only_button.set_active(False)
-        self.output_group.set_visible(count > 1)
+        self.output_group.set_visible(count > 0)
+        removing = self.page.output_mode == "remove"
+        label = (
+            _("Play without the removed segments")
+            if removing
+            else _("Play only the segments")
+        )
+        self.segments_only_button.set_tooltip_text(label)
+        self.segments_only_button.update_property(
+            [Gtk.AccessibleProperty.LABEL], [label]
+        )
+        self.trim_group.set_description(
+            _("The marked segments are cut out of the converted video.")
+            if removing and count
+            else None
+        )
 
     def update_for_force_copy_state(self, force_copy_enabled) -> None:
         """Say that editing the picture takes this video out of copy mode."""

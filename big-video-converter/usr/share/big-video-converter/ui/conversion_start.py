@@ -16,7 +16,7 @@ import re
 from constants import CONVERT_SCRIPT_PATH
 from engine.conversion import run_with_progress_dialog
 from engine.ffmpeg_options import validate_additional_options
-from engine.job_options import freeze, snapshot_preset
+from engine.job_options import freeze, segments_to_convert, snapshot_preset
 from engine.presets import PresetError, output_container
 from engine.segment_batch import start_segment_batch
 from engine.size_target import prepare_size_job, target_bytes
@@ -247,10 +247,18 @@ class ConversionStartMixin:
             if audio_codec:
                 env_vars["audio_codec"] = audio_codec
 
-            trim_segments = deepcopy(file_metadata.get("trim_segments", []))
-
-            # Get output mode from per-file metadata (not global settings)
-            output_mode = file_metadata.get("output_mode", "join")
+            # Per-file cuts and how to save them; removing segments converts
+            # what is left of the video, joined.
+            try:
+                trim_segments, output_mode = segments_to_convert(file_metadata)
+            except ValueError as error:
+                self.app.show_error_dialog(
+                    _("The segments cannot be removed"),
+                    _("“{name}” was not converted: {reason}").format(
+                        name=os.path.basename(input_file), reason=error
+                    ),
+                )
+                return False
 
             # Get crop values from per-file metadata (not global settings)
             crop_left = file_metadata.get("crop_left", 0)
