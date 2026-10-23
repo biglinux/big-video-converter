@@ -131,3 +131,76 @@ def test_join_merges_overlapping_unordered_cuts():
         {"start": 3, "end": 4},
     ]
     assert joined_cuts(cuts) == [{"start": 0, "end": 4}, {"start": 5, "end": 9}]
+
+
+def test_removal_keeps_parts_between_segments():
+    from engine.job_options import segments_to_convert
+
+    metadata = {
+        "trim_segments": [{"start": 8, "end": 10}, {"start": 2, "end": 4}],
+        "output_mode": "remove",
+        "duration": 20.0,
+    }
+    assert segments_to_convert(metadata) == (
+        [
+            {"start": 0.0, "end": 2},
+            {"start": 4, "end": 8},
+            {"start": 10, "end": 20.0},
+        ],
+        "join",
+    )
+    # Kept segments pass through unchanged.
+    metadata["output_mode"] = "split"
+    assert segments_to_convert(metadata)[1] == "split"
+    assert len(segments_to_convert(metadata)[0]) == 2
+
+
+def test_removing_from_the_edges_and_overlaps():
+    from engine.job_options import parts_left
+
+    removed = [
+        {"start": 0, "end": 3},
+        {"start": 2, "end": 5},
+        {"start": 9, "end": 12},  # past the end of the video
+    ]
+    assert parts_left(removed, 10.0) == [{"start": 5, "end": 9}]
+    # A sliver left by an imprecise mark is not a part.
+    assert parts_left([{"start": 0.02, "end": 9.99}], 10.0) == []
+
+
+def test_refuses_nothing_left_or_unknown_length():
+    from engine.job_options import segments_to_convert
+
+    with pytest.raises(ValueError, match="nothing would be left"):
+        segments_to_convert(
+            {
+                "trim_segments": [{"start": 0, "end": 10}],
+                "output_mode": "remove",
+                "duration": 10.0,
+            }
+        )
+    with pytest.raises(ValueError, match="length of the video is unknown"):
+        segments_to_convert(
+            {"trim_segments": [{"start": 1, "end": 2}], "output_mode": "remove"}
+        )
+    # A length that is not a number counts as unknown, not as a crash.
+    for duration in ("20", float("inf"), True, -1):
+        with pytest.raises(ValueError, match="length of the video is unknown"):
+            segments_to_convert(
+                {
+                    "trim_segments": [{"start": 1, "end": 2}],
+                    "output_mode": "remove",
+                    "duration": duration,
+                }
+            )
+    # No segments: the whole video, nothing to refuse.
+    assert segments_to_convert({"output_mode": "remove"}) == ([], "join")
+
+
+def test_unknown_output_mode_and_duration_normalize():
+    from engine.job_options import normalize_metadata
+
+    metadata = normalize_metadata({"output_mode": "drop", "duration": float("nan")})
+    assert metadata["output_mode"] == "join"
+    assert metadata["duration"] is None
+    assert normalize_metadata({"duration": 12.5})["duration"] == 12.5

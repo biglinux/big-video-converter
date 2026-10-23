@@ -536,7 +536,7 @@ class VideoEditUI(VideoEditSidebarMixin):
         return volume_button
 
     def _draw_cuts_track(self, area, cr, width, height):
-        """The kept parts and a pending mark, above the slider."""
+        """The marked segments and a pending mark, above the slider."""
         duration = self.page.video_duration
         if not self.page.current_video_path or duration <= 0:
             return
@@ -547,7 +547,11 @@ class VideoEditUI(VideoEditSidebarMixin):
         cr.rectangle(0, 0, width, height)
         cr.fill()
 
-        cr.set_source_rgba(0.21, 0.52, 0.89, 1)
+        if self.page.output_mode == "remove":
+            # Segments to cut out: red, so the gaps read as what is kept.
+            cr.set_source_rgba(0.88, 0.11, 0.14, 1)
+        else:
+            cr.set_source_rgba(0.21, 0.52, 0.89, 1)
         for segment in self.page.trim_segments:
             start_x = segment["start"] * scale
             cr.rectangle(start_x, 0, max(1.5, segment["end"] * scale - start_x), height)

@@ -12,6 +12,7 @@ import weakref
 from typing import NamedTuple
 
 from engine.ffmpeg_path import get_ffmpeg_executable
+from engine.job_options import OUTPUT_MODES
 from engine.pauses import (
     DEFAULT_VOICE_SENSITIVITY,
     PAUSE_LENGTHS,
@@ -466,7 +467,7 @@ class PausePanel(Adw.PreferencesGroup):
         # Not the user's choice: the general default stays as it was.
         page._restoring_metadata = True
         try:
-            page.ui.output_mode_combo.set_selected({"join": 0, "split": 1}[mode])
+            page.ui.output_mode_combo.set_selected(OUTPUT_MODES.index(mode))
         finally:
             page._restoring_metadata = False
         page._save_file_metadata()

@@ -6,6 +6,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
+from engine.job_options import OUTPUT_MODES, parts_left
 from gi.repository import Adw, Gtk
 
 _ = gettext.gettext
@@ -316,10 +317,22 @@ class VideoEditSegmentsMixin:
             except (ValueError, IndexError) as e:
                 self._show_error_dialog(_("Error"), str(e))
 
+    def preview_segments(self):
+        """The parts of the video the conversion keeps, in timeline order."""
+        if self.output_mode == "remove":
+            if self.video_duration <= 0:
+                return []
+            return parts_left(self.trim_segments, self.video_duration)
+        return self.trim_segments
+
     def _on_output_mode_changed(self, combo, pspec):
         selected = combo.get_selected()
-        self.output_mode = "join" if selected == 0 else "split"
+        if selected >= len(OUTPUT_MODES):
+            return
+        self.output_mode = OUTPUT_MODES[selected]
         self._save_file_metadata()
+        self.ui.update_segment_actions(len(self.trim_segments))
+        self.ui.update_segment_markers()
         # Save to global settings as the new default for future videos
         if not self._restoring_metadata:
             self.settings.save_setting("multi-segment-output-mode", self.output_mode)

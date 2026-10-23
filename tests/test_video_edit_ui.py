@@ -45,6 +45,7 @@ class FakePage:
         self.crop_edit_mode = False
         self.user_is_dragging_slider = False
         self.trim_segments = []
+        self.output_mode = "join"
         self.first_segment_point = None
         self.current_video_path = None
         self.mpv_player = FakePlayer()
@@ -130,6 +131,26 @@ class VideoEditUITests(unittest.TestCase):
         self.assertEqual(
             self.ui.sidebar_button.get_tooltip_text(), "Show editing tools (F9)"
         )
+
+    def test_remove_option_shows_with_one_segment(self):
+        self.ui.populate_sidebar(Gtk.Box(orientation=Gtk.Orientation.VERTICAL))
+        self.assertEqual(self.ui.output_mode_combo.get_model().get_n_items(), 3)
+        self.ui.update_segment_actions(1)
+        self.assertTrue(self.ui.output_group.get_visible())
+        self.assertFalse(self.ui.trim_group.get_description())
+
+        self.page.output_mode = "remove"
+        self.ui.update_segment_actions(1)
+        self.assertEqual(
+            self.ui.segments_only_button.get_tooltip_text(),
+            "Play without the removed segments",
+        )
+        self.assertEqual(
+            self.ui.trim_group.get_description(),
+            "The marked segments are cut out of the converted video.",
+        )
+        self.ui.update_segment_actions(0)
+        self.assertFalse(self.ui.output_group.get_visible())
 
     def test_speed_summary_updates_with_selection(self):
         self.ui._on_speed_btn_clicked(None, 1.5)
@@ -403,6 +424,24 @@ class VideoEditPageTests(unittest.TestCase):
         _box, start = page._create_time_input_fields(1)
         self.assertEqual(page._segment_times(start, end), (1, 10.0))
 
+    def test_removing_segments_previews_what_is_left(self):
+        video = self.videos[0]
+        self.assertTrue(self.page.set_video(video))
+        self.finish_loading(video)
+        page = self.page
+        page.trim_segments = [{"start": 2.0, "end": 4.0}, {"start": 9.99, "end": 10.0}]
+        page.output_mode = "remove"
+        page._save_file_metadata()
+        self.assertEqual(self.metadata[video]["output_mode"], "remove")
+        # Removing keeps up to the end, so the length goes with the edits.
+        self.assertEqual(self.metadata[video]["duration"], 10.0)
+        self.assertEqual(
+            page.preview_segments(),
+            [{"start": 0.0, "end": 2.0}, {"start": 4.0, "end": 9.99}],
+        )
+        page.output_mode = "join"
+        self.assertIs(page.preview_segments(), page.trim_segments)
+
 
 class MPVPlayerTrackTests(unittest.TestCase):
     def test_tracks_reset_and_report_per_file(self):
@@ -557,7 +596,9 @@ class PausePanelTests(unittest.TestCase):
             _update_segments_listbox=lambda: None,
             ui=SimpleNamespace(
                 update_segment_markers=lambda: None,
-                output_mode_combo=Gtk.DropDown.new_from_strings(["join", "split"]),
+                output_mode_combo=Gtk.DropDown.new_from_strings(
+                    ["join", "split", "remove"]
+                ),
             ),
         )
 
