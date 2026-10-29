@@ -271,18 +271,25 @@ def select_best_gpu(detected_gpus: list[dict], codec: str) -> dict | None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) not in (2, 3) or sys.argv[1] not in CODECS:
+    args = sys.argv[1:]
+    # --without VENDOR leaves out a GPU whose encoder failed its check.
+    without = ""
+    if len(args) >= 2 and args[-2] == "--without":
+        without = args[-1]
+        args = args[:-2]
+    if len(args) not in (1, 2) or args[0] not in CODECS:
         sys.exit(
-            f"usage: {os.path.basename(sys.argv[0])} {{{','.join(CODECS)}}} [DEVICE]"
+            f"usage: {os.path.basename(sys.argv[0])} "
+            f"{{{','.join(CODECS)}}} [DEVICE] [--without VENDOR]"
         )
-    gpus = render_devices()
-    if len(sys.argv) == 3:
+    gpus = [gpu for gpu in render_devices() if gpu["type"] != without]
+    if len(args) == 2:
         # A device the caller named is used as asked; only its vendor is needed.
-        chosen = next((g for g in gpus if g["device"] == sys.argv[2]), None)
+        chosen = next((g for g in gpus if g["device"] == args[1]), None)
         if chosen is not None and chosen["type"] == "unknown":
             chosen = None
     else:
-        chosen = choose_gpu(gpus, sys.argv[1])
+        chosen = choose_gpu(gpus, args[0])
     if chosen is not None:
         # The script initializes CUDA by index, in the PCI order it exports.
         index = cuda_index(chosen, gpus) if chosen["type"] == "nvidia" else ""
