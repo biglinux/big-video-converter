@@ -1293,13 +1293,97 @@ use_video_bitrate() { # <encoder array name>
 
 gpu=${gpu,,}
 gpu=${gpu/auto/}
+# A hybrid laptop's dedicated GPU that big-dgpu-power keeps off while unused
+# is off the bus: nothing below can see it until it is woken, as prime-run
+# does, and it goes off again once the conversion lets go of it.
+dedicated_gpu_is_off() {
+	command -v big-dgpu >/dev/null && [[ $(big-dgpu status 2>/dev/null) == off* ]]
+}
+on_mains_power() { # [power supply class directory]
+	local supply batteries=0
+	for supply in "${1:-/sys/class/power_supply}"/*; do
+		case $(<"$supply/type") in
+		Mains) [[ $(<"$supply/online") == 1 ]] && return 0 ;;
+		Battery) batteries=1 ;;
+		esac
+	done 2>/dev/null
+	((batteries == 0))
+}
+# NVENC needs a driver new enough for this FFmpeg (API 13.1, driver 610, for
+# FFmpeg 9), which older cards never get. That refusal is remembered for the
+# driver and FFmpeg it happened with, so the GPU is not woken for nothing;
+# any other failure (CUDA not ready yet after a wake) is only tried again.
+nvenc_failed_file=${XDG_CACHE_HOME:-$HOME/.cache}/big-video-converter/nvenc-failed
+# Builds of one FFmpeg version differ in the NVENC API they ask for (the
+# Jellyfin portable build's works with drivers the packaged one refuses), so
+# the binary itself is part of the combination.
+nvenc_combination() {
+	local binary
+	binary=$(readlink -f "$(command -v "$ffmpeg_executable")")
+	echo "$(modinfo -F version nvidia 2>/dev/null) $binary $(stat -c '%s %Y' "$binary" 2>/dev/null)"
+}
+nvenc_known_to_fail() {
+	[[ -r $nvenc_failed_file && $(<"$nvenc_failed_file") == "$(nvenc_combination)" ]]
+}
+nvenc_encodes() {
+	local encoder=h264_nvenc error
+	case ${video_encoder:-h264} in
+	h265) encoder=hevc_nvenc ;;
+	av1) encoder=av1_nvenc ;;
+	esac
+	for _ in 1 2 3; do
+		error=$(timeout 20 "$ffmpeg_executable" -nostdin -v error -init_hw_device "cuda=cu:${cuda_index:-0}" \
+			-f lavfi -i "color=c=gray:size=256x256:rate=25:duration=0.2" \
+			-c:v "$encoder" -frames:v 2 -f null - 2>&1) && return 0
+		if [[ $error == *"required nvenc API version"* ]]; then
+			mkdir -p "${nvenc_failed_file%/*}" && nvenc_combination >"$nvenc_failed_file"
+			return 1
+		fi
+		sleep 0.5
+	done
+	return 1
+}
+wake_dedicated_gpu() {
+	echo "Turning on the dedicated GPU"
+	if ! big-dgpu wake; then
+		echo "The dedicated GPU did not turn on: choosing among the others"
+		return 1
+	fi
+	local node
+	for _ in {1..50}; do
+		for node in /sys/class/drm/renderD*/device/vendor; do
+			[[ $(<"$node") == 0x10de ]] && return 0
+		done 2>/dev/null
+		sleep 0.1
+	done
+	echo "The dedicated GPU did not come back: choosing among the others"
+	return 1
+}
+
+gpu_vendor=""
+cuda_index=""
+gpu_selector="$script_dir/../share/big-video-converter/engine/gpu_selector.py"
+select_gpu() { # [DEVICE] [--without VENDOR]
+	read -r gpu_vendor chosen_device cuda_index < <(
+		ffmpeg_executable=$ffmpeg_executable python3 "$gpu_selector" "${video_encoder:-h264}" "$@"
+	) || true
+	gpu_device=$chosen_device
+}
+# Asked for by name, it is woken. Chosen automatically, it is woken on mains
+# power, where the best encoder is worth its power; on battery the GPUs that
+# are on encode, and it is woken only when none of them encodes the codec.
+if dedicated_gpu_is_off; then
+	if [[ $gpu == nvidia || $force_encoder == nvenc || $force_decoder == cuda ]]; then
+		wake_dedicated_gpu || true
+	elif [[ -z $gpu && $force_software != 1 && $force_copy_video != 1 && ${video_encoder:-h264} != prores ]] &&
+		on_mains_power && ! nvenc_known_to_fail; then
+		wake_dedicated_gpu || true
+	fi
+fi
 # The GPU to encode on: the vendor asked for, the vendor of gpu_device, else
 # the one the GUI's rule picks (engine/gpu_selector.py): the card that alone
 # encodes AV1, else the one that alone encodes VP9, else NVIDIA, AMD, Intel
 # among those that encode the chosen codec.
-gpu_vendor=""
-cuda_index=""
-gpu_selector="$script_dir/../share/big-video-converter/engine/gpu_selector.py"
 case $gpu in
 nvidia | amd | intel)
 	gpu_vendor=$gpu
@@ -1312,12 +1396,14 @@ nvidia | amd | intel)
 	;;
 "")
 	if [[ $force_copy_video != 1 && ${video_encoder:-h264} != prores ]]; then
-		chosen_device=""
-		read -r gpu_vendor chosen_device cuda_index < <(
-			ffmpeg_executable=$ffmpeg_executable python3 \
-				"$gpu_selector" "${video_encoder:-h264}" ${gpu_device:+"$gpu_device"}
-		) || true
-		gpu_device=$chosen_device
+		select_gpu ${gpu_device:+"$gpu_device"}
+		if [[ -z $gpu_vendor ]] && dedicated_gpu_is_off && wake_dedicated_gpu; then
+			select_gpu
+		fi
+		if [[ $gpu_vendor == nvidia ]] && ! nvenc_encodes; then
+			echo "NVENC did not encode a test frame: choosing among the other GPUs"
+			select_gpu --without nvidia
+		fi
 		[[ -n $gpu_vendor ]] || echo "No GPU encodes ${video_encoder:-h264} here - using software encoding"
 	fi
 	;;
@@ -1693,21 +1779,25 @@ attempt_conversion() {
 		case $force_encoder in
 		nvenc)
 			detected_encoder_var=encoder_nvenc
+			decoder_format=("${decoder_cuda[@]}")
 			init_hardware=("${init_nvidia[@]}")
 			scale_filter_name=scale_cuda
 			;;
 		vaapi)
 			detected_encoder_var=encoder_vaapi
+			decoder_format=("${decoder_vaapi[@]}")
 			init_hardware=("${init_vaapi[@]}")
 			scale_filter_name=scale_vaapi
 			;;
 		qsv)
 			detected_encoder_var=encoder_qsv
+			decoder_format=("${decoder_qsv[@]}")
 			init_hardware=("${init_qsv[@]}")
 			scale_filter_name=scale_qsv
 			;;
 		vulkan)
 			detected_encoder_var=encoder_vulkan
+			decoder_format=("${decoder_vulkan[@]}")
 			init_hardware=("${init_vulkan[@]}")
 			;;
 		software) detected_encoder_var=encoder_software ;;
@@ -1748,6 +1838,24 @@ attempt_conversion() {
 			return
 			;;
 		esac
+	fi
+	# Intel's QSV needs the runtime of its generation: VPL's starts at Tiger
+	# Lake, and the Media SDK for the older ones is unmaintained and seldom
+	# installed. VA-API drives the same encoder on every generation, so a QSV
+	# that fails its check gives way to it, before the filters are chosen.
+	local encoder_checked=""
+	if [[ $detected_encoder_var == encoder_qsv && -z $force_encoder && $force_software != 1 &&
+		$force_copy_video != 1 && ${gpu_smoke_test:-1} == 1 ]]; then
+		if hw_encoder_smoke_test; then
+			encoder_checked=1
+		else
+			echo "QSV did not encode a test frame: using VA-API on the same GPU"
+			detected_encoder_var=encoder_vaapi
+			encoder_format=("${encoder_vaapi[@]}")
+			[[ -n $force_decoder ]] || decoder_format=("${decoder_vaapi[@]}")
+			init_hardware=("${init_vaapi[@]}")
+			scale_filter_name=scale_vaapi
+		fi
 	fi
 	if [[ $force_software == 1 || ${#encoder_format[@]} -eq 0 ]]; then
 		encoder_format=("${encoder_software[@]}")
@@ -1870,7 +1978,8 @@ attempt_conversion() {
 		echo "Vulkan scaling: forcing software decode (Stage 2)"
 	fi
 
-	if [[ $force_copy_video != 1 && $detected_encoder_var != encoder_software && ${gpu_smoke_test:-1} == 1 ]]; then
+	if [[ $force_copy_video != 1 && $detected_encoder_var != encoder_software && ${gpu_smoke_test:-1} == 1 &&
+		-z $encoder_checked ]]; then
 		if ! hw_encoder_smoke_test; then
 			echo "GPU encoder check failed: $hw_encoder_name did not encode a test frame (driver problem?). Using software encoding."
 			detected_encoder_var=encoder_software
