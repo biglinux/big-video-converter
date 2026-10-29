@@ -21,6 +21,7 @@ import big_gtk_kit
 from audio_settings import AudioSettingsMixin
 from big_gtk_kit.hover_cards import CardLayer
 from constants import APP_ID
+from engine import legacy_nvidia
 from engine.dependency_checker import DependencyChecker
 from engine.job_options import SOURCE_HDR_MODES, parse_segments_arg
 from engine.settings_store import SettingsStore
@@ -236,6 +237,65 @@ class VideoConverterApp(
             self.settings_store
         ):
             GLib.idle_add(self._show_welcome_dialog_startup)
+        if is_first_activation:
+            threading.Thread(target=self._check_legacy_nvidia, daemon=True).start()
+
+    def _check_legacy_nvidia(self) -> None:
+        """Off the main loop: modinfo and pacman are external commands."""
+        version = legacy_nvidia.driver_version()
+        asked_for = self.settings_store.load_setting("legacy-nvidia-asked", "")
+        if legacy_nvidia.should_offer(
+            version, asked_for, legacy_nvidia.package_installed()
+        ):
+            GLib.idle_add(self._offer_legacy_ffmpeg, version)
+
+    def _offer_legacy_ffmpeg(self, version: str) -> bool:
+        # After the welcome, which a first start shows. Its closed signal comes
+        # while it is still in the window, so the offer does not ask again.
+        welcome = getattr(self, "welcome_dialog", None)
+        if welcome is not None and welcome.dialog.get_parent() is not None:
+            welcome.dialog.connect(
+                "closed",
+                lambda _dialog: GLib.idle_add(self._present_legacy_offer, version),
+            )
+        else:
+            self._present_legacy_offer(version)
+        return False
+
+    def _present_legacy_offer(self, version: str) -> bool:
+        dialog = Adw.AlertDialog(
+            heading=_("NVIDIA moved this card's driver to its legacy branch"),
+            body=_(
+                "With driver {version}, the FFmpeg installed here cannot encode on the NVIDIA card (NVENC), so videos are encoded by another graphics card or by the processor. An FFmpeg that keeps support for the legacy driver brings NVENC back: {package}, from the AUR, usually does. Install it?"
+            ).format(version=version, package=legacy_nvidia.PACKAGE),
+        )
+        dialog.add_response("later", _("Not Now"))
+        dialog.add_response("install", _("Install…"))
+        dialog.set_response_appearance("install", Adw.ResponseAppearance.SUGGESTED)
+        dialog.set_default_response("install")
+        dialog.set_close_response("later")
+
+        def respond(_dialog, response):
+            # Asked once per driver version, whatever the answer.
+            self.settings_store.save_setting("legacy-nvidia-asked", version)
+            if response != "install":
+                return
+            try:
+                Gio.Subprocess.new(
+                    ["pamac-manager", "--details", legacy_nvidia.PACKAGE],
+                    Gio.SubprocessFlags.NONE,
+                )
+            except GLib.Error:
+                self.show_error_dialog(
+                    _("The package manager could not be opened"),
+                    _(
+                        "Install {package} from the AUR with your package manager."
+                    ).format(package=legacy_nvidia.PACKAGE),
+                )
+
+        dialog.connect("response", respond)
+        dialog.present(self.window)
+        return False
 
     def _show_welcome_dialog_startup(self):
         """Show welcome dialog on startup (called via idle_add)"""
