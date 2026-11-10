@@ -22,6 +22,8 @@ from pathlib import Path
 
 import gi
 
+from big_gtk_kit import init_class
+
 gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, GObject, Gtk
@@ -82,7 +84,7 @@ def install():
             display, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 100
         )
     # A class's signals exist once the class is initialised.
-    GObject.TypeClass.get(Gtk.Widget.__gtype__)
+    init_class(Gtk.Widget.__gtype__)
     GObject.add_emission_hook(Gtk.Widget, "realize", _on_realize)
     for window in Gtk.Window.list_toplevels():
         if window.get_realized():

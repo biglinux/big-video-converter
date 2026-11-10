@@ -13,6 +13,8 @@ import ctypes
 
 import gi
 
+from big_gtk_kit import init_class
+
 gi.require_version("Gdk", "4.0")
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gdk, GLib, GObject, Gtk
@@ -33,7 +35,7 @@ def install():
     if _installed or Gtk.check_version(4, 22, 5) is None:
         return
     _installed = True
-    GObject.TypeClass.get(Gtk.Widget.__gtype__)
+    init_class(Gtk.Widget.__gtype__)
     GObject.add_emission_hook(Gtk.Widget, "realize", _on_realize)
 
 
