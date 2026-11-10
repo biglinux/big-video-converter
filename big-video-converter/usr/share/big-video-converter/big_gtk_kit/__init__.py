@@ -10,3 +10,18 @@ def install():
     tooltip.install()
     dialog.install()
     surface.install()
+
+
+def init_class(gtype):
+    """Initialise a GObject class, so its signals exist before any instance.
+
+    PyGObject 3.50 added ``GObject.TypeClass.get`` and deprecated
+    ``GObject.type_class_ref``; the 3.48 of Ubuntu 24.04, which AppImages are
+    built on, only has the latter."""
+    from gi.repository import GObject
+
+    get = getattr(GObject.TypeClass, "get", None)
+    if get is not None:
+        get(gtype)
+    else:
+        GObject.type_class_ref(gtype)

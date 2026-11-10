@@ -10,6 +10,8 @@ dialog as it closes lets it go.
 
 import gi
 
+from big_gtk_kit import init_class
+
 gi.require_version("Adw", "1")
 gi.require_version("Gtk", "4.0")
 from gi.repository import Adw, GObject, Gtk
@@ -24,7 +26,7 @@ def install():
         return
     _installed = True
     # A class's signals exist once the class is initialised.
-    GObject.TypeClass.get(Adw.Dialog.__gtype__)
+    init_class(Adw.Dialog.__gtype__)
     GObject.add_emission_hook(Adw.Dialog, "closed", _on_closed)
 
 
